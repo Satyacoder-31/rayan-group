@@ -43,21 +43,21 @@ export const LEADERSHIP_TEAM = [
   {
     name: "Arshad Alam Shaikh",
     role: "Founder / Chairman",
-    image: "/assets/team/arshad-alam-shaikh.jpg",
+    image: null, // Ready for future custom portrait image (e.g. "/assets/team/arshad-alam-shaikh.jpg")
     bio: "Pioneering the strategic vision and engineering standards of Rayan Engineering across the GCC and South Asia.",
     initials: "AS"
   },
   {
     name: "Eng. Bakhteyar Alam",
     role: "Chief Operating Officer (COO)",
-    image: "/assets/team/eng-bakhteyar-alam.jpg",
+    image: null, // Ready for future custom portrait image (e.g. "/assets/team/eng-bakhteyar-alam.jpg")
     bio: "Directing multi-disciplinary engineering operations, rigorous safety compliance, and seamless on-site project execution.",
     initials: "BA"
   },
   {
     name: "Eng. Nadeem Akhtar",
     role: "Chief Financial Officer (CFO)",
-    image: "/assets/team/eng-nadeem-akhtar.jpg",
+    image: null, // Ready for future custom portrait image (e.g. "/assets/team/eng-nadeem-akhtar.jpg")
     bio: "Managing institutional fiscal governance, capital efficiency, commercial risk, and sustainable international expansion.",
     initials: "NA"
   }
