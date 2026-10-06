@@ -290,16 +290,145 @@
 
       <!-- Action Buttons -->
       <div class="header-actions">
-        <button type="button" class="btn-search-trigger" aria-label="Open global search">
+        <button type="button" class="btn-search-trigger" aria-label="Open global search" title="Search (Ctrl+K)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
         <a href="/contact/" class="btn-contact-header">
           <span>CONTACT US</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
+        <!-- Mobile Menu Hamburger Button -->
+        <button type="button" class="btn-mobile-menu-toggle" aria-label="Toggle mobile navigation menu" aria-expanded="false" aria-controls="mobileNavDrawer">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
       </div>
     </div>
   </header>
+  
+  
+  <!-- Full-Screen Enterprise Mobile Navigation Drawer -->
+  <div class="mobile-nav-drawer" id="mobileNavDrawer" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="mobile-drawer-header">
+      <a href="/" class="mobile-drawer-brand" aria-label="Rayan Group Home">
+        <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" width="160" height="40">
+      </a>
+      <button type="button" class="mobile-drawer-close" aria-label="Close navigation menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="mobile-drawer-ticker">
+      <a href="/investors/stock-information/" class="mobile-ticker-pill">
+        <span style="opacity: 0.85;">ADX: RYNG</span>
+        <span class="ticker-val">AED 28.40</span>
+        <span class="ticker-change">▲ +1.79%</span>
+      </a>
+      <div class="mobile-hub-text">DUAL-HUB: ABU DHABI &amp; INDIA</div>
+    </div>
+
+    <div class="mobile-drawer-body">
+      <nav class="mobile-nav-menu" role="navigation">
+        <!-- ABOUT -->
+        <div class="mobile-nav-group ">
+          <button type="button" class="mobile-group-header" aria-expanded="false">
+            <span>ABOUT RAYAN</span>
+            <svg class="mobile-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="mobile-group-links">
+            <a href="/about/" class="mobile-sublink ">Who We Are &amp; History</a>
+            <a href="/leadership/" class="mobile-sublink ">Executive Leadership &amp; Board</a>
+            <a href="/about/#timeline" class="mobile-sublink">Corporate Timeline (2021–2025+)</a>
+            <a href="/sustainability/" class="mobile-sublink">ESG &amp; Sustainability</a>
+          </div>
+        </div>
+
+        <!-- BUSINESS -->
+        <div class="mobile-nav-group ">
+          <button type="button" class="mobile-group-header" aria-expanded="false">
+            <span>BUSINESS DIVISIONS</span>
+            <svg class="mobile-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="mobile-group-links">
+            <a href="/business/" class="mobile-sublink ">All Business Areas</a>
+            <a href="/business/engineering/" class="mobile-sublink ">Civil &amp; General Contracting</a>
+            <a href="/business/marine/" class="mobile-sublink ">Marine &amp; Coastal Dredging</a>
+            <a href="/business/infrastructure/" class="mobile-sublink ">Heavy Infrastructure</a>
+            <a href="/business/energy/" class="mobile-sublink ">Energy &amp; Oil/Gas EPC</a>
+            <a href="/business/logistics/" class="mobile-sublink ">Heavy Logistics &amp; Fleet</a>
+            <a href="/business/#companies" class="mobile-sublink">Operating Companies Matrix</a>
+          </div>
+        </div>
+
+        <!-- PROJECTS -->
+        <div class="mobile-nav-group ">
+          <button type="button" class="mobile-group-header" aria-expanded="false">
+            <span>PROJECTS</span>
+            <svg class="mobile-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="mobile-group-links">
+            <a href="/projects/" class="mobile-sublink ">Projects Portfolio Showcase</a>
+            <a href="/projects/al-wahda-mall/" class="mobile-sublink ">Al Wahda Mall Development</a>
+            <a href="/projects/ghantoot-palace/" class="mobile-sublink ">Ghantoot Royal Palace</a>
+            <a href="/projects/yas-mall/" class="mobile-sublink ">Yas Mall Destination Fit-Out</a>
+          </div>
+        </div>
+
+        <!-- INVESTORS -->
+        <div class="mobile-nav-group active">
+          <button type="button" class="mobile-group-header" aria-expanded="false">
+            <span>INVESTOR RELATIONS</span>
+            <svg class="mobile-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="mobile-group-links">
+            <a href="/investors/" class="mobile-sublink ">IR Hub &amp; Executive Summary</a>
+            <a href="/investors/financial-results/" class="mobile-sublink ">Financial Statements &amp; P&amp;L</a>
+            <a href="/investors/annual-reports/" class="mobile-sublink ">Annual Reports Archive</a>
+            <a href="/investors/presentations/" class="mobile-sublink ">Investor Presentations &amp; Decks</a>
+            <a href="/investors/shareholder-information/" class="mobile-sublink ">Shareholder Capital &amp; Dividends</a>
+            <a href="/investors/corporate-governance/" class="mobile-sublink active">Corporate Governance &amp; Charters</a>
+            <a href="/investors/stock-information/" class="mobile-sublink ">Stock Quote (ADX: RYNG)</a>
+            <a href="/investors/financial-calendar/" class="mobile-sublink ">Financial Calendar 2025/2026</a>
+          </div>
+        </div>
+
+        <!-- DIRECT LINKS -->
+        <a href="/sustainability/" class="mobile-direct-navlink ">
+          <span>SUSTAINABILITY (ESG)</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/news/" class="mobile-direct-navlink ">
+          <span>CORPORATE NEWSROOM</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/careers/" class="mobile-direct-navlink ">
+          <span>CAREERS &amp; TALENT</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/media/" class="mobile-direct-navlink ">
+          <span>MEDIA GALLERY</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/contact/" class="mobile-direct-navlink ">
+          <span>GLOBAL CONTACT</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </nav>
+
+      <div class="mobile-drawer-footer">
+        <a href="/contact/" class="btn-enterprise-primary mobile-btn-full">
+          <span>INITIATE CORPORATE INQUIRY</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <div class="mobile-drawer-contact-block">
+          <div><strong>Corporate HQ:</strong> +971 2 642 8899</div>
+          <div><strong>Inquiries:</strong> info@rayangroup.com</div>
+          <div>Al Maryah Island, Abu Dhabi, UAE</div>
+        </div>
+      </div>
+    </div>
+  </div>
   
   
   <!-- ==========================================================================

@@ -450,10 +450,81 @@ function initBackToTop() {
 }
 
 // ==========================================================================
+// 9. MOBILE DRAWER NAVIGATION
+// ==========================================================================
+function initMobileNavigation() {
+  const toggleBtn = document.querySelector('.btn-mobile-menu-toggle');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const closeBtn = document.querySelector('.mobile-drawer-close');
+  if (!toggleBtn || !drawer) return;
+
+  const openDrawer = () => {
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+    toggleBtn.classList.add('active');
+    toggleBtn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeDrawer = () => {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    toggleBtn.classList.remove('active');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (drawer.classList.contains('open')) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeDrawer();
+    });
+  }
+
+  // Accordion submenus inside mobile drawer
+  drawer.querySelectorAll('.mobile-group-header').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const group = btn.closest('.mobile-nav-group');
+      const isOpen = group.classList.contains('active');
+      drawer.querySelectorAll('.mobile-nav-group').forEach(g => {
+        if (g !== group) g.classList.remove('active');
+      });
+      group.classList.toggle('active', !isOpen);
+      btn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+    });
+  });
+
+  // Close drawer on clicking any navigation link
+  drawer.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      closeDrawer();
+    });
+  });
+
+  // Close on Escape key
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) {
+      closeDrawer();
+    }
+  });
+}
+
+// ==========================================================================
 // DOM READY INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
   initHeader();
+  initMobileNavigation();
   initSearchModal();
   initHeroSlideshow();
   initStatisticsCounters();
@@ -462,3 +533,4 @@ document.addEventListener('DOMContentLoaded', () => {
   initForms();
   initBackToTop();
 });
+
