@@ -38,7 +38,8 @@ function renderHeader(activePath = '/') {
     <!-- Main Navigation Bar -->
     <div class="header-main-nav container">
       <a href="/" class="brand-logo-wrap" aria-label="Rayan Group Home">
-        <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" class="brand-logo-img" width="180" height="48">
+        <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" class="brand-logo-img logo-theme-dark" width="180" height="48">
+        <img src="/assets/rayan-logo-dark.svg" alt="Rayan Group" class="brand-logo-img logo-theme-light" width="180" height="48">
       </a>
 
       <!-- Desktop Primary Navigation -->
@@ -254,6 +255,23 @@ function renderHeader(activePath = '/') {
 
       <!-- Action Buttons -->
       <div class="header-actions">
+        <!-- Theme Mode Switcher -->
+        <button type="button" class="btn-theme-toggle" aria-label="Toggle light and dark theme" title="Toggle Theme (Light/Dark)">
+          <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
         <button type="button" class="btn-search-trigger" aria-label="Open global search" title="Search (Ctrl+K)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
@@ -280,11 +298,30 @@ function renderMobileDrawer(activePath = '/') {
   <div class="mobile-nav-drawer" id="mobileNavDrawer" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="mobile-drawer-header">
       <a href="/" class="mobile-drawer-brand" aria-label="Rayan Group Home">
-        <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" width="160" height="40">
+        <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" class="logo-theme-dark" width="160" height="40">
+        <img src="/assets/rayan-logo-dark.svg" alt="Rayan Group" class="logo-theme-light" width="160" height="40">
       </a>
-      <button type="button" class="mobile-drawer-close" aria-label="Close navigation menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <button type="button" class="btn-theme-toggle mobile-theme-btn" aria-label="Toggle light and dark theme" title="Toggle Theme (Light/Dark)">
+          <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        <button type="button" class="mobile-drawer-close" aria-label="Close navigation menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="mobile-drawer-ticker">
@@ -575,6 +612,16 @@ function wrapPage({ title, description, activePath, content, heroHtml }) {
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/assets/rayan-symbol.svg">
+
+  <!-- Zero-FOUT Theme Script -->
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('rayan_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Google Fonts Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

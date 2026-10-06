@@ -520,9 +520,40 @@ function initMobileNavigation() {
 }
 
 // ==========================================================================
+// THEME SWITCHER (Light Mode / Dark Mode)
+// ==========================================================================
+function initThemeToggle() {
+  const toggleButtons = document.querySelectorAll('.btn-theme-toggle');
+  if (!toggleButtons.length) return;
+
+  function getCurrentTheme() {
+    return document.documentElement.getAttribute('data-theme') || 'dark';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('rayan_theme', theme);
+    } catch (e) {
+      console.warn('LocalStorage unavailable for theme storage:', e);
+    }
+  }
+
+  toggleButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const current = getCurrentTheme();
+      const nextTheme = current === 'light' ? 'dark' : 'light';
+      applyTheme(nextTheme);
+    });
+  });
+}
+
+// ==========================================================================
 // DOM READY INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
   initHeader();
   initMobileNavigation();
   initSearchModal();
@@ -533,4 +564,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initForms();
   initBackToTop();
 });
+
 

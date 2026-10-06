@@ -163,11 +163,6 @@ const homeHeroHtml = `
     <!-- Controls Bar -->
     <div class="hero-controls-bar">
       <div class="hero-controls-inner">
-        <div class="hero-slide-counter">
-          <span class="hero-counter-current">01</span>
-          <div class="hero-progress-line"><div class="hero-progress-fill"></div></div>
-          <span class="hero-counter-total">05</span>
-        </div>
         <div class="hero-arrows-group">
           <button type="button" class="hero-arrow-btn hero-arrow-prev" aria-label="Previous slide">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
