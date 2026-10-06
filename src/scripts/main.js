@@ -57,7 +57,7 @@ function initHeader() {
   const currentPath = window.location.pathname.replace(/\/index\.html$/, '/');
   document.querySelectorAll('.nav-link, .mega-sub-link, .footer-link').forEach(link => {
     const href = link.getAttribute('href');
-    if (href && (href === currentPath || (href !== '/' && currentPath.startsWith(href)))) {
+    if (href && (href === currentPath || (href !== '/' && currentPath.startsWith(href)) || (href === '/news/' && currentPath.startsWith('/media')))) {
       link.classList.add('active');
     }
   });

@@ -243,31 +243,10 @@ function renderHeader(activePath = '/') {
             </div>
           </li>
 
-          <!-- NEWS -->
-          <li class="nav-item ${activePath.startsWith('/news') ? 'active' : ''}">
+          <!-- NEWS & MEDIA -->
+          <li class="nav-item ${activePath.startsWith('/news') || activePath.startsWith('/media') ? 'active' : ''}">
             <a href="/news/" class="nav-link">
-              <span>News</span>
-            </a>
-          </li>
-
-          <!-- CAREERS -->
-          <li class="nav-item ${activePath.startsWith('/careers') ? 'active' : ''}">
-            <a href="/careers/" class="nav-link">
-              <span>Careers</span>
-            </a>
-          </li>
-
-          <!-- MEDIA -->
-          <li class="nav-item ${activePath.startsWith('/media') ? 'active' : ''}">
-            <a href="/media/" class="nav-link">
-              <span>Media</span>
-            </a>
-          </li>
-
-          <!-- CONTACT -->
-          <li class="nav-item ${activePath.startsWith('/contact') ? 'active' : ''}">
-            <a href="/contact/" class="nav-link">
-              <span>Contact</span>
+              <span>News &amp; Media</span>
             </a>
           </li>
         </ul>
