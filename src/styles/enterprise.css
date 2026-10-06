@@ -526,6 +526,9 @@
   transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.2s ease;
   display: flex;
   align-items: center;
+  padding-top: calc(var(--header-height, 100px) + 1rem);
+  padding-bottom: 5.5rem;
+  box-sizing: border-box;
 }
 
 .hero-slide-item.active {
@@ -565,7 +568,7 @@
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 4rem);
-  padding-top: 5rem;
+  box-sizing: border-box;
 }
 
 .hero-eyebrow-badge {
@@ -611,6 +614,8 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1.25rem;
+  position: relative;
+  z-index: 15;
 }
 
 .btn-enterprise-primary {
@@ -667,10 +672,11 @@
 /* Slideshow Controls Bar */
 .hero-controls-bar {
   position: absolute;
-  bottom: 2.5rem;
+  bottom: 2.25rem;
   left: 0;
   width: 100%;
   z-index: 20;
+  pointer-events: none;
 }
 
 .hero-controls-inner {
@@ -679,27 +685,38 @@
   padding: 0 clamp(1.25rem, 4vw, 4rem);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end; /* Groups counter and navigation arrows safely on the bottom-right! */
+  gap: 1.5rem;
+  box-sizing: border-box;
 }
 
 .hero-slide-counter {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
   font-family: var(--font-heading);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #cbd5e1;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
+  background: rgba(7, 17, 30, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 0.45rem 1.15rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
 }
 
 .hero-counter-current {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #fff;
+  min-width: 24px;
 }
 
 .hero-progress-line {
-  width: 140px;
+  width: 110px;
   height: 3px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
@@ -713,17 +730,26 @@
   transition: width 0.1s linear;
 }
 
+.hero-counter-total {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  min-width: 20px;
+}
+
 .hero-arrows-group {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
+  pointer-events: auto;
 }
 
 .hero-arrow-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(7, 17, 30, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
   display: flex;
@@ -731,12 +757,13 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
 }
 
 .hero-arrow-btn:hover {
   background: var(--brand-cyan);
   border-color: var(--brand-cyan);
-  transform: scale(1.08);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
@@ -1586,29 +1613,66 @@
   }
 
   /* Homepage Hero */
+  .hero-slideshow-wrap {
+    min-height: 640px;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .hero-slide-item {
+    align-items: flex-start;
+    padding-top: 85px;
+    padding-bottom: 6rem;
+  }
   .hero-slide-container {
-    padding-top: 96px;
-    padding-bottom: 4rem;
+    padding: 0 1.25rem;
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
   }
   .hero-giant-title {
-    font-size: clamp(2.2rem, 7vw, 3.8rem);
+    font-size: clamp(1.85rem, 6.5vw, 2.75rem);
     line-height: 1.15;
+    margin-bottom: 1rem;
   }
   .hero-lead-text {
-    font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
   }
   .hero-actions-row {
     flex-direction: column;
     width: 100%;
-    gap: 0.85rem;
+    gap: 0.75rem;
   }
   .hero-actions-row .btn-enterprise-primary,
   .hero-actions-row .btn-enterprise-secondary {
     width: 100%;
     justify-content: center;
-    padding: 0.9rem 1.5rem;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.825rem;
+  }
+  .hero-controls-bar {
+    bottom: 1.25rem;
+  }
+  .hero-controls-inner {
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 1.25rem;
+  }
+  .hero-slide-counter {
+    padding: 0.35rem 0.85rem;
+    font-size: 0.75rem;
+    gap: 0.65rem;
+  }
+  .hero-counter-current {
+    font-size: 1.1rem;
+    min-width: 22px;
+  }
+  .hero-progress-line {
+    width: 55px;
+  }
+  .hero-arrow-btn {
+    width: 38px;
+    height: 38px;
   }
 
   /* Grids and Columns */
@@ -1657,5 +1721,57 @@
   .btn-mobile-menu-toggle {
     width: 38px;
     height: 38px;
+  }
+}
+
+/* ==========================================================================
+   10. SHORT VIEWPORT HEIGHT SAFEGUARDS (Laptops & Scaled Screens <= 840px)
+   ========================================================================== */
+@media (max-height: 840px) and (min-width: 769px) {
+  .hero-slide-item {
+    padding-top: calc(var(--header-height, 100px) + 0.5rem);
+    padding-bottom: 5rem;
+  }
+  .hero-giant-title {
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    margin-bottom: 1rem;
+    line-height: 1.1;
+  }
+  .hero-lead-text {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin-bottom: 1.5rem;
+    max-width: 620px;
+  }
+  .hero-eyebrow-badge {
+    margin-bottom: 1rem;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.7rem;
+  }
+  .btn-enterprise-primary,
+  .btn-enterprise-secondary {
+    padding: 0.85rem 1.75rem;
+    font-size: 0.825rem;
+  }
+  .hero-controls-bar {
+    bottom: 1.5rem;
+  }
+}
+
+@media (max-height: 700px) and (min-width: 769px) {
+  .hero-giant-title {
+    font-size: clamp(1.8rem, 3.8vw, 2.8rem);
+    margin-bottom: 0.75rem;
+  }
+  .hero-lead-text {
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.45;
+  }
+  .hero-slide-item {
+    padding-bottom: 4rem;
+  }
+  .hero-controls-bar {
+    bottom: 1rem;
   }
 }
