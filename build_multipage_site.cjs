@@ -9,6 +9,33 @@ function ensureDir(filePath) {
   }
 }
 
+// 0. Shared Global Preloader (Brand Intro & Loading Progress Bar)
+function renderPreloader() {
+  return `
+  <!-- ==========================================================================
+       GLOBAL PRELOADER (Brand Intro & Loading Progress Bar)
+       ========================================================================== -->
+  <div id="site-preloader" class="site-preloader" aria-hidden="true">
+    <div class="preloader-inner">
+      <div class="preloader-logo-wrap">
+        <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" class="preloader-logo logo-theme-dark" width="280" height="74">
+        <img src="/assets/rayan-logo-dark.svg" alt="Rayan Group" class="preloader-logo logo-theme-light" width="280" height="74">
+      </div>
+      <div class="preloader-tagline">ENGINEERING • MARINE • INFRASTRUCTURE</div>
+      <div class="preloader-progress-wrap">
+        <div class="preloader-progress-bar">
+          <div class="preloader-progress-fill" id="preloader-fill"></div>
+        </div>
+        <div class="preloader-progress-meta">
+          <span class="preloader-status-text" id="preloader-status">INITIALIZING SYSTEMS...</span>
+          <span class="preloader-percentage" id="preloader-percent">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
 // 1. Shared Header Template
 function renderHeader(activePath = '/') {
   return `
@@ -631,7 +658,8 @@ function wrapPage({ title, description, activePath, content, heroHtml }) {
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="/src/styles/main.css">
 </head>
-<body class="page-${activePath.replace(/[^a-z0-9]/gi, '-')}">
+<body class="preloader-active page-${activePath.replace(/[^a-z0-9]/gi, '-')}">
+  ${renderPreloader()}
   ${renderHeader(activePath)}
   ${renderMobileDrawer(activePath)}
   ${renderSearchModal()}

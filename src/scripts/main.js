@@ -550,6 +550,87 @@ function initThemeToggle() {
 }
 
 // ==========================================================================
+// GLOBAL SITE PRELOADER (Brand Intro with Progress Bar)
+// ==========================================================================
+function initPreloader() {
+  const preloader = document.getElementById('site-preloader');
+  if (!preloader) return;
+
+  const fill = document.getElementById('preloader-fill');
+  const percent = document.getElementById('preloader-percent');
+  const status = document.getElementById('preloader-status');
+
+  let currentPercent = 0;
+  const duration = 1100; // 1.1s smooth luxurious brand animation
+  const startTime = performance.now();
+  let animationDone = false;
+
+  function finishPreloader() {
+    if (animationDone) return;
+    animationDone = true;
+
+    if (fill) fill.style.width = '100%';
+    if (percent) percent.textContent = '100%';
+    if (status) status.textContent = 'EXPERIENCE READY';
+
+    setTimeout(() => {
+      preloader.classList.add('preloader-done');
+      document.body.classList.remove('preloader-active');
+      setTimeout(() => {
+        if (preloader.parentNode) {
+          preloader.parentNode.removeChild(preloader);
+        }
+      }, 700);
+    }, 180);
+  }
+
+  function frame(currentTime) {
+    if (animationDone) return;
+    const elapsed = currentTime - startTime;
+    currentPercent = Math.min(100, Math.floor((elapsed / duration) * 100));
+
+    if (fill) fill.style.width = currentPercent + '%';
+    if (percent) percent.textContent = currentPercent + '%';
+
+    if (status) {
+      if (currentPercent < 35) {
+        status.textContent = 'CONNECTING GLOBAL HUBS...';
+      } else if (currentPercent < 75) {
+        status.textContent = 'LOADING INFRASTRUCTURE PORTFOLIO...';
+      } else {
+        status.textContent = 'FINALIZING ASSETS...';
+      }
+    }
+
+    if (currentPercent < 100) {
+      requestAnimationFrame(frame);
+    } else {
+      finishPreloader();
+    }
+  }
+
+  requestAnimationFrame(frame);
+
+  // Allow clicking anywhere to skip
+  preloader.addEventListener('click', finishPreloader);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      finishPreloader();
+    }
+  });
+
+  // Safety fallback
+  setTimeout(finishPreloader, 2200);
+}
+
+// Start preloader as early as possible
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPreloader);
+} else {
+  initPreloader();
+}
+
+// ==========================================================================
 // DOM READY INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
