@@ -1,0 +1,286 @@
+const fs = require('fs');
+const path = require('path');
+const { wrapPage, renderPageHero, ensureDir } = require('./build_multipage_site.cjs');
+
+function createRoute(relativePath, { title, description, activePath, heroHtml, content }) {
+  const fullPath = path.join(__dirname, relativePath);
+  ensureDir(fullPath);
+  const html = wrapPage({ title, description, activePath, heroHtml, content });
+  fs.writeFileSync(fullPath, html, 'utf8');
+  console.log(`Generated route: ${relativePath}`);
+}
+
+const irSubnav = (activeHref) => [
+  { label: 'Overview', href: '/investors/', active: activeHref === '/investors/' },
+  { label: 'Financial Results', href: '/investors/financial-results/', active: activeHref === '/investors/financial-results/' },
+  { label: 'Annual Reports', href: '/investors/annual-reports/', active: activeHref === '/investors/annual-reports/' },
+  { label: 'Presentations', href: '/investors/presentations/', active: activeHref === '/investors/presentations/' },
+  { label: 'Shareholders', href: '/investors/shareholder-information/', active: activeHref === '/investors/shareholder-information/' },
+  { label: 'Governance', href: '/investors/corporate-governance/', active: activeHref === '/investors/corporate-governance/' },
+  { label: 'Stock Info', href: '/investors/stock-information/', active: activeHref === '/investors/stock-information/' },
+  { label: 'IR Calendar', href: '/investors/financial-calendar/', active: activeHref === '/investors/financial-calendar/' },
+];
+
+const businessSubnav = (activeHref) => [
+  { label: 'All Divisions', href: '/business/', active: activeHref === '/business/' },
+  { label: 'Civil & EPC', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
+  { label: 'Marine & Offshore', href: '/business/marine/', active: activeHref === '/business/marine/' },
+  { label: 'Infrastructure', href: '/business/infrastructure/', active: activeHref === '/business/infrastructure/' },
+  { label: 'Energy & Oil/Gas', href: '/business/energy/', active: activeHref === '/business/energy/' },
+  { label: 'Heavy Logistics', href: '/business/logistics/', active: activeHref === '/business/logistics/' },
+];
+
+// ============================================================================
+// 2. ABOUT PAGE (about/index.html)
+// ============================================================================
+createRoute('about/index.html', {
+  title: 'Who We Are & Corporate History',
+  description: 'Discover Rayan Group, our history from founding in Abu Dhabi to multinational scale across the UAE and South Asia, core values, and vision for 2030.',
+  activePath: '/about/',
+  heroHtml: renderPageHero({
+    category: 'CORPORATE OVERVIEW',
+    title: 'WHO WE ARE',
+    description: 'Engineering excellence built over decades of industrial execution, cross-border synergy, and fiduciary discipline.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'About', href: '/about/' }, { label: 'Who We Are', href: '/about/' }],
+    bgImage: '/assets/images/about/overview.jpg',
+    subnav: [
+      { label: 'Who We Are', href: '/about/', active: true },
+      { label: 'Executive Governance', href: '/leadership/', active: false },
+      { label: 'Operating Companies', href: '/business/#companies', active: false },
+      { label: 'Sustainability ESG', href: '/sustainability/', active: false }
+    ]
+  }),
+  content: `
+  <section class="section" style="padding: 6rem 0; background: #07111e; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;" class="intro-grid-responsive">
+        <div>
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.85rem;">CONGLOMERATE VISION</span>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3.25rem); font-weight: 800; color: #fff; line-height: 1.15; text-transform: uppercase; margin-bottom: 1.5rem;">SHAPING CRITICAL INFRASTRUCTURE WITH PURPOSE.</h2>
+          <p style="font-size: 1.05rem; line-height: 1.7; color: #cbd5e1; margin-bottom: 1.25rem;">
+            Established in the United Arab Emirates, Rayan Group has expanded into a multi-sector engineering and infrastructure enterprise encompassing civil contracting, marine dredging, hydrocarbon energy facilities, and regional industrial hubs.
+          </p>
+          <p style="font-size: 0.95rem; line-height: 1.7; color: #94a3b8; margin-bottom: 2rem;">
+            Our dual-market presence in Abu Dhabi and India allows us to combine UAE capital efficiency and megaproject agility with world-class engineering talent, executing projects from design and BIM structural modeling to commissioning with certified ISO 9001 and ISO 45001 compliance.
+          </p>
+          <div style="display: flex; gap: 1.5rem;">
+            <a href="/leadership/" class="btn-enterprise-primary">EXECUTIVE LEADERSHIP →</a>
+            <a href="/business/" class="btn-enterprise-secondary">EXPLORE DIVISIONS</a>
+          </div>
+        </div>
+        <div>
+          <img src="/assets/images/about/history.jpg" alt="Rayan Group Infrastructure" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission & Vision Cards -->
+  <section class="section" style="padding: 6rem 0; background: #050b14; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
+          <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(0,153,230,0.15); display: flex; align-items: center; justify-content: center; color: #0099e6; margin-bottom: 1.5rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+          </div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem; text-transform: uppercase;">OUR VISION</h3>
+          <p style="color: #94a3b8; line-height: 1.65; font-size: 0.95rem;">
+            To be the premier multinational engineering, marine, and infrastructure conglomerate recognized for delivering innovative, sustainable, and high-impact built environments across global markets.
+          </p>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
+          <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(0,153,230,0.15); display: flex; align-items: center; justify-content: center; color: #0099e6; margin-bottom: 1.5rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem; text-transform: uppercase;">OUR MISSION</h3>
+          <p style="color: #94a3b8; line-height: 1.65; font-size: 0.95rem;">
+            To provide reliable engineering, marine contracting, and energy solutions with an unwavering focus on safety, fiduciary excellence, client satisfaction, and technological innovation.
+          </p>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
+          <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(0,153,230,0.15); display: flex; align-items: center; justify-content: center; color: #0099e6; margin-bottom: 1.5rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem; text-transform: uppercase;">CORE VALUES</h3>
+          <p style="color: #94a3b8; line-height: 1.65; font-size: 0.95rem;">
+            Uncompromising structural integrity, zero-harm health &amp; safety (ISO 45001), environmental stewardship (ISO 14001), and enduring cross-border partnership.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Corporate Timeline -->
+  <section id="timeline" class="section" style="padding: 6rem 0; background: #07111e;">
+    <div class="container">
+      <div style="text-align: center; max-width: 700px; margin: 0 auto 4rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">GROWTH &amp; MILESTONES</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">CORPORATE TIMELINE</h2>
+      </div>
+
+      <div style="max-width: 860px; margin: 0 auto; position: relative; border-left: 2px solid rgba(0,153,230,0.3); padding-left: 2.5rem;">
+        <!-- 2021 -->
+        <div style="margin-bottom: 3rem; position: relative;">
+          <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #0099e6; box-shadow: 0 0 12px #0099e6;"></div>
+          <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #0099e6;">2021</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Founding of Rayan Engineering &amp; Contracting L.L.C</h3>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Established in Mussafah, Abu Dhabi, with 50+ qualified engineers dedicated to commercial building execution and MEP engineering.</p>
+        </div>
+
+        <!-- 2022 -->
+        <div style="margin-bottom: 3rem; position: relative;">
+          <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #0099e6; box-shadow: 0 0 12px #0099e6;"></div>
+          <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #0099e6;">2022</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Expansion Across Dubai &amp; Al Ain</h3>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Award of landmark contracts including Al Wahda Mall, Jimi Mall, and high-spec corporate office infrastructure.</p>
+        </div>
+
+        <!-- 2023 -->
+        <div style="margin-bottom: 3rem; position: relative;">
+          <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #0099e6; box-shadow: 0 0 12px #0099e6;"></div>
+          <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #0099e6;">2023</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Launch of South Asia Regional Hub in India</h3>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Formalized cross-border operational hub in Bettiah, Bihar, delivering regional civil engineering and BIM coordination for global projects.</p>
+        </div>
+
+        <!-- 2024 -->
+        <div style="margin-bottom: 3rem; position: relative;">
+          <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #0099e6; box-shadow: 0 0 12px #0099e6;"></div>
+          <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #0099e6;">2024</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Strategic Diversification into Marine Dredging &amp; Energy EPC</h3>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Expansion into deep-water marine berthing, island reclamation, and industrial hydrocarbon pipeline contracting.</p>
+        </div>
+
+        <!-- 2025+ -->
+        <div style="position: relative;">
+          <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #10b981; box-shadow: 0 0 12px #10b981;"></div>
+          <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #10b981;">2025 &amp; BEYOND</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Group Consolidation &amp; Global Capital Scale</h3>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Operating under Rayan Group Holdings with an active multi-billion order backlog, accelerated decarbonization, and regional expansion.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  `
+});
+
+// ============================================================================
+// 3. LEADERSHIP PAGE (leadership/index.html)
+// ============================================================================
+createRoute('leadership/index.html', {
+  title: 'Executive Leadership & Corporate Governance',
+  description: 'Meet the Board of Directors and executive leaders directing Rayan Group across the UAE and South Asia.',
+  activePath: '/leadership/',
+  heroHtml: renderPageHero({
+    category: 'GOVERNANCE & DIRECTORS',
+    title: 'EXECUTIVE LEADERSHIP',
+    description: 'Visionary leadership directing multi-billion dirham operations with structural precision, safety compliance, and fiduciary excellence.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'About', href: '/about/' }, { label: 'Leadership', href: '/leadership/' }],
+    bgImage: '/assets/images/investors/boardroom-governance.jpg',
+    subnav: [
+      { label: 'Executive Profiles', href: '#profiles', active: true },
+      { label: 'Board Committees', href: '#committees', active: false },
+      { label: 'Governance Charters', href: '/investors/corporate-governance/', active: false }
+    ]
+  }),
+  content: `
+  <section id="profiles" class="section" style="padding: 6rem 0; background: #07111e; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="text-align: center; max-width: 750px; margin: 0 auto 4.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">BOARD OF DIRECTORS</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">EXECUTIVE GOVERNANCE</h2>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2.5rem;">
+        <!-- Chairman -->
+        <div style="background: #0c1828; border: 1px solid rgba(197,160,89,0.3); border-radius: 12px; padding: 2.5rem; text-align: center; position: relative;">
+          <div style="position: absolute; top: 1.25rem; right: 1.25rem; font-size: 0.75rem; font-weight: 700; color: #c5a059; border: 1px solid rgba(197,160,89,0.4); padding: 0.2rem 0.6rem; border-radius: 4px;">DIR // 01</div>
+          <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #c5a059; margin: 0 auto 1.5rem; background: radial-gradient(circle, rgba(197,160,89,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #c5a059;">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+          </div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Arshad Alam Shaikh</h3>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Founder &amp; Group Chairman</div>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+            Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group since inception across Abu Dhabi, Dubai, India, and international markets.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Strategic Vision</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Capital Allocation</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Global Hubs</span>
+          </div>
+        </div>
+
+        <!-- COO -->
+        <div style="background: #0c1828; border: 1px solid rgba(0,153,230,0.3); border-radius: 12px; padding: 2.5rem; text-align: center; position: relative;">
+          <div style="position: absolute; top: 1.25rem; right: 1.25rem; font-size: 0.75rem; font-weight: 700; color: #0099e6; border: 1px solid rgba(0,153,230,0.4); padding: 0.2rem 0.6rem; border-radius: 4px;">DIR // 02</div>
+          <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #0099e6; margin: 0 auto 1.5rem; background: radial-gradient(circle, rgba(0,153,230,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #0099e6;">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+          </div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Eng. Bakhteyar Alam</h3>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Chief Operating Officer (COO)</div>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+            Directing multi-disciplinary engineering operations, 500+ qualified engineers, on-site safety protocols, and precision delivery across 500+ turnkey megaprojects.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Turnkey Execution</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">HSE ISO 45001</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">500+ Engineers</span>
+          </div>
+        </div>
+
+        <!-- CFO -->
+        <div style="background: #0c1828; border: 1px solid rgba(0,153,230,0.3); border-radius: 12px; padding: 2.5rem; text-align: center; position: relative;">
+          <div style="position: absolute; top: 1.25rem; right: 1.25rem; font-size: 0.75rem; font-weight: 700; color: #0099e6; border: 1px solid rgba(0,153,230,0.4); padding: 0.2rem 0.6rem; border-radius: 4px;">DIR // 03</div>
+          <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #0099e6; margin: 0 auto 1.5rem; background: radial-gradient(circle, rgba(0,153,230,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #0099e6;">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+          </div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Eng. Nadeem Akhtar</h3>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Chief Financial Officer (CFO)</div>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+            Directing institutional fiscal governance, capital efficiency, commercial risk management, contract tendering, and sustainable international enterprise growth.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Fiscal Governance</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Commercial Risk</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Capital Markets</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Board Committees -->
+  <section id="committees" class="section" style="padding: 6rem 0; background: #050b14;">
+    <div class="container">
+      <div style="text-align: center; max-width: 700px; margin: 0 auto 3.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OVERSIGHT &amp; INTEGRITY</span>
+        <h2 style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">BOARD COMMITTEES</h2>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Audit &amp; Risk Committee</h4>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">Oversees financial reporting accuracy, internal controls, statutory audits, and enterprise risk frameworks.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 700;">Independent Oversight</span>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">ESG &amp; Sustainability Steering</h4>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">Guides decarbonization roadmap, environmental compliance, workforce health &amp; safety, and community impact.</p>
+          <span style="font-size: 0.75rem; color: #10b981; font-weight: 700;">Net-Zero 2050 Mandate</span>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Nomination &amp; Remuneration</h4>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">Directs executive evaluation, board succession planning, and performance-aligned executive compensation.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 700;">Institutional Governance</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  `
+});
+
+console.log('Generated About & Leadership pages.');

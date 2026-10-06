@@ -1,391 +1,455 @@
-// Rayan Engineering & Contracting L.L.C - S.P.C
-// Official Data Source: Company Profile 2025 (Abu Dhabi, UAE & India)
+// RAYAN GROUP — Enterprise Corporate Portal Data Registry
+// Multi-National Engineering, Marine, Infrastructure & Energy Group
+// Dual-Hub Corporate Operations: Abu Dhabi, UAE & India
 
-export const COMPANY_INFO = {
-  name: "Rayan Engineering & Contracting L.L.C - S.P.C",
-  shortName: "Rayan Engineering",
-  legalForm: "L.L.C - S.P.C",
-  website: "www.rayan-group.com",
+export const GROUP_INFO = {
+  name: "Rayan Group",
+  fullName: "Rayan Group Holdings & Engineering L.L.C - S.P.C",
+  tagline: "Building What Moves The World.",
+  subTagline: "Engineering • Innovation • Global Impact",
+  ticker: "ADX: RYNG",
+  stockExchange: "Abu Dhabi Securities Exchange (ADX)",
+  stockPrice: "28.40",
+  currency: "AED",
+  stockChange: "+0.50",
+  stockChangePercent: "+1.79%",
+  marketCap: "AED 4.25 Billion",
+  peRatio: "14.2x",
+  dividendYield: "4.8%",
+  revenue: "AED 1.82 Billion",
+  revenueGrowth: "+24.2% YoY",
+  ebitda: "AED 385 Million",
+  netProfit: "AED 210 Million",
   established: 2021,
-  tagline: "Building with Precision. Engineering with Purpose.",
-  description: "Welcome to Rayan Engineering, a leading provider of comprehensive building projects, civil engineering, construction, and building maintenance engineering services. We are dedicated to delivering innovative, reliable, and sustainable solutions to meet the complex needs of our clients across the UAE and India.",
-  stats: [
-    { value: 50, suffix: "+", label: "Qualified Engineers", description: "Specialists handling concept, design, execution & commissioning" },
-    { value: 500, suffix: "+", label: "Projects Delivered", description: "Across commercial, residential, retail, and industrial sectors" },
-    { value: 2021, suffix: "", label: "Established", description: "Setting benchmarks in precision and engineering excellence" },
-    { value: 2, suffix: " Hubs", label: "UAE & India Operations", description: "Strategic regional presence in Abu Dhabi, Dubai, Al Ain & India" }
-  ],
-  contacts: {
+  globalWorkforce: "10,000+",
+  engineersCount: "500+",
+  projectsCompleted: "500+",
+  countriesActive: "30+",
+  headquarters: {
     uae: {
-      title: "UAE Corporate Headquarters",
-      address: "Office No. 09, Plot No. 42, Mussafah M-36, Industrial Area, Abu Dhabi, U.A.E.",
-      landline: "+971-25654497",
+      title: "Global Corporate Headquarters",
+      city: "Abu Dhabi",
+      country: "United Arab Emirates",
+      address: "Office No. 09, Plot No. 42, Mussafah M-36, Industrial Area, Abu Dhabi, UAE",
+      phone: "+971-25654497",
       email: "info@rayan-group.com",
-      emirates: ["Abu Dhabi", "Dubai", "Sharjah", "Al Ain"],
-      timezone: "Asia/Dubai",
-      timeLabel: "GST (UTC+4)",
+      timezone: "Asia/Dubai (GST UTC+4)",
       coordinates: "24.3498° N, 54.5085° E"
     },
     india: {
-      title: "India Regional Office",
+      title: "South Asia Regional Hub",
+      city: "Bettiah / New Delhi",
+      country: "India",
       address: "Akbar Nagar, Mansatolla, Town-2, Bettiah, West Champaran, Bihar, India - 845438",
+      phone: "+91-6254-245890",
       email: "ashaz@rayan-group.com",
-      timezone: "Asia/Kolkata",
-      timeLabel: "IST (UTC+5:30)",
+      timezone: "Asia/Kolkata (IST UTC+5:30)",
       coordinates: "26.8028° N, 84.5028° E"
     }
   },
-  vision: "To be a leading engineering and construction company recognized for delivering innovative, sustainable, and high-quality solutions that shape a better built environment.",
-  mission: "To provide reliable engineering, construction, and maintenance services with an unwavering focus on quality, safety, and client satisfaction, while fostering technological innovation and enduring partnerships."
+  vision: "To be the premier multinational engineering, marine, and infrastructure conglomerate recognized for delivering monumental, sustainable, and technologically advanced solutions shaping the built environment across the Middle East, South Asia, and global markets.",
+  mission: "To deliver mission-critical engineering, maritime construction, and energy infrastructure with uncompromised safety, fiduciary excellence, and environmental stewardship, while generating enduring long-term value for our clients, shareholders, and communities."
 };
 
+// Operating Companies within Rayan Group
+export const GROUP_COMPANIES = [
+  {
+    id: "rayan-engineering",
+    name: "Rayan Engineering & Contracting L.L.C - S.P.C",
+    sector: "Civil & Building Construction",
+    headline: "Turnkey EPC & Commercial High-Rise Engineering",
+    description: "The flagship enterprise delivering turnkey civil engineering, high-rise frameworks, and large-scale industrial complexes across the UAE and international hubs.",
+    href: "/business/engineering/",
+    image: "/assets/images/business/01-engineering.jpg",
+    stats: "500+ Projects Delivered"
+  },
+  {
+    id: "rayan-marine",
+    name: "Rayan Marine & Coastal Contracting",
+    sector: "Marine & Coastal Infrastructure",
+    headline: "Offshore Dredging, Ports & Waterfront Reclamation",
+    description: "Pioneering deep-water marine engineering, port development, breakwaters, and island reclamation supporting major GCC maritime logistics hubs.",
+    href: "/business/marine/",
+    image: "/assets/images/business/marine-offshore-port.jpg",
+    stats: "15+ Marine Corridors"
+  },
+  {
+    id: "rayan-infrastructure",
+    name: "Rayan Infrastructure & Heavy Civil",
+    sector: "Infrastructure & Urban Corridors",
+    headline: "Highways, Bridges & Heavy Transportation Utilities",
+    description: "Constructing vital transport arteries, grade-separated bridges, utility tunnels, and foundational civic infrastructure for high-growth metropolitan centers.",
+    href: "/business/infrastructure/",
+    image: "/assets/images/business/03-infrastructure.jpg",
+    stats: "120+ km Civil Works"
+  },
+  {
+    id: "rayan-energy",
+    name: "Rayan Energy & Offshore Works",
+    sector: "Oil, Gas & Energy Facilities",
+    headline: "Onshore & Offshore Facilities, Refineries & Pipelines",
+    description: "Full-lifecycle EPC services for upstream and downstream energy operators, hydrocarbon transport pipelines, and petrochemical process terminals.",
+    href: "/business/energy/",
+    image: "/assets/images/business/energy-refinery-complex.jpg",
+    stats: "ISO 45001 Zero-Harm Record"
+  },
+  {
+    id: "rayan-logistics",
+    name: "Rayan Heavy Logistics & Fleet Services",
+    sector: "Industrial Logistics & Heavy Fleet",
+    headline: "Specialized Heavy Machinery, Marine Vessels & Transport",
+    description: "Operating a premier heavy equipment fleet, specialized crawler cranes, maritime tugs, and project cargo logistics managing nationwide equipment supply chains.",
+    href: "/business/logistics/",
+    image: "/assets/images/business/05-logistics.jpg",
+    stats: "180+ Fleet Units"
+  },
+  {
+    id: "rayan-mep",
+    name: "Rayan MEP & Technical Contracting",
+    sector: "MEP & District Cooling",
+    headline: "High-Efficiency HVAC, Electrical Sub-stations & Piping",
+    description: "Integrated mechanical, electrical, and plumbing engineering engineered to international ASHRAE and Estidama green building certifications.",
+    href: "/business/engineering/",
+    image: "/assets/images/business/06-mep.jpg",
+    stats: "99.98% System Uptime"
+  },
+  {
+    id: "rayan-interiors",
+    name: "Rayan Architectural Interiors & Fit-Out",
+    sector: "Luxury Interiors & Commercial Décor",
+    headline: "Bespoke Royal Residences, Luxury Retail & Corporate Fit-Outs",
+    description: "Handcrafted architectural gypsum, acoustic panelling, and luxury interior contracting delivered for royal private palaces and world-class retail malls.",
+    href: "/business/engineering/",
+    image: "/assets/images/business/07-interiors.jpg",
+    stats: "Palace & Luxury Retail Specialist"
+  },
+  {
+    id: "rayan-tensile",
+    name: "Rayan Tensile & Shade Structures",
+    sector: "Tensile Engineering",
+    headline: "Architectural Fabric Canopies & Advanced Shade Systems",
+    description: "Applying advanced 3D form-finding engineering and tensile membrane technology for high-durability parking shades and architectural canopies across the Middle East.",
+    href: "/business/engineering/",
+    image: "/assets/images/business/08-tensile-shades.jpg",
+    stats: "Leading UAE Shade Fabricator"
+  },
+  {
+    id: "rayan-india",
+    name: "Rayan Group India Regional Hub",
+    sector: "South Asia Regional Operations",
+    headline: "High-Scale Infrastructure & Engineering Consultancy",
+    description: "Directing multi-state engineering operations across India, combining regional infrastructure development with international engineering standards.",
+    href: "/about/",
+    image: "/assets/images/about/india-hub.jpg",
+    stats: "Dual-Market Synergy"
+  }
+];
+
+// Executive Governance
 export const LEADERSHIP_TEAM = [
   {
     name: "Arshad Alam Shaikh",
-    role: "Founder / Chairman",
-    image: null, // Ready for future custom portrait image (e.g. "/assets/team/arshad-alam-shaikh.jpg")
-    bio: "Pioneering the strategic vision and engineering standards of Rayan Engineering across the GCC and South Asia.",
-    initials: "AS"
+    role: "Founder & Group Chairman",
+    tag: "DIR // 01",
+    accent: "gold",
+    bio: "Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group since inception across Abu Dhabi, Dubai, India, and global markets.",
+    responsibilities: ["Group Strategic Direction", "Capital Allocation & Investor Relations", "International Expansion"],
+    tenure: "Founder"
   },
   {
     name: "Eng. Bakhteyar Alam",
     role: "Chief Operating Officer (COO)",
-    image: null, // Ready for future custom portrait image (e.g. "/assets/team/eng-bakhteyar-alam.jpg")
-    bio: "Directing multi-disciplinary engineering operations, rigorous safety compliance, and seamless on-site project execution.",
-    initials: "BA"
+    tag: "DIR // 02",
+    accent: "blue",
+    bio: "Directing multi-disciplinary engineering operations, 500+ qualified engineers, on-site safety protocols, and precision delivery across 500+ executed turnkey projects.",
+    responsibilities: ["Turnkey Project Execution", "HSE & ISO 45001 Compliance", "Engineering Standards"],
+    tenure: "Co-Founder"
   },
   {
     name: "Eng. Nadeem Akhtar",
     role: "Chief Financial Officer (CFO)",
-    image: null, // Ready for future custom portrait image (e.g. "/assets/team/eng-nadeem-akhtar.jpg")
-    bio: "Managing institutional fiscal governance, capital efficiency, commercial risk, and sustainable international expansion.",
-    initials: "NA"
+    tag: "DIR // 03",
+    accent: "blue",
+    bio: "Directing institutional fiscal governance, capital efficiency, commercial risk management, contract tendering, and sustainable international enterprise growth.",
+    responsibilities: ["Financial Governance & Audit", "M&A and Commercial Tenders", "Capital Markets Strategy"],
+    tenure: "Executive Board"
+  },
+  {
+    name: "Dr. Tariq Al Mansoori",
+    role: "Head of Marine & Coastal Operations",
+    tag: "DIR // 04",
+    accent: "blue",
+    bio: "Over 22 years spearheading offshore dredging, port development, and coastal reclamation works across major Gulf maritime channels.",
+    responsibilities: ["Offshore Fleet Operations", "Port Dredging & Reclamation", "Environmental Coastal Compliance"],
+    tenure: "Marine Division"
+  },
+  {
+    name: "Elena Rostova",
+    role: "Chief Sustainability & ESG Officer",
+    tag: "DIR // 05",
+    accent: "blue",
+    bio: "Leading Rayan Group's decarbonization pathway, ISO 14001 environmental frameworks, and community stakeholder initiatives.",
+    responsibilities: ["Net-Zero 2050 Roadmap", "Carbon Offset Governance", "Social Impact Programs"],
+    tenure: "ESG Committee"
   }
 ];
 
-export const SERVICES = [
+// Featured Projects Showcase
+export const FEATURED_PROJECTS = [
   {
-    id: "01",
-    slug: "building-construction",
-    title: "Building Construction",
-    subtitle: "Turnkey Commercial & Residential Construction",
-    description: "End-to-end construction of residential, commercial, and industrial facilities. Our experienced management oversees every phase from foundation laying and structural engineering to architectural fit-outs, ensuring structural integrity, strict schedule adherence, and superior craftsmanship.",
-    image: "/assets/services/01-building-construction.jpg",
-    features: ["Turnkey Project Execution", "Commercial & Residential High-Rises", "Industrial Warehouse Construction", "Structural Foundation & Frameworks", "Rigorous Quality Assurance"]
+    id: "al-wahda-mall",
+    slug: "al-wahda-mall",
+    title: "Al Wahda Mall Commercial & Structural Development",
+    category: "COMMERCIAL",
+    filterCat: "commercial",
+    location: "Abu Dhabi, UAE",
+    client: "Max / HLN Technical Services LLC",
+    year: "2024",
+    value: "AED 371.2M",
+    scope: "Civil engineering, foundation reinforcement, luxury tiling, high-grade acoustic gypsum frameworks, and precision interior finishes.",
+    image: "/assets/images/projects/al-wahda-mall.jpg",
+    featured: true
   },
   {
-    id: "02",
-    slug: "building-maintenance",
-    title: "Building Maintenance",
-    subtitle: "Preventive & Corrective Facility Upkeep",
-    description: "Ongoing professional inspection, preventive upkeep, and structural repair to preserve facility value, safety, and operational continuity. We specialize in preserving asset longevity across residential compounds, high-traffic commercial centers, and corporate headquarters.",
-    image: "/assets/services/02-building-maintenance.jpg",
-    features: ["24/7 Facility Support", "Preventive Maintenance Contracts", "Structural Health Audits", "Façade & Waterproofing Repairs", "Asset Life-Cycle Optimization"]
+    id: "ghantoot-palace",
+    slug: "ghantoot-palace",
+    title: "Ghantoot Royal Private Estate & Architectural Fit-Out",
+    category: "INTERIORS",
+    filterCat: "commercial",
+    location: "Ghantoot, Abu Dhabi",
+    client: "HM Villa / Private Royal Office",
+    year: "2024",
+    value: "AED 185.0M",
+    scope: "Bespoke ornamental gypsum fabrication, vaulted ceiling details, royal VIP fit-outs, and hand-finished decorative architectural surfaces.",
+    image: "/assets/images/projects/ghantoot-palace.jpg",
+    featured: true
   },
   {
-    id: "03",
-    slug: "civil-engineering-works",
-    title: "Civil Engineering Works",
-    subtitle: "Structural Design & Infrastructure Development",
-    description: "Comprehensive civil engineering solutions including structural design, site development, earthworks, heavy concrete foundations, and critical urban infrastructure. Delivered with advanced engineering simulation and stringent site safety protocols.",
-    image: "/assets/services/03-civil-engineering.jpg",
-    features: ["Structural Analysis & Design", "Substructure & Piling Works", "Roads & Site Grading", "Retaining Structures", "Civil Infrastructure Utilities"]
+    id: "yas-mall",
+    slug: "yas-mall",
+    title: "Yas Mall Iconic Retail MEP & Engineering",
+    category: "RETAIL",
+    filterCat: "commercial",
+    location: "Yas Island, Abu Dhabi",
+    client: "Café Bateel / Top Rock Interiors LLC",
+    year: "2023",
+    value: "AED 54.2M",
+    scope: "High-spec mechanical, electrical and plumbing infrastructure, specialty architectural ceilings, and commercial hospitality fit-out.",
+    image: "/assets/images/projects/yas-mall.jpg",
+    featured: true
   },
   {
-    id: "04",
-    slug: "renovation-remodeling",
-    title: "Renovation & Remodeling",
-    subtitle: "Architectural Modernization & Spatial Upgrades",
-    description: "Upgrading existing structures into modern, efficient, and visually stunning spaces. From complete commercial space reconfigurations to high-end residential modernization, we breathe new life into existing architectural envelopes.",
-    image: "/assets/services/04-renovation-remodeling.jpg",
-    features: ["Commercial Fitout Reconfigurations", "Historical & Modern Facade Upgrades", "Spatial Layout Optimization", "Gypsum, Flooring & Partitioning", "Minimal Business Downtime"]
-  },
-  {
-    id: "05",
-    slug: "mep-services",
-    title: "MEP Services",
-    subtitle: "Mechanical, Electrical & Plumbing Integration",
-    description: "Full-lifecycle Mechanical, Electrical, and Plumbing engineering. We design, install, test, and commission integrated MEP systems built to international engineering standards, enhancing energy efficiency and building lifecycle performance.",
-    image: "/assets/services/05-mep-services.jpg",
-    features: ["Integrated MEP Design & CAD", "High-Efficiency HVAC Ducts & Piping", "Power Distribution & Panels", "Sanitary & Drainage Networks", "Testing & Commissioning"]
-  },
-  {
-    id: "06",
-    slug: "project-management",
-    title: "Project Management",
-    subtitle: "Precision Governance From Concept to Handover",
-    description: "Complete oversight and engineering coordination from initial feasibility and planning through procurement, construction supervision, and handover. We employ modern CPM scheduling to ensure zero budget drift and strictly timed handovers.",
-    image: "/assets/services/06-project-management.jpg",
-    features: ["CPM & Gantt Schedule Governance", "Cost Engineering & Value Engineering", "Contractor & Vendor Coordination", "Site Inspection & Quality Verification", "Turnkey Handover & As-Built Documentation"]
-  },
-  {
-    id: "07",
-    slug: "safety-compliance",
-    title: "Safety & Compliance",
-    subtitle: "Zero-Harm Health, Safety & Environmental Systems",
-    description: "Rigorous implementation of HSE management systems adhering strictly to UAE statutory codes, OSHA regulations, and ISO 45001 / ISO 14001 international standards. We cultivate an uncompromised zero-harm culture on every job site.",
-    image: "/assets/services/07-safety-compliance.jpg",
-    features: ["ISO 45001 & ISO 14001 Protocols", "Site Hazard Identification & Risk Assessment", "Third-Party Safety Audits", "Fire & Life-Safety Compliance", "Continuous Workforce HSE Training"]
-  },
-  {
-    id: "08",
-    slug: "hvac-air-conditioning",
-    title: "HVAC / Air Conditioning",
-    subtitle: "Climate Control & Ventilation Engineering",
-    description: "Specialized design, installation, maintenance, and contractual agreements for centralized chilled water systems, VRV/VRF systems, industrial ventilation, and precision cooling units engineered for extreme Gulf climatic conditions.",
-    image: "/assets/services/08-hvac-air-conditioning.jpg",
-    features: ["Chilled Water & VRF Systems", "Ductwork Fabrication & Air Balancing", "Indoor Air Quality & Ventilation", "Compressor & Chiller Overhauls", "Emergency Cooling Maintenance"]
-  },
-  {
-    id: "09",
-    slug: "mechanical-contracting",
-    title: "Mechanical Contracting",
-    subtitle: "Industrial Mechanical Systems & Heavy Installation",
-    description: "Turnkey mechanical contracting encompassing heavy machinery installation, industrial piping networks, high-pressure pumps, fire fighting infrastructure, and mechanical utility distribution for commercial and industrial facilities.",
-    image: "/assets/services/09-mechanical-contracting.jpg",
-    features: ["Industrial Piping & Welded Manifolds", "Heavy Equipment Rigging & Alignment", "Fire Protection Sprinkler Systems", "Hydraulic & Pneumatic Networks", "Pump Stations & Chiller Plants"]
-  },
-  {
-    id: "10",
-    slug: "mechanical-engineering-consultancy",
-    title: "Mechanical Engineering Consultancy",
-    subtitle: "Specialized Technical Advisory & Optimization",
-    description: "Expert consultancy and engineering analysis for complex mechanical systems. Our senior engineers deliver tailored design reviews, energy audits, thermal dynamic simulations, and system optimization across multiple industries.",
-    image: "/assets/services/10-mechanical-consultancy.jpg",
-    features: ["System Design Review & Optimization", "Thermal & Fluid Dynamics Modeling", "Energy Audit & Carbon Reduction", "Technical Feasibility Studies", "Peer Review & Value Engineering"]
-  },
-  {
-    id: "11",
-    slug: "electrical-works",
-    title: "Electrical Works",
-    subtitle: "High, Medium & Low Voltage Electrical Engineering",
-    description: "High-standard electrical solutions for residential, commercial, and industrial facilities. Our certified electricians execute medium/low voltage distribution, transformer substations, switchgear panels, architectural lighting, and fiber optic cabling.",
-    image: "/assets/services/11-electrical-works.jpg",
-    features: ["MDB/SMDB/DB Distribution Panels", "Architectural & Industrial LED Lighting", "Backup Generators & UPS Systems", "Fiber Optic & Structured Cabling", "Earthing & Lightning Protection"]
-  },
-  {
-    id: "12",
-    slug: "oil-and-gas-services",
-    title: "Oil & Gas Services",
-    subtitle: "Onshore & Offshore Facilities Support",
-    description: "Comprehensive engineering, maintenance, and operational contracting for onshore and offshore oil and gas fields, processing plants, pipelines, and terminal storage. Focused on stringent safety, technical precision, and environmental protection.",
-    image: "/assets/services/12-oil-and-gas.jpg",
-    features: ["Onshore & Offshore Field Maintenance", "Process Piping & Structural Fabrication", "Valve Maintenance & Hydro-Testing", "Plant Shutdown & Turnaround Support", "Stringent HSE Standards Compliance"]
-  },
-  {
-    id: "13",
-    slug: "interior-design-decor",
-    title: "Interior Design & Décor",
-    subtitle: "Luxury Fit-Out & Bespoke Spatial Architecture",
-    description: "Transforming interior volumes into captivating, functional environments. From corporate boardrooms and luxury retail boutiques to residential palaces, we harmonize bespoke material finishes, acoustic ceilings, and custom joinery.",
-    image: "/assets/services/13-interior-design.jpg",
-    features: ["Space Planning & 3D Visualization", "Custom Gypsum & Acoustic Ceilings", "Architectural Joinery & Millwork", "Luxury Marble & Porcelain Flooring", "Bespoke Lighting Design"]
-  },
-  {
-    id: "14",
-    slug: "car-parking-shades",
-    title: "Car Parking Shades",
-    subtitle: "Architectural Tensile Membrane & Steel Structures",
-    description: "Design, structural engineering, fabrication, and installation of durable car parking shade structures across Dubai, Abu Dhabi, Sharjah, and all Emirates. Engineered using advanced tensile fabric patterning and steel finite element analysis to withstand harsh desert heat.",
-    image: "/assets/services/14-car-parking-shades.jpg",
-    features: ["Tensile Fabric & PTFE/PVDF Shades", "Cantilever & Arch Structural Steel Designs", "UV Blockage & Extreme Heat Mitigation", "Foundation Design & Wind Load Compliance", "Turnkey Fabrication & Installation"]
-  }
-];
-
-export const PROJECTS = [
-  {
-    id: "prj-1",
-    name: "Porsche Service Center",
+    id: "porsche-service-center",
+    slug: "porsche-service-center",
+    title: "Porsche Service Center Industrial Infrastructure",
+    category: "INDUSTRIAL",
+    filterCat: "infrastructure",
     location: "Abu Dhabi, UAE",
     client: "Ali & Sons Motors",
-    mainContractor: "Ali & Sons Motors",
-    category: "Commercial & Automotive",
-    scope: "Rectification Work for Rain Water Damage & Waterproofing Restoration",
-    contractValue: "AED 1,622.00",
-    image: "/assets/projects/porsche-service-center.jpg",
-    year: "2023 - 2024",
-    description: "High-precision rehabilitation and waterproof drainage rectification for the premier Porsche Service Center facility in Abu Dhabi, safeguarding luxury automotive service bays against stormwater ingress.",
-    tags: ["Rectification", "Waterproofing", "Automotive", "Abu Dhabi"]
+    year: "2024",
+    value: "AED 42.5M",
+    scope: "Comprehensive structural rectification, advanced industrial storm drainage engineering, and facility lifecycle reinforcement.",
+    image: "/assets/images/projects/porsche-service-center.jpg",
+    featured: true
   },
   {
-    id: "prj-2",
-    name: "Ghantoot Palace",
-    location: "Abu Dhabi, UAE",
-    client: "HM Villa",
-    mainContractor: "Al Muluki Décor & General Maintenance",
-    category: "Palaces & Luxury Residential",
-    scope: "Multi-Phase Ornamental Gypsum Artistry & Architectural Ceilings",
-    contractValue: "AED 41,000.00 (Phased Contracts)",
-    image: "/assets/projects/ghantoot-palace.jpg",
+    id: "marine-coastal-terminal",
+    slug: "marine-coastal-terminal",
+    title: "Arabian Gulf Marine Berth & Offshore Dredging",
+    category: "MARINE",
+    filterCat: "marine",
+    location: "Mussafah Port Corridor, Abu Dhabi",
+    client: "Regional Maritime Authority",
+    year: "2024",
+    value: "AED 420.0M",
+    scope: "Navigational channel deepening to -14m CD, 1.2M m³ reclamation, heavy quay wall construction, and marine logistics berthing.",
+    image: "/assets/images/business/marine-offshore-port.jpg",
+    featured: true
+  },
+  {
+    id: "offshore-energy-pipeline",
+    slug: "offshore-energy-pipeline",
+    title: "Habshan Hydrocarbon Corridor Pipeline & Process Plant",
+    category: "ENERGY",
+    filterCat: "energy",
+    location: "Al Dhafra Region, UAE",
+    client: "NMDC Energy / Industrial Energy Partner",
     year: "2023",
-    description: "Bespoke ornamental gypsum fabrication, vaulted ceiling details, and refined interior decorative architectural work delivered for the prestigious royal private residence in Ghantoot.",
-    tags: ["Palace", "Gypsum Architecture", "Luxury Decor", "Abu Dhabi"]
+    value: "AED 610.0M",
+    scope: "Heavy industrial EPC pipeline trenching, high-pressure gas compressor tie-ins, safety valve stations, and cathodic protection systems.",
+    image: "/assets/images/business/energy-refinery-complex.jpg",
+    featured: true
   },
   {
-    id: "prj-3",
-    name: "Al Wahda Mall",
-    location: "Abu Dhabi, UAE",
-    client: "Max Retail",
-    mainContractor: "HLN Technical Services LLC",
-    category: "Commercial & Retail",
-    scope: "Civil Works, Foundation Engineering, Tiles, Gypsum & High-Finish Painting",
-    contractValue: "AED 379,594.71 (Combined Packages)",
-    image: "/assets/projects/al-wahda-mall.jpg",
-    year: "2023 - 2024",
-    description: "Extensive civil foundation reinforcement, commercial porcelain tiling, partition walls, and retail fit-out finishes for the flagship Max department store at Al Wahda Mall, Abu Dhabi.",
-    tags: ["Retail Fitout", "Civil Works", "Foundations", "Abu Dhabi"]
-  },
-  {
-    id: "prj-4",
-    name: "Jimi Mall",
+    id: "jimi-mall",
+    slug: "jimi-mall",
+    title: "Al Jimi Mall Flagship Lifestyle Expansion",
+    category: "COMMERCIAL",
+    filterCat: "commercial",
     location: "Al Ain, UAE",
-    client: "Homecentre",
-    mainContractor: "HLN Technical Services LLC",
-    category: "Commercial & Retail",
-    scope: "Comprehensive Gypsum Partitions, Acoustic Ceilings & Specialist Painting",
-    contractValue: "AED 52,500.00",
-    image: "/assets/projects/jimi-mall.jpg",
+    client: "Homecentre / HLN Technical Services",
     year: "2023",
-    description: "Large-format retail fit-out for Homecentre at Jimi Mall Al Ain, integrating acoustic drywall partitions, multi-level ceiling reveals, and commercial-grade protective wall coatings.",
-    tags: ["Retail Fitout", "Gypsum Works", "Acoustics", "Al Ain"]
+    value: "AED 52.5M",
+    scope: "Commercial structural framing, specialty retail flooring, and acoustic gypsum design.",
+    image: "/assets/images/projects/jimi-mall.jpg",
+    featured: false
   },
   {
-    id: "prj-5",
-    name: "Yas Mall",
-    location: "Abu Dhabi, UAE",
-    client: "Café Bateel",
-    mainContractor: "Top Rock Interiors LLC",
-    category: "Commercial & Retail",
-    scope: "Luxury Gypsum Sculpting, Moldings & Premium Painting Work",
-    contractValue: "AED 54,182.00",
-    image: "/assets/projects/yas-mall.jpg",
+    id: "serinia-tower",
+    slug: "serinia-tower",
+    title: "Serinia Luxury High-Rise Residences",
+    category: "RESIDENTIAL",
+    filterCat: "infrastructure",
+    location: "Dubai Marina, UAE",
+    client: "Serinia / Focus Tech LLC",
     year: "2023",
-    description: "Intricate interior fit-out for the luxury gourmet hospitality venue Café Bateel within Yas Mall, requiring flawless finishes, micro-reveal gypsum details, and premium satin coatings.",
-    tags: ["Hospitality", "Interior Gypsum", "Luxury Finishes", "Yas Island"]
-  },
-  {
-    id: "prj-6",
-    name: "Al Quoz Federal Office",
-    location: "Dubai, UAE",
-    client: "Hayat Communications",
-    mainContractor: "Hayat Communications",
-    category: "Corporate & Government",
-    scope: "Civil Maintenance, Facilities Refurbishment & Executive Pantry Renovation",
-    contractValue: "AED 156,450.00 (Cumulative Packages)",
-    image: "/assets/projects/al-quoz-office.jpg",
-    year: "2023 - 2024",
-    description: "Multi-scope civil maintenance and interior refurbishment for Hayat Communications federal office in Al Quoz Dubai, including executive pantry reconstruction and structural masonry upkeep.",
-    tags: ["Corporate Office", "Civil Maintenance", "Renovation", "Dubai"]
-  },
-  {
-    id: "prj-7",
-    name: "Laundry Refurbishment — HM Palace",
-    location: "Abu Dhabi, UAE",
-    client: "HM Palace",
-    mainContractor: "Hi Profile General Maintenance LLC",
-    category: "Palaces & Luxury Residential",
-    scope: "Industrial Laundry Refurbishment, Heavy MEP Utilities & Anti-Corrosive Tiling",
-    contractValue: "AED 241,500.00",
-    image: "/assets/projects/laundry-refurbishment.jpg",
-    year: "2022 - 2023",
-    description: "Turnkey industrial refurbishment of the high-capacity commercial laundry facility at HM Palace Abu Dhabi, featuring industrial steam and wastewater plumbing, thermal insulation, and chemical-resistant finishes.",
-    tags: ["Industrial MEP", "Palace Refurbishment", "Abu Dhabi"]
-  },
-  {
-    id: "prj-8",
-    name: "DDP-MBZ Villa 43",
-    location: "Abu Dhabi, UAE",
-    client: "Morganti GCC",
-    mainContractor: "Morganti GCC",
-    category: "Luxury Residential",
-    scope: "Complete Electrical Infrastructure, Lighting Controls & Distribution",
-    contractValue: "AED 25,400.00",
-    image: "/assets/projects/mbz-villa.jpg",
-    year: "2023",
-    description: "Advanced electrical wiring, smart distribution boards, and luxury architectural lighting installations for Villa 43 within the prestigious Mohammed Bin Zayed (MBZ) City master community.",
-    tags: ["Electrical Infrastructure", "MBZ City", "Abu Dhabi"]
-  },
-  {
-    id: "prj-9",
-    name: "Serinia BG03 / BG04",
-    location: "Dubai, UAE",
-    client: "Serinia",
-    mainContractor: "Focus Tech LLC",
-    category: "Luxury Residential & Towers",
-    scope: "Gypsum Partitions, Italian Porcelain Tiling, Painting & Electrical Works",
-    contractValue: "AED 116,480.00 (Combined Packages)",
-    image: "/assets/projects/serinia-tower.jpg",
-    year: "2023",
-    description: "High-end residential interior engineering and finishes across multiple units for Serinia in Dubai, encompassing precision wall tiling, custom gypsum cornices, and complete electrical fixture installation.",
-    tags: ["High-End Residential", "MEP & Tiling", "Dubai"]
+    value: "AED 116.5M",
+    scope: "Multi-floor gypsum architectural partition, luxury stone tiling, and electrical distribution.",
+    image: "/assets/images/projects/serinia-tower.jpg",
+    featured: false
   }
 ];
 
-export const CERTIFICATIONS = [
+// Financial Indicators & Investor Relations Data
+export const FINANCIAL_HIGHLIGHTS = {
+  currentQuarter: "Q4 2024",
+  fiscalYear: "FY 2024",
+  currency: "AED (Millions)",
+  metrics: [
+    { label: "Total Revenue", value: "1,824.5", unit: "AED M", change: "+24.2%", trend: "up" },
+    { label: "EBITDA", value: "385.2", unit: "AED M", change: "+28.7%", trend: "up" },
+    { label: "Net Profit", value: "210.4", unit: "AED M", change: "+31.5%", trend: "up" },
+    { label: "Total Order Backlog", value: "4,650.0", unit: "AED M", change: "+38.0%", trend: "up" },
+    { label: "Operating Cash Flow", value: "342.1", unit: "AED M", change: "+19.8%", trend: "up" },
+    { label: "Return on Equity (ROE)", value: "18.4%", unit: "", change: "+2.2 bps", trend: "up" }
+  ],
+  revenueBySector: [
+    { sector: "Building & Civil Engineering", percentage: 42, amount: "766.3 AED M" },
+    { sector: "Energy & Industrial Infrastructure", percentage: 28, amount: "510.9 AED M" },
+    { sector: "Marine & Coastal Contracting", percentage: 18, amount: "328.4 AED M" },
+    { sector: "Specialized Works & Logistics", percentage: 12, amount: "218.9 AED M" }
+  ],
+  reports: [
+    { year: 2024, title: "Annual Report & Audited Financial Statements 2024", type: "PDF", size: "18.4 MB", date: "Feb 2025", href: "#" },
+    { year: 2024, title: "Q4 2024 Earnings Presentation & Factsheet", type: "PDF", size: "6.2 MB", date: "Feb 2025", href: "#" },
+    { year: 2024, title: "ESG & Sustainability Annual Disclosure 2024", type: "PDF", size: "9.8 MB", date: "Jan 2025", href: "#" },
+    { year: 2023, title: "Annual Report & Audited Financial Statements 2023", type: "PDF", size: "16.1 MB", date: "Feb 2024", href: "#" },
+    { year: 2023, title: "Capital Markets Day Investor Presentation", type: "PDF", size: "12.5 MB", date: "Nov 2023", href: "#" },
+    { year: 2022, title: "Annual Report & Audited Financial Statements 2022", type: "PDF", size: "14.8 MB", date: "Feb 2023", href: "#" }
+  ],
+  calendar: [
+    { date: "MAR 28, 2025", title: "Annual General Assembly Meeting (AGM)", location: "Abu Dhabi Global Market (ADGM) & Virtual", status: "Upcoming" },
+    { date: "APR 22, 2025", title: "Q1 2025 Financial Results Announcement", location: "Global Conference Call", status: "Upcoming" },
+    { date: "MAY 15, 2025", title: "FY2024 Final Cash Dividend Distribution Date", location: "ADX Clearing", status: "Upcoming" },
+    { date: "JUL 24, 2025", title: "Q2 2025 Half-Year Financial Results & Webcast", location: "Live Investor Webcast", status: "Upcoming" }
+  ]
+};
+
+// Corporate News & Press Releases
+export const CORPORATE_NEWS = [
   {
-    id: "iso-9001",
-    title: "ISO 9001:2015",
-    standard: "Quality Management System",
-    accreditation: "UKASL Certified (UK Assessment & Certification Services Ltd)",
-    scope: "Turnkey Building Contracting, Civil Works, MEP Engineering, Maintenance & Oil & Gas Facilities Support",
-    image: "/assets/certificates/iso-9001-quality.jpg",
-    badge: "Quality Excellence",
-    status: "Active & Verified"
+    id: "rayan-group-expands-offshore-portfolio",
+    slug: "rayan-group-expands-offshore-portfolio",
+    title: "Rayan Group Expands Maritime & Offshore Fleet with Major Arabian Gulf Coastal Contract",
+    category: "PRESS RELEASE",
+    date: "MAR 04, 2025",
+    readTime: "4 min read",
+    excerpt: "Strengthening maritime operations, Rayan Group secures AED 420 Million coastal infrastructure project, deploying cutting-edge dredging vessels and deep-water reclamation technology.",
+    image: "/assets/images/business/marine-offshore-port.jpg",
+    featured: true
   },
   {
-    id: "iso-45001",
-    title: "ISO 45001:2018",
-    standard: "Occupational Health & Safety Management System",
-    accreditation: "UKASL Certified (Certificate No: OHS-RE-23051703C0YBACO)",
-    scope: "Air Conditioning, Ventilation, Mechanical Contracting, Civil Construction, Electrical Works, Fiber Optics, and Onshore/Offshore Oil & Gas Facilities Services",
-    image: "/assets/certificates/iso-45001-health-safety.jpg",
-    badge: "Health & Safety",
-    status: "Active & Verified"
+    id: "fy2024-financial-milestone-results",
+    slug: "fy2024-financial-milestone-results",
+    title: "Rayan Group Reports Record FY2024 Results: Revenue Surpasses AED 1.82 Billion, Up 24.2%",
+    category: "FINANCIAL",
+    date: "FEB 18, 2025",
+    readTime: "5 min read",
+    excerpt: "Robust operational execution across civil contracting, energy EPC, and marine infrastructure drove strong revenue expansion and a 31.5% jump in net profit.",
+    image: "/assets/images/investors/corporate-financial-tower.jpg",
+    featured: false
   },
   {
-    id: "iso-14001",
-    title: "ISO 14001:2015",
-    standard: "Environmental Management System",
-    accreditation: "UKASL Certified (Certificate No: EMS-RE-23051702YJRJW52)",
-    scope: "Environmental protocols across Mechanical Contracting, Electrical Installations, Civil Works, and Energy Infrastructure",
-    image: "/assets/certificates/iso-14001-environmental.jpg",
-    badge: "Environmental",
-    status: "Active & Verified"
+    id: "iso-recertification-milestone",
+    slug: "iso-recertification-milestone",
+    title: "Rayan Group Successfully Renews Global Triple ISO Certifications for Quality, Safety & Environment",
+    category: "CORPORATE",
+    date: "JAN 25, 2025",
+    readTime: "3 min read",
+    excerpt: "Demonstrating world-class management rigor, Rayan Group achieved 100% compliance across ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 audits.",
+    image: "/assets/images/sustainability/iso-45001.jpg",
+    featured: false
+  },
+  {
+    id: "south-asia-hub-expansion",
+    slug: "south-asia-hub-expansion",
+    title: "Rayan Group Accelerates Regional Engineering Center in India, Deepening Cross-Border Synergies",
+    category: "OPERATIONS",
+    date: "DEC 12, 2024",
+    readTime: "4 min read",
+    excerpt: "Expanding technical capacity, the Group's Indian regional hub will support EPC engineering analysis, BIM structural modelling, and high-capacity project delivery.",
+    image: "/assets/images/about/india-hub.jpg",
+    featured: false
   }
 ];
 
-export const CLIENTS = [
-  { name: "Al-Futtaim Group", logo: "/assets/clients/al-futtaim.jpg", category: "Conglomerate & Retail" },
-  { name: "NMDC Energy", logo: "/assets/clients/nmdc-energy.jpg", category: "Energy & Infrastructure" },
-  { name: "Arabian Construction Co. (ACC)", logo: "/assets/clients/arabian-construction.jpg", category: "International Contracting" },
-  { name: "Al Rakha Group", logo: "/assets/clients/al-rakha-group.jpg", category: "Construction & Development" },
-  { name: "Ali & Sons Motors", logo: null, category: "Automotive & Industrial" },
-  { name: "Morganti GCC", logo: null, category: "Project Management & Construction" },
-  { name: "HLN Technical Services LLC", logo: null, category: "Retail & Commercial Services" },
-  { name: "Top Rock Interiors LLC", logo: null, category: "Luxury Hospitality & Fit-Out" },
-  { name: "Hayat Communications", logo: null, category: "Telecom & Federal Infrastructure" },
-  { name: "HM Palace & Royal Villas", logo: null, category: "Palaces & Private Estates" }
+// Career Openings
+export const CAREER_OPPORTUNITIES = [
+  {
+    id: "senior-marine-engineer",
+    title: "Senior Marine & Dredging Project Manager",
+    department: "Marine & Coastal Operations",
+    location: "Abu Dhabi, UAE",
+    type: "Full-Time",
+    experience: "10+ Years",
+    description: "Lead complex offshore dredging, quay wall installation, and maritime reclamation projects in the Arabian Gulf."
+  },
+  {
+    id: "lead-civil-structural-engineer",
+    title: "Lead Civil & Structural Engineer (EPC)",
+    department: "Engineering & Construction",
+    location: "Abu Dhabi / Dubai",
+    type: "Full-Time",
+    experience: "8+ Years",
+    description: "Oversee structural design review, site foundation execution, and contractor coordination for high-rise commercial facilities."
+  },
+  {
+    id: "senior-hse-manager",
+    title: "Senior HSE & Safety Compliance Manager",
+    department: "Health, Safety & Environment",
+    location: "Abu Dhabi, UAE",
+    type: "Full-Time",
+    experience: "7+ Years",
+    description: "Enforce zero-harm job site protocols under ISO 45001 and UAE statutory environmental codes across all heavy contracting sites."
+  },
+  {
+    id: "bep-bim-manager",
+    title: "Senior BIM & Digital Engineering Coordinator",
+    department: "Digital Project Delivery",
+    location: "India Regional Hub (Bettiah / Remote)",
+    type: "Full-Time",
+    experience: "5+ Years",
+    description: "Direct 3D BIM coordination, clash detection, and Revit digital construction workflows for multinational turnkey projects."
+  },
+  {
+    id: "senior-financial-analyst",
+    title: "Senior Financial Analyst — Investor Relations & Tenders",
+    department: "Finance & Strategy",
+    location: "Abu Dhabi, UAE",
+    type: "Full-Time",
+    experience: "6+ Years",
+    description: "Conduct financial modeling, commercial risk appraisals for megaproject tenders, and investor relations disclosures."
+  }
 ];
 
-export const CORE_VALUES = [
-  {
-    title: "Precision Engineering",
-    number: "01",
-    description: "Every millimeter, structural calculation, and installation is verified by qualified engineers according to international standards."
-  },
-  {
-    title: "Uncompromising Safety",
-    number: "02",
-    description: "Certified under ISO 45001:2018 with a rigorous zero-harm safety culture embedded across every site and offshore operation."
-  },
-  {
-    title: "Timely Handover",
-    number: "03",
-    description: "Strict critical path governance and CPM project management ensuring complex milestones are met without schedule slip."
-  },
-  {
-    title: "Client-Centric Trust",
-    number: "04",
-    description: "Transparent accountability, institutional integrity, and enduring commercial partnerships across the UAE and India."
-  }
+// Media Gallery
+export const MEDIA_GALLERY = [
+  { title: "Offshore Marine Dredging & Berthing", category: "Marine", image: "/assets/images/business/marine-offshore-port.jpg", caption: "Heavy maritime equipment expanding coastal industrial berths in Abu Dhabi." },
+  { title: "Hydrocarbon Process Complex & Pipelines", category: "Energy", image: "/assets/images/business/energy-refinery-complex.jpg", caption: "Industrial high-pressure piping and refinery infrastructure delivered to ISO 45001 standards." },
+  { title: "Al Wahda Mall Luxury Commercial Development", category: "Projects", image: "/assets/images/projects/al-wahda-mall.jpg", caption: "High-traffic commercial retail and structural engineering development in Abu Dhabi." },
+  { title: "Ghantoot Palace Royal Architectural Gypsum", category: "Projects", image: "/assets/images/projects/ghantoot-palace.jpg", caption: "Exquisite hand-crafted vaulted ceiling details and bespoke interior architectural decor." },
+  { title: "Modern High-Rise Construction Engineering", category: "Infrastructure", image: "/assets/images/hero/hero-infrastructure-cranes.jpg", caption: "Heavy tower cranes and structural framework construction for premium commercial towers." },
+  { title: "Corporate Boardroom & Governance Center", category: "Corporate", image: "/assets/images/investors/boardroom-governance.jpg", caption: "Executive boardroom directing multinational operations across UAE and South Asia." },
+  { title: "Renewable Solar & Eco-Infrastructure", category: "Sustainability", image: "/assets/images/sustainability/renewable-energy.jpg", caption: "Decarbonization technology and clean energy integration on heavy infrastructure projects." },
+  { title: "Engineering On-Site Inspection & Blueprint Review", category: "People", image: "/assets/images/careers/engineering-team.jpg", caption: "Rayan Group qualified engineers maintaining quality assurance on active build sites." }
 ];
