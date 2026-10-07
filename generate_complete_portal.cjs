@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { wrapPage, renderPageHero, ensureDir } = require('./build_multipage_site.cjs');
+const { wrapPage, renderPageHero, renderBusinessUnitsSection, ensureDir } = require('./build_multipage_site.cjs');
 
 function createRoute(relativePath, { title, description, activePath, heroHtml, content }) {
   const fullPath = path.join(__dirname, relativePath);
@@ -12,11 +12,10 @@ function createRoute(relativePath, { title, description, activePath, heroHtml, c
 
 const businessSubnav = (activeHref) => [
   { label: 'Overview', href: '/business/', active: activeHref === '/business/' },
-  { label: 'Engineering & Contracting', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
-  { label: 'Marine & Dredging', href: '/business/marine/', active: activeHref === '/business/marine/' },
-  { label: 'Energy & EPC', href: '/business/energy/', active: activeHref === '/business/energy/' },
-  { label: 'Civil Infrastructure', href: '/business/infrastructure/', active: activeHref === '/business/infrastructure/' },
-  { label: 'Heavy Fleet Logistics', href: '/business/logistics/', active: activeHref === '/business/logistics/' },
+  { label: 'Rayan Engineering', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
+  { label: 'Rayan Energy', href: '/business/energy/', active: activeHref === '/business/energy/' },
+  { label: 'Ashaz Engineering (India)', href: '/about/#india-hub', active: false },
+  { label: 'Rayan Properties (Upcoming)', href: '/contact/', active: false },
 ];
 
 // Helper to render standardized division pages (EthosEnergy / NMDC pattern)
@@ -219,284 +218,102 @@ function renderDivisionPage({
 // 1. BUSINESS OVERVIEW (/business/index.html)
 // ============================================================================
 createRoute('business/index.html', {
-  title: 'Our Businesses, Divisions & Operating Subsidiaries',
-  description: 'Explore Rayan Group 5 integrated operational divisions and operating companies across civil engineering, marine dredging, energy EPC, infrastructure, and heavy fleet logistics.',
+  title: 'Our Businesses & Operating Subsidiaries | Rayan Group',
+  description: 'Explore Rayan Group operating companies across turnkey civil engineering, critical energy EPC, South Asia industrial fabrication, and premier property development.',
   activePath: '/business/',
   heroHtml: renderPageHero({
-    category: 'CONGLOMERATE CAPABILITIES',
+    category: 'CONGLOMERATE SUBSIDIARIES',
     title: 'OUR BUSINESSES',
-    description: 'An integrated multi-disciplinary powerhouse executing landmark civil engineering, marine dredging, energy EPC, heavy infrastructure, and specialized logistics.',
+    description: 'An integrated multi-disciplinary powerhouse executing landmark civil engineering, critical energy facilities, South Asia engineering fabrication, and premier properties.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Businesses', href: '/business/' }],
     bgImage: '/assets/images/hero/hero-1-skyline.jpg',
     subnav: businessSubnav('/business/')
   }),
   content: `
-  <!-- 5 Core Divisions Cards -->
+  <!-- Interactive Operating Subsidiaries Card (NMDC Pattern) -->
+  ${renderBusinessUnitsSection()}
+
+  <!-- 4 Core Operating Companies Cards -->
   <section class="section" style="padding: 5rem 0; background: var(--bg-dark); border-bottom: 1px solid rgba(255,255,255,0.08);">
     <div class="container">
       <div style="text-align: center; max-width: 760px; margin: 0 auto 4rem;">
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OPERATIONAL SECTORS</span>
-        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">5 CORE BUSINESS DIVISIONS</h2>
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OPERATING SUBSIDIARIES</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">OUR COMPANIES &amp; SUBSIDIARIES</h2>
         <p style="color: #94a3b8; font-size: 1rem; margin-top: 0.75rem; line-height: 1.6;">
-          Rayan Group operates five specialized operational divisions backed by high-capacity heavy machinery, certified QHSE management, and 50+ years combined executive heritage.
+          Rayan Group operates specialized operating entities backed by heavy machinery, certified QHSE management, and 50+ years combined executive heritage.
         </p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
-        <!-- Division 1: Engineering & Contracting -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+        <!-- Company 1: Rayan Engineering -->
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/business/01-engineering.jpg" alt="Engineering & Contracting" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(0,153,230,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">DIVISION 01</span>
+            <img src="/assets/images/business/01-engineering.jpg" alt="Rayan Engineering" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(0,153,230,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">CIVIL EPC</span>
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Engineering &amp; Contracting</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Rayan Engineering</h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Turnkey civil EPC, commercial high-rise towers, luxury hospitality overhauls, acoustic auditorium engineering, and certified structural frameworks.
             </p>
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">ISO 9001 Certified</span>
-              <a href="/business/engineering/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE DIVISION →</a>
+              <a href="/business/engineering/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
             </div>
           </div>
         </div>
 
-        <!-- Division 2: Marine & Dredging -->
+        <!-- Company 2: Rayan Energy -->
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/hero/hero-2-marine.jpg" alt="Marine & Dredging" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(0,153,230,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">DIVISION 02</span>
+            <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Rayan Energy" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(16,185,129,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">ENERGY EPC</span>
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Marine &amp; Dredging</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Coastal reclamation, harbor navigation channel deepening, breakwater rock armor, sheet-pile quay walls, and oceanfront cantilevered aquatic works.
-            </p>
-            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Marine Fleets &amp; Barges</span>
-              <a href="/business/marine/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE DIVISION →</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Division 3: Energy & EPC -->
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;">
-          <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Energy & EPC" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(0,153,230,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">DIVISION 03</span>
-          </div>
-          <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Energy &amp; EPC</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Rayan Energy</h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Onshore and industrial process energy facilities, cross-country hydrocarbon transport pipelines, gas compressor terminals, and refinery maintenance.
             </p>
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">ASME &amp; API Rigor</span>
-              <a href="/business/energy/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE DIVISION →</a>
+              <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">ISO 45001 Rigor</span>
+              <a href="/business/energy/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
             </div>
           </div>
         </div>
 
-        <!-- Division 4: Civil Infrastructure -->
+        <!-- Company 3: Ashaz Engineering (India) -->
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/projects/al-qua-school-infrastructure.jpg" alt="Civil Infrastructure" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(0,153,230,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">DIVISION 04</span>
+            <img src="/assets/images/about/india-hub.jpg" alt="Ashaz Engineering (India)" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(20,148,155,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">SOUTH ASIA HUB</span>
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Heavy Civil Infrastructure</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Ashaz Engineering (India)</h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Highway corridors, large-scale earthmoving, deep stormwater drainage, precast bridges, interlock paving, and municipal utility networks.
+              Rayan Group's strategic South Asia engineering and contracting arm in Bettiah and New Delhi delivering heavy civil works, steel fabrication, and industrial EPC.
             </p>
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Municipal Approvals</span>
-              <a href="/business/infrastructure/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE DIVISION →</a>
+              <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Regional Hub</span>
+              <a href="/about/#india-hub" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
             </div>
           </div>
         </div>
 
-        <!-- Division 5: Heavy Fleet Logistics -->
+        <!-- Company 4: Rayan Properties (Upcoming) -->
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/about/overview.jpg" alt="Heavy Fleet Logistics" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(0,153,230,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">DIVISION 05</span>
+            <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Rayan Properties" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(245,158,11,0.85); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px;">UPCOMING</span>
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Heavy Fleet Logistics</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Rayan Properties</h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              High-capacity crawler and mobile crane hire up to 750 tonnes, multi-axle hydraulic transport, engineered heavy lifting, and plant mobilization.
+              Premier real estate development enterprise curating ultra-luxury waterfront estates, master-planned communities, and landmark commercial high-rises.
             </p>
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Up to 750T Rigging</span>
-              <a href="/business/logistics/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE DIVISION →</a>
+              <span style="font-size: 0.78rem; color: #fbbf24; font-weight: 600;">Upcoming Portfolio</span>
+              <a href="/contact/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">REGISTER INTEREST →</a>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Operating Subsidiaries Card (NMDC Pattern) -->
-  <section class="business-units-section" id="companies" aria-label="Group Companies and Subsidiaries" style="padding: 5rem 0; background: #07111e;">
-    <div class="container">
-      <div class="business-units-header">
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brand-cyan, #0099e6); display: block; margin-bottom: 0.5rem;">CONGLOMERATE SUBSIDIARIES</span>
-        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.8vw, 3.25rem); font-weight: 800; color: #fff; text-transform: uppercase; line-height: 1.15; margin: 0 0 0.85rem;">OPERATING COMPANIES &amp; SUBSIDIARIES</h2>
-        <p style="font-size: 1.05rem; line-height: 1.65; color: #cbd5e1; max-width: 660px; margin: 0 auto;">
-          An integrated ecosystem of specialized civil engineering, energy facilities, South Asia infrastructure, and premier properties operating under unified governance.
-        </p>
-      </div>
-
-      <div class="bu-card-container">
-        <div class="bu-card">
-          <div class="bu-top-bar">
-            <span class="bu-top-label">BUSINESS UNITS</span>
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em;">RAYAN ENTERPRISE MATRIX</span>
-          </div>
-
-          <div class="bu-slides-viewport" role="region" aria-live="polite">
-            <!-- Slide 0: Rayan Group -->
-            <div class="bu-slide active" data-slide="0">
-              <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" width="240" height="70">
-              </div>
-              <div class="bu-info-col">
-                <div class="bu-title-row">
-                  <h3 class="bu-company-title">Rayan Group</h3>
-                  <span class="bu-badge bu-badge-holding">PARENT HOLDING</span>
-                </div>
-                <p class="bu-company-desc">
-                  The premier multinational holding conglomerate orchestrating landmark civil engineering, critical energy infrastructure, and regional capital ventures. Headquartered in Abu Dhabi with expanding multinational corridors, Rayan Group unites specialized divisions under rigorous engineering precision and fiduciary stewardship.
-                </p>
-                <a href="/about/" class="bu-action-link">
-                  <span class="bu-action-box">↗</span>
-                  <span>Explore Group Overview</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- Slide 1: Rayan Engineering -->
-            <div class="bu-slide" data-slide="1">
-              <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-engineering-white.png" alt="Rayan Engineering" width="240" height="75">
-              </div>
-              <div class="bu-info-col">
-                <div class="bu-title-row">
-                  <h3 class="bu-company-title">Rayan Engineering &amp; Contracting</h3>
-                  <span class="bu-badge bu-badge-active">CIVIL &amp; GENERAL CONTRACTING</span>
-                </div>
-                <p class="bu-company-desc">
-                  The flagship engineering enterprise executing turnkey building construction, high-rise commercial towers, luxury residential estates, and complex industrial complexes across the UAE. With 50+ years of combined leadership heritage, Rayan Engineering sets benchmarks in structural excellence.
-                </p>
-                <a href="/business/engineering/" class="bu-action-link">
-                  <span class="bu-action-box">↗</span>
-                  <span>Visit Engineering Division</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- Slide 2: Rayan Energy -->
-            <div class="bu-slide" data-slide="2">
-              <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-energy-white.png" alt="Rayan Energy" width="240" height="75">
-              </div>
-              <div class="bu-info-col">
-                <div class="bu-title-row">
-                  <h3 class="bu-company-title">Rayan Energy</h3>
-                  <span class="bu-badge bu-badge-active">OIL, GAS &amp; PROCESS FACILITIES</span>
-                </div>
-                <p class="bu-company-desc">
-                  Powering mission-critical energy infrastructure through onshore and process EPC services, strategic hydrocarbon pipeline corridors, petrochemical process plants, and refinery turnaround execution to strict ISO 45001 standards.
-                </p>
-                <a href="/business/energy/" class="bu-action-link">
-                  <span class="bu-action-box">↗</span>
-                  <span>Visit Energy Division</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- Slide 3: Ashaz Engineering (India) -->
-            <div class="bu-slide" data-slide="3">
-              <div class="bu-logo-col">
-                <img src="/assets/logos/ashaz-engineering-white.png" alt="Ashaz Engineering (India)" width="200" height="150">
-              </div>
-              <div class="bu-info-col">
-                <div class="bu-title-row">
-                  <h3 class="bu-company-title">Ashaz Engineering (India)</h3>
-                  <span class="bu-badge bu-badge-india">SOUTH ASIA REGIONAL HUB</span>
-                </div>
-                <p class="bu-company-desc">
-                  Rayan Group's strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi. Ashaz Engineering delivers heavy civil works, structural fabrication, industrial infrastructure, and technical contracting.
-                </p>
-                <a href="/about/#india-hub" class="bu-action-link">
-                  <span class="bu-action-box">↗</span>
-                  <span>Explore Ashaz Regional Hub</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- Slide 4: Rayan Properties -->
-            <div class="bu-slide" data-slide="4">
-              <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-properties-white.png" alt="Rayan Properties" width="240" height="72">
-              </div>
-              <div class="bu-info-col">
-                <div class="bu-title-row">
-                  <h3 class="bu-company-title">Rayan Properties</h3>
-                  <span class="bu-badge bu-badge-upcoming">UPCOMING DIVISION</span>
-                </div>
-                <p class="bu-company-desc">
-                  Rayan Group's upcoming premier real estate development enterprise. Curating ultra-luxury waterfront estates, master-planned residential communities, architectural landmark high-rises, and prime commercial destinations across UAE metropolitan locations.
-                </p>
-                <a href="/contact/" class="bu-action-link">
-                  <span class="bu-action-box">↗</span>
-                  <span>Upcoming Division • Register Interest</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Selector Pills Row -->
-          <div class="bu-pills-row" role="tablist" aria-label="Company Selector Tabs">
-            <button type="button" class="bu-pill active" data-index="0" role="tab" aria-selected="true">
-              <span class="bu-pill-slash" style="color: #0099e6;">/</span>
-              <div>
-                <span class="bu-pill-label">Rayan Group</span>
-                <span class="bu-pill-subtag">Parent Holding</span>
-              </div>
-            </button>
-
-            <button type="button" class="bu-pill" data-index="1" role="tab" aria-selected="false">
-              <span class="bu-pill-slash" style="color: #00c7b3;">/</span>
-              <div>
-                <span class="bu-pill-label">Rayan Engineering</span>
-                <span class="bu-pill-subtag">Civil &amp; EPC</span>
-              </div>
-            </button>
-
-            <button type="button" class="bu-pill" data-index="2" role="tab" aria-selected="false">
-              <span class="bu-pill-slash" style="color: #00ad61;">/</span>
-              <div>
-                <span class="bu-pill-label">Rayan Energy</span>
-                <span class="bu-pill-subtag">Oil, Gas &amp; Energy</span>
-              </div>
-            </button>
-
-            <button type="button" class="bu-pill" data-index="3" role="tab" aria-selected="false">
-              <span class="bu-pill-slash" style="color: #14949b;">/</span>
-              <div>
-                <span class="bu-pill-label">Ashaz Engineering</span>
-                <span class="bu-pill-subtag">India Regional Hub</span>
-              </div>
-            </button>
-
-            <button type="button" class="bu-pill" data-index="4" role="tab" aria-selected="false">
-              <span class="bu-pill-slash" style="color: #f59e0b;">/</span>
-              <div>
-                <span class="bu-pill-label">Rayan Properties</span>
-                <span class="bu-pill-subtag" style="color: #fbbf24;">Upcoming</span>
-              </div>
-            </button>
           </div>
         </div>
       </div>
@@ -571,73 +388,6 @@ createRoute('business/engineering/index.html', {
       { title: 'Waldorf Astoria Luxury Hotel Overhaul', sector: '5-Star Hospitality EPC', image: '/assets/images/projects/waldorf-astoria-renovation-rak.jpg', desc: 'Comprehensive interior fit-out, MEP modernization, and acoustic upgrades in Ras Al Khaimah in partnership with Brock Construction.', location: 'Ras Al Khaimah, UAE', href: '/projects/waldorf-astoria-renovation-rak/' },
       { title: 'C2 Towers Twin High-Rise Development', sector: 'Commercial & High-Rise', image: '/assets/images/projects/c2-towers-al-bateen.jpg', desc: 'Twin 22-story waterfront residential towers featuring post-tensioned slabs, deep basements, and luxury finishes.', location: 'Al Bateen, Abu Dhabi', href: '/projects/c2-towers-al-bateen/' },
       { title: 'EDGE Group REMAYA Tactical Complex', sector: 'Defense & Special Works', image: '/assets/images/projects/edge-group-remaya.jpg', desc: 'Specialized defense tactical shooting complex incorporating acoustic baffling and heavy structural containment.', location: 'Abu Dhabi, UAE', href: '/projects/edge-group-remaya/' }
-    ]
-  })
-});
-
-// ============================================================================
-// 3. DIVISION: MARINE & DREDGING (/business/marine/index.html)
-// ============================================================================
-createRoute('business/marine/index.html', {
-  title: 'Marine & Dredging | Coastal Engineering & Reclamation | Rayan Group',
-  description: 'Coastal reclamation, navigation channel deepening, breakwater rock armor, sheet piling, quay walls, and oceanfront aquatic engineering.',
-  activePath: '/business/marine/',
-  heroHtml: renderPageHero({
-    category: 'BUSINESS DIVISION 02',
-    title: 'MARINE & DREDGING',
-    description: 'Harbor deepening, land reclamation, coastal protection revetments, quay wall construction, and bespoke oceanfront aquatic structures across the UAE coast.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Businesses', href: '/business/' }, { label: 'Marine & Dredging', href: '/business/marine/' }],
-    bgImage: '/assets/images/hero/hero-2-marine.jpg',
-    subnav: businessSubnav('/business/marine/')
-  }),
-  content: renderDivisionPage({
-    number: '02',
-    title: 'Marine & Dredging',
-    tagline: 'SHAPING COASTLINES & OFFSHORE WATERFRONT HORIZONS',
-    divisionKey: 'marine',
-    overview: `
-      Rayan Marine &amp; Dredging delivers specialized coastal and maritime engineering solutions. From deep-water navigation channel deepening and coastal reclamation to heavy rock armor breakwaters and precast quay walls, our marine operations combine specialized marine plant with geotechnical precision.
-      <br><br>
-      Our coastal engineering capabilities also encompass complex oceanfront aquatic installations—such as the landmark 50-meter cantilevered concrete oceanfront pool on Luxury Island and coastal stabilization works along Palm Jumeirah.
-    `,
-    keyStats: [
-      { label: 'Marine Expertise', value: 'Turnkey', sub: 'Deep Dredging & Coastal Armor' },
-      { label: 'Coastal Scope', value: 'Reclamation', sub: 'Harbor Deepening & Quay Walls' },
-      { label: 'Environmental QHSE', value: 'ISO 14001', sub: 'Marine Ecology Protection' },
-      { label: 'Specialized Works', value: 'Aquatic EPC', sub: 'Cantilevered Oceanfront Structures' }
-    ],
-    capabilities: [
-      { icon: '🌊', title: 'Capital & Maintenance Dredging', desc: 'Navigational channel deepening, port basin excavation, and removal of marine sediment to precise hydrographic depths.' },
-      { icon: '🏝️', title: 'Land Reclamation & Island Development', desc: 'Engineered placement of dredged marine fill, dynamic compaction, vibroflotation, and geotextile slope stabilization.' },
-      { icon: '🧱', title: 'Breakwaters & Coastal Protection', desc: 'Heavy rock armoring, core-loc concrete accropodes, revetments, and shoreline wave dissipation systems.' },
-      { icon: '⚓', title: 'Quay Walls, Jetties & Marinas', desc: 'Precast concrete block quay walls, steel sheet-pile bulkheads, pontoon mooring berths, and marina infrastructure.' },
-      { icon: '🏊', title: 'Oceanfront Aquatic Engineering', desc: 'High-complexity cantilevered concrete aquatic pools, marine saltwater filtration systems, and coastal landscaping.' },
-      { icon: '🛰️', title: 'Hydrographic & Bathymetric Survey', desc: 'Multibeam sonar seabed mapping, real-time RTK GPS dredging tracking, and environmental turbidity monitoring.' }
-    ],
-    services: [
-      { title: 'Navigation Dredging', desc: 'Precision excavation of berths, approach channels, and turning basins.' },
-      { title: 'Coastal Erosion Control', desc: 'Engineered rock revetments and groynes to safeguard coastal assets.' },
-      { title: 'Sheet Pile Bulkheads', desc: 'High-strength steel sheet piling for marina basin containment.' },
-      { title: 'Marine Concrete Structures', desc: 'Saltwater-resistant sulphate-resistant concrete marine foundations.' }
-    ],
-    industries: [
-      { title: 'Port & Maritime Authorities', desc: 'Commercial shipping channels, harbor expansions, and port facilities.' },
-      { title: 'Waterfront Developers', desc: 'Private coastal islands, luxury beach resorts, and marina precincts.' },
-      { title: 'Coastal Infrastructure', desc: 'Municipal sea defenses, storm surge barriers, and coastal highway revetments.' }
-    ],
-    equipment: {
-      summary: 'Our marine operations deploy a versatile fleet of cutter suction dredging plant, spud-leg barges, long-reach marine excavators, and precision hydrographic surveying vessels.',
-      items: [
-        { name: 'Dredging Equipment', spec: 'Cutter suction and marine backhoe dredgers with RTK GPS monitoring.' },
-        { name: 'Marine Transport', spec: 'Split hopper barges and heavy marine tugboats.' },
-        { name: 'Long-Reach Excavators', spec: '24m-reach marine backhoe units for underwater rock placement.' },
-        { name: 'Hydrographic Systems', spec: 'Dual-frequency multibeam sonar with real-time seabed depth logging.' }
-      ]
-    },
-    safetyQuality: 'Our marine division operates under strict ISO 14001:2015 Marine Environmental protocols. Silt curtains and real-time turbidity sensors ensure marine ecology and coral ecosystems remain fully protected throughout offshore execution.',
-    featuredProjects: [
-      { title: 'Luxury Island 50m Oceanfront Cantilevered Pool', sector: 'Aquatic & Coastal Engineering', image: '/assets/images/projects/luxury-island-infinity-pool.jpg', desc: 'Engineering a signature 50-meter cantilevered concrete swimming pool extending over the marine coastline with high-grade marine waterproofing.', location: 'Private Coastal Island, UAE', href: '/projects/luxury-island-infinity-pool/' },
-      { title: 'Palm Jumeirah Ultra-Luxury Waterfront Coastal Works', sector: 'Coastal Residential EPC', image: '/assets/images/projects/palm-jumeirah-rec-estate.jpg', desc: 'Waterfront ground stabilization, custom coastal retaining structures, and luxury estate civil execution.', location: 'Palm Jumeirah, Dubai', href: '/projects/palm-jumeirah-rec-estate/' }
     ]
   })
 });
@@ -799,7 +549,7 @@ createRoute('business/logistics/index.html', {
     overview: `
       Rayan Heavy Fleet Logistics powers critical lifting and transport operations across the region. Backed by high-tonnage mobile cranes and crawler cranes with capacities up to 750 tonnes, multi-axle hydraulic transport trailers, and certified rigging engineers, we provide complete engineered lifting solutions.
       <br><br>
-      From erecting heavy precast beams and structural high-rise steel on commercial towers to mobilizing oversized refinery vessels and marine equipment, our logistics division ensures safe, timely, and certified equipment support.
+      From erecting heavy precast beams and structural high-rise steel on commercial towers to mobilizing oversized refinery vessels and heavy industrial plant equipment, our logistics division ensures safe, timely, and certified equipment support.
     `,
     keyStats: [
       { label: 'Lifting Capacity', value: 'Up to 750T', sub: 'Heavy Crawler & Mobile Cranes' },
@@ -824,7 +574,7 @@ createRoute('business/logistics/index.html', {
     industries: [
       { title: 'High-Rise & Megaproject Construction', desc: 'Structural steel erection, tower crane erection, and precast beam placement.' },
       { title: 'Energy & Oil/Gas Facilities', desc: 'Refinery reactor lifting, column installations, and turnaround equipment.' },
-      { title: 'Marine & Offshore Shipyards', desc: 'Marine component handling, barge loading, and drydock heavy lifts.' }
+      { title: 'Industrial Manufacturing & Plants', desc: 'Heavy industrial module handling, modular assembly, and heavy plant lifts.' }
     ],
     equipment: {
       summary: 'Our fleet comprises premier equipment from Liebherr, Terex-Demag, and Tadano, maintained to manufacturer tolerances in our central Mussafah industrial facility.',

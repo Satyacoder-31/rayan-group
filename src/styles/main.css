@@ -293,27 +293,28 @@ button {
   position: fixed;
   top: 0;
   left: 0;
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(0, 168, 150, 0.45);
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(0, 153, 230, 0.55);
   border-radius: 50%;
-  pointer-events: none;
-  z-index: var(--z-cursor);
+  pointer-events: none !important;
+  z-index: 999998;
   transform: translate(-50%, -50%);
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.3s ease,
-              border-color 0.3s ease,
-              transform 0.08s ease-out;
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.25s ease,
+              border-color 0.25s ease,
+              opacity 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #07090c;
-  font-family: var(--font-mono);
+  color: #ffffff;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  opacity: 0;
 }
 
 #custom-cursor .cursor-label {
@@ -326,22 +327,33 @@ button {
   position: fixed;
   top: 0;
   left: 0;
-  width: 6px;
-  height: 6px;
-  background-color: var(--color-teal);
+  width: 7px;
+  height: 7px;
+  background-color: #0099e6;
   border-radius: 50%;
-  pointer-events: none;
-  z-index: calc(var(--z-cursor) + 1);
+  pointer-events: none !important;
+  z-index: 999999;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 10px var(--color-teal);
+  box-shadow: 0 0 12px #0099e6, 0 0 20px rgba(0, 153, 230, 0.6);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 /* Hover States for Cursor */
 body.cursor-hover #custom-cursor {
-  width: 56px;
-  height: 56px;
-  background-color: rgba(0, 168, 150, 0.15);
-  border-color: var(--color-teal);
+  width: 58px;
+  height: 58px;
+  background-color: rgba(0, 153, 230, 0.14);
+  border-color: #0099e6;
+  box-shadow: 0 0 20px rgba(0, 153, 230, 0.35);
+}
+
+body.cursor-project #custom-cursor {
+  width: 90px;
+  height: 90px;
+  background-color: rgba(0, 153, 230, 0.88);
+  border-color: #0099e6;
+  box-shadow: 0 0 35px rgba(0, 153, 230, 0.65);
 }
 
 body.cursor-project #custom-cursor {

@@ -99,12 +99,12 @@ createRoute('investors/index.html', {
 // ============================================================================
 createRoute('careers/index.html', {
   title: 'Careers & Talent Pool | Join Rayan Group',
-  description: 'Explore engineering, marine, energy, infrastructure, and logistics careers with Rayan Group across the UAE and India. Submit your CV to our global talent pool.',
+  description: 'Explore engineering, energy, infrastructure, and corporate careers with Rayan Group across the UAE and India. Submit your CV to our global talent pool.',
   activePath: '/careers/',
   heroHtml: renderPageHero({
     category: 'PEOPLE & CULTURE',
     title: 'BUILD YOUR FUTURE WITH US',
-    description: 'Join a dynamic, multinational engineering conglomerate executing high-impact infrastructure, energy, and marine projects across the UAE and South Asia.',
+    description: 'Join a dynamic, multinational engineering conglomerate executing high-impact infrastructure, energy, and civil contracting projects across the UAE and South Asia.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Careers', href: '/careers/' }],
     bgImage: '/assets/images/careers/careers-hero.jpg'
   }),
@@ -117,7 +117,7 @@ createRoute('careers/index.html', {
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OUR PEOPLE PHILOSOPHY</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; margin: 0.5rem 0 1.25rem;">EMPOWERING ENGINEERING EXCELLENCE</h2>
           <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.25rem;">
-            At Rayan Group, our professionals are the driving engine behind our landmark achievements. From high-specification luxury renovations and defensive installations to deep-water marine operations and critical energy piping, we foster an environment of technical rigor, integrity, and meritocratic growth.
+            At Rayan Group, our professionals are the driving engine behind our landmark achievements. From high-specification luxury renovations and defensive installations to South Asia regional fabrication and critical energy piping, we foster an environment of technical rigor, integrity, and meritocratic growth.
           </p>
           <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
             Operating across dual strategic hubs in the UAE and India, we provide our engineers and specialists with exposure to cutting-edge methodologies, heavy machinery fleets, and world-class safety protocols.
@@ -176,9 +176,9 @@ createRoute('careers/index.html', {
         </div>
 
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">2. Marine &amp; Coastal Dredging</h3>
-          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Harbor deepening, reclamation works, quay wall construction, revetments, and specialized marine plant operations.</p>
-          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Coastal UAE &amp; Arabian Gulf</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">2. Ashaz Engineering Regional Hub</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Heavy structural steel fabrication, industrial workshops, and South Asia regional EPC contracting.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Bettiah, Bihar &amp; New Delhi, India</span>
         </div>
 
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
@@ -254,7 +254,7 @@ createRoute('careers/index.html', {
                   <select id="car-dept" class="service-form-select" required>
                     <option value="" disabled selected>Select Discipline</option>
                     <option value="civil">Civil &amp; Structural Engineering</option>
-                    <option value="marine">Marine Dredging &amp; Coastal Works</option>
+                    <option value="ashaz">Ashaz Engineering (India Hub)</option>
                     <option value="energy">Energy, Piping &amp; Process EPC</option>
                     <option value="infrastructure">Highway &amp; Heavy Civil Infrastructure</option>
                     <option value="logistics">Heavy Fleet &amp; Crane Operations</option>
@@ -317,8 +317,8 @@ createRoute('careers/index.html', {
                 <span style="color: #94a3b8; font-size: 0.78rem;">Abu Dhabi • Commercial &amp; Hospitality Projects</span>
               </li>
               <li style="border-left: 2px solid #10b981; padding-left: 0.65rem;">
-                <strong style="color: #fff; display: block;">Marine Dredging Superintendent</strong>
-                <span style="color: #94a3b8; font-size: 0.78rem;">UAE Coast • Channel &amp; Reclamation Works</span>
+                <strong style="color: #fff; display: block;">Senior Structural Steel / Fabrication Engineer</strong>
+                <span style="color: #94a3b8; font-size: 0.78rem;">India &amp; UAE • Ashaz Regional Hub</span>
               </li>
               <li style="border-left: 2px solid #f59e0b; padding-left: 0.65rem;">
                 <strong style="color: #fff; display: block;">Energy Piping &amp; Quality Inspector</strong>
@@ -424,7 +424,7 @@ createRoute('news/index.html', {
               Rayan Group Successfully Renews Global Triple ISO Quality &amp; Safety Certifications
             </h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Achieving full compliance across ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 audits across all construction yards and marine sites.
+              Achieving full compliance across ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 audits across all construction yards and regional engineering hubs.
             </p>
             <a href="/sustainability/" class="btn-enterprise-secondary" style="align-self: flex-start;">VIEW HSE POLICY →</a>
           </div>
@@ -478,7 +478,7 @@ createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
 
       <div style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.8; margin-bottom: 3rem;">
         <p style="font-size: 1.2rem; font-weight: 500; color: #fff; margin-bottom: 2rem; line-height: 1.6;">
-          <strong>ABU DHABI, UAE</strong> — Rayan Group, a premier multinational engineering, marine, and infrastructure conglomerate, today announced the formal award of turnkey civil engineering and structural execution works for strategic commercial and mixed-use infrastructure development in Abu Dhabi.
+          <strong>ABU DHABI, UAE</strong> — Rayan Group, a premier multinational engineering, energy, and infrastructure conglomerate, today announced the formal award of turnkey civil engineering and structural execution works for strategic commercial and mixed-use infrastructure development in Abu Dhabi.
         </p>
 
         <p style="margin-bottom: 1.75rem;">
@@ -511,7 +511,7 @@ createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
 // ============================================================================
 createRoute('media/index.html', {
   title: 'Media Gallery & Project Photography Showcase',
-  description: 'Explore high-resolution photography of Rayan Group landmark infrastructure, hospitality overhauls, marine works, and engineering projects.',
+  description: 'Explore high-resolution photography of Rayan Group landmark infrastructure, hospitality overhauls, energy facilities, and engineering projects.',
   activePath: '/media/',
   heroHtml: renderPageHero({
     category: 'MEDIA & BRAND ASSETS',

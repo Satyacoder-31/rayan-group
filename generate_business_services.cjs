@@ -15,7 +15,7 @@ function createRoute(relativePath, { title, description, activePath, heroHtml, c
 // ============================================================================
 createRoute('proposal/index.html', {
   title: 'Request a Proposal | Business Enquiries',
-  description: 'Submit project tender specifications, request proposals, and initiate partnership inquiries with Rayan Group for engineering, marine, energy, infrastructure, and logistics projects.',
+  description: 'Submit project tender specifications, request proposals, and initiate partnership inquiries with Rayan Group for engineering, energy, infrastructure, and properties projects.',
   activePath: '/proposal/',
   heroHtml: renderPageHero({
     category: 'CLIENT ENGAGEMENT & TENDERS',
@@ -75,11 +75,10 @@ createRoute('proposal/index.html', {
                   <label class="service-form-label" for="rfp-division">Required Business Division <span class="req">*</span></label>
                   <select id="rfp-division" class="service-form-select" required>
                     <option value="" disabled selected>Select Business Division</option>
-                    <option value="engineering">Engineering &amp; Turnkey Contracting</option>
-                    <option value="marine">Marine Dredging &amp; Coastal Works</option>
-                    <option value="energy">Energy &amp; EPC Facilities</option>
-                    <option value="infrastructure">Heavy Civil Infrastructure &amp; Roads</option>
-                    <option value="logistics">Heavy Fleet &amp; Heavy Lift Logistics</option>
+                    <option value="engineering">Rayan Engineering &amp; Turnkey Contracting</option>
+                    <option value="energy">Rayan Energy &amp; Process EPC</option>
+                    <option value="ashaz">Ashaz Engineering (India Regional Hub)</option>
+                    <option value="properties">Rayan Properties (Upcoming)</option>
                     <option value="multiple">Multi-Disciplinary / Integrated Group Scope</option>
                   </select>
                 </div>
@@ -92,8 +91,8 @@ createRoute('proposal/index.html', {
                     <option value="residential">Bespoke Coastal Residential / Villas</option>
                     <option value="defense">Defense, Security &amp; Special Tactical</option>
                     <option value="energy">Oil &amp; Gas / Process Piping</option>
-                    <option value="marine">Waterfront Port / Dredging / Reclamation</option>
-                    <option value="infrastructure">Highway Corridor / Bridges / Civil Works</option>
+                    <option value="fabrication">Heavy Structural Steel / Fabrication</option>
+                    <option value="infrastructure">Civic Infrastructure &amp; Paving Works</option>
                     <option value="other">Other Specialized Contracting</option>
                   </select>
                 </div>
@@ -185,7 +184,7 @@ createRoute('proposal/index.html', {
             <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.85rem; color: #94a3b8;">
               <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
                 <span style="color: #0099e6; font-weight: 700;">▸</span>
-                <span><strong>50+ Years Combined Leadership:</strong> Extensive civil, energy, and marine track record across UAE &amp; South Asia.</span>
+                <span><strong>50+ Years Combined Leadership:</strong> Extensive civil, energy, and infrastructure track record across UAE &amp; South Asia.</span>
               </li>
               <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
                 <span style="color: #0099e6; font-weight: 700;">▸</span>
@@ -193,7 +192,7 @@ createRoute('proposal/index.html', {
               </li>
               <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
                 <span style="color: #0099e6; font-weight: 700;">▸</span>
-                <span><strong>Heavy Plant &amp; Marine Fleets:</strong> High-capacity mobile cranes, earthmovers, dredging vessels, and precision logistics.</span>
+                <span><strong>Heavy Plant &amp; Equipment Fleets:</strong> High-capacity mobile cranes, earthmovers, pipe fabrication plant, and precision logistics.</span>
               </li>
               <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
                 <span style="color: #0099e6; font-weight: 700;">▸</span>
@@ -219,9 +218,9 @@ createRoute('procurement/index.html', {
   heroHtml: renderPageHero({
     category: 'SUPPLY CHAIN & VENDOR RELATIONS',
     title: 'SUPPLIERS & PROCUREMENT',
-    description: 'Fostering ethical, resilient, and high-performance supply chain partnerships across materials, specialized subcontracting, marine equipment, and energy technology.',
+    description: 'Fostering ethical, resilient, and high-performance supply chain partnerships across materials, specialized subcontracting, heavy equipment, and energy technology.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Business Services', href: '/procurement/' }, { label: 'Procurement', href: '/procurement/' }],
-    bgImage: '/assets/images/hero/hero-2-marine.jpg'
+    bgImage: '/assets/images/hero/hero-1-skyline.jpg'
   }),
   content: `
   <!-- 4-Step Onboarding Process -->
@@ -311,7 +310,7 @@ createRoute('procurement/index.html', {
                     <option value="" disabled selected>Select Supply Category</option>
                     <option value="civil-materials">Civil &amp; Structural Building Materials (Steel, Concrete, Aggregates)</option>
                     <option value="mep">MEP Equipment, Switchgear &amp; HVAC</option>
-                    <option value="marine">Marine Dredging Support, Barges &amp; Marine Spares</option>
+                    <option value="fabrication">Structural Steel, Precast &amp; Fabrication Modules</option>
                     <option value="energy">Piping, Valves, Pressure Vessels &amp; Process Equipment</option>
                     <option value="machinery">Heavy Equipment Rental &amp; Logistics Fleets</option>
                     <option value="subcontracting">Specialized Subcontracting (Fit-out, Waterproofing, Piling)</option>
@@ -700,7 +699,7 @@ createRoute('disclaimer/index.html', {
         <p>The materials, specifications, and project highlights displayed on this website are published solely for general corporate informational purposes by Rayan Group Holdings &amp; Engineering L.L.C - S.P.C. While all reasonable diligence is exercised to maintain factual precision, content does not constitute a legally binding contractual tender or engineering warranty unless formalized in an executed agreement.</p>
 
         <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">2. Engineering &amp; Project Representation</h3>
-        <p>Project scopes, imagery, and specifications reflect actual delivered or ongoing assignments across our engineering, marine, energy, infrastructure, and logistics divisions. Specific scope boundaries, joint venture participation, and client deliverables are governed exclusively by executed master construction contracts and FIDIC agreements.</p>
+        <p>Project scopes, imagery, and specifications reflect actual delivered or ongoing assignments across our engineering, energy, infrastructure, and properties operations. Specific scope boundaries, joint venture participation, and client deliverables are governed exclusively by executed master construction contracts and FIDIC agreements.</p>
 
         <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">3. Private Group Status</h3>
         <p>Rayan Group is a private corporate conglomerate. Nothing on this website constitutes an offer to buy or sell securities, shares, or public financial instruments in any jurisdiction.</p>
@@ -748,15 +747,13 @@ createRoute('sitemap/index.html', {
 
         <!-- Businesses & Divisions -->
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #0099e6; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem;">BUSINESSES &amp; DIVISIONS</h3>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #0099e6; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem;">OPERATING COMPANIES</h3>
           <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.9rem;">
-            <li><a href="/business/" style="color: #fff; text-decoration: none;">• Business Overview &amp; Subsidiaries</a></li>
-            <li><a href="/business/engineering/" style="color: #cbd5e1; text-decoration: none;">• Engineering &amp; Contracting</a></li>
-            <li><a href="/business/marine/" style="color: #cbd5e1; text-decoration: none;">• Marine &amp; Dredging</a></li>
-            <li><a href="/business/energy/" style="color: #cbd5e1; text-decoration: none;">• Energy &amp; EPC Facilities</a></li>
-            <li><a href="/business/infrastructure/" style="color: #cbd5e1; text-decoration: none;">• Heavy Civil Infrastructure</a></li>
-            <li><a href="/business/logistics/" style="color: #cbd5e1; text-decoration: none;">• Heavy Fleet Logistics</a></li>
+            <li><a href="/business/" style="color: #fff; text-decoration: none;">• All Operating Companies</a></li>
+            <li><a href="/business/engineering/" style="color: #cbd5e1; text-decoration: none;">• Rayan Engineering</a></li>
+            <li><a href="/business/energy/" style="color: #cbd5e1; text-decoration: none;">• Rayan Energy</a></li>
             <li><a href="/about/#india-hub" style="color: #cbd5e1; text-decoration: none;">• Ashaz Engineering (India)</a></li>
+            <li><a href="/contact/" style="color: #cbd5e1; text-decoration: none;">• Rayan Properties (Upcoming)</a></li>
           </ul>
         </div>
 

@@ -122,42 +122,34 @@ function renderHeader(activePath = '/') {
             <div class="mega-menu-panel" style="min-width: 920px;">
               <div class="mega-grid">
                 <div class="mega-intro-col">
-                  <span class="mega-cat-badge">CORE DIVISIONS &amp; SUBSIDIARIES</span>
-                  <h3 class="mega-cat-title">OUR BUSINESSES</h3>
-                  <p class="mega-cat-desc">Integrated engineering horsepower across civil contracting, marine dredging, energy EPC, heavy infrastructure, and logistics.</p>
+                  <span class="mega-cat-badge">OPERATING SUBSIDIARIES</span>
+                  <h3 class="mega-cat-title">OUR COMPANIES</h3>
+                  <p class="mega-cat-desc">Integrated engineering horsepower across civil contracting, critical energy EPC, South Asia industrial fabrication, and premier property development.</p>
                   <a href="/business/" class="mega-cat-explore">All Operating Companies →</a>
                 </div>
                 <div class="mega-links-grid" style="grid-template-columns: 1fr 1fr;">
                   <a href="/business/engineering/" class="mega-sub-link">
-                    <div class="mega-link-title"><span>Engineering &amp; Contracting</span><span>→</span></div>
-                    <div class="mega-link-desc">Turnkey civil EPC, commercial high-rises, and industrial complexes.</div>
-                  </a>
-                  <a href="/business/marine/" class="mega-sub-link">
-                    <div class="mega-link-title"><span>Marine &amp; Dredging</span><span>→</span></div>
-                    <div class="mega-link-desc">Coastal reclamation, channel deepening, breakwaters &amp; quay walls.</div>
+                    <div class="mega-link-title"><span>Rayan Engineering</span><span>→</span></div>
+                    <div class="mega-link-desc">Flagship civil EPC, high-rise towers, luxury hospitality &amp; industrial complexes.</div>
                   </a>
                   <a href="/business/energy/" class="mega-sub-link">
-                    <div class="mega-link-title"><span>Energy &amp; EPC</span><span>→</span></div>
-                    <div class="mega-link-desc">Onshore &amp; offshore energy facilities, pipelines &amp; process plants.</div>
-                  </a>
-                  <a href="/business/infrastructure/" class="mega-sub-link">
-                    <div class="mega-link-title"><span>Heavy Civil Infrastructure</span><span>→</span></div>
-                    <div class="mega-link-desc">Highway corridors, bridges, earthworks &amp; municipal utilities.</div>
-                  </a>
-                  <a href="/business/logistics/" class="mega-sub-link">
-                    <div class="mega-link-title"><span>Heavy Fleet Logistics</span><span>→</span></div>
-                    <div class="mega-link-desc">Crawler cranes up to 750T, modular transport &amp; equipment fleets.</div>
+                    <div class="mega-link-title"><span>Rayan Energy</span><span>→</span></div>
+                    <div class="mega-link-desc">Mission-critical energy facilities, hydrocarbon pipelines &amp; process plants.</div>
                   </a>
                   <a href="/about/#india-hub" class="mega-sub-link">
                     <div class="mega-link-title"><span>Ashaz Engineering (India)</span><span>→</span></div>
-                    <div class="mega-link-desc">South Asia regional engineering hub, heavy fabrication &amp; industrial EPC.</div>
+                    <div class="mega-link-desc">South Asia regional engineering hub, heavy structural fabrication &amp; industrial works.</div>
+                  </a>
+                  <a href="/contact/" class="mega-sub-link">
+                    <div class="mega-link-title"><span>Rayan Properties <span style="font-size: 0.65rem; background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); border-radius: 999px; padding: 0.15rem 0.5rem; margin-left: 0.4rem; vertical-align: middle;">UPCOMING</span></span><span>→</span></div>
+                    <div class="mega-link-desc">Premier luxury waterfront estates, residential master plans &amp; commercial towers.</div>
                   </a>
                 </div>
                 <div class="mega-featured-card">
-                  <img src="/assets/images/business/01-engineering.jpg" alt="Rayan Engineering" class="mega-featured-img">
+                  <img src="/assets/images/business/01-engineering.jpg" alt="Rayan Group Companies" class="mega-featured-img">
                   <div class="mega-featured-overlay">
-                    <span class="mega-featured-tag">TURNKEY CAPABILITIES</span>
-                    <h4 class="mega-featured-title">Integrated Solutions Across 5 Operating Sectors</h4>
+                    <span class="mega-featured-tag">CONGLOMERATE ECOSYSTEM</span>
+                    <h4 class="mega-featured-title">Operating Subsidiaries Across the UAE &amp; South Asia</h4>
                   </div>
                 </div>
               </div>
@@ -385,17 +377,15 @@ function renderMobileDrawer(activePath = '/') {
         <!-- BUSINESSES -->
         <div class="mobile-nav-group ${activePath.startsWith('/business') ? 'active' : ''}">
           <button type="button" class="mobile-group-header" aria-expanded="false">
-            <span>BUSINESSES &amp; DIVISIONS</span>
+            <span>BUSINESSES &amp; SUBSIDIARIES</span>
             <svg class="mobile-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="mobile-group-links">
-            <a href="/business/" class="mobile-sublink ${activePath === '/business/' ? 'active' : ''}">All Group Companies &amp; Divisions</a>
-            <a href="/business/engineering/" class="mobile-sublink ${activePath === '/business/engineering/' ? 'active' : ''}">Engineering &amp; Contracting</a>
-            <a href="/business/marine/" class="mobile-sublink ${activePath === '/business/marine/' ? 'active' : ''}">Marine &amp; Dredging</a>
-            <a href="/business/energy/" class="mobile-sublink ${activePath === '/business/energy/' ? 'active' : ''}">Energy &amp; EPC</a>
-            <a href="/business/infrastructure/" class="mobile-sublink ${activePath === '/business/infrastructure/' ? 'active' : ''}">Heavy Civil Infrastructure</a>
-            <a href="/business/logistics/" class="mobile-sublink ${activePath === '/business/logistics/' ? 'active' : ''}">Heavy Fleet Logistics</a>
+            <a href="/business/" class="mobile-sublink ${activePath === '/business/' ? 'active' : ''}">All Operating Companies</a>
+            <a href="/business/engineering/" class="mobile-sublink ${activePath === '/business/engineering/' ? 'active' : ''}">Rayan Engineering</a>
+            <a href="/business/energy/" class="mobile-sublink ${activePath === '/business/energy/' ? 'active' : ''}">Rayan Energy</a>
             <a href="/about/#india-hub" class="mobile-sublink">Ashaz Engineering (India)</a>
+            <a href="/contact/" class="mobile-sublink">Rayan Properties (Upcoming)</a>
           </div>
         </div>
 
@@ -523,7 +513,7 @@ function renderFooter() {
             <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" width="190" height="54">
           </a>
           <p style="margin: 1rem 0; color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">
-            A premier private engineering, marine, infrastructure, energy, and logistics conglomerate executing landmark projects across the UAE and South Asia.
+            A premier private engineering, critical energy EPC, South Asia infrastructure, and real estate development conglomerate executing landmark projects across the UAE and South Asia.
           </p>
           <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 0.85rem;">
             <strong style="color: #fff; display: block; margin-bottom: 0.2rem;">Abu Dhabi Corporate HQ:</strong>
@@ -555,16 +545,15 @@ function renderFooter() {
           </ul>
         </div>
 
-        <!-- Column 2: Businesses & Divisions -->
+        <!-- Column 2: Businesses & Companies -->
         <div>
           <h4 class="footer-col-title">BUSINESSES</h4>
           <ul class="footer-links-list">
-            <li><a href="/business/engineering/" class="footer-link">Engineering &amp; Contracting</a></li>
-            <li><a href="/business/marine/" class="footer-link">Marine &amp; Dredging</a></li>
-            <li><a href="/business/energy/" class="footer-link">Energy &amp; EPC</a></li>
-            <li><a href="/business/infrastructure/" class="footer-link">Civil Infrastructure</a></li>
-            <li><a href="/business/logistics/" class="footer-link">Heavy Fleet Logistics</a></li>
+            <li><a href="/business/engineering/" class="footer-link">Rayan Engineering</a></li>
+            <li><a href="/business/energy/" class="footer-link">Rayan Energy</a></li>
             <li><a href="/about/#india-hub" class="footer-link">Ashaz Engineering (India)</a></li>
+            <li><a href="/contact/" class="footer-link">Rayan Properties (Upcoming)</a></li>
+            <li><a href="/business/" class="footer-link">All Operating Companies</a></li>
           </ul>
         </div>
 
@@ -670,6 +659,10 @@ function wrapPage({ title, description, activePath, content, heroHtml }) {
 
   ${renderFooter()}
 
+  <!-- Interactive Custom Cursor Elements -->
+  <div id="custom-cursor" aria-hidden="true"><span class="cursor-label"></span></div>
+  <div id="cursor-dot" aria-hidden="true"></div>
+
   <!-- Main JavaScript Bundle -->
   <script type="module" src="/src/scripts/main.js"></script>
 </body>
@@ -711,9 +704,181 @@ function renderPageHero({ category, title, description, breadcrumb, bgImage, sub
   `;
 }
 
+// 6. NMDC-Style Interactive Operating Companies Slideshow Card (Home & Business)
+function renderBusinessUnitsSection() {
+  return `
+  <!-- ==========================================================================
+       NMDC-STYLE BUSINESS UNITS SLIDESHOW CARD (5 Operating Entities)
+       ========================================================================== -->
+  <section class="business-units-section" id="group-companies" aria-label="Group Companies and Operating Subsidiaries">
+    <div class="container">
+      <div class="business-units-header">
+        <span class="bu-top-label" style="justify-content: center; margin-bottom: 0.65rem;">CONGLOMERATE SUBSIDIARIES</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.8vw, 3.25rem); font-weight: 800; color: #fff; text-transform: uppercase; line-height: 1.15; margin: 0 0 0.85rem;">OPERATING COMPANIES &amp; SUBSIDIARIES</h2>
+        <p style="font-size: 1.05rem; line-height: 1.65; color: #cbd5e1; max-width: 680px; margin: 0 auto;">
+          An integrated ecosystem of specialized civil contracting, critical energy facilities, South Asia engineering fabrication, and premier property developments operating under unified corporate governance.
+        </p>
+      </div>
+
+      <div class="bu-card-container">
+        <div class="bu-card">
+          <div class="bu-top-bar">
+            <span class="bu-top-label">BUSINESS UNITS</span>
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">RAYAN ENTERPRISE MATRIX</span>
+          </div>
+
+          <div class="bu-slides-viewport" role="region" aria-live="polite">
+            <!-- Slide 0: Rayan Group -->
+            <div class="bu-slide active" data-slide="0">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" width="240" height="70" loading="eager">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Group</h3>
+                  <span class="bu-badge bu-badge-holding">PARENT HOLDING</span>
+                </div>
+                <p class="bu-company-desc">
+                  The premier multinational holding conglomerate orchestrating landmark civil engineering, critical energy infrastructure, and regional capital ventures. Headquartered in Abu Dhabi with expanding multinational corridors, Rayan Group unites specialized operating subsidiaries under rigorous engineering precision and fiduciary stewardship.
+                </p>
+                <a href="/about/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Explore Group Overview</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 1: Rayan Engineering -->
+            <div class="bu-slide" data-slide="1">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/rayan-engineering-white.png" alt="Rayan Engineering" width="240" height="75" loading="lazy">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Engineering &amp; Contracting</h3>
+                  <span class="bu-badge bu-badge-active">CIVIL &amp; GENERAL CONTRACTING</span>
+                </div>
+                <p class="bu-company-desc">
+                  The flagship engineering enterprise executing turnkey building construction, high-rise commercial towers, luxury residential estates, and complex industrial complexes across the UAE. With 50+ years of combined executive heritage, Rayan Engineering sets benchmarks in structural durability and on-schedule execution.
+                </p>
+                <a href="/business/engineering/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Visit Engineering Division</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 2: Rayan Energy -->
+            <div class="bu-slide" data-slide="2">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/rayan-energy-white.png" alt="Rayan Energy" width="240" height="75" loading="lazy">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Energy</h3>
+                  <span class="bu-badge bu-badge-active">OIL, GAS &amp; PROCESS EPC</span>
+                </div>
+                <p class="bu-company-desc">
+                  Powering mission-critical energy infrastructure through onshore and process EPC services, strategic hydrocarbon pipeline corridors, petrochemical process plants, and refinery turnaround execution to strict ISO 45001 safety benchmarks.
+                </p>
+                <a href="/business/energy/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Visit Energy Division</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 3: Ashaz Engineering (India) -->
+            <div class="bu-slide" data-slide="3">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/ashaz-engineering-white.png" alt="Ashaz Engineering (India)" width="200" height="150" loading="lazy">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Ashaz Engineering (India)</h3>
+                  <span class="bu-badge bu-badge-india">SOUTH ASIA REGIONAL HUB</span>
+                </div>
+                <p class="bu-company-desc">
+                  Rayan Group's strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi. Ashaz Engineering delivers heavy civil works, structural steel fabrication, industrial infrastructure, and technical contracting across the Indian subcontinent.
+                </p>
+                <a href="/about/#india-hub" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Explore Ashaz Regional Hub</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 4: Rayan Properties -->
+            <div class="bu-slide" data-slide="4">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/rayan-properties-white.png" alt="Rayan Properties" width="240" height="72" loading="lazy">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Properties</h3>
+                  <span class="bu-badge bu-badge-upcoming">UPCOMING DIVISION</span>
+                </div>
+                <p class="bu-company-desc">
+                  Rayan Group's upcoming premier real estate development enterprise. Curating ultra-luxury waterfront estates, master-planned residential communities, architectural landmark high-rises, and prime commercial destinations across UAE metropolitan locations.
+                </p>
+                <a href="/contact/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Register Interest</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- NMDC-Style Interactive Navigation Pills -->
+          <div class="bu-pills-row" role="tablist" aria-label="Select Operating Company">
+            <button type="button" class="bu-pill active" data-pill="0" role="tab" aria-selected="true">
+              <span class="bu-pill-slash" style="color: #0099e6;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Group</span>
+                <span class="bu-pill-subtag">Parent Holding</span>
+              </div>
+            </button>
+            <button type="button" class="bu-pill" data-pill="1" role="tab" aria-selected="false">
+              <span class="bu-pill-slash" style="color: #0099e6;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Engineering</span>
+                <span class="bu-pill-subtag">Civil &amp; General EPC</span>
+              </div>
+            </button>
+            <button type="button" class="bu-pill" data-pill="2" role="tab" aria-selected="false">
+              <span class="bu-pill-slash" style="color: #10b981;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Energy</span>
+                <span class="bu-pill-subtag">Oil, Gas &amp; Process</span>
+              </div>
+            </button>
+            <button type="button" class="bu-pill" data-pill="3" role="tab" aria-selected="false">
+              <span class="bu-pill-slash" style="color: #00c7b3;">/</span>
+              <div>
+                <span class="bu-pill-label">Ashaz Engineering</span>
+                <span class="bu-pill-subtag">India Regional Hub</span>
+              </div>
+            </button>
+            <button type="button" class="bu-pill" data-pill="4" role="tab" aria-selected="false">
+              <span class="bu-pill-slash" style="color: #f59e0b;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Properties</span>
+                <span class="bu-pill-subtag">Upcoming</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  `;
+}
+
 module.exports = {
   wrapPage,
   renderPageHero,
+  renderBusinessUnitsSection,
   ensureDir
 };
 console.log('Template system configured.');
+

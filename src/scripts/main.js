@@ -776,6 +776,166 @@ function initBusinessUnitsSlider() {
   startAutoplay();
 }
 
+// ==========================================================================
+// 13. LUXURY INTERACTIVE CUSTOM CURSOR
+// ==========================================================================
+function initCustomCursor() {
+  const cursor = document.getElementById('custom-cursor');
+  const dot = document.getElementById('cursor-dot');
+  if (!cursor || !dot) return;
+
+  // Only activate on mouse-capable desktop devices
+  if (window.matchMedia('(hover: none) and (pointer: coarse)').matches || window.innerWidth <= 1024) {
+    cursor.style.display = 'none';
+    dot.style.display = 'none';
+    return;
+  }
+
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  let cursorX = mouseX;
+  let cursorY = mouseY;
+  let isVisible = false;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+    if (!isVisible) {
+      isVisible = true;
+      cursor.style.opacity = '1';
+      dot.style.opacity = '1';
+    }
+  }, { passive: true });
+
+  function renderCursor() {
+    cursorX += (mouseX - cursorX) * 0.16;
+    cursorY += (mouseY - cursorY) * 0.16;
+    cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0)`;
+    requestAnimationFrame(renderCursor);
+  }
+  requestAnimationFrame(renderCursor);
+
+  // Link & Button hover states
+  const interactives = document.querySelectorAll('a, button, input, select, textarea, .bu-pill, .division-card, .project-card, .project-editorial-card, .btn-enterprise-primary, .btn-enterprise-secondary');
+  interactives.forEach((el) => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+  });
+
+  // Project cards special state
+  const projectCards = document.querySelectorAll('.project-card, .project-editorial-card');
+  projectCards.forEach((card) => {
+    card.addEventListener('mouseenter', () => {
+      document.body.classList.add('cursor-project');
+      const label = cursor.querySelector('.cursor-label');
+      if (label) label.textContent = 'EXPLORE';
+    });
+    card.addEventListener('mouseleave', () => {
+      document.body.classList.remove('cursor-project');
+    });
+  });
+}
+
+// ==========================================================================
+// 14. GSAP SCROLL & REVEAL ANIMATIONS
+// ==========================================================================
+function initScrollAnimations() {
+  if (prefersReducedMotion) return;
+
+  // Staggered reveal for section titles & subtitles
+  document.querySelectorAll('.section, .page-hero, .business-units-section').forEach((sec) => {
+    const title = sec.querySelector('.section-title, .bu-section-title, h2');
+    const eyebrow = sec.querySelector('.section-eyebrow, .bu-eyebrow, .bu-top-label');
+    const desc = sec.querySelector('.section-subtitle, .bu-section-desc');
+
+    if (title) {
+      gsap.from(title, {
+        opacity: 0,
+        y: 35,
+        duration: 0.85,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: title,
+          start: 'top 88%',
+        }
+      });
+    }
+
+    if (eyebrow) {
+      gsap.from(eyebrow, {
+        opacity: 0,
+        x: -20,
+        duration: 0.6,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: eyebrow,
+          start: 'top 90%',
+        }
+      });
+    }
+
+    if (desc) {
+      gsap.from(desc, {
+        opacity: 0,
+        y: 20,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: desc,
+          start: 'top 88%',
+        }
+      });
+    }
+  });
+
+  // Division and operating company cards reveal
+  if (document.querySelector('.division-card')) {
+    gsap.from('.division-card', {
+      opacity: 0,
+      y: 40,
+      stagger: 0.12,
+      duration: 0.85,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.division-card',
+        start: 'top 85%',
+      }
+    });
+  }
+
+  // Project cards reveal
+  if (document.querySelector('.project-card, .project-editorial-card')) {
+    gsap.from('.project-card, .project-editorial-card', {
+      opacity: 0,
+      y: 40,
+      stagger: 0.1,
+      duration: 0.8,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.project-card, .project-editorial-card',
+        start: 'top 85%',
+      }
+    });
+  }
+
+  // Bu Card reveal
+  const buCard = document.querySelector('.bu-card');
+  if (buCard) {
+    gsap.from(buCard, {
+      opacity: 0,
+      y: 45,
+      scale: 0.98,
+      duration: 0.9,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: buCard,
+        start: 'top 88%',
+      }
+    });
+  }
+}
+
 // Start preloader as early as possible
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initPreloader);
@@ -787,6 +947,7 @@ if (document.readyState === 'loading') {
 // DOM READY INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  initCustomCursor();
   initThemeToggle();
   initHeader();
   initMobileNavigation();
@@ -798,7 +959,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initFilterTabs();
   initForms();
   initBackToTop();
+  initScrollAnimations();
 });
+
 
 
 

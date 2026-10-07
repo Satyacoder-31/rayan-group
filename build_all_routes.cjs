@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { wrapPage, ensureDir } = require('./build_multipage_site.cjs');
+const { wrapPage, ensureDir, renderBusinessUnitsSection } = require('./build_multipage_site.cjs');
 
 function createRoute(relativePath, { title, description, activePath, heroHtml, content }) {
   const fullPath = path.join(__dirname, relativePath);
@@ -11,7 +11,7 @@ function createRoute(relativePath, { title, description, activePath, heroHtml, c
 }
 
 // ============================================================================
-// 1. HERO SLIDESHOW (5 High-Impact Engineering, Marine & Energy Slides)
+// 1. HERO SLIDESHOW (High-Impact Engineering, Energy & Infrastructure Slides)
 // ============================================================================
 const homeHeroHtml = `
   <section class="hero-slideshow-wrap" aria-label="Cinematic Slideshow">
@@ -25,7 +25,7 @@ const homeHeroHtml = `
         </div>
         <h1 class="hero-giant-title">BUILDING WHAT MOVES THE WORLD</h1>
         <p class="hero-lead-text">
-          A premier multinational engineering, marine, energy, and infrastructure conglomerate executing landmark projects across the UAE and South Asia.
+          A premier multinational engineering, energy, infrastructure, and property development conglomerate executing landmark projects across the UAE and South Asia.
         </p>
         <div class="hero-actions-row">
           <a href="/proposal/" class="btn-enterprise-primary">
@@ -39,31 +39,7 @@ const homeHeroHtml = `
       </div>
     </div>
 
-    <!-- Slide 2: Marine & Coastal Dredging -->
-    <div class="hero-slide-item">
-      <img src="/assets/images/hero/hero-2-marine.jpg" alt="Marine Dredging & Coastal Engineering" class="hero-slide-bg-img">
-      <div class="hero-slide-gradient"></div>
-      <div class="hero-slide-container">
-        <div class="hero-eyebrow-badge">
-          <span>MARINE &amp; DREDGING</span> • <span>COASTAL RECLAMATION</span>
-        </div>
-        <h1 class="hero-giant-title">SHAPING COASTLINES &amp; OFFSHORE INFRASTRUCTURE</h1>
-        <p class="hero-lead-text">
-          Deep harbor channel dredging, land reclamation, breakwater rock armor, and bespoke waterfront aquatic installations.
-        </p>
-        <div class="hero-actions-row">
-          <a href="/business/marine/" class="btn-enterprise-primary">
-            <span>MARINE DIVISION</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-          <a href="/proposal/?division=marine" class="btn-enterprise-secondary">
-            <span>START A MARINE PROJECT</span>
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Slide 3: Energy Facilities & EPC -->
+    <!-- Slide 2: Energy Facilities & EPC -->
     <div class="hero-slide-item">
       <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Energy Facilities & Pipelines" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
@@ -87,7 +63,7 @@ const homeHeroHtml = `
       </div>
     </div>
 
-    <!-- Slide 4: Heavy Civil Infrastructure & Plant -->
+    <!-- Slide 3: Heavy Civil Infrastructure & Plant -->
     <div class="hero-slide-item">
       <img src="/assets/images/hero/hero-infrastructure-cranes.jpg" alt="Heavy Civil Infrastructure & Cranes" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
@@ -111,7 +87,7 @@ const homeHeroHtml = `
       </div>
     </div>
 
-    <!-- Slide 5: Dual Hub UAE & India -->
+    <!-- Slide 4: Dual Hub UAE & India -->
     <div class="hero-slide-item">
       <img src="/assets/images/about/india-hub.jpg" alt="Dual Hub UAE and India" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
@@ -152,9 +128,15 @@ const homeHeroHtml = `
 `;
 
 // ============================================================================
-// 2. HOMEPAGE CONTENT (Structured 12-Section Flow)
+// 2. HOMEPAGE CONTENT (Structured Multi-Entity Flow)
 // ============================================================================
 const homeContent = `
+  <!-- ==========================================================================
+       SECTION 1: INTERACTIVE OPERATING COMPANIES CARD SLIDESHOW (NMDC Pattern)
+       Placed prominently at the start per user specification
+       ========================================================================== -->
+  ${renderBusinessUnitsSection()}
+
   <!-- ==========================================================================
        SECTION 2: WHO WE ARE (Dual-Hub Presence & Executive Heritage)
        ========================================================================== -->
@@ -169,7 +151,7 @@ const homeContent = `
         </div>
         <div>
           <p style="font-size: 1.05rem; line-height: 1.7; color: #cbd5e1; margin-bottom: 1.25rem;">
-            Rayan Group is a premier private engineering, marine, energy, infrastructure, and logistics conglomerate operating across the United Arab Emirates and South Asia.
+            Rayan Group is a premier private engineering, critical energy, infrastructure, and property development conglomerate operating across the United Arab Emirates and South Asia.
           </p>
           <p style="font-size: 0.95rem; line-height: 1.7; color: #94a3b8; margin-bottom: 2rem;">
             With headquarters in Abu Dhabi (Mussafah M-36) and regional operations in Dubai and India (Ashaz Engineering), we combine over 50 years of executive engineering heritage with heavy equipment fleets and triple ISO certifications to deliver high-complexity megaprojects on accelerated schedules.
@@ -194,9 +176,9 @@ const homeContent = `
           <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">Landmark hospitality, retail &amp; towers</div>
         </div>
         <div>
-          <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.75rem); font-weight: 900; color: #fff; line-height: 1;">5</div>
-          <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0099e6; margin-top: 0.5rem;">CORE DIVISIONS</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">Civil, Marine, Energy, Civil Infra, Fleet</div>
+          <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.75rem); font-weight: 900; color: #fff; line-height: 1;">4</div>
+          <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0099e6; margin-top: 0.5rem;">OPERATING ENTITIES</div>
+          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">Engineering, Energy, Ashaz India, Properties</div>
         </div>
         <div>
           <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.75rem); font-weight: 900; color: #fff; line-height: 1;">TRIPLE</div>
@@ -208,71 +190,60 @@ const homeContent = `
   </section>
 
   <!-- ==========================================================================
-       SECTION 3: BUSINESS DIVISIONS (5 Core Operational Divisions)
+       SECTION 3: OPERATING SUBSIDIARIES (4 Core Conglomerate Companies)
        ========================================================================== -->
   <section class="section" style="padding: 6rem 0; background: var(--bg-dark); border-bottom: 1px solid rgba(255,255,255,0.08);">
     <div class="container">
       <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 3.5rem;">
         <div>
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.5rem;">SPECIALIZED HORSEPOWER</span>
-          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase;">BUSINESS DIVISIONS</h2>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase;">OPERATING SUBSIDIARIES</h2>
         </div>
         <a href="/business/" class="btn-enterprise-secondary" style="padding: 0.75rem 1.75rem;">ALL OPERATING COMPANIES →</a>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.75rem;">
-        <!-- Division 1 -->
+        <!-- Company 1: Rayan Engineering -->
         <a href="/business/engineering/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
-          <img src="/assets/images/business/01-engineering.jpg" alt="Engineering & Contracting" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
+          <img src="/assets/images/business/01-engineering.jpg" alt="Rayan Engineering & Contracting" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
             <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">01</span>
             <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #0099e6; text-transform: uppercase; margin-bottom: 0.35rem;">CIVIL &amp; GENERAL CONTRACTING</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">ENGINEERING &amp; CONTRACTING</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">RAYAN ENGINEERING</h3>
             <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Turnkey high-rise towers, luxury hospitality overhauls, retail precincts, and tactical defense structures.</p>
           </div>
         </a>
 
-        <!-- Division 2 -->
-        <a href="/business/marine/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
-          <img src="/assets/images/hero/hero-2-marine.jpg" alt="Marine & Dredging" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
+        <!-- Company 2: Rayan Energy -->
+        <a href="/business/energy/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
+          <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Rayan Energy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
             <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">02</span>
-            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #00c7b3; text-transform: uppercase; margin-bottom: 0.35rem;">COASTAL RECLAMATION &amp; DREDGING</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">MARINE &amp; DREDGING</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Channel deepening, rock breakwaters, quay wall piling, and cantilevered oceanfront aquatic engineering.</p>
-          </div>
-        </a>
-
-        <!-- Division 3 -->
-        <a href="/business/energy/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
-          <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Energy & EPC" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
-          <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
-            <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">03</span>
             <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #10b981; text-transform: uppercase; margin-bottom: 0.35rem;">OIL, GAS &amp; PROCESS PLANTS</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">ENERGY &amp; EPC</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">RAYAN ENERGY</h3>
             <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Onshore hydrocarbon transport pipelines, storage tank farms, process plant mechanics, and shutdown maintenance.</p>
           </div>
         </a>
 
-        <!-- Division 4 -->
-        <a href="/business/infrastructure/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
-          <img src="/assets/images/projects/al-qua-school-infrastructure.jpg" alt="Civil Infrastructure" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
+        <!-- Company 3: Ashaz Engineering (India) -->
+        <a href="/about/#india-hub" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
+          <img src="/assets/images/about/india-hub.jpg" alt="Ashaz Engineering (India)" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
-            <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">04</span>
-            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #38bdf8; text-transform: uppercase; margin-bottom: 0.35rem;">MUNICIPAL &amp; TRANSPORT</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">CIVIL INFRASTRUCTURE</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Highways, arterial roads, stormwater attenuation networks, large-scale interlock paving, and bridges.</p>
+            <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">03</span>
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #00c7b3; text-transform: uppercase; margin-bottom: 0.35rem;">SOUTH ASIA REGIONAL HUB</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">ASHAZ ENGINEERING (INDIA)</h3>
+            <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Heavy civil contracting, structural steel fabrication, industrial workshops, and South Asia project execution.</p>
           </div>
         </a>
 
-        <!-- Division 5 -->
-        <a href="/business/logistics/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
-          <img src="/assets/images/about/overview.jpg" alt="Heavy Fleet Logistics" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
+        <!-- Company 4: Rayan Properties (Upcoming) -->
+        <a href="/contact/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
+          <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Rayan Properties" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
-            <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">05</span>
-            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #f59e0b; text-transform: uppercase; margin-bottom: 0.35rem;">UP TO 750T LIFTING CAPACITY</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">HEAVY FLEET LOGISTICS</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Crawler crane rental up to 750 tonnes, multi-axle modular hydraulic haulage, and engineered heavy rigging.</p>
+            <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">04</span>
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #f59e0b; text-transform: uppercase; margin-bottom: 0.35rem;">UPCOMING DEVELOPMENT DIVISION</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">RAYAN PROPERTIES</h3>
+            <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Ultra-luxury waterfront estates, master-planned residential communities, and landmark metropolitan developments.</p>
           </div>
         </a>
       </div>
@@ -288,7 +259,7 @@ const homeContent = `
         <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">INTEGRATED CAPABILITIES</span>
         <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; margin-top: 0.35rem;">WHAT WE DELIVER</h2>
         <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.5rem; line-height: 1.6;">
-          End-to-end engineering horsepower from design coordination and deep foundations to marine dredging, mechanical energy execution, and specialized logistics.
+          End-to-end engineering horsepower from deep foundations and civil towers to critical mechanical energy execution and South Asia industrial infrastructure.
         </p>
       </div>
 
@@ -300,9 +271,9 @@ const homeContent = `
         </div>
 
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
-          <div style="font-size: 2rem; margin-bottom: 1rem;">🌊</div>
-          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Coastal Marine &amp; Dredging</h3>
-          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Harbor deepening, land reclamation, breakwaters, sheet-pile quay walls, and oceanfront cantilevered aquatic pool installations.</p>
+          <div style="font-size: 2rem; margin-bottom: 1rem;">⚙️</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">South Asia Engineering &amp; Fabrication</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Heavy civil engineering, structural steel fabrication, industrial workshops, and South Asia project execution via Ashaz Engineering.</p>
         </div>
 
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
@@ -411,7 +382,7 @@ const homeContent = `
           <div style="padding: 2rem;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">PRIVATE ISLAND, UAE</span>
             <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Luxury Island 50m Oceanfront Cantilevered Pool</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Cantilevered structural concrete pool engineering extending over coastal waters, horizon overflow waterfalls, and marine landscaping.</p>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Cantilevered structural concrete pool engineering extending over coastal waters, horizon overflow waterfalls, and architectural landscaping.</p>
             <a href="/projects/luxury-island-infinity-pool/" style="color: #0099e6; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
           </div>
         </article>
@@ -559,7 +530,7 @@ const homeContent = `
             SAFETY IS NON-NEGOTIABLE.
           </h2>
           <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.7; margin-bottom: 1.25rem;">
-            At Rayan Group, operational excellence begins with protecting our workforce and the surrounding environment. Every construction site, marine vessel, and industrial fabrication facility operates under our certified zero-harm safety mandate.
+            At Rayan Group, operational excellence begins with protecting our workforce and the surrounding environment. Every construction site, regional yard, and industrial fabrication facility operates under our certified zero-harm safety mandate.
           </p>
           <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem; color: #94a3b8; margin-bottom: 2rem;">
             <li style="display: flex; gap: 0.6rem; align-items: center;"><span style="color: #10b981; font-weight: 700;">✓</span> Full-time NEBOSH-certified safety managers on all sites</li>
@@ -597,7 +568,7 @@ const homeContent = `
           <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: #fff; margin-bottom: 1rem;">ACTIVE TALENT DISCIPLINES</h4>
           <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.85rem; color: #cbd5e1;">
             <li style="display: flex; justify-content: space-between;"><span>• Civil &amp; Structural Engineers</span><span style="color: #0099e6;">UAE &amp; India</span></li>
-            <li style="display: flex; justify-content: space-between;"><span>• Marine Dredging Superintendents</span><span style="color: #0099e6;">Coastal UAE</span></li>
+            <li style="display: flex; justify-content: space-between;"><span>• Heavy Steel Fabrication Engineers</span><span style="color: #0099e6;">India Regional Hub</span></li>
             <li style="display: flex; justify-content: space-between;"><span>• Energy Piping &amp; Quality Inspectors</span><span style="color: #0099e6;">UAE &amp; India</span></li>
             <li style="display: flex; justify-content: space-between;"><span>• Heavy Crane Operators &amp; Riggers</span><span style="color: #0099e6;">Abu Dhabi</span></li>
             <li style="display: flex; justify-content: space-between;"><span>• NEBOSH-Certified HSE Officers</span><span style="color: #0099e6;">All Yards</span></li>
@@ -686,8 +657,8 @@ const homeContent = `
 `;
 
 createRoute('index.html', {
-  title: 'Rayan Group — Multinational Engineering, Marine, Energy & Infrastructure Conglomerate',
-  description: 'Rayan Group is a premier multinational engineering, marine dredging, energy EPC, civil infrastructure, and heavy logistics conglomerate operating across the UAE and South Asia.',
+  title: 'Rayan Group — Multinational Engineering, Energy & Infrastructure Conglomerate',
+  description: 'Rayan Group is a premier multinational engineering, critical energy EPC, civil infrastructure, and properties conglomerate operating across the UAE and South Asia.',
   activePath: '/',
   heroHtml: homeHeroHtml,
   content: homeContent
