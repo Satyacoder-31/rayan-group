@@ -310,7 +310,71 @@ const homeContent = `
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem;">
-        <!-- Project 1 -->
+        <!-- Project 1: Waldorf Astoria -->
+        <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="height: 260px; overflow: hidden; position: relative;">
+            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Luxury Renovation" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">AED 92.5M</span>
+          </div>
+          <div style="padding: 2rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">5-STAR HOSPITALITY / RAK</div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Waldorf Astoria Hotel Luxury Renovation</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">5-Star ultra-luxury hospitality overhaul, presidential suites refurbishment, and grand lobby fit-out.</p>
+            <a href="/projects/waldorf-astoria-renovation-rak/" style="font-size: 0.825rem; font-weight: 700; color: #0099e6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <span>READ CASE STUDY</span><span>→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- Project 2: Palm Jumeirah Estate -->
+        <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="height: 260px; overflow: hidden; position: relative;">
+            <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Palm Jumeirah Luxury Estate" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981; text-transform: uppercase;">AED 115.0M</span>
+          </div>
+          <div style="padding: 2rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">COASTAL RESIDENTIAL / DUBAI</div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Palm Jumeirah Luxury Waterfront Estate</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Ultra-luxury coastal villa construction, bespoke Italian marble, structural works, and panoramic glazing.</p>
+            <a href="/projects/palm-jumeirah-rec-estate/" style="font-size: 0.825rem; font-weight: 700; color: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <span>READ CASE STUDY</span><span>→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- Project 3: C2 Towers Al Bateen -->
+        <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="height: 260px; overflow: hidden; position: relative;">
+            <img src="/assets/images/projects/c2-towers-al-bateen.jpg" alt="C2 Towers Al Bateen" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">AED 142.8M</span>
+          </div>
+          <div style="padding: 2rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">HIGH-RISE / ABU DHABI</div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">C2 Towers Twin High-Rise Development</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Twin 22-story luxury waterfront residential towers architectural gypsum, vaulted ceilings, and turnkey fit-out.</p>
+            <a href="/projects/c2-towers-al-bateen/" style="font-size: 0.825rem; font-weight: 700; color: #0099e6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <span>READ CASE STUDY</span><span>→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- Project 4: Edge Group REMAYA -->
+        <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="height: 260px; overflow: hidden; position: relative;">
+            <img src="/assets/images/projects/edge-group-remaya.jpg" alt="Edge Group REMAYA" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">AED 78.4M</span>
+          </div>
+          <div style="padding: 2rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">DEFENSE / ABU DHABI</div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Edge Group - REMAYA Tactical Complex</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Specialized defense training facilities, ballistic partitions, heavy engineering, and architectural fit-out.</p>
+            <a href="/projects/edge-group-remaya/" style="font-size: 0.825rem; font-weight: 700; color: #c5a059; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <span>READ CASE STUDY</span><span>→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- Project 5: Al Wahda Mall -->
         <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden; position: relative;">
             <img src="/assets/images/projects/al-wahda-mall.jpg" alt="Al Wahda Mall" style="width: 100%; height: 100%; object-fit: cover;">
@@ -326,23 +390,7 @@ const homeContent = `
           </div>
         </article>
 
-        <!-- Project 2 -->
-        <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-          <div style="height: 260px; overflow: hidden; position: relative;">
-            <img src="/assets/images/projects/ghantoot-palace.jpg" alt="Ghantoot Palace" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">AED 185.0M</span>
-          </div>
-          <div style="padding: 2rem;">
-            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">ROYAL INTERIORS / GHANTOOT</div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Ghantoot Royal Private Estate &amp; Fit-Out</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Bespoke ornamental gypsum fabrication, vaulted ceilings, and refined hand-crafted architectural finishes.</p>
-            <a href="/projects/ghantoot-palace/" style="font-size: 0.825rem; font-weight: 700; color: #c5a059; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
-              <span>READ CASE STUDY</span><span>→</span>
-            </a>
-          </div>
-        </article>
-
-        <!-- Project 3 -->
+        <!-- Project 6: Arabian Gulf Coastal Berth -->
         <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden; position: relative;">
             <img src="/assets/images/business/marine-offshore-port.jpg" alt="Maritime Berths" style="width: 100%; height: 100%; object-fit: cover;">

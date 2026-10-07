@@ -1157,6 +1157,66 @@ createRoute('media/index.html', {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem;">
         <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
           <div style="height: 260px; overflow: hidden;">
+            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Luxury Renovation" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+          </div>
+          <div style="padding: 1.5rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">5-STAR HOSPITALITY</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Waldorf Astoria Hotel Luxury Renovation, RAK</h3>
+          </div>
+        </div>
+
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+          <div style="height: 260px; overflow: hidden;">
+            <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Palm Jumeirah Luxury Estate" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+          </div>
+          <div style="padding: 1.5rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">COASTAL RESIDENTIAL</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Palm Jumeirah Ultra-Luxury Waterfront Estate</h3>
+          </div>
+        </div>
+
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+          <div style="height: 260px; overflow: hidden;">
+            <img src="/assets/images/projects/c2-towers-al-bateen.jpg" alt="C2 Towers Al Bateen" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+          </div>
+          <div style="padding: 1.5rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">HIGH-RISE ENGINEERING</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">C2 Towers Twin High-Rise Development, Al Bateen</h3>
+          </div>
+        </div>
+
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+          <div style="height: 260px; overflow: hidden;">
+            <img src="/assets/images/projects/edge-group-remaya.jpg" alt="Edge Group REMAYA" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+          </div>
+          <div style="padding: 1.5rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">DEFENSE &amp; TACTICAL</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">EDGE Group - REMAYA Tactical Shooting Complex</h3>
+          </div>
+        </div>
+
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+          <div style="height: 260px; overflow: hidden;">
+            <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Luxury Island Infinity Pool" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+          </div>
+          <div style="padding: 1.5rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">AQUATIC RESORT ENGINEERING</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Luxury Island 50m Oceanfront Cantilevered Pool</h3>
+          </div>
+        </div>
+
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+          <div style="height: 260px; overflow: hidden;">
+            <img src="/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg" alt="Roxy Cinemas Dubai Hills" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+          </div>
+          <div style="padding: 1.5rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">ACOUSTIC ENGINEERING</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Roxy Cinemas VIP Auditoriums, Dubai Hills Mall</h3>
+          </div>
+        </div>
+
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+          <div style="height: 260px; overflow: hidden;">
             <img src="/assets/images/projects/al-wahda-mall.jpg" alt="Al Wahda Mall" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
           </div>
           <div style="padding: 1.5rem;">
@@ -1207,11 +1267,11 @@ createRoute('media/index.html', {
 
         <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/business/05-logistics.jpg" alt="Heavy Fleet" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/projects/al-qua-school-infrastructure.jpg" alt="Al Qua School Infrastructure" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
           </div>
           <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">FLEET LOGISTICS</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Heavy Crawler Cranes &amp; Multi-Axle Modular Haulers</h3>
+            <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">CAMPUS CIVIC WORKS</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Al Qua School 35,000+ sqm Interlock &amp; Paving</h3>
           </div>
         </div>
       </div>

@@ -1,0 +1,470 @@
+{
+  "projects": [
+    {
+      "pdf": "Al Lisaili Villa Work Under Construction .pdf",
+      "slug": "al-lisaili-villa",
+      "name": "Al Lisaili Luxury Villa",
+      "category": "residential",
+      "location": "Al Lisaili, Dubai",
+      "client": "Private High-Net-Worth Client",
+      "scope": "Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes",
+      "status": "Under Construction"
+    },
+    {
+      "pdf": "Andina restaurant Marina dubai.pdf",
+      "slug": "andina-restaurant-marina",
+      "name": "Andina Restaurant & Lounge",
+      "category": "commercial",
+      "location": "Dubai Marina, Dubai",
+      "client": "Andina Hospitality Group",
+      "scope": "Bespoke Restaurant Fit-Out, Luxury Woodwork, Commercial Kitchen MEP & Bar Joinery",
+      "status": "Completed"
+    },
+    {
+      "pdf": "C2 Towers Al Bateen  Ayat.pdf",
+      "slug": "c2-towers-al-bateen",
+      "name": "C2 Towers Development",
+      "category": "residential",
+      "location": "Al Bateen, Abu Dhabi",
+      "client": "Ayat Contracting LLC / Prestige Real Estate",
+      "scope": "High-Rise Architectural Gypsum, Vaulted Ceilings, Interior Partitions & Turnkey Fit-Out",
+      "status": "Completed"
+    },
+    {
+      "pdf": "CHIPOTLE Restaurant MBZ Mall  Top Rock.pdf",
+      "slug": "chipotle-mbz-mall",
+      "name": "Chipotle Mexican Grill - MBZ Mall",
+      "category": "commercial",
+      "location": "MBZ Mall, Abu Dhabi",
+      "client": "Top Rock Interiors / Chipotle Middle East",
+      "scope": "Turnkey F&B Retail Fit-Out, Custom Metalwork, Acoustic Ceilings & Specialized MEP",
+      "status": "Completed"
+    },
+    {
+      "pdf": "CRC OFFICE MARINA PALACE MARINA DUBAI.pdf",
+      "slug": "crc-office-marina-palace",
+      "name": "CRC Corporate Offices - Marina Palace",
+      "category": "commercial",
+      "location": "Dubai Marina, Dubai",
+      "client": "CRC Real Estate / Commercial Real Estate Group",
+      "scope": "Grade-A Executive Office Fit-Out, Acoustic Glass Partitions, Ergonomic Workstations & MEP",
+      "status": "Completed"
+    },
+    {
+      "pdf": "Dubai Jumera Palm-REC.pdf",
+      "slug": "palm-jumeirah-rec-estate",
+      "name": "Palm Jumeirah Luxury Waterfront Estate",
+      "category": "residential",
+      "location": "Palm Jumeirah, Dubai",
+      "client": "REC Contracting LLC / Royal Estate Corp",
+      "scope": "Ultra-Luxury Coastal Villa Construction, Bespoke Marble, Structural Works & Panoramic Glazing",
+      "status": "Completed"
+    },
+    {
+      "pdf": "Dubai Police Academy  Top Rock Under Construction.pdf",
+      "slug": "dubai-police-academy",
+      "name": "Dubai Police Academy Tactical Facility",
+      "category": "infrastructure",
+      "location": "Al Rowaiyah / Dubai",
+      "client": "Dubai Police GHQ / Top Rock Contracting",
+      "scope": "Institutional Complex Construction, Tactical Infrastructure, Heavy Gypsum & Security Partitions",
+      "status": "Under Construction"
+    },
+    {
+      "pdf": "Edge Group  REMAYA .pdf",
+      "slug": "edge-group-remaya",
+      "name": "Edge Group - REMAYA Shooting Club & Tactical Complex",
+      "category": "infrastructure",
+      "location": "Abu Dhabi, UAE",
+      "client": "EDGE Group / REMAYA International",
+      "scope": "Specialized Defense Training Facilities, Ballistic Partitions, Heavy Engineering & Architectural Fit-Out",
+      "status": "Completed"
+    },
+    {
+      "pdf": "Luxury Island  Marble.pdf",
+      "slug": "luxury-island-marble-works",
+      "name": "Luxury Island Marble & Architectural Stone Installation",
+      "category": "residential",
+      "location": "Private Luxury Island, Abu Dhabi",
+      "client": "Private Royal Estate Development",
+      "scope": "Italian Calacatta & Statuario Marble Cladding, Precision Waterjet Inlays & Luxury Flooring",
+      "status": "Completed"
+    },
+    {
+      "pdf": "Max-Al Wahda Mall  HLN.pdf",
+      "slug": "max-fashion-al-wahda-mall",
+      "name": "Max Fashion Anchor Store - Al Wahda Mall",
+      "category": "commercial",
+      "location": "Al Wahda Mall, Abu Dhabi",
+      "client": "Landmark Group / HLN Technical Services LLC",
+      "scope": "Large-Format Anchor Retail Fit-Out, Heavy Duty Flooring, Structural MEP & Architectural Gypsum",
+      "status": "Completed"
+    },
+    {
+      "pdf": "PASCO work in Al qua school.pdf",
+      "slug": "al-qua-school-infrastructure",
+      "name": "Al Qua School Educational Infrastructure & Paving",
+      "category": "infrastructure",
+      "location": "Al Qua'a, Abu Dhabi",
+      "client": "Abu Dhabi Department of Education & Knowledge (ADEK) / PASCO",
+      "scope": "External Civil Engineering, Heavy Interlock Paving, Campus Utility Walkways & Stormwater Drainage",
+      "status": "Completed"
+    },
+    {
+      "pdf": "Private apparent in Silicon oasis.pdf",
+      "slug": "silicon-oasis-residence",
+      "name": "Dubai Silicon Oasis Luxury Residence",
+      "category": "residential",
+      "location": "Dubai Silicon Oasis, Dubai",
+      "client": "Private Residential Investor",
+      "scope": "Turnkey Apartment Modernization, Premium Joinery, Recessed Lighting & Bespoke Kitchen",
+      "status": "Completed"
+    },
+    {
+      "pdf": "Roxy cinema Dubai hills mall DUBAI.pdf",
+      "slug": "roxy-cinema-dubai-hills-mall",
+      "name": "Roxy Cinemas VIP Auditoriums - Dubai Hills Mall",
+      "category": "commercial",
+      "location": "Dubai Hills Mall, Dubai",
+      "client": "Roxy Cinemas / Dubai Holding",
+      "scope": "Acoustic Soundproofing Engineering, VIP Cinema Auditorium Fit-Out, Stadium Tier Seating & Stepped Gypsum",
+      "status": "Completed"
+    },
+    {
+      "pdf": "Sweeming Pool at Luxury Island Abu Dhabi  Brock.pdf",
+      "slug": "luxury-island-infinity-pool",
+      "name": "Luxury Island Oceanfront Infinity Pool & Resort Deck",
+      "category": "residential",
+      "location": "Private Luxury Island, Abu Dhabi",
+      "client": "Brock Construction / Private Island Estate",
+      "scope": "Cantilevered Marine Concrete Pool Engineering, Horizon Waterfalls, Mosaic Tiling & Coastal Landscaping",
+      "status": "Completed"
+    },
+    {
+      "pdf": "The noodle house city walk dubai.pdf",
+      "slug": "the-noodle-house-city-walk",
+      "name": "The Noodle House - City Walk",
+      "category": "commercial",
+      "location": "City Walk, Dubai",
+      "client": "Sarood Hospitality / Dubai Holding",
+      "scope": "Contemporary Asian Restaurant Interior Fit-Out, Open Kitchen Joinery, Lighting & MEP Engineering",
+      "status": "Completed"
+    },
+    {
+      "pdf": "WA Hotel Renovation Ras Al Khaimah   SPECON.pdf",
+      "slug": "waldorf-astoria-renovation-rak",
+      "name": "Waldorf Astoria Hotel Luxury Renovation",
+      "category": "commercial",
+      "location": "Al Hamra, Ras Al Khaimah",
+      "client": "Waldorf Astoria Hotels & Resorts / SPECON LLC",
+      "scope": "5-Star Ultra-Luxury Hospitality Overhaul, Presidential Suites Refurbishment, MEP Modernization & Grand Lobby Fit-Out",
+      "status": "Completed"
+    }
+  ],
+  "results": [
+    {
+      "slug": "al-lisaili-villa",
+      "name": "Al Lisaili Luxury Villa",
+      "category": "residential",
+      "imagesExtracted": 5,
+      "primaryThumb": "/assets/images/projects/al-lisaili-villa.jpg",
+      "images": [
+        "/assets/images/projects/al-lisaili-villa/img_1.jpg",
+        "/assets/images/projects/al-lisaili-villa/img_2.jpg",
+        "/assets/images/projects/al-lisaili-villa/img_3.jpg",
+        "/assets/images/projects/al-lisaili-villa/img_4.jpg",
+        "/assets/images/projects/al-lisaili-villa/img_5.jpg"
+      ]
+    },
+    {
+      "slug": "andina-restaurant-marina",
+      "name": "Andina Restaurant & Lounge",
+      "category": "commercial",
+      "imagesExtracted": 4,
+      "primaryThumb": "/assets/images/projects/andina-restaurant-marina.jpg",
+      "images": [
+        "/assets/images/projects/andina-restaurant-marina/img_1.jpg",
+        "/assets/images/projects/andina-restaurant-marina/img_2.jpg",
+        "/assets/images/projects/andina-restaurant-marina/img_3.jpg",
+        "/assets/images/projects/andina-restaurant-marina/img_4.jpg"
+      ]
+    },
+    {
+      "slug": "c2-towers-al-bateen",
+      "name": "C2 Towers Development",
+      "category": "residential",
+      "imagesExtracted": 20,
+      "primaryThumb": "/assets/images/projects/c2-towers-al-bateen.jpg",
+      "images": [
+        "/assets/images/projects/c2-towers-al-bateen/img_1.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_2.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_3.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_4.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_5.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_6.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_7.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_8.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_9.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_10.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_11.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_12.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_13.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_14.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_15.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_16.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_17.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_18.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_19.jpg",
+        "/assets/images/projects/c2-towers-al-bateen/img_20.jpg"
+      ]
+    },
+    {
+      "slug": "chipotle-mbz-mall",
+      "name": "Chipotle Mexican Grill - MBZ Mall",
+      "category": "commercial",
+      "imagesExtracted": 3,
+      "primaryThumb": "/assets/images/projects/chipotle-mbz-mall.jpg",
+      "images": [
+        "/assets/images/projects/chipotle-mbz-mall/img_1.jpg",
+        "/assets/images/projects/chipotle-mbz-mall/img_2.jpg",
+        "/assets/images/projects/chipotle-mbz-mall/img_3.jpg"
+      ]
+    },
+    {
+      "slug": "crc-office-marina-palace",
+      "name": "CRC Corporate Offices - Marina Palace",
+      "category": "commercial",
+      "imagesExtracted": 11,
+      "primaryThumb": "/assets/images/projects/crc-office-marina-palace.jpg",
+      "images": [
+        "/assets/images/projects/crc-office-marina-palace/img_1.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_2.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_3.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_4.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_5.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_6.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_7.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_8.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_9.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_10.jpg",
+        "/assets/images/projects/crc-office-marina-palace/img_11.jpg"
+      ]
+    },
+    {
+      "slug": "palm-jumeirah-rec-estate",
+      "name": "Palm Jumeirah Luxury Waterfront Estate",
+      "category": "residential",
+      "imagesExtracted": 27,
+      "primaryThumb": "/assets/images/projects/palm-jumeirah-rec-estate.jpg",
+      "images": [
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_1.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_2.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_3.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_4.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_5.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_6.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_7.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_8.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_9.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_10.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_11.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_12.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_13.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_14.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_15.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_16.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_17.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_18.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_19.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_20.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_21.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_22.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_23.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_24.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_25.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_26.jpg",
+        "/assets/images/projects/palm-jumeirah-rec-estate/img_27.jpg"
+      ]
+    },
+    {
+      "slug": "dubai-police-academy",
+      "name": "Dubai Police Academy Tactical Facility",
+      "category": "infrastructure",
+      "imagesExtracted": 9,
+      "primaryThumb": "/assets/images/projects/dubai-police-academy.jpg",
+      "images": [
+        "/assets/images/projects/dubai-police-academy/img_1.jpg",
+        "/assets/images/projects/dubai-police-academy/img_2.jpg",
+        "/assets/images/projects/dubai-police-academy/img_3.jpg",
+        "/assets/images/projects/dubai-police-academy/img_4.jpg",
+        "/assets/images/projects/dubai-police-academy/img_5.jpg",
+        "/assets/images/projects/dubai-police-academy/img_6.jpg",
+        "/assets/images/projects/dubai-police-academy/img_7.jpg",
+        "/assets/images/projects/dubai-police-academy/img_8.jpg",
+        "/assets/images/projects/dubai-police-academy/img_9.jpg"
+      ]
+    },
+    {
+      "slug": "edge-group-remaya",
+      "name": "Edge Group - REMAYA Shooting Club & Tactical Complex",
+      "category": "infrastructure",
+      "imagesExtracted": 4,
+      "primaryThumb": "/assets/images/projects/edge-group-remaya.jpg",
+      "images": [
+        "/assets/images/projects/edge-group-remaya/img_1.jpg",
+        "/assets/images/projects/edge-group-remaya/img_2.jpg",
+        "/assets/images/projects/edge-group-remaya/img_3.jpg",
+        "/assets/images/projects/edge-group-remaya/img_4.jpg"
+      ]
+    },
+    {
+      "slug": "luxury-island-marble-works",
+      "name": "Luxury Island Marble & Architectural Stone Installation",
+      "category": "residential",
+      "imagesExtracted": 5,
+      "primaryThumb": "/assets/images/projects/luxury-island-marble-works.jpg",
+      "images": [
+        "/assets/images/projects/luxury-island-marble-works/img_1.jpg",
+        "/assets/images/projects/luxury-island-marble-works/img_2.jpg",
+        "/assets/images/projects/luxury-island-marble-works/img_3.jpg",
+        "/assets/images/projects/luxury-island-marble-works/img_4.jpg",
+        "/assets/images/projects/luxury-island-marble-works/img_5.jpg"
+      ]
+    },
+    {
+      "slug": "max-fashion-al-wahda-mall",
+      "name": "Max Fashion Anchor Store - Al Wahda Mall",
+      "category": "commercial",
+      "imagesExtracted": 13,
+      "primaryThumb": "/assets/images/projects/max-fashion-al-wahda-mall.jpg",
+      "images": [
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_1.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_2.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_3.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_4.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_5.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_6.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_7.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_8.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_9.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_10.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_11.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_12.jpg",
+        "/assets/images/projects/max-fashion-al-wahda-mall/img_13.jpg"
+      ]
+    },
+    {
+      "slug": "al-qua-school-infrastructure",
+      "name": "Al Qua School Educational Infrastructure & Paving",
+      "category": "infrastructure",
+      "imagesExtracted": 11,
+      "primaryThumb": "/assets/images/projects/al-qua-school-infrastructure.jpg",
+      "images": [
+        "/assets/images/projects/al-qua-school-infrastructure/img_1.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_2.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_3.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_4.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_5.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_6.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_7.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_8.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_9.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_10.jpg",
+        "/assets/images/projects/al-qua-school-infrastructure/img_11.jpg"
+      ]
+    },
+    {
+      "slug": "silicon-oasis-residence",
+      "name": "Dubai Silicon Oasis Luxury Residence",
+      "category": "residential",
+      "imagesExtracted": 4,
+      "primaryThumb": "/assets/images/projects/silicon-oasis-residence.jpg",
+      "images": [
+        "/assets/images/projects/silicon-oasis-residence/img_1.jpg",
+        "/assets/images/projects/silicon-oasis-residence/img_2.jpg",
+        "/assets/images/projects/silicon-oasis-residence/img_3.jpg",
+        "/assets/images/projects/silicon-oasis-residence/img_4.jpg"
+      ]
+    },
+    {
+      "slug": "roxy-cinema-dubai-hills-mall",
+      "name": "Roxy Cinemas VIP Auditoriums - Dubai Hills Mall",
+      "category": "commercial",
+      "imagesExtracted": 9,
+      "primaryThumb": "/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg",
+      "images": [
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_1.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_2.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_3.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_4.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_5.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_6.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_7.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_8.jpg",
+        "/assets/images/projects/roxy-cinema-dubai-hills-mall/img_9.jpg"
+      ]
+    },
+    {
+      "slug": "luxury-island-infinity-pool",
+      "name": "Luxury Island Oceanfront Infinity Pool & Resort Deck",
+      "category": "residential",
+      "imagesExtracted": 21,
+      "primaryThumb": "/assets/images/projects/luxury-island-infinity-pool.jpg",
+      "images": [
+        "/assets/images/projects/luxury-island-infinity-pool/img_1.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_2.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_3.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_4.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_5.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_6.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_7.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_8.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_9.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_10.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_11.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_12.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_13.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_14.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_15.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_16.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_17.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_18.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_19.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_20.jpg",
+        "/assets/images/projects/luxury-island-infinity-pool/img_21.jpg"
+      ]
+    },
+    {
+      "slug": "the-noodle-house-city-walk",
+      "name": "The Noodle House - City Walk",
+      "category": "commercial",
+      "imagesExtracted": 4,
+      "primaryThumb": "/assets/images/projects/the-noodle-house-city-walk.jpg",
+      "images": [
+        "/assets/images/projects/the-noodle-house-city-walk/img_1.jpg",
+        "/assets/images/projects/the-noodle-house-city-walk/img_2.jpg",
+        "/assets/images/projects/the-noodle-house-city-walk/img_3.jpg",
+        "/assets/images/projects/the-noodle-house-city-walk/img_4.jpg"
+      ]
+    },
+    {
+      "slug": "waldorf-astoria-renovation-rak",
+      "name": "Waldorf Astoria Hotel Luxury Renovation",
+      "category": "commercial",
+      "imagesExtracted": 10,
+      "primaryThumb": "/assets/images/projects/waldorf-astoria-renovation-rak.jpg",
+      "images": [
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_1.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_2.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_3.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_4.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_5.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_6.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_7.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_8.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_9.jpg",
+        "/assets/images/projects/waldorf-astoria-renovation-rak/img_10.jpg"
+      ]
+    }
+  ]
+}

@@ -77,9 +77,28 @@ const SITE_INDEX = [
   { title: "Energy & Offshore Works", category: "Business / Oil & Gas", url: "/business/energy/" },
   { title: "Heavy Logistics & Fleet Services", category: "Business / Logistics", url: "/business/logistics/" },
   { title: "Project Portfolio Showcase", category: "Projects", url: "/projects/" },
+  { title: "Waldorf Astoria Hotel Luxury Renovation", category: "Projects / Hospitality", url: "/projects/waldorf-astoria-renovation-rak/" },
+  { title: "Palm Jumeirah Luxury Waterfront Estate", category: "Projects / Residential", url: "/projects/palm-jumeirah-rec-estate/" },
+  { title: "C2 Towers Development, Al Bateen", category: "Projects / High-Rise", url: "/projects/c2-towers-al-bateen/" },
+  { title: "Edge Group - REMAYA Tactical Complex", category: "Projects / Defense", url: "/projects/edge-group-remaya/" },
   { title: "Al Wahda Mall Development", category: "Projects / Commercial", url: "/projects/al-wahda-mall/" },
   { title: "Ghantoot Royal Private Estate", category: "Projects / Interiors", url: "/projects/ghantoot-palace/" },
-  { title: "Yas Mall Retail Engineering", category: "Projects / Retail", url: "/projects/yas-mall/" },
+  { title: "Dubai Police Academy Tactical Facility", category: "Projects / Civic", url: "/projects/dubai-police-academy/" },
+  { title: "Roxy Cinemas VIP Auditoriums - Dubai Hills", category: "Projects / Entertainment", url: "/projects/roxy-cinema-dubai-hills-mall/" },
+  { title: "Luxury Island Oceanfront Infinity Pool", category: "Projects / Aquatic", url: "/projects/luxury-island-infinity-pool/" },
+  { title: "Luxury Island Marble & Stone Works", category: "Projects / Masonry", url: "/projects/luxury-island-marble-works/" },
+  { title: "Max Fashion Anchor Store - Al Wahda Mall", category: "Projects / Retail", url: "/projects/max-fashion-al-wahda-mall/" },
+  { title: "Al Lisaili Luxury Villa Development", category: "Projects / Residential", url: "/projects/al-lisaili-villa/" },
+  { title: "Al Qua School Educational Infrastructure", category: "Projects / Infrastructure", url: "/projects/al-qua-school-infrastructure/" },
+  { title: "Chipotle Mexican Grill - MBZ Mall", category: "Projects / F&B", url: "/projects/chipotle-mbz-mall/" },
+  { title: "Andina Restaurant & Lounge, Dubai Marina", category: "Projects / Hospitality", url: "/projects/andina-restaurant-marina/" },
+  { title: "The Noodle House - City Walk Dubai", category: "Projects / Hospitality", url: "/projects/the-noodle-house-city-walk/" },
+  { title: "CRC Corporate Offices - Marina Palace", category: "Projects / Commercial", url: "/projects/crc-office-marina-palace/" },
+  { title: "Dubai Silicon Oasis Luxury Residence", category: "Projects / Residential", url: "/projects/silicon-oasis-residence/" },
+  { title: "Arabian Gulf Coastal Industrial Berth", category: "Projects / Marine", url: "/projects/marine-coastal-terminal/" },
+  { title: "Habshan Energy Pipeline Corridor", category: "Projects / Energy", url: "/projects/offshore-energy-pipeline/" },
+  { title: "Porsche Industrial Service Facility", category: "Projects / Infrastructure", url: "/projects/porsche-service-center/" },
+  { title: "Yas Mall Destination Fit-Out", category: "Projects / Retail", url: "/projects/yas-mall/" },
   { title: "Sustainability & Net-Zero ESG", category: "Sustainability", url: "/sustainability/" },
   { title: "Investor Relations Dashboard", category: "Investors", url: "/investors/" },
   { title: "Financial Results & Statements", category: "Investors / Financials", url: "/investors/financial-results/" },
@@ -305,31 +324,59 @@ function initInvestorTables() {
 // 7. PROJECT & MEDIA FILTERS
 // ==========================================================================
 function initFilterTabs() {
-  // Project category filters
+  // Project category filters & Live search
   const projectFilterBtns = document.querySelectorAll('.project-filter-btn');
-  const projectCards = document.querySelectorAll('.project-editorial-card, [data-project-cat]');
+  const projectCards = document.querySelectorAll('.project-editorial-card');
+  const searchInput = document.getElementById('projectSearchInput');
+  const counterEl = document.getElementById('projectCounter');
+
+  let activeFilter = 'all';
+  let searchQuery = '';
+
+  function updateProjectDisplay() {
+    let visibleCount = 0;
+    projectCards.forEach(card => {
+      const cat = card.getAttribute('data-project-cat') || '';
+      const title = (card.getAttribute('data-project-title') || '').toLowerCase();
+      const client = (card.getAttribute('data-project-client') || '').toLowerCase();
+      const loc = (card.getAttribute('data-project-loc') || '').toLowerCase();
+      const text = card.textContent.toLowerCase();
+
+      const matchesCategory = activeFilter === 'all' || cat === activeFilter;
+      const matchesSearch = !searchQuery || title.includes(searchQuery) || client.includes(searchQuery) || loc.includes(searchQuery) || text.includes(searchQuery);
+
+      if (matchesCategory && matchesSearch) {
+        card.style.display = '';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    if (counterEl) {
+      counterEl.textContent = `DISPLAYING ${visibleCount} OF ${projectCards.length} EXECUTED ASSETS`;
+    }
+  }
 
   if (projectFilterBtns.length && projectCards.length) {
     projectFilterBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         projectFilterBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const filter = btn.getAttribute('data-filter') || 'all';
-
-        projectCards.forEach(card => {
-          const cat = card.getAttribute('data-project-cat');
-          if (filter === 'all' || cat === filter) {
-            card.style.display = '';
-            gsap.fromTo(card, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.35 });
-          } else {
-            card.style.display = 'none';
-          }
-        });
+        activeFilter = btn.getAttribute('data-filter') || 'all';
+        updateProjectDisplay();
       });
     });
   }
 
-  // Media Gallery Lightbox
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      updateProjectDisplay();
+    });
+  }
+
+  // Media & Project Gallery Lightbox
   const mediaCards = document.querySelectorAll('.media-thumb-card');
   const lightboxModal = document.querySelector('.lightbox-modal');
 
@@ -341,7 +388,7 @@ function initFilterTabs() {
     mediaCards.forEach(card => {
       card.addEventListener('click', () => {
         const img = card.querySelector('img');
-        const caption = card.querySelector('.media-card-title')?.textContent || '';
+        const caption = card.querySelector('.media-card-title')?.textContent || img?.alt || '';
         if (lbImg && img) lbImg.src = img.src;
         if (lbCaption) lbCaption.textContent = caption;
         lightboxModal.classList.add('open');
@@ -353,6 +400,11 @@ function initFilterTabs() {
     }
     lightboxModal.addEventListener('click', (e) => {
       if (e.target === lightboxModal) lightboxModal.classList.remove('open');
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightboxModal.classList.contains('open')) {
+        lightboxModal.classList.remove('open');
+      }
     });
   }
 }
