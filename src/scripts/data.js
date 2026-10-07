@@ -54,96 +54,67 @@ export const GROUP_INFO = {
 // Operating Companies within Rayan Group
 export const GROUP_COMPANIES = [
   {
+    id: "rayan-group",
+    name: "Rayan Group",
+    sector: "Parent Holding Conglomerate",
+    headline: "Multinational Engineering, Marine & Infrastructure Governance",
+    description: "The parent multinational conglomerate orchestrating landmark engineering, energy infrastructure, heavy marine contracting, and cross-border capital ventures across the UAE, South Asia, and the Middle East.",
+    href: "/about/",
+    image: "/assets/images/about/overview.jpg",
+    logo: "/assets/rayan-logo-white.svg",
+    stats: "50+ Years Combined Leadership",
+    status: "holding"
+  },
+  {
     id: "rayan-engineering",
-    name: "Rayan Engineering & Contracting L.L.C - S.P.C",
-    sector: "Civil & Building Construction",
+    name: "Rayan Engineering & Contracting L.L.C",
+    sector: "Civil & General Contracting",
     headline: "Turnkey EPC & Commercial High-Rise Engineering",
-    description: "The flagship enterprise delivering turnkey civil engineering, high-rise frameworks, and large-scale industrial complexes across the UAE and international hubs.",
+    description: "The flagship enterprise executing turnkey civil engineering, high-rise frameworks, and large-scale industrial complexes across the UAE with 500+ executed projects.",
     href: "/business/engineering/",
     image: "/assets/images/business/01-engineering.jpg",
-    stats: "500+ Projects Delivered"
-  },
-  {
-    id: "rayan-marine",
-    name: "Rayan Marine & Coastal Contracting",
-    sector: "Marine & Coastal Infrastructure",
-    headline: "Offshore Dredging, Ports & Waterfront Reclamation",
-    description: "Pioneering deep-water marine engineering, port development, breakwaters, and island reclamation supporting major GCC maritime logistics hubs.",
-    href: "/business/marine/",
-    image: "/assets/images/business/marine-offshore-port.jpg",
-    stats: "15+ Marine Corridors"
-  },
-  {
-    id: "rayan-infrastructure",
-    name: "Rayan Infrastructure & Heavy Civil",
-    sector: "Infrastructure & Urban Corridors",
-    headline: "Highways, Bridges & Heavy Transportation Utilities",
-    description: "Constructing vital transport arteries, grade-separated bridges, utility tunnels, and foundational civic infrastructure for high-growth metropolitan centers.",
-    href: "/business/infrastructure/",
-    image: "/assets/images/business/03-infrastructure.jpg",
-    stats: "120+ km Civil Works"
+    logo: "/assets/logos/rayan-engineering-white.svg",
+    stats: "500+ Projects Delivered",
+    status: "active"
   },
   {
     id: "rayan-energy",
-    name: "Rayan Energy & Offshore Works",
+    name: "Rayan Energy L.L.C",
     sector: "Oil, Gas & Energy Facilities",
     headline: "Onshore & Offshore Facilities, Refineries & Pipelines",
-    description: "Full-lifecycle EPC services for upstream and downstream energy operators, hydrocarbon transport pipelines, and petrochemical process terminals.",
+    description: "Full-lifecycle EPC services for upstream and downstream energy operators, hydrocarbon transport pipelines, and petrochemical process terminals to ISO 45001 zero-harm standards.",
     href: "/business/energy/",
     image: "/assets/images/business/energy-refinery-complex.jpg",
-    stats: "ISO 45001 Zero-Harm Record"
+    logo: "/assets/logos/rayan-energy-white.svg",
+    stats: "ISO 45001 Zero-Harm Record",
+    status: "active"
   },
   {
-    id: "rayan-logistics",
-    name: "Rayan Heavy Logistics & Fleet Services",
-    sector: "Industrial Logistics & Heavy Fleet",
-    headline: "Specialized Heavy Machinery, Marine Vessels & Transport",
-    description: "Operating a premier heavy equipment fleet, specialized crawler cranes, maritime tugs, and project cargo logistics managing nationwide equipment supply chains.",
-    href: "/business/logistics/",
-    image: "/assets/images/business/05-logistics.jpg",
-    stats: "180+ Fleet Units"
-  },
-  {
-    id: "rayan-mep",
-    name: "Rayan MEP & Technical Contracting",
-    sector: "MEP & District Cooling",
-    headline: "High-Efficiency HVAC, Electrical Sub-stations & Piping",
-    description: "Integrated mechanical, electrical, and plumbing engineering engineered to international ASHRAE and Estidama green building certifications.",
-    href: "/business/engineering/",
-    image: "/assets/images/business/06-mep.jpg",
-    stats: "99.98% System Uptime"
-  },
-  {
-    id: "rayan-interiors",
-    name: "Rayan Architectural Interiors & Fit-Out",
-    sector: "Luxury Interiors & Commercial Décor",
-    headline: "Bespoke Royal Residences, Luxury Retail & Corporate Fit-Outs",
-    description: "Handcrafted architectural gypsum, acoustic panelling, and luxury interior contracting delivered for royal private palaces and world-class retail malls.",
-    href: "/business/engineering/",
-    image: "/assets/images/business/07-interiors.jpg",
-    stats: "Palace & Luxury Retail Specialist"
-  },
-  {
-    id: "rayan-tensile",
-    name: "Rayan Tensile & Shade Structures",
-    sector: "Tensile Engineering",
-    headline: "Architectural Fabric Canopies & Advanced Shade Systems",
-    description: "Applying advanced 3D form-finding engineering and tensile membrane technology for high-durability parking shades and architectural canopies across the Middle East.",
-    href: "/business/engineering/",
-    image: "/assets/images/business/08-tensile-shades.jpg",
-    stats: "Leading UAE Shade Fabricator"
-  },
-  {
-    id: "rayan-india",
-    name: "Rayan Group India Regional Hub",
-    sector: "South Asia Regional Operations",
-    headline: "High-Scale Infrastructure & Engineering Consultancy",
-    description: "Directing multi-state engineering operations across India, combining regional infrastructure development with international engineering standards.",
-    href: "/about/",
+    id: "ashaz-engineering",
+    name: "Ashaz Engineering (India)",
+    sector: "South Asia Infrastructure & EPC",
+    headline: "Heavy Engineering, Fabrication & Regional Infrastructure",
+    description: "Operating as Rayan Group's strategic South Asia engineering and regional contracting arm, Ashaz Engineering delivers heavy civil works, structural fabrication, industrial facilities, and technical contracting across India.",
+    href: "/about/#india-hub",
     image: "/assets/images/about/india-hub.jpg",
-    stats: "Dual-Market Synergy"
+    logo: "/assets/logos/ashaz-engineering-white.svg",
+    stats: "Dual-Market Synergy",
+    status: "active"
+  },
+  {
+    id: "rayan-properties",
+    name: "Rayan Properties",
+    sector: "Luxury Real Estate & Master Developments",
+    headline: "Visionary Waterfront Estates & Landmark Developments",
+    description: "Rayan Group's upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans.",
+    href: "/contact/",
+    image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg",
+    logo: "/assets/logos/rayan-properties-white.svg",
+    stats: "Upcoming Division",
+    status: "upcoming"
   }
 ];
+
 
 // Executive Governance
 export const LEADERSHIP_TEAM = [

@@ -669,6 +669,114 @@ function initPreloader() {
   setTimeout(finishPreloader, 2200);
 }
 
+// ==========================================================================
+// 12. NMDC-STYLE BUSINESS UNITS SLIDESHOW CARD
+// ==========================================================================
+function initBusinessUnitsSlider() {
+  const container = document.querySelector('.business-units-section');
+  if (!container) return;
+
+  const slides = container.querySelectorAll('.bu-slide');
+  const pills = container.querySelectorAll('.bu-pill');
+  if (!slides.length || !pills.length) return;
+
+  let currentIndex = 0;
+  let autoplayTimer = null;
+  const slideInterval = 5500; // 5.5s autoplay
+
+  function goToSlide(index) {
+    if (index < 0) index = slides.length - 1;
+    if (index >= slides.length) index = 0;
+    currentIndex = index;
+
+    slides.forEach((slide, i) => {
+      if (i === currentIndex) {
+        slide.classList.add('active');
+        slide.setAttribute('aria-hidden', 'false');
+      } else {
+        slide.classList.remove('active');
+        slide.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    pills.forEach((pill, i) => {
+      if (i === currentIndex) {
+        pill.classList.add('active');
+        pill.setAttribute('aria-selected', 'true');
+      } else {
+        pill.classList.remove('active');
+        pill.setAttribute('aria-selected', 'false');
+      }
+    });
+  }
+
+  function startAutoplay() {
+    stopAutoplay();
+    autoplayTimer = setInterval(() => {
+      goToSlide(currentIndex + 1);
+    }, slideInterval);
+  }
+
+  function stopAutoplay() {
+    if (autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+  }
+
+  // Pill click handlers
+  pills.forEach((pill, idx) => {
+    pill.addEventListener('click', (e) => {
+      e.preventDefault();
+      goToSlide(idx);
+      startAutoplay(); // Reset interval on interaction
+    });
+  });
+
+  // Pause on hover / focus
+  container.addEventListener('mouseenter', stopAutoplay);
+  container.addEventListener('mouseleave', startAutoplay);
+  container.addEventListener('focusin', stopAutoplay);
+  container.addEventListener('focusout', startAutoplay);
+
+  // Keyboard navigation
+  container.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      goToSlide(currentIndex + 1);
+      startAutoplay();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      goToSlide(currentIndex - 1);
+      startAutoplay();
+    }
+  });
+
+  // Touch swipe support
+  let touchStartX = 0;
+  let touchEndX = 0;
+  container.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  container.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchEndX - touchStartX;
+    if (Math.abs(diff) > 40) {
+      if (diff < 0) {
+        goToSlide(currentIndex + 1);
+      } else {
+        goToSlide(currentIndex - 1);
+      }
+      startAutoplay();
+    }
+  }, { passive: true });
+
+  // Initialize first slide and start autoplay
+  goToSlide(0);
+  startAutoplay();
+}
+
 // Start preloader as early as possible
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initPreloader);
@@ -685,11 +793,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNavigation();
   initSearchModal();
   initHeroSlideshow();
+  initBusinessUnitsSlider();
   initStatisticsCounters();
   initInvestorTables();
   initFilterTabs();
   initForms();
   initBackToTop();
 });
+
 
 

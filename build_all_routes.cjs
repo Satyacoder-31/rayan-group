@@ -225,6 +225,176 @@ const homeContent = `
   </section>
 
   <!-- ==========================================================================
+       SECTION: GROUP COMPANIES & BUSINESS UNITS (NMDC-STYLE SLIDESHOW CARD)
+       ========================================================================== -->
+  <section class="business-units-section" id="companies" aria-label="Group Companies and Business Units">
+    <div class="container">
+      <div class="business-units-header">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brand-cyan, #0099e6); display: block; margin-bottom: 0.5rem;">CONGLOMERATE SUBSIDIARIES</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.8vw, 3.25rem); font-weight: 800; color: #fff; text-transform: uppercase; line-height: 1.15; margin: 0 0 0.85rem;">GROUP COMPANIES &amp; DIVISIONS</h2>
+        <p style="font-size: 1.05rem; line-height: 1.65; color: #cbd5e1; max-width: 660px; margin: 0 auto;">
+          An integrated ecosystem of specialized civil engineering, energy facilities, South Asia infrastructure, and premier properties operating under unified governance.
+        </p>
+      </div>
+
+      <div class="bu-card-container">
+        <div class="bu-card">
+          <div class="bu-top-bar">
+            <span class="bu-top-label">BUSINESS UNITS</span>
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em;">RAYAN ENTERPRISE MATRIX</span>
+          </div>
+
+          <!-- Slides Viewport -->
+          <div class="bu-slides-viewport" role="region" aria-live="polite">
+            <!-- Slide 0: Rayan Group -->
+            <div class="bu-slide active" data-slide="0">
+              <div class="bu-logo-col">
+                <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" width="240" height="65">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Group</h3>
+                  <span class="bu-badge bu-badge-holding">PARENT HOLDING</span>
+                </div>
+                <p class="bu-company-desc">
+                  The premier multinational holding conglomerate orchestrating landmark civil engineering, deep-water marine contracting, critical energy infrastructure, and regional capital ventures. Headquartered in Abu Dhabi with expanding multinational corridors, Rayan Group unites specialized divisions under rigorous engineering precision and fiduciary stewardship.
+                </p>
+                <a href="/about/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Explore Group Overview</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 1: Rayan Engineering -->
+            <div class="bu-slide" data-slide="1">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/rayan-engineering-white.svg" alt="Rayan Engineering" width="240" height="75">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Engineering &amp; Contracting</h3>
+                  <span class="bu-badge bu-badge-active">CIVIL &amp; GENERAL CONTRACTING</span>
+                </div>
+                <p class="bu-company-desc">
+                  The flagship engineering enterprise executing turnkey building construction, high-rise commercial towers, luxury residential estates, and complex industrial complexes across the UAE. With 500+ executed projects and 50+ years of combined leadership heritage, Rayan Engineering sets benchmarks in structural excellence.
+                </p>
+                <a href="/business/engineering/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Visit Engineering Division</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 2: Rayan Energy -->
+            <div class="bu-slide" data-slide="2">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/rayan-energy-white.svg" alt="Rayan Energy" width="240" height="75">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Energy</h3>
+                  <span class="bu-badge bu-badge-active">OIL, GAS &amp; OFFSHORE EPC</span>
+                </div>
+                <p class="bu-company-desc">
+                  Powering mission-critical energy infrastructure through onshore and offshore EPC services, strategic hydrocarbon pipeline corridors, petrochemical process plants, and refinery turnaround execution. Operating to uncompromised ISO 45001 and ISO 14001 zero-harm standards across regional energy corridors.
+                </p>
+                <a href="/business/energy/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Visit Energy Division</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 3: Ashaz Engineering (India) -->
+            <div class="bu-slide" data-slide="3">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/ashaz-engineering-white.svg" alt="Ashaz Engineering (India)" width="200" height="150">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Ashaz Engineering (India)</h3>
+                  <span class="bu-badge bu-badge-india">SOUTH ASIA REGIONAL HUB</span>
+                </div>
+                <p class="bu-company-desc">
+                  Rayan Group's strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi. Ashaz Engineering delivers heavy civil works, structural fabrication, industrial infrastructure, and technical contracting, combining deep regional talent with international engineering standards.
+                </p>
+                <a href="/about/#india-hub" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Explore Ashaz Regional Hub</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Slide 4: Rayan Properties -->
+            <div class="bu-slide" data-slide="4">
+              <div class="bu-logo-col">
+                <img src="/assets/logos/rayan-properties-white.svg" alt="Rayan Properties" width="240" height="72">
+              </div>
+              <div class="bu-info-col">
+                <div class="bu-title-row">
+                  <h3 class="bu-company-title">Rayan Properties</h3>
+                  <span class="bu-badge bu-badge-upcoming">UPCOMING DIVISION</span>
+                </div>
+                <p class="bu-company-desc">
+                  Rayan Group's upcoming premier real estate development enterprise. Curating ultra-luxury waterfront estates, master-planned residential communities, architectural landmark high-rises, and prime commercial destinations across high-growth UAE and international metropolitan locations.
+                </p>
+                <a href="/contact/" class="bu-action-link">
+                  <span class="bu-action-box">↗</span>
+                  <span>Upcoming Division • Register Interest</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Selector Pills Row (NMDC Style) -->
+          <div class="bu-pills-row" role="tablist" aria-label="Company Selector Tabs">
+            <button type="button" class="bu-pill active" data-index="0" role="tab" aria-selected="true" aria-controls="slide-0">
+              <span class="bu-pill-slash" style="color: #0099e6;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Group</span>
+                <span class="bu-pill-subtag">Parent Holding</span>
+              </div>
+            </button>
+
+            <button type="button" class="bu-pill" data-index="1" role="tab" aria-selected="false" aria-controls="slide-1">
+              <span class="bu-pill-slash" style="color: #00c7b3;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Engineering</span>
+                <span class="bu-pill-subtag">Civil &amp; EPC</span>
+              </div>
+            </button>
+
+            <button type="button" class="bu-pill" data-index="2" role="tab" aria-selected="false" aria-controls="slide-2">
+              <span class="bu-pill-slash" style="color: #00ad61;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Energy</span>
+                <span class="bu-pill-subtag">Oil, Gas &amp; Energy</span>
+              </div>
+            </button>
+
+            <button type="button" class="bu-pill" data-index="3" role="tab" aria-selected="false" aria-controls="slide-3">
+              <span class="bu-pill-slash" style="color: #14949b;">/</span>
+              <div>
+                <span class="bu-pill-label">Ashaz Engineering</span>
+                <span class="bu-pill-subtag">India Regional Hub</span>
+              </div>
+            </button>
+
+            <button type="button" class="bu-pill" data-index="4" role="tab" aria-selected="false" aria-controls="slide-4">
+              <span class="bu-pill-slash" style="color: #f59e0b;">/</span>
+              <div>
+                <span class="bu-pill-label">Rayan Properties</span>
+                <span class="bu-pill-subtag" style="color: #fbbf24;">Upcoming</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
        SECTION 3: WHAT WE DO (5 Large Business Panels)
        ========================================================================== -->
   <section class="section" style="padding: 7rem 0; background: #050b14; border-bottom: 1px solid rgba(255,255,255,0.08);">
