@@ -651,6 +651,52 @@ createRoute('contact/index.html', {
                 <div><strong>Email:</strong> ashaz@rayan-group.com</div>
               </div>
             </div>
+
+            <!-- Official Social & Digital Media Channels -->
+            <div style="background: #0c1828; border: 1px solid rgba(0, 153, 230, 0.25); border-radius: 10px; padding: 1.75rem;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">VERIFIED DIGITAL PRESENCE</span>
+              <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.75rem;">Official Social &amp; Media Channels</h3>
+              <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                Connect with our corporate communications desk, project showcases, and career announcements across verified platforms:
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="https://www.linkedin.com/company/rayangroupinc/" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(10, 102, 194, 0.12); border: 1px solid rgba(10, 102, 194, 0.3); color: #fff; text-decoration: none; transition: transform 0.2s ease;">
+                  <span style="display: inline-flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 0.875rem;">
+                    <span style="color: #0a66c2;">LinkedIn</span>
+                    <span style="color: #94a3b8; font-weight: 400; font-size: 0.8rem;">/company/rayangroupinc</span>
+                  </span>
+                  <span style="color: #0099e6; font-weight: 700; font-size: 0.85rem;">Connect ↗</span>
+                </a>
+                <a href="https://www.youtube.com/@rayangroupinc" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.25); color: #fff; text-decoration: none; transition: transform 0.2s ease;">
+                  <span style="display: inline-flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 0.875rem;">
+                    <span style="color: #ff4d4d;">YouTube</span>
+                    <span style="color: #94a3b8; font-weight: 400; font-size: 0.8rem;">@rayangroupinc</span>
+                  </span>
+                  <span style="color: #0099e6; font-weight: 700; font-size: 0.85rem;">Subscribe ↗</span>
+                </a>
+                <a href="https://x.com/rayangroupinc" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; text-decoration: none; transition: transform 0.2s ease;">
+                  <span style="display: inline-flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 0.875rem;">
+                    <span>X (Twitter)</span>
+                    <span style="color: #94a3b8; font-weight: 400; font-size: 0.8rem;">@rayangroupinc</span>
+                  </span>
+                  <span style="color: #0099e6; font-weight: 700; font-size: 0.85rem;">Follow ↗</span>
+                </a>
+                <a href="https://www.facebook.com/rayangroupinc" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(24, 119, 242, 0.12); border: 1px solid rgba(24, 119, 242, 0.3); color: #fff; text-decoration: none; transition: transform 0.2s ease;">
+                  <span style="display: inline-flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 0.875rem;">
+                    <span style="color: #4b9bfa;">Facebook</span>
+                    <span style="color: #94a3b8; font-weight: 400; font-size: 0.8rem;">@rayangroupinc</span>
+                  </span>
+                  <span style="color: #0099e6; font-weight: 700; font-size: 0.85rem;">Follow ↗</span>
+                </a>
+                <a href="https://www.instagram.com/rayangroupinc/" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(225, 48, 108, 0.12); border: 1px solid rgba(225, 48, 108, 0.3); color: #fff; text-decoration: none; transition: transform 0.2s ease;">
+                  <span style="display: inline-flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 0.875rem;">
+                    <span style="color: #f472b6;">Instagram</span>
+                    <span style="color: #94a3b8; font-weight: 400; font-size: 0.8rem;">@rayangroupinc</span>
+                  </span>
+                  <span style="color: #0099e6; font-weight: 700; font-size: 0.85rem;">Follow ↗</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
