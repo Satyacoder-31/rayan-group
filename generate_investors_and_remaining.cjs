@@ -257,10 +257,10 @@ createRoute('investors/financial-results/index.html', {
 
           <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">Marine &amp; Dredging</h4>
+              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">Energy &amp; Oil/Gas EPC</h4>
               <span style="font-weight: 700; color: #10b981;">28%</span>
             </div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 511M Revenue. Offshore land reclamation, port deepening, and coastal quay walls.</p>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 511M Revenue. Pipeline installation, storage tank farms, and petrochemical maintenance.</p>
             <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
               <div style="width: 28%; height: 100%; background: #10b981;"></div>
             </div>
@@ -268,10 +268,10 @@ createRoute('investors/financial-results/index.html', {
 
           <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">Energy &amp; Oil/Gas EPC</h4>
+              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">International Operations (Ashaz India)</h4>
               <span style="font-weight: 700; color: #c5a059;">18%</span>
             </div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 328M Revenue. Pipeline installation, storage tank farms, and petrochemical maintenance.</p>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 328M Revenue. Industrial fabrication, mechanical engineering, and cross-border project execution.</p>
             <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
               <div style="width: 18%; height: 100%; background: #c5a059;"></div>
             </div>
@@ -424,7 +424,7 @@ createRoute('investors/presentations/index.html', {
           <div style="padding: 2rem;">
             <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">FEB 2025 • ABU DHABI</span>
             <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.5rem 0 1rem; line-height: 1.3;">Capital Markets Day 2025: Engineering The Decade of Growth</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">Comprehensive 48-page slide deck outlining Rayan Group's multi-billion AED project backlog, maritime dredging expansion, and India EPC manufacturing hub.</p>
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">Comprehensive 48-page slide deck outlining Rayan Group's multi-billion AED project backlog, Energy EPC expansion, and Ashaz Engineering India manufacturing hub.</p>
             <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Capital Markets Day 2025 Deck" style="width: 100%; justify-content: center;">DOWNLOAD DECK (PDF 18MB) ↓</button>
           </div>
         </div>
@@ -444,14 +444,14 @@ createRoute('investors/presentations/index.html', {
 
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
           <div style="height: 180px; position: relative; overflow: hidden;">
-            <img src="/assets/images/business/02-marine.jpg" alt="Maritime Expansion" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="/assets/images/business/03-energy.jpg" alt="Energy &amp; Industrial EPC" style="width: 100%; height: 100%; object-fit: cover;">
             <div style="position: absolute; top: 1rem; left: 1rem; background: #c5a059; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">DIVISIONAL DECK</div>
           </div>
           <div style="padding: 2rem;">
             <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">NOV 2024 • LONDON ROADSHOW</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.5rem 0 1rem; line-height: 1.3;">Marine &amp; Energy EPC Infrastructure Deck</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">Deep dive into Rayan Group's maritime assets, specialized dredging vessels, offshore pipeline capabilities, and hydrocarbon infrastructure contracts.</p>
-            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Marine and Energy Deck" style="width: 100%; justify-content: center;">DOWNLOAD DECK (PDF 11MB) ↓</button>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.5rem 0 1rem; line-height: 1.3;">Energy EPC &amp; Industrial Infrastructure Deck</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">Deep dive into Rayan Group's energy infrastructure assets, turnkey EPC capabilities, industrial manufacturing plants, and hydrocarbon storage contracts.</p>
+            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Energy and EPC Deck" style="width: 100%; justify-content: center;">DOWNLOAD DECK (PDF 11MB) ↓</button>
           </div>
         </div>
       </div>
@@ -803,7 +803,7 @@ createRoute('investors/financial-calendar/index.html', {
           </div>
           <div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Q2 / Half-Year 2025 Interim Results</h3>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Review of first six months operational trajectory, marine fleet utilization rates, and civil project deliveries.</p>
+            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Review of first six months operational trajectory, industrial plant utilization rates, and civil project deliveries.</p>
           </div>
           <div style="text-align: right;">
             <span style="color: #0099e6; font-size: 0.8rem; font-weight: 700;">LIVE WEBCAST</span>
@@ -857,7 +857,7 @@ createRoute('news/index.html', {
         <!-- Featured Article 1 -->
         <article style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
           <div style="height: 220px; overflow: hidden;">
-            <img src="/assets/images/business/marine-offshore-port.jpg" alt="Offshore fleet" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/business/hero-1-skyline.jpg" alt="Commercial EPC" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
@@ -865,10 +865,10 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">MARCH 04, 2025</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 1rem;">
-              Rayan Group Expands Maritime &amp; Offshore Fleet with Major Coastal Contract
+              Rayan Group Awarded Landmark AED 450M Commercial &amp; Infrastructure EPC Contract
             </h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Awarded AED 420 Million contract for extensive coastal land reclamation, channel dredging, and quay wall construction in Abu Dhabi.
+              Turnkey civil construction, MEP systems, and advanced structural engineering for landmark mixed-use towers in Abu Dhabi.
             </p>
             <a href="/news/rayan-group-expands-offshore-portfolio/" class="btn-enterprise-primary" style="align-self: flex-start;">READ FULL ARTICLE →</a>
           </div>
@@ -888,7 +888,7 @@ createRoute('news/index.html', {
               Rayan Group Reports Record FY2024 Revenue Surpassing AED 1.82 Billion
             </h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Strong 24.2% top-line growth driven by civil infrastructure, energy EPC execution, and high-margin specialized marine engineering.
+              Strong 24.2% top-line growth driven by civil infrastructure, energy EPC execution, and high-margin specialized industrial engineering.
             </p>
             <a href="/investors/financial-results/" class="btn-enterprise-secondary" style="align-self: flex-start;">VIEW FINANCIAL AUDIT →</a>
           </div>
@@ -932,15 +932,15 @@ createRoute('news/index.html', {
 // 10. NEWS DETAIL ARTICLE (/news/rayan-group-expands-offshore-portfolio/index.html)
 // ============================================================================
 createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
-  title: 'Rayan Group Expands Maritime & Offshore Fleet with Major Coastal Contract',
-  description: 'Official corporate announcement regarding Rayan Group awarding of AED 420 Million marine dredging and coastal infrastructure contract.',
+  title: 'Rayan Group Awarded Landmark AED 450M Commercial & Infrastructure EPC Contract',
+  description: 'Official corporate announcement regarding Rayan Group awarding of AED 450 Million turnkey engineering, procurement and construction contract.',
   activePath: '/news/',
   heroHtml: renderPageHero({
     category: 'PRESS RELEASE • OFFICIAL ANNOUNCEMENT',
-    title: 'RAYAN EXPANDS MARITIME FLEET',
-    description: 'Securing AED 420 Million coastal engineering contract and commissioning two state-of-the-art suction hopper dredgers.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'News', href: '/news/' }, { label: 'Maritime Expansion', href: '/news/rayan-group-expands-offshore-portfolio/' }],
-    bgImage: '/assets/images/business/marine-offshore-port.jpg'
+    title: 'LANDMARK AED 450M EPC CONTRACT',
+    description: 'Securing turnkey engineering, procurement, and structural construction for major regional development.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'News', href: '/news/' }, { label: 'EPC Contract Award', href: '/news/rayan-group-expands-offshore-portfolio/' }],
+    bgImage: '/assets/images/business/hero-1-skyline.jpg'
   }),
   content: `
   <section class="section" style="padding: 5rem 0; background: #07111e;">
@@ -956,32 +956,32 @@ createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
         </div>
         <div>
           <span style="font-size: 0.75rem; color: #94a3b8; display: block;">SECTOR</span>
-          <strong style="color: #0099e6; font-size: 0.9rem;">Marine Dredging &amp; Ports</strong>
+          <strong style="color: #0099e6; font-size: 0.9rem;">Civil Engineering &amp; EPC</strong>
         </div>
       </div>
 
       <div style="color: #cbd5e1; font-size: 1.1rem; line-height: 1.8; margin-bottom: 3rem;">
         <p style="font-size: 1.25rem; font-weight: 500; color: #fff; margin-bottom: 2rem; line-height: 1.6;">
-          <strong>ABU DHABI, UAE</strong> — Rayan Group, a leading multinational engineering, marine dredging, and energy infrastructure conglomerate, today announced the formal signing of a major turnkey marine civil contract valued at AED 420 Million for strategic coastal protection and maritime basin expansion in the Emirate of Abu Dhabi.
+          <strong>ABU DHABI, UAE</strong> — Rayan Group, a leading multinational engineering, energy, and infrastructure conglomerate, today announced the formal signing of a major turnkey civil EPC contract valued at AED 450 Million for strategic commercial and mixed-use tower development in the Emirate of Abu Dhabi.
         </p>
 
         <p style="margin-bottom: 1.75rem;">
-          Under the scope of the contract, Rayan Marine &amp; Dredging will deploy over 12 specialized marine vessels, including trailing suction hopper dredgers, heavy crane spud barges, and rock placement workboats. The project entails deep-channel dredging to -16.5 meters LAT, 4.2 million cubic meters of hydraulic sand reclamation, and the construction of 1,850 linear meters of heavy reinforced quay walls.
+          Under the scope of the contract, Rayan Engineering will deliver full-scope structural engineering, MEP systems installation, post-tensioned slab construction, and advanced architectural finishing. The development spans over 140,000 square meters of built-up area and integrates state-of-the-art building management systems with Estidama Pearl 2 green building certification.
         </p>
 
         <div style="margin: 3rem 0; padding: 2rem; background: #0c1828; border-left: 4px solid #0099e6; border-radius: 0 8px 8px 0;">
           <blockquote style="font-family: var(--font-heading); font-size: 1.35rem; font-style: italic; color: #fff; line-height: 1.5; margin: 0 0 1rem;">
-            "This landmark award underscores Rayan Group's proven reputation for delivering high-complexity maritime engineering on accelerated schedules. Our continuous investment in specialized naval assets and environmental silt containment technology ensures we meet international standards while driving sustainable coastal growth."
+            "This landmark award underscores Rayan Group's proven reputation for delivering high-complexity structural engineering and turnkey project execution on accelerated schedules. Our continuous investment in digital construction management and sustainable materials ensures we exceed international benchmarks."
           </blockquote>
           <cite style="font-size: 0.9rem; color: #0099e6; font-weight: 700; text-transform: uppercase;">— Eng. Mohammad Sajjad, Founder &amp; Group Chairman</cite>
         </div>
 
         <p style="margin-bottom: 1.75rem;">
-          Mobilization on-site will commence immediately, with major marine dredging operations scheduled across four sequential phases over an 18-month execution timeline. The project adheres to strict environmental guidelines under ISO 14001:2015, featuring real-time water turbidity monitoring and turtle nesting habitat preservation protocols.
+          Mobilization on-site has commenced immediately, with major structural construction scheduled across four sequential phases over an 18-month execution timeline. The project adheres to strict environmental standards under ISO 14001:2015 and ISO 45001:2018 safety protocols.
         </p>
 
         <p>
-          This contract award further expands Rayan Group's consolidated unexecuted project backlog to exceed AED 3.8 Billion across its civil contracting, marine offshore, and energy EPC divisions.
+          This contract award further expands Rayan Group's consolidated unexecuted project backlog to exceed AED 3.8 Billion across its civil contracting, energy EPC, and industrial manufacturing divisions.
         </p>
       </div>
 
@@ -1003,12 +1003,12 @@ createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
 // ============================================================================
 createRoute('careers/index.html', {
   title: 'Careers & Global Engineering Opportunities',
-  description: 'Join Rayan Group. Discover career opportunities in civil engineering, marine dredging, project management, and corporate services across the UAE and India.',
+  description: 'Join Rayan Group. Discover career opportunities in civil engineering, energy EPC, project management, and corporate services across the UAE and India.',
   activePath: '/careers/',
   heroHtml: renderPageHero({
     category: 'PEOPLE & CULTURE',
     title: 'BUILD YOUR FUTURE WITH US',
-    description: 'Empowering 10,000+ professionals across world-class engineering, marine, and energy megaprojects with merit-driven leadership and global mobility.',
+    description: 'Empowering 10,000+ professionals across world-class engineering, energy, and infrastructure megaprojects with merit-driven leadership and global mobility.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Careers', href: '/careers/' }],
     bgImage: '/assets/images/careers/careers-hero.jpg',
     subnav: [
@@ -1027,7 +1027,7 @@ createRoute('careers/index.html', {
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OUR HUMAN CAPITAL</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; line-height: 1.2; text-transform: uppercase; margin: 0.5rem 0 1.5rem;">WHERE ENGINEERING AMBITION MEETS LIMITLESS OPPORTUNITY.</h2>
           <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem;">
-            At Rayan Group, our greatest competitive asset is our diverse workforce of over 10,000 engineers, marine captains, project directors, technicians, and craft specialists representing over 25 nationalities.
+            At Rayan Group, our greatest competitive asset is our diverse workforce of over 10,000 engineers, project directors, technicians, and craft specialists representing over 25 nationalities.
           </p>
           <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
             We offer our professionals hands-on exposure to signature infrastructure, state-of-the-art heavy equipment fleets, fast-track career progression, and an uncompromising safety culture certified under ISO 45001.
@@ -1051,7 +1051,7 @@ createRoute('careers/index.html', {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Landmark Megaprojects</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Work on high-profile regional retail malls, deep-water ports, offshore dredging, and industrial power plants.</p>
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Work on high-profile regional retail malls, commercial towers, energy infrastructure, and industrial fabrication facilities.</p>
           </div>
 
           <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
@@ -1100,15 +1100,15 @@ createRoute('careers/index.html', {
           <!-- Job 2 -->
           <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
             <div>
-              <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">MARINE &amp; DREDGING • REF: MAR-2025-03</span>
-              <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Chief Marine Dredging Superintendent</h3>
+              <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">ENERGY &amp; EPC • REF: EN-2025-04</span>
+              <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Principal Energy Pipeline &amp; EPC Lead</h3>
               <div style="display: flex; gap: 1.5rem; color: #94a3b8; font-size: 0.85rem;">
-                <span>📍 Offshore UAE</span>
+                <span>📍 Abu Dhabi, UAE</span>
                 <span>⏱ Full-time / Permanent</span>
-                <span>🎓 10+ Years Marine Experience</span>
+                <span>🎓 10+ Years EPC &amp; Energy Experience</span>
               </div>
             </div>
-            <button type="button" class="btn-enterprise-primary" onclick="alert('Please email your CV to careers@rayangroup.com quoting REF: MAR-2025-03')">APPLY FOR POSITION →</button>
+            <button type="button" class="btn-enterprise-primary" onclick="alert('Please email your CV to careers@rayangroup.com quoting REF: EN-2025-04')">APPLY FOR POSITION →</button>
           </div>
 
           <!-- Job 3 -->
@@ -1136,12 +1136,12 @@ createRoute('careers/index.html', {
 // ============================================================================
 createRoute('media/index.html', {
   title: 'Media Gallery & Corporate Photography Showcase',
-  description: 'Explore high-resolution photography of Rayan Group landmark infrastructure, marine fleets, industrial construction, and executive operations.',
+  description: 'Explore high-resolution photography of Rayan Group landmark infrastructure, energy facilities, industrial construction, and executive operations.',
   activePath: '/media/',
   heroHtml: renderPageHero({
     category: 'MEDIA & BRAND ASSETS',
     title: 'CORPORATE PHOTOGRAPHY',
-    description: 'Immersive visual documentation of our multinational operations across marine dredging, civil construction, energy EPC, and heavy logistics.',
+    description: 'Immersive visual documentation of our multinational operations across civil construction, energy EPC, and industrial contracting.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Media Gallery', href: '/media/' }],
     bgImage: '/assets/images/projects/yas-mall.jpg',
     subnav: [
@@ -1227,11 +1227,11 @@ createRoute('media/index.html', {
 
         <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/business/marine-offshore-port.jpg" alt="Marine Dredging" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/business/hero-1-skyline.jpg" alt="Commercial EPC" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
           </div>
           <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">MARINE &amp; PORTS</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Offshore Dredging &amp; Silt Containment Works</h3>
+            <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">CIVIL &amp; INFRASTRUCTURE</span>
+            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Turnkey Commercial Towers &amp; Civil EPC</h3>
           </div>
         </div>
 
@@ -1380,9 +1380,10 @@ createRoute('contact/index.html', {
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Nature of Inquiry *</label>
               <select required style="width: 100%; background: #07111e; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.85rem 1rem; border-radius: 6px; font-size: 0.95rem;">
                 <option value="">Select Category...</option>
-                <option value="tender">Commercial Tender / EPC Project</option>
-                <option value="marine">Marine Dredging &amp; Ports</option>
-                <option value="energy">Energy &amp; Oil/Gas Infrastructure</option>
+                <option value="tender">Commercial Tender / Civil EPC (Rayan Engineering)</option>
+                <option value="energy">Energy &amp; Oil/Gas Infrastructure (Rayan Energy)</option>
+                <option value="ashaz">Industrial Fabrication &amp; Engineering (Ashaz India)</option>
+                <option value="properties">Real Estate Development (Rayan Properties)</option>
                 <option value="investors">Investor Relations &amp; Equity Disclosures</option>
                 <option value="careers">Careers &amp; Human Capital</option>
                 <option value="media">Press &amp; Media Communications</option>

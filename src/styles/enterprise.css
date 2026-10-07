@@ -2300,8 +2300,8 @@ body.preloader-active {
   padding: 6.5rem 0 7rem;
   background-color: #06111d;
   background-image: 
-    linear-gradient(180deg, rgba(5, 11, 20, 0.85) 0%, rgba(6, 17, 29, 0.72) 40%, rgba(5, 11, 20, 0.95) 100%),
-    url('/assets/images/business/marine-offshore-port.jpg');
+    linear-gradient(180deg, rgba(5, 11, 20, 0.88) 0%, rgba(6, 17, 29, 0.78) 40%, rgba(5, 11, 20, 0.95) 100%),
+    url('/assets/images/hero/hero-1-skyline.jpg');
   background-size: cover;
   background-position: center center;
   background-attachment: scroll;
@@ -2403,25 +2403,28 @@ body.preloader-active {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  min-height: 170px;
+  padding: 1.75rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  min-height: 180px;
+  backdrop-filter: blur(8px);
 }
 
 .bu-logo-col img {
-  max-width: 100%;
-  max-height: 95px;
+  max-width: 92%;
+  max-height: 105px;
   width: auto;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+  display: block;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.65));
+  image-rendering: -webkit-optimize-contrast;
   transition: transform 0.3s ease;
 }
 
 .bu-slide.active .bu-logo-col img {
-  transform: scale(1.02);
+  transform: scale(1.03);
 }
 
 .bu-info-col {

@@ -40,12 +40,12 @@ const NEW_EXTRACTED_PROJECTS = [
     heroImage: '/assets/images/projects/palm-jumeirah-rec-estate.jpg',
     scope: 'Ultra-Luxury Coastal Villa Construction, Bespoke Marble, Structural Works & Panoramic Glazing',
     highlights: [
-      'Cantilevered coastal foundations engineered against marine tidal variations',
+      'Cantilevered coastal foundations engineered against dynamic tidal variations',
       'Hand-selected Italian Statuario marble slabs installed across 18,000 sq.ft of living spaces',
-      'Ultra-minimalist triple-glazed marine-grade sliding facade systems with UV protection',
+      'Ultra-minimalist triple-glazed weather-sealed sliding facade systems with UV protection',
       'Private infinity beachfront pool integration with submerged fiber-optic illumination'
     ],
-    narrative: `Positioned on an exclusive private frond of Palm Jumeirah, this architectural masterpiece represents the pinnacle of private coastal residential engineering in Dubai. Rayan Group partnered with REC Contracting LLC to deliver turnkey civil reinforcement, specialized marine dewatering, structural framing, and world-class architectural finishes.\n\nThe project required specialized structural engineering to withstand dynamic coastal soil conditions, integrating deep micropiles and sulfate-resisting cement matrices. The interior fit-out features bespoke architectural millwork, seamless flush ceiling details, smart home automation integration, and custom landscaped outdoor beachfront terraces.`,
+    narrative: `Positioned on an exclusive private frond of Palm Jumeirah, this architectural masterpiece represents the pinnacle of private coastal residential engineering in Dubai. Rayan Group partnered with REC Contracting LLC to deliver turnkey civil reinforcement, specialized geotechnical dewatering, structural framing, and world-class architectural finishes.\n\nThe project required specialized structural engineering to withstand dynamic coastal soil conditions, integrating deep micropiles and sulfate-resisting cement matrices. The interior fit-out features bespoke architectural millwork, seamless flush ceiling details, smart home automation integration, and custom landscaped outdoor beachfront terraces.`,
     imgDir: 'palm-jumeirah-rec-estate',
     imgCount: 27
   },
@@ -176,14 +176,14 @@ const NEW_EXTRACTED_PROJECTS = [
     valueShort: 'AED 46.2M',
     status: 'Completed',
     heroImage: '/assets/images/projects/luxury-island-infinity-pool.jpg',
-    scope: 'Cantilevered Marine Concrete Pool Engineering, Horizon Waterfalls, Mosaic Tiling & Coastal Landscaping',
+    scope: 'Cantilevered Structural Concrete Pool Engineering, Horizon Waterfalls, Mosaic Tiling & Coastal Landscaping',
     highlights: [
       '50-meter cantilevered horizon infinity pool visually merging with the Arabian Gulf',
-      'Sulfate-resistant high-performance marine concrete construction with crystalline waterproofing',
+      'Sulfate-resistant high-performance structural concrete construction with crystalline waterproofing',
       'Hand-laid iridescent Italian glass mosaic tiles with precision perimeter balance tanks',
       'Integrated hydromassage loungers, submerged LED fiber optics, and automated filtration plants'
     ],
-    narrative: `Commissioned for an exclusive private island estate off the coast of Abu Dhabi, this world-class aquatic project features a monumental 50-meter cantilevered infinity swimming pool, cascading waterfalls, and luxury resort sun decks. Rayan Group collaborated with Brock Construction to engineer and build the marine pool structure from ground-up.\n\nConstructing a massive water retaining structure on island sand dunes required specialized geotechnical stabilization, cathodic concrete protection against saline groundwater, and heavy sub-surface drainage balance channels. The final result is a breathtaking oasis of serenity and engineering mastery.`,
+    narrative: `Commissioned for an exclusive private island estate off the coast of Abu Dhabi, this world-class aquatic project features a monumental 50-meter cantilevered infinity swimming pool, cascading waterfalls, and luxury resort sun decks. Rayan Group collaborated with Brock Construction to engineer and build the concrete pool structure from ground-up.\n\nConstructing a massive water retaining structure on island sand dunes required specialized geotechnical stabilization, cathodic concrete protection against saline groundwater, and heavy sub-surface drainage balance channels. The final result is a breathtaking oasis of serenity and engineering mastery.`,
     imgDir: 'luxury-island-infinity-pool',
     imgCount: 21
   },
@@ -631,7 +631,7 @@ const portfolioContent = `
     <!-- 22 Project Editorial Cards Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;" id="projectsGrid">
       ${COMBINED_PROJECTS.map(proj => {
-        const filterCat = (proj.category === 'marine' || proj.category === 'energy') ? 'marine-energy' : proj.category;
+        const filterCat = proj.category;
         return `
         <article class="project-editorial-card" data-project-cat="${filterCat}" data-project-title="${proj.title.toLowerCase()}" data-project-client="${proj.client.toLowerCase()}" data-project-loc="${proj.location.toLowerCase()}" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
           <div style="height: 240px; overflow: hidden; position: relative;">
@@ -660,7 +660,7 @@ const portfolioContent = `
 
 createRoute('projects/index.html', {
   title: 'Project Portfolio Showcase | Rayan Group',
-  description: 'Explore Rayan Group landmark projects in commercial retail, marine dredging, luxury residential, and industrial infrastructure.',
+  description: 'Explore Rayan Group landmark projects in commercial retail, energy facilities, luxury residential, and industrial infrastructure.',
   activePath: '/projects/',
   heroHtml: portfolioHeroHtml,
   content: portfolioContent

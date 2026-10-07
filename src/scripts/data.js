@@ -1,5 +1,5 @@
 // RAYAN GROUP — Enterprise Corporate Portal Data Registry
-// Multi-National Engineering, Marine, Infrastructure & Energy Group
+// Multi-National Engineering, Energy, Infrastructure & Capital Group
 // Dual-Hub Corporate Operations: Abu Dhabi, UAE & India
 
 export const GROUP_INFO = {
@@ -47,8 +47,8 @@ export const GROUP_INFO = {
       coordinates: "26.8028° N, 84.5028° E"
     }
   },
-  vision: "To be the premier multinational engineering, marine, and infrastructure conglomerate recognized for delivering monumental, sustainable, and technologically advanced solutions shaping the built environment across the Middle East, South Asia, and global markets.",
-  mission: "To deliver mission-critical engineering, maritime construction, and energy infrastructure with uncompromised safety, fiduciary excellence, and environmental stewardship, while generating enduring long-term value for our clients, shareholders, and communities."
+  vision: "To be the premier multinational engineering, energy, and infrastructure conglomerate recognized for delivering monumental, sustainable, and technologically advanced solutions shaping the built environment across the Middle East, South Asia, and global markets.",
+  mission: "To deliver mission-critical engineering, civil construction, and energy infrastructure with uncompromised safety, fiduciary excellence, and environmental stewardship, while generating enduring long-term value for our clients, shareholders, and communities."
 };
 
 // Operating Companies within Rayan Group
@@ -57,11 +57,11 @@ export const GROUP_COMPANIES = [
     id: "rayan-group",
     name: "Rayan Group",
     sector: "Parent Holding Conglomerate",
-    headline: "Multinational Engineering, Marine & Infrastructure Governance",
-    description: "The parent multinational conglomerate orchestrating landmark engineering, energy infrastructure, heavy marine contracting, and cross-border capital ventures across the UAE, South Asia, and the Middle East.",
+    headline: "Multinational Engineering, Energy & Infrastructure Governance",
+    description: "The parent multinational conglomerate orchestrating landmark engineering, energy infrastructure, turnkey EPC contracting, and cross-border capital ventures across the UAE, South Asia, and the Middle East.",
     href: "/about/",
     image: "/assets/images/about/overview.jpg",
-    logo: "/assets/rayan-logo-white.svg",
+    logo: "/assets/logos/rayan-group-white.png",
     stats: "50+ Years Combined Leadership",
     status: "holding"
   },
@@ -73,7 +73,7 @@ export const GROUP_COMPANIES = [
     description: "The flagship enterprise executing turnkey civil engineering, high-rise frameworks, and large-scale industrial complexes across the UAE with 500+ executed projects.",
     href: "/business/engineering/",
     image: "/assets/images/business/01-engineering.jpg",
-    logo: "/assets/logos/rayan-engineering-white.svg",
+    logo: "/assets/logos/rayan-engineering-white.png",
     stats: "500+ Projects Delivered",
     status: "active"
   },
@@ -81,11 +81,11 @@ export const GROUP_COMPANIES = [
     id: "rayan-energy",
     name: "Rayan Energy L.L.C",
     sector: "Oil, Gas & Energy Facilities",
-    headline: "Onshore & Offshore Facilities, Refineries & Pipelines",
+    headline: "Onshore & Process Facilities, Refineries & Pipelines",
     description: "Full-lifecycle EPC services for upstream and downstream energy operators, hydrocarbon transport pipelines, and petrochemical process terminals to ISO 45001 zero-harm standards.",
     href: "/business/energy/",
     image: "/assets/images/business/energy-refinery-complex.jpg",
-    logo: "/assets/logos/rayan-energy-white.svg",
+    logo: "/assets/logos/rayan-energy-white.png",
     stats: "ISO 45001 Zero-Harm Record",
     status: "active"
   },
@@ -97,7 +97,7 @@ export const GROUP_COMPANIES = [
     description: "Operating as Rayan Group's strategic South Asia engineering and regional contracting arm, Ashaz Engineering delivers heavy civil works, structural fabrication, industrial facilities, and technical contracting across India.",
     href: "/about/#india-hub",
     image: "/assets/images/about/india-hub.jpg",
-    logo: "/assets/logos/ashaz-engineering-white.svg",
+    logo: "/assets/logos/ashaz-engineering-white.png",
     stats: "Dual-Market Synergy",
     status: "active"
   },
@@ -109,7 +109,7 @@ export const GROUP_COMPANIES = [
     description: "Rayan Group's upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans.",
     href: "/contact/",
     image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg",
-    logo: "/assets/logos/rayan-properties-white.svg",
+    logo: "/assets/logos/rayan-properties-white.png",
     stats: "Upcoming Division",
     status: "upcoming"
   }
@@ -147,12 +147,12 @@ export const LEADERSHIP_TEAM = [
   },
   {
     name: "Dr. Tariq Al Mansoori",
-    role: "Head of Marine & Coastal Operations",
+    role: "Head of Energy & Infrastructure Operations",
     tag: "DIR // 04",
     accent: "blue",
-    bio: "Over 22 years spearheading offshore dredging, port development, and coastal reclamation works across major Gulf maritime channels.",
-    responsibilities: ["Offshore Fleet Operations", "Port Dredging & Reclamation", "Environmental Coastal Compliance"],
-    tenure: "Marine Division"
+    bio: "Over 22 years spearheading complex energy EPC, industrial infrastructure, and mechanical turnkey execution across the Arabian Gulf.",
+    responsibilities: ["Energy EPC Operations", "Pipeline Infrastructure", "Zero-Harm Safety Governance"],
+    tenure: "Energy Division"
   },
   {
     name: "Elena Rostova",
@@ -261,7 +261,7 @@ export const FEATURED_PROJECTS = [
     client: "Brock Construction / Private Island Estate",
     year: "2024",
     value: "AED 46.2M",
-    scope: "Cantilevered Marine Concrete Pool Engineering, Horizon Waterfalls, Mosaic Tiling & Coastal Landscaping.",
+    scope: "Cantilevered Structural Concrete Pool Engineering, Horizon Waterfalls, Mosaic Tiling & Coastal Landscaping.",
     image: "/assets/images/projects/luxury-island-infinity-pool.jpg",
     featured: true
   },
@@ -421,10 +421,9 @@ export const FINANCIAL_HIGHLIGHTS = {
     { label: "Return on Equity (ROE)", value: "18.4%", unit: "", change: "+2.2 bps", trend: "up" }
   ],
   revenueBySector: [
-    { sector: "Building & Civil Engineering", percentage: 42, amount: "766.3 AED M" },
-    { sector: "Energy & Industrial Infrastructure", percentage: 28, amount: "510.9 AED M" },
-    { sector: "Marine & Coastal Contracting", percentage: 18, amount: "328.4 AED M" },
-    { sector: "Specialized Works & Logistics", percentage: 12, amount: "218.9 AED M" }
+    { sector: "Building & Civil Engineering", percentage: 48, amount: "873.6 AED M" },
+    { sector: "Energy & Industrial Infrastructure", percentage: 34, amount: "618.8 AED M" },
+    { sector: "Specialized Works & Regional Hub", percentage: 18, amount: "327.6 AED M" }
   ],
   reports: [
     { year: 2024, title: "Annual Report & Audited Financial Statements 2024", type: "PDF", size: "18.4 MB", date: "Feb 2025", href: "#" },
@@ -445,14 +444,14 @@ export const FINANCIAL_HIGHLIGHTS = {
 // Corporate News & Press Releases
 export const CORPORATE_NEWS = [
   {
-    id: "rayan-group-expands-offshore-portfolio",
-    slug: "rayan-group-expands-offshore-portfolio",
-    title: "Rayan Group Expands Maritime & Offshore Fleet with Major Arabian Gulf Coastal Contract",
+    id: "rayan-group-secures-landmark-epc-contract",
+    slug: "rayan-group-secures-landmark-epc-contract",
+    title: "Rayan Group Awarded Landmark AED 450M EPC High-Rise & Infrastructure Contract",
     category: "PRESS RELEASE",
     date: "MAR 04, 2025",
     readTime: "4 min read",
-    excerpt: "Strengthening maritime operations, Rayan Group secures AED 420 Million coastal infrastructure project, deploying cutting-edge dredging vessels and deep-water reclamation technology.",
-    image: "/assets/images/business/marine-offshore-port.jpg",
+    excerpt: "Securing major commercial high-rise construction and civil engineering delivery across Abu Dhabi prime development corridors.",
+    image: "/assets/images/business/01-engineering.jpg",
     featured: true
   },
   {
@@ -462,7 +461,7 @@ export const CORPORATE_NEWS = [
     category: "FINANCIAL",
     date: "FEB 18, 2025",
     readTime: "5 min read",
-    excerpt: "Robust operational execution across civil contracting, energy EPC, and marine infrastructure drove strong revenue expansion and a 31.5% jump in net profit.",
+    excerpt: "Robust operational execution across civil contracting, energy EPC, and infrastructure delivery drove strong revenue expansion and a 31.5% jump in net profit.",
     image: "/assets/images/investors/corporate-financial-tower.jpg",
     featured: false
   },
@@ -493,13 +492,13 @@ export const CORPORATE_NEWS = [
 // Career Openings
 export const CAREER_OPPORTUNITIES = [
   {
-    id: "senior-marine-engineer",
-    title: "Senior Marine & Dredging Project Manager",
-    department: "Marine & Coastal Operations",
+    id: "senior-structural-epc-manager",
+    title: "Senior Structural & EPC Project Manager",
+    department: "Civil & EPC Operations",
     location: "Abu Dhabi, UAE",
     type: "Full-Time",
     experience: "10+ Years",
-    description: "Lead complex offshore dredging, quay wall installation, and maritime reclamation projects in the Arabian Gulf."
+    description: "Lead complex structural EPC, commercial high-rise, and industrial facility execution across the UAE."
   },
   {
     id: "lead-civil-structural-engineer",
@@ -545,10 +544,10 @@ export const MEDIA_GALLERY = [
   { title: "Palm Jumeirah Luxury Waterfront Estate", category: "Residential", image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg", caption: "Ultra-luxury coastal villa structural concrete and bespoke Italian marble on Palm Jumeirah." },
   { title: "C2 Towers Al Bateen Waterfront Development", category: "High-Rise", image: "/assets/images/projects/c2-towers-al-bateen.jpg", caption: "Twin 22-story luxury waterfront residential towers architectural finishes in Abu Dhabi." },
   { title: "Edge Group - REMAYA Tactical Complex", category: "Defense", image: "/assets/images/projects/edge-group-remaya.jpg", caption: "High-security ballistic partitions and specialized defense training facilities." },
-  { title: "Luxury Island Oceanfront Infinity Pool", category: "Aquatic", image: "/assets/images/projects/luxury-island-infinity-pool.jpg", caption: "50-meter cantilevered marine concrete horizon pool on Private Luxury Island." },
+  { title: "Luxury Island Oceanfront Infinity Pool", category: "Aquatic", image: "/assets/images/projects/luxury-island-infinity-pool.jpg", caption: "50-meter cantilevered structural concrete horizon pool on Private Luxury Island." },
   { title: "Roxy Cinemas VIP Auditoriums - Dubai Hills", category: "Entertainment", image: "/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg", caption: "Precision acoustic sound isolation and VIP cinema auditorium engineering in Dubai." },
   { title: "Dubai Police Academy Tactical Facility", category: "Civic", image: "/assets/images/projects/dubai-police-academy.jpg", caption: "Institutional complex masonry and tactical briefing halls under construction in Dubai." },
-  { title: "Offshore Marine Dredging & Berthing", category: "Marine", image: "/assets/images/business/marine-offshore-port.jpg", caption: "Heavy maritime equipment expanding coastal industrial berths in Abu Dhabi." },
+  { title: "Commercial High-Rise Structural Framework", category: "Commercial", image: "/assets/images/hero/hero-1-skyline.jpg", caption: "Precision structural engineering and tower crane assembly for landmark commercial skyline." },
   { title: "Hydrocarbon Process Complex & Pipelines", category: "Energy", image: "/assets/images/business/energy-refinery-complex.jpg", caption: "Industrial high-pressure piping and refinery infrastructure delivered to ISO 45001 standards." },
   { title: "Max Fashion Anchor Store - Al Wahda Mall", category: "Retail", image: "/assets/images/projects/max-fashion-al-wahda-mall.jpg", caption: "High-traffic commercial retail and structural engineering development in Abu Dhabi." },
   { title: "Luxury Island Marble & Stone Works", category: "Masonry", image: "/assets/images/projects/luxury-island-marble-works.jpg", caption: "Italian Calacatta and Statuario marble cladding and precision flooring in Abu Dhabi." },

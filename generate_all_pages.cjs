@@ -22,12 +22,11 @@ const irSubnav = (activeHref) => [
 ];
 
 const businessSubnav = (activeHref) => [
-  { label: 'All Divisions', href: '/business/', active: activeHref === '/business/' },
-  { label: 'Civil & EPC', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
-  { label: 'Marine & Offshore', href: '/business/marine/', active: activeHref === '/business/marine/' },
-  { label: 'Infrastructure', href: '/business/infrastructure/', active: activeHref === '/business/infrastructure/' },
-  { label: 'Energy & Oil/Gas', href: '/business/energy/', active: activeHref === '/business/energy/' },
-  { label: 'Heavy Logistics', href: '/business/logistics/', active: activeHref === '/business/logistics/' },
+  { label: 'All Companies', href: '/business/', active: activeHref === '/business/' },
+  { label: 'Rayan Engineering', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
+  { label: 'Rayan Energy', href: '/business/energy/', active: activeHref === '/business/energy/' },
+  { label: 'Ashaz Engineering (India)', href: '/about/#india-hub', active: false },
+  { label: 'Rayan Properties (Upcoming)', href: '/contact/', active: false },
 ];
 
 // ============================================================================
@@ -58,7 +57,7 @@ createRoute('about/index.html', {
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.85rem;">CONGLOMERATE VISION</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3.25rem); font-weight: 800; color: #fff; line-height: 1.15; text-transform: uppercase; margin-bottom: 1.5rem;">SHAPING CRITICAL INFRASTRUCTURE WITH PURPOSE.</h2>
           <p style="font-size: 1.05rem; line-height: 1.7; color: #cbd5e1; margin-bottom: 1.25rem;">
-            Established in the United Arab Emirates, Rayan Group has expanded into a multi-sector engineering and infrastructure enterprise encompassing civil contracting, marine dredging, hydrocarbon energy facilities, and regional industrial hubs.
+            Established in the United Arab Emirates, Rayan Group has expanded into a multi-sector engineering and infrastructure enterprise encompassing civil contracting, energy infrastructure facilities, and regional industrial hubs.
           </p>
           <p style="font-size: 0.95rem; line-height: 1.7; color: #94a3b8; margin-bottom: 2rem;">
             Our dual-market presence in Abu Dhabi and India allows us to combine UAE capital efficiency and megaproject agility with world-class engineering talent, executing projects from design and BIM structural modeling to commissioning with certified ISO 9001 and ISO 45001 compliance.
@@ -85,7 +84,7 @@ createRoute('about/index.html', {
           </div>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem; text-transform: uppercase;">OUR VISION</h3>
           <p style="color: #94a3b8; line-height: 1.65; font-size: 0.95rem;">
-            To be the premier multinational engineering, marine, and infrastructure conglomerate recognized for delivering innovative, sustainable, and high-impact built environments across global markets.
+            To be the premier multinational engineering, energy, and infrastructure conglomerate recognized for delivering innovative, sustainable, and high-impact built environments across global markets.
           </p>
         </div>
 
@@ -95,7 +94,7 @@ createRoute('about/index.html', {
           </div>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem; text-transform: uppercase;">OUR MISSION</h3>
           <p style="color: #94a3b8; line-height: 1.65; font-size: 0.95rem;">
-            To provide reliable engineering, marine contracting, and energy solutions with an unwavering focus on safety, fiduciary excellence, client satisfaction, and technological innovation.
+            To provide reliable civil engineering, energy solutions, and infrastructure contracting with an unwavering focus on safety, fiduciary excellence, client satisfaction, and technological innovation.
           </p>
         </div>
 
@@ -149,8 +148,8 @@ createRoute('about/index.html', {
         <div style="margin-bottom: 3rem; position: relative;">
           <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #0099e6; box-shadow: 0 0 12px #0099e6;"></div>
           <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #0099e6;">2024</span>
-          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Strategic Diversification into Marine Dredging &amp; Energy EPC</h3>
-          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Expansion into deep-water marine berthing, island reclamation, and industrial hydrocarbon pipeline contracting.</p>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Strategic Diversification into Energy EPC &amp; Industrial Infrastructure</h3>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Expansion into specialized energy process facilities, pipeline corridors, and industrial EPC contracting.</p>
         </div>
 
         <!-- 2025+ -->
@@ -293,7 +292,7 @@ createRoute('sustainability/index.html', {
   heroHtml: renderPageHero({
     category: 'ESG STRATEGY',
     title: 'SUSTAINABILITY AT OUR CORE',
-    description: 'Pioneering decarbonization, marine biodiversity protection, and zero-harm workplace safety across all multinational projects.',
+    description: 'Pioneering decarbonization, biodiversity protection, and zero-harm workplace safety across all multinational projects.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Sustainability', href: '/sustainability/' }],
     bgImage: '/assets/images/sustainability/renewable-energy.jpg',
     subnav: [
@@ -311,7 +310,7 @@ createRoute('sustainability/index.html', {
           <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; letter-spacing: 0.1em; text-transform: uppercase;">PILLAR 01</span>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1rem; text-transform: uppercase;">ENVIRONMENTAL RESPONSIBILITY</h3>
           <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
-            Integrating solar hybrid power on remote sites, reducing dredging silt dispersal, and targeting 30% carbon emission reduction across operations by 2030.
+            Integrating solar hybrid power on remote sites, reducing construction waste, and targeting 30% carbon emission reduction across operations by 2030.
           </p>
         </div>
 

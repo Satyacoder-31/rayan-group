@@ -22,27 +22,26 @@ const irSubnav = (activeHref) => [
 ];
 
 const businessSubnav = (activeHref) => [
-  { label: 'All Divisions', href: '/business/', active: activeHref === '/business/' },
-  { label: 'Civil & EPC', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
-  { label: 'Marine & Coastal', href: '/business/marine/', active: activeHref === '/business/marine/' },
-  { label: 'Infrastructure', href: '/business/infrastructure/', active: activeHref === '/business/infrastructure/' },
-  { label: 'Energy & Oil/Gas', href: '/business/energy/', active: activeHref === '/business/energy/' },
-  { label: 'Heavy Logistics', href: '/business/logistics/', active: activeHref === '/business/logistics/' },
+  { label: 'All Companies', href: '/business/', active: activeHref === '/business/' },
+  { label: 'Rayan Engineering', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
+  { label: 'Rayan Energy', href: '/business/energy/', active: activeHref === '/business/energy/' },
+  { label: 'Ashaz Engineering (India)', href: '/about/#india-hub', active: false },
+  { label: 'Rayan Properties (Upcoming)', href: '/contact/', active: false },
 ];
 
 // ============================================================================
 // 4. BUSINESS OVERVIEW (business/index.html)
 // ============================================================================
 createRoute('business/index.html', {
-  title: 'Our Business Divisions & Operating Capabilities',
-  description: 'Explore Rayan Group multi-sector operating divisions across civil contracting, marine dredging, energy infrastructure, and heavy fleet logistics.',
+  title: 'Our Business Companies & Operating Subsidiaries',
+  description: 'Explore Rayan Group operating companies across civil engineering, energy infrastructure, South Asia regional hub, and premier property developments.',
   activePath: '/business/',
   heroHtml: renderPageHero({
-    category: 'BUSINESS SECTORS',
+    category: 'CONGLOMERATE SUBSIDIARIES',
     title: 'WHAT WE DO',
-    description: 'Delivering end-to-end engineering, offshore maritime contracting, hydrocarbon energy EPC, and foundational infrastructure at multinational scale.',
+    description: 'Delivering end-to-end engineering excellence, hydrocarbon energy EPC, South Asia infrastructure, and premier developments under unified governance.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Business', href: '/business/' }],
-    bgImage: '/assets/images/hero/hero-infrastructure-cranes.jpg',
+    bgImage: '/assets/images/hero/hero-1-skyline.jpg',
     subnav: businessSubnav('/business/')
   }),
   content: `
@@ -50,16 +49,16 @@ createRoute('business/index.html', {
     <div class="container">
       <div style="text-align: center; max-width: 780px; margin: 0 auto 4.5rem;">
         <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">CAPABILITIES AT SCALE</span>
-        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">CORE OPERATING DIVISIONS</h2>
-        <p style="color: #94a3b8; font-size: 1rem; margin-top: 1rem; line-height: 1.6;">Rayan Group combines technical ingenuity with operational horsepower across five pillars of global engineering.</p>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">OUR OPERATING COMPANIES</h2>
+        <p style="color: #94a3b8; font-size: 1rem; margin-top: 1rem; line-height: 1.6;">Rayan Group combines technical ingenuity with operational horsepower across four specialized subsidiaries operating under unified governance.</p>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 3rem;">
-        <!-- Division 1 -->
+        <!-- Company 1: Rayan Engineering -->
         <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 3.5rem; align-items: center; background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: clamp(1.5rem, 3.5vw, 3rem);" class="intro-grid-responsive">
           <div>
             <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #0099e6;">01</span>
-            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Engineering &amp; Turnkey Construction</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Rayan Engineering &amp; Contracting</h3>
             <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.65; margin-bottom: 1.5rem;">
               Full-lifecycle EPC contracting for residential high-rises, commercial retail complexes, and industrial warehouses. Overseeing site foundation piling, structural concrete, and certified ISO 9001 handovers.
             </p>
@@ -71,87 +70,67 @@ createRoute('business/index.html', {
             <a href="/business/engineering/" class="btn-enterprise-primary">DISCOVER DIVISION →</a>
           </div>
           <div>
-            <img src="/assets/images/business/01-engineering.jpg" alt="Civil Engineering" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
+            <img src="/assets/images/business/01-engineering.jpg" alt="Rayan Engineering" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
           </div>
         </div>
 
-        <!-- Division 2 -->
+        <!-- Company 2: Rayan Energy -->
         <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 3.5rem; align-items: center; background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: clamp(1.5rem, 3.5vw, 3rem);" class="intro-grid-responsive">
           <div>
-            <img src="/assets/images/business/marine-offshore-port.jpg" alt="Marine Dredging" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
+            <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Rayan Energy" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
           </div>
           <div>
-            <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #0099e6;">02</span>
-            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Marine &amp; Coastal Works</h3>
+            <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #00c7b3;">02</span>
+            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Rayan Energy</h3>
             <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.65; margin-bottom: 1.5rem;">
-              Offshore capital dredging, island reclamation, deep-water port berthing, rock revetments, and breakwater construction supporting vital Arabian Gulf maritime trade arteries.
+              Supporting the lifecycle of onshore and industrial process facilities, cross-country hydrocarbon transport pipelines, gas compressor terminals, and refinery maintenance to strict ISO 45001 standards.
             </p>
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Deep-Water Dredging</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Port Infrastructure</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Island Reclamation</span>
-            </div>
-            <a href="/business/marine/" class="btn-enterprise-primary">DISCOVER DIVISION →</a>
-          </div>
-        </div>
-
-        <!-- Division 3 -->
-        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 3.5rem; align-items: center; background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: clamp(1.5rem, 3.5vw, 3rem);" class="intro-grid-responsive">
-          <div>
-            <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #0099e6;">03</span>
-            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Infrastructure &amp; Heavy Civil</h3>
-            <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.65; margin-bottom: 1.5rem;">
-              Connecting metropolitan hubs through arterial highways, grade-separated bridges, earthmoving, urban stormwater retention tunnels, and public utility networks.
-            </p>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Highway Corridors</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Bridge Structures</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Utility Networks</span>
-            </div>
-            <a href="/business/infrastructure/" class="btn-enterprise-primary">DISCOVER DIVISION →</a>
-          </div>
-          <div>
-            <img src="/assets/images/business/03-infrastructure.jpg" alt="Heavy Infrastructure" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
-          </div>
-        </div>
-
-        <!-- Division 4 -->
-        <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 3.5rem; align-items: center; background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: clamp(1.5rem, 3.5vw, 3rem);" class="intro-grid-responsive">
-          <div>
-            <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Energy Facilities" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
-          </div>
-          <div>
-            <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #0099e6;">04</span>
-            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Energy &amp; Offshore EPC</h3>
-            <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.65; margin-bottom: 1.5rem;">
-              Supporting the lifecycle of onshore and offshore oil and gas facilities, cross-country hydrocarbon transport pipelines, gas compressor terminals, and refinery maintenance.
-            </p>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Hydrocarbon Pipelines</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Process Terminals</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Zero-Harm Record</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,199,179,0.1); color: #2dd4bf;">Hydrocarbon Pipelines</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,199,179,0.1); color: #2dd4bf;">Process Facilities</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,199,179,0.1); color: #2dd4bf;">Zero-Harm Compliance</span>
             </div>
             <a href="/business/energy/" class="btn-enterprise-primary">DISCOVER DIVISION →</a>
           </div>
         </div>
 
-        <!-- Division 5 -->
+        <!-- Company 3: Ashaz Engineering (India) -->
         <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 3.5rem; align-items: center; background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: clamp(1.5rem, 3.5vw, 3rem);" class="intro-grid-responsive">
           <div>
-            <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #0099e6;">05</span>
-            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Heavy Fleet Logistics &amp; Transport</h3>
+            <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #14949b;">03</span>
+            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Ashaz Engineering (India)</h3>
             <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.65; margin-bottom: 1.5rem;">
-              Operating a proprietary fleet of 180+ heavy cranes, hydraulic multi-axle modular trailers, and marine transport vessels managing nationwide logistics and project cargo.
+              Rayan Group's strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi. Delivering heavy civil works, structural steel fabrication, industrial facilities, and technical contracting.
             </p>
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">180+ Units</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Heavy Modular Fleet</span>
-              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(0,153,230,0.1); color: #0099e6;">Project Cargo</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(20,148,155,0.15); color: #2dd4bf;">Regional Hub</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(20,148,155,0.15); color: #2dd4bf;">Structural Fabrication</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(20,148,155,0.15); color: #2dd4bf;">Cross-Border Talent</span>
             </div>
-            <a href="/business/logistics/" class="btn-enterprise-primary">DISCOVER DIVISION →</a>
+            <a href="/about/#india-hub" class="btn-enterprise-primary">DISCOVER HUB →</a>
           </div>
           <div>
-            <img src="/assets/images/business/05-logistics.jpg" alt="Logistics Fleet" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
+            <img src="/assets/images/about/india-hub.jpg" alt="Ashaz Engineering" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
+          </div>
+        </div>
+
+        <!-- Company 4: Rayan Properties -->
+        <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 3.5rem; align-items: center; background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: clamp(1.5rem, 3.5vw, 3rem);" class="intro-grid-responsive">
+          <div>
+            <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Rayan Properties" style="width: 100%; height: 340px; object-fit: cover; border-radius: 8px;">
+          </div>
+          <div>
+            <span style="font-family: var(--font-heading); font-size: 2rem; font-weight: 900; color: #f59e0b;">04</span>
+            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">Rayan Properties <span style="font-size: 0.8rem; background: rgba(245,158,11,0.2); color: #fbbf24; padding: 3px 8px; border-radius: 999px; margin-left: 8px;">UPCOMING</span></h3>
+            <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.65; margin-bottom: 1.5rem;">
+              Rayan Group's upcoming premier real estate development enterprise. Curating ultra-luxury waterfront estates, master-planned residential communities, architectural landmark high-rises, and prime commercial destinations.
+            </p>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(245,158,11,0.15); color: #fbbf24;">Ultra-Luxury Estates</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(245,158,11,0.15); color: #fbbf24;">Master Developments</span>
+              <span style="font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 4px; background: rgba(245,158,11,0.15); color: #fbbf24;">Upcoming Portfolio</span>
+            </div>
+            <a href="/contact/" class="btn-enterprise-primary">REGISTER INTEREST →</a>
           </div>
         </div>
       </div>
@@ -181,7 +160,7 @@ createRoute('business/index.html', {
             <!-- Slide 0: Rayan Group -->
             <div class="bu-slide active" data-slide="0">
               <div class="bu-logo-col">
-                <img src="/assets/rayan-logo-white.svg" alt="Rayan Group" width="240" height="65">
+                <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" width="240" height="70">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
@@ -189,7 +168,7 @@ createRoute('business/index.html', {
                   <span class="bu-badge bu-badge-holding">PARENT HOLDING</span>
                 </div>
                 <p class="bu-company-desc">
-                  The premier multinational holding conglomerate orchestrating landmark civil engineering, deep-water marine contracting, critical energy infrastructure, and regional capital ventures. Headquartered in Abu Dhabi with expanding multinational corridors, Rayan Group unites specialized divisions under rigorous engineering precision and fiduciary stewardship.
+                  The premier multinational holding conglomerate orchestrating landmark civil engineering, critical energy infrastructure, and regional capital ventures. Headquartered in Abu Dhabi with expanding multinational corridors, Rayan Group unites specialized divisions under rigorous engineering precision and fiduciary stewardship.
                 </p>
                 <a href="/about/" class="bu-action-link">
                   <span class="bu-action-box">↗</span>
@@ -201,7 +180,7 @@ createRoute('business/index.html', {
             <!-- Slide 1: Rayan Engineering -->
             <div class="bu-slide" data-slide="1">
               <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-engineering-white.svg" alt="Rayan Engineering" width="240" height="75">
+                <img src="/assets/logos/rayan-engineering-white.png" alt="Rayan Engineering" width="240" height="75">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
@@ -221,15 +200,15 @@ createRoute('business/index.html', {
             <!-- Slide 2: Rayan Energy -->
             <div class="bu-slide" data-slide="2">
               <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-energy-white.svg" alt="Rayan Energy" width="240" height="75">
+                <img src="/assets/logos/rayan-energy-white.png" alt="Rayan Energy" width="240" height="75">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
                   <h3 class="bu-company-title">Rayan Energy</h3>
-                  <span class="bu-badge bu-badge-active">OIL, GAS &amp; OFFSHORE EPC</span>
+                  <span class="bu-badge bu-badge-active">OIL, GAS &amp; PROCESS FACILITIES</span>
                 </div>
                 <p class="bu-company-desc">
-                  Powering mission-critical energy infrastructure through onshore and offshore EPC services, strategic hydrocarbon pipeline corridors, petrochemical process plants, and refinery turnaround execution. Operating to uncompromised ISO 45001 and ISO 14001 zero-harm standards across regional energy corridors.
+                  Powering mission-critical energy infrastructure through onshore and process EPC services, strategic hydrocarbon pipeline corridors, petrochemical process plants, and refinery turnaround execution. Operating to uncompromised ISO 45001 and ISO 14001 zero-harm standards across regional energy corridors.
                 </p>
                 <a href="/business/energy/" class="bu-action-link">
                   <span class="bu-action-box">↗</span>
@@ -241,7 +220,7 @@ createRoute('business/index.html', {
             <!-- Slide 3: Ashaz Engineering (India) -->
             <div class="bu-slide" data-slide="3">
               <div class="bu-logo-col">
-                <img src="/assets/logos/ashaz-engineering-white.svg" alt="Ashaz Engineering (India)" width="200" height="150">
+                <img src="/assets/logos/ashaz-engineering-white.png" alt="Ashaz Engineering (India)" width="200" height="150">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
@@ -261,7 +240,7 @@ createRoute('business/index.html', {
             <!-- Slide 4: Rayan Properties -->
             <div class="bu-slide" data-slide="4">
               <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-properties-white.svg" alt="Rayan Properties" width="240" height="72">
+                <img src="/assets/logos/rayan-properties-white.png" alt="Rayan Properties" width="240" height="72">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
@@ -371,101 +350,17 @@ createRoute('business/engineering/index.html', {
 });
 
 // ============================================================================
-// 6. BUSINESS SUB-PAGE: MARINE
-// ============================================================================
-createRoute('business/marine/index.html', {
-  title: 'Marine & Coastal Engineering Works',
-  description: 'Deep-water capital dredging, port infrastructure, maritime reclamation, and breakwaters across the Arabian Gulf.',
-  activePath: '/business/marine/',
-  heroHtml: renderPageHero({
-    category: 'BUSINESS DIVISION 02',
-    title: 'MARINE & COASTAL WORKS',
-    description: 'Offshore dredging, deep-water port berthing, maritime reclamation, rock revetments, and coastal infrastructure.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Business', href: '/business/' }, { label: 'Marine', href: '/business/marine/' }],
-    bgImage: '/assets/images/business/marine-offshore-port.jpg',
-    subnav: businessSubnav('/business/marine/')
-  }),
-  content: `
-  <section class="section" style="padding: 6rem 0; background: #07111e;">
-    <div class="container">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;" class="intro-grid-responsive">
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.85rem;">MARITIME SPECIALIZATION</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #fff; line-height: 1.15; text-transform: uppercase; margin-bottom: 1.5rem;">SHAPING COASTLINES &amp; NAVIGATIONAL CORRIDORS</h2>
-          <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.65; margin-bottom: 1.25rem;">
-            Rayan Marine operates heavy dredging vessels and maritime support barges executing complex coastal capital works, navigational channel deepening, and artificial island reclamation.
-          </p>
-          <ul style="color: #94a3b8; font-size: 0.95rem; line-height: 1.8; margin-bottom: 2rem; padding-left: 1.25rem;">
-            <li>Capital and maintenance dredging to -16m Chart Datum</li>
-            <li>Heavy rock armour placement, groynes, and breakwaters</li>
-            <li>Industrial quay wall construction and vessel berthing jetties</li>
-            <li>Marine environmental monitoring adhering to ISO 14001</li>
-          </ul>
-          <a href="/contact/" class="btn-enterprise-primary">INQUIRE ON MARINE WORKS →</a>
-        </div>
-        <div>
-          <img src="/assets/images/business/marine-offshore-port.jpg" alt="Marine Works" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
-
-// ============================================================================
-// 7. BUSINESS SUB-PAGE: INFRASTRUCTURE
-// ============================================================================
-createRoute('business/infrastructure/index.html', {
-  title: 'Heavy Civil Infrastructure & Transportation Corridors',
-  description: 'Constructing arterial highways, bridges, urban utility networks, and municipal civil engineering projects.',
-  activePath: '/business/infrastructure/',
-  heroHtml: renderPageHero({
-    category: 'BUSINESS DIVISION 03',
-    title: 'HEAVY CIVIL INFRASTRUCTURE',
-    description: 'Arterial roadways, grade-separated bridges, earthmoving, urban storm retention, and major utility corridors.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Business', href: '/business/' }, { label: 'Infrastructure', href: '/business/infrastructure/' }],
-    bgImage: '/assets/images/business/03-infrastructure.jpg',
-    subnav: businessSubnav('/business/infrastructure/')
-  }),
-  content: `
-  <section class="section" style="padding: 6rem 0; background: #07111e;">
-    <div class="container">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;" class="intro-grid-responsive">
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.85rem;">CIVIL ARTERIES</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #fff; line-height: 1.15; text-transform: uppercase; margin-bottom: 1.5rem;">CONNECTING INDUSTRIAL &amp; CIVIC GROWTH</h2>
-          <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.65; margin-bottom: 1.25rem;">
-            From heavy earthworks and grade preparation to high-capacity asphalt highways and reinforced concrete bridges, Rayan Infrastructure builds the foundation of economic progress.
-          </p>
-          <ul style="color: #94a3b8; font-size: 0.95rem; line-height: 1.8; margin-bottom: 2rem; padding-left: 1.25rem;">
-            <li>120+ km of delivered roadway corridors and access roads</li>
-            <li>Pre-cast concrete flyovers and pedestrian overpasses</li>
-            <li>Stormwater retention ponds and deep gravitational sewers</li>
-            <li>Heavy earthmoving fleet exceeding 180 active equipment units</li>
-          </ul>
-          <a href="/projects/" class="btn-enterprise-primary">VIEW CIVIL PROJECTS →</a>
-        </div>
-        <div>
-          <img src="/assets/images/business/03-infrastructure.jpg" alt="Civil Infrastructure" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
-
-// ============================================================================
-// 8. BUSINESS SUB-PAGE: ENERGY
+// 6. BUSINESS SUB-PAGE: RAYAN ENERGY
 // ============================================================================
 createRoute('business/energy/index.html', {
-  title: 'Onshore & Offshore Energy Facilities EPC',
+  title: 'Rayan Energy - Turnkey Energy Facilities & Hydrocarbon EPC',
   description: 'Hydrocarbon pipelines, refinery turnaround contracting, gas compressor stations, and industrial process facilities.',
   activePath: '/business/energy/',
   heroHtml: renderPageHero({
-    category: 'BUSINESS DIVISION 04',
-    title: 'ENERGY & OFFSHORE EPC',
+    category: 'GROUP COMPANY',
+    title: 'RAYAN ENERGY',
     description: 'EPC contracting for upstream and downstream hydrocarbon facilities, pipelines, and refinery maintenance.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Business', href: '/business/' }, { label: 'Energy', href: '/business/energy/' }],
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Business', href: '/business/' }, { label: 'Rayan Energy', href: '/business/energy/' }],
     bgImage: '/assets/images/business/energy-refinery-complex.jpg',
     subnav: businessSubnav('/business/energy/')
   }),
@@ -477,7 +372,7 @@ createRoute('business/energy/index.html', {
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.85rem;">CRITICAL HYDROCARBONS</span>
           <h2 style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #fff; line-height: 1.15; text-transform: uppercase; margin-bottom: 1.5rem;">SAFETY &amp; RELIABILITY ACROSS ENERGY ASSETS</h2>
           <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.65; margin-bottom: 1.25rem;">
-            Rayan Energy delivers high-spec pipeline engineering, offshore platform reinforcement, pressure vessel tie-ins, and ongoing operational maintenance for leading regional energy operators.
+            Rayan Energy delivers high-spec pipeline engineering, structural facility reinforcement, pressure vessel tie-ins, and ongoing operational maintenance for leading regional energy operators.
           </p>
           <ul style="color: #94a3b8; font-size: 0.95rem; line-height: 1.8; margin-bottom: 2rem; padding-left: 1.25rem;">
             <li>Cross-country high-pressure gas and liquid hydrocarbon pipelines</li>
@@ -496,46 +391,26 @@ createRoute('business/energy/index.html', {
   `
 });
 
-// ============================================================================
-// 9. BUSINESS SUB-PAGE: LOGISTICS
-// ============================================================================
-createRoute('business/logistics/index.html', {
-  title: 'Heavy Logistics, Cranes & Fleet Management',
-  description: 'Operating a fleet of 180+ crawler cranes, specialized multi-axle modular transport, and marine equipment.',
-  activePath: '/business/logistics/',
-  heroHtml: renderPageHero({
-    category: 'BUSINESS DIVISION 05',
-    title: 'HEAVY LOGISTICS & INDUSTRIAL FLEET',
-    description: 'Specialized crawler cranes, multi-axle hydraulic trailers, maritime tugs, and project cargo shipping.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Business', href: '/business/' }, { label: 'Logistics', href: '/business/logistics/' }],
-    bgImage: '/assets/images/business/05-logistics.jpg',
-    subnav: businessSubnav('/business/logistics/')
-  }),
-  content: `
-  <section class="section" style="padding: 6rem 0; background: #07111e;">
-    <div class="container">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;" class="intro-grid-responsive">
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.85rem;">FLEET POWER</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #fff; line-height: 1.15; text-transform: uppercase; margin-bottom: 1.5rem;">HEAVY EQUIPMENT &amp; GLOBAL PROJECT LOGISTICS</h2>
-          <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.65; margin-bottom: 1.25rem;">
-            Rayan Heavy Logistics provides internal and third-party logistics support, deploying high-tonnage cranes, marine barges, and specialized heavy transport to meet strict project timelines.
-          </p>
-          <ul style="color: #94a3b8; font-size: 0.95rem; line-height: 1.8; margin-bottom: 2rem; padding-left: 1.25rem;">
-            <li>Crawler cranes up to 750 tonnes lifting capacity</li>
-            <li>Hydraulic modular multi-axle trailers for super-heavy industrial loads</li>
-            <li>Maritime tugs, anchor handling vessels, and flat-top barges</li>
-            <li>Telematics tracking and 24/7 preventative maintenance fleet depots</li>
-          </ul>
-          <a href="/contact/" class="btn-enterprise-primary">CHARTER &amp; FLEET INQUIRIES →</a>
-        </div>
-        <div>
-          <img src="/assets/images/business/05-logistics.jpg" alt="Logistics Fleet" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
+// Legacy infrastructure, logistics and marine routes redirected to /business/
+const redirectBusinessHtml = (title) => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=/business/">
+  <title>Redirecting to Business Companies...</title>
+  <script>window.location.replace('/business/');</script>
+</head>
+<body>
+  <p>Redirecting to <a href="/business/">Business Companies</a>...</p>
+</body>
+</html>`;
+
+const legacyRoutes = ['business/marine/index.html', 'business/infrastructure/index.html', 'business/logistics/index.html'];
+for (const rel of legacyRoutes) {
+  const p = path.join(__dirname, rel);
+  ensureDir(p);
+  fs.writeFileSync(p, redirectBusinessHtml(), 'utf8');
+  console.log(`Redirected legacy ${rel} -> /business/`);
+}
 
 console.log('Business pages generated.');
