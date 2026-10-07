@@ -373,150 +373,9 @@ const NEW_EXTRACTED_PROJECTS = [
   }
 ];
 
-const EXISTING_FLAGSHIP_PROJECTS = [
-  {
-    slug: 'al-wahda-mall',
-    title: 'Al Wahda Mall Development',
-    shortTitle: 'Al Wahda Mall',
-    category: 'commercial',
-    categoryLabel: 'COMMERCIAL / ABU DHABI',
-    location: 'Abu Dhabi, UAE',
-    client: 'Max / HLN Technical Services LLC',
-    value: 'AED 371,194,710',
-    valueShort: 'AED 371.2M',
-    status: 'Completed',
-    heroImage: '/assets/images/projects/al-wahda-mall.jpg',
-    scope: 'Civil engineering, structural framing, luxury tile installations, and retail finishes for Max / HLN Technical.',
-    highlights: [
-      'Zero operational disruption to over 50,000 daily mall visitors',
-      'Post-tensioned slab reinforcement and specialized tile engineering',
-      'Delivered ahead of scheduled retail launch with zero lost-time incidents',
-      'Full compliance with Estidama and Abu Dhabi municipality safety codes'
-    ],
-    narrative: `Rayan Group was selected by HLN Technical Services to execute extensive civil reinforcement, foundation works, and acoustic architectural gypsum fit-outs for the multi-story commercial retail expansion at Al Wahda Mall, Abu Dhabi.\n\nExecuting within an active, high-traffic commercial destination required rigorous logistical synchronization, night-shift structural operations, and strict adherence to Estidama safety and environmental guidelines.`,
-    imgDir: 'max-fashion-al-wahda-mall',
-    imgCount: 13
-  },
-  {
-    slug: 'ghantoot-palace',
-    title: 'Ghantoot Royal Private Estate',
-    shortTitle: 'Ghantoot Royal Palace',
-    category: 'residential',
-    categoryLabel: 'INTERIORS / GHANTOOT',
-    location: 'Ghantoot, Abu Dhabi, UAE',
-    client: 'Private Royal Office / HM Villa',
-    value: 'AED 185,000,000',
-    valueShort: 'AED 185.0M',
-    status: 'Completed',
-    heroImage: '/assets/images/projects/ghantoot-palace.jpg',
-    scope: 'Bespoke ornamental gypsum, vaulted ceilings, and hand-finished VIP interiors.',
-    highlights: [
-      'Over 25,000 sq.m of custom hand-cast ornamental gypsum mouldings',
-      'Bespoke royal majlis and grand ceremonial banquet halls',
-      'Gilded 24k gold leaf embellishments and acoustic ceiling baffles',
-      'Master artisan craftsmanship delivered to highest VIP protocol standards'
-    ],
-    narrative: `Rayan Architectural Interiors delivered monumental hand-cast gypsum panels, intricate Arabic geometric mouldings, and vaulted ceiling restoration for the private royal residence in Ghantoot, Abu Dhabi.\n\nThe project required exquisite precision, combining traditional Andalusian architectural heritage with modern suspended structural backing systems.`,
-    imgDir: 'ghantoot-palace',
-    imgCount: 1
-  },
-  {
-    slug: 'yas-mall',
-    title: 'Yas Mall Destination Fit-Out',
-    shortTitle: 'Yas Mall Fit-Out',
-    category: 'commercial',
-    categoryLabel: 'RETAIL / YAS ISLAND',
-    location: 'Yas Island, Abu Dhabi, UAE',
-    client: 'Café Bateel / Top Rock Interiors LLC',
-    value: 'AED 54,182,000',
-    valueShort: 'AED 54.2M',
-    status: 'Completed',
-    heroImage: '/assets/images/projects/yas-mall.jpg',
-    scope: 'MEP integration, custom architectural woodwork, and turnkey retail delivery for Café Bateel.',
-    highlights: [
-      'Flagship culinary retail fit-out at Abu Dhabi’s leading shopping and entertainment island',
-      'Specialized commercial pastry and kitchen MEP utilities integration',
-      'Bespoke walnut millwork and high-gloss brass decorative metal frames',
-      'Zero-defect completion with Aldar Properties retail design certification'
-    ],
-    narrative: `Delivered specialty MEP engineering, acoustic gypsum ceilings, and luxury hospitality fit-out for flagship retail destination at Yas Mall, Abu Dhabi.\n\nRayan Group provided complete turnkey coordination between mall management, MEP consultants, and international brand directors to create an unforgettable retail presence.`,
-    imgDir: 'yas-mall',
-    imgCount: 1
-  },
-  {
-    slug: 'marine-coastal-terminal',
-    title: 'Arabian Gulf Coastal Industrial Berth',
-    shortTitle: 'Arabian Gulf Marine Berth',
-    category: 'marine',
-    categoryLabel: 'MARINE / ABU DHABI PORT',
-    location: 'Mussafah Port Corridor, Abu Dhabi, UAE',
-    client: 'Regional Maritime Authority',
-    value: 'AED 420,000,000',
-    valueShort: 'AED 420.0M',
-    status: 'Completed',
-    heroImage: '/assets/images/business/marine-offshore-port.jpg',
-    scope: 'Channel deepening to -14m CD, 1.2M m³ reclamation, heavy quay walls, and industrial vessel berthing.',
-    highlights: [
-      'Deepening navigational channel to -14.0m Chart Datum using cutter suction dredgers',
-      '1.2 Million cubic meters of hydraulic coastal land reclamation',
-      'Reinforced concrete precast block quay wall designed for 50,000 DWT vessels',
-      'ISO 14001 marine biodiversity protection and turbidity curtain deployment'
-    ],
-    narrative: `Rayan Marine & Coastal Contracting executed this monumental offshore civil project expanding industrial berthing facilities in the Arabian Gulf. The contract encompassed high-volume dredging, marine soil improvement, heavy sheet piling, and turnkey berthing equipment.`,
-    imgDir: 'marine',
-    imgCount: 0
-  },
-  {
-    slug: 'offshore-energy-pipeline',
-    title: 'Habshan Energy Pipeline Corridor',
-    shortTitle: 'Habshan Energy Corridor',
-    category: 'energy',
-    categoryLabel: 'ENERGY / AL DHAFRA',
-    location: 'Al Dhafra Region, Abu Dhabi, UAE',
-    client: 'NMDC Energy / Industrial Energy Partner',
-    value: 'AED 610,000,000',
-    valueShort: 'AED 610.0M',
-    status: 'Completed',
-    heroImage: '/assets/images/business/energy-refinery-complex.jpg',
-    scope: 'Heavy industrial pipeline trenching, high-pressure compressor tie-ins, and cathodic protection.',
-    highlights: [
-      '180 km cross-country hydrocarbon pipeline corridor excavation and bedding',
-      'High-pressure gas compressor tie-ins and automated emergency shutdown valves',
-      'Impressed current cathodic protection (ICCP) system for 40-year design life',
-      'Over 2.4 million man-hours executed with zero lost-time incidents (LTI)'
-    ],
-    narrative: `Serving as a critical backbone for Abu Dhabi's energy distribution network, Rayan Group delivered turnkey pipeline trenching, structural concrete compressor foundations, and pipeline crossings under stringent ADNOC-compliant quality and HSE benchmarks.`,
-    imgDir: 'energy',
-    imgCount: 0
-  },
-  {
-    slug: 'porsche-service-center',
-    title: 'Porsche Industrial Service Facility',
-    shortTitle: 'Porsche Service Facility',
-    category: 'infrastructure',
-    categoryLabel: 'INDUSTRIAL / ABU DHABI',
-    location: 'Mussafah Industrial City, Abu Dhabi, UAE',
-    client: 'Ali & Sons Motors / Porsche Middle East',
-    value: 'AED 42,500,000',
-    valueShort: 'AED 42.5M',
-    status: 'Completed',
-    heroImage: '/assets/images/projects/porsche-service-center.jpg',
-    scope: 'Structural reinforcement, high-grade drainage remediation, and civil facility overhaul for Ali & Sons Motors.',
-    highlights: [
-      'Turnkey renovation of luxury automotive diagnostic workshops and training bays',
-      'Heavy-duty chemical-resistant epoxy flooring with high slip resistance',
-      'Industrial oil-water separator drainage plants and sub-floor pneumatic routing',
-      'Delivered to stringent Porsche AG Corporate Architecture standards'
-    ],
-    narrative: `Rayan Group executed the comprehensive structural overhaul and facility modernization for Ali & Sons Motors' premier Porsche service center in Abu Dhabi, incorporating advanced industrial infrastructure and luxury client handover suites.`,
-    imgDir: 'porsche',
-    imgCount: 0
-  }
-];
+const COMBINED_PROJECTS = NEW_EXTRACTED_PROJECTS;
 
-const COMBINED_PROJECTS = [...NEW_EXTRACTED_PROJECTS, ...EXISTING_FLAGSHIP_PROJECTS];
-
-console.log(`Processing total ${COMBINED_PROJECTS.length} projects...`);
+console.log(`Processing total ${COMBINED_PROJECTS.length} extracted projects...`);
 
 // Helper to write an HTML page
 function createRoute(relativePath, { title, description, activePath, heroHtml, content }) {
@@ -723,21 +582,21 @@ for (const proj of COMBINED_PROJECTS) {
 const commercialCount = COMBINED_PROJECTS.filter(p => p.category === 'commercial').length;
 const residentialCount = COMBINED_PROJECTS.filter(p => p.category === 'residential').length;
 const infraCount = COMBINED_PROJECTS.filter(p => p.category === 'infrastructure').length;
-const marineEnergyCount = COMBINED_PROJECTS.filter(p => p.category === 'marine' || p.category === 'energy').length;
 
 const portfolioHeroHtml = renderPageHero({
-  category: 'GLOBAL PORTFOLIO SHOWCASE',
+  category: 'PORTFOLIO SHOWCASE',
   title: 'PROJECTS DEFINING OUR SCALE',
-  description: `A track record of over 500 completed turnkey projects combining structural precision, marine prowess, and architectural excellence across the UAE and South Asia.`,
+  description: `A proven track record of landmark projects combining structural precision, luxury fit-out, and architectural engineering across the UAE.`,
   breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Projects', href: '/projects/' }],
-  bgImage: '/assets/images/projects/al-wahda-mall.jpg',
+  bgImage: '/assets/images/projects/waldorf-astoria-renovation-rak.jpg',
   subnav: [
     { label: `All Projects (${COMBINED_PROJECTS.length})`, href: '/projects/', active: true },
     { label: 'Waldorf Astoria', href: '/projects/waldorf-astoria-renovation-rak/', active: false },
     { label: 'Palm Jumeirah', href: '/projects/palm-jumeirah-rec-estate/', active: false },
-    { label: 'Al Wahda Mall', href: '/projects/al-wahda-mall/', active: false },
     { label: 'C2 Towers', href: '/projects/c2-towers-al-bateen/', active: false },
-    { label: 'Edge REMAYA', href: '/projects/edge-group-remaya/', active: false }
+    { label: 'Edge REMAYA', href: '/projects/edge-group-remaya/', active: false },
+    { label: 'Roxy Cinemas', href: '/projects/roxy-cinema-dubai-hills-mall/', active: false },
+    { label: 'Infinity Pool', href: '/projects/luxury-island-infinity-pool/', active: false }
   ]
 });
 
@@ -753,8 +612,7 @@ const portfolioContent = `
           <button type="button" class="subnav-tab-link project-filter-btn active" data-filter="all">ALL (${COMBINED_PROJECTS.length})</button>
           <button type="button" class="subnav-tab-link project-filter-btn" data-filter="commercial">COMMERCIAL &amp; HOSPITALITY (${commercialCount})</button>
           <button type="button" class="subnav-tab-link project-filter-btn" data-filter="residential">LUXURY RESIDENTIAL (${residentialCount})</button>
-          <button type="button" class="subnav-tab-link project-filter-btn" data-filter="infrastructure">INFRASTRUCTURE &amp; CIVIC (${infraCount})</button>
-          <button type="button" class="subnav-tab-link project-filter-btn" data-filter="marine-energy">MARINE &amp; ENERGY (${marineEnergyCount})</button>
+          <button type="button" class="subnav-tab-link project-filter-btn" data-filter="infrastructure">CIVIC &amp; INFRASTRUCTURE (${infraCount})</button>
         </div>
 
         <!-- Live Search Field -->

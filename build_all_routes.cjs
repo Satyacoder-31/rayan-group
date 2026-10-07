@@ -374,34 +374,34 @@ const homeContent = `
           </div>
         </article>
 
-        <!-- Project 5: Al Wahda Mall -->
+        <!-- Project 5: Luxury Island Infinity Pool -->
         <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden; position: relative;">
-            <img src="/assets/images/projects/al-wahda-mall.jpg" alt="Al Wahda Mall" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">AED 371.2M</span>
+            <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Luxury Island Infinity Pool" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">AED 46.2M</span>
           </div>
           <div style="padding: 2rem;">
-            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">COMMERCIAL / ABU DHABI</div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Al Wahda Mall Commercial &amp; Structural Development</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Civil engineering, foundation reinforcement, luxury tiling, and precision architectural finishes for Max &amp; HLN Technical.</p>
-            <a href="/projects/al-wahda-mall/" style="font-size: 0.825rem; font-weight: 700; color: #0099e6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">AQUATIC &amp; RESORT / ABU DHABI</div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Luxury Island Oceanfront Infinity Pool &amp; Deck</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Cantilevered marine concrete pool engineering, horizon overflow waterfalls, and coastal leisure landscaping.</p>
+            <a href="/projects/luxury-island-infinity-pool/" style="font-size: 0.825rem; font-weight: 700; color: #0099e6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
               <span>READ CASE STUDY</span><span>→</span>
             </a>
           </div>
         </article>
 
-        <!-- Project 6: Arabian Gulf Coastal Berth -->
+        <!-- Project 6: Roxy Cinemas Dubai Hills -->
         <article class="project-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden; position: relative;">
-            <img src="/assets/images/business/marine-offshore-port.jpg" alt="Maritime Berths" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">AED 420.0M</span>
+            <img src="/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg" alt="Roxy Cinemas VIP Auditoriums" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981; text-transform: uppercase;">AED 38.6M</span>
           </div>
           <div style="padding: 2rem;">
-            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">MARINE / ABU DHABI PORT</div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Arabian Gulf Coastal Industrial Berth</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Channel deepening to -14m CD, 1.2M m³ reclamation, heavy quay walls, and industrial vessel berthing.</p>
-            <a href="/business/marine/" style="font-size: 0.825rem; font-weight: 700; color: #0099e6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
-              <span>EXPLORE MARINE WORKS</span><span>→</span>
+            <div style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">ENTERTAINMENT / DUBAI</div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 0.75rem;">Roxy Cinemas VIP Auditoriums - Dubai Hills</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.5rem;">Acoustic sound isolation engineering, VIP cinema auditorium fit-out, and multi-tier stadium seating.</p>
+            <a href="/projects/roxy-cinema-dubai-hills-mall/" style="font-size: 0.825rem; font-weight: 700; color: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+              <span>READ CASE STUDY</span><span>→</span>
             </a>
           </div>
         </article>

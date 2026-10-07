@@ -253,34 +253,6 @@ export const FEATURED_PROJECTS = [
     featured: true
   },
   {
-    id: "al-wahda-mall",
-    slug: "al-wahda-mall",
-    title: "Al Wahda Mall Commercial & Structural Development",
-    category: "COMMERCIAL",
-    filterCat: "commercial",
-    location: "Abu Dhabi, UAE",
-    client: "Max / HLN Technical Services LLC",
-    year: "2024",
-    value: "AED 371.2M",
-    scope: "Civil engineering, foundation reinforcement, luxury tiling, high-grade acoustic gypsum frameworks, and precision interior finishes.",
-    image: "/assets/images/projects/al-wahda-mall.jpg",
-    featured: true
-  },
-  {
-    id: "ghantoot-palace",
-    slug: "ghantoot-palace",
-    title: "Ghantoot Royal Private Estate & Architectural Fit-Out",
-    category: "INTERIORS",
-    filterCat: "residential",
-    location: "Ghantoot, Abu Dhabi",
-    client: "HM Villa / Private Royal Office",
-    year: "2024",
-    value: "AED 185.0M",
-    scope: "Bespoke ornamental gypsum fabrication, vaulted ceiling details, royal VIP fit-outs, and hand-finished decorative architectural surfaces.",
-    image: "/assets/images/projects/ghantoot-palace.jpg",
-    featured: true
-  },
-  {
     id: "dubai-police-academy",
     slug: "dubai-police-academy",
     title: "Dubai Police Academy Tactical Facility",
@@ -461,48 +433,6 @@ export const FEATURED_PROJECTS = [
     scope: "Turnkey Apartment Modernization, Premium Joinery, Recessed Lighting & Bespoke Kitchen.",
     image: "/assets/images/projects/silicon-oasis-residence.jpg",
     featured: false
-  },
-  {
-    id: "marine-coastal-terminal",
-    slug: "marine-coastal-terminal",
-    title: "Arabian Gulf Marine Berth & Offshore Dredging",
-    category: "MARINE",
-    filterCat: "marine",
-    location: "Mussafah Port Corridor, Abu Dhabi",
-    client: "Regional Maritime Authority",
-    year: "2024",
-    value: "AED 420.0M",
-    scope: "Navigational channel deepening to -14m CD, 1.2M m³ reclamation, heavy quay wall construction, and marine logistics berthing.",
-    image: "/assets/images/business/marine-offshore-port.jpg",
-    featured: true
-  },
-  {
-    id: "offshore-energy-pipeline",
-    slug: "offshore-energy-pipeline",
-    title: "Habshan Hydrocarbon Corridor Pipeline & Process Plant",
-    category: "ENERGY",
-    filterCat: "energy",
-    location: "Al Dhafra Region, UAE",
-    client: "NMDC Energy / Industrial Energy Partner",
-    year: "2023",
-    value: "AED 610.0M",
-    scope: "Heavy industrial EPC pipeline trenching, high-pressure gas compressor tie-ins, safety valve stations, and cathodic protection systems.",
-    image: "/assets/images/business/energy-refinery-complex.jpg",
-    featured: true
-  },
-  {
-    id: "porsche-service-center",
-    slug: "porsche-service-center",
-    title: "Porsche Service Center Industrial Infrastructure",
-    category: "INDUSTRIAL",
-    filterCat: "infrastructure",
-    location: "Abu Dhabi, UAE",
-    client: "Ali & Sons Motors",
-    year: "2024",
-    value: "AED 42.5M",
-    scope: "Comprehensive structural rectification, advanced industrial storm drainage engineering, and facility lifecycle reinforcement.",
-    image: "/assets/images/projects/porsche-service-center.jpg",
-    featured: false
   }
 ];
 
@@ -649,8 +579,8 @@ export const MEDIA_GALLERY = [
   { title: "Dubai Police Academy Tactical Facility", category: "Civic", image: "/assets/images/projects/dubai-police-academy.jpg", caption: "Institutional complex masonry and tactical briefing halls under construction in Dubai." },
   { title: "Offshore Marine Dredging & Berthing", category: "Marine", image: "/assets/images/business/marine-offshore-port.jpg", caption: "Heavy maritime equipment expanding coastal industrial berths in Abu Dhabi." },
   { title: "Hydrocarbon Process Complex & Pipelines", category: "Energy", image: "/assets/images/business/energy-refinery-complex.jpg", caption: "Industrial high-pressure piping and refinery infrastructure delivered to ISO 45001 standards." },
-  { title: "Al Wahda Mall Luxury Commercial Development", category: "Projects", image: "/assets/images/projects/al-wahda-mall.jpg", caption: "High-traffic commercial retail and structural engineering development in Abu Dhabi." },
-  { title: "Ghantoot Palace Royal Architectural Gypsum", category: "Projects", image: "/assets/images/projects/ghantoot-palace.jpg", caption: "Exquisite hand-crafted vaulted ceiling details and bespoke interior architectural decor." },
+  { title: "Max Fashion Anchor Store - Al Wahda Mall", category: "Retail", image: "/assets/images/projects/max-fashion-al-wahda-mall.jpg", caption: "High-traffic commercial retail and structural engineering development in Abu Dhabi." },
+  { title: "Luxury Island Marble & Stone Works", category: "Masonry", image: "/assets/images/projects/luxury-island-marble-works.jpg", caption: "Italian Calacatta and Statuario marble cladding and precision flooring in Abu Dhabi." },
   { title: "Al Qua School Campus Infrastructure", category: "Infrastructure", image: "/assets/images/projects/al-qua-school-infrastructure.jpg", caption: "35,000+ sqm heavy interlock paving and campus stormwater drainage in Al Ain." },
   { title: "Modern High-Rise Construction Engineering", category: "Infrastructure", image: "/assets/images/hero/hero-infrastructure-cranes.jpg", caption: "Heavy tower cranes and structural framework construction for premium commercial towers." },
   { title: "Corporate Boardroom & Governance Center", category: "Corporate", image: "/assets/images/investors/boardroom-governance.jpg", caption: "Executive boardroom directing multinational operations across UAE and South Asia." }

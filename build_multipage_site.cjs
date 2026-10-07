@@ -197,9 +197,9 @@ function renderHeader(activePath = '/') {
                     <div class="mega-link-title"><span>Edge Group - REMAYA Complex</span><span>→</span></div>
                     <div class="mega-link-desc">AED 78.4M high-security tactical &amp; defense training infrastructure.</div>
                   </a>
-                  <a href="/projects/al-wahda-mall/" class="mega-sub-link">
-                    <div class="mega-link-title"><span>Al Wahda Mall Development</span><span>→</span></div>
-                    <div class="mega-link-desc">AED 371.2M flagship commercial retail &amp; foundation structural project.</div>
+                  <a href="/projects/luxury-island-infinity-pool/" class="mega-sub-link">
+                    <div class="mega-link-title"><span>Luxury Island Infinity Pool</span><span>→</span></div>
+                    <div class="mega-link-desc">AED 46.2M oceanfront cantilevered infinity pool &amp; resort deck.</div>
                   </a>
                   <a href="/projects/roxy-cinema-dubai-hills-mall/" class="mega-sub-link">
                     <div class="mega-link-title"><span>Roxy Cinemas Dubai Hills</span><span>→</span></div>
@@ -408,15 +408,15 @@ function renderMobileDrawer(activePath = '/') {
             <svg class="mobile-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="mobile-group-links">
-            <a href="/projects/" class="mobile-sublink ${activePath === '/projects/' ? 'active' : ''}">All 22 Projects Showcase</a>
+            <a href="/projects/" class="mobile-sublink ${activePath === '/projects/' ? 'active' : ''}">All 16 Projects Showcase</a>
             <a href="/projects/waldorf-astoria-renovation-rak/" class="mobile-sublink ${activePath === '/projects/waldorf-astoria-renovation-rak/' ? 'active' : ''}">Waldorf Astoria Renovation</a>
             <a href="/projects/palm-jumeirah-rec-estate/" class="mobile-sublink ${activePath === '/projects/palm-jumeirah-rec-estate/' ? 'active' : ''}">Palm Jumeirah Waterfront Estate</a>
             <a href="/projects/c2-towers-al-bateen/" class="mobile-sublink ${activePath === '/projects/c2-towers-al-bateen/' ? 'active' : ''}">C2 Towers Al Bateen</a>
             <a href="/projects/edge-group-remaya/" class="mobile-sublink ${activePath === '/projects/edge-group-remaya/' ? 'active' : ''}">Edge Group - REMAYA Complex</a>
-            <a href="/projects/al-wahda-mall/" class="mobile-sublink ${activePath === '/projects/al-wahda-mall/' ? 'active' : ''}">Al Wahda Mall Development</a>
+            <a href="/projects/luxury-island-infinity-pool/" class="mobile-sublink ${activePath === '/projects/luxury-island-infinity-pool/' ? 'active' : ''}">Luxury Island Infinity Pool</a>
             <a href="/projects/roxy-cinema-dubai-hills-mall/" class="mobile-sublink ${activePath === '/projects/roxy-cinema-dubai-hills-mall/' ? 'active' : ''}">Roxy Cinemas Dubai Hills</a>
-            <a href="/projects/ghantoot-palace/" class="mobile-sublink ${activePath === '/projects/ghantoot-palace/' ? 'active' : ''}">Ghantoot Royal Palace</a>
-            <a href="/projects/yas-mall/" class="mobile-sublink ${activePath === '/projects/yas-mall/' ? 'active' : ''}">Yas Mall Destination Fit-Out</a>
+            <a href="/projects/dubai-police-academy/" class="mobile-sublink ${activePath === '/projects/dubai-police-academy/' ? 'active' : ''}">Dubai Police Academy Facility</a>
+            <a href="/projects/max-fashion-al-wahda-mall/" class="mobile-sublink ${activePath === '/projects/max-fashion-al-wahda-mall/' ? 'active' : ''}">Max Fashion Al Wahda Mall</a>
           </div>
         </div>
 
@@ -576,9 +576,9 @@ function renderFooter() {
           <h4 class="footer-col-title">PROJECTS</h4>
           <ul class="footer-links-list">
             <li><a href="/projects/" class="footer-link">Project Portfolio</a></li>
-            <li><a href="/projects/al-wahda-mall/" class="footer-link">Al Wahda Mall</a></li>
-            <li><a href="/projects/ghantoot-palace/" class="footer-link">Ghantoot Palace</a></li>
-            <li><a href="/projects/yas-mall/" class="footer-link">Yas Mall Retail</a></li>
+            <li><a href="/projects/waldorf-astoria-renovation-rak/" class="footer-link">Waldorf Astoria RAK</a></li>
+            <li><a href="/projects/palm-jumeirah-rec-estate/" class="footer-link">Palm Jumeirah Estate</a></li>
+            <li><a href="/projects/c2-towers-al-bateen/" class="footer-link">C2 Towers Al Bateen</a></li>
             <li><a href="/media/" class="footer-link">Media Gallery</a></li>
           </ul>
         </div>
