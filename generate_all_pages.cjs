@@ -283,4 +283,85 @@ createRoute('leadership/index.html', {
   `
 });
 
-console.log('Generated About & Leadership pages.');
+// ============================================================================
+// 14. SUSTAINABILITY PAGE (sustainability/index.html)
+// ============================================================================
+createRoute('sustainability/index.html', {
+  title: 'Sustainability, ESG & Net-Zero Pathway',
+  description: 'Rayan Group ESG commitments: 30% carbon emission reduction by 2030, zero-harm health & safety, and triple ISO certifications.',
+  activePath: '/sustainability/',
+  heroHtml: renderPageHero({
+    category: 'ESG STRATEGY',
+    title: 'SUSTAINABILITY AT OUR CORE',
+    description: 'Pioneering decarbonization, marine biodiversity protection, and zero-harm workplace safety across all multinational projects.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Sustainability', href: '/sustainability/' }],
+    bgImage: '/assets/images/sustainability/renewable-energy.jpg',
+    subnav: [
+      { label: 'ESG Pillars', href: '#pillars', active: true },
+      { label: 'Carbon Reduction', href: '#carbon', active: false },
+      { label: 'HSE Safety (ISO 45001)', href: '#safety', active: false },
+      { label: 'Triple Certifications', href: '#certifications', active: false }
+    ]
+  }),
+  content: `
+  <section class="section" style="padding: 6rem 0; background: #07111e;" id="pillars">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 5rem;">
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; letter-spacing: 0.1em; text-transform: uppercase;">PILLAR 01</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1rem; text-transform: uppercase;">ENVIRONMENTAL RESPONSIBILITY</h3>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
+            Integrating solar hybrid power on remote sites, reducing dredging silt dispersal, and targeting 30% carbon emission reduction across operations by 2030.
+          </p>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6; letter-spacing: 0.1em; text-transform: uppercase;">PILLAR 02</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1rem; text-transform: uppercase;">SOCIAL &amp; WORKFORCE HSE</h3>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
+            Uncompromising zero-harm safety culture under ISO 45001:2018, workforce health screenings, fair wages, and extensive skills training across all job sites.
+          </p>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; color: #c5a059; letter-spacing: 0.1em; text-transform: uppercase;">PILLAR 03</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1rem; text-transform: uppercase;">FIDUCIARY GOVERNANCE</h3>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
+            Zero-tolerance bribery and corruption policy, transparent ESG disclosures, independent audit committees, and strict corporate ethics compliance.
+          </p>
+        </div>
+      </div>
+
+      <!-- Triple Certifications Card -->
+      <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 3rem;" id="certifications">
+        <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">VERIFIED STANDARDS</span>
+          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">TRIPLE ISO CERTIFICATIONS</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem;">
+          <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
+            <div style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #0099e6;">ISO 9001:2015</div>
+            <div style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; margin: 0.5rem 0;">Quality Management System</div>
+            <span style="font-size: 0.75rem; color: #94a3b8;">ANID: AN11136910824</span>
+          </div>
+
+          <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
+            <div style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #10b981;">ISO 14001:2015</div>
+            <div style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; margin: 0.5rem 0;">Environmental Management</div>
+            <span style="font-size: 0.75rem; color: #94a3b8;">EMS-RE-23051702YJRJW52</span>
+          </div>
+
+          <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.02); border-radius: 8px;">
+            <div style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #c5a059;">ISO 45001:2018</div>
+            <div style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; margin: 0.5rem 0;">Occupational Health &amp; Safety</div>
+            <span style="font-size: 0.75rem; color: #94a3b8;">OHS-RE-23051702YJRJW52</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  `
+});
+
+console.log('Generated About, Leadership & Sustainability pages.');
