@@ -2644,9 +2644,346 @@ body.preloader-active {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  .bu-pill {
-    padding: 0.75rem 0.85rem;
+}
+
+/* ============================================================================
+   BUSINESS SERVICES: PROPOSAL, PROCUREMENT & BILLING STYLES
+   ============================================================================ */
+.service-form-card {
+  background: #0c1828;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: clamp(1.75rem, 3.5vw, 3rem);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .form-grid-2col {
+    grid-template-columns: 1fr;
   }
 }
+
+.service-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.service-form-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #cbd5e1;
+}
+
+.service-form-label span.req {
+  color: #ef4444;
+}
+
+.service-form-input,
+.service-form-select,
+.service-form-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  padding: 0.85rem 1.15rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.25s ease;
+}
+
+.service-form-input:focus,
+.service-form-select:focus,
+.service-form-textarea:focus {
+  outline: none;
+  border-color: #0099e6;
+  background: rgba(0, 153, 230, 0.06);
+  box-shadow: 0 0 0 3px rgba(0, 153, 230, 0.18);
+}
+
+.service-form-select option {
+  background: #0c1828;
+  color: #fff;
+}
+
+.file-dropzone {
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.file-dropzone:hover,
+.file-dropzone.dragover {
+  border-color: #0099e6;
+  background: rgba(0, 153, 230, 0.06);
+}
+
+.file-dropzone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.file-dropzone-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #0099e6;
+}
+
+.file-dropzone-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.file-dropzone-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.file-dropzone-selected {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Process Timeline / Workflow */
+.process-step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin: 3rem 0;
+}
+
+.process-step-card {
+  background: #0c1828;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 2rem;
+  position: relative;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.process-step-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 153, 230, 0.4);
+}
+
+.process-step-num {
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: rgba(0, 153, 230, 0.35);
+  margin-bottom: 0.75rem;
+  line-height: 1;
+}
+
+.process-step-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.process-step-desc {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* Clients & Certifications Showcase */
+.client-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1.5rem;
+}
+
+.client-logo-card {
+  background: #0c1828;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.client-logo-card:hover {
+  border-color: rgba(0, 153, 230, 0.45);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+.client-card-name {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  margin-top: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.client-card-sector {
+  font-size: 0.75rem;
+  color: #0099e6;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.25rem;
+}
+
+/* ISO Badges Banner */
+.iso-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.iso-badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.iso-badge-item .iso-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+/* Quick Inquiry Floating / Sticky Banner */
+.action-cta-banner {
+  background: linear-gradient(135deg, #091a2e 0%, #061320 100%);
+  border: 1px solid rgba(0, 153, 230, 0.25);
+  border-radius: 16px;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-cta-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(0, 153, 230, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+/* Light Mode Adjustments for Business Services & Forms */
+[data-theme="light"] .service-form-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .service-form-label {
+  color: #1e293b;
+}
+
+[data-theme="light"] .service-form-input,
+[data-theme="light"] .service-form-select,
+[data-theme="light"] .service-form-textarea {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .service-form-input:focus,
+[data-theme="light"] .service-form-select:focus,
+[data-theme="light"] .service-form-textarea:focus {
+  background: #ffffff;
+  border-color: #0099e6;
+  box-shadow: 0 0 0 3px rgba(0, 153, 230, 0.15);
+}
+
+[data-theme="light"] .service-form-select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .file-dropzone {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .file-dropzone-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .file-dropzone-desc {
+  color: #64748b;
+}
+
+[data-theme="light"] .process-step-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .process-step-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .process-step-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .client-logo-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .client-card-name {
+  color: #0f172a;
+}
+
+[data-theme="light"] .iso-badge-item {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
 
 

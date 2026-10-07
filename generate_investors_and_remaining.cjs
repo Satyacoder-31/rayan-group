@@ -7,570 +7,87 @@ function createRoute(relativePath, { title, description, activePath, heroHtml, c
   ensureDir(fullPath);
   const html = wrapPage({ title, description, activePath, heroHtml, content });
   fs.writeFileSync(fullPath, html, 'utf8');
-  console.log(`Generated route: ${relativePath}`);
+  console.log(`Generated: ${relativePath}`);
 }
 
-// Common IR subnav configuration
-const irSubnav = (activeHref) => [
-  { label: 'Overview', href: '/investors/', active: activeHref === '/investors/' },
-  { label: 'Financial Results', href: '/investors/financial-results/', active: activeHref === '/investors/financial-results/' },
-  { label: 'Annual Reports', href: '/investors/annual-reports/', active: activeHref === '/investors/annual-reports/' },
-  { label: 'Presentations', href: '/investors/presentations/', active: activeHref === '/investors/presentations/' },
-  { label: 'Shareholders', href: '/investors/shareholder-information/', active: activeHref === '/investors/shareholder-information/' },
-  { label: 'Governance', href: '/investors/corporate-governance/', active: activeHref === '/investors/corporate-governance/' },
-  { label: 'Stock Info', href: '/investors/stock-information/', active: activeHref === '/investors/stock-information/' },
-  { label: 'IR Calendar', href: '/investors/financial-calendar/', active: activeHref === '/investors/financial-calendar/' },
-];
-
 // ============================================================================
-// 1. INVESTOR RELATIONS HUB (/investors/index.html)
+// 1. CORPORATE PROFILE / PRIVATE GOVERNANCE (/investors/index.html)
+// Clean unlisted corporate governance without fake stock exchange data
 // ============================================================================
 createRoute('investors/index.html', {
-  title: 'Investor Relations Dashboard & Financial Performance',
-  description: 'Access Rayan Group financial results, annual reports, stock performance (ADX: RYNG), shareholder disclosures, and institutional governance.',
+  title: 'Corporate Governance & Private Group Profile',
+  description: 'Rayan Group is a privately held engineering and infrastructure conglomerate operating across the UAE and South Asia with strict corporate governance.',
   activePath: '/investors/',
   heroHtml: renderPageHero({
-    category: 'INVESTOR RELATIONS',
-    title: 'CAPITAL & VALUE CREATION',
-    description: 'Delivering sustainable long-term value through operational scale, engineering discipline, and prudent capital allocation across high-growth international markets.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }],
-    bgImage: '/assets/images/investors/investor-hero.jpg',
-    subnav: irSubnav('/investors/')
+    category: 'CORPORATE GOVERNANCE & STRUCTURE',
+    title: 'PRIVATE GROUP PROFILE',
+    description: 'Operating as a privately held multinational conglomerate with prudent capital allocation, independent oversight, and long-term industrial commitment.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Corporate Profile', href: '/investors/' }],
+    bgImage: '/assets/images/about/overview.jpg'
   }),
   content: `
-  <!-- Key Financial Metrics Bar -->
-  <section class="section" style="padding: 5rem 0 3rem; background: #07111e; border-bottom: 1px solid rgba(255,255,255,0.08);">
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container">
-      <div style="text-align: center; max-width: 750px; margin: 0 auto 3.5rem;">
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">FINANCIAL HIGHLIGHTS FY2024</span>
-        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">RECORD CORPORATE PERFORMANCE</h2>
-      </div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3.5rem;">
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; text-align: center;">
-          <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">REVENUE FY2024</span>
-          <div style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #0099e6; margin: 0.5rem 0;" data-counter-target="1.82" data-counter-prefix="AED " data-counter-suffix="B" data-counter-decimals="2">AED 1.82B</div>
-          <span style="font-size: 0.8125rem; color: #10b981; font-weight: 600;">▲ +24.2% YoY Growth</span>
-        </div>
-
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; text-align: center;">
-          <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">EBITDA</span>
-          <div style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #fff; margin: 0.5rem 0;" data-counter-target="385" data-counter-prefix="AED " data-counter-suffix="M">AED 385M</div>
-          <span style="font-size: 0.8125rem; color: #10b981; font-weight: 600;">▲ 21.1% EBITDA Margin</span>
-        </div>
-
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; text-align: center;">
-          <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">NET PROFIT</span>
-          <div style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #0099e6; margin: 0.5rem 0;" data-counter-target="246" data-counter-prefix="AED " data-counter-suffix="M">AED 246M</div>
-          <span style="font-size: 0.8125rem; color: #10b981; font-weight: 600;">▲ +19.4% YoY Growth</span>
-        </div>
-
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; text-align: center;">
-          <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">MARKET CAPITALIZATION</span>
-          <div style="font-family: var(--font-heading); font-size: 2.75rem; font-weight: 800; color: #c5a059; margin: 0.5rem 0;" data-counter-target="8.52" data-counter-prefix="AED " data-counter-suffix="B" data-counter-decimals="2">AED 8.52B</div>
-          <span style="font-size: 0.8125rem; color: #cbd5e1;">ADX: RYNG Listing</span>
-        </div>
-      </div>
-
-      <!-- Quick Portals Grid -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-        <a href="/investors/financial-results/" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; text-decoration: none; display: block; transition: all 0.3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6;">REPORTS &amp; AUDITS</span>
-            <span style="color: #0099e6;">→</span>
-          </div>
-          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Financial Results</h3>
-          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Access quarterly statements, audited annual accounts, income statements, and cash flows.</p>
-        </a>
-
-        <a href="/investors/annual-reports/" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; text-decoration: none; display: block; transition: all 0.3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6;">DOWNLOAD ARCHIVE</span>
-            <span style="color: #0099e6;">→</span>
-          </div>
-          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Annual Reports</h3>
-          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Comprehensive annual reports, integrated ESG performance, and auditor sign-offs in PDF format.</p>
-        </a>
-
-        <a href="/investors/presentations/" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; text-decoration: none; display: block; transition: all 0.3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6;">DISCLOSURES</span>
-            <span style="color: #0099e6;">→</span>
-          </div>
-          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Investor Presentations</h3>
-          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Quarterly roadshow slides, Capital Markets Day presentations, and executive webcasts.</p>
-        </a>
-
-        <a href="/investors/stock-information/" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; text-decoration: none; display: block; transition: all 0.3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6;">ADX LISTING</span>
-            <span style="color: #0099e6;">→</span>
-          </div>
-          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Stock Information</h3>
-          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Real-time stock quote (ADX: RYNG), historical chart data, shares in issue, and valuation ratios.</p>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Investor Relations Contact & Secretary -->
-  <section class="section" style="padding: 5rem 0; background: #050b14;">
-    <div class="container">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;" class="intro-grid-responsive">
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">SHAREHOLDER ENGAGEMENT</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1.5rem;">INVESTOR RELATIONS SECRETARIAT</h2>
-          <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.7; margin-bottom: 1.5rem;">
-            Rayan Group is committed to continuous, fair, and transparent communication with institutional investors, analysts, and retail shareholders globally.
-          </p>
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <span style="color: #0099e6; font-weight: 700; width: 140px;">IR EMAIL:</span>
-              <a href="mailto:ir@rayangroup.com" style="color: #fff; text-decoration: none;">ir@rayangroup.com</a>
-            </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <span style="color: #0099e6; font-weight: 700; width: 140px;">DIRECT LINE:</span>
-              <span style="color: #fff;">+971 2 642 8899</span>
-            </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <span style="color: #0099e6; font-weight: 700; width: 140px;">REGISTRAR:</span>
-              <span style="color: #fff;">Abu Dhabi Securities Exchange (ADX)</span>
-            </div>
-          </div>
-        </div>
-        <div>
-          <img src="/assets/images/investors/corporate-financial-tower.jpg" alt="Rayan Group Headquarters" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
-
-// ============================================================================
-// 2. FINANCIAL RESULTS (/investors/financial-results/index.html)
-// ============================================================================
-createRoute('investors/financial-results/index.html', {
-  title: 'Financial Results, Statements & Segment Performance',
-  description: 'Audited financial statements, quarterly income statements, EBITDA margins, and divisional revenue performance for Rayan Group.',
-  activePath: '/investors/financial-results/',
-  heroHtml: renderPageHero({
-    category: 'FINANCIAL REPORTING',
-    title: 'FINANCIAL RESULTS',
-    description: 'Disciplined revenue compounding, resilient operational margins, and strong balance sheet liquidity across all business verticals.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }, { label: 'Financial Results', href: '/investors/financial-results/' }],
-    bgImage: '/assets/images/investors/corporate-financial-tower.jpg',
-    subnav: irSubnav('/investors/financial-results/')
-  }),
-  content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
-    <div class="container">
-      <div style="margin-bottom: 3.5rem;">
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">STATEMENT OF COMPREHENSIVE INCOME</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">FY2024 CONSOLIDATED PERFORMANCE</h2>
-      </div>
-
-      <!-- Financial Data Table -->
-      <div class="ir-table-wrapper" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; margin-bottom: 4rem;">
-        <div style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; gap: 1rem;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">Summary Income Statement (in AED Millions)</h3>
-          <div class="ir-table-search">
-            <input type="text" placeholder="Search line items..." style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;">
-          </div>
-        </div>
-
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-            <thead>
-              <tr style="background: rgba(255,255,255,0.03); color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                <th style="padding: 1rem 1.5rem; font-weight: 700;">METRIC / LINE ITEM</th>
-                <th style="padding: 1rem 1.5rem; font-weight: 700; text-align: right;">FY 2024</th>
-                <th style="padding: 1rem 1.5rem; font-weight: 700; text-align: right;">FY 2023</th>
-                <th style="padding: 1rem 1.5rem; font-weight: 700; text-align: right;">YoY CHANGE</th>
-                <th style="padding: 1rem 1.5rem; font-weight: 700; text-align: center;">DISCLOSURE</th>
-              </tr>
-            </thead>
-            <tbody style="color: #cbd5e1;">
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">Consolidated Revenue</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; font-weight: 700; color: #0099e6;">1,824.5</td>
-                <td style="padding: 1rem 1.5rem; text-align: right;">1,468.2</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; color: #10b981; font-weight: 600;">+24.2%</td>
-                <td style="padding: 1rem 1.5rem; text-align: center;"><a href="#" class="doc-download-btn" data-doc-name="FY2024 Revenue Breakdown" style="color: #0099e6; text-decoration: none;">Download PDF</a></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1rem 1.5rem;">Cost of Operations &amp; Direct Materials</td>
-                <td style="padding: 1rem 1.5rem; text-align: right;">(1,312.0)</td>
-                <td style="padding: 1rem 1.5rem; text-align: right;">(1,062.5)</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; color: #94a3b8;">+23.4%</td>
-                <td style="padding: 1rem 1.5rem; text-align: center;"><a href="#" class="doc-download-btn" data-doc-name="Operational Cost Note" style="color: #0099e6; text-decoration: none;">Download PDF</a></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">Gross Profit</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; font-weight: 700; color: #fff;">512.5</td>
-                <td style="padding: 1rem 1.5rem; text-align: right;">405.7</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; color: #10b981; font-weight: 600;">+26.3%</td>
-                <td style="padding: 1rem 1.5rem; text-align: center;"><a href="#" class="doc-download-btn" data-doc-name="Gross Margin Analysis" style="color: #0099e6; text-decoration: none;">Download PDF</a></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">EBITDA</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; font-weight: 700; color: #10b981;">385.2</td>
-                <td style="padding: 1rem 1.5rem; text-align: right;">318.0</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; color: #10b981; font-weight: 600;">+21.1%</td>
-                <td style="padding: 1rem 1.5rem; text-align: center;"><a href="#" class="doc-download-btn" data-doc-name="EBITDA Reconciliation" style="color: #0099e6; text-decoration: none;">Download PDF</a></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">Net Profit Attributable to Shareholders</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; font-weight: 700; color: #c5a059;">246.0</td>
-                <td style="padding: 1rem 1.5rem; text-align: right;">206.0</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; color: #10b981; font-weight: 600;">+19.4%</td>
-                <td style="padding: 1rem 1.5rem; text-align: center;"><a href="#" class="doc-download-btn" data-doc-name="FY2024 Full Audit" style="color: #0099e6; text-decoration: none;">Download PDF</a></td>
-              </tr>
-              <tr>
-                <td style="padding: 1rem 1.5rem;">Basic &amp; Diluted EPS (AED)</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; font-weight: 700; color: #fff;">0.82</td>
-                <td style="padding: 1rem 1.5rem; text-align: right;">0.69</td>
-                <td style="padding: 1rem 1.5rem; text-align: right; color: #10b981; font-weight: 600;">+18.8%</td>
-                <td style="padding: 1rem 1.5rem; text-align: center;"><a href="#" class="doc-download-btn" data-doc-name="Share Capital Notes" style="color: #0099e6; text-decoration: none;">Download PDF</a></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Segment Performance Cards -->
-      <div>
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OPERATIONAL DIVERSIFICATION</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 2rem;">REVENUE CONTRIBUTION BY DIVISION</h2>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">Civil &amp; General Contracting</h4>
-              <span style="font-weight: 700; color: #0099e6;">42%</span>
-            </div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 766M Revenue. Driven by commercial retail, luxury residential, and mixed-use towers.</p>
-            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
-              <div style="width: 42%; height: 100%; background: #0099e6;"></div>
-            </div>
-          </div>
-
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">Energy &amp; Oil/Gas EPC</h4>
-              <span style="font-weight: 700; color: #10b981;">28%</span>
-            </div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 511M Revenue. Pipeline installation, storage tank farms, and petrochemical maintenance.</p>
-            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
-              <div style="width: 28%; height: 100%; background: #10b981;"></div>
-            </div>
-          </div>
-
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">International Operations (Ashaz India)</h4>
-              <span style="font-weight: 700; color: #c5a059;">18%</span>
-            </div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 328M Revenue. Industrial fabrication, mechanical engineering, and cross-border project execution.</p>
-            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
-              <div style="width: 18%; height: 100%; background: #c5a059;"></div>
-            </div>
-          </div>
-
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-              <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff;">Heavy Logistics &amp; Other</h4>
-              <span style="font-weight: 700; color: #38bdf8;">12%</span>
-            </div>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">AED 219M Revenue. Heavy crane charters, modular transport, and specialist engineering MEP.</p>
-            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
-              <div style="width: 12%; height: 100%; background: #38bdf8;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
-
-// ============================================================================
-// 3. ANNUAL REPORTS (/investors/annual-reports/index.html)
-// ============================================================================
-createRoute('investors/annual-reports/index.html', {
-  title: 'Annual Reports, Integrated Audits & ESG Disclosures',
-  description: 'Download audited Annual Reports, Integrated Reports, Corporate Governance Statements, and ESG Disclosures for Rayan Group.',
-  activePath: '/investors/annual-reports/',
-  heroHtml: renderPageHero({
-    category: 'INVESTOR DISCLOSURES',
-    title: 'ANNUAL REPORTS ARCHIVE',
-    description: 'Providing comprehensive transparency into annual operations, financial performance, strategic milestones, and stakeholder value creation.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }, { label: 'Annual Reports', href: '/investors/annual-reports/' }],
-    bgImage: '/assets/images/investors/governance.jpg',
-    subnav: irSubnav('/investors/annual-reports/')
-  }),
-  content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
-    <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 3rem;">
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">STATUTORY PUBLICATIONS</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">ANNUAL REPORT LIBRARY</h2>
-        </div>
-        <div style="font-size: 0.85rem; color: #94a3b8;">Format: High-Resolution PDF (Interactive)</div>
-      </div>
-
-      <!-- Searchable Report Table -->
-      <div class="ir-table-wrapper" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
-        <div style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; gap: 1rem;">
-          <div style="font-weight: 700; color: #fff;">Filter Publications by Year or Topic</div>
-          <div class="ir-table-search">
-            <input type="text" placeholder="Search reports (e.g. 2024, ESG, Audit)..." style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; width: 280px;">
-          </div>
-        </div>
-
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-            <thead>
-              <tr style="background: rgba(255,255,255,0.03); color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                <th style="padding: 1.1rem 1.5rem; font-weight: 700;">YEAR</th>
-                <th style="padding: 1.1rem 1.5rem; font-weight: 700;">DOCUMENT TITLE</th>
-                <th style="padding: 1.1rem 1.5rem; font-weight: 700;">CATEGORY</th>
-                <th style="padding: 1.1rem 1.5rem; font-weight: 700;">FILE SIZE</th>
-                <th style="padding: 1.1rem 1.5rem; font-weight: 700; text-align: right;">ACTION</th>
-              </tr>
-            </thead>
-            <tbody style="color: #cbd5e1;">
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1.1rem 1.5rem; font-weight: 700; color: #0099e6;">2024</td>
-                <td style="padding: 1.1rem 1.5rem; font-weight: 600; color: #fff;">Rayan Group Integrated Annual Report 2024</td>
-                <td style="padding: 1.1rem 1.5rem;"><span style="background: rgba(0,153,230,0.15); color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">Full Financials</span></td>
-                <td style="padding: 1.1rem 1.5rem; color: #94a3b8;">14.2 MB</td>
-                <td style="padding: 1.1rem 1.5rem; text-align: right;"><button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Annual Report 2024" style="padding: 0.4rem 0.9rem; font-size: 0.75rem;">DOWNLOAD PDF ↓</button></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1.1rem 1.5rem; font-weight: 700; color: #0099e6;">2024</td>
-                <td style="padding: 1.1rem 1.5rem; font-weight: 600; color: #fff;">Sustainability &amp; ESG Governance Report 2024</td>
-                <td style="padding: 1.1rem 1.5rem;"><span style="background: rgba(16,185,129,0.15); color: #10b981; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">ESG Disclosure</span></td>
-                <td style="padding: 1.1rem 1.5rem; color: #94a3b8;">8.6 MB</td>
-                <td style="padding: 1.1rem 1.5rem; text-align: right;"><button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="ESG Report 2024" style="padding: 0.4rem 0.9rem; font-size: 0.75rem;">DOWNLOAD PDF ↓</button></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1.1rem 1.5rem; font-weight: 700; color: #0099e6;">2024</td>
-                <td style="padding: 1.1rem 1.5rem; font-weight: 600; color: #fff;">Corporate Governance Statement &amp; Board Report</td>
-                <td style="padding: 1.1rem 1.5rem;"><span style="background: rgba(197,160,89,0.15); color: #c5a059; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">Governance</span></td>
-                <td style="padding: 1.1rem 1.5rem; color: #94a3b8;">4.1 MB</td>
-                <td style="padding: 1.1rem 1.5rem; text-align: right;"><button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Corporate Governance 2024" style="padding: 0.4rem 0.9rem; font-size: 0.75rem;">DOWNLOAD PDF ↓</button></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1.1rem 1.5rem; font-weight: 700; color: #0099e6;">2023</td>
-                <td style="padding: 1.1rem 1.5rem; font-weight: 600; color: #fff;">Rayan Group Integrated Annual Report 2023</td>
-                <td style="padding: 1.1rem 1.5rem;"><span style="background: rgba(0,153,230,0.15); color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">Full Financials</span></td>
-                <td style="padding: 1.1rem 1.5rem; color: #94a3b8;">12.8 MB</td>
-                <td style="padding: 1.1rem 1.5rem; text-align: right;"><button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Annual Report 2023" style="padding: 0.4rem 0.9rem; font-size: 0.75rem;">DOWNLOAD PDF ↓</button></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                <td style="padding: 1.1rem 1.5rem; font-weight: 700; color: #0099e6;">2022</td>
-                <td style="padding: 1.1rem 1.5rem; font-weight: 600; color: #fff;">Rayan Group Annual Financial Statement 2022</td>
-                <td style="padding: 1.1rem 1.5rem;"><span style="background: rgba(0,153,230,0.15); color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">Full Financials</span></td>
-                <td style="padding: 1.1rem 1.5rem; color: #94a3b8;">9.4 MB</td>
-                <td style="padding: 1.1rem 1.5rem; text-align: right;"><button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Annual Report 2022" style="padding: 0.4rem 0.9rem; font-size: 0.75rem;">DOWNLOAD PDF ↓</button></td>
-              </tr>
-              <tr>
-                <td style="padding: 1.1rem 1.5rem; font-weight: 700; color: #0099e6;">2021</td>
-                <td style="padding: 1.1rem 1.5rem; font-weight: 600; color: #fff;">Inaugural Group Consolidation Report 2021</td>
-                <td style="padding: 1.1rem 1.5rem;"><span style="background: rgba(0,153,230,0.15); color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">Foundational</span></td>
-                <td style="padding: 1.1rem 1.5rem; color: #94a3b8;">6.2 MB</td>
-                <td style="padding: 1.1rem 1.5rem; text-align: right;"><button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Consolidation Report 2021" style="padding: 0.4rem 0.9rem; font-size: 0.75rem;">DOWNLOAD PDF ↓</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
-
-// ============================================================================
-// 4. INVESTOR PRESENTATIONS (/investors/presentations/index.html)
-// ============================================================================
-createRoute('investors/presentations/index.html', {
-  title: 'Investor Presentations, Roadshow Decks & Webcasts',
-  description: 'Download Rayan Group executive presentations, Capital Markets Day slide decks, and quarterly earnings call conference webcasts.',
-  activePath: '/investors/presentations/',
-  heroHtml: renderPageHero({
-    category: 'EXECUTIVE DISCLOSURES',
-    title: 'INVESTOR PRESENTATIONS',
-    description: 'Executive overviews, market outlooks, capital expenditure plans, and commercial growth strategies presented to international institutional investors.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }, { label: 'Presentations', href: '/investors/presentations/' }],
-    bgImage: '/assets/images/investors/boardroom-governance.jpg',
-    subnav: irSubnav('/investors/presentations/')
-  }),
-  content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
-    <div class="container">
-      <div style="margin-bottom: 3.5rem;">
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">ROADSHOWS &amp; EARNINGS CALLS</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">LATEST INVESTOR DECKS</h2>
-      </div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem;">
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
-          <div style="height: 180px; position: relative; overflow: hidden;">
-            <img src="/assets/images/investors/investor-hero.jpg" alt="Capital Markets Day" style="width: 100%; height: 100%; object-fit: cover;">
-            <div style="position: absolute; top: 1rem; left: 1rem; background: #0099e6; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">KEYNOTE PRESENTATION</div>
-          </div>
-          <div style="padding: 2rem;">
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">FEB 2025 • ABU DHABI</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.5rem 0 1rem; line-height: 1.3;">Capital Markets Day 2025: Engineering The Decade of Growth</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">Comprehensive 48-page slide deck outlining Rayan Group's multi-billion AED project backlog, Energy EPC expansion, and Ashaz Engineering India manufacturing hub.</p>
-            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Capital Markets Day 2025 Deck" style="width: 100%; justify-content: center;">DOWNLOAD DECK (PDF 18MB) ↓</button>
-          </div>
-        </div>
-
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
-          <div style="height: 180px; position: relative; overflow: hidden;">
-            <img src="/assets/images/investors/corporate-financial-tower.jpg" alt="FY2024 Results Presentation" style="width: 100%; height: 100%; object-fit: cover;">
-            <div style="position: absolute; top: 1rem; left: 1rem; background: #10b981; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">EARNINGS CALL</div>
-          </div>
-          <div style="padding: 2rem;">
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">JAN 2025 • GLOBAL WEBCAST</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.5rem 0 1rem; line-height: 1.3;">FY2024 Full Year Financial Results Presentation</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">CFO &amp; CEO presentation covering 24.2% top-line revenue expansion, EBITDA expansion to AED 385M, and capital expenditure roadmap.</p>
-            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="FY2024 Earnings Presentation" style="width: 100%; justify-content: center;">DOWNLOAD DECK (PDF 9MB) ↓</button>
-          </div>
-        </div>
-
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
-          <div style="height: 180px; position: relative; overflow: hidden;">
-            <img src="/assets/images/business/03-energy.jpg" alt="Energy &amp; Industrial EPC" style="width: 100%; height: 100%; object-fit: cover;">
-            <div style="position: absolute; top: 1rem; left: 1rem; background: #c5a059; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">DIVISIONAL DECK</div>
-          </div>
-          <div style="padding: 2rem;">
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">NOV 2024 • LONDON ROADSHOW</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.5rem 0 1rem; line-height: 1.3;">Energy EPC &amp; Industrial Infrastructure Deck</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">Deep dive into Rayan Group's energy infrastructure assets, turnkey EPC capabilities, industrial manufacturing plants, and hydrocarbon storage contracts.</p>
-            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Energy and EPC Deck" style="width: 100%; justify-content: center;">DOWNLOAD DECK (PDF 11MB) ↓</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
-
-// ============================================================================
-// 5. SHAREHOLDER INFORMATION (/investors/shareholder-information/index.html)
-// ============================================================================
-createRoute('investors/shareholder-information/index.html', {
-  title: 'Shareholder Information, Capital Structure & Dividends',
-  description: 'Examine Rayan Group share capital distribution, institutional shareholder register, dividend history, and registry services.',
-  activePath: '/investors/shareholder-information/',
-  heroHtml: renderPageHero({
-    category: 'INVESTOR SERVICES',
-    title: 'SHAREHOLDER INFORMATION',
-    description: 'Providing comprehensive share capital structure, historic dividend distribution track records, and share registrar contact points.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }, { label: 'Shareholder Info', href: '/investors/shareholder-information/' }],
-    bgImage: '/assets/images/investors/governance.jpg',
-    subnav: irSubnav('/investors/shareholder-information/')
-  }),
-  content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
-    <div class="container">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: flex-start; margin-bottom: 5rem;" class="intro-grid-responsive">
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">CAPITAL STRUCTURE</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1.5rem;">EQUITY &amp; SHARE DISTRIBUTION</h2>
-          <p style="color: #cbd5e1; font-size: 1rem; line-height: 1.7; margin-bottom: 1.5rem;">
-            Rayan Group has 300,000,000 ordinary shares listed and traded on the Abu Dhabi Securities Exchange under ticker symbol <strong>RYNG</strong>, with nominal par value of AED 1.00 each.
+      <div style="max-width: 860px; margin: 0 auto;">
+        
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: clamp(2rem, 4vw, 3.5rem); margin-bottom: 3.5rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">CORPORATE OWNERSHIP &amp; STRUCTURE</span>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 800; color: #fff; margin: 0.5rem 0 1.5rem;">PRIVATE MULTINATIONAL ENTERPRISE</h2>
+          
+          <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.25rem;">
+            Rayan Group Holdings &amp; Engineering L.L.C - S.P.C is a 100% privately held corporate enterprise headquartered in Abu Dhabi, United Arab Emirates, with major operational hubs in India. The group does not list public equity or issue publicly traded shares on secondary stock exchanges.
           </p>
 
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); padding: 1.25rem; border-radius: 8px; display: flex; justify-content: space-between;">
-              <span style="color: #94a3b8;">Issued &amp; Paid-Up Capital:</span>
-              <span style="font-weight: 700; color: #fff;">AED 300,000,000</span>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65; margin-bottom: 2rem;">
+            Our financial discipline is driven by strategic reinvestment, conservative balance sheet management, and long-standing banking relationships with premier financial institutions across the GCC and South Asia.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <div>
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Legal Structure</span>
+              <div style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">L.L.C - S.P.C (UAE)</div>
             </div>
-            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); padding: 1.25rem; border-radius: 8px; display: flex; justify-content: space-between;">
-              <span style="color: #94a3b8;">Total Ordinary Shares:</span>
-              <span style="font-weight: 700; color: #fff;">300,000,000 Shares</span>
+            <div>
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Ownership</span>
+              <div style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">100% Privately Held</div>
             </div>
-            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); padding: 1.25rem; border-radius: 8px; display: flex; justify-content: space-between;">
-              <span style="color: #94a3b8;">Founding &amp; Strategic Sponsors:</span>
-              <span style="font-weight: 700; color: #0099e6;">68.5%</span>
-            </div>
-            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); padding: 1.25rem; border-radius: 8px; display: flex; justify-content: space-between;">
-              <span style="color: #94a3b8;">Institutional &amp; Public Float:</span>
-              <span style="font-weight: 700; color: #10b981;">31.5%</span>
+            <div>
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Operating Hubs</span>
+              <div style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #0099e6; margin-top: 0.25rem;">Abu Dhabi, Dubai &amp; India</div>
             </div>
           </div>
         </div>
 
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">SHARE REGISTRAR</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1.5rem;">REGISTRATION SERVICES</h2>
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
-            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 1rem;">Abu Dhabi Securities Exchange (ADX)</h4>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
-              Shareholders requiring assistance with share certificate reconciliation, dividends payment status, bank account updates, or NIN transfers should consult ADX Registry Services.
-            </p>
-            <div style="color: #cbd5e1; font-size: 0.875rem; line-height: 1.8;">
-              <div><strong>Toll-Free (UAE):</strong> 800 ADX (800 239)</div>
-              <div><strong>International:</strong> +971 2 627 7777</div>
-              <div><strong>Email:</strong> contactus@adx.ae</div>
-              <div><strong>Website:</strong> www.adx.ae</div>
+        <!-- Governance Charters -->
+        <div style="margin-bottom: 3.5rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">FIDUCIARY RIGOR</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1.5rem;">GOVERNANCE PRINCIPLES</h3>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.75rem;">
+              <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;">Executive Oversight</h4>
+              <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">Board-level steering committees maintain rigorous technical and financial oversight across all major construction and energy contracts.</p>
+            </div>
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.75rem;">
+              <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;">Independent Financial Audits</h4>
+              <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">Annual accounts and project-level financial disclosures are reviewed by certified independent auditing institutions in accordance with IFRS.</p>
+            </div>
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.75rem;">
+              <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;">QHSE Zero-Harm Commitment</h4>
+              <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">Strict corporate safety governance aligned with ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 certifications.</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Dividend History Table -->
-      <div>
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">CASH DISTRIBUTIONS</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 2rem;">HISTORIC DIVIDEND TRACK RECORD</h2>
-
-        <div class="ir-table-wrapper" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
-          <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-              <thead>
-                <tr style="background: rgba(255,255,255,0.03); color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                  <th style="padding: 1rem 1.5rem;">FINANCIAL YEAR</th>
-                  <th style="padding: 1rem 1.5rem;">DIVIDEND PER SHARE</th>
-                  <th style="padding: 1rem 1.5rem;">TOTAL PAYOUT</th>
-                  <th style="padding: 1rem 1.5rem;">EX-DIVIDEND DATE</th>
-                  <th style="padding: 1rem 1.5rem;">PAYMENT DATE</th>
-                  <th style="padding: 1rem 1.5rem; text-align: right;">STATUS</th>
-                </tr>
-              </thead>
-              <tbody style="color: #cbd5e1;">
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">FY 2024 (Proposed)</td>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #0099e6;">AED 0.85</td>
-                  <td style="padding: 1rem 1.5rem;">AED 255.0M</td>
-                  <td style="padding: 1rem 1.5rem;">Apr 14, 2025</td>
-                  <td style="padding: 1rem 1.5rem;">May 02, 2025</td>
-                  <td style="padding: 1rem 1.5rem; text-align: right;"><span style="color: #c5a059; font-weight: 700;">Subject to AGM</span></td>
-                </tr>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">FY 2023</td>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #0099e6;">AED 0.72</td>
-                  <td style="padding: 1rem 1.5rem;">AED 216.0M</td>
-                  <td style="padding: 1rem 1.5rem;">Apr 10, 2024</td>
-                  <td style="padding: 1rem 1.5rem;">Apr 29, 2024</td>
-                  <td style="padding: 1rem 1.5rem; text-align: right;"><span style="color: #10b981; font-weight: 700;">Paid</span></td>
-                </tr>
-                <tr>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">FY 2022</td>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #0099e6;">AED 0.58</td>
-                  <td style="padding: 1rem 1.5rem;">AED 174.0M</td>
-                  <td style="padding: 1rem 1.5rem;">Apr 12, 2023</td>
-                  <td style="padding: 1rem 1.5rem;">Apr 30, 2023</td>
-                  <td style="padding: 1rem 1.5rem; text-align: right;"><span style="color: #10b981; font-weight: 700;">Paid</span></td>
-                </tr>
-              </tbody>
-            </table>
+        <!-- Partnership Contact -->
+        <div style="background: linear-gradient(135deg, #091a2e 0%, #061320 100%); border: 1px solid rgba(0,153,230,0.25); border-radius: 12px; padding: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+          <div>
+            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;">Strategic Joint Ventures &amp; Banking Enquiries</h4>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin: 0;">For institutional partnerships or banking verifications, contact our executive office directly.</p>
           </div>
+          <a href="/contact/" class="btn-enterprise-primary">EXECUTIVE CONTACT →</a>
         </div>
+
       </div>
     </div>
   </section>
@@ -578,251 +95,256 @@ createRoute('investors/shareholder-information/index.html', {
 });
 
 // ============================================================================
-// 6. CORPORATE GOVERNANCE (/investors/corporate-governance/index.html)
+// 2. CAREERS & TALENT POOL (/careers/index.html) - EthosEnergy & Khansaheb Pattern
 // ============================================================================
-createRoute('investors/corporate-governance/index.html', {
-  title: 'Corporate Governance Framework & Board Charters',
-  description: 'Rayan Group institutional governance framework, board committees, code of business conduct, ethics line, and compliance policies.',
-  activePath: '/investors/corporate-governance/',
+createRoute('careers/index.html', {
+  title: 'Careers & Talent Pool | Join Rayan Group',
+  description: 'Explore engineering, marine, energy, infrastructure, and logistics careers with Rayan Group across the UAE and India. Submit your CV to our global talent pool.',
+  activePath: '/careers/',
   heroHtml: renderPageHero({
-    category: 'INTEGRITY & FIDUCIARY ETHICS',
-    title: 'CORPORATE GOVERNANCE',
-    description: 'Operating with strict institutional oversight, transparent disclosure standards, independent board committees, and uncompromising integrity.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }, { label: 'Governance', href: '/investors/corporate-governance/' }],
-    bgImage: '/assets/images/investors/boardroom-governance.jpg',
-    subnav: irSubnav('/investors/corporate-governance/')
+    category: 'PEOPLE & CULTURE',
+    title: 'BUILD YOUR FUTURE WITH US',
+    description: 'Join a dynamic, multinational engineering conglomerate executing high-impact infrastructure, energy, and marine projects across the UAE and South Asia.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Careers', href: '/careers/' }],
+    bgImage: '/assets/images/careers/careers-hero.jpg'
   }),
   content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
+  <!-- Why Work With Rayan (EthosEnergy / Khansaheb Pattern) -->
+  <section class="section" id="why-rayan" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-bottom: 5rem;" class="intro-grid-responsive">
         <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">INSTITUTIONAL RIGOR</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1.5rem;">OUR GOVERNANCE PHILOSOPHY</h2>
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OUR PEOPLE PHILOSOPHY</span>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; margin: 0.5rem 0 1.25rem;">EMPOWERING ENGINEERING EXCELLENCE</h2>
           <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.25rem;">
-            At Rayan Group, sound corporate governance is not merely compliance—it is the foundation of long-term commercial competitiveness and stakeholder trust across the UAE, South Asia, and global markets.
+            At Rayan Group, our professionals are the driving engine behind our landmark achievements. From high-specification luxury renovations and defensive installations to deep-water marine operations and critical energy piping, we foster an environment of technical rigor, integrity, and meritocratic growth.
           </p>
           <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
-            Our board structure enforces clear separation between non-executive oversight and operational executive management, ensuring accountability, risk mitigation, and ethical stewardship.
+            Operating across dual strategic hubs in the UAE and India, we provide our engineers and specialists with exposure to cutting-edge methodologies, heavy machinery fleets, and world-class safety protocols.
           </p>
         </div>
         <div>
-          <img src="/assets/images/investors/boardroom-governance.jpg" alt="Boardroom Governance" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+          <img src="/assets/images/careers/engineering-team.jpg" alt="Rayan Group Engineering Team" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
         </div>
       </div>
 
-      <!-- Governance Pillars & Charters -->
-      <div>
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">GOVERNANCE INSTRUMENTS</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 2rem;">BOARD CHARTERS &amp; ETHICS POLICIES</h2>
+      <!-- Core Employee Pillars -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 5rem;">
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">🛡️</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Zero-Harm Safety Culture</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Our triple ISO certification (9001/14001/45001) guarantees that safety is non-negotiable. Every team member has the authority to stop unsafe work.</p>
+        </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Audit &amp; Risk Committee Charter</h4>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem;">Mandates direct oversight over external auditors, quarterly financial statement veracity, enterprise risk heatmaps, and cybersecurity controls.</p>
-            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Audit Committee Charter" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">DOWNLOAD CHARTER (PDF) ↓</button>
-          </div>
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">🌐</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Dual-Hub International Mobility</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Collaborate seamlessly across our Abu Dhabi headquarters, Dubai projects, and Ashaz Engineering fabrication facilities in South Asia.</p>
+        </div>
 
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Code of Business Conduct &amp; Ethics</h4>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem;">Applies to 10,000+ professionals across all group companies. Enforces zero tolerance for bribery, anti-corruption, and strict fair competition.</p>
-            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Code of Conduct" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">DOWNLOAD CODE (PDF) ↓</button>
-          </div>
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">🏗️</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Signature Project Experience</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Deliver landmark assignments alongside tier-one clients including Brock Construction, Emaar, Hilton, Al Wahda, and defense authorities.</p>
+        </div>
 
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
-            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Whistleblower &amp; Integrity Policy</h4>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem;">Confidential reporting mechanism managed by an independent third-party ombudsman, guaranteeing absolute protection for bona fide reporters.</p>
-            <button type="button" class="doc-download-btn btn-enterprise-primary" data-doc-name="Whistleblower Policy" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">DOWNLOAD POLICY (PDF) ↓</button>
-          </div>
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">📈</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Professional Development</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Continuous technical training, leadership advancement pathways, and international industry credentials support.</p>
         </div>
       </div>
     </div>
   </section>
-  `
-});
 
-// ============================================================================
-// 7. STOCK INFORMATION (/investors/stock-information/index.html)
-// ============================================================================
-createRoute('investors/stock-information/index.html', {
-  title: 'Stock Information & Trading Metrics (ADX: RYNG)',
-  description: 'Monitor Rayan Group equity performance on Abu Dhabi Securities Exchange (ADX: RYNG), interactive quote, valuation multiples, and analyst coverage.',
-  activePath: '/investors/stock-information/',
-  heroHtml: renderPageHero({
-    category: 'EQUITY CAPITAL MARKETS',
-    title: 'STOCK INFORMATION',
-    description: 'Real-time equity market data, trading multiples, historical price dynamics, and equity research analyst consensus for ADX: RYNG.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }, { label: 'Stock Information', href: '/investors/stock-information/' }],
-    bgImage: '/assets/images/investors/investor-hero.jpg',
-    subnav: irSubnav('/investors/stock-information/')
-  }),
-  content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
+  <!-- Operating Departments (EthosEnergy Pattern) -->
+  <section class="section" id="departments" style="padding: 5rem 0; background: #07111e; border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08);">
     <div class="container">
-      <!-- Live Ticker Card -->
-      <div style="background: #0c1828; border: 1px solid rgba(0,153,230,0.3); border-radius: 12px; padding: 2.5rem; margin-bottom: 4rem;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 2rem;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-              <span style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff;">ADX: RYNG</span>
-              <span style="font-size: 0.8rem; background: rgba(0,153,230,0.15); color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 700;">ABU DHABI SECURITIES EXCHANGE</span>
-            </div>
-            <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.5rem); font-weight: 800; color: #38bdf8;">
-              AED 28.40
-              <span style="font-size: 1.25rem; font-weight: 600; color: #10b981; margin-left: 0.75rem;">▲ +0.50 (+1.79%)</span>
-            </div>
-            <span style="font-size: 0.75rem; color: #94a3b8;">Trading Currency: United Arab Emirates Dirham (AED) • Market Status: Market Closed</span>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem 3rem;">
-            <div>
-              <span style="font-size: 0.75rem; color: #94a3b8; display: block;">Day Range</span>
-              <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">AED 27.90 - 28.65</span>
-            </div>
-            <div>
-              <span style="font-size: 0.75rem; color: #94a3b8; display: block;">52-Week Range</span>
-              <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">AED 21.20 - 30.15</span>
-            </div>
-            <div>
-              <span style="font-size: 0.75rem; color: #94a3b8; display: block;">Market Capitalization</span>
-              <span style="font-size: 1.1rem; font-weight: 700; color: #0099e6;">AED 8.52 Billion</span>
-            </div>
-            <div>
-              <span style="font-size: 0.75rem; color: #94a3b8; display: block;">Trailing P/E Ratio</span>
-              <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">14.6x</span>
-            </div>
-          </div>
-        </div>
+      <div style="text-align: center; max-width: 700px; margin: 0 auto 3.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">ORGANIZATIONAL DISCIPLINES</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.5rem); font-weight: 800; color: #fff; margin-top: 0.35rem;">OUR OPERATING DEPARTMENTS</h2>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.5rem; line-height: 1.6;">
+          Rayan Group deploys specialized multi-disciplinary teams across five core divisions and supporting corporate services.
+        </p>
       </div>
 
-      <!-- Analyst Coverage Table -->
-      <div>
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">INSTITUTIONAL RESEARCH</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 2rem;">ANALYST COVERAGE &amp; CONSENSUS</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem;">
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">1. Civil &amp; Structural Engineering</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Turnkey commercial high-rise construction, luxury residential fit-out, MEP integration, and structural renovations.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Abu Dhabi, Dubai, India</span>
+        </div>
 
-        <div class="ir-table-wrapper" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;">
-          <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-              <thead>
-                <tr style="background: rgba(255,255,255,0.03); color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                  <th style="padding: 1rem 1.5rem;">INVESTMENT BANK / BROKERAGE</th>
-                  <th style="padding: 1rem 1.5rem;">LEAD ANALYST</th>
-                  <th style="padding: 1rem 1.5rem;">RATING</th>
-                  <th style="padding: 1rem 1.5rem;">TARGET PRICE</th>
-                  <th style="padding: 1rem 1.5rem; text-align: right;">LAST REPORT</th>
-                </tr>
-              </thead>
-              <tbody style="color: #cbd5e1;">
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">FAB Securities</td>
-                  <td style="padding: 1rem 1.5rem;">Tarek Al-Mansoor</td>
-                  <td style="padding: 1rem 1.5rem;"><span style="color: #10b981; font-weight: 700;">BUY / OUTPERFORM</span></td>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #0099e6;">AED 33.50</td>
-                  <td style="padding: 1rem 1.5rem; text-align: right; color: #94a3b8;">Feb 2025</td>
-                </tr>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">EFG Hermes</td>
-                  <td style="padding: 1rem 1.5rem;">Kareem Mostafa</td>
-                  <td style="padding: 1rem 1.5rem;"><span style="color: #10b981; font-weight: 700;">BUY</span></td>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #0099e6;">AED 32.00</td>
-                  <td style="padding: 1rem 1.5rem; text-align: right; color: #94a3b8;">Jan 2025</td>
-                </tr>
-                <tr>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #fff;">Emirates NBD Capital</td>
-                  <td style="padding: 1rem 1.5rem;">Sarah Siddiqui</td>
-                  <td style="padding: 1rem 1.5rem;"><span style="color: #c5a059; font-weight: 700;">ACCUMULATE</span></td>
-                  <td style="padding: 1rem 1.5rem; font-weight: 700; color: #0099e6;">AED 31.25</td>
-                  <td style="padding: 1rem 1.5rem; text-align: right; color: #94a3b8;">Dec 2024</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">2. Marine &amp; Coastal Dredging</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Harbor deepening, reclamation works, quay wall construction, revetments, and specialized marine plant operations.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Coastal UAE &amp; Arabian Gulf</span>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">3. Energy &amp; Industrial EPC</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Hydrocarbon storage terminal works, process piping, pressure vessel installation, and substation electrical works.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Abu Dhabi &amp; India Regional</span>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">4. Heavy Infrastructure &amp; Earthworks</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Highway corridor excavation, subgrade stabilization, stormwater drainage, and large-scale site development.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Abu Dhabi &amp; Northern Emirates</span>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">5. Heavy Fleet &amp; Rigging Logistics</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Heavy crawler crane coordination, multi-axle hydraulic transport, plant maintenance, and logistics fleet control.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Mussafah Industrial Yard &amp; India</span>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">6. QHSE, Estimating &amp; Commercial</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Quality assurance audits, environmental compliance, commercial estimating, quantity surveying, and contract law.</p>
+          <span style="font-size: 0.75rem; color: #0099e6; font-weight: 600;">Hubs: Abu Dhabi HQ</span>
         </div>
       </div>
     </div>
   </section>
-  `
-});
 
-// ============================================================================
-// 8. FINANCIAL CALENDAR (/investors/financial-calendar/index.html)
-// ============================================================================
-createRoute('investors/financial-calendar/index.html', {
-  title: 'Financial Calendar & Corporate Earnings Timeline',
-  description: 'Upcoming corporate events, earnings releases, Annual General Meeting (AGM), and dividend payment key dates for Rayan Group.',
-  activePath: '/investors/financial-calendar/',
-  heroHtml: renderPageHero({
-    category: 'INVESTOR ENGAGEMENT',
-    title: 'FINANCIAL CALENDAR',
-    description: 'Upcoming financial disclosures, quarterly board meetings, Annual General Meeting, and key dividend distribution record dates.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Investors', href: '/investors/' }, { label: 'Financial Calendar', href: '/investors/financial-calendar/' }],
-    bgImage: '/assets/images/investors/investor-hero.jpg',
-    subnav: irSubnav('/investors/financial-calendar/')
-  }),
-  content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
+  <!-- Job Application & Talent Pool Form (Khansaheb / EthosEnergy Pattern) -->
+  <section class="section" id="apply" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container">
-      <div style="margin-bottom: 3.5rem;">
-        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">SCHEDULE OF EVENTS</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">2025/2026 INVESTOR TIMELINE</h2>
-      </div>
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 3.5rem;" class="intro-grid-responsive">
+        
+        <!-- Application Form -->
+        <div>
+          <div style="margin-bottom: 2rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">GENERAL RECRUITMENT &amp; TALENT POOL</span>
+            <h2 style="font-family: var(--font-heading); font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 800; color: #fff; margin-top: 0.35rem;">SUBMIT YOUR CV / APPLICATION</h2>
+            <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.5rem; line-height: 1.6;">
+              Whether applying for active openings or joining our ongoing talent database, submit your credentials below. Our talent acquisition team reviews all engineering dossiers.
+            </p>
+          </div>
 
-      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <div style="background: #0c1828; border: 1px solid rgba(0,153,230,0.3); border-radius: 10px; padding: 2rem; display: grid; grid-template-columns: 160px 1fr 140px; gap: 2rem; align-items: center;" class="intro-grid-responsive">
-          <div>
-            <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">UPCOMING</span>
-            <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff;">APR 14, 2025</div>
-          </div>
-          <div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Annual General Assembly Meeting (AGM)</h3>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Shareholders vote on FY2024 audited accounts, proposed AED 0.85/share cash dividend, and board committee reappointments. Venue: Abu Dhabi &amp; Hybrid Webcast.</p>
-          </div>
-          <div style="text-align: right;">
-            <button type="button" class="btn-enterprise-primary doc-download-btn" data-doc-name="AGM Invitation & Agenda" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">AGM NOTICE ↓</button>
+          <div class="service-form-card">
+            <form id="careerForm" onsubmit="event.preventDefault(); alert('Thank you for your application. Reference: APP-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Your resume has been entered into the Rayan Group talent database. Our HR recruitment team will contact qualified candidates.'); this.reset();">
+              
+              <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
+                <div class="service-form-group">
+                  <label class="service-form-label" for="car-name">Full Legal Name <span class="req">*</span></label>
+                  <input type="text" id="car-name" class="service-form-input" required placeholder="e.g. Rahul Sharma / Omar Khalid">
+                </div>
+                <div class="service-form-group">
+                  <label class="service-form-label" for="car-email">Email Address <span class="req">*</span></label>
+                  <input type="email" id="car-email" class="service-form-input" required placeholder="name@email.com">
+                </div>
+              </div>
+
+              <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
+                <div class="service-form-group">
+                  <label class="service-form-label" for="car-phone">Phone / WhatsApp Number <span class="req">*</span></label>
+                  <input type="tel" id="car-phone" class="service-form-input" required placeholder="+971 50 123 4567">
+                </div>
+                <div class="service-form-group">
+                  <label class="service-form-label" for="car-location">Current Residence / Location <span class="req">*</span></label>
+                  <input type="text" id="car-location" class="service-form-input" required placeholder="e.g. Abu Dhabi, Dubai, India">
+                </div>
+              </div>
+
+              <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
+                <div class="service-form-group">
+                  <label class="service-form-label" for="car-dept">Target Department / Discipline <span class="req">*</span></label>
+                  <select id="car-dept" class="service-form-select" required>
+                    <option value="" disabled selected>Select Discipline</option>
+                    <option value="civil">Civil &amp; Structural Engineering</option>
+                    <option value="marine">Marine Dredging &amp; Coastal Works</option>
+                    <option value="energy">Energy, Piping &amp; Process EPC</option>
+                    <option value="infrastructure">Highway &amp; Heavy Civil Infrastructure</option>
+                    <option value="logistics">Heavy Fleet &amp; Crane Operations</option>
+                    <option value="qhse">QHSE &amp; Environmental Safety</option>
+                    <option value="commercial">Commercial, Estimating &amp; Quantity Surveying</option>
+                    <option value="corporate">Finance, HR &amp; Corporate Administration</option>
+                  </select>
+                </div>
+                <div class="service-form-group">
+                  <label class="service-form-label" for="car-exp">Total Years of Experience <span class="req">*</span></label>
+                  <select id="car-exp" class="service-form-select" required>
+                    <option value="" disabled selected>Select Experience Range</option>
+                    <option value="entry">Entry Level / Graduate (0 - 2 Years)</option>
+                    <option value="mid">Mid-Level Professional (3 - 7 Years)</option>
+                    <option value="senior">Senior Engineer / Specialist (8 - 12 Years)</option>
+                    <option value="lead">Project Director / Management (13+ Years)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="service-form-group" style="margin-bottom: 1.5rem;">
+                <label class="service-form-label" for="car-notes">Cover Note / Key Projects Handled</label>
+                <textarea id="car-notes" class="service-form-textarea" rows="3" placeholder="Briefly highlight your technical specialties, key past projects, software proficiencies, or availability timeline..."></textarea>
+              </div>
+
+              <!-- CV / Resume Upload Dropzone -->
+              <div class="service-form-group" style="margin-bottom: 2rem;">
+                <label class="service-form-label">Upload CV / Resume (PDF / DOCX) <span class="req">*</span></label>
+                <div class="file-dropzone" onclick="document.getElementById('car-file').click();">
+                  <input type="file" id="car-file" style="display: none;" required onchange="const list = document.getElementById('car-file-name'); list.textContent = this.files.length ? this.files[0].name : '';">
+                  <div class="file-dropzone-icon">📄</div>
+                  <div class="file-dropzone-title">Upload Your Resume / CV</div>
+                  <div class="file-dropzone-desc">Accepted formats: PDF, DOCX (Up to 15MB)</div>
+                  <div id="car-file-name" class="file-dropzone-selected"></div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-enterprise-primary" style="padding: 1rem 2.25rem; font-size: 0.95rem; font-weight: 800;">
+                <span>SUBMIT APPLICATION TO TALENT POOL</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
           </div>
         </div>
 
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; display: grid; grid-template-columns: 160px 1fr 140px; gap: 2rem; align-items: center;" class="intro-grid-responsive">
-          <div>
-            <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">UPCOMING</span>
-            <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff;">MAY 12, 2025</div>
+        <!-- Sample Requisitions & Recruitment Notice -->
+        <div>
+          <!-- Sample Opportunities Notice -->
+          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.1em;">REPRESENTATIVE DISCIPLINES</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: #fff; margin: 0.5rem 0 1rem;">SAMPLE REQUISITIONS</h3>
+            
+            <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.25rem;">
+              We regularly onboard specialized talent across the following roles as project pipelines expand:
+            </p>
+
+            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem; color: #cbd5e1;">
+              <li style="border-left: 2px solid #0099e6; padding-left: 0.65rem;">
+                <strong style="color: #fff; display: block;">Senior Project Engineer (Civil &amp; Fit-Out)</strong>
+                <span style="color: #94a3b8; font-size: 0.78rem;">Abu Dhabi • Commercial &amp; Hospitality Projects</span>
+              </li>
+              <li style="border-left: 2px solid #10b981; padding-left: 0.65rem;">
+                <strong style="color: #fff; display: block;">Marine Dredging Superintendent</strong>
+                <span style="color: #94a3b8; font-size: 0.78rem;">UAE Coast • Channel &amp; Reclamation Works</span>
+              </li>
+              <li style="border-left: 2px solid #f59e0b; padding-left: 0.65rem;">
+                <strong style="color: #fff; display: block;">Energy Piping &amp; Quality Inspector</strong>
+                <span style="color: #94a3b8; font-size: 0.78rem;">India &amp; UAE Hubs • ASME / API Standards</span>
+              </li>
+              <li style="border-left: 2px solid #0099e6; padding-left: 0.65rem;">
+                <strong style="color: #fff; display: block;">HSE Officer (ISO 45001 / NEBOSH)</strong>
+                <span style="color: #94a3b8; font-size: 0.78rem;">Abu Dhabi &amp; Dubai • Zero-Harm Enforcement</span>
+              </li>
+            </ul>
           </div>
-          <div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Q1 2025 Financial Results Announcement</h3>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Release of condensed interim financial statements for the three-month period ending March 31, 2025, followed by institutional earnings conference call.</p>
-          </div>
-          <div style="text-align: right;">
-            <span style="color: #0099e6; font-size: 0.8rem; font-weight: 700;">LIVE WEBCAST</span>
+
+          <!-- Recruitment Fraud Warning -->
+          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.1em;">RECRUITMENT INTEGRITY</span>
+            <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: #fff; margin: 0.5rem 0 0.75rem;">OFFICIAL RECRUITMENT ONLY</h4>
+            <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6; margin-bottom: 1rem;">
+              Rayan Group never charges fees or demands security deposits at any stage of the recruitment process. All official communications originate strictly from <span style="color: #0099e6;">@rayan-group.com</span>.
+            </p>
+            <div style="font-size: 0.8rem; color: #94a3b8;">
+              Recruitment Enquiries:<br>
+              <span style="color: #0099e6; font-weight: 600;">careers@rayan-group.com</span>
+            </div>
           </div>
         </div>
 
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; display: grid; grid-template-columns: 160px 1fr 140px; gap: 2rem; align-items: center;" class="intro-grid-responsive">
-          <div>
-            <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">UPCOMING</span>
-            <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff;">AUG 11, 2025</div>
-          </div>
-          <div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Q2 / Half-Year 2025 Interim Results</h3>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Review of first six months operational trajectory, industrial plant utilization rates, and civil project deliveries.</p>
-          </div>
-          <div style="text-align: right;">
-            <span style="color: #0099e6; font-size: 0.8rem; font-weight: 700;">LIVE WEBCAST</span>
-          </div>
-        </div>
-
-        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; display: grid; grid-template-columns: 160px 1fr 140px; gap: 2rem; align-items: center;" class="intro-grid-responsive">
-          <div>
-            <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">COMPLETED</span>
-            <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff;">FEB 18, 2025</div>
-          </div>
-          <div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">FY2024 Full Year Financial Results Disclosed</h3>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.5;">Audit sign-off and filing on Abu Dhabi Securities Exchange portal with revenue surpassing AED 1.82 Billion.</p>
-          </div>
-          <div style="text-align: right;">
-            <a href="/investors/financial-results/" class="btn-enterprise-secondary" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">VIEW AUDIT →</a>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -830,67 +352,61 @@ createRoute('investors/financial-calendar/index.html', {
 });
 
 // ============================================================================
-// 9. CORPORATE NEWSROOM (/news/index.html)
+// 3. NEWSROOM (/news/index.html)
 // ============================================================================
 createRoute('news/index.html', {
-  title: 'Corporate Newsroom, Press Releases & Announcements',
-  description: 'Stay updated with Rayan Group corporate news, major contract awards, infrastructure project completions, and international media releases.',
+  title: 'Corporate Newsroom & Project Announcements',
+  description: 'Stay updated with Rayan Group corporate news, contract awards, infrastructure project completions, and QHSE milestones.',
   activePath: '/news/',
   heroHtml: renderPageHero({
     category: 'MEDIA & COMMUNICATIONS',
     title: 'CORPORATE NEWSROOM',
-    description: 'Official corporate statements, press releases, major project contract awards, executive appointments, and industry developments.',
+    description: 'Official announcements, landmark contract awards, infrastructure project milestones, and corporate developments across the UAE and South Asia.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Newsroom', href: '/news/' }],
-    bgImage: '/assets/images/news/news-hero.jpg',
-    subnav: [
-      { label: 'All News', href: '/news/', active: true },
-      { label: 'Press Releases', href: '/news/#press', active: false },
-      { label: 'Financial Disclosures', href: '/investors/financial-results/', active: false },
-      { label: 'Media Gallery', href: '/media/', active: false }
-    ]
+    bgImage: '/assets/images/news/news-hero.jpg'
   }),
   content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container">
-      <!-- News Grid -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2.5rem; margin-bottom: 4rem;">
-        <!-- Featured Article 1 -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2.5rem; margin-bottom: 4rem;">
+        
+        <!-- Article 1 -->
         <article style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
           <div style="height: 220px; overflow: hidden;">
-            <img src="/assets/images/business/hero-1-skyline.jpg" alt="Commercial EPC" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/business/hero-1-skyline.jpg" alt="Commercial EPC" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
-              <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">PRESS RELEASE</span>
-              <span style="font-size: 0.72rem; color: #94a3b8;">MARCH 04, 2025</span>
+              <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">CONTRACT AWARD</span>
+              <span style="font-size: 0.72rem; color: #94a3b8;">FEBRUARY 2025</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 1rem;">
-              Rayan Group Awarded Landmark AED 450M Commercial &amp; Infrastructure EPC Contract
+              Rayan Group Awarded Major Turnkey Commercial &amp; Infrastructure EPC Works
             </h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Turnkey civil construction, MEP systems, and advanced structural engineering for landmark mixed-use towers in Abu Dhabi.
+              Turnkey civil construction, MEP integration, and advanced structural execution for landmark developments in Abu Dhabi.
             </p>
-            <a href="/news/rayan-group-expands-offshore-portfolio/" class="btn-enterprise-primary" style="align-self: flex-start;">READ FULL ARTICLE →</a>
+            <a href="/news/rayan-group-expands-offshore-portfolio/" class="btn-enterprise-primary" style="align-self: flex-start;">READ FULL RELEASE →</a>
           </div>
         </article>
 
         <!-- Article 2 -->
         <article style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
           <div style="height: 220px; overflow: hidden;">
-            <img src="/assets/images/investors/corporate-financial-tower.jpg" alt="Record Revenue" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Overhaul" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
-              <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">FINANCIAL</span>
-              <span style="font-size: 0.72rem; color: #94a3b8;">FEBRUARY 18, 2025</span>
+              <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">PROJECT HANDOVER</span>
+              <span style="font-size: 0.72rem; color: #94a3b8;">NOVEMBER 2024</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 1rem;">
-              Rayan Group Reports Record FY2024 Revenue Surpassing AED 1.82 Billion
+              Successful Handover: Waldorf Astoria Luxury Hospitality Overhaul in RAK
             </h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Strong 24.2% top-line growth driven by civil infrastructure, energy EPC execution, and high-margin specialized industrial engineering.
+              Full-scope interior fit-out, acoustic MEP reconfiguration, and luxury guestroom modernization delivered in partnership with Brock Construction.
             </p>
-            <a href="/investors/financial-results/" class="btn-enterprise-secondary" style="align-self: flex-start;">VIEW FINANCIAL AUDIT →</a>
+            <a href="/projects/waldorf-astoria-renovation-rak/" class="btn-enterprise-secondary" style="align-self: flex-start;">VIEW CASE STUDY →</a>
           </div>
         </article>
 
@@ -901,16 +417,16 @@ createRoute('news/index.html', {
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
-              <span style="font-size: 0.72rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">CORPORATE &amp; HSE</span>
-              <span style="font-size: 0.72rem; color: #94a3b8;">JANUARY 25, 2025</span>
+              <span style="font-size: 0.72rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">QHSE AUDIT</span>
+              <span style="font-size: 0.72rem; color: #94a3b8;">JANUARY 2025</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 1rem;">
               Rayan Group Successfully Renews Global Triple ISO Quality &amp; Safety Certifications
             </h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
-              Achieving 100% compliance across ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 audits across all construction yards.
+              Achieving full compliance across ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 audits across all construction yards and marine sites.
             </p>
-            <a href="/sustainability/" class="btn-enterprise-secondary" style="align-self: flex-start;">VIEW CERTIFICATIONS →</a>
+            <a href="/sustainability/" class="btn-enterprise-secondary" style="align-self: flex-start;">VIEW HSE POLICY →</a>
           </div>
         </article>
       </div>
@@ -918,10 +434,10 @@ createRoute('news/index.html', {
       <!-- Media Inquiries Box -->
       <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
         <div>
-          <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Media &amp; Press Inquiries</h4>
-          <p style="color: #94a3b8; font-size: 0.9rem;">For official press kit downloads, executive interview requests, or image assets, please reach out to our communications team.</p>
+          <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Media &amp; Press Communications</h4>
+          <p style="color: #94a3b8; font-size: 0.9rem; margin: 0;">For official brand guidelines, executive interview requests, or image assets, reach out to our communications team.</p>
         </div>
-        <a href="mailto:media@rayangroup.com" class="btn-enterprise-primary">CONTACT PRESS OFFICE →</a>
+        <a href="mailto:info@rayan-group.com" class="btn-enterprise-primary">CONTACT COMMUNICATIONS →</a>
       </div>
     </div>
   </section>
@@ -929,26 +445,26 @@ createRoute('news/index.html', {
 });
 
 // ============================================================================
-// 10. NEWS DETAIL ARTICLE (/news/rayan-group-expands-offshore-portfolio/index.html)
+// 4. NEWS DETAIL ARTICLE (/news/rayan-group-expands-offshore-portfolio/index.html)
 // ============================================================================
 createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
-  title: 'Rayan Group Awarded Landmark AED 450M Commercial & Infrastructure EPC Contract',
-  description: 'Official corporate announcement regarding Rayan Group awarding of AED 450 Million turnkey engineering, procurement and construction contract.',
+  title: 'Turnkey Commercial & Infrastructure EPC Contract Award',
+  description: 'Official corporate announcement regarding Rayan Group turnkey engineering, procurement and construction contracts in Abu Dhabi.',
   activePath: '/news/',
   heroHtml: renderPageHero({
-    category: 'PRESS RELEASE • OFFICIAL ANNOUNCEMENT',
-    title: 'LANDMARK AED 450M EPC CONTRACT',
-    description: 'Securing turnkey engineering, procurement, and structural construction for major regional development.',
+    category: 'CORPORATE ANNOUNCEMENT',
+    title: 'COMMERCIAL & INFRASTRUCTURE EPC AWARD',
+    description: 'Securing turnkey engineering, structural execution, and civil contracting for major regional development.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'News', href: '/news/' }, { label: 'EPC Contract Award', href: '/news/rayan-group-expands-offshore-portfolio/' }],
     bgImage: '/assets/images/business/hero-1-skyline.jpg'
   }),
   content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container" style="max-width: 900px;">
       <div style="display: flex; gap: 2rem; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1.5rem; margin-bottom: 3rem;">
         <div>
           <span style="font-size: 0.75rem; color: #94a3b8; display: block;">PUBLISHED</span>
-          <strong style="color: #fff; font-size: 0.9rem;">March 04, 2025</strong>
+          <strong style="color: #fff; font-size: 0.9rem;">February 2025</strong>
         </div>
         <div>
           <span style="font-size: 0.75rem; color: #94a3b8; display: block;">LOCATION</span>
@@ -960,38 +476,30 @@ createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
         </div>
       </div>
 
-      <div style="color: #cbd5e1; font-size: 1.1rem; line-height: 1.8; margin-bottom: 3rem;">
-        <p style="font-size: 1.25rem; font-weight: 500; color: #fff; margin-bottom: 2rem; line-height: 1.6;">
-          <strong>ABU DHABI, UAE</strong> — Rayan Group, a leading multinational engineering, energy, and infrastructure conglomerate, today announced the formal signing of a major turnkey civil EPC contract valued at AED 450 Million for strategic commercial and mixed-use tower development in the Emirate of Abu Dhabi.
+      <div style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.8; margin-bottom: 3rem;">
+        <p style="font-size: 1.2rem; font-weight: 500; color: #fff; margin-bottom: 2rem; line-height: 1.6;">
+          <strong>ABU DHABI, UAE</strong> — Rayan Group, a premier multinational engineering, marine, and infrastructure conglomerate, today announced the formal award of turnkey civil engineering and structural execution works for strategic commercial and mixed-use infrastructure development in Abu Dhabi.
         </p>
 
         <p style="margin-bottom: 1.75rem;">
-          Under the scope of the contract, Rayan Engineering will deliver full-scope structural engineering, MEP systems installation, post-tensioned slab construction, and advanced architectural finishing. The development spans over 140,000 square meters of built-up area and integrates state-of-the-art building management systems with Estidama Pearl 2 green building certification.
+          Under the scope of the project, Rayan Engineering will execute comprehensive structural construction, advanced MEP coordination, and architectural integration. The project incorporates rigorous sustainability metrics and adheres to Estidama Pearl environmental guidelines.
         </p>
 
         <div style="margin: 3rem 0; padding: 2rem; background: #0c1828; border-left: 4px solid #0099e6; border-radius: 0 8px 8px 0;">
-          <blockquote style="font-family: var(--font-heading); font-size: 1.35rem; font-style: italic; color: #fff; line-height: 1.5; margin: 0 0 1rem;">
-            "This landmark award underscores Rayan Group's proven reputation for delivering high-complexity structural engineering and turnkey project execution on accelerated schedules. Our continuous investment in digital construction management and sustainable materials ensures we exceed international benchmarks."
+          <blockquote style="font-family: var(--font-heading); font-size: 1.25rem; font-style: italic; color: #fff; line-height: 1.5; margin: 0 0 1rem;">
+            "This contract award underscores Rayan Group's proven reputation for delivering high-complexity structural engineering and turnkey project execution on accelerated schedules."
           </blockquote>
-          <cite style="font-size: 0.9rem; color: #0099e6; font-weight: 700; text-transform: uppercase;">— Eng. Mohammad Sajjad, Founder &amp; Group Chairman</cite>
+          <cite style="font-size: 0.9rem; color: #0099e6; font-weight: 700; text-transform: uppercase;">— Executive Committee, Rayan Group</cite>
         </div>
 
         <p style="margin-bottom: 1.75rem;">
-          Mobilization on-site has commenced immediately, with major structural construction scheduled across four sequential phases over an 18-month execution timeline. The project adheres to strict environmental standards under ISO 14001:2015 and ISO 45001:2018 safety protocols.
-        </p>
-
-        <p>
-          This contract award further expands Rayan Group's consolidated unexecuted project backlog to exceed AED 3.8 Billion across its civil contracting, energy EPC, and industrial manufacturing divisions.
+          Mobilization on-site adheres strictly to Rayan Group's zero-harm safety standards under certified ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 procedures.
         </p>
       </div>
 
-      <!-- Article Footer & Back Link -->
       <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <a href="/news/" style="color: #0099e6; font-weight: 700; text-decoration: none;">← BACK TO ALL NEWS</a>
-        <div style="display: flex; gap: 1rem;">
-          <button type="button" class="btn-enterprise-secondary" onclick="navigator.clipboard.writeText(window.location.href); alert('Article URL copied to clipboard.');">SHARE LINK</button>
-          <a href="/investors/" class="btn-enterprise-primary">INVESTOR RELATIONS →</a>
-        </div>
+        <a href="/proposal/" class="btn-enterprise-primary">REQUEST A PROPOSAL →</a>
       </div>
     </div>
   </section>
@@ -999,356 +507,148 @@ createRoute('news/rayan-group-expands-offshore-portfolio/index.html', {
 });
 
 // ============================================================================
-// 11. CAREERS PAGE (/careers/index.html)
-// ============================================================================
-createRoute('careers/index.html', {
-  title: 'Careers & Global Engineering Opportunities',
-  description: 'Join Rayan Group. Discover career opportunities in civil engineering, energy EPC, project management, and corporate services across the UAE and India.',
-  activePath: '/careers/',
-  heroHtml: renderPageHero({
-    category: 'PEOPLE & CULTURE',
-    title: 'BUILD YOUR FUTURE WITH US',
-    description: 'Empowering 10,000+ professionals across world-class engineering, energy, and infrastructure megaprojects with merit-driven leadership and global mobility.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Careers', href: '/careers/' }],
-    bgImage: '/assets/images/careers/careers-hero.jpg',
-    subnav: [
-      { label: 'Overview', href: '/careers/', active: true },
-      { label: 'Why Rayan', href: '#why-us', active: false },
-      { label: 'Culture & Benefits', href: '#benefits', active: false },
-      { label: 'Open Positions', href: '#jobs', active: false }
-    ]
-  }),
-  content: `
-  <!-- Why Work With Us Section -->
-  <section class="section" style="padding: 6rem 0; background: #07111e;" id="why-us">
-    <div class="container">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-bottom: 6rem;" class="intro-grid-responsive">
-        <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OUR HUMAN CAPITAL</span>
-          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; line-height: 1.2; text-transform: uppercase; margin: 0.5rem 0 1.5rem;">WHERE ENGINEERING AMBITION MEETS LIMITLESS OPPORTUNITY.</h2>
-          <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem;">
-            At Rayan Group, our greatest competitive asset is our diverse workforce of over 10,000 engineers, project directors, technicians, and craft specialists representing over 25 nationalities.
-          </p>
-          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
-            We offer our professionals hands-on exposure to signature infrastructure, state-of-the-art heavy equipment fleets, fast-track career progression, and an uncompromising safety culture certified under ISO 45001.
-          </p>
-        </div>
-        <div>
-          <img src="/assets/images/careers/engineering-team.jpg" alt="Rayan Group Engineers" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-        </div>
-      </div>
-
-      <!-- Benefits Grid -->
-      <div id="benefits" style="margin-bottom: 6rem;">
-        <div style="text-align: center; max-width: 700px; margin: 0 auto 3.5rem;">
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">EMPLOYEE EXPERIENCE</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">WHY JOIN RAYAN GROUP</h2>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
-            <div style="width: 50px; height: 50px; border-radius: 8px; background: rgba(0,153,230,0.15); display: flex; align-items: center; justify-content: center; color: #0099e6; margin-bottom: 1.5rem;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-            </div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Landmark Megaprojects</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Work on high-profile regional retail malls, commercial towers, energy infrastructure, and industrial fabrication facilities.</p>
-          </div>
-
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
-            <div style="width: 50px; height: 50px; border-radius: 8px; background: rgba(16,185,129,0.15); display: flex; align-items: center; justify-content: center; color: #10b981; margin-bottom: 1.5rem;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            </div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Global Cross-Hub Mobility</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Opportunities to rotate between our headquarters in Abu Dhabi, Dubai operations, and South Asia India manufacturing hub.</p>
-          </div>
-
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
-            <div style="width: 50px; height: 50px; border-radius: 8px; background: rgba(197,160,89,0.15); display: flex; align-items: center; justify-content: center; color: #c5a059; margin-bottom: 1.5rem;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            </div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Continuous Training Academy</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Institutional technical certifications, project management professional (PMP) sponsorships, and executive leadership tracks.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Live Job Search Interface -->
-      <div id="jobs">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 3rem;">
-          <div>
-            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OPEN OPPORTUNITIES</span>
-            <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">CURRENT CAREER VACANCIES</h2>
-          </div>
-          <div style="font-size: 0.85rem; color: #94a3b8;">Showing 5 Active Requisitions across UAE &amp; India</div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-          <!-- Job 1 -->
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
-            <div>
-              <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">ENGINEERING &amp; EPC • REF: ENG-2025-09</span>
-              <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Senior Civil Project Director</h3>
-              <div style="display: flex; gap: 1.5rem; color: #94a3b8; font-size: 0.85rem;">
-                <span>📍 Abu Dhabi, UAE</span>
-                <span>⏱ Full-time / Permanent</span>
-                <span>🎓 12+ Years Experience</span>
-              </div>
-            </div>
-            <button type="button" class="btn-enterprise-primary" onclick="alert('Please email your CV to careers@rayangroup.com quoting REF: ENG-2025-09')">APPLY FOR POSITION →</button>
-          </div>
-
-          <!-- Job 2 -->
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
-            <div>
-              <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">ENERGY &amp; EPC • REF: EN-2025-04</span>
-              <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Principal Energy Pipeline &amp; EPC Lead</h3>
-              <div style="display: flex; gap: 1.5rem; color: #94a3b8; font-size: 0.85rem;">
-                <span>📍 Abu Dhabi, UAE</span>
-                <span>⏱ Full-time / Permanent</span>
-                <span>🎓 10+ Years EPC &amp; Energy Experience</span>
-              </div>
-            </div>
-            <button type="button" class="btn-enterprise-primary" onclick="alert('Please email your CV to careers@rayangroup.com quoting REF: EN-2025-04')">APPLY FOR POSITION →</button>
-          </div>
-
-          <!-- Job 3 -->
-          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
-            <div>
-              <span style="font-size: 0.75rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">HEALTH &amp; SAFETY • REF: HSE-2025-02</span>
-              <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.35rem 0 0.5rem;">Lead Corporate HSE Manager (ISO 45001)</h3>
-              <div style="display: flex; gap: 1.5rem; color: #94a3b8; font-size: 0.85rem;">
-                <span>📍 Dubai, UAE</span>
-                <span>⏱ Full-time / Permanent</span>
-                <span>🎓 8+ Years NEBOSH / ISO Auditing</span>
-              </div>
-            </div>
-            <button type="button" class="btn-enterprise-primary" onclick="alert('Please email your CV to careers@rayangroup.com quoting REF: HSE-2025-02')">APPLY FOR POSITION →</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  `
-});
-
-// ============================================================================
-// 12. MEDIA / GALLERY PAGE (/media/index.html)
+// 5. MEDIA / GALLERY PAGE (/media/index.html)
 // ============================================================================
 createRoute('media/index.html', {
-  title: 'Media Gallery & Corporate Photography Showcase',
-  description: 'Explore high-resolution photography of Rayan Group landmark infrastructure, energy facilities, industrial construction, and executive operations.',
+  title: 'Media Gallery & Project Photography Showcase',
+  description: 'Explore high-resolution photography of Rayan Group landmark infrastructure, hospitality overhauls, marine works, and engineering projects.',
   activePath: '/media/',
   heroHtml: renderPageHero({
     category: 'MEDIA & BRAND ASSETS',
-    title: 'CORPORATE PHOTOGRAPHY',
-    description: 'Immersive visual documentation of our multinational operations across civil construction, energy EPC, and industrial contracting.',
+    title: 'PROJECT PHOTOGRAPHY',
+    description: 'Visual documentation of our deliveries across civil construction, luxury hospitality, coastal estates, and specialized engineering.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Media Gallery', href: '/media/' }],
-    bgImage: '/assets/images/projects/yas-mall.jpg',
-    subnav: [
-      { label: 'All Photos', href: '/media/', active: true },
-      { label: 'Projects', href: '/projects/', active: false },
-      { label: 'Newsroom', href: '/news/', active: false }
-    ]
+    bgImage: '/assets/images/projects/yas-mall.jpg'
   }),
   content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container">
-      <!-- Media Grid -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem;">
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Luxury Renovation" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Luxury Renovation" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">5-STAR HOSPITALITY</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Waldorf Astoria Hotel Luxury Renovation, RAK</h3>
+            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">5-STAR LUXURY HOSPITALITY</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Waldorf Astoria Hotel Luxury Renovation, RAK</h3>
           </div>
         </div>
 
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Palm Jumeirah Luxury Estate" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Palm Jumeirah Luxury Estate" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 1.5rem;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">COASTAL RESIDENTIAL</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Palm Jumeirah Ultra-Luxury Waterfront Estate</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Palm Jumeirah Ultra-Luxury Waterfront Estate</h3>
           </div>
         </div>
 
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/c2-towers-al-bateen.jpg" alt="C2 Towers Al Bateen" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/projects/c2-towers-al-bateen.jpg" alt="C2 Towers Al Bateen" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 1.5rem;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">HIGH-RISE ENGINEERING</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">C2 Towers Twin High-Rise Development, Al Bateen</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">C2 Towers Twin High-Rise Development, Al Bateen</h3>
           </div>
         </div>
 
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/edge-group-remaya.jpg" alt="Edge Group REMAYA" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/projects/edge-group-remaya.jpg" alt="Edge Group REMAYA" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 1.5rem;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">DEFENSE &amp; TACTICAL</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">EDGE Group - REMAYA Tactical Shooting Complex</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">EDGE Group - REMAYA Tactical Shooting Complex</h3>
           </div>
         </div>
 
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Luxury Island Infinity Pool" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Luxury Island Infinity Pool" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 1.5rem;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">AQUATIC RESORT ENGINEERING</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Luxury Island 50m Oceanfront Cantilevered Pool</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Luxury Island 50m Oceanfront Cantilevered Pool</h3>
           </div>
         </div>
 
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
+        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg" alt="Roxy Cinemas Dubai Hills" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+            <img src="/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg" alt="Roxy Cinemas Dubai Hills" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
           <div style="padding: 1.5rem;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">ACOUSTIC ENGINEERING</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Roxy Cinemas VIP Auditoriums, Dubai Hills Mall</h3>
-          </div>
-        </div>
-
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
-          <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/al-wahda-mall.jpg" alt="Al Wahda Mall" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
-          </div>
-          <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">COMMERCIAL RETAIL</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Al Wahda Mall Grand Extension, Abu Dhabi</h3>
-          </div>
-        </div>
-
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
-          <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/business/hero-1-skyline.jpg" alt="Commercial EPC" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
-          </div>
-          <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">CIVIL &amp; INFRASTRUCTURE</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Turnkey Commercial Towers &amp; Civil EPC</h3>
-          </div>
-        </div>
-
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
-          <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Energy Refinery" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
-          </div>
-          <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">ENERGY EPC</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Hydrocarbon Storage Tank Farm &amp; Pipelines</h3>
-          </div>
-        </div>
-
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
-          <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/ghantoot-palace.jpg" alt="Ghantoot Palace" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
-          </div>
-          <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">ROYAL ESTATES</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Ghantoot Royal Private Estate &amp; Custom Millwork</h3>
-          </div>
-        </div>
-
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
-          <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/yas-mall.jpg" alt="Yas Mall" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
-          </div>
-          <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">RETAIL EPC</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Yas Mall Retail Precinct Engineering, Yas Island</h3>
-          </div>
-        </div>
-
-        <div class="media-thumb-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;">
-          <div style="height: 260px; overflow: hidden;">
-            <img src="/assets/images/projects/al-qua-school-infrastructure.jpg" alt="Al Qua School Infrastructure" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
-          </div>
-          <div style="padding: 1.5rem;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">CAMPUS CIVIC WORKS</span>
-            <h3 class="media-card-title" style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Al Qua School 35,000+ sqm Interlock &amp; Paving</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">Roxy Cinemas VIP Auditoriums, Dubai Hills Mall</h3>
           </div>
         </div>
       </div>
     </div>
   </section>
-
-  <!-- Interactive Lightbox Modal -->
-  <div class="lightbox-modal" style="position: fixed; inset: 0; background: rgba(5,11,20,0.95); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 2rem;">
-    <button type="button" class="lightbox-close" style="position: absolute; top: 2rem; right: 2rem; background: transparent; border: none; color: #fff; font-size: 2rem; cursor: pointer;">✕</button>
-    <div style="max-width: 1100px; max-height: 85vh; text-align: center;">
-      <img src="" alt="Enlarged view" class="lightbox-img" style="max-width: 100%; max-height: 75vh; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 30px 60px rgba(0,0,0,0.8);">
-      <div class="lightbox-caption-text" style="color: #cbd5e1; font-family: var(--font-heading); font-size: 1.1rem; margin-top: 1.25rem; font-weight: 600;"></div>
-    </div>
-  </div>
   `
 });
 
 // ============================================================================
-// 13. CONTACT PAGE (/contact/index.html)
+// 6. CONTACT PAGE (/contact/index.html)
 // ============================================================================
 createRoute('contact/index.html', {
-  title: 'Global Contact Center, Headquarters & Regional Hubs',
-  description: 'Connect with Rayan Group executive headquarters in Abu Dhabi, regional office in Dubai, or South Asia manufacturing hub in India.',
+  title: 'Global Contact Directory | Headquarters & Regional Hubs',
+  description: 'Connect with Rayan Group corporate headquarters in Abu Dhabi, commercial hub in Dubai, or South Asia manufacturing hub in India.',
   activePath: '/contact/',
   heroHtml: renderPageHero({
     category: 'GLOBAL COMMUNICATIONS',
     title: 'GET IN TOUCH',
-    description: 'Our executive corporate team, tender bidding secretariat, and investor relations officers are available across our global offices.',
+    description: 'Our executive team, commercial tenders department, and regional operations are available across Abu Dhabi, Dubai, and India.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Contact', href: '/contact/' }],
     bgImage: '/assets/images/about/global-presence.jpg'
   }),
   content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4.5rem;" class="intro-grid-responsive">
+        
         <!-- Contact Info Left -->
         <div>
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">HEADQUARTERS &amp; HUBS</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 2rem;">GLOBAL DIRECTORY</h2>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.5rem); font-weight: 800; color: #fff; margin: 0.5rem 0 2rem;">GLOBAL DIRECTORY</h2>
 
-          <div style="display: flex; flex-direction: column; gap: 2rem;">
+          <div style="display: flex; flex-direction: column; gap: 1.75rem;">
             <!-- Abu Dhabi HQ -->
             <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.75rem;">
-              <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">GLOBAL HEADQUARTERS</span>
+              <span style="font-size: 0.75rem; font-weight: 700; color: #0099e6; text-transform: uppercase;">GLOBAL CORPORATE HEADQUARTERS</span>
               <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.5rem;">Abu Dhabi, United Arab Emirates</h3>
               <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.75rem;">
-                Tower 2, Al Maryah Island Business District, Abu Dhabi, UAE
+                Office No. 09, Plot No. 42, Mussafah M-36, Industrial Area, Abu Dhabi, UAE
               </p>
               <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
-                <div>Phone: +971 2 642 8899</div>
-                <div>Email: hq@rayangroup.com</div>
+                <div><strong>Telephone:</strong> +971-25654497</div>
+                <div><strong>General Inquiries:</strong> info@rayan-group.com</div>
+                <div><strong>Tenders &amp; Proposals:</strong> tenders@rayan-group.com</div>
               </div>
             </div>
 
-            <!-- Dubai Hub -->
+            <!-- Dubai Operations -->
             <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.75rem;">
-              <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">COMMERCIAL REGIONAL HUB</span>
+              <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">DUBAI REGIONAL OPERATIONS</span>
               <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.5rem;">Dubai, United Arab Emirates</h3>
               <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.75rem;">
-                Business Bay Commercial Tower, P.O. Box 48123, Dubai, UAE
+                Commercial Project Operations &amp; Site Offices, Dubai, UAE
               </p>
               <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
-                <div>Phone: +971 4 398 7722</div>
-                <div>Email: dubai@rayangroup.com</div>
+                <div><strong>Inquiries:</strong> info@rayan-group.com</div>
               </div>
             </div>
 
             <!-- India Hub -->
             <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.75rem;">
-              <span style="font-size: 0.75rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">SOUTH ASIA INDUSTRIAL HUB</span>
-              <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.5rem;">Rayan Group India Ltd.</h3>
+              <span style="font-size: 0.75rem; font-weight: 700; color: #c5a059; text-transform: uppercase;">SOUTH ASIA ENGINEERING HUB</span>
+              <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.5rem;">Ashaz Engineering (India)</h3>
               <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.75rem;">
-                Rayan Industrial Engineering Complex, Mumbai / Gujarat Industrial Corridor, India
+                Bettiah, West Champaran, Bihar - 845438, India
               </p>
               <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
-                <div>Phone: +91 22 6842 1100</div>
-                <div>Email: india@rayangroup.com</div>
+                <div><strong>Email:</strong> ashaz@rayan-group.com</div>
               </div>
             </div>
           </div>
@@ -1356,48 +656,47 @@ createRoute('contact/index.html', {
 
         <!-- Validated Contact Form Right -->
         <div>
-          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">CORPORATE INQUIRY</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 2rem;">SEND AN OFFICIAL MESSAGE</h2>
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">DIRECT INQUIRY</span>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.5rem); font-weight: 800; color: #fff; margin: 0.5rem 0 2rem;">SEND A MESSAGE</h2>
 
-          <form data-enterprise-form style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+          <form onsubmit="event.preventDefault(); alert('Your message has been received. Our team will contact you shortly.'); this.reset();" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
             <div>
-              <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Full Legal Name *</label>
-              <input type="text" required placeholder="e.g. Alexander Vance" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.85rem 1rem; border-radius: 6px; font-size: 0.95rem;">
+              <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Full Name *</label>
+              <input type="text" required placeholder="e.g. Tariq Al Mansoori" class="service-form-input">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="intro-grid-responsive">
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Corporate Email *</label>
-                <input type="email" required placeholder="name@company.com" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.85rem 1rem; border-radius: 6px; font-size: 0.95rem;">
+                <input type="email" required placeholder="name@company.com" class="service-form-input">
               </div>
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Contact Number</label>
-                <input type="tel" placeholder="+971 50 000 0000" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.85rem 1rem; border-radius: 6px; font-size: 0.95rem;">
+                <input type="tel" placeholder="+971 50 123 4567" class="service-form-input">
               </div>
             </div>
 
             <div>
-              <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Nature of Inquiry *</label>
-              <select required style="width: 100%; background: #07111e; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.85rem 1rem; border-radius: 6px; font-size: 0.95rem;">
+              <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Inquiry Nature *</label>
+              <select required class="service-form-select">
                 <option value="">Select Category...</option>
-                <option value="tender">Commercial Tender / Civil EPC (Rayan Engineering)</option>
-                <option value="energy">Energy &amp; Oil/Gas Infrastructure (Rayan Energy)</option>
-                <option value="ashaz">Industrial Fabrication &amp; Engineering (Ashaz India)</option>
-                <option value="properties">Real Estate Development (Rayan Properties)</option>
-                <option value="investors">Investor Relations &amp; Equity Disclosures</option>
-                <option value="careers">Careers &amp; Human Capital</option>
-                <option value="media">Press &amp; Media Communications</option>
+                <option value="proposal">Request a Proposal / Tenders</option>
+                <option value="procurement">Suppliers &amp; Procurement</option>
+                <option value="billing">Billing &amp; Accounts Desk</option>
+                <option value="careers">Careers &amp; Recruitment</option>
+                <option value="general">General Commercial Inquiry</option>
               </select>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Message / Scope Details *</label>
-              <textarea required rows="4" placeholder="Detail your project requirements, scope of work, or inquiry..." style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.85rem 1rem; border-radius: 6px; font-size: 0.95rem; resize: vertical;"></textarea>
+              <textarea required rows="4" placeholder="Detail your project requirements, scope of work, or inquiry..." class="service-form-textarea"></textarea>
             </div>
 
-            <button type="submit" class="btn-enterprise-primary" style="padding: 1rem; width: 100%; justify-content: center;">TRANSMIT ENQUIRY →</button>
+            <button type="submit" class="btn-enterprise-primary" style="padding: 1rem; width: 100%; justify-content: center;">SUBMIT INQUIRY →</button>
           </form>
         </div>
+
       </div>
     </div>
   </section>
@@ -1405,44 +704,49 @@ createRoute('contact/index.html', {
 });
 
 // ============================================================================
-// 14. PRIVACY POLICY (/privacy/index.html)
+// 7. PRIVACY POLICY (/privacy/index.html) - UAE Law No. 45 / 2021 Compliant
 // ============================================================================
 createRoute('privacy/index.html', {
-  title: 'Corporate Privacy Policy & Data Protection',
-  description: 'Rayan Group corporate privacy policy, personal data protection standards under UAE federal laws, and international disclosure practices.',
+  title: 'Privacy Policy | Data Protection Notice',
+  description: 'Rayan Group corporate privacy policy and personal data protection standards under UAE federal laws.',
   activePath: '/privacy/',
   heroHtml: renderPageHero({
-    category: 'LEGAL & COMPLIANCE',
+    category: 'LEGAL & DATA COMPLIANCE',
     title: 'PRIVACY POLICY',
     description: 'Our commitment to safeguarding personal data in accordance with UAE Federal Decree-Law No. 45 of 2021 regarding Personal Data Protection.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Privacy Policy', href: '/privacy/' }],
-    bgImage: '/assets/images/investors/governance.jpg'
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Legal', href: '/terms/' }, { label: 'Privacy Policy', href: '/privacy/' }],
+    bgImage: '/assets/images/about/overview.jpg'
   }),
   content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
-    <div class="container" style="max-width: 860px; color: #cbd5e1; font-size: 1rem; line-height: 1.8;">
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
+    <div class="container" style="max-width: 860px; color: #94a3b8; font-size: 0.95rem; line-height: 1.8;">
+      <div style="margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <span style="font-size: 0.8rem; color: #0099e6; font-weight: 700;">LAST UPDATED: OCTOBER 2026</span>
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; color: #fff; margin-top: 0.5rem;">DATA PROTECTION COMPLIANCE</h2>
+      </div>
+
       <p style="margin-bottom: 1.5rem;">
-        This Privacy Policy explains how Rayan Group, its subsidiaries, joint ventures, and operating companies collect, process, and safeguard information submitted through our global website and digital portals.
+        This Privacy Policy explains how Rayan Group Holdings &amp; Engineering L.L.C - S.P.C, its subsidiaries, and regional operating companies collect, process, and safeguard information submitted through our corporate web portals.
       </p>
 
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 2rem 0 1rem;">1. Information We Collect</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">1. Information We Collect</h3>
       <p style="margin-bottom: 1.5rem;">
-        We collect personal data you provide voluntarily when submitting business tenders, career applications, or investor relations inquiries. This may include your name, corporate email address, contact numbers, and project specifications.
+        We collect data provided voluntarily when clients request proposals, suppliers submit prequalification dossiers, or candidates apply to our talent pool. This may include names, corporate email addresses, telephone numbers, company registration documents, and resumes.
       </p>
 
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 2rem 0 1rem;">2. Purpose of Data Processing</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">2. Purpose of Processing</h3>
       <p style="margin-bottom: 1.5rem;">
-        Data is processed strictly to respond to procurement inquiries, manage institutional investor communications, evaluate job candidacies, and ensure regulatory compliance with financial exchange authorities.
+        Submitted details are used strictly to evaluate commercial bids, process vendor onboarding, facilitate accounts payable inquiries, and screen talent applications. We do not sell or monetize personal or commercial information.
       </p>
 
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 2rem 0 1rem;">3. Data Security &amp; Retention</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">3. Data Security</h3>
       <p style="margin-bottom: 1.5rem;">
-        Rayan Group enforces military-grade transport layer security (TLS 1.3), firewall isolation, and role-based access control to prevent unauthorized access or disclosure of confidential corporate information.
+        We implement technical and organizational controls including encrypted communications (TLS 1.3), firewall safeguards, and role-based access restrictions to protect proprietary corporate data from unauthorized disclosure.
       </p>
 
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 2rem 0 1rem;">4. Contacting Data Protection Officer</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">4. Inquiries &amp; Rights</h3>
       <p>
-        For inquiries regarding our data handling or to request erasure of your details, contact: <strong>dpo@rayangroup.com</strong>.
+        For inquiries regarding data protection, contact our administrative office at <span style="color: #0099e6;">info@rayan-group.com</span>.
       </p>
     </div>
   </section>
@@ -1450,44 +754,49 @@ createRoute('privacy/index.html', {
 });
 
 // ============================================================================
-// 15. TERMS & CONDITIONS (/terms/index.html)
+// 8. TERMS & CONDITIONS (/terms/index.html) - Khansaheb Pattern
 // ============================================================================
 createRoute('terms/index.html', {
-  title: 'Terms of Use & Legal Disclaimer',
-  description: 'Terms and conditions governing the use of the Rayan Group corporate website and electronic portals.',
+  title: 'Terms of Use & Website Conditions',
+  description: 'Terms and conditions governing the access and use of the Rayan Group corporate website and digital portals.',
   activePath: '/terms/',
   heroHtml: renderPageHero({
-    category: 'LEGAL & COMPLIANCE',
-    title: 'TERMS OF USE',
-    description: 'Terms of access and legal disclaimers governing the use of Rayan Group corporate web assets and financial disclosures.',
-    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Terms of Use', href: '/terms/' }],
-    bgImage: '/assets/images/investors/governance.jpg'
+    category: 'LEGAL TERMS & GOVERNANCE',
+    title: 'TERMS & CONDITIONS',
+    description: 'Terms of access, intellectual property rules, and legal conditions governing the use of Rayan Group digital channels.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Legal', href: '/terms/' }, { label: 'Terms & Conditions', href: '/terms/' }],
+    bgImage: '/assets/images/about/overview.jpg'
   }),
   content: `
-  <section class="section" style="padding: 5rem 0; background: #07111e;">
-    <div class="container" style="max-width: 860px; color: #cbd5e1; font-size: 1rem; line-height: 1.8;">
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 0 0 1rem;">1. Acceptance of Terms</h3>
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
+    <div class="container" style="max-width: 860px; color: #94a3b8; font-size: 0.95rem; line-height: 1.8;">
+      <div style="margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <span style="font-size: 0.8rem; color: #0099e6; font-weight: 700;">LAST UPDATED: OCTOBER 2026</span>
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; color: #fff; margin-top: 0.5rem;">WEBSITE TERMS OF ACCESS</h2>
+      </div>
+
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">1. Acceptance of Terms</h3>
       <p style="margin-bottom: 1.5rem;">
-        By accessing or browsing this website, you agree to be bound by these Terms of Use and all applicable laws and regulations of the United Arab Emirates.
+        By accessing or using this website, you agree to comply with and be bound by these Terms and Conditions and all applicable laws of the Emirate of Abu Dhabi and the United Arab Emirates.
       </p>
 
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 2rem 0 1rem;">2. Intellectual Property Rights</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">2. Intellectual Property Rights</h3>
       <p style="margin-bottom: 1.5rem;">
-        All trademarks, logos, engineering drawings, photography, texts, and brand elements displayed on this portal are the proprietary property of Rayan Group and protected by international intellectual property laws.
+        All content on this site, including logos, text, structural descriptions, photography, and graphical assets, is the proprietary property of Rayan Group Holdings &amp; Engineering L.L.C - S.P.C. Reproduction without prior written authorization is prohibited.
       </p>
 
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 2rem 0 1rem;">3. Forward-Looking Statements Disclaimer</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">3. Commercial Scope</h3>
       <p style="margin-bottom: 1.5rem;">
-        Materials on this portal may contain forward-looking statements regarding revenues, backlogs, and market developments. These statements are subject to operational uncertainties and do not constitute an invitation or offer to invest in securities.
+        Website content is presented for informational purposes. Formal commercial commitments, tender quotations, and subcontracting obligations arise solely from executed written contracts under relevant FIDIC or standard engineering agreements.
       </p>
 
-      <h3 style="font-family: var(--font-heading); color: #fff; font-size: 1.35rem; margin: 2rem 0 1rem;">4. Governing Law &amp; Jurisdiction</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">4. Governing Law</h3>
       <p>
-        These terms shall be governed by and construed in accordance with the laws of the Emirate of Abu Dhabi and federal laws of the United Arab Emirates.
+        These terms are governed by and construed in accordance with the laws of the United Arab Emirates as applied in the Emirate of Abu Dhabi.
       </p>
     </div>
   </section>
   `
 });
 
-console.log('All remaining Investor, News, Careers, Media, Contact & Legal pages generated successfully!');
+console.log('Clean Corporate, Careers, News, Media, Contact & Legal pages generated successfully.');
