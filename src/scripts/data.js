@@ -36,6 +36,7 @@ export const GROUP_INFO = {
       tenderEmail: "tender@rayan-group.com",
       recruitmentEmail: "recruitment@rayan-group.com",
       purchaseEmail: "purchase@rayan-group.com",
+      vendorEmail: "vendors@rayan-group.com",
       timezone: "Asia/Dubai (GST UTC+4)",
       coordinates: "24.3498° N, 54.5085° E"
     },
