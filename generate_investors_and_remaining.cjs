@@ -648,7 +648,8 @@ createRoute('contact/index.html', {
                 Bettiah, West Champaran, Bihar - 845438, India
               </p>
               <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
-                <div><strong>Email:</strong> ashaz@rayan-group.com</div>
+                <div><strong>Telephone / Mobile:</strong> <a href="tel:+919973086910" style="color: #0099e6; text-decoration: none; font-weight: 600;">+91-9973086910</a></div>
+                <div style="margin-top: 0.25rem;"><strong>Email:</strong> <a href="mailto:ashaz@rayan-group.com" style="color: #cbd5e1; text-decoration: none;">ashaz@rayan-group.com</a></div>
               </div>
             </div>
 

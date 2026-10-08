@@ -167,7 +167,8 @@ createRoute('proposal/index.html', {
               <div style="border-left: 2px solid #10b981; padding-left: 0.75rem;">
                 <strong style="color: #fff; display: block;">South Asia Regional Hub:</strong>
                 <span style="color: #94a3b8;">Ashaz Engineering, India</span><br>
-                <span style="color: #0099e6;">ashaz@rayan-group.com</span>
+                <span style="color: #94a3b8;">Phone: +91-9973086910</span><br>
+                <a href="mailto:ashaz@rayan-group.com" style="color: #0099e6; text-decoration: none;">ashaz@rayan-group.com</a>
               </div>
             </div>
 
@@ -184,7 +185,7 @@ createRoute('proposal/index.html', {
             <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.85rem; color: #94a3b8;">
               <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
                 <span style="color: #0099e6; font-weight: 700;">▸</span>
-                <span><strong>50+ Years Combined Leadership:</strong> Extensive civil, energy, and infrastructure track record across UAE &amp; South Asia.</span>
+                <span><strong>18+ Years Industry Heritage:</strong> Extensive civil, energy, and infrastructure track record since 2008 across UAE &amp; South Asia.</span>
               </li>
               <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
                 <span style="color: #0099e6; font-weight: 700;">▸</span>

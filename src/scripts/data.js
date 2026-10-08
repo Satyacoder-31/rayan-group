@@ -42,7 +42,7 @@ export const GROUP_INFO = {
       city: "Bettiah / New Delhi",
       country: "India",
       address: "Akbar Nagar, Mansatolla, Town-2, Bettiah, West Champaran, Bihar, India - 845438",
-      phone: "+91-6254-245890",
+      phone: "+91-9973086910",
       email: "ashaz@rayan-group.com",
       timezone: "Asia/Kolkata (IST UTC+5:30)",
       coordinates: "26.8028° N, 84.5028° E"
@@ -63,7 +63,7 @@ export const GROUP_COMPANIES = [
     href: "/about/",
     image: "/assets/images/about/overview.jpg",
     logo: "/assets/logos/rayan-group-white.png",
-    stats: "50+ Years Combined Leadership",
+    stats: "18+ Years Industry Excellence (Since 2008)",
     status: "active"
   },
   {

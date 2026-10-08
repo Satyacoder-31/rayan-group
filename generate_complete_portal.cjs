@@ -266,7 +266,7 @@ createRoute('business/index.html', {
         <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OPERATING SUBSIDIARIES</span>
         <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.5rem;">OUR COMPANIES &amp; SUBSIDIARIES</h2>
         <p style="color: #94a3b8; font-size: 1rem; margin-top: 0.75rem; line-height: 1.6;">
-          Rayan Group operates specialized operating entities backed by heavy machinery, certified QHSE management, and 50+ years combined executive heritage.
+          Rayan Group operates specialized operating entities backed by heavy machinery, certified QHSE management, and 18+ years industry heritage since 2008.
         </p>
       </div>
 
@@ -369,12 +369,12 @@ createRoute('business/engineering/index.html', {
     tagline: 'TURNKEY CIVIL EPC & HIGH-SPECIFICATION CONSTRUCTION',
     divisionKey: 'engineering',
     overview: `
-      Rayan Engineering &amp; Contracting is our flagship civil delivery division, executing high-complexity construction across the United Arab Emirates. With over 50 years of combined executive leadership heritage, we manage projects from deep shoring and foundation piling through post-tensioned concrete superstructures, integrated MEP systems, and bespoke architectural handover.
+      Rayan Engineering &amp; Contracting is our flagship civil delivery division, executing high-complexity construction across the United Arab Emirates. With over 18 years of proven industry leadership heritage since 2008, we manage projects from deep shoring and foundation piling through post-tensioned concrete superstructures, integrated MEP systems, and bespoke architectural handover.
       <br><br>
       Our project portfolio spans major shopping destinations, 5-star luxury hospitality overhauls, commercial high-rise towers, and specialized tactical defense infrastructure for clients including Brock Construction, Emaar, Hilton/Waldorf Astoria, and defense entities.
     `,
     keyStats: [
-      { label: 'Leadership Heritage', value: '50+ Yrs', sub: 'Combined Executive Track Record' },
+      { label: 'Industry Heritage', value: '18+ Yrs', sub: 'Proven Track Record Since 2008' },
       { label: 'Core Projects', value: '16 Verified', sub: 'Landmark UAE Deliveries' },
       { label: 'Quality Audit', value: 'ISO 9001', sub: '2015 Bureau Veritas Certified' },
       { label: 'Delivery Model', value: 'Turnkey', sub: 'EPC / Design & Build / Fit-out' }

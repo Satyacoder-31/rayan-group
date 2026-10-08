@@ -73,14 +73,14 @@ createRoute('about/index.html', {
         </div>
       </div>
 
-      <!-- Verified Statistics Row (Increasing Animated Counters: 50+, 16, 4) -->
+      <!-- Verified Statistics Row (Increasing Animated Counters: 18+, 16, 4) -->
       <div class="stats-counter-grid">
         <div class="stat-counter-card">
           <div class="stat-counter-number-wrap">
-            <span class="stat-counter-val" data-counter-target="50" data-counter-suffix="+" data-counter-duration="1800">50+</span>
+            <span class="stat-counter-val" data-counter-target="18" data-counter-suffix="+" data-counter-duration="1500">18+</span>
           </div>
           <div class="stat-counter-label">YEARS HERITAGE</div>
-          <div class="stat-counter-desc">Combined leadership execution</div>
+          <div class="stat-counter-desc">Proven industry track record since 2008</div>
         </div>
 
         <div class="stat-counter-card">
