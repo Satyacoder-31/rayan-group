@@ -316,6 +316,41 @@ createRoute('about/index.html', {
       </div>
     </div>
   </section>
+
+  <!-- Executive Leadership Messages Showcase on About Page -->
+  <section class="section" style="padding: 5rem 0; background: #06101c; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="background: linear-gradient(135deg, #0d1e33 0%, #081424 100%); border: 1px solid rgba(197,160,89,0.3); border-radius: 16px; padding: clamp(2rem, 4vw, 3.5rem); display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2.5rem; align-items: center;">
+        <div>
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #c5a059;">EXECUTIVE PERSPECTIVES</span>
+          <h3 style="font-family: var(--font-heading); font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 800; color: #fff; margin: 0.35rem 0 1rem; line-height: 1.2;">
+            LEADERSHIP MESSAGES
+          </h3>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.7; margin: 0 0 1.5rem;">
+            Read the official strategic addresses from Founder &amp; Chairman Mr. Arshad Alam Shaikh and Chief Executive Officer Mrs. Sadaf Fatma detailing our dual-hub vision, disciplined execution, and long-term value creation across the UAE and India.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="/leadership/#chairman-message" class="btn-enterprise-primary" style="background: #c5a059; border-color: #c5a059; color: #07111e; font-weight: 800;">
+              READ CHAIRMAN’S ADDRESS →
+            </a>
+            <a href="/leadership/#ceo-message" class="btn-enterprise-secondary" style="border-color: #00c7b3; color: #00c7b3;">
+              READ CEO’S ADDRESS →
+            </a>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="background: rgba(197,160,89,0.08); border-left: 3px solid #c5a059; padding: 1.25rem 1.5rem; border-radius: 0 8px 8px 0;">
+            <p style="font-style: italic; color: #e2e8f0; font-size: 0.9rem; margin: 0 0 0.5rem; line-height: 1.5;">“Success is measured not only by the projects we complete, but by the trust we build and the value we contribute to the communities in which we operate.”</p>
+            <div style="font-size: 0.78rem; font-weight: 700; color: #c5a059;">&mdash; Mr. Arshad Alam Shaikh, Founder &amp; Chairman</div>
+          </div>
+          <div style="background: rgba(0,199,179,0.08); border-left: 3px solid #00c7b3; padding: 1.25rem 1.5rem; border-radius: 0 8px 8px 0;">
+            <p style="font-style: italic; color: #e2e8f0; font-size: 0.9rem; margin: 0 0 0.5rem; line-height: 1.5;">“Our mission: creating lasting value today while building transformational opportunities for tomorrow.”</p>
+            <div style="font-size: 0.78rem; font-weight: 700; color: #00c7b3;">&mdash; Mrs. Sadaf Fatma, Chief Executive Officer (CEO)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   `
 });
 
@@ -334,8 +369,11 @@ createRoute('leadership/index.html', {
     bgImage: '/assets/images/investors/boardroom-governance.jpg',
     subnav: [
       { label: 'Executive Profiles', href: '#profiles', active: true },
+      { label: 'Chairman’s Message', href: '#chairman-message', active: false },
+      { label: 'CEO’s Message', href: '#ceo-message', active: false },
+      { label: 'Ashaz India Board', href: '#ashaz-board', active: false },
       { label: 'Board Committees', href: '#committees', active: false },
-      { label: 'Governance Charters', href: '/investors/corporate-governance/', active: false }
+      { label: 'Corporate Governance', href: '/investors/corporate-governance/', active: false }
     ]
   }),
   content: `
@@ -363,6 +401,11 @@ createRoute('leadership/index.html', {
             <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Capital Allocation</span>
             <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3);">Trade Mark Proprietor (Govt. of India)</span>
           </div>
+          <div style="margin-top: 1.25rem;">
+            <a href="#chairman-message" style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; font-weight: 700; color: #c5a059; border: 1px solid rgba(197,160,89,0.4); background: rgba(197,160,89,0.08); padding: 0.45rem 1rem; border-radius: 6px; text-decoration: none;">
+              <span>Read Chairman’s Address</span> <span>↓</span>
+            </a>
+          </div>
         </div>
 
         <!-- CEO -->
@@ -380,6 +423,11 @@ createRoute('leadership/index.html', {
             <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Enterprise Leadership</span>
             <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Corporate Strategy</span>
             <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Global Operations</span>
+          </div>
+          <div style="margin-top: 1.25rem;">
+            <a href="#ceo-message" style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; font-weight: 700; color: #00c7b3; border: 1px solid rgba(0,199,179,0.4); background: rgba(0,199,179,0.08); padding: 0.45rem 1rem; border-radius: 6px; text-decoration: none;">
+              <span>Read CEO’s Address</span> <span>↓</span>
+            </a>
           </div>
         </div>
 
@@ -439,7 +487,7 @@ createRoute('leadership/index.html', {
       </div>
 
       <!-- Ashaz Engineering (India) Board of Directors Highlight -->
-      <div style="margin-top: 5rem; background: linear-gradient(135deg, #091a2e 0%, #061320 100%); border: 1px solid rgba(0,199,179,0.3); border-radius: 16px; padding: 3rem;">
+      <div id="ashaz-board" style="margin-top: 5rem; background: linear-gradient(135deg, #091a2e 0%, #061320 100%); border: 1px solid rgba(0,199,179,0.3); border-radius: 16px; padding: 3rem;">
         <div style="text-align: center; max-width: 720px; margin: 0 auto 3rem;">
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #00c7b3;">REGIONAL GOVERNANCE</span>
           <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.35rem 0 0.5rem;">ASHAZ ENGINEERING (INDIA) — BOARD OF DIRECTORS</h3>
@@ -476,6 +524,232 @@ createRoute('leadership/index.html', {
           </div>
         </div>
       </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- CHAIRMAN'S MESSAGE SECTION                                                -->
+  <!-- ========================================================================= -->
+  <section id="chairman-message" class="section" style="padding: 6.5rem 0; background: linear-gradient(180deg, #07111e 0%, #0a1728 100%); border-bottom: 1px solid rgba(197,160,89,0.25); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -120px; right: -120px; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(197,160,89,0.08) 0%, transparent 70%); pointer-events: none;"></div>
+
+    <div class="container">
+      <div style="max-width: 1040px; margin: 0 auto; background: #0c1828; border: 1px solid rgba(197,160,89,0.35); border-radius: 16px; padding: clamp(2rem, 5vw, 4.5rem); box-shadow: 0 25px 60px rgba(0,0,0,0.45); position: relative;">
+        
+        <!-- Header Meta -->
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(197,160,89,0.25);">
+          <div>
+            <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #c5a059; margin-bottom: 0.5rem;">
+              EXECUTIVE ADDRESS // FOUNDER &amp; CHAIRMAN
+            </span>
+            <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; margin: 0; line-height: 1.2;">
+              CHAIRMAN’S MESSAGE
+            </h2>
+            <div style="font-size: 0.95rem; color: #94a3b8; margin-top: 0.5rem; font-weight: 500;">
+              Strategic Vision, Cross-Border Synergies &amp; Enduring Value Creation
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; border: 2.5px solid #c5a059; background: radial-gradient(circle, rgba(197,160,89,0.25) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #c5a059; font-weight: 800; font-size: 1.25rem;">
+              AA
+            </div>
+            <div style="text-align: left;">
+              <div style="color: #fff; font-weight: 700; font-size: 1.05rem;">Mr. Arshad Alam Shaikh</div>
+              <div style="color: #c5a059; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">Founder &amp; Chairman</div>
+              <div style="color: #64748b; font-size: 0.74rem;">Rayan Group (UAE &amp; India)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pull Quote -->
+        <div style="background: rgba(197,160,89,0.06); border-left: 4px solid #c5a059; padding: 1.5rem 1.75rem; border-radius: 0 10px 10px 0; margin-bottom: 2.5rem;">
+          <p style="font-family: var(--font-heading); font-size: clamp(1.05rem, 1.8vw, 1.25rem); font-style: italic; color: #f1f5f9; line-height: 1.6; margin: 0;">
+            “At RAYAN Group, our measure of success extends far beyond the scale of projects we engineer or the commercial milestones we reach. Our true legacy is defined by the enduring trust we cultivate, the institutional integrity we uphold, and the transformative value we deliver to our communities and partners.”
+          </p>
+        </div>
+
+        <!-- Message Prose -->
+        <div style="color: #cbd5e1; font-size: 1.025rem; line-height: 1.85; display: flex; flex-direction: column; gap: 1.35rem;">
+          <p style="font-weight: 600; color: #e2e8f0; font-size: 1.1rem; margin: 0;">
+            Dear Valued Partners, Clients, Investors, and Friends,
+          </p>
+
+          <p style="margin: 0;">
+            It gives me immense personal honor and profound pleasure to welcome you to <strong>RAYAN Group</strong> &mdash; a diversified, forward-looking multinational conglomerate anchored by deep operational excellence across the United Arab Emirates and the Republic of India.
+          </p>
+
+          <p style="margin: 0;">
+            Over the years, our organization has achieved a purposeful evolution. What began as a focused engineering and contracting enterprise has flourished into a multi-sector industrial powerhouse. Today, our operational capabilities span complex turnkey engineering, civil and commercial construction, strategic infrastructure, energy systems, industrial manufacturing, and high-impact commercial development. This extraordinary journey has been charted by a steadfast founding vision: to build self-sustaining, resilient enterprises, create exceptional economic value for our clients, and cultivate lifelong strategic partnerships grounded in trust, uncompromising integrity, and superior execution.
+          </p>
+
+          <!-- Dual-Hub Advantage Callout -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(197,160,89,0.25); border-radius: 12px; padding: 1.75rem; margin: 0.5rem 0;">
+            <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.75rem;">
+              The Strategic Dual-Hub Advantage: Connecting UAE &amp; India
+            </h4>
+            <p style="margin: 0; color: #94a3b8; font-size: 0.95rem; line-height: 1.7;">
+              Our presence across the United Arab Emirates and India delivers a distinct, synergistic competitive advantage. The UAE stands as our sovereign epicenter for global capital, cutting-edge infrastructure, world-class business governance, and gateway access to Middle Eastern markets. In dynamic harmony, our India operations provide direct access to an elite reservoir of engineering talent, advanced technical capabilities, scalable manufacturing and steel fabrication capacity, and boundless emerging opportunities. By bridging these two economic powerhouses, RAYAN Group delivers an integrated, cost-efficient, and globally competitive delivery platform executing projects to exacting international standards.
+            </p>
+          </div>
+
+          <p style="margin: 0;">
+            At RAYAN Group, our operating philosophy is guided by collective unity and decentralized agility. Each of our operating subsidiaries maintains its specialized discipline and operational focus, while drawing upon the institutional strength, technical depth, and financial backing of the Group. This unified synergy empowers us to anticipate market shifts, orchestrate multidisciplinary EPC undertakings, and capitalize on high-potential opportunities across diverse geographies.
+          </p>
+
+          <p style="margin: 0;">
+            Our foundational commitments remain absolute: uncompromised occupational health and safety (zero-harm), flawless quality assurance, pioneering technological innovation, environmental sustainability, and ethical business stewardship. We invest relentlessly in our human capital, digital engineering systems, and strategic alliances because we recognize that enduring institutions are forged through continuous, disciplined improvement.
+          </p>
+
+          <p style="margin: 0;">
+            As we look to the horizon, our roadmap is defined by responsible expansion, strengthening our market leadership in established sectors, pioneering new sustainable industries, and generating sustainable long-term value for our clients, employees, partners, and society at large.
+          </p>
+
+          <p style="margin: 0;">
+            I extend my deepest gratitude to our esteemed clients, strategic partners, dedicated workforce of over 500 professionals, and sovereign authorities whose trust has made our journey possible. Your confidence fuels our determination to reach higher, innovate further, and build with purpose.
+          </p>
+
+          <p style="margin: 0.5rem 0 0;">
+            Together, we look forward to building a stronger, more diversified, and globally connected RAYAN Group.
+          </p>
+        </div>
+
+        <!-- Signature Block -->
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(197,160,89,0.25); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.5rem;">
+          <div>
+            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">With sincere regards and warmest respect,</div>
+            <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
+              Mr. Arshad Alam Shaikh
+            </div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem;">
+              Founder &amp; Chairman
+            </div>
+            <div style="color: #94a3b8; font-size: 0.825rem; margin-top: 0.15rem;">
+              RAYAN GROUP (UAE &amp; INDIA)
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="display: inline-block; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(197,160,89,0.1); border: 1px solid rgba(197,160,89,0.3); font-size: 0.8rem; color: #c5a059; font-weight: 700;">
+              18+ YEARS INDUSTRY HERITAGE &bull; EST. 2008
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- CEO'S MESSAGE SECTION                                                     -->
+  <!-- ========================================================================= -->
+  <section id="ceo-message" class="section" style="padding: 6.5rem 0; background: linear-gradient(180deg, #0a1728 0%, #07111e 100%); border-bottom: 1px solid rgba(0,199,179,0.25); position: relative; overflow: hidden;">
+    <div style="position: absolute; bottom: -120px; left: -120px; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(0,199,179,0.08) 0%, transparent 70%); pointer-events: none;"></div>
+
+    <div class="container">
+      <div style="max-width: 1040px; margin: 0 auto; background: #0c1828; border: 1px solid rgba(0,199,179,0.35); border-radius: 16px; padding: clamp(2rem, 5vw, 4.5rem); box-shadow: 0 25px 60px rgba(0,0,0,0.45); position: relative;">
+        
+        <!-- Header Meta -->
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(0,199,179,0.25);">
+          <div>
+            <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #00c7b3; margin-bottom: 0.5rem;">
+              EXECUTIVE ADDRESS // CHIEF EXECUTIVE OFFICER
+            </span>
+            <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; margin: 0; line-height: 1.2;">
+              CEO’S MESSAGE
+            </h2>
+            <div style="font-size: 0.95rem; color: #94a3b8; margin-top: 0.5rem; font-weight: 500;">
+              Disciplined Execution, People-Centric Culture &amp; Agile Enterprise Growth
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; border: 2.5px solid #00c7b3; background: radial-gradient(circle, rgba(0,199,179,0.25) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 1.25rem;">
+              SF
+            </div>
+            <div style="text-align: left;">
+              <div style="color: #fff; font-weight: 700; font-size: 1.05rem;">Mrs. Sadaf Fatma</div>
+              <div style="color: #00c7b3; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">Chief Executive Officer (CEO)</div>
+              <div style="color: #64748b; font-size: 0.74rem;">Rayan Group (UAE &amp; India)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pull Quote -->
+        <div style="background: rgba(0,199,179,0.06); border-left: 4px solid #00c7b3; padding: 1.5rem 1.75rem; border-radius: 0 10px 10px 0; margin-bottom: 2.5rem;">
+          <p style="font-family: var(--font-heading); font-size: clamp(1.05rem, 1.8vw, 1.25rem); font-style: italic; color: #f1f5f9; line-height: 1.6; margin: 0;">
+            “Great enterprises are forged through inspired people, resilient partnerships, disciplined execution, and an unshakeable clarity of purpose. At RAYAN Group, our mission is simple yet profound: to create lasting value today while building stronger opportunities for tomorrow.”
+          </p>
+        </div>
+
+        <!-- Message Prose -->
+        <div style="color: #cbd5e1; font-size: 1.025rem; line-height: 1.85; display: flex; flex-direction: column; gap: 1.35rem;">
+          <p style="font-weight: 600; color: #e2e8f0; font-size: 1.1rem; margin: 0;">
+            A Warm Welcome to RAYAN Group,
+          </p>
+
+          <p style="margin: 0;">
+            Our corporate journey has continuously been guided by an enduring conviction: transformative businesses are not created by chance, but by deliberate discipline, exceptional talent, trustworthy alliances, and a clear vision for what lies ahead.
+          </p>
+
+          <p style="margin: 0;">
+            Today, <strong>RAYAN Group</strong> is advancing with accelerating momentum as a diversified multinational enterprise. Across our operational hubs in the United Arab Emirates and India, we unite deep domain expertise across multi-disciplinary engineering, turnkey civil contracting, strategic infrastructure, commercial renewable energy, and heavy industrial fabrication.
+          </p>
+
+          <p style="margin: 0;">
+            Our primary strength originates from the collective capabilities, passion, and technical mastery of our multidisciplinary team. While each operating entity functions with dedicated autonomy and sector specialization, we are unified by a shared standard of excellence, common institutional values, and an uncompromising commitment to delivering measurable, high-impact outcomes for our clients and stakeholders.
+          </p>
+
+          <!-- Twin Pillars Highlight -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,199,179,0.25); border-radius: 12px; padding: 1.75rem; margin: 0.5rem 0;">
+            <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.75rem;">
+              Twin Pillars of Strategic Growth: UAE &amp; India
+            </h4>
+            <p style="margin: 0; color: #94a3b8; font-size: 0.95rem; line-height: 1.7;">
+              The UAE and India constitute the twin foundations of our corporate growth strategy. The UAE provides a dynamic global stage for iconic infrastructure, advanced industrial initiatives, and ambitious mega-developments. Concurrently, India delivers extraordinary technical intellect, engineering ingenuity, state-of-the-art manufacturing infrastructure, and sustained long-term economic vigor. By synchronizing these strategic corridors, we unlock unprecedented enterprise value that transcends individual project boundaries.
+            </p>
+          </div>
+
+          <p style="margin: 0;">
+            At RAYAN Group, our operational benchmark is centered not merely on <em>what</em> we build, but <em>how</em> we construct it. Rigorous quality control, zero-compromise occupational safety (HSE), operational efficiency, cutting-edge engineering technologies, and ESG stewardship remain woven into every blueprint and field operation.
+          </p>
+
+          <p style="margin: 0;">
+            In an era of rapid technological transformation and changing global markets, enterprise agility is paramount. Clients rightfully demand faster execution, greater fiscal value, and higher performance benchmarks. We are meeting this imperative by modernizing our project delivery frameworks, adopting Building Information Modeling (BIM) and digital systems, empowering our people through continuous learning, and exploring clean energy solutions that keep our clients competitive in tomorrow's economy.
+          </p>
+
+          <p style="margin: 0;">
+            Our vision for the future is bold and unyielding: to establish RAYAN Group as a benchmark multinational organization recognized for operational reliability, technical precision, and enduring social contribution across global markets.
+          </p>
+
+          <p style="margin: 0;">
+            This trajectory would be impossible without the tireless dedication of our engineers, project managers, and workforce; the continued confidence of our clients; and the steadfast collaboration of our strategic partners. To each of you, I express my deepest respect and personal appreciation.
+          </p>
+
+          <p style="margin: 0.5rem 0 0;">
+            Thank you for being part of the RAYAN Group journey.
+          </p>
+        </div>
+
+        <!-- Signature Block -->
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,199,179,0.25); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.5rem;">
+          <div>
+            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">With warm regards and shared dedication,</div>
+            <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
+              Mrs. Sadaf Fatma
+            </div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem;">
+              Chief Executive Officer (CEO)
+            </div>
+            <div style="color: #94a3b8; font-size: 0.825rem; margin-top: 0.15rem;">
+              RAYAN GROUP (UAE &amp; INDIA)
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="display: inline-block; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(0,199,179,0.1); border: 1px solid rgba(0,199,179,0.3); font-size: 0.8rem; color: #00c7b3; font-weight: 700;">
+              DISCIPLINED EXECUTION &bull; SUSTAINABLE GROWTH
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
