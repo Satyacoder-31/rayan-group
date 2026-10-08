@@ -115,6 +115,49 @@ export const GROUP_COMPANIES = [
   }
 ];
 
+// Corporate Timeline & Milestones
+export const CORPORATE_TIMELINE = [
+  {
+    year: "2021",
+    entity: "Rayan Group",
+    tag: "Group Establishment",
+    title: "Establishment of Rayan Group",
+    description: "Rayan Group was established in the United Arab Emirates as the parent enterprise, instituting executive corporate governance, strategic capital allocation, and long-term vision across multidisciplinary contracting and infrastructure sectors.",
+    accent: "#0099e6"
+  },
+  {
+    year: "2022",
+    entity: "Rayan Engineering & Contracting L.L.C",
+    tag: "Civil & Interiors EPC",
+    title: "Establishment of Rayan Engineering & Contracting L.L.C",
+    description: "Founded in 2022 as Rayan Group's flagship civil delivery arm, executing turnkey building construction, commercial high-rise towers, luxury hospitality overhauls, retail fit-outs, and architectural engineering across Abu Dhabi, Dubai, and the UAE.",
+    accent: "#f97316"
+  },
+  {
+    year: "2022",
+    entity: "Rayan Energy L.L.C",
+    tag: "Electrical & Mechanical EPC",
+    title: "Establishment of Rayan Energy L.L.C",
+    description: "Established in 2022 to deliver specialized electrical and mechanical EPC services, high-voltage substations, process piping networks, and critical energy infrastructure operating to strict ISO 45001 zero-harm safety benchmarks.",
+    accent: "#10b981"
+  },
+  {
+    year: "2024",
+    entity: "Ashaz Engineering (India)",
+    tag: "South Asia Regional Hub",
+    title: "Establishment of Ashaz Engineering (India)",
+    description: "Established in 2024 as Rayan Group's strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi, providing heavy civil works, structural steel fabrication, industrial workshops, and cross-border delivery synergy.",
+    accent: "#00c7b3"
+  },
+  {
+    year: "Upcoming",
+    entity: "Rayan Properties",
+    tag: "Property Development Division",
+    title: "Launch of Rayan Properties",
+    description: "The upcoming premier property development division of Rayan Group, curating luxury waterfront estates, master-planned residential communities, and landmark commercial developments across the United Arab Emirates.",
+    accent: "#fbbf24"
+  }
+];
 
 // Executive Governance
 export const LEADERSHIP_TEAM = [
