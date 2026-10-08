@@ -156,6 +156,14 @@ export const CORPORATE_TIMELINE = [
     accent: "#00c7b3"
   },
   {
+    year: "2026",
+    entity: "Rayan Group (India)",
+    tag: "Registered Trademark Awarded",
+    title: "Rayan Group (India) — Official Registered Trademark Awarded",
+    description: "Certificate of Registration of Trade Mark (No. 6580565, Class 37 Construction Services) officially sealed and awarded under the Trade Marks Act, 1999 by the Trade Marks Registry, Government of India, establishing protected intellectual property and corporate branding for Rayan Group.",
+    accent: "#38bdf8"
+  },
+  {
     year: "Upcoming",
     entity: "Rayan Properties",
     tag: "Property Development Division",

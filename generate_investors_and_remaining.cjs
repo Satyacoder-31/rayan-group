@@ -826,9 +826,9 @@ createRoute('terms/index.html', {
         By accessing or using this website, you agree to comply with and be bound by these Terms and Conditions and all applicable laws of the United Arab Emirates.
       </p>
 
-      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">2. Intellectual Property Rights</h3>
+      <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">2. Intellectual Property Rights &amp; Registered Trade Marks</h3>
       <p style="margin-bottom: 1.5rem;">
-        All content on this site, including logos, text, structural descriptions, photography, and graphical assets, is the proprietary property of Rayan Group. Reproduction without prior written authorization is prohibited.
+        All content on this site, including logos, visual identity assets, structural engineering descriptions, photography, and technical media, is the proprietary property of Rayan Group. "Rayan Group" is an officially registered trade mark under the Trade Marks Act, 1999 (Registration Certificate No. 3997390, Trade Mark No. 6580565, Class 37 Construction Services awarded by the Trade Marks Registry, Government of India). Reproduction, copying, or unauthorized commercial use of the brand, emblem, or materials without prior written consent is strictly prohibited.
       </p>
 
       <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">3. Commercial Scope</h3>

@@ -672,7 +672,7 @@ function renderFooter() {
       <!-- Bottom Legal Row -->
       <div class="footer-bottom-bar">
         <div class="footer-copy-text">
-          &copy; ${new Date().getFullYear()} Rayan Group. Registered in United Arab Emirates &amp; India. All rights reserved.
+          &copy; ${new Date().getFullYear()} Rayan Group. Registered in UAE &amp; India (Govt. of India Trade Mark No. 6580565, Class 37). All rights reserved.
         </div>
         <div class="footer-legal-links">
           <a href="/privacy/">Privacy Policy</a>

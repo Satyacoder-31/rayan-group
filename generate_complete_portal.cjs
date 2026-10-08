@@ -652,8 +652,8 @@ createRoute('business/ashaz/index.html', {
     keyStats: [
       { label: 'Established', value: '2024', sub: 'South Asia Regional Hub' },
       { label: 'Dual Hubs', value: 'Bettiah & Delhi', sub: 'Bihar Works & Capital Office' },
-      { label: 'Quality Standards', value: 'ISO 9001', sub: 'Certified Procedures' },
-      { label: 'Delivery Model', value: 'Turnkey EPC', sub: 'Civil, Steel & PEB' }
+      { label: 'Trade Mark', value: '2026 Award', sub: 'Govt. of India Class 37' },
+      { label: 'Quality Standards', value: 'ISO 9001', sub: 'Certified Procedures' }
     ],
     capabilities: [
       { icon: '🏭', title: 'Heavy Structural Steel Fabrication', desc: 'Automated beam welding, built-up plate girders, heavy trusses, and industrial structural frameworks.' },
@@ -683,7 +683,7 @@ createRoute('business/ashaz/index.html', {
         { name: 'Material Handling', spec: 'Overhead EOT cranes and heavy mobile yard cranes for heavy steel assemblies.' }
       ]
     },
-    safetyQuality: 'Ashaz Engineering enforces zero-harm occupational safety, magnetic particle and ultrasonic weld testing, and certified ISO 9001 and ISO 45001 procedures across all fabrication bays and site erection locations.',
+    safetyQuality: 'Ashaz Engineering operates under official Government of India Registered Trade Mark No. 6580565 (Class 37 Construction Services), and enforces zero-harm occupational safety, certified ISO 9001 quality management, and ISO 45001 safety compliance.',
     featuredProjects: [
       { title: 'Ashaz Regional Engineering & Fabrication Hub', sector: 'Industrial Fabrication', image: '/assets/images/about/india-hub.jpg', desc: 'Central structural steel fabrication facility and engineering design center serving South Asia infrastructure.', location: 'Bettiah, Bihar, India', href: '/business/ashaz/' },
       { title: 'Industrial Heavy Plant Frameworks', sector: 'Structural EPC', image: '/assets/images/business/01-engineering.jpg', desc: 'Heavy structural steel framework fabrication, column erection, and overhead crane runway beams.', location: 'Regional Hub, India', href: '/business/ashaz/' }
