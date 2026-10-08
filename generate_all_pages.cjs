@@ -39,7 +39,7 @@ createRoute('about/index.html', {
   heroHtml: renderPageHero({
     category: 'CORPORATE OVERVIEW',
     title: 'WHO WE ARE',
-    description: 'Engineering excellence built over decades of industrial execution, cross-border synergy, and fiduciary discipline.',
+    description: 'A premier multinational engineering, infrastructure, and energy conglomerate with an 18+ year execution heritage since 2008, delivering landmark turnkey EPC projects and high-precision contracting across the UAE and India.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'About', href: '/about/' }, { label: 'Who We Are', href: '/about/' }],
     bgImage: '/assets/images/about/overview.jpg',
     subnav: [
@@ -58,10 +58,10 @@ createRoute('about/index.html', {
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.85rem;">CONGLOMERATE VISION</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3.25rem); font-weight: 800; color: #fff; line-height: 1.15; text-transform: uppercase; margin-bottom: 1.5rem;">SHAPING CRITICAL INFRASTRUCTURE WITH PURPOSE.</h2>
           <p style="font-size: 1.05rem; line-height: 1.7; color: #cbd5e1; margin-bottom: 1.25rem;">
-            Established in the United Arab Emirates, Rayan Group has expanded into a multi-sector engineering and infrastructure enterprise encompassing civil contracting, energy infrastructure facilities, and regional industrial hubs.
+            Rayan Group is a premier multinational engineering, contracting, and infrastructure conglomerate operating across the United Arab Emirates and India. Built on an 18+ year foundation of continuous industry execution established in 2008, our enterprise delivers high-specification turnkey EPC projects, civil &amp; interiors contracting, electrical &amp; mechanical systems, heavy structural steel fabrication, and sustainable energy infrastructure.
           </p>
           <p style="font-size: 0.95rem; line-height: 1.7; color: #94a3b8; margin-bottom: 2rem;">
-            Our dual-market presence in the United Arab Emirates and India allows us to combine UAE capital efficiency and megaproject agility with world-class engineering talent, executing projects from design and BIM structural modeling to commissioning with certified ISO 9001 and ISO 45001 compliance.
+            With operational headquarters in Abu Dhabi (UAE) and regional engineering fabrication works in Bettiah &amp; New Delhi (Ashaz Engineering, India), Rayan Group combines GCC megaproject agility with world-class engineering execution. Governed by uncompromised fiduciary discipline, dedicated executive leadership, and triple ISO accreditations (ISO 9001 / ISO 14001 / ISO 45001), we transform complex architectural visions into enduring, monumental infrastructure.
           </p>
           <div style="display: flex; gap: 1.5rem;">
             <a href="/leadership/" class="btn-enterprise-primary">EXECUTIVE LEADERSHIP →</a>

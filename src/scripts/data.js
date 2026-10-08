@@ -34,6 +34,7 @@ export const GROUP_INFO = {
       phone: "+971-25654497",
       email: "info@rayan-group.com",
       tenderEmail: "tender@rayan-group.com",
+      recruitmentEmail: "recruitment@rayan-group.com",
       timezone: "Asia/Dubai (GST UTC+4)",
       coordinates: "24.3498° N, 54.5085° E"
     },
