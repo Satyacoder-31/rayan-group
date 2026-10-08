@@ -219,9 +219,9 @@ const homeContent = `
           <img src="/assets/images/business/01-engineering.jpg" alt="Rayan Engineering & Contracting" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
             <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">01</span>
-            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #0099e6; text-transform: uppercase; margin-bottom: 0.35rem;">CIVIL &amp; GENERAL CONTRACTING</span>
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #f97316; text-transform: uppercase; margin-bottom: 0.35rem;">CIVIL &amp; INTERIORS EPC</span>
             <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">RAYAN ENGINEERING</h3>
-            <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Turnkey high-rise towers, luxury hospitality overhauls, retail precincts, and tactical defense structures.</p>
+            <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Turnkey high-rise towers, luxury hospitality overhauls, retail precincts, interior fit-outs, and commercial structures.</p>
           </div>
         </a>
 
@@ -230,7 +230,7 @@ const homeContent = `
           <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Rayan Energy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
             <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">02</span>
-            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #10b981; text-transform: uppercase; margin-bottom: 0.35rem;">OIL, GAS &amp; PROCESS PLANTS</span>
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #10b981; text-transform: uppercase; margin-bottom: 0.35rem;">OIL, GAS &amp; PROCESS</span>
             <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.5rem;">RAYAN ENERGY</h3>
             <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">Onshore hydrocarbon transport pipelines, storage tank farms, process plant mechanics, and shutdown maintenance.</p>
           </div>

@@ -68,7 +68,7 @@ export const GROUP_COMPANIES = [
   {
     id: "rayan-engineering",
     name: "Rayan Engineering & Contracting L.L.C",
-    sector: "Civil & General Contracting",
+    sector: "Civil & Interiors EPC",
     headline: "Turnkey EPC & Commercial High-Rise Engineering",
     description: "The flagship enterprise executing turnkey civil engineering, high-rise frameworks, and large-scale industrial complexes across the UAE with 500+ executed projects.",
     href: "/business/engineering/",
@@ -80,7 +80,7 @@ export const GROUP_COMPANIES = [
   {
     id: "rayan-energy",
     name: "Rayan Energy L.L.C",
-    sector: "Oil, Gas & Energy Facilities",
+    sector: "Oil, Gas & Process",
     headline: "Onshore & Process Facilities, Refineries & Pipelines",
     description: "Full-lifecycle EPC services for upstream and downstream energy operators, hydrocarbon transport pipelines, and petrochemical process terminals to ISO 45001 zero-harm standards.",
     href: "/business/energy/",

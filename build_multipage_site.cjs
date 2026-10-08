@@ -845,7 +845,7 @@ function renderBusinessUnitsSection() {
               <div class="bu-info-col">
                 <div class="bu-title-row">
                   <h3 class="bu-company-title">Rayan Engineering &amp; Contracting</h3>
-                  <span class="bu-badge" style="background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.35);">CIVIL &amp; GENERAL CONTRACTING</span>
+                  <span class="bu-badge" style="background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.35);">CIVIL &amp; INTERIORS EPC</span>
                 </div>
                 <p class="bu-company-desc">
                   The flagship engineering enterprise executing turnkey building construction, high-rise commercial towers, luxury residential estates, precision electrical works, and complex industrial complexes across the UAE. With 50+ years of combined executive heritage, Rayan Engineering sets benchmarks in structural durability and on-schedule execution.
@@ -930,7 +930,7 @@ function renderBusinessUnitsSection() {
               ${renderPillSymbol('#c2410c', '#f97316')}
               <div>
                 <span class="bu-pill-label">Rayan Engineering</span>
-                <span class="bu-pill-subtag" style="color: #f97316;">Civil &amp; General EPC</span>
+                <span class="bu-pill-subtag" style="color: #f97316;">Civil &amp; Interiors EPC</span>
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="2" role="tab" aria-selected="false">
