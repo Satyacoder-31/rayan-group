@@ -981,6 +981,16 @@ function renderBusinessUnitsSection() {
                 <p class="bu-company-desc">
                   The flagship engineering enterprise executing turnkey building construction, high-rise commercial towers, luxury residential estates, precision electrical works, and complex industrial complexes across the UAE. With 18+ years of industry leadership heritage since 2008, Rayan Engineering sets benchmarks in structural durability and on-schedule execution.
                 </p>
+                <div style="margin: 0.85rem 0 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.75rem 1rem;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: #f97316; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Turnkey Civil EPC</span>
+                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">High-Rise Concrete Frameworks</span>
+                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Luxury Hotel Fit-Out</span>
+                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Acoustic Auditoriums</span>
+                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Tactical Defense Infrastructure</span>
+                  </div>
+                </div>
                 <a href="/business/engineering/" class="bu-action-link" style="border-color: rgba(249, 115, 22, 0.4); color: #f97316;">
                   <span class="bu-action-box" style="background: rgba(249, 115, 22, 0.15); color: #f97316;">↗</span>
                   <span>Visit Engineering Division</span>
@@ -1001,6 +1011,16 @@ function renderBusinessUnitsSection() {
                 <p class="bu-company-desc">
                   Powering mission-critical industrial and energy facilities through turnkey electrical and mechanical EPC services, high-voltage substations, process mechanical works, piping networks, and turnaround execution to strict ISO 45001 safety benchmarks.
                 </p>
+                <div style="margin: 0.85rem 0 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.75rem 1rem;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #a7f3d0; padding: 0.2rem 0.55rem; border-radius: 4px;">Cross-Country Pipelines (up to 48")</span>
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #a7f3d0; padding: 0.2rem 0.55rem; border-radius: 4px;">API 650/620 Tank Farms</span>
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #a7f3d0; padding: 0.2rem 0.55rem; border-radius: 4px;">Process Plant Piping</span>
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #a7f3d0; padding: 0.2rem 0.55rem; border-radius: 4px;">Refinery Turnaround Contracting</span>
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #a7f3d0; padding: 0.2rem 0.55rem; border-radius: 4px;">Ex-Proof E&amp;I Automation</span>
+                  </div>
+                </div>
                 <a href="/business/energy/" class="bu-action-link" style="border-color: rgba(16, 185, 129, 0.4); color: #10b981;">
                   <span class="bu-action-box" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">↗</span>
                   <span>Visit Energy Division</span>
@@ -1021,6 +1041,16 @@ function renderBusinessUnitsSection() {
                 <p class="bu-company-desc">
                   Rayan Group's strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi. Ashaz Engineering delivers heavy civil works, structural steel fabrication, industrial infrastructure, and technical contracting across the Indian subcontinent.
                 </p>
+                <div style="margin: 0.85rem 0 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.75rem 1rem;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Heavy Steel Fabrication (Bettiah Yard)</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Pre-Engineered Buildings (PEB)</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Machine Foundations &amp; Superflat Floors</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Industrial Process Piping &amp; Silos</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">LOD 400 BIM Detailing (Tekla)</span>
+                  </div>
+                </div>
                 <a href="/business/ashaz/" class="bu-action-link">
                   <span class="bu-action-box">↗</span>
                   <span>Explore Ashaz Regional Hub</span>
@@ -1041,6 +1071,16 @@ function renderBusinessUnitsSection() {
                 <p class="bu-company-desc">
                   Rayan Group's upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans across the United Arab Emirates.
                 </p>
+                <div style="margin: 0.85rem 0 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.75rem 1rem;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Master-Planned Residential Communities</span>
+                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Ultra-Luxury Waterfront Mansions</span>
+                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Grade-A Smart Commercial Towers</span>
+                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Branded Hospitality Residences</span>
+                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Turnkey Development Lifecycle</span>
+                  </div>
+                </div>
                 <a href="/business/properties/" class="bu-action-link" style="border-color: rgba(36, 140, 145, 0.4); color: #2dd4bf;">
                   <span class="bu-action-box" style="background: rgba(36, 140, 145, 0.15); color: #2dd4bf;">↗</span>
                   <span>Explore Upcoming Properties</span>

@@ -24,6 +24,7 @@ function renderDivisionPage({
   tagline,
   overview,
   keyStats,
+  scopeOfWork,
   capabilities,
   services,
   industries,
@@ -48,7 +49,7 @@ function renderDivisionPage({
           </div>
           <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <a href="/proposal/?division=${divisionKey}" class="btn-enterprise-primary" style="padding: 0.9rem 2rem;">REQUEST A PROPOSAL →</a>
-            <a href="#capabilities" class="btn-enterprise-secondary" style="padding: 0.9rem 2rem;">VIEW CAPABILITIES ↓</a>
+            <a href="#scope-of-work" class="btn-enterprise-secondary" style="padding: 0.9rem 2rem;">DETAILED SCOPE OF WORK ↓</a>
           </div>
         </div>
 
@@ -65,6 +66,65 @@ function renderDivisionPage({
       </div>
     </div>
   </section>
+
+  ${scopeOfWork && scopeOfWork.length ? `
+  <!-- Scope of Work & Contracting Deliverables -->
+  <section class="section" id="scope-of-work" style="padding: 5rem 0; background: #06111e; border-bottom: 1px solid rgba(255,255,255,0.08); position: relative;">
+    <div class="container">
+      <div style="text-align: center; max-width: 800px; margin: 0 auto 3.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #0099e6; display: inline-block;"></span>
+          OPERATIONAL SCOPE &amp; CONTRACTING DOMAINS
+        </span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.2vw, 2.75rem); font-weight: 800; color: #fff; margin-top: 0.5rem; text-transform: uppercase; line-height: 1.2;">
+          DETAILED SCOPE OF WORK
+        </h2>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.65rem; line-height: 1.6;">
+          Definitive contracting boundaries, technical disciplines, engineering standards, and turnkey deliverables executed by ${title}.
+        </p>
+      </div>
+
+      <div class="scope-grid">
+        ${scopeOfWork.map((scope, idx) => `
+          <div class="scope-card">
+            <div class="scope-card-header">
+              <span class="scope-code-badge" style="color: ${scope.badgeColor || '#0099e6'}; background: ${scope.badgeBg || 'rgba(0,153,230,0.12)'}; border: 1px solid ${scope.badgeBorder || 'rgba(0,153,230,0.28)'};">
+                ${scope.code || `SCOPE 0${idx + 1}`}
+              </span>
+              ${scope.standard ? `
+                <span class="scope-standard-badge">
+                  ${scope.standard}
+                </span>
+              ` : ''}
+            </div>
+
+            <h3 class="scope-card-title">
+              ${scope.title}
+            </h3>
+
+            <p class="scope-card-desc">
+              ${scope.description}
+            </p>
+
+            <div class="scope-deliverables-wrap">
+              <span class="scope-deliverables-title">
+                Key Technical Deliverables &amp; Activities:
+              </span>
+              <ul class="scope-deliverables-list">
+                ${scope.deliverables.map(deliv => `
+                  <li class="scope-deliverable-item">
+                    <span class="arrow" style="color: ${scope.badgeColor || '#0099e6'};">▸</span>
+                    <span>${deliv}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </section>
+  ` : ''}
 
   <!-- Core Capabilities & Services -->
   <section class="section" id="capabilities" style="padding: 5rem 0; background: #07111e; border-bottom: 1px solid rgba(255,255,255,0.08);">
@@ -279,9 +339,25 @@ createRoute('business/index.html', {
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Rayan Engineering</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.25rem;">
               Turnkey civil EPC, commercial high-rise towers, luxury hospitality overhauls, acoustic auditorium engineering, and certified structural frameworks.
             </p>
+            
+            <!-- Scope of Work Highlights -->
+            <div class="company-card-scope-box" style="margin-bottom: 1.5rem; flex: 1;">
+              <span class="company-card-scope-title" style="color: #0099e6;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0099e6" stroke-width="2.5"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                CORE SCOPE OF WORK:
+              </span>
+              <ul class="company-card-scope-list">
+                <li><span style="color: #0099e6; font-weight: 700;">▸</span> Turnkey Civil EPC &amp; High-Rise Superstructures</li>
+                <li><span style="color: #0099e6; font-weight: 700;">▸</span> 5-Star Hotel Fit-Out &amp; VIP Refurbishment</li>
+                <li><span style="color: #0099e6; font-weight: 700;">▸</span> STC 60+ Acoustic &amp; Cinema Engineering</li>
+                <li><span style="color: #0099e6; font-weight: 700;">▸</span> Ballistic Defense Infrastructure &amp; Security</li>
+                <li><span style="color: #0099e6; font-weight: 700;">▸</span> Deep Piling, Shoring &amp; Turnkey MEP Systems</li>
+              </ul>
+            </div>
+
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">ISO 9001 Certified</span>
               <a href="/business/engineering/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
@@ -297,9 +373,25 @@ createRoute('business/index.html', {
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Rayan Energy</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.25rem;">
               Onshore and industrial process energy facilities, cross-country hydrocarbon transport pipelines, gas compressor terminals, and refinery maintenance.
             </p>
+
+            <!-- Scope of Work Highlights -->
+            <div class="company-card-scope-box" style="margin-bottom: 1.5rem; flex: 1;">
+              <span class="company-card-scope-title" style="color: #10b981;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                CORE SCOPE OF WORK:
+              </span>
+              <ul class="company-card-scope-list">
+                <li><span style="color: #10b981; font-weight: 700;">▸</span> Cross-Country Hydrocarbon Pipelines (up to 48")</li>
+                <li><span style="color: #10b981; font-weight: 700;">▸</span> API 650/620 Storage Tank Farms &amp; Manifolds</li>
+                <li><span style="color: #10b981; font-weight: 700;">▸</span> Process Plant Mechanical EPC &amp; Piping</li>
+                <li><span style="color: #10b981; font-weight: 700;">▸</span> Refinery Turnarounds &amp; Scheduled Overhauls</li>
+                <li><span style="color: #10b981; font-weight: 700;">▸</span> Ex-Proof E&amp;I Automation &amp; 100% NDT Testing</li>
+              </ul>
+            </div>
+
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">ISO 45001 Rigor</span>
               <a href="/business/energy/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
@@ -315,9 +407,25 @@ createRoute('business/index.html', {
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Ashaz Engineering (India)</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.25rem;">
               Rayan Group's strategic South Asia engineering and contracting arm in Bettiah and New Delhi delivering heavy civil works, steel fabrication, and industrial EPC.
             </p>
+
+            <!-- Scope of Work Highlights -->
+            <div class="company-card-scope-box" style="margin-bottom: 1.5rem; flex: 1;">
+              <span class="company-card-scope-title" style="color: #00c7b3;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00c7b3" stroke-width="2.5"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                CORE SCOPE OF WORK:
+              </span>
+              <ul class="company-card-scope-list">
+                <li><span style="color: #00c7b3; font-weight: 700;">▸</span> Heavy Structural Steel Fabrication (Bettiah Yard)</li>
+                <li><span style="color: #00c7b3; font-weight: 700;">▸</span> Pre-Engineered Metal Buildings (PEB) &amp; Warehouses</li>
+                <li><span style="color: #00c7b3; font-weight: 700;">▸</span> Regional Civil Foundations &amp; Superflat Floors</li>
+                <li><span style="color: #00c7b3; font-weight: 700;">▸</span> Industrial Process Piping, Silos &amp; Plant Rigging</li>
+                <li><span style="color: #00c7b3; font-weight: 700;">▸</span> Cross-Border LOD 400 BIM Detailing (Tekla)</li>
+              </ul>
+            </div>
+
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Regional Hub</span>
               <a href="/business/ashaz/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
@@ -333,9 +441,25 @@ createRoute('business/index.html', {
           </div>
           <div style="padding: 2rem; flex: 1; display: flex; flex-direction: column;">
             <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Rayan Properties</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.25rem;">
               Premier real estate development enterprise curating ultra-luxury waterfront estates, master-planned communities, and landmark commercial high-rises.
             </p>
+
+            <!-- Scope of Work Highlights -->
+            <div class="company-card-scope-box" style="margin-bottom: 1.5rem; flex: 1;">
+              <span class="company-card-scope-title" style="color: #fbbf24;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                CORE SCOPE OF WORK:
+              </span>
+              <ul class="company-card-scope-list">
+                <li><span style="color: #fbbf24; font-weight: 700;">▸</span> Master-Planned Residential Communities &amp; Enclaves</li>
+                <li><span style="color: #fbbf24; font-weight: 700;">▸</span> Ultra-Luxury Waterfront &amp; Private Island Mansions</li>
+                <li><span style="color: #fbbf24; font-weight: 700;">▸</span> Landmark Grade-A Sustainable Commercial Towers</li>
+                <li><span style="color: #fbbf24; font-weight: 700;">▸</span> Branded Hospitality Residences &amp; Retail Promenades</li>
+                <li><span style="color: #fbbf24; font-weight: 700;">▸</span> Turnkey Development Lifecycle &amp; Asset Management</li>
+              </ul>
+            </div>
+
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.78rem; color: #fbbf24; font-weight: 600;">Upcoming Portfolio</span>
               <a href="/business/properties/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE PROPERTIES →</a>
@@ -378,6 +502,104 @@ createRoute('business/engineering/index.html', {
       { label: 'Core Projects', value: '16 Verified', sub: 'Landmark UAE Deliveries' },
       { label: 'Quality Audit', value: 'ISO 9001', sub: '2015 Bureau Veritas Certified' },
       { label: 'Delivery Model', value: 'Turnkey', sub: 'EPC / Design & Build / Fit-out' }
+    ],
+    scopeOfWork: [
+      {
+        code: 'SCOPE 01',
+        standard: 'FIDIC Red Book / BS EN 1992',
+        title: 'Turnkey Civil EPC & High-Rise Structures',
+        description: 'Full-lifecycle structural concrete execution, deep basements, post-tensioned floor systems, high-rise core walls, and precision structural handover for commercial and mixed-use towers.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Deep basement excavation, secant shoring, and high-density raft foundations',
+          'Post-tensioned (PT) beam and slab construction with computerized tendon elongation monitoring',
+          'High-capacity reinforced concrete shear cores and vertical structural frameworks',
+          'Unitized double-glazed architectural curtain-wall and structural glazing integration',
+          'Third-party structural integrity testing, cube crushing, and municipal compliance certification'
+        ]
+      },
+      {
+        code: 'SCOPE 02',
+        standard: '5-Star Brand Standards / Estidama',
+        title: 'Luxury Hospitality & Commercial Interior Fit-Out',
+        description: 'Fast-track, turnkey refurbishment and luxury fit-out of operational 5-star hotels, high-end retail mall flagship stores, and premium corporate headquarters without operational disruption.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Turnkey guest room and public area remodeling under live hotel operating conditions',
+          'Architectural joinery, book-matched marble flooring, and custom acoustic wall claddings',
+          'Complete MEP reconfiguration: low-noise FCUs, concealed LED lighting, and smart room automation (GRMS)',
+          'Commercial retail facades, automated entrance portals, and display system installations',
+          'Fire life-safety compliance, smoke curtains, and civil defense final clearance'
+        ]
+      },
+      {
+        code: 'SCOPE 03',
+        standard: 'ISO 3382 / ASTM E90 (STC 60+)',
+        title: 'Specialized Acoustic & High-Performance Interiors',
+        description: 'World-class acoustic engineering and architectural isolation for high-performance auditoriums, commercial cinema complexes, VIP screening rooms, and broadcast suites.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Floating slab installations, spring isolators, and box-in-box sound isolation envelopes',
+          'STC-rated multi-layer gypsum and acoustic partition construction achieving STC 60+ ratings',
+          'Cinema stadium raked seating frameworks and fire-retardant fabric wall acoustic panelling',
+          'Sound attenuator duct silencers, vibration isolation hangers, and acoustic baffle ceilings',
+          'Acoustic reverberation time (RT60) commissioning, noise criterion (NC) field verification'
+        ]
+      },
+      {
+        code: 'SCOPE 04',
+        standard: 'MIL-STD / Def-Standard / ISO 9001',
+        title: 'Mission-Critical Defense & High-Security Infrastructure',
+        description: 'Highly specialized civil and architectural construction for defense, tactical shooting facilities, ballistic enclosures, and secure government installations.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Heavy reinforced concrete containment structures and anti-ricochet ballistic baffle walls',
+          'Blast-resistant doors, reinforced portals, and ballistic-rated glazing assemblies',
+          'High-volume tactical air extraction and hazardous lead dust filtration ventilation systems',
+          'Heavy rubber bullet-trap containment systems, sound deceleration zones, and target automation',
+          'Security zoning, tamper-proof conduit infrastructure, and classified access controls'
+        ]
+      },
+      {
+        code: 'SCOPE 05',
+        standard: 'ICE Piling / ASTM D1143',
+        title: 'Deep Shoring, Piling & Ground Engineering',
+        description: 'Substructure engineering, enabling works, deep excavation shoring, contiguous piling, and dewatering schemes across complex urban and coastal soil conditions.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Contiguous and secant pile wall installation for deep subterranean basements',
+          'Pre-stressed ground anchors, rock bolting, and heavy structural steel waler beams',
+          'Deep wellpoint dewatering schemes with automated water discharge monitoring',
+          'Mass earthworks excavation, soil stabilization, and compacted engineered sub-base',
+          'Pile load testing (static and dynamic), cross-hole sonic logging (CSL), and inclinometer monitoring'
+        ]
+      },
+      {
+        code: 'SCOPE 06',
+        standard: 'DEWA / ADDC / NFPA / ASHRAE',
+        title: 'Integrated MEP & Smart Building Infrastructure',
+        description: 'Complete Mechanical, Electrical, and Plumbing (MEP) execution, central district cooling integration, primary electrical distribution, and smart building management systems.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Central HVAC chiller plant installation, chilled water piping, and automated air handling units',
+          'High-voltage and medium-voltage switchgear, transformer substations, and busduct risers',
+          'Addressable fire alarm networks, deluge systems, and NFPA-compliant sprinkler infrastructure',
+          'Potable water booster stations, greywater recycling, and drainage pumping plants',
+          'Integrated Building Management System (BMS) with real-time SCADA energy telemetry'
+        ]
+      }
     ],
     capabilities: [
       { icon: '🏢', title: 'Commercial & High-Rise Construction', desc: 'Turnkey structural concrete frameworks, post-tensioned slabs, glass curtain-wall facades, and high-capacity vertical transportation coordination.' },
@@ -449,6 +671,104 @@ createRoute('business/energy/index.html', {
       { label: 'Scope Expertise', value: 'Turnkey EPC', sub: 'Piping, Tanks & Terminals' },
       { label: 'Regional Reach', value: 'UAE & India', sub: 'Dual Strategic Hubs' }
     ],
+    scopeOfWork: [
+      {
+        code: 'SCOPE 01',
+        standard: 'ASME B31.4 / B31.8 / API 1104',
+        title: 'Hydrocarbon Cross-Country & In-Field Pipelines',
+        description: 'Turnkey pipeline EPC across challenging desert, mountain, and industrial corridors for crude oil, refined petroleum products, natural fuel gas, and high-pressure water injection networks.',
+        badgeColor: '#10b981',
+        badgeBg: 'rgba(16,185,129,0.12)',
+        badgeBorder: 'rgba(16,185,129,0.28)',
+        deliverables: [
+          'Right-of-Way (ROW) clearing, trenching, stringing, and precision cold pipe bending up to 48" diameter',
+          'Automated orbital and semi-automatic welding by ASME Section IX certified pipeline welding specialists',
+          '100% Non-Destructive Testing (NDT) via Phased Array Ultrasonic Testing (PAUT) and digital radiography',
+          'Field joint coating (heat shrink sleeves / polyurethane liquid) and high-voltage holiday spark testing',
+          'High-pressure hydrostatic testing up to 500 bar, electronic caliper pigging, and hot-tap tie-in execution'
+        ]
+      },
+      {
+        code: 'SCOPE 02',
+        standard: 'API 650 / API 620 / API 653',
+        title: 'API Storage Tank Farms & Terminal Systems',
+        description: 'Complete mechanical engineering, pre-fabrication, field jacking, and commissioning of atmospheric, low-pressure, and cryogenic bulk storage tank farms and terminal piping systems.',
+        badgeColor: '#10b981',
+        badgeBg: 'rgba(16,185,129,0.12)',
+        badgeBorder: 'rgba(16,185,129,0.28)',
+        deliverables: [
+          'API 650 bottom annular plates, shell course hydraulic jacking, and pontoon-type floating roof assemblies',
+          'Internal and external floating roof primary/secondary mechanical seals, rolling ladders, and roof drains',
+          'Interconnecting transfer manifolds, motorized valve skids (MOVs), and fiscal metering skid integration',
+          'Reinforced concrete bund containment walls, leak-detection sumps, and HDPE impervious membrane liners',
+          'Automated radar tank gauging (ATG), high-expansion rim-seal foam deluge, and fire water cooling rings'
+        ]
+      },
+      {
+        code: 'SCOPE 03',
+        standard: 'ASME B31.3 / ASME Sec VIII Div 1 & 2',
+        title: 'Process Plant Mechanical EPC & High-Pressure Piping',
+        description: 'Heavy mechanical erection, static vessel installation, precision rotating equipment alignment, and exotic alloy process piping spools for petrochemical and refinery process units.',
+        badgeColor: '#10b981',
+        badgeBg: 'rgba(16,185,129,0.12)',
+        badgeBorder: 'rgba(16,185,129,0.28)',
+        deliverables: [
+          'Heavy distillation column, reactor vessel, drum, and shell-and-tube heat exchanger rigging and placement',
+          'High-pressure carbon steel, duplex, stainless steel, and alloy pipe spool shop fabrication and field erection',
+          'Laser alignment, epoxy chocking, and vibration baseline benchmarking for heavy pumps and gas compressors',
+          'High-temperature thermal insulation cladding, acoustic insulation lagging, and electrical heat tracing',
+          'System chemical pickling, passivation, steam blowing, and helium-nitrogen leak detection testing'
+        ]
+      },
+      {
+        code: 'SCOPE 04',
+        standard: 'ISO 45001 / OSHA 1910 Process Safety',
+        title: 'Fast-Track Plant Turnarounds & Scheduled Refinery Overhauls',
+        description: 'Accelerated-schedule turnaround contracting, column re-traying, catalyst support, high-pressure exchanger tube pulling, and emergency shutdown restoration executed under uncompromising safety.',
+        badgeColor: '#10b981',
+        badgeBg: 'rgba(16,185,129,0.12)',
+        badgeBorder: 'rgba(16,185,129,0.28)',
+        deliverables: [
+          'Pre-turnaround blind list engineering, work-pack development, and critical-path turnaround scheduling',
+          'Confined space entry vessel isolation, blinded mechanical separation, column internals inspection and overhaul',
+          'Safety relief valve (PSV) dismantling, certified pop-testing, recalibration, and on-site recertification',
+          'Elevated flare line inspection, flare tip replacement, and high-temperature cracking furnace tube repairs',
+          'De-blinding sequence management, nitrogen leak testing, cold-commissioning, and safe unit startup support'
+        ]
+      },
+      {
+        code: 'SCOPE 05',
+        standard: 'IECEx / ATEX / NFPA 70 / IEEE',
+        title: 'Explosion-Proof Electrical & Instrumentation (E&I)',
+        description: 'Mission-critical electrical distribution, explosion-proof instrumentation, automated SCADA controls, and safety instrumented systems (SIS) for Class 1 Div 1/2 hazardous zones.',
+        badgeColor: '#10b981',
+        badgeBg: 'rgba(16,185,129,0.12)',
+        badgeBorder: 'rgba(16,185,129,0.28)',
+        deliverables: [
+          'ATEX / IECEx certified explosion-proof junction boxes, flameproof conduits, and hazardous area raceways',
+          'Medium-voltage motor control centers (MCC), variable frequency drives (VFD), and emergency UPS systems',
+          'Distributed Control System (DCS), Programmable Logic Controllers (PLC), and Fire & Gas (F&G) field integration',
+          'Smart HART/Foundation Fieldbus transmitter calibration, control valve stroke testing, and loop validation',
+          'Impressed Current Cathodic Protection (ICCP) systems, transformer rectifiers, and deep anode beds'
+        ]
+      },
+      {
+        code: 'SCOPE 06',
+        standard: 'ASNT SNT-TC-1A / ISO 9712 / Bureau Veritas',
+        title: 'QA/QC Non-Destructive Testing & ASME Inspection',
+        description: 'Comprehensive quality assurance, non-destructive examination (NDE), and third-party notified body inspection ensuring complete ASME code compliance prior to facility energization.',
+        badgeColor: '#10b981',
+        badgeBg: 'rgba(16,185,129,0.12)',
+        badgeBorder: 'rgba(16,185,129,0.28)',
+        deliverables: [
+          '100% X-ray and Gamma-ray radiographic examination of critical hydrocarbon process weld joints',
+          'Phased Array Ultrasonic Testing (PAUT) and Time of Flight Diffraction (TOFD) weld inspection',
+          'Magnetic Particle Testing (MPT) and Liquid Penetrant Testing (LPT) of nozzle attachments and structural steel',
+          'Positive Material Identification (PMI) using handheld XRF spectrometry for alloy composition verification',
+          'Full Manufacturer Data Report (MDR) compiling weld logs, welder qualifications, NDT results, and test charts'
+        ]
+      }
+    ],
     capabilities: [
       { icon: '🛢️', title: 'Hydrocarbon Cross-Country Pipelines', desc: 'Trenching, stringing, automated orbital welding, cathodic protection, hydrostatic testing, and intelligent pigging for oil & gas transport.' },
       { icon: '🏭', title: 'Storage Tank Farms & Terminals', desc: 'API 650 / API 620 storage tank fabrication, floating roof installations, bund wall construction, and hydrocarbon manifold piping.' },
@@ -516,6 +836,83 @@ createRoute('business/infrastructure/index.html', {
       { label: 'Quality Compliance', value: 'ISO 9001', sub: 'Municipality Approved Testing' },
       { label: 'Civil Deliveries', value: 'Turnkey', sub: 'Roads, Drainage & Networks' }
     ],
+    scopeOfWork: [
+      {
+        code: 'SCOPE 01',
+        standard: 'AASHTO / UAE Municipal Codes',
+        title: 'Highway Corridors & Arterial Road Paving',
+        description: 'Full-depth highway construction, subgrade stabilization, aggregate road base, dense asphalt paving, and complete corridor delivery under strict municipal supervision.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Chemical and mechanical subgrade soil stabilization and California Bearing Ratio (CBR) verification',
+          'Dense bitumen macadam and high-durability asphalt concrete wearing course paving',
+          'Precast concrete curb laying, paved medians, safety barriers, and directional road signage',
+          'In-situ nuclear density testing, asphalt core sampling, and municipal compliance certification'
+        ]
+      },
+      {
+        code: 'SCOPE 02',
+        standard: 'Municipal Drainage & Water Authority Specs',
+        title: 'Stormwater, Drainage & Municipal Utility Networks',
+        description: 'Deep utility trenching, stormwater trunk mains, gravity sewer networks, potable water lines, and underground stormwater retention basins.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Deep stormwater trunk lines and precast reinforced concrete culvert installation',
+          'Ductile iron and high-density polyethylene (HDPE) water transmission mains with pressure logging',
+          'Underground attenuation tanks, soakaway borehole networks, and automated pumping stations',
+          'Live utility conflict relocation, deep dewatering schemes, and municipal connection handover'
+        ]
+      },
+      {
+        code: 'SCOPE 03',
+        standard: 'BS 7533 / Estidama Public Realm',
+        title: 'Large-Scale Interlock Paving & Campus Hardscapes',
+        description: 'High-durability interlocking concrete paving, pedestrian hardscaping, and vehicular plazas for educational campuses, commercial districts, and logistics terminals.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Over 35,000+ sqm of high-strength interlock paving executed at Al Qua School campus',
+          'Laser-guided aggregate bedding sand preparation, jointing sand stabilization, and mechanical compaction',
+          'Heavy vehicular traffic interlocking paving for bus turnaround terminals and logistics loading bays',
+          'Pedestrian walkways, tactile direction pavers, and ADA-compliant accessibility ramps'
+        ]
+      },
+      {
+        code: 'SCOPE 04',
+        standard: 'Earthworks Specs / 3D GPS Guidance',
+        title: 'Bulk Earthmoving & Precision Site Grading',
+        description: 'Millions of cubic meters of cut-and-fill earthmoving, rocky blasting and excavation, and precision structural platform preparation.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Mass cut-and-fill earthmoving with 3D GPS Trimble machine-guided excavators and motor graders',
+          'Rocky ground mechanical ripping, rock breaker crushing, and engineered structural backfill',
+          '15T-20T vibratory roller compaction with continuous compaction value (CCV) digital logging',
+          'Plate load bearing capacity testing and topographical digital terrain modeling (DTM)'
+        ]
+      },
+      {
+        code: 'SCOPE 05',
+        standard: 'BS 5400 / Bridge Engineering Codes',
+        title: 'Bridges, Culverts & Structural Containment Works',
+        description: 'Reinforced concrete bridge substructures, precast prestressed deck girders, grade-separated approach ramps, and heavy retaining walls.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Reinforced concrete bridge piers, abutments, and elastomeric bearing pad installation',
+          'Precast prestressed concrete bridge I-girders and post-tensioned deck slab casting',
+          'Mechanically stabilized earth (MSE) retaining wall construction and elevated approach ramps',
+          'Bridge expansion joints, crash barrier parapets, and deck waterproofing membrane application'
+        ]
+      }
+    ],
     capabilities: [
       { icon: '🛣️', title: 'Highway & Arterial Road Construction', desc: 'Subgrade stabilization, aggregate road base laying, asphalt paving, curb installation, and directional signage.' },
       { icon: '🚜', title: 'Bulk Earthmoving & Site Grading', desc: 'Millions of cubic meters of cut-and-fill, rocky excavation, precision laser grading, and structural platform compaction.' },
@@ -582,6 +979,83 @@ createRoute('business/logistics/index.html', {
       { label: 'Rigging Engineering', value: 'Certified', sub: '3D CAD Lift Planning Studies' },
       { label: 'Safety Standards', value: 'LOLER & OSHA', sub: 'Third-Party Certified Gear' },
       { label: 'Fleet Base', value: 'Mussafah M-36', sub: 'Central Industrial Yard & Workshops' }
+    ],
+    scopeOfWork: [
+      {
+        code: 'SCOPE 01',
+        standard: 'LOLER 1998 / BS 7121 / OSHA',
+        title: 'Heavy Mobile & Crawler Crane Rental (Up to 750T)',
+        description: 'Dry and wet lease options of high-tonnage all-terrain mobile cranes and lattice-boom crawler cranes with third-party certified operating crews.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'High-tonnage mobile cranes from 50T to 500T with variable outrigger base',
+          'Lattice-boom crawler cranes up to 750 tonnes lifting capacity for industrial mega-lifts',
+          'High-capacity luffing jib and superlift tray configurations for extended reach',
+          'Third-party certified crane operators, banksmen, and rigging supervisors'
+        ]
+      },
+      {
+        code: 'SCOPE 02',
+        standard: 'Engineered 3D Rigging Standards',
+        title: 'Engineered 3D Lift Planning & Feasibility Studies',
+        description: 'Comprehensive engineering lift studies, CAD simulation, ground bearing pressure assessments, and tandem lift coordination.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          '3D CAD lift simulation showing boom clearance, tail swing, and load radius',
+          'Ground bearing pressure (GBP) calculations and engineered outrigger matting design',
+          'Tandem crane lift synchronization and dynamic load distribution studies',
+          'Method statements, job safety analysis (JSA), and approved lift permit packages'
+        ]
+      },
+      {
+        code: 'SCOPE 03',
+        standard: 'DOT / Municipal Transport Clearance',
+        title: 'Heavy Haulage & Modular Transport (SPMT / Low-Beds)',
+        description: 'Multi-axle hydraulic modular trailers, low-bed transporters, and specialized route clearance for oversized and indivisible equipment.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Hydraulic multi-axle trailers with synchronized electronic steering for heavy vessels',
+          'Low-bed transporters for rapid construction equipment site mobilization',
+          'Route survey, overhead bridge clearance checks, and municipal police escort logistics',
+          'Hydraulic jacking, skidding, and foundation load placement of oversized machinery'
+        ]
+      },
+      {
+        code: 'SCOPE 04',
+        standard: 'Megaproject Logistics Management',
+        title: 'Turnkey Construction Site Rigging & Logistics',
+        description: 'Single-point management of all lifting, hoisting, and vertical material transport operations on megaproject job sites.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'High-rise tower crane supply, climbing frame erection, and certified anchoring',
+          'Construction hoist and mast climbing work platform (MCWP) mobilization',
+          'Precast beam, structural steel truss, and facade glass vacuum lifting coordination',
+          '24/7 central logistics dispatch and on-site rigging inspection coverage'
+        ]
+      },
+      {
+        code: 'SCOPE 05',
+        standard: 'ISO 9001 / Preventive Maintenance',
+        title: 'Fleet Maintenance Depot & Certified Rigging Gear',
+        description: 'Central workshop facility in Mussafah M-36 ensuring 98%+ fleet availability, calibrated load cells, and proof-tested rigging accessories.',
+        badgeColor: '#0099e6',
+        badgeBg: 'rgba(0,153,230,0.12)',
+        badgeBorder: 'rgba(0,153,230,0.28)',
+        deliverables: [
+          'Scheduled preventive maintenance, oil analysis, and computerized diagnostic audits',
+          'Certified modular spreader beams, heavy grommets, wire rope slings, and shackles',
+          'Annual third-party proof-load testing and magnetic particle inspection of lifting gear',
+          '24/7 emergency field mechanic service and mobile replacement parts support'
+        ]
+      }
     ],
     capabilities: [
       { icon: '🏗️', title: 'Heavy Mobile & Crawler Crane Hire', desc: 'Fleet ranging from 50T all-terrain cranes to 750T heavy crawler cranes for complex industrial and structural erection.' },
@@ -656,6 +1130,88 @@ createRoute('business/ashaz/index.html', {
       { label: 'Trade Mark', value: '2026 Award', sub: 'Govt. of India Class 37' },
       { label: 'Quality Standards', value: 'ISO 9001', sub: 'Certified Procedures' }
     ],
+    scopeOfWork: [
+      {
+        code: 'SCOPE 01',
+        standard: 'IS 800:2007 / AWS D1.1 / AISC 360',
+        title: 'Heavy Structural Steel Fabrication & High-Rise Frameworks',
+        description: 'Complete heavy industrial and commercial structural steel manufacturing at our Bettiah fabrication plant, delivering built-up plate girders, heavy column sections, roof trusses, and crane runways across South Asia.',
+        badgeColor: '#00c7b3',
+        badgeBg: 'rgba(0,199,179,0.12)',
+        badgeBorder: 'rgba(0,199,179,0.28)',
+        deliverables: [
+          'High-precision CNC multi-torch oxy-fuel and plasma plate profiling up to 80mm thickness',
+          'Automated Submerged Arc Welding (SAW) for deep-penetration H-beam and box-column fabrication',
+          'Heavy overhead crane runway beams, column brackets, and industrial roof truss fabrication',
+          'Surface shot-blasting to SA 2.5 standard and multi-coat epoxy/polyurethane industrial painting',
+          'Site delivery, mobile crane rigging, alignment surveying, and torque-controlled high-strength bolting'
+        ]
+      },
+      {
+        code: 'SCOPE 02',
+        standard: 'MBMA / IS 875 / NBC India',
+        title: 'Pre-Engineered Metal Buildings (PEB) & Industrial Warehouses',
+        description: 'Turnkey architectural and structural design, precision fabrication, and accelerated site erection of large clear-span pre-engineered metal buildings for logistics hubs, factories, and cold storage.',
+        badgeColor: '#00c7b3',
+        badgeBg: 'rgba(0,199,179,0.12)',
+        badgeBorder: 'rgba(0,199,179,0.28)',
+        deliverables: [
+          'Customized structural PEB engineering with optimized high-tensile tapered portal frames',
+          'Secondary cold-formed galvanized Z & C purlins, girts, sag rods, and structural cable bracing',
+          'Galvalume and color-coated steel roofing and wall cladding with polycarbonate skylight panels',
+          'Thermal insulation, continuous ridge ventilators, automated louvers, and crane runway brackets',
+          'Complete turnkey site erection from anchor bolt grouting to weather-tight handover'
+        ]
+      },
+      {
+        code: 'SCOPE 03',
+        standard: 'IS 456:2000 / IS 1893 (Seismic Zone V)',
+        title: 'Regional Civil Contracting & Heavy Machinery Foundations',
+        description: 'End-to-end civil execution for heavy manufacturing factories, vibrating machinery foundations, superflat industrial floors, and civic infrastructure in Bihar, Delhi NCR, and Eastern India.',
+        badgeColor: '#00c7b3',
+        badgeBg: 'rgba(0,199,179,0.12)',
+        badgeBorder: 'rgba(0,199,179,0.28)',
+        deliverables: [
+          'Heavy mass reinforced concrete pile cap and raft foundations for dynamic machinery loads',
+          'Laser-screeded FM2/DM2 industrial superflat flooring with metallic hardeners and sealed joints',
+          'Structural RCC retaining walls, boundary wall enclosures, and heavy-duty logistics access yards',
+          'Deep storm drainage culverts, internal factory road networks, and municipal water connections',
+          'On-site QA/QC laboratory testing: concrete slump, cube compressive strength, and aggregate grading'
+        ]
+      },
+      {
+        code: 'SCOPE 04',
+        standard: 'ASME B31.1 / IS 2825 / ISO 9001',
+        title: 'Industrial Process Piping, Silos & Mechanical Rigging',
+        description: 'Shop fabrication and field installation of industrial utility piping networks, raw material storage silos, heavy machinery placement, and structural equipment access platforms.',
+        badgeColor: '#00c7b3',
+        badgeBg: 'rgba(0,199,179,0.12)',
+        badgeBorder: 'rgba(0,199,179,0.28)',
+        deliverables: [
+          'Carbon steel and stainless steel utility piping for compressed air, cooling water, and process steam',
+          'Bulk material storage silos, hoppers, and conical discharge chutes fabrication',
+          'Heavy plant machinery unloading, skidding, precision laser alignment, and vibration isolation anchoring',
+          'Industrial dust extraction ductwork, ventilation hoods, and structural catwalks',
+          'Hydrostatic pressure testing, pneumatic testing, and protective insulation cladding'
+        ]
+      },
+      {
+        code: 'SCOPE 05',
+        standard: 'ISO 19650 / LOD 400 Shop Detailing',
+        title: 'Cross-Border LOD 400 BIM Detailing & Technical Synergy',
+        description: 'High-precision 3D structural modeling, automated CNC machine coding, and technical calculation packages bridging Indian engineering fabrication with Rayan Group UAE megaprojects.',
+        badgeColor: '#00c7b3',
+        badgeBg: 'rgba(0,199,179,0.12)',
+        badgeBorder: 'rgba(0,199,179,0.28)',
+        deliverables: [
+          'Tekla Structures 3D modeling with LOD 400 fabrication-ready connection detailing',
+          'Automated CNC DSTV data output for direct multi-axis cutting, drilling, and plate processing',
+          'Comprehensive erection general arrangement (GA) drawings and 3D clash-detection reports',
+          'Cross-border technical coordination with Rayan Group UAE engineering headquarters',
+          'Material traceability matrix, Mill Test Certificate (MTC) tracking, and certified weld QA dossier'
+        ]
+      }
+    ],
     capabilities: [
       { icon: '🏭', title: 'Heavy Structural Steel Fabrication', desc: 'Automated beam welding, built-up plate girders, heavy trusses, and industrial structural frameworks.' },
       { icon: '🏗️', title: 'Pre-Engineered Buildings (PEB)', desc: 'Turnkey design, fabrication, and erection of large-span industrial warehouses and logistics sheds.' },
@@ -721,14 +1277,14 @@ createRoute('business/properties/index.html', {
             VISIONARY LUXURY REAL ESTATE &amp; MASTER DEVELOPMENTS
           </h2>
           <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem;">
-            Rayan Properties represents the next strategic horizon of Rayan Group—transforming half a century of executive engineering prowess and contracting mastery into world-class residential and commercial developments.
+            Rayan Properties represents the next strategic horizon of Rayan Group—transforming over 18 years of proven executive engineering prowess and contracting mastery since 2008 into world-class residential and commercial developments.
           </p>
           <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.7; margin-bottom: 2rem;">
             From iconic waterfront villas and private beach mansions to master-planned residential enclaves and prime metropolitan commercial towers, Rayan Properties sets a new benchmark in architectural distinction and investment value across the UAE.
           </p>
           <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <a href="/contact/?interest=properties" class="btn-enterprise-primary" style="padding: 0.9rem 2rem; background: #fbbf24; color: #07111e; font-weight: 800;">REGISTER VIP INTEREST →</a>
-            <a href="#portfolio-pillars" class="btn-enterprise-secondary" style="padding: 0.9rem 2rem;">VIEW DEVELOPMENT PILLARS ↓</a>
+            <a href="#scope-of-work" class="btn-enterprise-secondary" style="padding: 0.9rem 2rem;">DETAILED SCOPE OF WORK ↓</a>
           </div>
         </div>
 
@@ -758,6 +1314,166 @@ createRoute('business/properties/index.html', {
               <strong style="color: #10b981; font-size: 0.85rem;">In-House Civil &amp; MEP Delivery</strong>
             </li>
           </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rayan Properties Scope of Work -->
+  <section class="section" id="scope-of-work" style="padding: 5rem 0; background: #06111e; border-bottom: 1px solid rgba(255,255,255,0.08); position: relative;">
+    <div class="container">
+      <div style="text-align: center; max-width: 800px; margin: 0 auto 3.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #fbbf24; display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; display: inline-block;"></span>
+          DEVELOPMENT SCOPE &amp; ASSET MANAGEMENT DOMAINS
+        </span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.2vw, 2.75rem); font-weight: 800; color: #fff; margin-top: 0.5rem; text-transform: uppercase; line-height: 1.2;">
+          DETAILED SCOPE OF WORK
+        </h2>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.65rem; line-height: 1.6;">
+          Definitive property lifecycle execution, prime asset creation, and master-planned development domains managed by Rayan Properties.
+        </p>
+      </div>
+
+      <div class="scope-grid">
+        <!-- Scope 01 -->
+        <div class="scope-card">
+          <div class="scope-card-header">
+            <span class="scope-code-badge" style="color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.28);">
+              SCOPE 01
+            </span>
+            <span class="scope-standard-badge">
+              Estidama Pearl / Dubai 2040 Plan
+            </span>
+          </div>
+          <h3 class="scope-card-title">
+            Master-Planned Residential Communities &amp; Enclaves
+          </h3>
+          <p class="scope-card-desc">
+            End-to-end master planning, architectural curation, and horizontal infrastructure development for integrated, high-amenity residential townships across prime UAE corridors.
+          </p>
+          <div class="scope-deliverables-wrap">
+            <span class="scope-deliverables-title">Key Technical Deliverables &amp; Activities:</span>
+            <ul class="scope-deliverables-list">
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Strategic master land-use planning, zoning compliance, and municipal entitlements</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Gated community infrastructure: landscaped boulevards, walking trails, and smart LED lighting</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Integrated community lifestyle clubhouses, sports parks, and family recreational amenities</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Sustainable stormwater harvesting, solar power generation, and subgrade utility corridors</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Turnkey community governance structuring, HOA setup, and lifecycle operations manual</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Scope 02 -->
+        <div class="scope-card">
+          <div class="scope-card-header">
+            <span class="scope-code-badge" style="color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.28);">
+              SCOPE 02
+            </span>
+            <span class="scope-standard-badge">
+              Super-Prime Architectural Standards
+            </span>
+          </div>
+          <h3 class="scope-card-title">
+            Ultra-Luxury Waterfront &amp; Private Beachfront Estates
+          </h3>
+          <p class="scope-card-desc">
+            Bespoke development of private beachfront mansions, signature island villas, and custom coastal residences featuring peerless architectural distinction and finishes.
+          </p>
+          <div class="scope-deliverables-wrap">
+            <span class="scope-deliverables-title">Key Technical Deliverables &amp; Activities:</span>
+            <ul class="scope-deliverables-list">
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Bespoke architectural concept design optimizing panoramic water views and thermal efficiency</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Private beachfront engineering, reinforced marine seawalls, and cantilevered infinity pools</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Imported Italian marble, book-matched stone facades, and handcrafted millwork joinery</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Integrated smart-home automation: touchless biometric access, climate zones, and circadian lighting</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Subterranean multi-vehicle galleries, private wellness spas, and private yacht mooring berths</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Scope 03 -->
+        <div class="scope-card">
+          <div class="scope-card-header">
+            <span class="scope-code-badge" style="color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.28);">
+              SCOPE 03
+            </span>
+            <span class="scope-standard-badge">
+              LEED Gold / Class-A Commercial
+            </span>
+          </div>
+          <h3 class="scope-card-title">
+            Landmark Commercial &amp; Grade-A Office Towers
+          </h3>
+          <p class="scope-card-desc">
+            Next-generation commercial high-rise towers designed for regional corporate headquarters, multinational financial institutions, and flagship commercial flagships.
+          </p>
+          <div class="scope-deliverables-wrap">
+            <span class="scope-deliverables-title">Key Technical Deliverables &amp; Activities:</span>
+            <ul class="scope-deliverables-list">
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>High-efficiency, column-free floor plates with acoustic double-glazed unitized curtain walls</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Destination-dispatch high-speed elevators with automated touchless security turnstiles</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Double-height corporate reception lobbies, executive boardrooms, and sky lounge amenities</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Centralized high-efficiency HVAC chiller plant, smart BMS, and Net-Zero carbon pathway</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Multi-tier subterranean parking with EV superchargers and automated license plate recognition</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Scope 04 -->
+        <div class="scope-card">
+          <div class="scope-card-header">
+            <span class="scope-code-badge" style="color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.28);">
+              SCOPE 04
+            </span>
+            <span class="scope-standard-badge">
+              International 5-Star Hotel Standards
+            </span>
+          </div>
+          <h3 class="scope-card-title">
+            Mixed-Use Hospitality &amp; Branded Luxury Residences
+          </h3>
+          <p class="scope-card-desc">
+            Integrated lifestyle destinations combining hotel-branded luxury residences, curated dining promenades, and world-class leisure and wellness facilities.
+          </p>
+          <div class="scope-deliverables-wrap">
+            <span class="scope-deliverables-title">Key Technical Deliverables &amp; Activities:</span>
+            <ul class="scope-deliverables-list">
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Branded hospitality joint ventures with globally renowned 5-star luxury hotel operators</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Turnkey furnished designer serviced apartments with 24/7 dedicated concierge services</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Pedestrian retail promenades with Michelin-caliber restaurant dining and luxury boutiques</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Private resident sky decks, infinity edge swimming pools, and holistic spa wellness suites</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Asset management structuring, rental pool management, and long-term yield optimization</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Scope 05 -->
+        <div class="scope-card">
+          <div class="scope-card-header">
+            <span class="scope-code-badge" style="color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.28);">
+              SCOPE 05
+            </span>
+            <span class="scope-standard-badge">
+              RICS / FIDIC Development
+            </span>
+          </div>
+          <h3 class="scope-card-title">
+            Turnkey Development Lifecycle &amp; Fiduciary Management
+          </h3>
+          <p class="scope-card-desc">
+            Single-point development management leveraging Rayan Group’s in-house EPC muscle to eliminate developer margin stacking and guarantee schedule and quality certainty.
+          </p>
+          <div class="scope-deliverables-wrap">
+            <span class="scope-deliverables-title">Key Technical Deliverables &amp; Activities:</span>
+            <ul class="scope-deliverables-list">
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Comprehensive land acquisition diligence, highest-and-best-use (HBU) models, and pro-forma finance</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Complete municipal approvals, master planning NOCs, and civil defense clearances</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Direct EPC construction management through Rayan Engineering, eliminating margin stacking</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>VIP investor allocations, escrow account governance, and RERA compliance monitoring</span></li>
+              <li class="scope-deliverable-item"><span class="arrow" style="color: #fbbf24;">▸</span><span>Post-completion defect liability handover, facility management onboarding, and asset tenure</span></li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
