@@ -428,7 +428,7 @@ createRoute('procurement/index.html', {
 
             <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #94a3b8;">
               Direct Procurement Queries:<br>
-              <span style="color: #0099e6; font-weight: 600;">procurement@rayan-group.com</span>
+              <a href="mailto:purchase@rayan-group.com" style="color: #0099e6; font-weight: 600; text-decoration: none;">purchase@rayan-group.com</a>
             </div>
           </div>
         </div>
