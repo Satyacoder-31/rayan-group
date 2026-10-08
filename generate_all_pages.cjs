@@ -276,14 +276,14 @@ createRoute('about/index.html', {
                 <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,199,179,0.2); border: 2px solid #00c7b3; display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 0.9rem;">AA</div>
                 <div>
                   <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">Mr. Arshad Alam Shaikh</h4>
-                  <span style="font-size: 0.78rem; color: #00c7b3; font-weight: 600;">Founder &amp; Chairman — Rayan Group (UAE &amp; India) | Director</span>
+                  <span style="font-size: 0.78rem; color: #00c7b3; font-weight: 600;">Founder &amp; Chairman &mdash; <span style="white-space: nowrap;">Rayan Group (UAE &amp; India)</span> | Director</span>
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                 <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,199,179,0.2); border: 2px solid #00c7b3; display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 0.9rem;">SF</div>
                 <div>
                   <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">Mrs. Sadaf Fatma</h4>
-                  <span style="font-size: 0.78rem; color: #00c7b3; font-weight: 600;">Chief Executive Officer — Rayan Group (UAE &amp; India) | Director</span>
+                  <span style="font-size: 0.78rem; color: #00c7b3; font-weight: 600;">Chief Executive Officer &mdash; <span style="white-space: nowrap;">Rayan Group (UAE &amp; India)</span> | Director</span>
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
@@ -354,7 +354,7 @@ createRoute('leadership/index.html', {
             <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
           </div>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Mr. Arshad Alam Shaikh</h3>
-          <div style="font-size: 0.8125rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">FOUNDER &amp; CHAIRMAN OF RAYAN GROUP (UAE &amp; INDIA)</div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem; line-height: 1.45;">FOUNDER &amp; CHAIRMAN<br><span style="white-space: nowrap;">RAYAN GROUP (UAE &amp; INDIA)</span></div>
           <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
             Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group and Ashaz Engineering across Abu Dhabi, Dubai, India, and international markets.
           </p>
@@ -369,10 +369,10 @@ createRoute('leadership/index.html', {
         <div style="background: #0c1828; border: 1px solid rgba(197,160,89,0.3); border-radius: 12px; padding: 2.5rem; text-align: center; position: relative;">
           <div style="position: absolute; top: 1.25rem; right: 1.25rem; font-size: 0.75rem; font-weight: 700; color: #c5a059; border: 1px solid rgba(197,160,89,0.4); padding: 0.2rem 0.6rem; border-radius: 4px;">EXEC // 02</div>
           <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #c5a059; margin: 0 auto 1.5rem; background: radial-gradient(circle, rgba(197,160,89,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #c5a059;">
-            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle></svg>
           </div>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Mrs. Sadaf Fatma</h3>
-          <div style="font-size: 0.8125rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">CHIEF EXECUTIVE OFFICER (CEO) — RAYAN GROUP (UAE &amp; INDIA)</div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem; line-height: 1.45;">CHIEF EXECUTIVE OFFICER (CEO)<br><span style="white-space: nowrap;">RAYAN GROUP (UAE &amp; INDIA)</span></div>
           <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
             Leading overall enterprise strategy, operational transformation, multi-regional business growth, and executive governance across UAE and India operations.
           </p>
@@ -387,10 +387,10 @@ createRoute('leadership/index.html', {
         <div style="background: #0c1828; border: 1px solid rgba(0,153,230,0.3); border-radius: 12px; padding: 2.5rem; text-align: center; position: relative;">
           <div style="position: absolute; top: 1.25rem; right: 1.25rem; font-size: 0.75rem; font-weight: 700; color: #0099e6; border: 1px solid rgba(0,153,230,0.4); padding: 0.2rem 0.6rem; border-radius: 4px;">EXEC // 03</div>
           <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #0099e6; margin: 0 auto 1.5rem; background: radial-gradient(circle, rgba(0,153,230,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #0099e6;">
-            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle></svg>
           </div>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Eng. Bakhteyar Alam</h3>
-          <div style="font-size: 0.8125rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Chief Operating Officer (COO) | Director, Ashaz Engineering (India)</div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem; line-height: 1.45;">CHIEF OPERATING OFFICER (COO)<br><span style="white-space: nowrap;">DIRECTOR, ASHAZ ENGINEERING (INDIA)</span></div>
           <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
             Directing multi-disciplinary engineering operations, 500+ qualified engineers, on-site safety protocols, and precision delivery across 500+ turnkey megaprojects.
           </p>
