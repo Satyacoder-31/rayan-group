@@ -865,10 +865,10 @@ function renderBusinessUnitsSection() {
               <div class="bu-info-col">
                 <div class="bu-title-row">
                   <h3 class="bu-company-title">Rayan Energy</h3>
-                  <span class="bu-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35);">OIL, GAS &amp; PROCESS EPC</span>
+                  <span class="bu-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35);">ELECTRICAL &amp; MECHANICAL EPC</span>
                 </div>
                 <p class="bu-company-desc">
-                  Powering mission-critical energy infrastructure through onshore and process EPC services, strategic hydrocarbon pipeline corridors, petrochemical process plants, and refinery turnaround execution to strict ISO 45001 safety benchmarks.
+                  Powering mission-critical industrial and energy facilities through turnkey electrical and mechanical EPC services, high-voltage substations, process mechanical works, piping networks, and turnaround execution to strict ISO 45001 safety benchmarks.
                 </p>
                 <a href="/business/energy/" class="bu-action-link" style="border-color: rgba(16, 185, 129, 0.4); color: #10b981;">
                   <span class="bu-action-box" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">↗</span>
@@ -937,7 +937,7 @@ function renderBusinessUnitsSection() {
               ${renderPillSymbol('#15803d', '#22c55e')}
               <div>
                 <span class="bu-pill-label">Rayan Energy</span>
-                <span class="bu-pill-subtag" style="color: #10b981;">Oil, Gas &amp; Process</span>
+                <span class="bu-pill-subtag" style="color: #10b981;">Electrical &amp; Mechanical EPC</span>
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="3" role="tab" aria-selected="false">

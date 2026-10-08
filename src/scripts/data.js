@@ -80,7 +80,7 @@ export const GROUP_COMPANIES = [
   {
     id: "rayan-energy",
     name: "Rayan Energy L.L.C",
-    sector: "Oil, Gas & Process",
+    sector: "Electrical and Mechanical EPC",
     headline: "Onshore & Process Facilities, Refineries & Pipelines",
     description: "Full-lifecycle EPC services for upstream and downstream energy operators, hydrocarbon transport pipelines, and petrochemical process terminals to ISO 45001 zero-harm standards.",
     href: "/business/energy/",
