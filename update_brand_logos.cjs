@@ -35,16 +35,16 @@ const brands = [
     themeColor: '#f97316'
   },
   {
-    id: 'rayan-construction',
-    label: 'CONSTRUCTION',
-    fontSpacing: '0.18em',
-    textX: 110,
-    // Symbol colors:
-    upperLight: '#b45309', // deep golden amber
-    lowerLight: '#ffc000', // bright sunshine yellow
-    upperDark: '#d97706',  // golden amber
-    lowerDark: '#facc15',  // bright vivid yellow
-    themeColor: '#facc15'
+    id: 'rayan-properties',
+    label: 'PROPERTIES',
+    fontSpacing: '0.22em',
+    textX: 118,
+    // Symbol colors from official PDF logo:
+    upperLight: '#002136', // deep navy
+    lowerLight: '#248c91', // teal
+    upperDark: '#cbd5e1',  // light slate on dark card
+    lowerDark: '#248c91',  // vivid teal
+    themeColor: '#248c91'
   }
 ];
 

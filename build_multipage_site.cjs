@@ -1014,22 +1014,22 @@ function renderBusinessUnitsSection() {
               </div>
             </div>
 
-            <!-- Slide 4: Rayan Construction -->
+            <!-- Slide 4: Rayan Properties (Upcoming) -->
             <div class="bu-slide" data-slide="4">
               <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-construction-white.png" alt="Rayan Construction" width="240" height="75" loading="lazy">
+                <img src="/assets/logos/rayan-properties-white.png" alt="Rayan Properties" width="240" height="75" loading="lazy">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
-                  <h3 class="bu-company-title">Rayan Construction</h3>
-                  <span class="bu-badge" style="background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.35);">CONSTRUCTION &amp; FIT-OUT</span>
+                  <h3 class="bu-company-title">Rayan Properties</h3>
+                  <span class="bu-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35);">UPCOMING PROPERTY VENTURES</span>
                 </div>
                 <p class="bu-company-desc">
-                  Specialized building construction, commercial interior fit-outs, precision electrical works, and premier developments delivering monumental architecture and luxury estates across the United Arab Emirates.
+                  Rayan Group's upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans across the United Arab Emirates.
                 </p>
-                <a href="/contact/" class="bu-action-link" style="border-color: rgba(234, 179, 8, 0.4); color: #facc15;">
-                  <span class="bu-action-box" style="background: rgba(234, 179, 8, 0.15); color: #facc15;">↗</span>
-                  <span>Explore Construction</span>
+                <a href="/contact/" class="bu-action-link" style="border-color: rgba(36, 140, 145, 0.4); color: #2dd4bf;">
+                  <span class="bu-action-box" style="background: rgba(36, 140, 145, 0.15); color: #2dd4bf;">↗</span>
+                  <span>Explore Upcoming Properties</span>
                 </a>
               </div>
             </div>
@@ -1065,10 +1065,10 @@ function renderBusinessUnitsSection() {
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="4" role="tab" aria-selected="false">
-              ${renderPillSymbol('#b45309', '#facc15')}
+              ${renderPillSymbol('#cbd5e1', '#248c91')}
               <div>
-                <span class="bu-pill-label">Rayan Construction</span>
-                <span class="bu-pill-subtag" style="color: #facc15;">Construction &amp; Fit-Out</span>
+                <span class="bu-pill-label">Rayan Properties</span>
+                <span class="bu-pill-subtag" style="color: #fbbf24;">Upcoming</span>
               </div>
             </button>
           </div>
