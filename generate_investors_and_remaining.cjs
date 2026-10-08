@@ -437,7 +437,7 @@ createRoute('news/index.html', {
           <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Media &amp; Press Communications</h4>
           <p style="color: #94a3b8; font-size: 0.9rem; margin: 0;">For official brand guidelines, executive interview requests, or image assets, reach out to our communications team.</p>
         </div>
-        <a href="mailto:info@rayan-group.com" class="btn-enterprise-primary">CONTACT COMMUNICATIONS →</a>
+        <a href="mailto:rayan@rayan-group.com" class="btn-enterprise-primary">CONTACT COMMUNICATIONS →</a>
       </div>
     </div>
   </section>
@@ -623,7 +623,7 @@ createRoute('contact/index.html', {
               </p>
               <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
                 <div><strong>Telephone:</strong> +971-25654497</div>
-                <div><strong>General Inquiries:</strong> info@rayan-group.com</div>
+                <div><strong>General Inquiries:</strong> <a href="mailto:rayan@rayan-group.com" style="color: #cbd5e1; text-decoration: none;">rayan@rayan-group.com</a></div>
                 <div><strong>Tenders &amp; Proposals:</strong> <a href="mailto:tender@rayan-group.com" style="color: #0099e6; text-decoration: none;">tender@rayan-group.com</a></div>
               </div>
             </div>
@@ -636,7 +636,7 @@ createRoute('contact/index.html', {
                 Commercial Project Operations &amp; Site Offices, Dubai, UAE
               </p>
               <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
-                <div><strong>Inquiries:</strong> info@rayan-group.com</div>
+                <div><strong>Inquiries:</strong> <a href="mailto:rayan@rayan-group.com" style="color: #cbd5e1; text-decoration: none;">rayan@rayan-group.com</a></div>
               </div>
             </div>
 
@@ -793,7 +793,7 @@ createRoute('privacy/index.html', {
 
       <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">4. Inquiries &amp; Rights</h3>
       <p>
-        For inquiries regarding data protection, contact our administrative office at <span style="color: #0099e6;">info@rayan-group.com</span>.
+        For inquiries regarding data protection, contact our administrative office at <a href="mailto:rayan@rayan-group.com" style="color: #0099e6; text-decoration: none;">rayan@rayan-group.com</a>.
       </p>
     </div>
   </section>
