@@ -4672,8 +4672,133 @@ body.cursor-project #cursor-dot {
   gap: 0.5rem;
 }
 
+/* ==========================================================================
+   SAP ARIBA NETWORK BADGE SYSTEM
+   Official Supplier Verification & Interactive Profile Link
+   ========================================================================== */
+.ariba-network-badge {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none !important;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  max-width: 100%;
+}
 
+.ariba-network-badge:hover {
+  background: #080c14;
+  border-color: #f59e0b !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25) !important;
+}
 
+.ariba-network-badge:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 3px;
+}
 
+.ariba-badge-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.95rem;
+  width: 100%;
+}
 
+.ariba-badge-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.25;
+}
 
+.ariba-badge-sub {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.ariba-badge-main {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-transform: none;
+}
+
+.ariba-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Large variant for Vendor Portal / Procurement page */
+.ariba-network-badge--lg {
+  padding: 0.7rem 1.35rem;
+  border-radius: 10px;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.ariba-network-badge--lg .ariba-badge-sub {
+  font-size: 0.72rem;
+  color: #e2e8f0;
+}
+
+.ariba-network-badge--lg .ariba-badge-main {
+  font-size: 1.1rem;
+}
+
+/* Ariba Verification Callout Card */
+.ariba-verification-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(12, 24, 40, 0.98) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ariba-verification-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24, #d97706);
+}
+
+.ariba-verification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.ariba-verification-anid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 5px;
+  letter-spacing: 0.05em;
+}

@@ -698,6 +698,32 @@ createRoute('contact/index.html', {
                 </a>
               </div>
             </div>
+
+            <!-- SAP Ariba Network Directory Card -->
+            <div style="background: #0c1828; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 1.75rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase;">VERIFIED PROCUREMENT NETWORK</span>
+                <span class="ariba-verification-anid">ANID: AN11136910824</span>
+              </div>
+              <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.5rem;">SAP Ariba Business Network</h3>
+              <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                For institutional procurement desks, registered buyers, and enterprise supply chain partners to connect and transact with Rayan Group:
+              </p>
+              <a href="https://portal.us.bn.cloud.ariba.com/profile/public?anId=AN11136910824" target="_blank" rel="noopener noreferrer" class="ariba-network-badge" title="Verify Rayan Group on SAP Ariba Network (ANID: AN11136910824)" aria-label="Find Rayan Group on SAP Ariba Network">
+                <div class="ariba-badge-content">
+                  <div class="ariba-badge-text">
+                    <span class="ariba-badge-sub">Find us on</span>
+                    <span class="ariba-badge-main">Ariba Network</span>
+                  </div>
+                  <div class="ariba-badge-icon">
+                    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M4 27 L16 5 L28 27" stroke="#F59E0B" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M10 27 L16 16 L22 27" stroke="#F59E0B" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
 

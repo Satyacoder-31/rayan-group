@@ -405,6 +405,36 @@ createRoute('procurement/index.html', {
             </ul>
           </div>
 
+          <!-- Official SAP Ariba Supplier Network Registration Card -->
+          <div class="ariba-verification-card" style="margin-bottom: 2rem;">
+            <div class="ariba-verification-header">
+              <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.1em; display: block;">VERIFIED SAP BUSINESS NETWORK</span>
+                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: #fff; margin: 0.25rem 0 0;">SUPPLIER PROFILE</h3>
+              </div>
+              <span class="ariba-verification-anid" title="Rayan Group SAP Ariba Network ID">ANID: AN11136910824</span>
+            </div>
+            
+            <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.25rem;">
+              Institutional clients, EPC contractors, and procurement departments can transact, issue tender RFQs, and verify Rayan Group’s authenticated supplier credentials directly on SAP Ariba Network.
+            </p>
+
+            <a href="https://portal.us.bn.cloud.ariba.com/profile/public?anId=AN11136910824" target="_blank" rel="noopener noreferrer" class="ariba-network-badge ariba-network-badge--lg" title="Open Rayan Group Profile on SAP Ariba Network (ANID: AN11136910824)" style="width: 100%; justify-content: center;">
+              <div class="ariba-badge-content" style="justify-content: center; gap: 1.25rem;">
+                <div class="ariba-badge-text">
+                  <span class="ariba-badge-sub">Find us on</span>
+                  <span class="ariba-badge-main">Ariba Network</span>
+                </div>
+                <div class="ariba-badge-icon">
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M4 27 L16 5 L28 27" stroke="#F59E0B" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 27 L16 16 L22 27" stroke="#F59E0B" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+            </a>
+          </div>
+
           <!-- Supplier Code of Conduct (Khansaheb / Ethos pattern) -->
           <div id="code-of-conduct" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.1em;">ETHICS &amp; GOVERNANCE</span>
