@@ -14,11 +14,10 @@ const businessSubnav = (activeHref) => [
   { label: 'Overview', href: '/business/', active: activeHref === '/business/' },
   { label: 'Rayan Engineering', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
   { label: 'Rayan Energy', href: '/business/energy/', active: activeHref === '/business/energy/' },
-  { label: 'Ashaz Engineering (India)', href: '/about/#india-hub', active: false },
-  { label: 'Rayan Properties (Upcoming)', href: '/contact/', active: false },
+  { label: 'Ashaz Engineering (India)', href: '/business/ashaz/', active: activeHref === '/business/ashaz/' },
+  { label: 'Rayan Properties (Upcoming)', href: '/business/properties/', active: activeHref === '/business/properties/' },
 ];
 
-// Helper to render standardized division pages (EthosEnergy / NMDC pattern)
 function renderDivisionPage({
   number,
   title,
@@ -31,7 +30,8 @@ function renderDivisionPage({
   equipment,
   safetyQuality,
   featuredProjects,
-  divisionKey
+  divisionKey,
+  directors
 }) {
   return `
   <!-- Division Overview & Stats -->
@@ -167,6 +167,32 @@ function renderDivisionPage({
     </div>
   </section>
 
+  ${directors && directors.length ? `
+  <!-- Board of Directors -->
+  <section class="section" style="padding: 5rem 0; background: #07111e; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="text-align: center; max-width: 720px; margin: 0 auto 3.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #00c7b3;">EXECUTIVE GOVERNANCE</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(1.85rem, 3vw, 2.5rem); font-weight: 800; color: #fff; margin-top: 0.35rem;">BOARD OF DIRECTORS</h2>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.5rem; line-height: 1.6;">Directing regional infrastructure growth, fabrication standards, and cross-border engineering execution.</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+        ${directors.map((dir, idx) => `
+          <div style="background: #0c1828; border: 1px solid rgba(0,199,179,0.3); border-radius: 12px; padding: 2.25rem 2rem; text-align: center; position: relative;">
+            <div style="position: absolute; top: 1rem; right: 1rem; font-size: 0.72rem; font-weight: 700; color: #00c7b3; border: 1px solid rgba(0,199,179,0.4); padding: 0.15rem 0.5rem; border-radius: 4px;">DIR // 0${idx + 1}</div>
+            <div style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid #00c7b3; margin: 0 auto 1.25rem; background: radial-gradient(circle, rgba(0,199,179,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #00c7b3;">
+              <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">${dir.name}</h3>
+            <div style="font-size: 0.8rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem;">${dir.role}</div>
+            <p style="color: #cbd5e1; font-size: 0.875rem; line-height: 1.6; margin: 0;">${dir.desc || ''}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </section>
+  ` : ''}
+
   <!-- Featured Projects -->
   <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
     <div class="container">
@@ -294,7 +320,7 @@ createRoute('business/index.html', {
             </p>
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Regional Hub</span>
-              <a href="/about/#india-hub" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
+              <a href="/business/ashaz/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE COMPANY →</a>
             </div>
           </div>
         </div>
@@ -312,7 +338,7 @@ createRoute('business/index.html', {
             </p>
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.78rem; color: #fbbf24; font-weight: 600;">Upcoming Portfolio</span>
-              <a href="/contact/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">REGISTER INTEREST →</a>
+              <a href="/business/properties/" class="btn-enterprise-primary" style="font-size: 0.8rem; padding: 0.5rem 1rem;">EXPLORE PROPERTIES →</a>
             </div>
           </div>
         </div>
@@ -593,4 +619,201 @@ createRoute('business/logistics/index.html', {
   })
 });
 
-console.log('Complete business portal and 5 core division pages generated successfully.');
+// ============================================================================
+// 7. DIVISION: ASHAZ ENGINEERING (INDIA) (/business/ashaz/index.html)
+// ============================================================================
+createRoute('business/ashaz/index.html', {
+  title: 'Ashaz Engineering (India) | South Asia Infrastructure & EPC | Rayan Group',
+  description: 'Operating as Rayan Group strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi, delivering heavy civil works, structural steel fabrication, and industrial EPC.',
+  activePath: '/business/ashaz/',
+  heroHtml: renderPageHero({
+    category: 'SOUTH ASIA REGIONAL HUB',
+    title: 'ASHAZ ENGINEERING (INDIA)',
+    description: 'Heavy civil infrastructure, structural steel fabrication yards, industrial workshops, and technical contracting across South Asia under unified corporate governance.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Businesses', href: '/business/' }, { label: 'Ashaz Engineering (India)', href: '/business/ashaz/' }],
+    bgImage: '/assets/images/about/india-hub.jpg',
+    subnav: businessSubnav('/business/ashaz/')
+  }),
+  content: renderDivisionPage({
+    number: '04',
+    title: 'Ashaz Engineering (India)',
+    tagline: 'SOUTH ASIA REGIONAL HUB — HEAVY INFRASTRUCTURE & STRUCTURAL STEEL FABRICATION',
+    divisionKey: 'ashaz',
+    overview: `
+      Ashaz Engineering (India) operates as Rayan Group's strategic South Asia engineering and regional contracting arm, established in 2024 with operational headquarters in Bettiah, Bihar and corporate presence in New Delhi.
+      <br><br>
+      Directing heavy civil works, structural steel fabrication, pre-engineered industrial buildings (PEB), and technical contracting, Ashaz Engineering delivers monumental scale and regional manufacturing capacity aligned with international standards.
+    `,
+    directors: [
+      { name: 'Mr. Arshad Alam', role: 'Director', desc: 'Group Chairman directing corporate governance, strategic capital allocation, and South Asia cross-border expansion.' },
+      { name: 'Mr. Bakhteyar Alam', role: 'Director', desc: 'Chief Operating Officer directing engineering standards, turnkey project delivery, and ISO 45001 safety mandates.' },
+      { name: 'Mr. Khalid Umar', role: 'Director', desc: 'Directing South Asia operations, heavy steel fabrication plants, and regional contracting infrastructure across India.' }
+    ],
+    keyStats: [
+      { label: 'Established', value: '2024', sub: 'South Asia Regional Hub' },
+      { label: 'Dual Hubs', value: 'Bettiah & Delhi', sub: 'Bihar Works & Capital Office' },
+      { label: 'Quality Standards', value: 'ISO 9001', sub: 'Certified Procedures' },
+      { label: 'Delivery Model', value: 'Turnkey EPC', sub: 'Civil, Steel & PEB' }
+    ],
+    capabilities: [
+      { icon: '🏭', title: 'Heavy Structural Steel Fabrication', desc: 'Automated beam welding, built-up plate girders, heavy trusses, and industrial structural frameworks.' },
+      { icon: '🏗️', title: 'Pre-Engineered Buildings (PEB)', desc: 'Turnkey design, fabrication, and erection of large-span industrial warehouses and logistics sheds.' },
+      { icon: '🧱', title: 'Regional Civil Contracting', desc: 'Heavy reinforced concrete foundations, equipment plinths, industrial flooring, and masonry execution.' },
+      { icon: '📐', title: '3D BIM Detailing & Engineering', desc: 'Tekla and Revit structural 3D modeling, shop drawing production, and cross-border project coordination with UAE.' },
+      { icon: '⚙️', title: 'Mechanical & Piping Assemblies', desc: 'Industrial process piping, ductwork fabrication, tank erection, and plant equipment alignment.' },
+      { icon: '🚜', title: 'Site Mobilization & Crane Erection', desc: 'Dedicated mobile cranes, boom trucks, and certified erection crews for fast-track site handover.' }
+    ],
+    services: [
+      { title: 'Turnkey Steel Fabrication', desc: 'Complete cutting, fit-up, welding, blast cleaning, and painting to international standards.' },
+      { title: 'PEB Industrial Warehouses', desc: 'Rapid-assembly pre-engineered metal buildings with thermal insulation and sheeting.' },
+      { title: 'Industrial Foundation Works', desc: 'Deep excavation, structural pile caps, and high-load machinery foundations.' },
+      { title: 'Cross-Border Project Synergy', desc: 'Technical detailing, shop drawings, and engineering calculation support for UAE projects.' }
+    ],
+    industries: [
+      { title: 'Industrial Manufacturing & Plants', desc: 'Heavy manufacturing units, production workshops, and processing mills.' },
+      { title: 'Logistics & Distribution Warehouses', desc: 'High-bay storage warehouses, freight terminals, and fulfillment centers.' },
+      { title: 'Commercial & Civic Infrastructure', desc: 'Multi-story structural steel frames, civic facilities, and regional transport infrastructure.' }
+    ],
+    equipment: {
+      summary: 'Ashaz Engineering operates specialized fabrication yards equipped with automated CNC plasma cutting, submerged arc welding (SAW), radial drills, and hydraulic shear machinery.',
+      items: [
+        { name: 'CNC Cutting Tables', spec: 'High-definition CNC plasma and oxy-fuel multi-head cutting up to 80mm plate.' },
+        { name: 'Welding Systems', spec: 'Automatic submerged arc welding (SAW) and MIG/TIG stations certified to AWS D1.1.' },
+        { name: 'Surface Preparation', spec: 'Automated shot blasting and high-durability airless protective coating booths.' },
+        { name: 'Material Handling', spec: 'Overhead EOT cranes and heavy mobile yard cranes for heavy steel assemblies.' }
+      ]
+    },
+    safetyQuality: 'Ashaz Engineering enforces zero-harm occupational safety, magnetic particle and ultrasonic weld testing, and certified ISO 9001 and ISO 45001 procedures across all fabrication bays and site erection locations.',
+    featuredProjects: [
+      { title: 'Ashaz Regional Engineering & Fabrication Hub', sector: 'Industrial Fabrication', image: '/assets/images/about/india-hub.jpg', desc: 'Central structural steel fabrication facility and engineering design center serving South Asia infrastructure.', location: 'Bettiah, Bihar, India', href: '/business/ashaz/' },
+      { title: 'Industrial Heavy Plant Frameworks', sector: 'Structural EPC', image: '/assets/images/business/01-engineering.jpg', desc: 'Heavy structural steel framework fabrication, column erection, and overhead crane runway beams.', location: 'Regional Hub, India', href: '/business/ashaz/' }
+    ]
+  })
+});
+
+// ============================================================================
+// 8. DIVISION: RAYAN PROPERTIES (/business/properties/index.html)
+// ============================================================================
+createRoute('business/properties/index.html', {
+  title: 'Rayan Properties | Upcoming Luxury Real Estate & Master Developments | Rayan Group',
+  description: 'Rayan Group upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans across the UAE.',
+  activePath: '/business/properties/',
+  heroHtml: renderPageHero({
+    category: 'UPCOMING PROPERTY VENTURES',
+    title: 'RAYAN PROPERTIES',
+    description: 'Curating luxury waterfront estates, master-planned residential communities, and landmark commercial developments across the United Arab Emirates.',
+    breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Businesses', href: '/business/' }, { label: 'Rayan Properties', href: '/business/properties/' }],
+    bgImage: '/assets/images/projects/palm-jumeirah-rec-estate.jpg',
+    subnav: businessSubnav('/business/properties/')
+  }),
+  content: `
+  <!-- Upcoming Property Preview -->
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark); border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 4rem; align-items: center;" class="intro-grid-responsive">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35); padding: 0.35rem 0.85rem; border-radius: 999px; margin-bottom: 1.25rem;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px #fbbf24;"></span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.1em;">UPCOMING DEVELOPMENT DIVISION</span>
+          </div>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; line-height: 1.2; text-transform: uppercase; margin-bottom: 1.25rem;">
+            VISIONARY LUXURY REAL ESTATE &amp; MASTER DEVELOPMENTS
+          </h2>
+          <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem;">
+            Rayan Properties represents the next strategic horizon of Rayan Group—transforming half a century of executive engineering prowess and contracting mastery into world-class residential and commercial developments.
+          </p>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.7; margin-bottom: 2rem;">
+            From iconic waterfront villas and private beach mansions to master-planned residential enclaves and prime metropolitan commercial towers, Rayan Properties sets a new benchmark in architectural distinction and investment value across the UAE.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="/contact/?interest=properties" class="btn-enterprise-primary" style="padding: 0.9rem 2rem; background: #fbbf24; color: #07111e; font-weight: 800;">REGISTER VIP INTEREST →</a>
+            <a href="#portfolio-pillars" class="btn-enterprise-secondary" style="padding: 0.9rem 2rem;">VIEW DEVELOPMENT PILLARS ↓</a>
+          </div>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(245,158,11,0.25); border-radius: 14px; padding: 2.5rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.35rem; color: #fff; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.75rem;">
+            DIVISION PROFILE
+          </h3>
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+            <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.75rem;">
+              <span style="color: #94a3b8; font-size: 0.85rem;">Division Status:</span>
+              <strong style="color: #fbbf24; font-size: 0.85rem;">Upcoming Division</strong>
+            </li>
+            <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.75rem;">
+              <span style="color: #94a3b8; font-size: 0.85rem;">Core Sector:</span>
+              <strong style="color: #fff; font-size: 0.85rem;">Luxury Residential &amp; Master EPC</strong>
+            </li>
+            <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.75rem;">
+              <span style="color: #94a3b8; font-size: 0.85rem;">Target Markets:</span>
+              <strong style="color: #fff; font-size: 0.85rem;">Abu Dhabi &amp; Dubai Prime Corridors</strong>
+            </li>
+            <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.75rem;">
+              <span style="color: #94a3b8; font-size: 0.85rem;">Governance:</span>
+              <strong style="color: #0099e6; font-size: 0.85rem;">Rayan Group Corporate Board</strong>
+            </li>
+            <li style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8; font-size: 0.85rem;">Turnkey Synergies:</span>
+              <strong style="color: #10b981; font-size: 0.85rem;">In-House Civil &amp; MEP Delivery</strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Development Pillars -->
+  <section class="section" id="portfolio-pillars" style="padding: 5rem 0; background: #07111e; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="text-align: center; max-width: 720px; margin: 0 auto 3.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #fbbf24;">UPCOMING PORTFOLIO</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(1.85rem, 3vw, 2.5rem); font-weight: 800; color: #fff; margin-top: 0.35rem;">DEVELOPMENT PILLARS</h2>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.5rem; line-height: 1.6;">Curating exclusive property opportunities across prime residential, leisure, and commercial corridors.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">🏖️</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Ultra-Luxury Waterfront Villas</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Signature private island residences, cantilevered infinity pools, panoramic sea-facing architecture, and bespoke interior marble craftsmanship.</p>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">🏡</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Master-Planned Communities</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Gated family enclaves with lush green parks, integrated smart-home infrastructure, private community centers, and world-class leisure facilities.</p>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">🏢</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Landmark Commercial High-Rises</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Class-A sustainable corporate towers, luxury retail podiums, and LEED-certified mixed-use towers in prime metropolitan business districts.</p>
+        </div>
+
+        <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">✨</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Branded Luxury Residences</h3>
+          <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6;">Hospitality-serviced residences in partnership with world-renowned luxury hotel brands, offering concierge amenities and private spas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Register VIP Interest CTA -->
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
+    <div class="container">
+      <div style="background: linear-gradient(135deg, #0e1e32 0%, #081422 100%); border: 1px solid rgba(245,158,11,0.3); border-radius: 14px; padding: 3rem; text-align: center; max-width: 800px; margin: 0 auto;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #fbbf24; display: block; margin-bottom: 0.5rem;">EXCLUSIVE ADVANCE ACCESS</span>
+        <h3 style="font-family: var(--font-heading); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 800; color: #fff; margin: 0 0 1rem;">REGISTER FOR UPCOMING LAUNCHES</h3>
+        <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 2rem;">
+          Be the first to receive confidential dossiers, private floor plans, and preferential pre-launch investment allocations for Rayan Properties upcoming developments.
+        </p>
+        <a href="/contact/?interest=properties" class="btn-enterprise-primary" style="background: #fbbf24; color: #07111e; font-weight: 800; padding: 1rem 2.5rem;">REGISTER VIP INTEREST →</a>
+      </div>
+    </div>
+  </section>
+  `
+});
+
+console.log('Complete business portal and 7 core division pages generated successfully.');
+

@@ -158,11 +158,11 @@ function renderHeader(activePath = '/') {
                     <div class="mega-link-title"><span>Rayan Energy</span><span>→</span></div>
                     <div class="mega-link-desc">Mission-critical energy facilities, hydrocarbon pipelines &amp; process plants.</div>
                   </a>
-                  <a href="/about/#india-hub" class="mega-sub-link">
+                  <a href="/business/ashaz/" class="mega-sub-link">
                     <div class="mega-link-title"><span>Ashaz Engineering (India)</span><span>→</span></div>
                     <div class="mega-link-desc">South Asia regional engineering hub, heavy structural fabrication &amp; industrial works.</div>
                   </a>
-                  <a href="/contact/" class="mega-sub-link">
+                  <a href="/business/properties/" class="mega-sub-link">
                     <div class="mega-link-title"><span>Rayan Properties <span style="font-size: 0.65rem; background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); border-radius: 999px; padding: 0.15rem 0.5rem; margin-left: 0.4rem; vertical-align: middle;">UPCOMING</span></span><span>→</span></div>
                     <div class="mega-link-desc">Premier luxury waterfront estates, residential master plans &amp; commercial towers.</div>
                   </a>
@@ -400,8 +400,8 @@ function renderMobileDrawer(activePath = '/') {
             <a href="/business/" class="mobile-sublink ${activePath === '/business/' ? 'active' : ''}">All Operating Companies</a>
             <a href="/business/engineering/" class="mobile-sublink ${activePath === '/business/engineering/' ? 'active' : ''}">Rayan Engineering</a>
             <a href="/business/energy/" class="mobile-sublink ${activePath === '/business/energy/' ? 'active' : ''}">Rayan Energy</a>
-            <a href="/about/#india-hub" class="mobile-sublink">Ashaz Engineering (India)</a>
-            <a href="/contact/" class="mobile-sublink">Rayan Properties (Upcoming)</a>
+            <a href="/business/ashaz/" class="mobile-sublink ${activePath === '/business/ashaz/' ? 'active' : ''}">Ashaz Engineering (India)</a>
+            <a href="/business/properties/" class="mobile-sublink ${activePath === '/business/properties/' ? 'active' : ''}">Rayan Properties (Upcoming)</a>
           </div>
         </div>
 
@@ -625,8 +625,8 @@ function renderFooter() {
           <ul class="footer-links-list">
             <li><a href="/business/engineering/" class="footer-link">Rayan Engineering</a></li>
             <li><a href="/business/energy/" class="footer-link">Rayan Energy</a></li>
-            <li><a href="/about/#india-hub" class="footer-link">Ashaz Engineering (India)</a></li>
-            <li><a href="/contact/" class="footer-link">Rayan Properties (Upcoming)</a></li>
+            <li><a href="/business/ashaz/" class="footer-link">Ashaz Engineering (India)</a></li>
+            <li><a href="/business/properties/" class="footer-link">Rayan Properties (Upcoming)</a></li>
             <li><a href="/business/" class="footer-link">All Operating Companies</a></li>
           </ul>
         </div>
@@ -1007,7 +1007,7 @@ function renderBusinessUnitsSection() {
                 <p class="bu-company-desc">
                   Rayan Group's strategic South Asia engineering and regional contracting arm based in Bettiah and New Delhi. Ashaz Engineering delivers heavy civil works, structural steel fabrication, industrial infrastructure, and technical contracting across the Indian subcontinent.
                 </p>
-                <a href="/about/#india-hub" class="bu-action-link">
+                <a href="/business/ashaz/" class="bu-action-link">
                   <span class="bu-action-box">↗</span>
                   <span>Explore Ashaz Regional Hub</span>
                 </a>
@@ -1027,7 +1027,7 @@ function renderBusinessUnitsSection() {
                 <p class="bu-company-desc">
                   Rayan Group's upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans across the United Arab Emirates.
                 </p>
-                <a href="/contact/" class="bu-action-link" style="border-color: rgba(36, 140, 145, 0.4); color: #2dd4bf;">
+                <a href="/business/properties/" class="bu-action-link" style="border-color: rgba(36, 140, 145, 0.4); color: #2dd4bf;">
                   <span class="bu-action-box" style="background: rgba(36, 140, 145, 0.15); color: #2dd4bf;">↗</span>
                   <span>Explore Upcoming Properties</span>
                 </a>

@@ -25,8 +25,8 @@ const businessSubnav = (activeHref) => [
   { label: 'All Companies', href: '/business/', active: activeHref === '/business/' },
   { label: 'Rayan Engineering', href: '/business/engineering/', active: activeHref === '/business/engineering/' },
   { label: 'Rayan Energy', href: '/business/energy/', active: activeHref === '/business/energy/' },
-  { label: 'Ashaz Engineering (India)', href: '/about/#india-hub', active: false },
-  { label: 'Rayan Properties (Upcoming)', href: '/contact/', active: false },
+  { label: 'Ashaz Engineering (India)', href: '/business/ashaz/', active: activeHref === '/business/ashaz/' },
+  { label: 'Rayan Properties (Upcoming)', href: '/business/properties/', active: activeHref === '/business/properties/' },
 ];
 
 // ============================================================================
@@ -45,8 +45,9 @@ createRoute('about/index.html', {
     subnav: [
       { label: 'Who We Are', href: '/about/', active: true },
       { label: 'Executive Governance', href: '/leadership/', active: false },
-      { label: 'Operating Companies', href: '/business/#companies', active: false },
-      { label: 'Sustainability ESG', href: '/sustainability/', active: false }
+      { label: 'Corporate Timeline', href: '#timeline', active: false },
+      { label: 'India Hub (Ashaz)', href: '#india-hub', active: false },
+      { label: 'Operating Companies', href: '/business/', active: false }
     ]
   }),
   content: `
@@ -223,6 +224,67 @@ createRoute('about/index.html', {
       </div>
     </div>
   </section>
+
+  <!-- South Asia Regional Hub: Ashaz Engineering (India) -->
+  <section id="india-hub" class="section" style="padding: 6rem 0; background: #050b14; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;" class="intro-grid-responsive">
+        <div>
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #00c7b3; display: block; margin-bottom: 0.85rem;">SOUTH ASIA REGIONAL HUB</span>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; line-height: 1.2; text-transform: uppercase; margin-bottom: 1.25rem;">
+            ASHAZ ENGINEERING (INDIA)
+          </h2>
+          <p style="font-size: 1.05rem; line-height: 1.7; color: #cbd5e1; margin-bottom: 1.25rem;">
+            Established in 2024 as Rayan Group's strategic South Asia engineering and regional contracting arm, Ashaz Engineering operates from Bettiah (Bihar) and New Delhi, providing heavy structural steel fabrication, pre-engineered buildings, and civil contracting across India.
+          </p>
+          <p style="font-size: 0.95rem; line-height: 1.7; color: #94a3b8; margin-bottom: 2rem;">
+            With certified fabrication yards, automated welding lines, and an integrated engineering team, Ashaz Engineering delivers monumental scale while maintaining seamless technical synergies with Rayan Group's UAE megaprojects.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="/business/ashaz/" class="btn-enterprise-primary" style="background: #00c7b3; border-color: #00c7b3;">EXPLORE ASHAZ ENGINEERING →</a>
+            <a href="/contact/" class="btn-enterprise-secondary">CONTACT INDIA HUB</a>
+          </div>
+        </div>
+        <div>
+          <div style="background: #0c1828; border: 1px solid rgba(0,199,179,0.3); border-radius: 14px; overflow: hidden; padding: 2.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem;">
+              <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #00c7b3; text-transform: uppercase;">GOVERNANCE</span>
+                <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0;">BOARD OF DIRECTORS</h3>
+              </div>
+              <span style="font-size: 0.75rem; background: rgba(0,199,179,0.15); color: #00c7b3; border: 1px solid rgba(0,199,179,0.3); padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 700;">ASHAZ INDIA</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+              <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,199,179,0.2); border: 2px solid #00c7b3; display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 0.9rem;">AA</div>
+                <div>
+                  <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">Mr. Arshad Alam</h4>
+                  <span style="font-size: 0.78rem; color: #00c7b3; font-weight: 600;">Director — Ashaz Engineering</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,199,179,0.2); border: 2px solid #00c7b3; display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 0.9rem;">BA</div>
+                <div>
+                  <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">Mr. Bakhteyar Alam</h4>
+                  <span style="font-size: 0.78rem; color: #00c7b3; font-weight: 600;">Director — Ashaz Engineering</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,199,179,0.2); border: 2px solid #00c7b3; display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 0.9rem;">KU</div>
+                <div>
+                  <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">Mr. Khalid Umar</h4>
+                  <span style="font-size: 0.78rem; color: #00c7b3; font-weight: 600;">Director — Ashaz Engineering</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #94a3b8;">
+              📍 Bettiah, West Champaran, Bihar &amp; New Delhi, India
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   `
 });
 
@@ -260,10 +322,10 @@ createRoute('leadership/index.html', {
           <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #c5a059; margin: 0 auto 1.5rem; background: radial-gradient(circle, rgba(197,160,89,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #c5a059;">
             <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
           </div>
-          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Arshad Alam Shaikh</h3>
-          <div style="font-size: 0.8125rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Founder &amp; Group Chairman</div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Mr. Arshad Alam</h3>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #c5a059; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Founder &amp; Group Chairman | Director, Ashaz Engineering (India)</div>
           <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
-            Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group since inception across Abu Dhabi, Dubai, India, and international markets.
+            Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group and Ashaz Engineering across Abu Dhabi, Dubai, India, and international markets.
           </p>
           <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
             <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Strategic Vision</span>
@@ -279,7 +341,7 @@ createRoute('leadership/index.html', {
             <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
           </div>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Eng. Bakhteyar Alam</h3>
-          <div style="font-size: 0.8125rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Chief Operating Officer (COO)</div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Chief Operating Officer (COO) | Director, Ashaz Engineering (India)</div>
           <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
             Directing multi-disciplinary engineering operations, 500+ qualified engineers, on-site safety protocols, and precision delivery across 500+ turnkey megaprojects.
           </p>
@@ -307,6 +369,57 @@ createRoute('leadership/index.html', {
             <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Capital Markets</span>
           </div>
         </div>
+
+        <!-- Director Khalid Umar -->
+        <div style="background: #0c1828; border: 1px solid rgba(0,199,179,0.3); border-radius: 12px; padding: 2.5rem; text-align: center; position: relative;">
+          <div style="position: absolute; top: 1.25rem; right: 1.25rem; font-size: 0.75rem; font-weight: 700; color: #00c7b3; border: 1px solid rgba(0,199,179,0.4); padding: 0.2rem 0.6rem; border-radius: 4px;">DIR // 04</div>
+          <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #00c7b3; margin: 0 auto 1.5rem; background: radial-gradient(circle, rgba(0,199,179,0.2) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #00c7b3;">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+          </div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Mr. Khalid Umar</h3>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem;">Director — Ashaz Engineering (India)</div>
+          <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+            Directing South Asia operations, heavy structural steel fabrication, industrial workshops, and regional contracting delivery across India.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">South Asia Operations</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Steel Fabrication</span>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(255,255,255,0.05); color: #cbd5e1;">Industrial Contracting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ashaz Engineering (India) Board of Directors Highlight -->
+      <div style="margin-top: 5rem; background: linear-gradient(135deg, #091a2e 0%, #061320 100%); border: 1px solid rgba(0,199,179,0.3); border-radius: 16px; padding: 3rem;">
+        <div style="text-align: center; max-width: 720px; margin: 0 auto 3rem;">
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #00c7b3;">REGIONAL GOVERNANCE</span>
+          <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.35rem 0 0.5rem;">ASHAZ ENGINEERING (INDIA) — BOARD OF DIRECTORS</h3>
+          <p style="color: #94a3b8; font-size: 0.95rem; margin: 0; line-height: 1.6;">Directing strategic operations, industrial steel fabrication facilities, and regional contracting execution across India.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; text-align: center;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid #00c7b3; margin: 0 auto 1rem; background: rgba(0,199,179,0.15); display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 1.2rem;">AA</div>
+            <h4 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Mr. Arshad Alam</h4>
+            <div style="font-size: 0.8rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem;">Director</div>
+            <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; margin: 0;">Group Chairman directing corporate governance, strategic capital allocation, and South Asia cross-border expansion.</p>
+          </div>
+
+          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; text-align: center;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid #00c7b3; margin: 0 auto 1rem; background: rgba(0,199,179,0.15); display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 1.2rem;">BA</div>
+            <h4 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Mr. Bakhteyar Alam</h4>
+            <div style="font-size: 0.8rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem;">Director</div>
+            <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; margin: 0;">Chief Operating Officer directing engineering standards, turnkey project delivery, and ISO 45001 safety mandates.</p>
+          </div>
+
+          <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; text-align: center;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid #00c7b3; margin: 0 auto 1rem; background: rgba(0,199,179,0.15); display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 1.2rem;">KU</div>
+            <h4 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">Mr. Khalid Umar</h4>
+            <div style="font-size: 0.8rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem;">Director</div>
+            <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; margin: 0;">Directing South Asia operations, heavy steel fabrication plants, and regional contracting infrastructure across India.</p>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   </section>

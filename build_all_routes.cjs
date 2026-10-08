@@ -237,7 +237,7 @@ const homeContent = `
         </a>
 
         <!-- Company 3: Ashaz Engineering (India) -->
-        <a href="/about/#india-hub" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
+        <a href="/business/ashaz/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
           <img src="/assets/images/about/india-hub.jpg" alt="Ashaz Engineering (India)" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
             <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">03</span>
@@ -248,7 +248,7 @@ const homeContent = `
         </a>
 
         <!-- Company 4: Rayan Properties (Upcoming) -->
-        <a href="/contact/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
+        <a href="/business/properties/" class="division-card" style="position: relative; border-radius: 12px; overflow: hidden; height: 420px; text-decoration: none; display: block; border: 1px solid rgba(255,255,255,0.08);">
           <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Rayan Properties" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="card-zoom-img">
           <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(7,17,30,0.95) 0%, rgba(7,17,30,0.4) 60%, transparent 100%); padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end;">
             <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 900; color: rgba(255,255,255,0.3); display: block;">04</span>

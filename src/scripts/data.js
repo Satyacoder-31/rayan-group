@@ -95,11 +95,16 @@ export const GROUP_COMPANIES = [
     sector: "South Asia Infrastructure & EPC",
     headline: "Heavy Engineering, Fabrication & Regional Infrastructure",
     description: "Operating as Rayan Group's strategic South Asia engineering and regional contracting arm, Ashaz Engineering delivers heavy civil works, structural fabrication, industrial facilities, and technical contracting across India.",
-    href: "/about/#india-hub",
+    href: "/business/ashaz/",
     image: "/assets/images/about/india-hub.jpg",
     logo: "/assets/logos/ashaz-engineering-white.png",
     stats: "Dual-Market Synergy",
-    status: "active"
+    status: "active",
+    directors: [
+      { name: "Mr. Arshad Alam", role: "Director" },
+      { name: "Mr. Bakhteyar Alam", role: "Director" },
+      { name: "Mr. Khalid Umar", role: "Director" }
+    ]
   },
   {
     id: "rayan-properties",
@@ -107,7 +112,7 @@ export const GROUP_COMPANIES = [
     sector: "Luxury Real Estate & Master Developments",
     headline: "Visionary Waterfront Estates & Landmark Developments",
     description: "Rayan Group's upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans.",
-    href: "/contact/",
+    href: "/business/properties/",
     image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg",
     logo: "/assets/logos/rayan-properties-white.png",
     stats: "Upcoming Division",
@@ -162,22 +167,22 @@ export const CORPORATE_TIMELINE = [
 // Executive Governance
 export const LEADERSHIP_TEAM = [
   {
-    name: "Arshad Alam Shaikh",
-    role: "Founder & Group Chairman",
+    name: "Mr. Arshad Alam",
+    role: "Founder & Group Chairman | Director, Ashaz Engineering (India)",
     tag: "DIR // 01",
     accent: "gold",
-    bio: "Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group since inception across Abu Dhabi, Dubai, India, and global markets.",
+    bio: "Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group and Ashaz Engineering across Abu Dhabi, Dubai, India, and global markets.",
     responsibilities: ["Group Strategic Direction", "Capital Allocation & Investor Relations", "International Expansion"],
-    tenure: "Founder"
+    tenure: "Founder & Director"
   },
   {
     name: "Eng. Bakhteyar Alam",
-    role: "Chief Operating Officer (COO)",
+    role: "Chief Operating Officer (COO) | Director, Ashaz Engineering (India)",
     tag: "DIR // 02",
     accent: "blue",
     bio: "Directing multi-disciplinary engineering operations, 500+ qualified engineers, on-site safety protocols, and precision delivery across 500+ executed turnkey projects.",
     responsibilities: ["Turnkey Project Execution", "HSE & ISO 45001 Compliance", "Engineering Standards"],
-    tenure: "Co-Founder"
+    tenure: "Co-Founder & Director"
   },
   {
     name: "Eng. Nadeem Akhtar",
@@ -189,9 +194,18 @@ export const LEADERSHIP_TEAM = [
     tenure: "Executive Board"
   },
   {
+    name: "Mr. Khalid Umar",
+    role: "Director — Ashaz Engineering (India)",
+    tag: "DIR // 04",
+    accent: "teal",
+    bio: "Directing South Asia operations, heavy structural steel fabrication, industrial workshops, and regional contracting delivery across India.",
+    responsibilities: ["South Asia Operational Leadership", "Fabrication & Industrial Works", "Regional Project Governance"],
+    tenure: "Ashaz Engineering (India)"
+  },
+  {
     name: "Dr. Tariq Al Mansoori",
     role: "Head of Energy & Infrastructure Operations",
-    tag: "DIR // 04",
+    tag: "DIR // 05",
     accent: "blue",
     bio: "Over 22 years spearheading complex energy EPC, industrial infrastructure, and mechanical turnkey execution across the Arabian Gulf.",
     responsibilities: ["Energy EPC Operations", "Pipeline Infrastructure", "Zero-Harm Safety Governance"],
@@ -200,7 +214,7 @@ export const LEADERSHIP_TEAM = [
   {
     name: "Elena Rostova",
     role: "Chief Sustainability & ESG Officer",
-    tag: "DIR // 05",
+    tag: "DIR // 06",
     accent: "blue",
     bio: "Leading Rayan Group's decarbonization pathway, ISO 14001 environmental frameworks, and community stakeholder initiatives.",
     responsibilities: ["Net-Zero 2050 Roadmap", "Carbon Offset Governance", "Social Impact Programs"],

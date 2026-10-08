@@ -752,8 +752,8 @@ createRoute('sitemap/index.html', {
             <li><a href="/business/" style="color: #fff; text-decoration: none;">• All Operating Companies</a></li>
             <li><a href="/business/engineering/" style="color: #cbd5e1; text-decoration: none;">• Rayan Engineering</a></li>
             <li><a href="/business/energy/" style="color: #cbd5e1; text-decoration: none;">• Rayan Energy</a></li>
-            <li><a href="/about/#india-hub" style="color: #cbd5e1; text-decoration: none;">• Ashaz Engineering (India)</a></li>
-            <li><a href="/contact/" style="color: #cbd5e1; text-decoration: none;">• Rayan Properties (Upcoming)</a></li>
+            <li><a href="/business/ashaz/" style="color: #cbd5e1; text-decoration: none;">• Ashaz Engineering (India)</a></li>
+            <li><a href="/business/properties/" style="color: #cbd5e1; text-decoration: none;">• Rayan Properties (Upcoming)</a></li>
           </ul>
         </div>
 
