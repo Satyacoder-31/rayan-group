@@ -35,7 +35,7 @@ createRoute('investors/index.html', {
           <h2 style="font-family: var(--font-heading); font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 800; color: #fff; margin: 0.5rem 0 1.5rem;">PRIVATE MULTINATIONAL ENTERPRISE</h2>
           
           <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.25rem;">
-            Rayan Group Holdings &amp; Engineering L.L.C - S.P.C is a 100% privately held corporate enterprise headquartered in Abu Dhabi, United Arab Emirates, with major operational hubs in India. The group does not list public equity or issue publicly traded shares on secondary stock exchanges.
+            Rayan Group is a 100% privately held corporate enterprise headquartered in the United Arab Emirates, with major operational hubs in India. The group does not list public equity or issue publicly traded shares on secondary stock exchanges.
           </p>
 
           <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65; margin-bottom: 2rem;">
@@ -53,7 +53,7 @@ createRoute('investors/index.html', {
             </div>
             <div>
               <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Operating Hubs</span>
-              <div style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #0099e6; margin-top: 0.25rem;">Abu Dhabi, Dubai &amp; India</div>
+              <div style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #0099e6; margin-top: 0.25rem;">United Arab Emirates &amp; India</div>
             </div>
           </div>
         </div>
@@ -772,7 +772,7 @@ createRoute('privacy/index.html', {
       </div>
 
       <p style="margin-bottom: 1.5rem;">
-        This Privacy Policy explains how Rayan Group Holdings &amp; Engineering L.L.C - S.P.C, its subsidiaries, and regional operating companies collect, process, and safeguard information submitted through our corporate web portals.
+        This Privacy Policy explains how Rayan Group, its subsidiaries, and regional operating companies collect, process, and safeguard information submitted through our corporate web portals.
       </p>
 
       <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">1. Information We Collect</h3>
@@ -823,12 +823,12 @@ createRoute('terms/index.html', {
 
       <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">1. Acceptance of Terms</h3>
       <p style="margin-bottom: 1.5rem;">
-        By accessing or using this website, you agree to comply with and be bound by these Terms and Conditions and all applicable laws of the Emirate of Abu Dhabi and the United Arab Emirates.
+        By accessing or using this website, you agree to comply with and be bound by these Terms and Conditions and all applicable laws of the United Arab Emirates.
       </p>
 
       <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">2. Intellectual Property Rights</h3>
       <p style="margin-bottom: 1.5rem;">
-        All content on this site, including logos, text, structural descriptions, photography, and graphical assets, is the proprietary property of Rayan Group Holdings &amp; Engineering L.L.C - S.P.C. Reproduction without prior written authorization is prohibited.
+        All content on this site, including logos, text, structural descriptions, photography, and graphical assets, is the proprietary property of Rayan Group. Reproduction without prior written authorization is prohibited.
       </p>
 
       <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">3. Commercial Scope</h3>

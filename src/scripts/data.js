@@ -1,10 +1,10 @@
 // RAYAN GROUP — Enterprise Corporate Portal Data Registry
 // Multi-National Engineering, Energy, Infrastructure & Capital Group
-// Dual-Hub Corporate Operations: Abu Dhabi, UAE & India
+// Dual-Hub Corporate Operations: United Arab Emirates & India
 
 export const GROUP_INFO = {
   name: "Rayan Group",
-  fullName: "Rayan Group Holdings & Engineering L.L.C - S.P.C",
+  fullName: "Rayan Group",
   tagline: "Building What Moves The World.",
   subTagline: "Engineering • Innovation • Global Impact",
   ticker: "ADX: RYNG",
@@ -27,10 +27,10 @@ export const GROUP_INFO = {
   countriesActive: "30+",
   headquarters: {
     uae: {
-      title: "Global Corporate Headquarters",
+      title: "UAE Corporate Headquarters",
       city: "Abu Dhabi",
       country: "United Arab Emirates",
-      address: "Office No. 09, Plot No. 42, Mussafah M-36, Industrial Area, Abu Dhabi, UAE",
+      address: "Office No. 09, Plot No. 42, Mussafah M-36, Industrial Area, Abu Dhabi, United Arab Emirates",
       phone: "+971-25654497",
       email: "info@rayan-group.com",
       timezone: "Asia/Dubai (GST UTC+4)",
@@ -56,14 +56,14 @@ export const GROUP_COMPANIES = [
   {
     id: "rayan-group",
     name: "Rayan Group",
-    sector: "Parent Holding Conglomerate",
+    sector: "Multinational Enterprise",
     headline: "Multinational Engineering, Energy & Infrastructure Governance",
-    description: "The parent multinational conglomerate orchestrating landmark engineering, energy infrastructure, turnkey EPC contracting, and cross-border capital ventures across the UAE, South Asia, and the Middle East.",
+    description: "The premier multinational conglomerate orchestrating landmark engineering, energy infrastructure, turnkey EPC contracting, and cross-border ventures across the UAE, South Asia, and the Middle East.",
     href: "/about/",
     image: "/assets/images/about/overview.jpg",
     logo: "/assets/logos/rayan-group-white.png",
     stats: "50+ Years Combined Leadership",
-    status: "holding"
+    status: "active"
   },
   {
     id: "rayan-engineering",

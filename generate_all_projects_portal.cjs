@@ -624,7 +624,7 @@ const portfolioContent = `
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.8rem; color: #94a3b8;">
         <span id="projectCounter">DISPLAYING ALL ${COMBINED_PROJECTS.length} EXECUTED ASSETS</span>
-        <span>DUAL-HUB DELIVERY: ABU DHABI &amp; INDIA</span>
+        <span>DUAL-HUB DELIVERY: UNITED ARAB EMIRATES &amp; INDIA</span>
       </div>
     </div>
 

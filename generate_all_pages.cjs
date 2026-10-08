@@ -34,7 +34,7 @@ const businessSubnav = (activeHref) => [
 // ============================================================================
 createRoute('about/index.html', {
   title: 'Who We Are & Corporate History',
-  description: 'Discover Rayan Group, our history from founding in Abu Dhabi to multinational scale across the UAE and South Asia, core values, and vision for 2030.',
+  description: 'Discover Rayan Group, our history from founding in the United Arab Emirates to multinational scale across the UAE and South Asia, core values, and vision for 2030.',
   activePath: '/about/',
   heroHtml: renderPageHero({
     category: 'CORPORATE OVERVIEW',
@@ -60,7 +60,7 @@ createRoute('about/index.html', {
             Established in the United Arab Emirates, Rayan Group has expanded into a multi-sector engineering and infrastructure enterprise encompassing civil contracting, energy infrastructure facilities, and regional industrial hubs.
           </p>
           <p style="font-size: 0.95rem; line-height: 1.7; color: #94a3b8; margin-bottom: 2rem;">
-            Our dual-market presence in Abu Dhabi and India allows us to combine UAE capital efficiency and megaproject agility with world-class engineering talent, executing projects from design and BIM structural modeling to commissioning with certified ISO 9001 and ISO 45001 compliance.
+            Our dual-market presence in the United Arab Emirates and India allows us to combine UAE capital efficiency and megaproject agility with world-class engineering talent, executing projects from design and BIM structural modeling to commissioning with certified ISO 9001 and ISO 45001 compliance.
           </p>
           <div style="display: flex; gap: 1.5rem;">
             <a href="/leadership/" class="btn-enterprise-primary">EXECUTIVE LEADERSHIP →</a>
@@ -69,6 +69,41 @@ createRoute('about/index.html', {
         </div>
         <div>
           <img src="/assets/images/about/history.jpg" alt="Rayan Group Infrastructure" style="width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        </div>
+      </div>
+
+      <!-- Verified Statistics Row (Increasing Animated Counters: 50+, 16, 4) -->
+      <div class="stats-counter-grid">
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val" data-counter-target="50" data-counter-suffix="+" data-counter-duration="1800">50+</span>
+          </div>
+          <div class="stat-counter-label">YEARS HERITAGE</div>
+          <div class="stat-counter-desc">Combined leadership execution</div>
+        </div>
+
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val" data-counter-target="16" data-counter-duration="1500">16</span>
+          </div>
+          <div class="stat-counter-label">VERIFIED PROJECTS</div>
+          <div class="stat-counter-desc">Landmark hospitality, retail &amp; towers</div>
+        </div>
+
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val" data-counter-target="4" data-counter-duration="1200">4</span>
+          </div>
+          <div class="stat-counter-label">OPERATING ENTITIES</div>
+          <div class="stat-counter-desc">Engineering, Energy, Ashaz India, Properties</div>
+        </div>
+
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val stat-counter-text-badge">TRIPLE</span>
+          </div>
+          <div class="stat-counter-label" style="color: #10b981;">ISO ACCREDITED</div>
+          <div class="stat-counter-desc">ISO 9001 / 14001 / 45001</div>
         </div>
       </div>
     </div>

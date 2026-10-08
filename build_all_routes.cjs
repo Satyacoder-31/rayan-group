@@ -63,25 +63,25 @@ const homeHeroHtml = `
       </div>
     </div>
 
-    <!-- Slide 3: Heavy Civil Infrastructure & Plant -->
+    <!-- Slide 3: Civil Infrastructure, Electrical & Interior Works -->
     <div class="hero-slide-item">
-      <img src="/assets/images/hero/hero-infrastructure-cranes.jpg" alt="Heavy Civil Infrastructure & Cranes" class="hero-slide-bg-img">
+      <img src="/assets/images/hero/hero-infrastructure-cranes.jpg" alt="Civil Infrastructure, Electrical & Interior Works" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
       <div class="hero-slide-container">
         <div class="hero-eyebrow-badge">
-          <span>CIVIL INFRASTRUCTURE</span> • <span>HEAVY FLEET LOGISTICS</span>
+          <span>CIVIL INFRASTRUCTURE</span> • <span>ELECTRICAL &amp; INTERIOR FIT-OUT</span>
         </div>
-        <h1 class="hero-giant-title">HIGHWAY CORRIDORS &amp; HEAVY LIFT RIGGING</h1>
+        <h1 class="hero-giant-title">CIVIL INFRASTRUCTURE, ELECTRICAL &amp; INTERIOR WORKS</h1>
         <p class="hero-lead-text">
-          Major road corridors, bulk earthmoving, stormwater networks, and high-capacity mobile and crawler crane fleets up to 750 tonnes.
+          Highway corridors, major earthmoving, commercial interior fit-outs, precision electrical contracting, and turnkey engineering solutions across the region.
         </p>
         <div class="hero-actions-row">
           <a href="/business/infrastructure/" class="btn-enterprise-primary">
             <span>INFRASTRUCTURE WORKS</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
-          <a href="/business/logistics/" class="btn-enterprise-secondary">
-            <span>HEAVY FLEET</span>
+          <a href="/business/engineering/" class="btn-enterprise-secondary">
+            <span>ELECTRICAL &amp; INTERIORS</span>
           </a>
         </div>
       </div>
@@ -97,7 +97,7 @@ const homeHeroHtml = `
         </div>
         <h1 class="hero-giant-title">STRATEGIC CORRIDORS. ONE UNIFIED STANDARD.</h1>
         <p class="hero-lead-text">
-          Headquartered in Abu Dhabi with regional operations in Dubai and South Asia engineering hub Ashaz Engineering in India.
+          Headquartered in the United Arab Emirates with regional operations and South Asia engineering hub Ashaz Engineering in India.
         </p>
         <div class="hero-actions-row">
           <a href="/about/" class="btn-enterprise-primary">
@@ -163,27 +163,38 @@ const homeContent = `
         </div>
       </div>
 
-      <!-- Verified Statistics Row -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255,255,255,0.08);">
-        <div>
-          <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.75rem); font-weight: 900; color: #fff; line-height: 1;">50+</div>
-          <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0099e6; margin-top: 0.5rem;">YEARS HERITAGE</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">Combined leadership execution</div>
+      <!-- Verified Statistics Row (Increasing Animated Counters: 50+, 16, 4) -->
+      <div class="stats-counter-grid">
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val" data-counter-target="50" data-counter-suffix="+" data-counter-duration="1800">50+</span>
+          </div>
+          <div class="stat-counter-label">YEARS HERITAGE</div>
+          <div class="stat-counter-desc">Combined leadership execution</div>
         </div>
-        <div>
-          <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.75rem); font-weight: 900; color: #fff; line-height: 1;">16</div>
-          <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0099e6; margin-top: 0.5rem;">VERIFIED PROJECTS</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">Landmark hospitality, retail &amp; towers</div>
+
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val" data-counter-target="16" data-counter-duration="1500">16</span>
+          </div>
+          <div class="stat-counter-label">VERIFIED PROJECTS</div>
+          <div class="stat-counter-desc">Landmark hospitality, retail &amp; towers</div>
         </div>
-        <div>
-          <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.75rem); font-weight: 900; color: #fff; line-height: 1;">4</div>
-          <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #0099e6; margin-top: 0.5rem;">OPERATING ENTITIES</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">Engineering, Energy, Ashaz India, Properties</div>
+
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val" data-counter-target="4" data-counter-duration="1200">4</span>
+          </div>
+          <div class="stat-counter-label">OPERATING ENTITIES</div>
+          <div class="stat-counter-desc">Engineering, Energy, Ashaz India, Properties</div>
         </div>
-        <div>
-          <div style="font-family: var(--font-heading); font-size: clamp(2.5rem, 4vw, 3.75rem); font-weight: 900; color: #fff; line-height: 1;">TRIPLE</div>
-          <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #10b981; margin-top: 0.5rem;">ISO ACCREDITED</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">ISO 9001 / 14001 / 45001</div>
+
+        <div class="stat-counter-card">
+          <div class="stat-counter-number-wrap">
+            <span class="stat-counter-val stat-counter-text-badge">TRIPLE</span>
+          </div>
+          <div class="stat-counter-label" style="color: #10b981;">ISO ACCREDITED</div>
+          <div class="stat-counter-desc">ISO 9001 / 14001 / 45001</div>
         </div>
       </div>
     </div>
@@ -455,42 +466,138 @@ const homeContent = `
         </p>
       </div>
 
-      <!-- Verified Clients Showcase Cards -->
-      <div class="client-logo-grid" style="margin-bottom: 3.5rem;">
-        <div class="client-logo-card">
-          <div style="font-size: 1.5rem; color: #0099e6;">🏢</div>
-          <div class="client-card-name">Brock Construction</div>
-          <div class="client-card-sector">General Contracting Partner</div>
+      <!-- Verified Clients & Strategic Partners Dossier Grid -->
+      <div class="partner-dossier-grid">
+        <!-- 1. Brock Construction -->
+        <div class="partner-dossier-card">
+          <div class="partner-card-header">
+            <div class="partner-icon-capsule">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+              </svg>
+            </div>
+            <span class="partner-type-badge partner-badge-partner">Strategic Partner</span>
+          </div>
+          <div class="partner-card-body">
+            <h3 class="partner-entity-name">Brock Construction</h3>
+            <p class="partner-entity-role">Tier-1 Main Contracting &amp; Civil Engineering Partner</p>
+          </div>
+          <div class="partner-card-footer">
+            <span class="partner-verified-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Waldorf Astoria Luxury Hotel Overhaul (RAK)</span>
+            </span>
+          </div>
         </div>
 
-        <div class="client-logo-card">
-          <div style="font-size: 1.5rem; color: #10b981;">🛍️</div>
-          <div class="client-card-name">Dubai Hills Mall (Emaar)</div>
-          <div class="client-card-sector">Master Developer Client</div>
+        <!-- 2. Dubai Hills Mall (Emaar) -->
+        <div class="partner-dossier-card">
+          <div class="partner-card-header">
+            <div class="partner-icon-capsule">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </div>
+            <span class="partner-type-badge partner-badge-developer">Master Developer</span>
+          </div>
+          <div class="partner-card-body">
+            <h3 class="partner-entity-name">Dubai Hills Mall (Emaar)</h3>
+            <p class="partner-entity-role">Master Developer &amp; Premier Retail Megaproject</p>
+          </div>
+          <div class="partner-card-footer">
+            <span class="partner-verified-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Roxy Cinemas VIP Auditoriums &amp; Acoustic Fit-Out</span>
+            </span>
+          </div>
         </div>
 
-        <div class="client-logo-card">
-          <div style="font-size: 1.5rem; color: #f59e0b;">🏨</div>
-          <div class="client-card-name">Hilton / Waldorf Astoria</div>
-          <div class="client-card-sector">5-Star Luxury Hospitality</div>
+        <!-- 3. Hilton / Waldorf Astoria -->
+        <div class="partner-dossier-card">
+          <div class="partner-card-header">
+            <div class="partner-icon-capsule">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+            <span class="partner-type-badge partner-badge-hospitality">5-Star Hospitality</span>
+          </div>
+          <div class="partner-card-body">
+            <h3 class="partner-entity-name">Hilton / Waldorf Astoria</h3>
+            <p class="partner-entity-role">Luxury Global Hospitality &amp; Resort Operator</p>
+          </div>
+          <div class="partner-card-footer">
+            <span class="partner-verified-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Presidential Suites &amp; Grand Ballroom Refurbishment</span>
+            </span>
+          </div>
         </div>
 
-        <div class="client-logo-card">
-          <div style="font-size: 1.5rem; color: #0099e6;">🏬</div>
-          <div class="client-card-name">Al Wahda Mall</div>
-          <div class="client-card-sector">Commercial Retail Client</div>
+        <!-- 4. Al Wahda Mall -->
+        <div class="partner-dossier-card">
+          <div class="partner-card-header">
+            <div class="partner-icon-capsule">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <span class="partner-type-badge partner-badge-retail">Commercial Asset</span>
+          </div>
+          <div class="partner-card-body">
+            <h3 class="partner-entity-name">Al Wahda Mall</h3>
+            <p class="partner-entity-role">Line Investments Commercial Destination (Abu Dhabi)</p>
+          </div>
+          <div class="partner-card-footer">
+            <span class="partner-verified-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Max Fashion Mega Anchor Store Engineering</span>
+            </span>
+          </div>
         </div>
 
-        <div class="client-logo-card">
-          <div style="font-size: 1.5rem; color: #c5a059;">🛡️</div>
-          <div class="client-card-name">EDGE Group (REMAYA)</div>
-          <div class="client-card-sector">Defense &amp; Tactical Client</div>
+        <!-- 5. EDGE Group (REMAYA) -->
+        <div class="partner-dossier-card">
+          <div class="partner-card-header">
+            <div class="partner-icon-capsule">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <span class="partner-type-badge partner-badge-defense">Defense &amp; Tactical</span>
+          </div>
+          <div class="partner-card-body">
+            <h3 class="partner-entity-name">EDGE Group (REMAYA)</h3>
+            <p class="partner-entity-role">UAE Sovereign Defense Technology &amp; Tactical Group</p>
+          </div>
+          <div class="partner-card-footer">
+            <span class="partner-verified-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>REMAYA Specialized Ballistic Shooting Complex</span>
+            </span>
+          </div>
         </div>
 
-        <div class="client-logo-card">
-          <div style="font-size: 1.5rem; color: #38bdf8;">🏛️</div>
-          <div class="client-card-name">Dubai Police Academy</div>
-          <div class="client-card-sector">Government Institutional</div>
+        <!-- 6. Dubai Police Academy -->
+        <div class="partner-dossier-card">
+          <div class="partner-card-header">
+            <div class="partner-icon-capsule">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 22h16"/><path d="M12 2v20"/><path d="M2 18h20"/><path d="m19 9-7-7-7 7"/>
+              </svg>
+            </div>
+            <span class="partner-type-badge partner-badge-gov">Government Civic</span>
+          </div>
+          <div class="partner-card-body">
+            <h3 class="partner-entity-name">Dubai Police Academy</h3>
+            <p class="partner-entity-role">Government Institutional Law Enforcement Complex</p>
+          </div>
+          <div class="partner-card-footer">
+            <span class="partner-verified-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Specialized Tactical Facility &amp; Infrastructure</span>
+            </span>
+          </div>
         </div>
       </div>
 

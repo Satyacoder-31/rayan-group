@@ -502,7 +502,7 @@ createRoute('billing/index.html', {
                   <label class="service-form-label" for="bill-entity">Rayan Group Entity Billed <span class="req">*</span></label>
                   <select id="bill-entity" class="service-form-select" required>
                     <option value="" disabled selected>Select Operating Entity</option>
-                    <option value="holding">Rayan Group Holdings &amp; Engineering L.L.C - S.P.C</option>
+                    <option value="rayan-group">Rayan Group</option>
                     <option value="engineering">Rayan Engineering</option>
                     <option value="energy">Rayan Energy</option>
                     <option value="ashaz">Ashaz Engineering (India)</option>
@@ -633,7 +633,7 @@ createRoute('cookies/index.html', {
   heroHtml: renderPageHero({
     category: 'LEGAL & PRIVACY COMPLIANCE',
     title: 'COOKIE POLICY',
-    description: 'This Cookie Policy explains how Rayan Group Holdings & Engineering L.L.C - S.P.C uses cookies and similar technologies on our corporate website.',
+    description: 'This Cookie Policy explains how Rayan Group uses cookies and similar technologies on our corporate website.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Legal', href: '/terms/' }, { label: 'Cookie Policy', href: '/cookies/' }],
     bgImage: '/assets/images/about/overview.jpg'
   }),
@@ -696,7 +696,7 @@ createRoute('disclaimer/index.html', {
         </div>
 
         <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">1. General Informational Use</h3>
-        <p>The materials, specifications, and project highlights displayed on this website are published solely for general corporate informational purposes by Rayan Group Holdings &amp; Engineering L.L.C - S.P.C. While all reasonable diligence is exercised to maintain factual precision, content does not constitute a legally binding contractual tender or engineering warranty unless formalized in an executed agreement.</p>
+        <p>The materials, specifications, and project highlights displayed on this website are published solely for general corporate informational purposes by Rayan Group. While all reasonable diligence is exercised to maintain factual precision, content does not constitute a legally binding contractual tender or engineering warranty unless formalized in an executed agreement.</p>
 
         <h3 style="color: #fff; font-size: 1.25rem; margin: 2rem 0 0.75rem;">2. Engineering &amp; Project Representation</h3>
         <p>Project scopes, imagery, and specifications reflect actual delivered or ongoing assignments across our engineering, energy, infrastructure, and properties operations. Specific scope boundaries, joint venture participation, and client deliverables are governed exclusively by executed master construction contracts and FIDIC agreements.</p>

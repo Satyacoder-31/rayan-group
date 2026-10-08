@@ -248,39 +248,76 @@ function initHeroSlideshow() {
 }
 
 // ==========================================================================
-// 5. ANIMATED STATISTICS COUNTERS
+// 5. ANIMATED STATISTICS COUNTERS (Increasing Count-Up Animation)
 // ==========================================================================
 function initStatisticsCounters() {
   const statsElements = document.querySelectorAll('[data-counter-target]');
   if (!statsElements.length) return;
 
+  // Set initial 0 value for smooth ramp-up
+  statsElements.forEach(el => {
+    const prefix = el.getAttribute('data-counter-prefix') || '';
+    const suffix = el.getAttribute('data-counter-suffix') || '';
+    const decimals = parseInt(el.getAttribute('data-counter-decimals') || '0', 10);
+    el.textContent = `${prefix}${(0).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`;
+  });
+
   const observer = new IntersectionObserver((entries, obs) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const el = entry.target;
+        obs.unobserve(el);
+
         const target = parseFloat(el.getAttribute('data-counter-target'));
         const prefix = el.getAttribute('data-counter-prefix') || '';
         const suffix = el.getAttribute('data-counter-suffix') || '';
         const decimals = parseInt(el.getAttribute('data-counter-decimals') || '0', 10);
-        let start = 0;
-        const duration = 1800;
+        const customDuration = parseInt(el.getAttribute('data-counter-duration'), 10);
+
+        let duration = 1800;
+        if (!isNaN(customDuration) && customDuration > 0) {
+          duration = customDuration;
+        } else if (target <= 5) {
+          duration = 1200;
+        } else if (target <= 20) {
+          duration = 1500;
+        } else {
+          duration = 1800;
+        }
+
+        const start = 0;
         const startTime = performance.now();
+        el.classList.add('counter-animating');
 
         function updateCounter(now) {
-          const progress = Math.min((now - startTime) / duration, 1);
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          // Smooth easeOutCubic curve
           const easeProgress = 1 - Math.pow(1 - progress, 3);
           const current = start + (target - start) * easeProgress;
-          el.textContent = `${prefix}${current.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`;
+
+          const displayVal = decimals > 0 
+            ? current.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+            : Math.round(current).toLocaleString();
+
+          el.textContent = `${prefix}${displayVal}${suffix}`;
+
           if (progress < 1) {
             requestAnimationFrame(updateCounter);
+          } else {
+            const finalVal = decimals > 0 
+              ? target.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+              : Math.round(target).toLocaleString();
+            el.textContent = `${prefix}${finalVal}${suffix}`;
+            el.classList.remove('counter-animating');
+            el.classList.add('counter-finished');
           }
         }
 
         requestAnimationFrame(updateCounter);
-        obs.unobserve(el);
       }
     });
-  }, { threshold: 0.2 });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
 
   statsElements.forEach(el => observer.observe(el));
 }
