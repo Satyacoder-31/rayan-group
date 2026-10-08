@@ -973,6 +973,60 @@ function initScrollAnimations() {
   }
 }
 
+// ==========================================================================
+// ASSISTANCE WIDGET & QUICK SUPPORT HUB
+// ==========================================================================
+function initAssistanceWidget() {
+  const triggerBtn = document.getElementById('assistance-trigger-btn');
+  const card = document.getElementById('assistance-card');
+  const closeBtn = document.getElementById('assistance-close-btn');
+  if (!triggerBtn || !card) return;
+
+  function openAssistance() {
+    card.classList.add('active');
+    triggerBtn.setAttribute('aria-expanded', 'true');
+    triggerBtn.classList.add('is-open');
+  }
+
+  function closeAssistance() {
+    card.classList.remove('active');
+    triggerBtn.setAttribute('aria-expanded', 'false');
+    triggerBtn.classList.remove('is-open');
+  }
+
+  function toggleAssistance() {
+    if (card.classList.contains('active')) {
+      closeAssistance();
+    } else {
+      openAssistance();
+    }
+  }
+
+  triggerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleAssistance();
+  });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeAssistance();
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!card.contains(e.target) && !triggerBtn.contains(e.target)) {
+      closeAssistance();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && card.classList.contains('active')) {
+      closeAssistance();
+    }
+  });
+}
+
 // Start preloader as early as possible
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initPreloader);
@@ -997,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initForms();
   initBackToTop();
   initScrollAnimations();
+  initAssistanceWidget();
 });
 
 
