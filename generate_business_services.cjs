@@ -162,7 +162,7 @@ createRoute('proposal/index.html', {
               <div style="border-left: 2px solid #0099e6; padding-left: 0.75rem;">
                 <strong style="color: #fff; display: block;">Abu Dhabi Commercial HQ:</strong>
                 <span style="color: #94a3b8;">Phone: +971-25654497</span><br>
-                <span style="color: #0099e6;">tenders@rayan-group.com</span>
+                <a href="mailto:tender@rayan-group.com" style="color: #0099e6; text-decoration: none;">tender@rayan-group.com</a>
               </div>
               <div style="border-left: 2px solid #10b981; padding-left: 0.75rem;">
                 <strong style="color: #fff; display: block;">South Asia Regional Hub:</strong>

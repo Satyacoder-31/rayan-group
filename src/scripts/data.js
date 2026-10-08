@@ -33,6 +33,7 @@ export const GROUP_INFO = {
       address: "Office No. 09, Plot No. 42, Mussafah M-36, Industrial Area, Abu Dhabi, United Arab Emirates",
       phone: "+971-25654497",
       email: "info@rayan-group.com",
+      tenderEmail: "tender@rayan-group.com",
       timezone: "Asia/Dubai (GST UTC+4)",
       coordinates: "24.3498° N, 54.5085° E"
     },

@@ -48,7 +48,7 @@ function renderHeader(activePath = '/') {
       <div class="header-top-left">
         <span class="header-hub-badge">
           <span class="header-live-dot" aria-hidden="true"></span>
-          <span class="header-hub-text"><strong>DUAL-HUB:</strong> UNITED ARAB EMIRATES &amp; INDIA • ISO 9001:2015 | 14001:2015 | 45001:2018</span>
+          <span class="header-hub-text"><strong>DUAL-HUB:</strong> UAE 🇦🇪 &amp; INDIA 🇮🇳 • ISO 9001:2015 | 14001:2015 | 45001:2018</span>
         </span>
       </div>
       <div class="header-top-right">
@@ -370,7 +370,7 @@ function renderMobileDrawer(activePath = '/') {
     <div class="mobile-drawer-ticker" style="justify-content: center;">
       <div class="mobile-hub-text" style="display: inline-flex; align-items: center; gap: 0.45rem;">
         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #0099e6;"></span>
-        DUAL-HUB: UNITED ARAB EMIRATES &amp; INDIA • ISO 9001/14001/45001
+        DUAL-HUB: UAE 🇦🇪 &amp; INDIA 🇮🇳 • ISO 9001/14001/45001
       </div>
     </div>
 
@@ -581,7 +581,7 @@ function renderFooter() {
           </p>
           <div class="footer-hub-pill">
             <span class="footer-hub-dot"></span>
-            <span>DUAL-HUB: UNITED ARAB EMIRATES &bull; INDIA</span>
+            <span>DUAL-HUB: UAE 🇦🇪 &bull; INDIA 🇮🇳</span>
           </div>
           <!-- Official Connected Social Channels -->
           <div class="footer-social-wrapper">

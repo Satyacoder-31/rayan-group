@@ -624,7 +624,7 @@ createRoute('contact/index.html', {
               <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
                 <div><strong>Telephone:</strong> +971-25654497</div>
                 <div><strong>General Inquiries:</strong> info@rayan-group.com</div>
-                <div><strong>Tenders &amp; Proposals:</strong> tenders@rayan-group.com</div>
+                <div><strong>Tenders &amp; Proposals:</strong> <a href="mailto:tender@rayan-group.com" style="color: #0099e6; text-decoration: none;">tender@rayan-group.com</a></div>
               </div>
             </div>
 
