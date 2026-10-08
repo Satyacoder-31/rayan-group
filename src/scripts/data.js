@@ -102,7 +102,8 @@ export const GROUP_COMPANIES = [
     stats: "Dual-Market Synergy",
     status: "active",
     directors: [
-      { name: "Mr. Arshad Alam", role: "Director" },
+      { name: "Mr. Arshad Alam Shaikh", role: "Founder & Chairman | Director" },
+      { name: "Mrs. Sadaf Fatma", role: "Chief Executive Officer | Director" },
       { name: "Mr. Bakhteyar Alam", role: "Director" },
       { name: "Mr. Khalid Umar", role: "Director" }
     ]
@@ -176,18 +177,27 @@ export const CORPORATE_TIMELINE = [
 // Executive Governance
 export const LEADERSHIP_TEAM = [
   {
-    name: "Mr. Arshad Alam",
-    role: "Founder & Group Chairman | Director, Ashaz Engineering (India)",
+    name: "Mr. Arshad Alam Shaikh",
+    role: "Founder & Chairman of Rayan Group (UAE & India)",
     tag: "DIR // 01",
     accent: "gold",
-    bio: "Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group and Ashaz Engineering across Abu Dhabi, Dubai, India, and global markets.",
-    responsibilities: ["Group Strategic Direction", "Capital Allocation & Investor Relations", "International Expansion"],
-    tenure: "Founder & Director"
+    bio: "Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group and Ashaz Engineering across the UAE, India, and global markets.",
+    responsibilities: ["Group Strategic Direction", "Capital Allocation & Corporate Governance", "International Hub Expansion"],
+    tenure: "Founder & Chairman"
+  },
+  {
+    name: "Mrs. Sadaf Fatma",
+    role: "Chief Executive Officer (CEO) — Rayan Group (UAE & India)",
+    tag: "EXEC // 02",
+    accent: "gold",
+    bio: "Directing executive enterprise operations, corporate strategy, international development, and organizational growth across Rayan Group and Ashaz Engineering operations in the UAE and India.",
+    responsibilities: ["Executive Enterprise Leadership", "Cross-Border Corporate Operations", "Strategic Market Growth"],
+    tenure: "Chief Executive Officer"
   },
   {
     name: "Eng. Bakhteyar Alam",
     role: "Chief Operating Officer (COO) | Director, Ashaz Engineering (India)",
-    tag: "DIR // 02",
+    tag: "DIR // 03",
     accent: "blue",
     bio: "Directing multi-disciplinary engineering operations, 500+ qualified engineers, on-site safety protocols, and precision delivery across 500+ executed turnkey projects.",
     responsibilities: ["Turnkey Project Execution", "HSE & ISO 45001 Compliance", "Engineering Standards"],
@@ -196,7 +206,7 @@ export const LEADERSHIP_TEAM = [
   {
     name: "Eng. Nadeem Akhtar",
     role: "Chief Financial Officer (CFO)",
-    tag: "DIR // 03",
+    tag: "DIR // 04",
     accent: "blue",
     bio: "Directing institutional fiscal governance, capital efficiency, commercial risk management, contract tendering, and sustainable international enterprise growth.",
     responsibilities: ["Financial Governance & Audit", "M&A and Commercial Tenders", "Capital Markets Strategy"],
@@ -205,7 +215,7 @@ export const LEADERSHIP_TEAM = [
   {
     name: "Mr. Khalid Umar",
     role: "Director — Ashaz Engineering (India)",
-    tag: "DIR // 04",
+    tag: "DIR // 05",
     accent: "teal",
     bio: "Directing South Asia operations, heavy structural steel fabrication, industrial workshops, and regional contracting delivery across India.",
     responsibilities: ["South Asia Operational Leadership", "Fabrication & Industrial Works", "Regional Project Governance"],

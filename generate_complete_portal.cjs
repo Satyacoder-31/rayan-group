@@ -645,7 +645,8 @@ createRoute('business/ashaz/index.html', {
       Directing heavy civil works, structural steel fabrication, pre-engineered industrial buildings (PEB), and technical contracting, Ashaz Engineering delivers monumental scale and regional manufacturing capacity aligned with international standards.
     `,
     directors: [
-      { name: 'Mr. Arshad Alam', role: 'Director', desc: 'Group Chairman directing corporate governance, strategic capital allocation, and South Asia cross-border expansion.' },
+      { name: 'Mr. Arshad Alam Shaikh', role: 'Founder & Chairman | Director', desc: 'Founder & Chairman directing corporate governance, strategic capital allocation, and South Asia cross-border expansion.' },
+      { name: 'Mrs. Sadaf Fatma', role: 'Chief Executive Officer | Director', desc: 'Chief Executive Officer directing enterprise operations, strategic partnerships, and organizational growth across the UAE and India.' },
       { name: 'Mr. Bakhteyar Alam', role: 'Director', desc: 'Chief Operating Officer directing engineering standards, turnkey project delivery, and ISO 45001 safety mandates.' },
       { name: 'Mr. Khalid Umar', role: 'Director', desc: 'Directing South Asia operations, heavy steel fabrication plants, and regional contracting infrastructure across India.' }
     ],
