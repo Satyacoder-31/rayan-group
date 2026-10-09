@@ -24,6 +24,7 @@
     })();
   </script>
 
+  <link rel="stylesheet" href="/src/styles/enterprise.css">
   <link rel="stylesheet" href="/src/styles/admin.css">
 </head>
 <body class="admin-body">
@@ -80,21 +81,21 @@
           </button>
         </li>
         <li class="admin-nav-item">
+          <button type="button" data-tab="hero">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <span>Hero &amp; Slideshow</span>
+          </button>
+        </li>
+        <li class="admin-nav-item">
           <button type="button" data-tab="profile">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span>Corporate Profile</span>
           </button>
         </li>
         <li class="admin-nav-item">
-          <button type="button" data-tab="ticker">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            <span>ADX Ticker &amp; Metrics</span>
-          </button>
-        </li>
-        <li class="admin-nav-item">
-          <button type="button" data-tab="contacts">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>Dual-Hub &amp; Contacts</span>
+          <button type="button" data-tab="stats">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Statistics &amp; Metrics</span>
           </button>
         </li>
         <li class="admin-nav-item">
@@ -104,21 +105,45 @@
           </button>
         </li>
         <li class="admin-nav-item">
-          <button type="button" data-tab="projects">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-            <span>Projects Portfolio</span>
-          </button>
-        </li>
-        <li class="admin-nav-item">
           <button type="button" data-tab="leadership">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span>Executive Governance</span>
           </button>
         </li>
         <li class="admin-nav-item">
+          <button type="button" data-tab="projects">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>Projects Portfolio</span>
+          </button>
+        </li>
+        <li class="admin-nav-item">
+          <button type="button" data-tab="ticker">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <span>ADX Ticker &amp; Financials</span>
+          </button>
+        </li>
+        <li class="admin-nav-item">
           <button type="button" data-tab="news">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
             <span>News &amp; Media</span>
+          </button>
+        </li>
+        <li class="admin-nav-item">
+          <button type="button" data-tab="careers">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Careers &amp; Talent</span>
+          </button>
+        </li>
+        <li class="admin-nav-item">
+          <button type="button" data-tab="timeline">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Milestone Timeline</span>
+          </button>
+        </li>
+        <li class="admin-nav-item">
+          <button type="button" data-tab="contacts">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Dual-Hub &amp; Socials</span>
           </button>
         </li>
         <li class="admin-nav-item">
@@ -152,13 +177,16 @@
       <!-- TOP BAR -->
       <header class="admin-top-bar">
         <div class="admin-top-left">
-          <h1 class="admin-top-title">Corporate Command Center</h1>
+          <h1 class="admin-top-title" id="admin-header-title">Corporate Command Center</h1>
           <span class="admin-sync-indicator">
             <span class="admin-live-pulse-dot"></span>
-            <span>Live Desk Active</span>
+            <span>Live Sync Active</span>
           </span>
         </div>
         <div class="admin-top-right">
+          <button type="button" class="admin-btn-secondary" id="admin-btn-save-all-top" style="padding: 0.6rem 1.15rem; font-size: 0.8rem;">
+            <span>💾 Save Live Changes</span>
+          </button>
           <button type="button" class="admin-btn-primary" onclick="window.__rayanAdminPortal.switchTab('git')" style="padding: 0.6rem 1.15rem; font-size: 0.8rem;">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             <span>Push to Git</span>
@@ -182,9 +210,14 @@
                   <h4 style="margin:0; font-size: 0.95rem; color:#fff;">Live Visitor Queue</h4>
                   <span style="font-size: 0.7rem; color: #94a3b8;">Active connections on site</span>
                 </div>
-                <button type="button" class="admin-btn-secondary" onclick="window.__rayanAdminPortal.refreshSessionsList()" style="padding: 0.35rem 0.65rem; font-size: 0.72rem;">
-                  ↻ Refresh
-                </button>
+                <div style="display:flex; gap:0.4rem;">
+                  <button type="button" class="admin-btn-primary" id="btn-create-test-chat" style="padding: 0.35rem 0.65rem; font-size: 0.72rem;" title="Simulate a new test visitor inquiry">
+                    + Test Visitor
+                  </button>
+                  <button type="button" class="admin-btn-secondary" onclick="window.__rayanAdminPortal.refreshSessionsList()" style="padding: 0.35rem 0.65rem; font-size: 0.72rem;" title="Refresh sessions">
+                    ↻
+                  </button>
+                </div>
               </div>
               <div class="admin-chat-sessions-list" id="admin-chat-sessions-list">
                 <!-- Dynamically populated -->
@@ -195,13 +228,16 @@
             <div class="admin-chat-thread-pane">
               <div class="admin-thread-top">
                 <div class="admin-thread-visitor-info">
-                  <div class="admin-thread-avatar">RD</div>
+                  <div class="admin-thread-avatar" id="admin-thread-avatar">RD</div>
                   <div>
-                    <h4 style="margin:0; font-size: 1rem; color:#fff;" id="admin-thread-visitor-title">Select a Visitor Session</h4>
-                    <span style="font-size: 0.72rem; color: #94a3b8;" id="admin-thread-visitor-meta">Click a visitor on the left queue to reply in real time</span>
+                    <h4 style="margin:0; font-size: 1rem; color:#fff;" id="admin-thread-visitor-title">Executive Support Desk</h4>
+                    <span style="font-size: 0.72rem; color: #94a3b8;" id="admin-thread-visitor-meta">Select a session from the left queue to respond</span>
                   </div>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <button type="button" class="admin-btn-secondary" id="admin-btn-toggle-sound" style="padding: 0.4rem 0.65rem; font-size: 0.75rem;">
+                    🔔 Audio Chime
+                  </button>
                   <button type="button" class="admin-btn-secondary" id="admin-btn-resolve-chat" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">
                     ✓ Mark Resolved
                   </button>
@@ -214,7 +250,7 @@
               <!-- Message thread -->
               <div class="admin-thread-messages-list" id="admin-thread-messages-list">
                 <div style="padding: 3rem 1rem; text-align: center; color: #64748b; font-size: 0.9rem;">
-                  Please select an incoming conversation from the left queue to begin live executive assistance.
+                  Loading active conversation...
                 </div>
               </div>
 
@@ -225,6 +261,7 @@
                 <button type="button" class="admin-canned-chip" data-reply="Please forward your drawings and tender documentation to tender@rayan-group.com for turnkey estimation.">Request Tender Docs</button>
                 <button type="button" class="admin-canned-chip" data-reply="You can reach our UAE Corporate Headquarters directly at +971-25654497 (Abu Dhabi).">UAE HQ Direct Phone</button>
                 <button type="button" class="admin-canned-chip" data-reply="Our India regional engineering team at Ashaz Engineering is available at +91-9973086910.">India Regional Hub</button>
+                <button type="button" class="admin-canned-chip" data-reply="Would you like us to schedule a formal briefing call with our Executive Directors?">Schedule Director Call</button>
               </div>
 
               <!-- Composer Bar -->
@@ -243,14 +280,33 @@
         </div>
 
         <!-- ==================================================================
-             TAB 2: CORPORATE PROFILE & IDENTITY
+             TAB 2: HOMEPAGE HERO & SLIDESHOW
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-hero">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">Homepage Hero &amp; Cinematic Slideshow</h3>
+                <p class="admin-card-desc">Control the primary banners, giant headlines, eyebrow badges, and action buttons</p>
+              </div>
+              <button type="button" class="admin-btn-primary btn-save-section">Save Hero Slideshow</button>
+            </div>
+
+            <div id="admin-hero-slides-list">
+              <!-- Dynamically populated with 4 slides -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 3: CORPORATE PROFILE & IDENTITY
              ================================================================== -->
         <div class="admin-tab-pane" id="tab-profile">
           <div class="admin-card">
             <div class="admin-card-header">
               <div>
                 <h3 class="admin-card-title">Corporate Identity &amp; Global Overview</h3>
-                <p class="admin-card-desc">Group brand metadata, primary headlines, and institutional statistics</p>
+                <p class="admin-card-desc">Group brand metadata, primary headlines, and institutional vision</p>
               </div>
               <button type="button" class="admin-btn-primary btn-save-section">Save Profile</button>
             </div>
@@ -271,7 +327,68 @@
               <input type="text" class="admin-input" id="info-subtagline">
             </div>
 
-            <div class="admin-grid-4" style="margin-top:1.25rem;">
+            <div class="admin-grid-2" style="margin-top:1.25rem;">
+              <div class="admin-field-group">
+                <label class="admin-label">Corporate Vision</label>
+                <textarea class="admin-input admin-textarea" id="info-vision" style="min-height: 110px;"></textarea>
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Corporate Mission</label>
+                <textarea class="admin-input admin-textarea" id="info-mission" style="min-height: 110px;"></textarea>
+              </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.08); margin: 2rem 0;">
+
+            <h4 style="color:#00c7b3; margin:0 0 1rem; font-size: 1rem;">Executive Addresses &amp; Messages</h4>
+            <div class="admin-grid-2">
+              <div class="admin-field-group">
+                <label class="admin-label">Chairman's Address — Mr. Arshad Alam Shaikh</label>
+                <textarea class="admin-input admin-textarea" id="info-chairman-message" style="min-height: 120px;"></textarea>
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">CEO's Address — Mrs. Sadaf Fatma</label>
+                <textarea class="admin-input admin-textarea" id="info-ceo-message" style="min-height: 120px;"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 4: INSTITUTIONAL STATISTICS & ANIMATED COUNTERS
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-stats">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">Institutional Statistics &amp; Animated Counters</h3>
+                <p class="admin-card-desc">Control the headline figures displayed on the homepage and about page</p>
+              </div>
+              <button type="button" class="admin-btn-primary btn-save-section">Save Statistics</button>
+            </div>
+
+            <h4 style="color: #0099e6; margin: 1rem 0 0.5rem; font-size: 0.95rem;">Homepage Counters Row</h4>
+            <div class="admin-grid-4">
+              <div class="admin-field-group">
+                <label class="admin-label">Years Heritage (e.g. 18+)</label>
+                <input type="text" class="admin-input" id="stat-years" value="18+">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Verified Projects (e.g. 16)</label>
+                <input type="text" class="admin-input" id="stat-projects-verified" value="16">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Operating Entities (e.g. 4)</label>
+                <input type="text" class="admin-input" id="stat-entities" value="4">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">ISO Accreditation Badge</label>
+                <input type="text" class="admin-input" id="stat-iso" value="TRIPLE">
+              </div>
+            </div>
+
+            <h4 style="color: #00c7b3; margin: 2rem 0 0.5rem; font-size: 0.95rem;">Corporate Portal Scale Indicators</h4>
+            <div class="admin-grid-4">
               <div class="admin-field-group">
                 <label class="admin-label">Global Workforce</label>
                 <input type="text" class="admin-input" id="info-workforce">
@@ -281,7 +398,7 @@
                 <input type="text" class="admin-input" id="info-engineers">
               </div>
               <div class="admin-field-group">
-                <label class="admin-label">Completed Projects</label>
+                <label class="admin-label">Completed Projects Total</label>
                 <input type="text" class="admin-input" id="info-projects">
               </div>
               <div class="admin-field-group">
@@ -290,21 +407,81 @@
               </div>
             </div>
 
-            <div class="admin-grid-2" style="margin-top:1.25rem;">
+            <div class="admin-grid-2" style="margin-top: 1.25rem;">
               <div class="admin-field-group">
-                <label class="admin-label">Corporate Vision</label>
-                <textarea class="admin-input admin-textarea" id="info-vision"></textarea>
+                <label class="admin-label">Client Retention Rate</label>
+                <input type="text" class="admin-input" id="stat-retention" value="98%">
               </div>
               <div class="admin-field-group">
-                <label class="admin-label">Corporate Mission</label>
-                <textarea class="admin-input admin-textarea" id="info-mission"></textarea>
+                <label class="admin-label">Zero-Harm Safe Man-Hours</label>
+                <input type="text" class="admin-input" id="stat-safe-hours" value="5M+ Safe Hours">
               </div>
             </div>
           </div>
         </div>
 
         <!-- ==================================================================
-             TAB 3: ADX TICKER & FINANCIALS
+             TAB 5: OPERATING COMPANIES
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-divisions">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">Operating Companies &amp; Divisions</h3>
+                <p class="admin-card-desc">Manage Rayan Engineering, Rayan Energy, Ashaz Engineering, Rayan Properties, and Holding</p>
+              </div>
+              <button type="button" class="admin-btn-primary btn-save-section">Save Divisions</button>
+            </div>
+            <div id="admin-companies-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 6: EXECUTIVE GOVERNANCE
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-leadership">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">Executive Governance &amp; Board of Directors</h3>
+                <p class="admin-card-desc">Chairman, CEO, COO, CFO, and Division Directors</p>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="admin-btn-secondary" id="btn-add-leader">+ Add Leader</button>
+                <button type="button" class="admin-btn-primary btn-save-section">Save Governance</button>
+              </div>
+            </div>
+            <div id="admin-leadership-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 7: PROJECTS PORTFOLIO
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-projects">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">Master Projects Portfolio (All 16 Projects)</h3>
+                <p class="admin-card-desc">Turnkey EPC, Civil Contracting, Energy, and Landmark Hospitality Projects</p>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="admin-btn-secondary" id="btn-add-project">+ Add New Project</button>
+                <button type="button" class="admin-btn-primary btn-save-section">Save Projects</button>
+              </div>
+            </div>
+            <div id="admin-projects-list">
+              <!-- Dynamically populated table/cards -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 8: ADX TICKER & FINANCIALS
              ================================================================== -->
         <div class="admin-tab-pane" id="tab-ticker">
           <div class="admin-card">
@@ -360,11 +537,89 @@
                 <input type="text" class="admin-input" id="ticker-net-profit">
               </div>
             </div>
+
+            <div class="admin-grid-3" style="margin-top:1.25rem;">
+              <div class="admin-field-group">
+                <label class="admin-label">EBITDA</label>
+                <input type="text" class="admin-input" id="ticker-ebitda" value="AED 385 Million">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Total Order Backlog</label>
+                <input type="text" class="admin-input" id="ticker-backlog" value="AED 4.65 Billion">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Operating Cash Flow</label>
+                <input type="text" class="admin-input" id="ticker-cashflow" value="AED 342.1 Million">
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- ==================================================================
-             TAB 4: DUAL-HUB & CONTACT INFO
+             TAB 9: NEWS & MEDIA
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-news">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">News &amp; Corporate Announcements</h3>
+                <p class="admin-card-desc">Press releases, milestones, and financial disclosures</p>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="admin-btn-secondary" id="btn-add-news">+ Add Press Release</button>
+                <button type="button" class="admin-btn-primary btn-save-section">Save News</button>
+              </div>
+            </div>
+            <div id="admin-news-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 10: CAREERS & TALENT POOL
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-careers">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">Careers &amp; Job Openings</h3>
+                <p class="admin-card-desc">Manage job vacancies displayed across the corporate careers page</p>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="admin-btn-secondary" id="btn-add-career">+ Add Job Opening</button>
+                <button type="button" class="admin-btn-primary btn-save-section">Save Careers</button>
+              </div>
+            </div>
+            <div id="admin-careers-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 11: MILESTONE TIMELINE
+             ================================================================== -->
+        <div class="admin-tab-pane" id="tab-timeline">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3 class="admin-card-title">Corporate Milestone Timeline</h3>
+                <p class="admin-card-desc">Historical timeline milestones and enterprise achievements (2021, 2022, 2024, 2026, Upcoming)</p>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="admin-btn-secondary" id="btn-add-timeline">+ Add Milestone</button>
+                <button type="button" class="admin-btn-primary btn-save-section">Save Timeline</button>
+              </div>
+            </div>
+            <div id="admin-timeline-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 12: DUAL-HUB & CONTACT INFO
              ================================================================== -->
         <div class="admin-tab-pane" id="tab-contacts">
           <div class="admin-card">
@@ -415,83 +670,39 @@
               <label class="admin-label">Address</label>
               <input type="text" class="admin-input" id="hq-ind-address">
             </div>
-          </div>
-        </div>
 
-        <!-- ==================================================================
-             TAB 5: OPERATING COMPANIES
-             ================================================================== -->
-        <div class="admin-tab-pane" id="tab-divisions">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h3 class="admin-card-title">Operating Companies &amp; Divisions</h3>
-                <p class="admin-card-desc">Manage Rayan Engineering, Rayan Energy, Ashaz Engineering, Rayan Properties, etc.</p>
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.08); margin: 2rem 0;">
+
+            <h4 style="color:#38bdf8; margin: 0 0 0.5rem; font-size:0.95rem;">Official Connected Social Media Channels</h4>
+            <div class="admin-grid-2">
+              <div class="admin-field-group">
+                <label class="admin-label">LinkedIn URL</label>
+                <input type="url" class="admin-input" id="social-linkedin" value="https://www.linkedin.com/company/rayangroupinc/">
               </div>
-              <button type="button" class="admin-btn-primary btn-save-section">Save Divisions</button>
-            </div>
-            <div id="admin-companies-list">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
-        </div>
-
-        <!-- ==================================================================
-             TAB 6: PROJECTS PORTFOLIO
-             ================================================================== -->
-        <div class="admin-tab-pane" id="tab-projects">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h3 class="admin-card-title">Master Projects Portfolio</h3>
-                <p class="admin-card-desc">Turnkey EPC, Civil Contracting, Energy, and Landmark Hospitality Projects</p>
+              <div class="admin-field-group">
+                <label class="admin-label">Instagram URL</label>
+                <input type="url" class="admin-input" id="social-instagram" value="https://www.instagram.com/rayangroupinc/">
               </div>
-              <button type="button" class="admin-btn-primary" id="btn-add-project">+ Add New Project</button>
             </div>
-            <div id="admin-projects-list">
-              <!-- Dynamically populated table -->
-            </div>
-          </div>
-        </div>
-
-        <!-- ==================================================================
-             TAB 7: EXECUTIVE GOVERNANCE
-             ================================================================== -->
-        <div class="admin-tab-pane" id="tab-leadership">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h3 class="admin-card-title">Executive Governance &amp; Board of Directors</h3>
-                <p class="admin-card-desc">Chairman, CEO, COO, and Division Directors</p>
+            <div class="admin-grid-3" style="margin-top:1rem;">
+              <div class="admin-field-group">
+                <label class="admin-label">Facebook URL</label>
+                <input type="url" class="admin-input" id="social-facebook" value="https://www.facebook.com/rayangroupinc">
               </div>
-              <button type="button" class="admin-btn-primary btn-save-section">Save Governance</button>
-            </div>
-            <div id="admin-leadership-list">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
-        </div>
-
-        <!-- ==================================================================
-             TAB 8: NEWS & MEDIA
-             ================================================================== -->
-        <div class="admin-tab-pane" id="tab-news">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h3 class="admin-card-title">News &amp; Corporate Announcements</h3>
-                <p class="admin-card-desc">Press releases, milestones, and financial disclosures</p>
+              <div class="admin-field-group">
+                <label class="admin-label">X (Twitter) URL</label>
+                <input type="url" class="admin-input" id="social-twitter" value="https://x.com/rayangroupinc">
               </div>
-              <button type="button" class="admin-btn-primary btn-save-section">Save News</button>
-            </div>
-            <div id="admin-news-list">
-              <!-- Dynamically populated -->
+              <div class="admin-field-group">
+                <label class="admin-label">YouTube URL</label>
+                <input type="url" class="admin-input" id="social-youtube" value="https://www.youtube.com/@rayangroupinc">
+              </div>
             </div>
           </div>
         </div>
 
         <!-- ==================================================================
-             TAB 9: ASSISTANCE WIDGET SETTINGS
+             TAB 13: ASSISTANCE WIDGET SETTINGS
              ================================================================== -->
         <div class="admin-tab-pane" id="tab-widget">
           <div class="admin-card">
@@ -503,7 +714,21 @@
               <button type="button" class="admin-btn-primary btn-save-section">Save Widget</button>
             </div>
 
-            <div class="admin-field-group">
+            <div class="admin-grid-2">
+              <div class="admin-field-group">
+                <label class="admin-label">Desk Status Badge</label>
+                <input type="text" class="admin-input" id="widget-status" value="Online">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Audio Chime Notifications</label>
+                <select class="admin-input" id="widget-sound-pref">
+                  <option value="enabled">Enabled (Play chime on new visitor messages)</option>
+                  <option value="disabled">Muted</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="admin-field-group" style="margin-top:1.25rem;">
               <label class="admin-label">Welcome Text Greeting</label>
               <textarea class="admin-input admin-textarea" id="widget-welcome"></textarea>
             </div>
@@ -516,7 +741,7 @@
         </div>
 
         <!-- ==================================================================
-             TAB 10: GIT PUSH & DEPLOYMENT ENGINE ("push to my git")
+             TAB 14: GIT PUSH & DEPLOYMENT ENGINE ("push to my git")
              ================================================================== -->
         <div class="admin-tab-pane" id="tab-git">
           <div class="admin-git-hero-card">
@@ -589,6 +814,217 @@ Click "Push All Changes to Git & Trigger Vercel Deploy" to commit directly to br
 
     </main>
   </div>
+
+  <!-- ==========================================================================
+       3. FLOATING LIVE ASSISTANCE WIDGET (Visible on Admin Panel for Testing & Direct Use)
+       ========================================================================== -->
+  <aside class="assistance-widget-container" id="assistance-widget" aria-label="Customer Assistance and Support">
+    <!-- Assistance Flyout Card -->
+    <div class="assistance-card" id="assistance-card" role="dialog" aria-modal="false" aria-labelledby="assistance-card-title">
+      
+      <!-- VIEW 1: Main Assistance Menu View -->
+      <div class="assistance-view" id="assistance-menu-view">
+        <div class="assistance-card-header">
+          <div class="assistance-header-left">
+            <div class="assistance-status-dot"></div>
+            <div>
+              <h4 class="assistance-header-title" id="assistance-card-title">Corporate Assistance</h4>
+              <span class="assistance-header-sub">Online &bull; Rayan Group Executive Desk</span>
+            </div>
+          </div>
+          <button type="button" class="assistance-close-btn" id="assistance-close-btn" aria-label="Close Assistance Menu">&times;</button>
+        </div>
+
+        <div class="assistance-card-body">
+          <p class="assistance-welcome-text">
+            Welcome to Rayan Group. How can our engineering and contracting team assist you today?
+          </p>
+
+          <div class="assistance-options-list">
+            <!-- Option 1: Live Corporate Assistance -->
+            <button type="button" class="assistance-option-item opt-live-chat" id="opt-start-live-chat" aria-label="Start Live Corporate Assistance">
+              <div class="assistance-opt-icon opt-icon-live-chat">
+                <span class="live-chat-ping"></span>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <path d="M8 10h.01M12 10h.01M16 10h.01"/>
+                </svg>
+              </div>
+              <div class="assistance-opt-text">
+                <div style="display: flex; align-items: center;">
+                  <span class="assistance-opt-title">Start Live Assistance</span>
+                  <span class="assistance-live-tag">LIVE DESK</span>
+                </div>
+                <span class="assistance-opt-desc">Direct chat with Executive Desk &bull; Instant Reply</span>
+              </div>
+              <span class="assistance-opt-arrow">&rarr;</span>
+            </button>
+
+            <!-- Option 2: Direct Call UAE -->
+            <a href="tel:+97125654497" class="assistance-option-item opt-call">
+              <div class="assistance-opt-icon opt-icon-call">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </div>
+              <div class="assistance-opt-text">
+                <span class="assistance-opt-title">Call UAE HQ</span>
+                <span class="assistance-opt-desc">+971-25654497 (Abu Dhabi, UAE)</span>
+              </div>
+              <span class="assistance-opt-arrow">&rarr;</span>
+            </a>
+
+            <!-- Option 2b: Direct Call India -->
+            <a href="tel:+919973086910" class="assistance-option-item opt-call">
+              <div class="assistance-opt-icon opt-icon-call" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </div>
+              <div class="assistance-opt-text">
+                <span class="assistance-opt-title">Call India Regional Hub</span>
+                <span class="assistance-opt-desc">+91-9973086910 (Ashaz Engineering)</span>
+              </div>
+              <span class="assistance-opt-arrow">&rarr;</span>
+            </a>
+
+            <!-- Option 3: Request Project Proposal (RFP) -->
+            <a href="/proposal/" class="assistance-option-item opt-proposal">
+              <div class="assistance-opt-icon opt-icon-proposal">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </div>
+              <div class="assistance-opt-text">
+                <span class="assistance-opt-title">Submit Tender / RFP</span>
+                <span class="assistance-opt-desc">Fast turnkey feasibility &amp; quotation</span>
+              </div>
+              <span class="assistance-opt-arrow">&rarr;</span>
+            </a>
+
+            <!-- Option 4: Corporate Email -->
+            <a href="mailto:rayan@rayan-group.com" class="assistance-option-item opt-email">
+              <div class="assistance-opt-icon opt-icon-email">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </div>
+              <div class="assistance-opt-text">
+                <span class="assistance-opt-title">Email Executive Desk</span>
+                <span class="assistance-opt-desc">rayan@rayan-group.com</span>
+              </div>
+              <span class="assistance-opt-arrow">&rarr;</span>
+            </a>
+          </div>
+
+          <!-- Quick Topic Chips -->
+          <div class="assistance-chips-section">
+            <span class="assistance-chips-title">Direct Topics:</span>
+            <div class="assistance-chips-list">
+              <button type="button" class="assistance-chip">Civil &amp; Interiors</button>
+              <button type="button" class="assistance-chip">Electrical &amp; Mechanical</button>
+              <button type="button" class="assistance-chip">Tender Proposal</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: Interactive Live Chat View -->
+      <div class="assistance-view assistance-chat-view view-hidden" id="assistance-chat-view">
+        <div class="chat-room-header">
+          <button type="button" class="chat-back-btn" id="chat-back-to-menu-btn" title="Back to menu">
+            <span>&larr; Menu</span>
+          </button>
+          <div class="chat-room-identity">
+            <div class="chat-agent-avatar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span class="chat-agent-pulse"></span>
+            </div>
+            <div class="chat-agent-info">
+              <h5 class="chat-agent-title">Executive Support Desk</h5>
+              <span class="chat-agent-status-text">Online &bull; Live Direct Assistance</span>
+            </div>
+          </div>
+          <div class="chat-header-actions">
+            <button type="button" class="chat-sound-toggle-btn" id="chat-sound-toggle-btn" title="Toggle audio chime" aria-label="Toggle audio chime">🔔</button>
+            <button type="button" class="assistance-close-btn" id="chat-close-btn" aria-label="Close Live Assistance">&times;</button>
+          </div>
+        </div>
+
+        <!-- Chat messages thread -->
+        <div class="chat-messages-container" id="chat-messages-container">
+          <div class="chat-time-divider">Live Advisory Connected</div>
+          
+          <div class="chat-msg-row msg-desk" id="welcome-msg-initial">
+            <div class="chat-msg-meta">
+              <span>🏛️ Rayan Executive Desk</span>
+            </div>
+            <div class="chat-msg-bubble">
+              Welcome to Rayan Group Executive Assistance. Our engineering and project advisory desk is online. How may we assist your project today?
+              <span class="chat-msg-time">Just now</span>
+            </div>
+          </div>
+
+          <!-- Quick Suggestion Prompts -->
+          <div class="chat-suggestions-wrap">
+            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to request an EPC Tender / RFP proposal.">Request Tender Proposal / RFP</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Civil Construction &amp; High-Rise contracting.">Civil &amp; High-Rise EPC</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Energy Facilities &amp; Process Pipelines.">Energy &amp; Process Infrastructure</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to connect with the Executive Directors.">Connect with Executive Director</button>
+          </div>
+
+          <!-- Typing indicator (hidden by default) -->
+          <div class="chat-typing-indicator" id="chat-typing-indicator" style="display: none;">
+            <span class="chat-typing-dot"></span>
+            <span class="chat-typing-dot"></span>
+            <span class="chat-typing-dot"></span>
+            <span class="chat-typing-dot"></span>
+          </div>
+        </div>
+
+        <!-- Visitor quick identification bar -->
+        <div class="chat-visitor-profile-bar">
+          <span style="font-size: 0.68rem; color: #94a3b8; white-space: nowrap;">Your Name / Co:</span>
+          <input type="text" class="chat-visitor-input-sm" id="chat-visitor-name-input" placeholder="e.g. Tariq (Apex Contracting)" maxlength="40">
+        </div>
+
+        <!-- Message composer -->
+        <div class="chat-composer-wrap">
+          <form class="chat-composer-form" id="chat-composer-form">
+            <input type="text" class="chat-input-field" id="chat-input-field" placeholder="Type your message..." autocomplete="off" required>
+            <button type="submit" class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Floating Trigger Button (Bottom-Right) -->
+    <button type="button" class="assistance-trigger-btn" id="assistance-trigger-btn" aria-label="Open Corporate Assistance" aria-expanded="false">
+      <span class="assistance-pulse-ring"></span>
+      <span class="assistance-icon-default" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <path d="M8 10h.01M12 10h.01M16 10h.01"/>
+        </svg>
+      </span>
+      <span class="assistance-icon-close" aria-hidden="true">&times;</span>
+      <span class="assistance-badge-label">Live Assistance</span>
+      <span class="assistance-unread-badge" id="assistance-unread-badge" style="display: none;">1</span>
+    </button>
+  </aside>
 
   <!-- Admin Main JavaScript Controller -->
   <script type="module" src="/src/scripts/admin.js"></script>

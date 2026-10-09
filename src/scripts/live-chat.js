@@ -302,6 +302,9 @@ class LiveAssistanceChat {
       this.scrollToBottom();
     }
 
+    // Save/update session in local index for instant admin panel detection
+    this.updateLocalSessionIndex(msg);
+
     // Broadcast across same-machine tabs
     if (this.broadcastChannel) {
       this.broadcastChannel.postMessage({ type: 'VISITOR_MESSAGE', message: msg, sessionId: this.sessionId });
@@ -327,6 +330,34 @@ class LiveAssistanceChat {
     } catch (err) {
       console.warn('Live chat remote dispatch fallback:', err);
     }
+  }
+
+  updateLocalSessionIndex(lastMsg) {
+    try {
+      let list = JSON.parse(localStorage.getItem('rayan_chat_sessions_index') || '[]');
+      let session = list.find(s => s.id === this.sessionId);
+      if (!session) {
+        session = {
+          id: this.sessionId,
+          visitorName: this.visitorName || 'Website Visitor',
+          page: window.location.pathname || '/',
+          createdAt: Date.now(),
+          lastActivity: Date.now(),
+          lastMessage: lastMsg.text,
+          unreadForAdmin: 1,
+          unreadForVisitor: 0,
+          status: 'active'
+        };
+        list.unshift(session);
+      } else {
+        session.lastActivity = Date.now();
+        session.lastMessage = lastMsg.text;
+        session.unreadForAdmin = (session.unreadForAdmin || 0) + 1;
+        session.page = window.location.pathname || session.page;
+        session.visitorName = this.visitorName || session.visitorName;
+      }
+      localStorage.setItem('rayan_chat_sessions_index', JSON.stringify(list));
+    } catch (e) {}
   }
 
   handleBroadcastMessage(data) {

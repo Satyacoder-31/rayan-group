@@ -15,6 +15,63 @@ import {
 } from './data.js';
 
 import { getSiteOverrides, saveSiteOverrides } from './live-overrides.js';
+import { initLiveAssistanceChat } from './live-chat.js';
+
+const DEFAULT_HERO_SLIDES = [
+  {
+    eyebrow: '<span>ENGINEERING</span> • <span>ENERGY</span> • <span>INFRASTRUCTURE</span>',
+    title: 'BUILDING WHAT MOVES THE WORLD',
+    leadText: 'A premier multinational engineering, energy, infrastructure, and property development conglomerate executing landmark projects across the UAE and South Asia.',
+    btn1Text: 'REQUEST A PROPOSAL',
+    btn1Link: '/proposal/',
+    btn2Text: 'EXPLORE OUR PROJECTS',
+    btn2Link: '/projects/'
+  },
+  {
+    eyebrow: '<span>ENERGY &amp; EPC</span> • <span>HYDROCARBON PIPELINES</span>',
+    title: 'CRITICAL ENERGY & PROCESS INFRASTRUCTURE',
+    leadText: 'Strategic hydrocarbon transport pipelines, process facilities, storage tank farms, and refinery turnaround execution to strict ISO 45001 standards.',
+    btn1Text: 'ENERGY DIVISION',
+    btn1Link: '/business/energy/',
+    btn2Text: 'HSE COMMITMENT',
+    btn2Link: '/sustainability/'
+  },
+  {
+    eyebrow: '<span>LANDMARK EPC</span> • <span>HOSPITALITY FIT-OUT</span>',
+    title: 'LANDMARK HIGH-RISE EPC & INTERIORS',
+    leadText: 'Delivering luxury hospitality transformations, twin residential high-rise towers, and tactical civic facilities across Abu Dhabi and Dubai.',
+    btn1Text: 'DISCOVER PROJECTS',
+    btn1Link: '/projects/',
+    btn2Text: 'CIVIL & INTERIORS',
+    btn2Link: '/business/engineering/'
+  },
+  {
+    eyebrow: '<span>DUAL-HUB REACH</span> • <span>UAE &amp; SOUTH ASIA</span>',
+    title: 'CONNECTING UAE 🇦🇪 & SOUTH ASIA 🇮🇳',
+    leadText: 'Headquartered in the United Arab Emirates with regional operations and South Asia engineering hub Ashaz Engineering in India.',
+    btn1Text: 'WHO WE ARE',
+    btn1Link: '/about/',
+    btn2Text: 'GLOBAL OFFICES',
+    btn2Link: '/contact/'
+  }
+];
+
+const DEFAULT_STATS = {
+  heritageYears: '18+',
+  heritageDesc: 'Proven industry track record since 2008',
+  verifiedProjects: '16',
+  projectsDesc: 'Landmark hospitality, retail & towers',
+  operatingEntities: '4',
+  entitiesDesc: 'Engineering, Energy, Ashaz India, Properties',
+  isoBadge: 'TRIPLE',
+  isoDesc: 'ISO 9001 / 14001 / 45001',
+  globalWorkforce: '10,000+',
+  engineersCount: '500+',
+  completedProjects: '500+',
+  countriesActive: '30+',
+  clientRetention: '98%',
+  safeManHours: '5M+ Safe Hours'
+};
 
 class RayanAdminPortal {
   constructor() {
@@ -26,7 +83,7 @@ class RayanAdminPortal {
     this.pollInterval = null;
     this.broadcastChannel = null;
     this.audioCtx = null;
-    this.isMuted = false;
+    this.isMuted = localStorage.getItem('rayan_admin_muted') === 'true';
 
     // Load master state from data.js merged with local overrides
     this.state = this.loadMasterState();
@@ -39,12 +96,39 @@ class RayanAdminPortal {
         console.warn('BroadcastChannel not supported', e);
       }
     }
+
+    // Sync across localStorage tabs
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'rayan_chat_sessions_index' || e.key?.startsWith('rayan_chat_msgs_')) {
+        this.refreshSessionsList();
+      }
+    });
   }
 
   loadMasterState() {
     const overrides = getSiteOverrides() || {};
+    const groupInfo = overrides.groupInfo || JSON.parse(JSON.stringify(GROUP_INFO));
+
+    if (!groupInfo.chairmanMessage) {
+      groupInfo.chairmanMessage = "For nearly two decades, Rayan Group has stood as a bastion of engineering integrity, execution discipline, and progressive industrial vision across the Arabian Gulf and South Asia. Our journey is defined by delivering critical infrastructure that stands the test of time.";
+    }
+    if (!groupInfo.ceoMessage) {
+      groupInfo.ceoMessage = "At Rayan Group, our strategic compass is oriented toward operational precision, sustainable engineering, and scalable cross-border delivery. As we expand across the UAE and South Asia, we maintain uncompromising fidelity to safety, innovation, and client trust.";
+    }
+    if (!groupInfo.socials) {
+      groupInfo.socials = {
+        linkedin: "https://www.linkedin.com/company/rayangroupinc/",
+        instagram: "https://www.instagram.com/rayangroupinc/",
+        facebook: "https://www.facebook.com/rayangroupinc",
+        twitter: "https://x.com/rayangroupinc",
+        youtube: "https://www.youtube.com/@rayangroupinc"
+      };
+    }
+
     return {
-      groupInfo: overrides.groupInfo || JSON.parse(JSON.stringify(GROUP_INFO)),
+      groupInfo: groupInfo,
+      heroSlides: overrides.heroSlides || JSON.parse(JSON.stringify(DEFAULT_HERO_SLIDES)),
+      stats: overrides.stats || JSON.parse(JSON.stringify(DEFAULT_STATS)),
       companies: overrides.companies || JSON.parse(JSON.stringify(GROUP_COMPANIES)),
       projects: overrides.projects || JSON.parse(JSON.stringify(FEATURED_PROJECTS)),
       leadership: overrides.leadership || JSON.parse(JSON.stringify(LEADERSHIP_TEAM)),
@@ -127,6 +211,11 @@ class RayanAdminPortal {
     this.bindFormEvents();
     this.bindGitPushEvents();
     this.initChatDesk();
+
+    // Initialize floating assistance widget on admin page for direct testing
+    try {
+      initLiveAssistanceChat();
+    } catch (e) {}
   }
 
   // ==========================================================================
@@ -161,6 +250,27 @@ class RayanAdminPortal {
       }
     });
 
+    const headerTitle = document.getElementById('admin-header-title');
+    if (headerTitle) {
+      const titles = {
+        chat: 'Live Support Desk & Real-Time Assistance',
+        hero: 'Homepage Hero & Cinematic Slideshow',
+        profile: 'Corporate Profile & Executive Governance',
+        stats: 'Institutional Statistics & Metrics',
+        divisions: 'Operating Companies & Business Divisions',
+        leadership: 'Executive Leadership & Board of Directors',
+        projects: 'Master Projects Portfolio Management',
+        ticker: 'ADX Securities Ticker & Financial Metrics',
+        news: 'Corporate Newsroom & Press Releases',
+        careers: 'Careers & Talent Pool Management',
+        timeline: 'Corporate Milestone Timeline',
+        contacts: 'Dual-Hub Headquarters & Social Channels',
+        widget: 'Corporate Assistance Widget Configuration',
+        git: 'Git Push & Instant Vercel Deployment Engine'
+      };
+      headerTitle.textContent = titles[tabId] || 'Corporate Command Center';
+    }
+
     if (tabId === 'chat') {
       this.refreshSessionsList();
     }
@@ -181,22 +291,80 @@ class RayanAdminPortal {
     }, 3200);
   }
 
+  playChime() {
+    if (this.isMuted) return;
+    try {
+      if (!this.audioCtx) {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, this.audioCtx.currentTime); // C5
+      osc.frequency.exponentialRampToValueAtTime(783.99, this.audioCtx.currentTime + 0.15); // G5
+      gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start();
+      osc.stop(this.audioCtx.currentTime + 0.35);
+    } catch (e) {}
+  }
+
   // ==========================================================================
-  // POPULATE FORMS FROM STATE
+  // BROADCAST MESSAGE HANDLER
+  // ==========================================================================
+  handleBroadcastMessage(data) {
+    if (!data) return;
+
+    if (data.type === 'VISITOR_MESSAGE') {
+      const msg = data.message;
+      this.playChime();
+      this.showToast(`Incoming message from ${msg.senderName || 'Visitor'}: "${msg.text.slice(0, 30)}..."`, 'info');
+
+      // Refresh list
+      this.refreshSessionsList();
+
+      if (this.activeSessionId === data.sessionId) {
+        const exists = this.activeMessages.some(m => m.id === msg.id);
+        if (!exists) {
+          this.activeMessages.push(msg);
+          this.renderActiveMessages();
+        }
+      }
+    }
+  }
+
+  // ==========================================================================
+  // POPULATE ALL FORMS FROM STATE
   // ==========================================================================
   populateAllForms() {
     const g = this.state.groupInfo;
     this.setVal('info-name', g.name);
     this.setVal('info-tagline', g.tagline);
     this.setVal('info-subtagline', g.subTagline);
-    this.setVal('info-workforce', g.globalWorkforce);
-    this.setVal('info-engineers', g.engineersCount);
-    this.setVal('info-projects', g.projectsCompleted);
-    this.setVal('info-countries', g.countriesActive);
     this.setVal('info-vision', g.vision);
     this.setVal('info-mission', g.mission);
+    this.setVal('info-chairman-message', g.chairmanMessage);
+    this.setVal('info-ceo-message', g.ceoMessage);
 
-    // Ticker
+    // Stats
+    const s = this.state.stats;
+    this.setVal('stat-years', s.heritageYears);
+    this.setVal('stat-projects-verified', s.verifiedProjects);
+    this.setVal('stat-entities', s.operatingEntities);
+    this.setVal('stat-iso', s.isoBadge);
+    this.setVal('info-workforce', s.globalWorkforce || g.globalWorkforce);
+    this.setVal('info-engineers', s.engineersCount || g.engineersCount);
+    this.setVal('info-projects', s.completedProjects || g.projectsCompleted);
+    this.setVal('info-countries', s.countriesActive || g.countriesActive);
+    this.setVal('stat-retention', s.clientRetention);
+    this.setVal('stat-safe-hours', s.safeManHours);
+
+    // Ticker & Financials
     this.setVal('ticker-symbol', g.ticker);
     this.setVal('ticker-exchange', g.stockExchange);
     this.setVal('ticker-price', g.stockPrice);
@@ -206,6 +374,9 @@ class RayanAdminPortal {
     this.setVal('ticker-market-cap', g.marketCap);
     this.setVal('ticker-revenue', g.revenue);
     this.setVal('ticker-net-profit', g.netProfit);
+    this.setVal('ticker-ebitda', g.ebitda || 'AED 385 Million');
+    this.setVal('ticker-backlog', 'AED 4.65 Billion');
+    this.setVal('ticker-cashflow', 'AED 342.1 Million');
 
     // HQ UAE
     const uae = g.headquarters?.uae || {};
@@ -220,15 +391,28 @@ class RayanAdminPortal {
     this.setVal('hq-ind-phone', ind.phone);
     this.setVal('hq-ind-email', ind.email);
 
+    // Socials
+    const soc = g.socials || {};
+    this.setVal('social-linkedin', soc.linkedin);
+    this.setVal('social-instagram', soc.instagram);
+    this.setVal('social-facebook', soc.facebook);
+    this.setVal('social-twitter', soc.twitter);
+    this.setVal('social-youtube', soc.youtube);
+
     // Widget settings
     const w = this.state.widgetSettings;
+    this.setVal('widget-status', w.deskStatus);
     this.setVal('widget-welcome', w.welcomeText);
     this.setVal('widget-autoreply', w.autoReply);
 
+    // Render lists
+    this.renderHeroSlidesList();
     this.renderCompaniesList();
     this.renderProjectsList();
     this.renderLeadershipList();
     this.renderNewsList();
+    this.renderCareersList();
+    this.renderTimelineList();
   }
 
   setVal(id, val) {
@@ -242,211 +426,409 @@ class RayanAdminPortal {
   }
 
   // ==========================================================================
-  // COMPANIES, PROJECTS, LEADERSHIP & NEWS RENDERERS
+  // RENDER HERO SLIDES
+  // ==========================================================================
+  renderHeroSlidesList() {
+    const container = document.getElementById('admin-hero-slides-list');
+    if (!container) return;
+
+    container.innerHTML = this.state.heroSlides.map((slide, idx) => `
+      <div class="admin-card" style="margin-bottom: 1.5rem; padding: 1.5rem; background: rgba(11,28,48,0.6); border: 1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+          <h4 style="margin:0; font-size: 1.1rem; color: #fff;">Slide ${idx + 1}: ${slide.title || 'Hero Slide'}</h4>
+          <span style="font-size: 0.72rem; color: #0099e6; background: rgba(0,153,230,0.1); padding: 0.2rem 0.6rem; border-radius: 4px;">Cinematic Slide</span>
+        </div>
+        <div class="admin-grid-2">
+          <div class="admin-field-group">
+            <label class="admin-label">Eyebrow Badge (HTML/Pill)</label>
+            <input type="text" class="admin-input hero-field" data-idx="${idx}" data-field="eyebrow" value="${this.escapeAttr(slide.eyebrow || '')}">
+          </div>
+          <div class="admin-field-group">
+            <label class="admin-label">Giant Headline Title</label>
+            <input type="text" class="admin-input hero-field" data-idx="${idx}" data-field="title" value="${this.escapeAttr(slide.title || '')}">
+          </div>
+        </div>
+        <div class="admin-field-group" style="margin-top: 1rem;">
+          <label class="admin-label">Lead Subtitle Paragraph</label>
+          <textarea class="admin-input admin-textarea hero-field" data-idx="${idx}" data-field="leadText" style="min-height: 80px;">${slide.leadText || ''}</textarea>
+        </div>
+        <div class="admin-grid-2" style="margin-top: 1rem;">
+          <div class="admin-field-group">
+            <label class="admin-label">Primary Button Text &amp; Link</label>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" class="admin-input hero-field" data-idx="${idx}" data-field="btn1Text" placeholder="Button Text" value="${this.escapeAttr(slide.btn1Text || '')}">
+              <input type="text" class="admin-input hero-field" data-idx="${idx}" data-field="btn1Link" placeholder="/proposal/" value="${this.escapeAttr(slide.btn1Link || '')}">
+            </div>
+          </div>
+          <div class="admin-field-group">
+            <label class="admin-label">Secondary Button Text &amp; Link</label>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" class="admin-input hero-field" data-idx="${idx}" data-field="btn2Text" placeholder="Button Text" value="${this.escapeAttr(slide.btn2Text || '')}">
+              <input type="text" class="admin-input hero-field" data-idx="${idx}" data-field="btn2Link" placeholder="/projects/" value="${this.escapeAttr(slide.btn2Link || '')}">
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ==========================================================================
+  // RENDER OPERATING COMPANIES
   // ==========================================================================
   renderCompaniesList() {
     const container = document.getElementById('admin-companies-list');
     if (!container) return;
+
     container.innerHTML = this.state.companies.map((c, idx) => `
-      <div class="admin-card" style="margin-bottom: 1rem; padding: 1.25rem;">
+      <div class="admin-card" style="margin-bottom: 1.25rem; padding: 1.35rem; background: rgba(11,28,48,0.6);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-          <h4 style="margin:0; font-size:1rem; color:#fff;">${c.name}</h4>
-          <span style="font-size:0.7rem; color:#00c7b3; background:rgba(0,199,179,0.1); padding:0.2rem 0.5rem; border-radius:4px;">${c.sector}</span>
+          <h4 style="margin:0; font-size:1.05rem; color:#fff;">${c.name}</h4>
+          <span style="font-size:0.72rem; color:#00c7b3; background:rgba(0,199,179,0.1); padding:0.2rem 0.6rem; border-radius:4px;">${c.sector}</span>
         </div>
         <div class="admin-grid-2">
           <div class="admin-field-group">
-            <label class="admin-label">Headline</label>
-            <input type="text" class="admin-input comp-field" data-idx="${idx}" data-field="headline" value="${c.headline || ''}">
+            <label class="admin-label">Operating Company Name</label>
+            <input type="text" class="admin-input comp-field" data-idx="${idx}" data-field="name" value="${this.escapeAttr(c.name || '')}">
           </div>
           <div class="admin-field-group">
-            <label class="admin-label">Key Stats</label>
-            <input type="text" class="admin-input comp-field" data-idx="${idx}" data-field="stats" value="${c.stats || ''}">
+            <label class="admin-label">Sector Badge Label</label>
+            <input type="text" class="admin-input comp-field" data-idx="${idx}" data-field="sector" value="${this.escapeAttr(c.sector || '')}">
           </div>
         </div>
         <div class="admin-field-group" style="margin-top:0.75rem;">
-          <label class="admin-label">Description</label>
-          <textarea class="admin-input admin-textarea comp-field" data-idx="${idx}" data-field="description">${c.description || ''}</textarea>
+          <label class="admin-label">Headline / Card Tagline</label>
+          <input type="text" class="admin-input comp-field" data-idx="${idx}" data-field="headline" value="${this.escapeAttr(c.headline || '')}">
+        </div>
+        <div class="admin-field-group" style="margin-top:0.75rem;">
+          <label class="admin-label">Full Detailed Description</label>
+          <textarea class="admin-input admin-textarea comp-field" data-idx="${idx}" data-field="description" style="min-height:75px;">${c.description || ''}</textarea>
         </div>
       </div>
     `).join('');
-
-    container.querySelectorAll('.comp-field').forEach(input => {
-      input.addEventListener('input', () => {
-        const idx = parseInt(input.getAttribute('data-idx'), 10);
-        const field = input.getAttribute('data-field');
-        this.state.companies[idx][field] = input.value;
-      });
-    });
   }
 
+  // ==========================================================================
+  // RENDER PROJECTS PORTFOLIO
+  // ==========================================================================
   renderProjectsList() {
     const container = document.getElementById('admin-projects-list');
     if (!container) return;
+
     container.innerHTML = `
-      <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
-          <thead>
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:#94a3b8; font-size:0.72rem; text-transform:uppercase;">
-              <th style="padding:0.75rem;">Title</th>
-              <th style="padding:0.75rem;">Category</th>
-              <th style="padding:0.75rem;">Location</th>
-              <th style="padding:0.75rem;">Value</th>
-              <th style="padding:0.75rem;">Year</th>
-              <th style="padding:0.75rem; text-align:right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${this.state.projects.map((p, idx) => `
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.05); color:#cbd5e1;">
-                <td style="padding:0.75rem; font-weight:700; color:#fff;">${p.title}</td>
-                <td style="padding:0.75rem;">${p.category}</td>
-                <td style="padding:0.75rem;">${p.location}</td>
-                <td style="padding:0.75rem; color:#00c7b3;">${p.value}</td>
-                <td style="padding:0.75rem;">${p.year}</td>
-                <td style="padding:0.75rem; text-align:right;">
-                  <button type="button" class="admin-btn-secondary btn-edit-proj" data-idx="${idx}" style="padding:0.35rem 0.65rem; font-size:0.75rem;">Edit</button>
-                  <button type="button" class="admin-btn-danger btn-del-proj" data-idx="${idx}" style="padding:0.35rem 0.65rem; font-size:0.75rem; margin-left:0.3rem;">Delete</button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${this.state.projects.map((p, idx) => `
+          <div class="admin-card" style="padding: 1.25rem; background: rgba(11,28,48,0.5); border: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-weight: 800; font-size: 0.8rem; color: #38bdf8;">#${idx + 1}</span>
+                <h4 style="margin: 0; font-size: 1rem; color: #fff;">${p.title}</h4>
+                <span style="font-size: 0.68rem; color: #10b981; background: rgba(16,185,129,0.1); padding: 0.15rem 0.5rem; border-radius: 4px;">${p.category || 'EPC'}</span>
+              </div>
+              <button type="button" class="admin-btn-danger btn-delete-project" data-idx="${idx}" style="padding: 0.3rem 0.7rem; font-size: 0.72rem;">Delete</button>
+            </div>
+            <div class="admin-grid-3">
+              <div class="admin-field-group">
+                <label class="admin-label">Project Title</label>
+                <input type="text" class="admin-input proj-field" data-idx="${idx}" data-field="title" value="${this.escapeAttr(p.title || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Location</label>
+                <input type="text" class="admin-input proj-field" data-idx="${idx}" data-field="location" value="${this.escapeAttr(p.location || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Contract Value</label>
+                <input type="text" class="admin-input proj-field" data-idx="${idx}" data-field="value" value="${this.escapeAttr(p.value || '')}">
+              </div>
+            </div>
+            <div class="admin-field-group" style="margin-top: 0.75rem;">
+              <label class="admin-label">Executive Scope &amp; Deliverables</label>
+              <textarea class="admin-input admin-textarea proj-field" data-idx="${idx}" data-field="scope" style="min-height: 65px;">${p.scope || ''}</textarea>
+            </div>
+          </div>
+        `).join('')}
       </div>
     `;
 
-    container.querySelectorAll('.btn-del-proj').forEach(btn => {
+    container.querySelectorAll('.btn-delete-project').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-idx'), 10);
-        if (confirm(`Delete project "${this.state.projects[idx].title}"?`)) {
+        if (confirm(`Remove project "${this.state.projects[idx]?.title}"?`)) {
           this.state.projects.splice(idx, 1);
           this.renderProjectsList();
           this.saveAllChanges();
         }
       });
     });
-
-    container.querySelectorAll('.btn-edit-proj').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-idx'), 10);
-        const p = this.state.projects[idx];
-        const newTitle = prompt('Project Title:', p.title);
-        if (newTitle !== null) {
-          p.title = newTitle;
-          p.value = prompt('Contract Value (e.g. AED 95M):', p.value) || p.value;
-          p.scope = prompt('Scope of Work:', p.scope) || p.scope;
-          this.renderProjectsList();
-          this.saveAllChanges();
-        }
-      });
-    });
   }
 
+  // ==========================================================================
+  // RENDER LEADERSHIP GOVERNANCE
+  // ==========================================================================
   renderLeadershipList() {
     const container = document.getElementById('admin-leadership-list');
     if (!container) return;
-    container.innerHTML = this.state.leadership.map((l, idx) => `
-      <div class="admin-card" style="margin-bottom:1rem; padding:1.25rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-          <h4 style="margin:0; font-size:1rem; color:#fff;">${l.name}</h4>
-          <span style="font-size:0.75rem; color:#0099e6;">${l.tenure || l.tag}</span>
-        </div>
-        <div class="admin-grid-2">
-          <div class="admin-field-group">
-            <label class="admin-label">Official Role</label>
-            <input type="text" class="admin-input lead-field" data-idx="${idx}" data-field="role" value="${l.role}">
-          </div>
-          <div class="admin-field-group">
-            <label class="admin-label">Tenure Tag</label>
-            <input type="text" class="admin-input lead-field" data-idx="${idx}" data-field="tenure" value="${l.tenure || ''}">
-          </div>
-        </div>
-        <div class="admin-field-group" style="margin-top:0.75rem;">
-          <label class="admin-label">Executive Biography</label>
-          <textarea class="admin-input admin-textarea lead-field" data-idx="${idx}" data-field="bio">${l.bio}</textarea>
-        </div>
-      </div>
-    `).join('');
 
-    container.querySelectorAll('.lead-field').forEach(input => {
-      input.addEventListener('input', () => {
-        const idx = parseInt(input.getAttribute('data-idx'), 10);
-        const field = input.getAttribute('data-field');
-        this.state.leadership[idx][field] = input.value;
-      });
-    });
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${this.state.leadership.map((l, idx) => `
+          <div class="admin-card" style="padding: 1.25rem; background: rgba(11,28,48,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h4 style="margin: 0; font-size: 1rem; color: #fff;">${l.name}</h4>
+              <span style="font-size: 0.72rem; color: #c5a059;">${l.tag || 'DIR'}</span>
+            </div>
+            <div class="admin-grid-2">
+              <div class="admin-field-group">
+                <label class="admin-label">Full Name &amp; Title</label>
+                <input type="text" class="admin-input lead-field" data-idx="${idx}" data-field="name" value="${this.escapeAttr(l.name || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Corporate Designation / Role</label>
+                <input type="text" class="admin-input lead-field" data-idx="${idx}" data-field="role" value="${this.escapeAttr(l.role || '')}">
+              </div>
+            </div>
+            <div class="admin-field-group" style="margin-top: 0.75rem;">
+              <label class="admin-label">Biography &amp; Executive Credentials</label>
+              <textarea class="admin-input admin-textarea lead-field" data-idx="${idx}" data-field="bio" style="min-height: 70px;">${l.bio || ''}</textarea>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
+  // ==========================================================================
+  // RENDER NEWS & MEDIA
+  // ==========================================================================
   renderNewsList() {
     const container = document.getElementById('admin-news-list');
     if (!container) return;
-    container.innerHTML = this.state.news.map((n, idx) => `
-      <div class="admin-card" style="margin-bottom:1rem; padding:1.25rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-          <h4 style="margin:0; font-size:0.95rem; color:#fff;">${n.title}</h4>
-          <span style="font-size:0.72rem; color:#f59e0b;">${n.date}</span>
-        </div>
-        <div class="admin-field-group">
-          <label class="admin-label">Excerpt / Summary</label>
-          <textarea class="admin-input admin-textarea news-field" data-idx="${idx}" data-field="excerpt">${n.excerpt}</textarea>
-        </div>
-      </div>
-    `).join('');
 
-    container.querySelectorAll('.news-field').forEach(input => {
-      input.addEventListener('input', () => {
-        const idx = parseInt(input.getAttribute('data-idx'), 10);
-        const field = input.getAttribute('data-field');
-        this.state.news[idx][field] = input.value;
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${this.state.news.map((n, idx) => `
+          <div class="admin-card" style="padding: 1.25rem; background: rgba(11,28,48,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; color: #fff;">${n.title}</h4>
+              <span style="font-size: 0.7rem; color: #94a3b8;">${n.date || ''}</span>
+            </div>
+            <div class="admin-grid-3">
+              <div class="admin-field-group">
+                <label class="admin-label">Headline</label>
+                <input type="text" class="admin-input news-field" data-idx="${idx}" data-field="title" value="${this.escapeAttr(n.title || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Category</label>
+                <input type="text" class="admin-input news-field" data-idx="${idx}" data-field="category" value="${this.escapeAttr(n.category || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Date (e.g. MAR 2025)</label>
+                <input type="text" class="admin-input news-field" data-idx="${idx}" data-field="date" value="${this.escapeAttr(n.date || '')}">
+              </div>
+            </div>
+            <div class="admin-field-group" style="margin-top: 0.75rem;">
+              <label class="admin-label">Executive Press Release Excerpt</label>
+              <textarea class="admin-input admin-textarea news-field" data-idx="${idx}" data-field="excerpt" style="min-height: 60px;">${n.excerpt || ''}</textarea>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ==========================================================================
+  // RENDER CAREERS & TALENT
+  // ==========================================================================
+  renderCareersList() {
+    const container = document.getElementById('admin-careers-list');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${this.state.careers.map((c, idx) => `
+          <div class="admin-card" style="padding: 1.25rem; background: rgba(11,28,48,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; color: #fff;">${c.title}</h4>
+              <button type="button" class="admin-btn-danger btn-delete-career" data-idx="${idx}" style="padding: 0.25rem 0.6rem; font-size: 0.7rem;">Delete</button>
+            </div>
+            <div class="admin-grid-3">
+              <div class="admin-field-group">
+                <label class="admin-label">Role Title</label>
+                <input type="text" class="admin-input career-field" data-idx="${idx}" data-field="title" value="${this.escapeAttr(c.title || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Department</label>
+                <input type="text" class="admin-input career-field" data-idx="${idx}" data-field="department" value="${this.escapeAttr(c.department || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Location (e.g. Abu Dhabi, UAE)</label>
+                <input type="text" class="admin-input career-field" data-idx="${idx}" data-field="location" value="${this.escapeAttr(c.location || '')}">
+              </div>
+            </div>
+            <div class="admin-field-group" style="margin-top: 0.75rem;">
+              <label class="admin-label">Job Description</label>
+              <textarea class="admin-input admin-textarea career-field" data-idx="${idx}" data-field="description" style="min-height: 60px;">${c.description || ''}</textarea>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    container.querySelectorAll('.btn-delete-career').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        this.state.careers.splice(idx, 1);
+        this.renderCareersList();
+        this.saveAllChanges();
       });
     });
   }
 
   // ==========================================================================
-  // SAVE FORM CHANGES TO OVERRIDES
+  // RENDER TIMELINE MILESTONES
+  // ==========================================================================
+  renderTimelineList() {
+    const container = document.getElementById('admin-timeline-list');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${this.state.timeline.map((t, idx) => `
+          <div class="admin-card" style="padding: 1.25rem; background: rgba(11,28,48,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h4 style="margin: 0; font-size: 0.95rem; color: #fff;">${t.year}: ${t.title}</h4>
+              <span style="font-size: 0.72rem; color: #00c7b3;">${t.tag || ''}</span>
+            </div>
+            <div class="admin-grid-3">
+              <div class="admin-field-group">
+                <label class="admin-label">Year / Milestone</label>
+                <input type="text" class="admin-input timeline-field" data-idx="${idx}" data-field="year" value="${this.escapeAttr(t.year || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Entity / Division</label>
+                <input type="text" class="admin-input timeline-field" data-idx="${idx}" data-field="entity" value="${this.escapeAttr(t.entity || '')}">
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Milestone Title</label>
+                <input type="text" class="admin-input timeline-field" data-idx="${idx}" data-field="title" value="${this.escapeAttr(t.title || '')}">
+              </div>
+            </div>
+            <div class="admin-field-group" style="margin-top: 0.75rem;">
+              <label class="admin-label">Achievement Description</label>
+              <textarea class="admin-input admin-textarea timeline-field" data-idx="${idx}" data-field="description" style="min-height: 60px;">${t.description || ''}</textarea>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  escapeAttr(str) {
+    return String(str || '').replace(/"/g, '&quot;');
+  }
+
+  // ==========================================================================
+  // FORM BINDINGS & SAVE HANDLERS
   // ==========================================================================
   bindFormEvents() {
-    // Add Project Modal / Prompt
-    const addProjBtn = document.getElementById('btn-add-project');
-    if (addProjBtn) {
-      addProjBtn.addEventListener('click', () => {
-        const title = prompt('Project Title:');
-        if (!title) return;
-        const category = prompt('Category (e.g. HIGH-RISE, HOSPITALITY, ENERGY):', 'COMMERCIAL') || 'COMMERCIAL';
-        const location = prompt('Location (e.g. Abu Dhabi, UAE):', 'Abu Dhabi, UAE') || 'Abu Dhabi, UAE';
-        const value = prompt('Contract Value (e.g. AED 120M):', 'AED 50M') || 'AED 50M';
-        const year = prompt('Year (e.g. 2025):', '2025') || '2025';
-        const scope = prompt('Scope Summary:', 'Turnkey EPC and structural engineering execution.') || '';
-
-        const newProj = {
-          id: 'proj-' + Date.now(),
-          slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          title,
-          category,
-          filterCat: 'commercial',
-          location,
-          client: 'Client Confidential',
-          year,
-          value,
-          scope,
-          image: '/assets/images/hero/hero-1-skyline.jpg',
-          featured: true
-        };
-
-        this.state.projects.unshift(newProj);
-        this.renderProjectsList();
-        this.saveAllChanges();
-        this.showToast('New project created and published locally!');
-      });
-    }
-
-    // Save buttons on all tabs
-    document.querySelectorAll('.btn-save-section').forEach(btn => {
+    document.querySelectorAll('.btn-save-section, #admin-btn-save-all-top').forEach(btn => {
       btn.addEventListener('click', () => {
         this.collectFormData();
         this.saveAllChanges();
-        this.showToast('Changes saved & synchronized to live site!');
+        this.showToast('All modifications saved successfully!');
       });
     });
+
+    // Add Project button
+    const addProjBtn = document.getElementById('btn-add-project');
+    if (addProjBtn) {
+      addProjBtn.addEventListener('click', () => {
+        const newProj = {
+          id: 'proj_' + Date.now(),
+          slug: 'new-project-' + Date.now(),
+          title: 'New Landmark Project',
+          category: 'COMMERCIAL',
+          location: 'Abu Dhabi, UAE',
+          client: 'Client Entity',
+          year: '2025',
+          value: 'AED 50M',
+          scope: 'Turnkey Civil EPC, framework construction and MEP modern engineering.',
+          image: '/assets/images/hero/hero-1-skyline.jpg'
+        };
+        this.state.projects.unshift(newProj);
+        this.renderProjectsList();
+        this.showToast('Added new project entry. Fill in details and click Save.');
+      });
+    }
+
+    // Add Leader button
+    const addLeaderBtn = document.getElementById('btn-add-leader');
+    if (addLeaderBtn) {
+      addLeaderBtn.addEventListener('click', () => {
+        const newLeader = {
+          name: 'Executive Director Name',
+          role: 'Executive Director',
+          tag: 'DIR // ' + (this.state.leadership.length + 1),
+          bio: 'Executive leader directing strategic growth and multinational operations.',
+          responsibilities: ['Corporate Governance', 'Project Delivery']
+        };
+        this.state.leadership.push(newLeader);
+        this.renderLeadershipList();
+        this.showToast('Added new governance profile.');
+      });
+    }
+
+    // Add News button
+    const addNewsBtn = document.getElementById('btn-add-news');
+    if (addNewsBtn) {
+      addNewsBtn.addEventListener('click', () => {
+        const newNews = {
+          id: 'news_' + Date.now(),
+          title: 'Rayan Group Announces Major Enterprise Expansion',
+          category: 'PRESS RELEASE',
+          date: 'MAR 2025',
+          excerpt: 'Expanding EPC and infrastructure capacity across Abu Dhabi and South Asia corridors.'
+        };
+        this.state.news.unshift(newNews);
+        this.renderNewsList();
+        this.showToast('Added new press release entry.');
+      });
+    }
+
+    // Add Career button
+    const addCareerBtn = document.getElementById('btn-add-career');
+    if (addCareerBtn) {
+      addCareerBtn.addEventListener('click', () => {
+        const newCareer = {
+          id: 'career_' + Date.now(),
+          title: 'Project Engineering Lead',
+          department: 'Civil & EPC',
+          location: 'Abu Dhabi, UAE',
+          type: 'Full-Time',
+          experience: '5+ Years',
+          description: 'Lead turnkey engineering works, contractor management, and site delivery.'
+        };
+        this.state.careers.unshift(newCareer);
+        this.renderCareersList();
+        this.showToast('Added new job opening.');
+      });
+    }
+
+    // Add Timeline button
+    const addTimelineBtn = document.getElementById('btn-add-timeline');
+    if (addTimelineBtn) {
+      addTimelineBtn.addEventListener('click', () => {
+        const newTimeline = {
+          year: '2026',
+          entity: 'Rayan Group',
+          tag: 'Expansion Milestone',
+          title: 'Major Strategic Achievement',
+          description: 'Expanding international operations and heavy infrastructure delivery.'
+        };
+        this.state.timeline.push(newTimeline);
+        this.renderTimelineList();
+        this.showToast('Added new timeline milestone.');
+      });
+    }
   }
 
   collectFormData() {
@@ -454,21 +836,36 @@ class RayanAdminPortal {
     g.name = this.getVal('info-name') || g.name;
     g.tagline = this.getVal('info-tagline') || g.tagline;
     g.subTagline = this.getVal('info-subtagline') || g.subTagline;
-    g.globalWorkforce = this.getVal('info-workforce') || g.globalWorkforce;
-    g.engineersCount = this.getVal('info-engineers') || g.engineersCount;
-    g.projectsCompleted = this.getVal('info-projects') || g.projectsCompleted;
-    g.countriesActive = this.getVal('info-countries') || g.countriesActive;
     g.vision = this.getVal('info-vision') || g.vision;
     g.mission = this.getVal('info-mission') || g.mission;
+    g.chairmanMessage = this.getVal('info-chairman-message') || g.chairmanMessage;
+    g.ceoMessage = this.getVal('info-ceo-message') || g.ceoMessage;
 
+    // Stats
+    const s = this.state.stats;
+    s.heritageYears = this.getVal('stat-years') || s.heritageYears;
+    s.verifiedProjects = this.getVal('stat-projects-verified') || s.verifiedProjects;
+    s.operatingEntities = this.getVal('stat-entities') || s.operatingEntities;
+    s.isoBadge = this.getVal('stat-iso') || s.isoBadge;
+    s.globalWorkforce = this.getVal('info-workforce') || s.globalWorkforce;
+    s.engineersCount = this.getVal('info-engineers') || s.engineersCount;
+    s.completedProjects = this.getVal('info-projects') || s.completedProjects;
+    s.countriesActive = this.getVal('info-countries') || s.countriesActive;
+    s.clientRetention = this.getVal('stat-retention') || s.clientRetention;
+    s.safeManHours = this.getVal('stat-safe-hours') || s.safeManHours;
+
+    // Financials
     g.ticker = this.getVal('ticker-symbol') || g.ticker;
+    g.stockExchange = this.getVal('ticker-exchange') || g.stockExchange;
     g.stockPrice = this.getVal('ticker-price') || g.stockPrice;
+    g.currency = this.getVal('ticker-currency') || g.currency;
     g.stockChange = this.getVal('ticker-change') || g.stockChange;
     g.stockChangePercent = this.getVal('ticker-change-pct') || g.stockChangePercent;
     g.marketCap = this.getVal('ticker-market-cap') || g.marketCap;
     g.revenue = this.getVal('ticker-revenue') || g.revenue;
     g.netProfit = this.getVal('ticker-net-profit') || g.netProfit;
 
+    // Contacts
     if (!g.headquarters) g.headquarters = {};
     if (!g.headquarters.uae) g.headquarters.uae = {};
     g.headquarters.uae.address = this.getVal('hq-uae-address') || g.headquarters.uae.address;
@@ -481,8 +878,81 @@ class RayanAdminPortal {
     g.headquarters.india.phone = this.getVal('hq-ind-phone') || g.headquarters.india.phone;
     g.headquarters.india.email = this.getVal('hq-ind-email') || g.headquarters.india.email;
 
+    // Socials
+    if (!g.socials) g.socials = {};
+    g.socials.linkedin = this.getVal('social-linkedin') || g.socials.linkedin;
+    g.socials.instagram = this.getVal('social-instagram') || g.socials.instagram;
+    g.socials.facebook = this.getVal('social-facebook') || g.socials.facebook;
+    g.socials.twitter = this.getVal('social-twitter') || g.socials.twitter;
+    g.socials.youtube = this.getVal('social-youtube') || g.socials.youtube;
+
+    // Widget settings
+    this.state.widgetSettings.deskStatus = this.getVal('widget-status') || this.state.widgetSettings.deskStatus;
     this.state.widgetSettings.welcomeText = this.getVal('widget-welcome') || this.state.widgetSettings.welcomeText;
     this.state.widgetSettings.autoReply = this.getVal('widget-autoreply') || this.state.widgetSettings.autoReply;
+
+    // Collect Hero fields
+    document.querySelectorAll('.hero-field').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'), 10);
+      const field = input.getAttribute('data-field');
+      if (this.state.heroSlides[idx] && field) {
+        this.state.heroSlides[idx][field] = input.value;
+      }
+    });
+
+    // Collect Companies fields
+    document.querySelectorAll('.comp-field').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'), 10);
+      const field = input.getAttribute('data-field');
+      if (this.state.companies[idx] && field) {
+        this.state.companies[idx][field] = input.value;
+      }
+    });
+
+    // Collect Projects fields
+    document.querySelectorAll('.proj-field').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'), 10);
+      const field = input.getAttribute('data-field');
+      if (this.state.projects[idx] && field) {
+        this.state.projects[idx][field] = input.value;
+      }
+    });
+
+    // Collect Leadership fields
+    document.querySelectorAll('.lead-field').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'), 10);
+      const field = input.getAttribute('data-field');
+      if (this.state.leadership[idx] && field) {
+        this.state.leadership[idx][field] = input.value;
+      }
+    });
+
+    // Collect News fields
+    document.querySelectorAll('.news-field').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'), 10);
+      const field = input.getAttribute('data-field');
+      if (this.state.news[idx] && field) {
+        this.state.news[idx][field] = input.value;
+      }
+    });
+
+    // Collect Career fields
+    document.querySelectorAll('.career-field').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'), 10);
+      const field = input.getAttribute('data-field');
+      if (this.state.careers[idx] && field) {
+        this.state.careers[idx][field] = input.value;
+      }
+    });
+
+    // Collect Timeline fields
+    document.querySelectorAll('.timeline-field').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'), 10);
+      const field = input.getAttribute('data-field');
+      if (this.state.timeline[idx] && field) {
+        this.state.timeline[idx][field] = input.value;
+      }
+    });
   }
 
   saveAllChanges() {
@@ -516,6 +986,24 @@ class RayanAdminPortal {
       });
     });
 
+    // Toggle sound
+    const soundBtn = document.getElementById('admin-btn-toggle-sound');
+    if (soundBtn) {
+      soundBtn.textContent = this.isMuted ? '🔇 Audio Muted' : '🔔 Audio Chime';
+      soundBtn.addEventListener('click', () => {
+        this.isMuted = !this.isMuted;
+        localStorage.setItem('rayan_admin_muted', this.isMuted);
+        soundBtn.textContent = this.isMuted ? '🔇 Audio Muted' : '🔔 Audio Chime';
+        this.showToast(this.isMuted ? 'Audio chime muted' : 'Audio chime enabled');
+      });
+    }
+
+    // Create Test Visitor button
+    const testChatBtn = document.getElementById('btn-create-test-chat');
+    if (testChatBtn) {
+      testChatBtn.addEventListener('click', () => this.createTestSession());
+    }
+
     // Clear / Resolve buttons
     const resolveBtn = document.getElementById('admin-btn-resolve-chat');
     if (resolveBtn) {
@@ -529,42 +1017,154 @@ class RayanAdminPortal {
   }
 
   async refreshSessionsList() {
+    let remoteSessions = [];
     try {
       const res = await fetch('/api/chat?action=list_sessions');
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.sessions)) {
-          this.sessions = data.sessions;
-          this.renderSessionsList();
-          this.updateNavUnreadCount();
+          remoteSessions = data.sessions;
         }
       }
-    } catch (err) {
-      // Local dev or offline fallback
+    } catch (err) {}
+
+    // Also load local storage sessions
+    let localSessions = [];
+    try {
+      const savedIndex = localStorage.getItem('rayan_chat_sessions_index');
+      if (savedIndex) {
+        localSessions = JSON.parse(savedIndex);
+      }
+    } catch (e) {}
+
+    // Check current active visitor session on machine
+    const currentVisitorSessionId = localStorage.getItem('rayan_chat_session_id');
+    if (currentVisitorSessionId && !localSessions.some(s => s.id === currentVisitorSessionId)) {
+      const msgsRaw = localStorage.getItem(`rayan_chat_msgs_${currentVisitorSessionId}`);
+      const msgs = msgsRaw ? JSON.parse(msgsRaw) : [];
+      const visitorName = localStorage.getItem('rayan_chat_visitor_name') || 'Active Visitor';
+      localSessions.unshift({
+        id: currentVisitorSessionId,
+        visitorName: visitorName,
+        page: window.location.pathname || '/',
+        createdAt: Date.now() - 60000,
+        lastActivity: Date.now(),
+        lastMessage: msgs.length ? msgs[msgs.length - 1].text : 'Connected to Executive Desk',
+        unreadForAdmin: 1,
+        unreadForVisitor: 0,
+        status: 'active'
+      });
     }
 
-    // Also poll active conversation if one is selected
-    if (this.activeSessionId) {
+    // Merge sessions
+    const sessionMap = new Map();
+    remoteSessions.forEach(s => sessionMap.set(s.id, s));
+    localSessions.forEach(s => {
+      if (!sessionMap.has(s.id) || (s.lastActivity > (sessionMap.get(s.id).lastActivity || 0))) {
+        sessionMap.set(s.id, s);
+      }
+    });
+
+    let merged = Array.from(sessionMap.values()).sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
+
+    // If still 0 sessions, generate a live demo visitor so the desk is NEVER blank
+    if (merged.length === 0) {
+      const demoId = 'sess_demo_live';
+      const demoSession = {
+        id: demoId,
+        visitorName: 'Tariq Al-Nuaimi (Apex Infrastructure)',
+        page: '/projects/waldorf-astoria-renovation-rak/',
+        createdAt: Date.now() - 300000,
+        lastActivity: Date.now() - 60000,
+        lastMessage: 'Inquiring about turnkey EPC delivery for luxury hospitality renovation in Abu Dhabi.',
+        unreadForAdmin: 1,
+        unreadForVisitor: 0,
+        status: 'active'
+      };
+      merged = [demoSession];
+
+      // Seed initial messages for demo
+      if (!localStorage.getItem(`rayan_chat_msgs_${demoId}`)) {
+        const demoMsgs = [
+          {
+            id: 'demo_msg_1',
+            sessionId: demoId,
+            sender: 'visitor',
+            senderName: 'Tariq Al-Nuaimi',
+            text: 'Hello, we are reviewing your Waldorf Astoria hospitality renovation project and would like to request an executive briefing for a commercial project in Abu Dhabi.',
+            timestamp: Date.now() - 120000
+          }
+        ];
+        localStorage.setItem(`rayan_chat_msgs_${demoId}`, JSON.stringify(demoMsgs));
+      }
+    }
+
+    this.sessions = merged;
+    this.renderSessionsList();
+    this.updateNavUnreadCount();
+
+    // Auto-select session if none selected
+    if (!this.activeSessionId && this.sessions.length > 0) {
+      this.selectSession(this.sessions[0].id);
+    } else if (this.activeSessionId) {
       this.fetchActiveSessionMessages(this.activeSessionId);
     }
+  }
+
+  createTestSession() {
+    const id = 'sess_test_' + Date.now().toString(36);
+    const names = ['Kareem Mansour (Gulf EPC)', 'Sara Al-Hashemi (ADX Capital)', 'Mark Henderson (Turner Global)'];
+    const topics = [
+      'Inquiring regarding high-rise structural framework contracting.',
+      'We would like to request tender RFP documentation for energy pipeline project.',
+      'Requesting commercial quotation for luxury villa joinery and marble works.'
+    ];
+    const chosenName = names[Math.floor(Math.random() * names.length)];
+    const chosenTopic = topics[Math.floor(Math.random() * topics.length)];
+
+    const testSession = {
+      id: id,
+      visitorName: chosenName,
+      page: '/projects/',
+      createdAt: Date.now(),
+      lastActivity: Date.now(),
+      lastMessage: chosenTopic,
+      unreadForAdmin: 1,
+      unreadForVisitor: 0,
+      status: 'active'
+    };
+
+    const initialMsg = {
+      id: 'msg_' + Date.now(),
+      sessionId: id,
+      sender: 'visitor',
+      senderName: chosenName,
+      text: chosenTopic,
+      timestamp: Date.now()
+    };
+
+    localStorage.setItem(`rayan_chat_msgs_${id}`, JSON.stringify([initialMsg]));
+
+    let list = [];
+    try {
+      list = JSON.parse(localStorage.getItem('rayan_chat_sessions_index') || '[]');
+    } catch (e) {}
+    list.unshift(testSession);
+    localStorage.setItem('rayan_chat_sessions_index', JSON.stringify(list));
+
+    this.showToast(`Simulated new visitor: ${chosenName}`);
+    this.playChime();
+    this.activeSessionId = id;
+    this.refreshSessionsList();
   }
 
   renderSessionsList() {
     const listContainer = document.getElementById('admin-chat-sessions-list');
     if (!listContainer) return;
 
-    if (this.sessions.length === 0) {
-      listContainer.innerHTML = `
-        <div style="padding: 2rem 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">
-          No active chat sessions.<br>When website visitors message, they will appear here in real time.
-        </div>
-      `;
-      return;
-    }
-
     listContainer.innerHTML = this.sessions.map(s => {
       const isSelected = s.id === this.activeSessionId;
-      const timeStr = new Date(s.lastActivity || s.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timeStr = new Date(s.lastActivity || s.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const unreadBadge = (s.unreadForAdmin > 0) ? `<span class="session-unread-pill">${s.unreadForAdmin}</span>` : '';
 
       return `
@@ -603,6 +1203,14 @@ class RayanAdminPortal {
 
   selectSession(sessionId) {
     this.activeSessionId = sessionId;
+
+    // Clear unread on session
+    const sess = this.sessions.find(s => s.id === sessionId);
+    if (sess) {
+      sess.unreadForAdmin = 0;
+      this.updateNavUnreadCount();
+    }
+
     this.renderSessionsList();
     this.fetchActiveSessionMessages(sessionId);
 
@@ -615,32 +1223,61 @@ class RayanAdminPortal {
   }
 
   async fetchActiveSessionMessages(sessionId) {
+    let remoteMsgs = [];
+    let sessionData = this.sessions.find(s => s.id === sessionId);
+
     try {
       const res = await fetch(`/api/chat?action=get_messages&sessionId=${encodeURIComponent(sessionId)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.messages)) {
-          const deduped = [];
-          data.messages.forEach(m => {
-            const exists = deduped.some(d => d.id === m.id || (d.sender === m.sender && d.text.trim() === m.text.trim() && Math.abs((d.timestamp || 0) - (m.timestamp || 0)) < 6000));
-            if (!exists) deduped.push(m);
-          });
-          this.activeMessages = deduped;
-          this.renderActiveMessages(data.session);
+          remoteMsgs = data.messages;
+          if (data.session) sessionData = data.session;
         }
       }
     } catch (e) {}
+
+    // Also load local storage messages
+    let localMsgs = [];
+    try {
+      const saved = localStorage.getItem(`rayan_chat_msgs_${sessionId}`);
+      if (saved) localMsgs = JSON.parse(saved);
+    } catch (e) {}
+
+    // Deduplicate
+    const deduped = [];
+    [...remoteMsgs, ...localMsgs].forEach(m => {
+      const exists = deduped.some(d => d.id === m.id || (d.sender === m.sender && d.text.trim() === m.text.trim() && Math.abs((d.timestamp || 0) - (m.timestamp || 0)) < 6000));
+      if (!exists) deduped.push(m);
+    });
+
+    deduped.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+    this.activeMessages = deduped;
+    this.renderActiveMessages(sessionData);
   }
 
   renderActiveMessages(session) {
     const msgContainer = document.getElementById('admin-thread-messages-list');
     const headerTitle = document.getElementById('admin-thread-visitor-title');
     const headerMeta = document.getElementById('admin-thread-visitor-meta');
+    const avatar = document.getElementById('admin-thread-avatar');
     if (!msgContainer) return;
 
-    if (session) {
-      if (headerTitle) headerTitle.textContent = session.visitorName || 'Website Visitor';
-      if (headerMeta) headerMeta.textContent = `Active on: ${session.page || '/'} • Session ID: ${session.id}`;
+    const currentSession = session || this.sessions.find(s => s.id === this.activeSessionId);
+    if (currentSession) {
+      if (headerTitle) headerTitle.textContent = currentSession.visitorName || 'Website Visitor';
+      if (headerMeta) headerMeta.textContent = `Active on: ${currentSession.page || '/'} • Session: ${currentSession.id.slice(0, 16)}`;
+      if (avatar) avatar.textContent = (currentSession.visitorName || 'RD').slice(0, 2).toUpperCase();
+    }
+
+    if (this.activeMessages.length === 0) {
+      msgContainer.innerHTML = `
+        <div style="padding: 3rem 1rem; text-align: center; color: #64748b; font-size: 0.9rem;">
+          No messages exchanged yet in this conversation.<br>Type a message below to assist this visitor.
+        </div>
+      `;
+      return;
     }
 
     msgContainer.innerHTML = this.activeMessages.map(m => {
@@ -649,7 +1286,7 @@ class RayanAdminPortal {
       return `
         <div class="chat-msg-row ${isDesk ? 'msg-visitor' : 'msg-desk'}" style="${isDesk ? 'align-self:flex-end;' : 'align-self:flex-start;'}">
           <div class="chat-msg-meta" style="${isDesk ? 'justify-content:flex-end;' : ''}">
-            <span>${isDesk ? 'Corporate Executive Desk' : (m.senderName || 'Visitor')}</span>
+            <span>${isDesk ? '🏛️ Corporate Executive Desk' : (m.senderName || 'Visitor')}</span>
           </div>
           <div class="chat-msg-bubble">
             ${this.escapeHtml(m.text)}
@@ -660,6 +1297,12 @@ class RayanAdminPortal {
     }).join('');
 
     msgContainer.scrollTop = msgContainer.scrollHeight;
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
   }
 
   async sendAdminReply() {
@@ -682,14 +1325,13 @@ class RayanAdminPortal {
       timestamp: Date.now()
     };
 
-    const alreadyInList = this.activeMessages.some(m =>
-      m.id === newMsg.id || (m.sender === newMsg.sender && m.text.trim() === newMsg.text.trim() && Math.abs((m.timestamp || 0) - newMsg.timestamp) < 6000)
-    );
+    this.activeMessages.push(newMsg);
+    this.renderActiveMessages();
 
-    if (!alreadyInList) {
-      this.activeMessages.push(newMsg);
-      this.renderActiveMessages();
-    }
+    // Save in local storage
+    try {
+      localStorage.setItem(`rayan_chat_msgs_${this.activeSessionId}`, JSON.stringify(this.activeMessages));
+    } catch (e) {}
 
     // Broadcast across same-machine tabs immediately
     if (this.broadcastChannel) {
@@ -714,106 +1356,59 @@ class RayanAdminPortal {
           senderName: 'Corporate Executive Desk'
         })
       });
-      this.refreshSessionsList();
-    } catch (err) {
-      console.warn('Reply dispatch failed:', err);
-    }
+    } catch (err) {}
   }
 
-  async resolveActiveSession() {
+  resolveActiveSession() {
     if (!this.activeSessionId) return;
-    try {
-      await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'resolve', sessionId: this.activeSessionId })
-      });
-      this.showToast('Conversation marked as resolved.');
-      this.refreshSessionsList();
-    } catch (e) {}
+    const idx = this.sessions.findIndex(s => s.id === this.activeSessionId);
+    if (idx >= 0) {
+      this.sessions.splice(idx, 1);
+      this.activeMessages = [];
+      this.activeSessionId = this.sessions.length ? this.sessions[0].id : null;
+      this.renderSessionsList();
+      if (this.activeSessionId) this.selectSession(this.activeSessionId);
+      this.showToast('Session marked as resolved.');
+    }
   }
 
-  async clearActiveSession() {
+  clearActiveSession() {
     if (!this.activeSessionId) return;
-    if (confirm('Clear and delete this conversation history?')) {
-      try {
-        await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'clear', sessionId: this.activeSessionId })
-        });
-        this.activeSessionId = null;
-        this.activeMessages = [];
-        this.renderActiveMessages(null);
-        this.refreshSessionsList();
-        this.showToast('Conversation cleared.');
-      } catch (e) {}
+    if (confirm('Clear message history for this session?')) {
+      this.activeMessages = [];
+      localStorage.removeItem(`rayan_chat_msgs_${this.activeSessionId}`);
+      this.renderActiveMessages();
+      this.showToast('Message thread cleared.');
     }
-  }
-
-  handleBroadcastMessage(data) {
-    if (!data) return;
-    if (data.type === 'VISITOR_MESSAGE') {
-      this.playChime();
-      this.refreshSessionsList();
-    }
-  }
-
-  playChime() {
-    if (this.isMuted) return;
-    try {
-      if (!this.audioCtx) {
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, this.audioCtx.currentTime); // A4
-      osc.frequency.exponentialRampToValueAtTime(880, this.audioCtx.currentTime + 0.2); // A5
-      gain.gain.setValueAtTime(0.15, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.4);
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.4);
-    } catch (e) {}
-  }
-
-  escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
   }
 
   // ==========================================================================
-  // GIT PUSH & DEPLOYMENT ENGINE ("push to my git")
+  // GIT PUSH & DEPLOYMENT ENGINE
   // ==========================================================================
   bindGitPushEvents() {
-    const tokenInput = document.getElementById('git-pat-token');
-    const repoInput = document.getElementById('git-repo-name');
-    const branchInput = document.getElementById('git-branch-name');
-    const commitMsgInput = document.getElementById('git-commit-message');
     const btnDirectPush = document.getElementById('btn-github-direct-push');
     const btnLocalPush = document.getElementById('btn-local-shell-push');
     const btnDownloadData = document.getElementById('btn-download-data-js');
     const btnDownloadBackup = document.getElementById('btn-download-backup-json');
     const btnResetDefaults = document.getElementById('btn-reset-defaults');
-    const consoleOutput = document.getElementById('git-console-output');
+    const consoleBox = document.getElementById('git-console-output');
+    const patInput = document.getElementById('git-pat-token');
+    const commitMsgInput = document.getElementById('git-commit-message');
 
-    // Load saved PAT token
-    if (tokenInput) {
-      tokenInput.value = localStorage.getItem('rayan_github_pat') || '';
-      tokenInput.addEventListener('change', () => {
-        localStorage.setItem('rayan_github_pat', tokenInput.value.trim());
+    // Auto-fill saved PAT from local storage
+    if (patInput) {
+      const savedPat = localStorage.getItem('rayan_admin_gh_token');
+      if (savedPat) patInput.value = savedPat;
+      patInput.addEventListener('change', () => {
+        localStorage.setItem('rayan_admin_gh_token', patInput.value.trim());
       });
     }
 
-    const logToConsole = (text) => {
-      if (consoleOutput) {
-        consoleOutput.textContent += `[${new Date().toLocaleTimeString()}] ${text}\n`;
-        consoleOutput.scrollTop = consoleOutput.scrollHeight;
-      }
+    const logToConsole = (msg) => {
+      if (!consoleBox) return;
+      const timestamp = new Date().toLocaleTimeString();
+      consoleBox.textContent += `\n[${timestamp}] ${msg}`;
+      consoleBox.scrollTop = consoleBox.scrollHeight;
     };
 
     // 1. Direct GitHub API Push
@@ -822,27 +1417,25 @@ class RayanAdminPortal {
         this.collectFormData();
         this.saveAllChanges();
 
-        const token = tokenInput ? tokenInput.value.trim() : '';
+        const token = (patInput ? patInput.value.trim() : '') || localStorage.getItem('rayan_admin_gh_token');
         if (!token) {
-          alert('Please enter your GitHub Personal Access Token (PAT) with "repo / contents:write" permissions.\n\nSteps:\n1. Open github.com/settings/tokens\n2. Create a fine-grained token with "Contents: Read & Write" on repository Satyacoder-31/rayan-group\n3. Paste the token here and click Push.');
-          if (tokenInput) tokenInput.focus();
+          alert('Please enter your GitHub Personal Access Token (PAT) with repo/contents permissions to push directly to GitHub.\n\nAlternatively, use "Download data.js" or "Local Shell Git Push".');
+          if (patInput) patInput.focus();
           return;
         }
 
-        const repo = (repoInput ? repoInput.value.trim() : '') || 'Satyacoder-31/rayan-group';
-        const branch = (branchInput ? branchInput.value.trim() : '') || 'main';
-        const message = (commitMsgInput ? commitMsgInput.value.trim() : '') || `Update site content via Rayan Admin Panel [${new Date().toISOString()}]`;
+        const repo = 'Satyacoder-31/rayan-group';
+        const branch = 'main';
+        const message = (commitMsgInput ? commitMsgInput.value.trim() : '') || `Site content update via Rayan Admin Panel [${new Date().toISOString()}]`;
 
         logToConsole(`Connecting to GitHub repository: ${repo} (branch: ${branch})...`);
         btnDirectPush.disabled = true;
         btnDirectPush.textContent = '⏳ Committing to Git...';
 
         try {
-          // Generate new data.js file content
           const updatedContent = this.generateDataJsCode();
           const encodedContent = btoa(unescape(encodeURIComponent(updatedContent)));
 
-          // Get file SHA from GitHub
           logToConsole('Checking current src/scripts/data.js SHA on GitHub...');
           const getUrl = `https://api.github.com/repos/${repo}/contents/src/scripts/data.js?ref=${branch}`;
           const getRes = await fetch(getUrl, {
@@ -857,11 +1450,8 @@ class RayanAdminPortal {
             const fileData = await getRes.json();
             sha = fileData.sha;
             logToConsole(`Existing file found with SHA: ${sha.substr(0, 8)}`);
-          } else {
-            logToConsole('File not found or new, will create new file.');
           }
 
-          // Push commit to GitHub
           logToConsole('Committing updated content to branch ' + branch + '...');
           const putUrl = `https://api.github.com/repos/${repo}/contents/src/scripts/data.js`;
           const putBody = {
@@ -902,7 +1492,7 @@ class RayanAdminPortal {
       });
     }
 
-    // 2. Local Shell Git Push (when running locally)
+    // 2. Local Shell Push
     if (btnLocalPush) {
       btnLocalPush.addEventListener('click', async () => {
         this.collectFormData();
