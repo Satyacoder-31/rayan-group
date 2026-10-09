@@ -174,11 +174,32 @@ class LiveAssistanceChat {
     }
   }
 
+  isMessageInList(msg, list) {
+    if (!msg || !Array.isArray(list)) return false;
+    return list.some(m => {
+      if (m.id && msg.id && m.id === msg.id) return true;
+      if (m.sender === msg.sender && m.text.trim() === msg.text.trim()) {
+        const t1 = m.timestamp || 0;
+        const t2 = msg.timestamp || 0;
+        if (Math.abs(t1 - t2) < 6000) return true;
+      }
+      return false;
+    });
+  }
+
   loadCachedMessages() {
     try {
       const saved = localStorage.getItem(`rayan_chat_msgs_${this.sessionId}`);
       if (saved) {
-        this.messages = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        this.messages = [];
+        if (Array.isArray(parsed)) {
+          parsed.forEach(m => {
+            if (!this.isMessageInList(m, this.messages)) {
+              this.messages.push(m);
+            }
+          });
+        }
         this.renderAllMessages();
       }
     } catch (e) {}
@@ -192,7 +213,7 @@ class LiveAssistanceChat {
 
   renderAllMessages() {
     if (!this.messagesContainer) return;
-    const items = this.messagesContainer.querySelectorAll('.chat-msg-row');
+    const items = this.messagesContainer.querySelectorAll('.chat-msg-row:not(#welcome-msg-initial)');
     items.forEach(el => el.remove());
 
     this.messages.forEach(msg => this.appendMessageToDom(msg));
@@ -201,12 +222,28 @@ class LiveAssistanceChat {
 
   appendMessageToDom(msg) {
     if (!this.messagesContainer) return;
+    if (msg.id && document.getElementById(msg.id)) return;
+
+    // Check if duplicate already exists in DOM
+    const domHasMsg = Array.from(this.messagesContainer.querySelectorAll('.chat-msg-row')).some(el => {
+      if (el.id && msg.id && el.id === msg.id) return true;
+      const bubble = el.querySelector('.chat-msg-bubble');
+      const isSenderMatch = (msg.sender === 'admin' ? el.classList.contains('msg-desk') : el.classList.contains('msg-visitor'));
+      if (isSenderMatch && bubble) {
+        const clone = bubble.cloneNode(true);
+        const timeEl = clone.querySelector('.chat-msg-time');
+        if (timeEl) timeEl.remove();
+        if (clone.textContent.trim() === msg.text.trim()) return true;
+      }
+      return false;
+    });
+    if (domHasMsg) return;
 
     const row = document.createElement('div');
     row.className = `chat-msg-row ${msg.sender === 'admin' ? 'msg-desk' : 'msg-visitor'}`;
     row.id = msg.id;
 
-    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const senderDisplay = msg.sender === 'admin' ? '🏛️ Rayan Executive Desk' : (msg.senderName || 'You');
 
     row.innerHTML = `
@@ -258,23 +295,27 @@ class LiveAssistanceChat {
       page: window.location.pathname
     };
 
-    this.messages.push(msg);
-    this.saveCachedMessages();
-    this.appendMessageToDom(msg);
-    this.scrollToBottom();
+    if (!this.isMessageInList(msg, this.messages)) {
+      this.messages.push(msg);
+      this.saveCachedMessages();
+      this.appendMessageToDom(msg);
+      this.scrollToBottom();
+    }
 
     // Broadcast across same-machine tabs
     if (this.broadcastChannel) {
       this.broadcastChannel.postMessage({ type: 'VISITOR_MESSAGE', message: msg, sessionId: this.sessionId });
     }
 
-    // Send to backend API
+    // Send to backend API with matching ID and timestamp
     try {
       await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'send',
+          id: msg.id,
+          timestamp: msg.timestamp,
           sessionId: this.sessionId,
           text: text,
           sender: 'visitor',
@@ -293,7 +334,7 @@ class LiveAssistanceChat {
 
     if (data.type === 'ADMIN_REPLY') {
       const msg = data.message;
-      if (!this.messages.some(m => m.id === msg.id)) {
+      if (!this.isMessageInList(msg, this.messages)) {
         this.messages.push(msg);
         this.saveCachedMessages();
         this.appendMessageToDom(msg);
@@ -331,7 +372,7 @@ class LiveAssistanceChat {
         if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
           let hasNewAdminMsg = false;
           data.messages.forEach(msg => {
-            if (!this.messages.some(m => m.id === msg.id)) {
+            if (!this.isMessageInList(msg, this.messages)) {
               this.messages.push(msg);
               this.appendMessageToDom(msg);
               if (msg.sender === 'admin') hasNewAdminMsg = true;

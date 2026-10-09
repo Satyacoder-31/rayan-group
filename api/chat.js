@@ -112,25 +112,46 @@ export default async function handler(req, res) {
       }
 
       const isVisitor = (sender !== 'admin');
-      const msg = {
-        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-        sessionId,
-        sender: isVisitor ? 'visitor' : 'admin',
-        senderName: isVisitor ? (session.visitorName || 'Visitor') : (senderName || 'Corporate Executive Desk'),
-        text: text.trim(),
-        timestamp: Date.now(),
-        read: false
-      };
+      const msgId = body.id || ('msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+      const msgTs = body.timestamp || Date.now();
 
-      messages[sessionId].push(msg);
+      // Check if message already exists in session by ID or identical text within 5s
+      const isDuplicate = (messages[sessionId] || []).some(m =>
+        m.id === msgId || (m.sender === (isVisitor ? 'visitor' : 'admin') && m.text === text.trim() && Math.abs(m.timestamp - msgTs) < 5000)
+      );
 
-      if (isVisitor) {
-        session.unreadForAdmin = (session.unreadForAdmin || 0) + 1;
-        session.lastMessage = text.trim();
-        session.status = 'active';
+      let msg;
+      if (isDuplicate) {
+        msg = (messages[sessionId] || []).find(m => m.id === msgId) || {
+          id: msgId,
+          sessionId,
+          sender: isVisitor ? 'visitor' : 'admin',
+          senderName: isVisitor ? (session.visitorName || 'Visitor') : (senderName || 'Corporate Executive Desk'),
+          text: text.trim(),
+          timestamp: msgTs,
+          read: false
+        };
       } else {
-        session.unreadForVisitor = (session.unreadForVisitor || 0) + 1;
-        session.lastMessage = text.trim();
+        msg = {
+          id: msgId,
+          sessionId,
+          sender: isVisitor ? 'visitor' : 'admin',
+          senderName: isVisitor ? (session.visitorName || 'Visitor') : (senderName || 'Corporate Executive Desk'),
+          text: text.trim(),
+          timestamp: msgTs,
+          read: false
+        };
+
+        messages[sessionId].push(msg);
+
+        if (isVisitor) {
+          session.unreadForAdmin = (session.unreadForAdmin || 0) + 1;
+          session.lastMessage = text.trim();
+          session.status = 'active';
+        } else {
+          session.unreadForVisitor = (session.unreadForVisitor || 0) + 1;
+          session.lastMessage = text.trim();
+        }
       }
 
       res.status(200).json({ success: true, message: msg, session });

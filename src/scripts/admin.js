@@ -620,7 +620,12 @@ class RayanAdminPortal {
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.messages)) {
-          this.activeMessages = data.messages;
+          const deduped = [];
+          data.messages.forEach(m => {
+            const exists = deduped.some(d => d.id === m.id || (d.sender === m.sender && d.text.trim() === m.text.trim() && Math.abs((d.timestamp || 0) - (m.timestamp || 0)) < 6000));
+            if (!exists) deduped.push(m);
+          });
+          this.activeMessages = deduped;
           this.renderActiveMessages(data.session);
         }
       }
@@ -640,7 +645,7 @@ class RayanAdminPortal {
 
     msgContainer.innerHTML = this.activeMessages.map(m => {
       const isDesk = (m.sender === 'admin');
-      const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timeStr = new Date(m.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       return `
         <div class="chat-msg-row ${isDesk ? 'msg-visitor' : 'msg-desk'}" style="${isDesk ? 'align-self:flex-end;' : 'align-self:flex-start;'}">
           <div class="chat-msg-meta" style="${isDesk ? 'justify-content:flex-end;' : ''}">
@@ -677,8 +682,14 @@ class RayanAdminPortal {
       timestamp: Date.now()
     };
 
-    this.activeMessages.push(newMsg);
-    this.renderActiveMessages();
+    const alreadyInList = this.activeMessages.some(m =>
+      m.id === newMsg.id || (m.sender === newMsg.sender && m.text.trim() === newMsg.text.trim() && Math.abs((m.timestamp || 0) - newMsg.timestamp) < 6000)
+    );
+
+    if (!alreadyInList) {
+      this.activeMessages.push(newMsg);
+      this.renderActiveMessages();
+    }
 
     // Broadcast across same-machine tabs immediately
     if (this.broadcastChannel) {
@@ -695,6 +706,8 @@ class RayanAdminPortal {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'reply',
+          id: newMsg.id,
+          timestamp: newMsg.timestamp,
           sessionId: this.activeSessionId,
           text: text,
           sender: 'admin',
