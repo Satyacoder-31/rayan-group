@@ -2,6 +2,8 @@ import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { GROUP_INFO, GROUP_COMPANIES, LEADERSHIP_TEAM, FEATURED_PROJECTS, FINANCIAL_HIGHLIGHTS, CORPORATE_NEWS, CAREER_OPPORTUNITIES, MEDIA_GALLERY } from './data.js';
+import { initLiveAssistanceChat } from './live-chat.js';
+import { applyLiveOverrides } from './live-overrides.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -1020,6 +1022,14 @@ function initAssistanceWidget() {
     });
   }
 
+  const chatCloseBtn = document.getElementById('chat-close-btn');
+  if (chatCloseBtn) {
+    chatCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeAssistance();
+    });
+  }
+
   document.addEventListener('click', (e) => {
     if (!card.contains(e.target) && !triggerBtn.contains(e.target)) {
       closeAssistance();
@@ -1031,6 +1041,9 @@ function initAssistanceWidget() {
       closeAssistance();
     }
   });
+
+  // Initialize live assistance interactive chat controller
+  initLiveAssistanceChat();
 }
 
 // Start preloader as early as possible
@@ -1058,6 +1071,31 @@ document.addEventListener('DOMContentLoaded', () => {
   initBackToTop();
   initScrollAnimations();
   initAssistanceWidget();
+  applyLiveOverrides();
+
+  // Discreet keyboard shortcut for Corporate Admin Panel (Ctrl + Shift + A)
+  // Admin panel is hidden from public navigation per security requirements
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+      e.preventDefault();
+      window.location.href = '/admin/';
+    }
+  });
+
+  // Triple-click on footer copyright to navigate to admin panel
+  const footerCopy = document.querySelector('.footer-copyright, .footer-bottom-copy');
+  if (footerCopy) {
+    let clickCount = 0;
+    let clickTimer = null;
+    footerCopy.addEventListener('click', () => {
+      clickCount++;
+      clearTimeout(clickTimer);
+      if (clickCount >= 3) {
+        window.location.href = '/admin/';
+      }
+      clickTimer = setTimeout(() => { clickCount = 0; }, 600);
+    });
+  }
 });
 
 
