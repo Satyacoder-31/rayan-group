@@ -7,6 +7,23 @@ import { applyLiveOverrides } from './live-overrides.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Ensure viewport resets to top on initial load and refresh
+if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+window.scrollTo(0, 0);
+
+window.addEventListener('beforeunload', () => {
+  window.scrollTo(0, 0);
+});
+
+window.addEventListener('pageshow', () => {
+  window.scrollTo(0, 0);
+  if (lenis) {
+    lenis.scrollTo(0, { immediate: true });
+  }
+});
+
 // ==========================================================================
 // 1. LENIS SMOOTH SCROLLING
 // ==========================================================================
@@ -24,6 +41,8 @@ if (!prefersReducedMotion) {
       touchMultiplier: 2,
       infinite: false,
     });
+
+    lenis.scrollTo(0, { immediate: true });
 
     lenis.on('scroll', ScrollTrigger.update);
 
@@ -534,7 +553,11 @@ function initBackToTop() {
   const btn = document.querySelector('.back-to-top-btn');
   if (btn) {
     btn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (lenis) {
+        lenis.scrollTo(0, { duration: 1.2 });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     });
   }
 }
@@ -663,9 +686,19 @@ function initPreloader() {
     if (percent) percent.textContent = '100%';
     if (status) status.textContent = 'EXPERIENCE READY';
 
+    window.scrollTo(0, 0);
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
+
     setTimeout(() => {
       preloader.classList.add('preloader-done');
       document.body.classList.remove('preloader-active');
+      window.scrollTo(0, 0);
+      if (lenis) {
+        lenis.scrollTo(0, { immediate: true });
+      }
+      ScrollTrigger.refresh();
       setTimeout(() => {
         if (preloader.parentNode) {
           preloader.parentNode.removeChild(preloader);
@@ -1057,6 +1090,11 @@ if (document.readyState === 'loading') {
 // DOM READY INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  window.scrollTo(0, 0);
+  if (lenis) {
+    lenis.scrollTo(0, { immediate: true });
+  }
+
   initCustomCursor();
   initThemeToggle();
   initHeader();
@@ -1096,6 +1134,15 @@ document.addEventListener('DOMContentLoaded', () => {
       clickTimer = setTimeout(() => { clickCount = 0; }, 600);
     });
   }
+});
+
+// Window load safety check to guarantee viewport is anchored to top
+window.addEventListener('load', () => {
+  window.scrollTo(0, 0);
+  if (lenis) {
+    lenis.scrollTo(0, { immediate: true });
+  }
+  ScrollTrigger.refresh();
 });
 
 

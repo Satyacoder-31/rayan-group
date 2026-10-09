@@ -962,13 +962,19 @@ function wrapPage({ title, description, activePath, content, heroHtml }) {
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/assets/rayan-symbol.svg">
 
-  <!-- Zero-FOUT Theme Script -->
+  <!-- Zero-FOUT Theme Script & Scroll-To-Top on Refresh -->
   <script>
     (function() {
       try {
         var savedTheme = localStorage.getItem('rayan_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
       } catch (e) {}
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+      window.addEventListener('beforeunload', function() { window.scrollTo(0, 0); });
+      window.addEventListener('pageshow', function() { window.scrollTo(0, 0); });
     })();
   </script>
 

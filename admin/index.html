@@ -12,6 +12,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Scroll-To-Top on Refresh -->
+  <script>
+    (function() {
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+      window.addEventListener('beforeunload', function() { window.scrollTo(0, 0); });
+      window.addEventListener('pageshow', function() { window.scrollTo(0, 0); });
+    })();
+  </script>
+
   <link rel="stylesheet" href="/src/styles/admin.css">
 </head>
 <body class="admin-body">
