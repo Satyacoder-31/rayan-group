@@ -216,9 +216,9 @@
 }
 
 .brand-logo-img {
-  height: 38px;
+  height: 40px;
   width: auto;
-  max-width: 175px;
+  max-width: 185px;
   display: block;
   object-fit: contain;
   transition: transform 0.2s ease;
@@ -1443,9 +1443,9 @@
 }
 
 .footer-brand-logo {
-  height: 42px;
+  height: 46px;
   width: auto;
-  max-width: 180px;
+  max-width: 200px;
   object-fit: contain;
   display: block;
 }

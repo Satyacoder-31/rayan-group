@@ -18,13 +18,13 @@ async function main() {
   rawCtx.drawImage(rawImg, 0, 0);
   const rawData = rawCtx.getImageData(0, 0, rawW, rawH).data;
 
-  // 1. Precise bounding box of logo graphics
+  // Bounding box of actual logo content
+  // Start y from 5 to skip top grey artifact line (y=0..1)
   let minX = rawW, maxX = 0, minY = rawH, maxY = 0;
-  for (let y = 3; y < rawH - 3; y++) {
+  for (let y = 5; y < rawH - 3; y++) {
     for (let x = 3; x < rawW - 3; x++) {
       const idx = (y * rawW + x) * 4;
       const r = rawData[idx], g = rawData[idx + 1], b = rawData[idx + 2];
-      // non-white detection
       if (r < 245 || g < 245 || b < 245) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
@@ -36,21 +36,21 @@ async function main() {
 
   console.log('Bounding Box of Logo:', { minX, maxX, minY, maxY, width: maxX - minX + 1, height: maxY - minY + 1 });
 
-  const padX = 20;
-  const padY = 12;
+  const padX = 14;
+  const padY = 8;
   const cropW = (maxX - minX + 1);
   const cropH = (maxY - minY + 1);
 
   const outW = cropW + padX * 2;
   const outH = cropH + padY * 2;
 
-  // 2. Prepare canvas for Light Logo (rayan-group.png)
+  // Canvas for Light Logo (rayan-group.png)
   const lightCanvas = createCanvas(outW, outH);
   const lightCtx = lightCanvas.getContext('2d');
   const lightImgData = lightCtx.createImageData(outW, outH);
   const ld = lightImgData.data;
 
-  // 3. Prepare canvas for Dark Logo (rayan-group-white.png)
+  // Canvas for Dark Logo (rayan-group-white.png)
   const darkCanvas = createCanvas(outW, outH);
   const darkCtx = darkCanvas.getContext('2d');
   const darkImgData = darkCtx.createImageData(outW, outH);
@@ -71,47 +71,45 @@ async function main() {
       const g = rawData[srcIdx + 1];
       const b = rawData[srcIdx + 2];
 
-      // Pure background check
-      if (r >= 252 && g >= 252 && b >= 252) {
-        // Transparent
+      // Pure or near-white background check
+      if (r >= 248 && g >= 248 && b >= 248) {
         continue;
       }
 
-      // Check if pixel is part of the cyan leg
-      // In original logo, cyan leg is at x < 200, y between 60 and 212
-      // Characteristic: blue > red + 30 and green > red + 15
-      const isCyan = (b > r + 30 && g > r + 15 && srcX < minX + 220 && srcY < minY + 215);
-
       // Compute Alpha by de-matting from white (255)
-      // Minimum channel gives darkness from 255
       const darkness = 255 - Math.min(r, g, b);
       let alpha = darkness / 255;
-      // Slight contrast curve to eliminate faint grey fringing while preserving anti-aliasing
-      alpha = Math.min(1, Math.pow(alpha, 0.82) * 1.06);
+      alpha = Math.min(1, Math.pow(alpha, 0.8) * 1.08);
 
       const aByte = Math.round(alpha * 255);
-      if (aByte <= 2) continue;
+      if (aByte <= 3) continue;
 
-      // --- LIGHT THEME (rayan-group.png) ---
-      // De-multiply from white background:
+      // Recover true foreground color from white blend
       const fgR = Math.max(0, Math.min(255, Math.round(255 - (255 - r) / Math.max(alpha, 0.1))));
       const fgG = Math.max(0, Math.min(255, Math.round(255 - (255 - g) / Math.max(alpha, 0.1))));
       const fgB = Math.max(0, Math.min(255, Math.round(255 - (255 - b) / Math.max(alpha, 0.1))));
 
+      // --- LIGHT THEME (rayan-group.png) ---
+      // Keeps authentic Navy (#002036), Cyan (#008ac3), and charcoal GROUP (#373236)
       ld[destIdx]     = fgR;
       ld[destIdx + 1] = fgG;
       ld[destIdx + 2] = fgB;
       ld[destIdx + 3] = aByte;
 
       // --- DARK THEME (rayan-group-white.png) ---
+      // True Cyan wing of R:
+      // Notice: Solid cyan has b >= 140, g >= 85, r < 75.
+      // Navy upper loop of R has b <= 85, g <= 55!
+      const isCyan = (b >= 125 && g >= 80 && r < 75 && srcX < minX + 250);
+
       if (isCyan) {
-        // Keep the authentic vivid cyan / cerulean blue: #008ac3 -> vibrant #009ae8
+        // Electric vibrant cyan for high contrast against dark navbar
         dd[destIdx]     = 0;
-        dd[destIdx + 1] = Math.min(255, Math.round(fgG * 1.06));
+        dd[destIdx + 1] = Math.min(255, Math.round(fgG * 1.05));
         dd[destIdx + 2] = Math.min(255, Math.round(fgB * 1.12));
         dd[destIdx + 3] = aByte;
       } else {
-        // Navy 'RAYAN' & charcoal 'GROUP' -> crisp pure WHITE on dark theme!
+        // Pure crisp white (#ffffff) for the upper loop of R, all letters of AYAN, and GROUP!
         dd[destIdx]     = 255;
         dd[destIdx + 1] = 255;
         dd[destIdx + 2] = 255;
@@ -140,7 +138,7 @@ async function main() {
     console.log(`Saved logos to ${dir}`);
   });
 
-  // Also update rayan-symbol.svg with official cyan: #008ac3
+  // Updated rayan-symbol.svg with official cyan: #008ac3
   const symbolSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 43.0 37.0" width="44" height="44">
   <path d="M 20.75 19.67 L 28.79 29.09 C 32.19 32.89 33.42 35.32 41.25 34.39 C 39.74 32.28 33.28 25.46 32.49 24.15 L 33.00 23.66 C 33.27 23.44 33.27 23.48 33.55 23.28 C 33.92 23.02 34.25 22.74 34.56 22.46 C 40.31 17.23 39.38 8.61 33.70 4.23 C 30.05 1.42 26.15 1.83 20.88 1.83 C 15.73 1.83 10.55 1.89 5.41 1.82 C 5.77 2.60 7.93 5.11 8.59 5.70 C 13.11 9.73 19.92 6.70 27.52 7.86 C 31.11 8.41 33.89 12.38 31.80 16.49 C 29.73 20.56 25.76 19.20 20.75 19.67" fill="#ffffff" fill-rule="evenodd"/>
   <path d="M 29.40 34.44 L 14.32 16.69 L 25.76 16.67 C 25.27 15.68 22.88 13.08 22.20 12.51 C 20.64 11.22 19.06 10.72 16.53 10.72 C 11.91 10.72 5.72 10.38 1.29 10.77 C 1.47 11.32 6.32 16.69 7.04 17.59 L 19.17 31.60 C 21.84 34.60 24.52 34.55 29.40 34.44" fill="#008ac3" fill-rule="evenodd"/>
@@ -151,9 +149,8 @@ async function main() {
   if (fs.existsSync(path.join(__dirname, 'dist/assets'))) {
     fs.writeFileSync(path.join(__dirname, 'dist/assets/rayan-symbol.svg'), symbolSvg);
   }
-  console.log('Updated rayan-symbol.svg');
 
-  console.log('✓ Successfully processed and updated original Rayan Group logos!');
+  console.log('✓ Successfully processed and updated original Rayan Group logos with flawless R geometry!');
 }
 
 main().catch(console.error);
