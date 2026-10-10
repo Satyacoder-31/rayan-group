@@ -549,3 +549,98 @@
   border-color: rgba(0, 153, 230, 0.4);
   background: rgba(0, 153, 230, 0.06);
 }
+
+/* Civil Engineering & Heavy Infrastructure Theme */
+.civil-spotlight {
+  background: linear-gradient(135deg, rgba(16, 28, 48, 0.98) 0%, rgba(8, 17, 30, 0.98) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 20px;
+  padding: clamp(2rem, 5vw, 4rem);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="light"] .civil-spotlight {
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 20px 50px rgba(245, 158, 11, 0.08);
+}
+
+.civil-scope-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(12, 24, 40, 0.9);
+  backdrop-filter: blur(8px);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+}
+
+.civil-plant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.civil-plant-card {
+  background: #0c1828;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition: all 0.3s ease;
+}
+
+.civil-plant-card:hover {
+  border-color: #f59e0b;
+  transform: translateY(-4px);
+  background: #0f2136;
+}
+
+[data-theme="light"] .civil-plant-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .civil-plant-card:hover {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.qhse-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.qhse-card {
+  background: #0c1828;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.qhse-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #10b981;
+}
+
+[data-theme="light"] .qhse-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
