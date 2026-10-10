@@ -92,6 +92,16 @@ const SITE_INDEX = [
   { title: "Who We Are & History", category: "About Us", url: "/about/" },
   { title: "Executive Leadership & Board", category: "Governance", url: "/leadership/" },
   { title: "Business Companies Overview", category: "Business / Conglomerate", url: "/business/" },
+  { title: "Our Services — Turnkey Interior & Contracting Directory", category: "Services", url: "/services/" },
+  { title: "Interior Design & Turnkey Fit-Out Works", category: "Services / Interior Design", url: "/services/#interior-work" },
+  { title: "Residential Interior Design (Villas & Penthouses)", category: "Services / Residential", url: "/services/#residential" },
+  { title: "Commercial & Office Interior Fit-Out", category: "Services / Commercial", url: "/services/#commercial" },
+  { title: "Hospitality & Restaurant Interior Design", category: "Services / Hospitality", url: "/services/#hospitality" },
+  { title: "Renovation & Interior Execution", category: "Services / Renovation", url: "/services/#renovation" },
+  { title: "Custom Furniture & Joinery Fabrication", category: "Services / Joinery", url: "/services/#custom-joinery" },
+  { title: "Property Styling, Staging & Furnishing", category: "Services / Styling", url: "/services/#property-styling" },
+  { title: "Turnkey Interior Contracting & MEP Coordination", category: "Services / Turnkey Contracting", url: "/services/#contractor-capabilities" },
+  { title: "Interior Project 5-Step Execution Workflow", category: "Services / Workflow", url: "/services/#workflow" },
   { title: "Rayan Engineering & Contracting", category: "Business / Civil & EPC", url: "/business/engineering/" },
   { title: "Rayan Energy", category: "Business / Energy EPC", url: "/business/energy/" },
   { title: "Ashaz Engineering (India)", category: "Business / South Asia Hub", url: "/business/ashaz/" },
@@ -1110,6 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollAnimations();
   initAssistanceWidget();
   applyLiveOverrides();
+  initServicesFeatures();
 
   // Discreet keyboard shortcut for Corporate Admin Panel (Ctrl + Shift + A)
   // Admin panel is hidden from public navigation per security requirements
@@ -1144,6 +1155,66 @@ window.addEventListener('load', () => {
   }
   ScrollTrigger.refresh();
 });
+
+// ==========================================================================
+// 15. SERVICES DIRECTORY & CONSULTATION HANDLERS
+// ==========================================================================
+function initServicesFeatures() {
+  // Service Category Filter Tabs in Matrix
+  const tabBtns = document.querySelectorAll('.service-tab-btn');
+  const matrixCards = document.querySelectorAll('.matrix-card');
+
+  if (tabBtns.length && matrixCards.length) {
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const selectedCat = btn.getAttribute('data-cat') || 'all';
+
+        matrixCards.forEach(card => {
+          const cardCat = card.getAttribute('data-matrix-cat');
+          if (selectedCat === 'all' || cardCat === selectedCat) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  }
+
+  // Consultation Form Handler with instant feedback
+  const consultForm = document.getElementById('interiorConsultationForm');
+  if (consultForm) {
+    consultForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const submitBtn = consultForm.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'PROCESSING INQUIRY...';
+      }
+
+      setTimeout(() => {
+        consultForm.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1.5rem; background: rgba(0, 153, 230, 0.08); border: 1px solid rgba(0, 153, 230, 0.3); border-radius: 14px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.75rem; color: #fff; font-weight: 800; margin-bottom: 0.75rem;">
+              CONSULTATION INQUIRY RECEIVED
+            </h3>
+            <p style="color: #cbd5e1; font-size: 1rem; max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.6;">
+              Thank you for connecting with Rayan Group. Our Principal Interior Architect and commercial fit-out estimating desk have received your project details and will reach out within 24 hours.
+            </p>
+            <div style="display: inline-flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+              <a href="tel:+97125654497" class="btn-enterprise-primary" style="padding: 0.75rem 1.75rem;">CALL UAE HQ DIRECTLY</a>
+              <a href="/projects/" class="btn-enterprise-secondary" style="padding: 0.75rem 1.75rem;">BROWSE PORTFOLIO</a>
+            </div>
+          </div>
+        `;
+      }, 700);
+    });
+  }
+}
+
 
 
 
