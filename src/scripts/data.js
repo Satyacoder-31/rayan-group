@@ -141,7 +141,7 @@ export const CORPORATE_TIMELINE = [
     tag: "Civil & Interiors EPC",
     title: "Establishment of Rayan Engineering & Contracting L.L.C",
     description: "Founded in 2022 as Rayan Group's flagship civil delivery arm, executing turnkey building construction, commercial high-rise towers, luxury hospitality overhauls, retail fit-outs, and architectural engineering across Abu Dhabi, Dubai, and the UAE.",
-    accent: "#f97316"
+    accent: "#00c7b3"
   },
   {
     year: "2022",

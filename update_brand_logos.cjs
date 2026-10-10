@@ -25,14 +25,14 @@ const brands = [
   {
     id: 'rayan-engineering',
     label: 'ENGINEERING',
-    fontSpacing: '0.20em',
-    textX: 108,
-    // Symbol colors:
-    upperLight: '#c2410c', // deep orange
-    lowerLight: '#f97316', // bright vibrant orange
-    upperDark: '#ea580c',  // deep bright orange
-    lowerDark: '#f97316',  // bright electric orange
-    themeColor: '#f97316'
+    fontSpacing: '0.12em',
+    textX: 106,
+    // Symbol colors from official PDF logo:
+    upperLight: '#002136', // deep navy
+    lowerLight: '#00c7b3', // official turquoise/teal
+    upperDark: '#ffffff',  // clean white on dark cards
+    lowerDark: '#00c7b3',  // bright electric turquoise/teal
+    themeColor: '#00c7b3'
   },
   {
     id: 'rayan-properties',
@@ -49,7 +49,7 @@ const brands = [
 ];
 
 function generateSvg({ upperColor, lowerColor, textColor, subColor, label, textX, fontSpacing }) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80" width="100%" height="100%">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 82" width="100%" height="100%">
   <!-- Symbol: Division Styled Mark -->
   <g id="rayan-mark">
     <path d="${upperPath}" fill="${upperColor}" fill-rule="evenodd" />
@@ -57,7 +57,7 @@ function generateSvg({ upperColor, lowerColor, textColor, subColor, label, textX
     <path d="${ayanPath}" fill="${textColor}" fill-rule="nonzero" />
   </g>
   <!-- Division Wordmark -->
-  <text x="${textX}" y="77" font-family="'Outfit', 'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="20" letter-spacing="${fontSpacing}" fill="${subColor}">${label}</text>
+  <text x="${textX}" y="77" font-family="'Outfit', 'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="18.5" letter-spacing="${fontSpacing}" fill="${subColor}">${label}</text>
 </svg>`;
 }
 
@@ -94,8 +94,8 @@ function renderPng(svgStr, width, height) {
     const fill = textMatch[3];
     const text = textMatch[4];
     ctx.fillStyle = fill;
-    ctx.font = "bold 20px 'Outfit', 'Segoe UI', Arial, sans-serif";
-    ctx.letterSpacing = "4px";
+    ctx.font = "bold 18.5px 'Outfit', 'Segoe UI', Arial, sans-serif";
+    ctx.letterSpacing = "2px";
     ctx.fillText(text, x, y);
   }
 
@@ -140,8 +140,8 @@ for (const b of brands) {
   fs.writeFileSync(path.join(__dirname, `public/assets/logos/${b.id}-white.svg`), darkSvg);
 
   // Render high-res PNGs
-  const lightPng = renderPng(lightSvg, 260, 80);
-  const darkPng = renderPng(darkSvg, 260, 80);
+  const lightPng = renderPng(lightSvg, 270, 82);
+  const darkPng = renderPng(darkSvg, 270, 82);
   fs.writeFileSync(path.join(__dirname, `assets/logos/${b.id}.png`), lightPng);
   fs.writeFileSync(path.join(__dirname, `public/assets/logos/${b.id}.png`), lightPng);
   fs.writeFileSync(path.join(__dirname, `assets/logos/${b.id}-white.png`), darkPng);

@@ -172,10 +172,10 @@ createRoute('about/index.html', {
 
         <!-- 2022: Rayan Engineering -->
         <div style="margin-bottom: 3.5rem; position: relative;">
-          <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #f97316; box-shadow: 0 0 12px #f97316;"></div>
+          <div style="position: absolute; left: calc(-2.5rem - 7px); top: 0; width: 14px; height: 14px; border-radius: 50%; background: #00c7b3; box-shadow: 0 0 12px #00c7b3;"></div>
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
-            <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #f97316;">2022</span>
-            <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: rgba(249,115,22,0.15); color: #f97316; border: 1px solid rgba(249,115,22,0.3); padding: 0.2rem 0.6rem; border-radius: 4px;">CIVIL &amp; INTERIORS EPC</span>
+            <span style="font-family: var(--font-heading); font-size: 1.75rem; font-weight: 800; color: #00c7b3;">2022</span>
+            <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: rgba(0,199,179,0.15); color: #00c7b3; border: 1px solid rgba(0,199,179,0.3); padding: 0.2rem 0.6rem; border-radius: 4px;">CIVIL &amp; INTERIORS EPC</span>
           </div>
           <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.5rem;">Establishment of Rayan Engineering</h3>
           <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.65;">

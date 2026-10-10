@@ -1236,23 +1236,23 @@ function renderBusinessUnitsSection() {
               <div class="bu-info-col">
                 <div class="bu-title-row">
                   <h3 class="bu-company-title">Rayan Engineering &amp; Contracting</h3>
-                  <span class="bu-badge" style="background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.35);">CIVIL &amp; INTERIORS EPC</span>
+                  <span class="bu-badge" style="background: rgba(0, 199, 179, 0.15); color: #00c7b3; border: 1px solid rgba(0, 199, 179, 0.35);">CIVIL &amp; INTERIORS EPC</span>
                 </div>
                 <p class="bu-company-desc">
                   The flagship engineering enterprise executing turnkey building construction, high-rise commercial towers, luxury residential estates, precision electrical works, and complex industrial complexes across the UAE. With 18+ years of industry leadership heritage since 2008, Rayan Engineering sets benchmarks in structural durability and on-schedule execution.
                 </p>
                 <div style="margin: 0.85rem 0 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.75rem 1rem;">
-                  <span style="font-size: 0.68rem; font-weight: 700; color: #f97316; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
+                  <span style="font-size: 0.68rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
                   <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Turnkey Civil EPC</span>
-                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">High-Rise Concrete Frameworks</span>
-                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Luxury Hotel Fit-Out</span>
-                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Acoustic Auditoriums</span>
-                    <span style="font-size: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 0.2rem 0.55rem; border-radius: 4px;">Tactical Defense Infrastructure</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Turnkey Civil EPC</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">High-Rise Concrete Frameworks</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Luxury Hotel Fit-Out</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Acoustic Auditoriums</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 199, 179, 0.1); border: 1px solid rgba(0, 199, 179, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Tactical Defense Infrastructure</span>
                   </div>
                 </div>
-                <a href="/business/engineering/" class="bu-action-link" style="border-color: rgba(249, 115, 22, 0.4); color: #f97316;">
-                  <span class="bu-action-box" style="background: rgba(249, 115, 22, 0.15); color: #f97316;">↗</span>
+                <a href="/business/engineering/" class="bu-action-link" style="border-color: rgba(0, 199, 179, 0.4); color: #00c7b3;">
+                  <span class="bu-action-box" style="background: rgba(0, 199, 179, 0.15); color: #00c7b3;">↗</span>
                   <span>Visit Engineering Division</span>
                 </a>
               </div>
@@ -1358,10 +1358,10 @@ function renderBusinessUnitsSection() {
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="1" role="tab" aria-selected="false">
-              ${renderPillSymbol('#c2410c', '#f97316')}
+              ${renderPillSymbol('#002136', '#00c7b3')}
               <div>
                 <span class="bu-pill-label">Rayan Engineering</span>
-                <span class="bu-pill-subtag" style="color: #f97316;">Civil &amp; Interiors EPC</span>
+                <span class="bu-pill-subtag" style="color: #00c7b3;">Civil &amp; Interiors EPC</span>
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="2" role="tab" aria-selected="false">
@@ -1372,14 +1372,14 @@ function renderBusinessUnitsSection() {
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="3" role="tab" aria-selected="false">
-              ${renderPillSymbol('#0f766e', '#00c7b3')}
+              ${renderPillSymbol('#0f766e', '#14949b')}
               <div>
                 <span class="bu-pill-label">Ashaz Engineering</span>
-                <span class="bu-pill-subtag">India Regional Hub</span>
+                <span class="bu-pill-subtag" style="color: #248c91;">India Regional Hub</span>
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="4" role="tab" aria-selected="false">
-              ${renderPillSymbol('#cbd5e1', '#248c91')}
+              ${renderPillSymbol('#92400e', '#f59e0b')}
               <div>
                 <span class="bu-pill-label">Rayan Properties</span>
                 <span class="bu-pill-subtag" style="color: #fbbf24;">Upcoming</span>
