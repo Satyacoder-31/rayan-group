@@ -183,7 +183,7 @@ export const LEADERSHIP_TEAM = [
     name: "Mr. Arshad Alam Shaikh",
     role: "Founder & Chairman of Rayan Group (UAE & India)",
     tag: "DIR // 01",
-    accent: "gold",
+    accent: "blue",
     bio: "Pioneering the corporate governance, strategic vision, and cross-border expansion of Rayan Group and Ashaz Engineering across the UAE, India, and global markets.",
     responsibilities: ["Group Strategic Direction", "Capital Allocation & Corporate Governance", "International Hub Expansion"],
     tenure: "Founder & Chairman"
@@ -192,7 +192,7 @@ export const LEADERSHIP_TEAM = [
     name: "Mrs. Sadaf Fatma",
     role: "Chief Executive Officer (CEO) — Rayan Group (UAE & India)",
     tag: "EXEC // 02",
-    accent: "gold",
+    accent: "blue",
     bio: "Directing executive enterprise operations, corporate strategy, international development, and organizational growth across Rayan Group and Ashaz Engineering operations in the UAE and India.",
     responsibilities: ["Executive Enterprise Leadership", "Cross-Border Corporate Operations", "Strategic Market Growth"],
     tenure: "Chief Executive Officer"
@@ -201,7 +201,7 @@ export const LEADERSHIP_TEAM = [
     name: "Eng. Bakhteyar Alam",
     role: "Chief Operating Officer (COO) | Director, Ashaz Engineering (India)",
     tag: "DIR // 03",
-    accent: "blue",
+    accent: "teal",
     bio: "Directing multi-disciplinary engineering operations, 500+ qualified engineers, on-site safety protocols, and precision delivery across 500+ executed turnkey projects.",
     responsibilities: ["Turnkey Project Execution", "HSE & ISO 45001 Compliance", "Engineering Standards"],
     tenure: "Co-Founder & Director"
@@ -210,7 +210,7 @@ export const LEADERSHIP_TEAM = [
     name: "Eng. Nadeem Akhtar",
     role: "Chief Financial Officer (CFO)",
     tag: "DIR // 04",
-    accent: "blue",
+    accent: "teal",
     bio: "Directing institutional fiscal governance, capital efficiency, commercial risk management, contract tendering, and sustainable international enterprise growth.",
     responsibilities: ["Financial Governance & Audit", "M&A and Commercial Tenders", "Capital Markets Strategy"],
     tenure: "Executive Board"
