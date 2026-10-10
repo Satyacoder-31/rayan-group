@@ -89,6 +89,8 @@ createRoute('proposal/index.html', {
                     <option value="commercial">Commercial High-Rise / Mixed-Use</option>
                     <option value="hospitality">Luxury Hospitality &amp; Resort Overhaul</option>
                     <option value="residential">Bespoke Coastal Residential / Villas</option>
+                    <option value="interior">Interior Design &amp; Turnkey Fit-Out</option>
+                    <option value="facilities-management">Facilities Management &amp; Property Maintenance (FM / AMC)</option>
                     <option value="defense">Defense, Security &amp; Special Tactical</option>
                     <option value="energy">Oil &amp; Gas / Process Piping</option>
                     <option value="fabrication">Heavy Structural Steel / Fabrication</option>
@@ -310,11 +312,13 @@ createRoute('procurement/index.html', {
                   <select id="vnd-category" class="service-form-select" required>
                     <option value="" disabled selected>Select Supply Category</option>
                     <option value="civil-materials">Civil &amp; Structural Building Materials (Steel, Concrete, Aggregates)</option>
+                    <option value="interior-design">Interior Design &amp; Turnkey Fit-Out (Residential, Commercial &amp; Joinery)</option>
+                    <option value="facilities-management">Facilities Management &amp; Property Maintenance (FM / AMC, HVAC, MEP)</option>
                     <option value="mep">MEP Equipment, Switchgear &amp; HVAC</option>
                     <option value="fabrication">Structural Steel, Precast &amp; Fabrication Modules</option>
                     <option value="energy">Piping, Valves, Pressure Vessels &amp; Process Equipment</option>
                     <option value="machinery">Heavy Equipment Rental &amp; Logistics Fleets</option>
-                    <option value="subcontracting">Specialized Subcontracting (Fit-out, Waterproofing, Piling)</option>
+                    <option value="subcontracting">Specialized Subcontracting (Civil, Waterproofing, Piling)</option>
                     <option value="safety">QHSE, Safety Wear &amp; Environmental Services</option>
                     <option value="other">Other Commercial Services</option>
                   </select>
