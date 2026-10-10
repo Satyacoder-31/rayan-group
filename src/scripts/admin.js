@@ -28,31 +28,40 @@ const DEFAULT_HERO_SLIDES = [
     btn2Link: '/projects/'
   },
   {
-    eyebrow: '<span>ENERGY &amp; EPC</span> • <span>HYDROCARBON PIPELINES</span>',
+    eyebrow: '<span>ARCHITECTURAL INNOVATION</span> • <span>FUTURE ENGINEERING</span>',
+    title: 'ICONIC LANDMARKS & VISIONARY STRUCTURES',
+    leadText: 'Engineering monumental civic landmarks, complex structural geometry, luxury hospitality overhauls, and next-generation architectural transformations across the UAE.',
+    btn1Text: 'OUR SERVICES',
+    btn1Link: '/services/',
+    btn2Text: 'LANDMARK PROJECTS',
+    btn2Link: '/projects/'
+  },
+  {
+    eyebrow: '<span>CAPITAL HEADQUARTERS</span> • <span>ENERGY &amp; PROCESS EPC</span>',
     title: 'CRITICAL ENERGY & PROCESS INFRASTRUCTURE',
-    leadText: 'Strategic hydrocarbon transport pipelines, process facilities, storage tank farms, and refinery turnaround execution to strict ISO 45001 standards.',
+    leadText: 'From the UAE capital to regional energy corridors: strategic hydrocarbon transport pipelines, process facilities, storage tank farms, and refinery turnaround execution to strict ISO 45001 standards.',
     btn1Text: 'ENERGY DIVISION',
     btn1Link: '/business/energy/',
     btn2Text: 'HSE COMMITMENT',
     btn2Link: '/sustainability/'
   },
   {
-    eyebrow: '<span>LANDMARK EPC</span> • <span>HOSPITALITY FIT-OUT</span>',
-    title: 'LANDMARK HIGH-RISE EPC & INTERIORS',
-    leadText: 'Delivering luxury hospitality transformations, twin residential high-rise towers, and tactical civic facilities across Abu Dhabi and Dubai.',
-    btn1Text: 'DISCOVER PROJECTS',
-    btn1Link: '/projects/',
-    btn2Text: 'CIVIL & INTERIORS',
-    btn2Link: '/business/engineering/'
+    eyebrow: '<span>CIVIL INFRASTRUCTURE</span> • <span>TRANSPORTATION NETWORKS</span>',
+    title: 'ARTERIAL HIGHWAYS, TRANSIT & HEAVY CIVIL WORKS',
+    leadText: 'Express highway corridors, runway civil works, complex utility bridges, deep municipal networks, and arterial paving delivered with uncompromised engineering precision.',
+    btn1Text: 'INFRASTRUCTURE DIVISION',
+    btn1Link: '/business/infrastructure/',
+    btn2Text: 'TENDER PROPOSALS',
+    btn2Link: '/proposal/'
   },
   {
-    eyebrow: '<span>DUAL-HUB REACH</span> • <span>UAE &amp; SOUTH ASIA</span>',
-    title: 'CONNECTING UAE 🇦🇪 & SOUTH ASIA 🇮🇳',
-    leadText: 'Headquartered in the United Arab Emirates with regional operations and South Asia engineering hub Ashaz Engineering in India.',
-    btn1Text: 'WHO WE ARE',
-    btn1Link: '/about/',
-    btn2Text: 'GLOBAL OFFICES',
-    btn2Link: '/contact/'
+    eyebrow: '<span>INTERIOR FIT-OUT</span> • <span>FACILITIES MANAGEMENT</span>',
+    title: 'BESPOKE INTERIOR FIT-OUT & COASTAL ASSETS',
+    leadText: 'Turnkey commercial interiors, bespoke architectural joinery, high-end residential towers, and premier facilities management (FM & AMC) preserving prestige properties 24/7 across the UAE.',
+    btn1Text: 'INTERIOR & FM SCOPE',
+    btn1Link: '/services/',
+    btn2Text: 'VENDOR ENLISTMENT',
+    btn2Link: '/procurement/'
   }
 ];
 

@@ -15,9 +15,9 @@ function createRoute(relativePath, { title, description, activePath, heroHtml, c
 // ============================================================================
 const homeHeroHtml = `
   <section class="hero-slideshow-wrap" aria-label="Cinematic Slideshow">
-    <!-- Slide 1: Civil & High-Rise EPC -->
+    <!-- Slide 1: Landmark Conglomerate Vision (Burj Khalifa & Downtown Dubai Night Skyline) -->
     <div class="hero-slide-item active">
-      <img src="/assets/images/hero/hero-1-skyline.jpg" alt="Civil Construction & Skyline" class="hero-slide-bg-img">
+      <img src="/assets/images/hero/hero-burj-downtown.jpg" alt="Downtown Dubai Skyline &amp; Burj Khalifa" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
       <div class="hero-slide-container">
         <div class="hero-eyebrow-badge">
@@ -39,17 +39,41 @@ const homeHeroHtml = `
       </div>
     </div>
 
-    <!-- Slide 2: Energy Facilities & EPC -->
+    <!-- Slide 2: Architectural Innovation & Future Engineering (Museum of the Future & Emirates Towers) -->
     <div class="hero-slide-item">
-      <img src="/assets/images/business/energy-refinery-complex.jpg" alt="Energy Facilities & Pipelines" class="hero-slide-bg-img">
+      <img src="/assets/images/hero/hero-museum-future.jpg" alt="Museum of the Future &amp; Emirates Towers" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
       <div class="hero-slide-container">
         <div class="hero-eyebrow-badge">
-          <span>ENERGY &amp; EPC</span> • <span>HYDROCARBON PIPELINES</span>
+          <span>ARCHITECTURAL INNOVATION</span> • <span>FUTURE ENGINEERING</span>
+        </div>
+        <h1 class="hero-giant-title">ICONIC LANDMARKS &amp; VISIONARY STRUCTURES</h1>
+        <p class="hero-lead-text">
+          Engineering monumental civic landmarks, complex structural geometry, luxury hospitality overhauls, and next-generation architectural transformations across the UAE.
+        </p>
+        <div class="hero-actions-row">
+          <a href="/services/" class="btn-enterprise-primary">
+            <span>OUR SERVICES</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="/projects/" class="btn-enterprise-secondary">
+            <span>LANDMARK PROJECTS</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Capital Energy & Process Infrastructure (Abu Dhabi Etihad Towers & Corniche Waterfront) -->
+    <div class="hero-slide-item">
+      <img src="/assets/images/hero/hero-etihad-abu-dhabi.jpg" alt="Abu Dhabi Etihad Towers &amp; Waterfront" class="hero-slide-bg-img">
+      <div class="hero-slide-gradient"></div>
+      <div class="hero-slide-container">
+        <div class="hero-eyebrow-badge">
+          <span>CAPITAL HEADQUARTERS</span> • <span>ENERGY &amp; PROCESS EPC</span>
         </div>
         <h1 class="hero-giant-title">CRITICAL ENERGY &amp; PROCESS INFRASTRUCTURE</h1>
         <p class="hero-lead-text">
-          Strategic hydrocarbon transport pipelines, process facilities, storage tank farms, and refinery turnaround execution to strict ISO 45001 standards.
+          From the UAE capital to regional energy corridors: strategic hydrocarbon transport pipelines, process facilities, storage tank farms, and refinery turnaround execution to strict ISO 45001 standards.
         </p>
         <div class="hero-actions-row">
           <a href="/business/energy/" class="btn-enterprise-primary">
@@ -63,49 +87,49 @@ const homeHeroHtml = `
       </div>
     </div>
 
-    <!-- Slide 3: Civil Infrastructure, Electrical & Interior Works -->
+    <!-- Slide 4: Civil Infrastructure & Heavy Transportation (Sheikh Zayed Road Highway & Transit Arteries) -->
     <div class="hero-slide-item">
-      <img src="/assets/images/hero/hero-infrastructure-cranes.jpg" alt="Civil Infrastructure, Electrical & Interior Works" class="hero-slide-bg-img">
+      <img src="/assets/images/hero/hero-sheikh-zayed-corridor.jpg" alt="Sheikh Zayed Road Arterial Infrastructure" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
       <div class="hero-slide-container">
         <div class="hero-eyebrow-badge">
-          <span>CIVIL INFRASTRUCTURE</span> • <span>ELECTRICAL &amp; INTERIOR FIT-OUT</span>
+          <span>CIVIL INFRASTRUCTURE</span> • <span>TRANSPORTATION NETWORKS</span>
         </div>
-        <h1 class="hero-giant-title">CIVIL INFRASTRUCTURE, ELECTRICAL &amp; INTERIOR WORKS</h1>
+        <h1 class="hero-giant-title">ARTERIAL HIGHWAYS, TRANSIT &amp; HEAVY CIVIL WORKS</h1>
         <p class="hero-lead-text">
-          Highway corridors, major earthmoving, commercial interior fit-outs, precision electrical contracting, and turnkey engineering solutions across the region.
+          Express highway corridors, runway civil works, complex utility bridges, deep municipal networks, and arterial paving delivered with uncompromised engineering precision.
         </p>
         <div class="hero-actions-row">
           <a href="/business/infrastructure/" class="btn-enterprise-primary">
             <span>INFRASTRUCTURE WORKS</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
-          <a href="/business/engineering/" class="btn-enterprise-secondary">
-            <span>ELECTRICAL &amp; INTERIORS</span>
+          <a href="/proposal/" class="btn-enterprise-secondary">
+            <span>TENDER PROPOSALS</span>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Slide 4: Dual Hub UAE & India -->
+    <!-- Slide 5: Luxury Interior Fit-Out & Facilities Management (Dubai Marina Waterfront & Towers) -->
     <div class="hero-slide-item">
-      <img src="/assets/images/about/india-hub.jpg" alt="Dual Hub UAE and India" class="hero-slide-bg-img">
+      <img src="/assets/images/hero/hero-dubai-marina.jpg" alt="Dubai Marina Skyline &amp; Waterfront" class="hero-slide-bg-img">
       <div class="hero-slide-gradient"></div>
       <div class="hero-slide-container">
         <div class="hero-eyebrow-badge">
-          <span>DUAL-HUB PRESENCE</span> • <span>UAE &amp; INDIA</span>
+          <span>INTERIOR FIT-OUT</span> • <span>FACILITIES MANAGEMENT</span>
         </div>
-        <h1 class="hero-giant-title">STRATEGIC CORRIDORS. ONE UNIFIED STANDARD.</h1>
+        <h1 class="hero-giant-title">BESPOKE INTERIOR FIT-OUT &amp; COASTAL ASSETS</h1>
         <p class="hero-lead-text">
-          Headquartered in the United Arab Emirates with regional operations and South Asia engineering hub Ashaz Engineering in India.
+          Turnkey commercial interiors, bespoke architectural joinery, high-end residential towers, and premier facilities management (FM &amp; AMC) preserving prestige properties 24/7 across the UAE.
         </p>
         <div class="hero-actions-row">
-          <a href="/about/" class="btn-enterprise-primary">
-            <span>WHO WE ARE</span>
+          <a href="/services/" class="btn-enterprise-primary">
+            <span>INTERIOR &amp; FM SCOPE</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
-          <a href="/contact/" class="btn-enterprise-secondary">
-            <span>GLOBAL OFFICES</span>
+          <a href="/procurement/" class="btn-enterprise-secondary">
+            <span>VENDOR ENLISTMENT</span>
           </a>
         </div>
       </div>
