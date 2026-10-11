@@ -179,7 +179,7 @@ const servicesContent = `
         <!-- 2. Commercial Interior Design -->
         <div class="interior-card" id="commercial">
           <div class="interior-card-image-wrap">
-            <img src="/assets/images/projects/al-quoz-office.jpg" alt="Commercial Interior Design - Executive Office" class="interior-card-img" loading="lazy">
+            <img src="/assets/services/commercial-interior-design.jpg" alt="Commercial Interior Design - Executive Office" class="interior-card-img" loading="lazy">
             <span class="interior-card-badge">COMMERCIAL &amp; WORKSPACES</span>
           </div>
           <div class="interior-card-body">
@@ -588,7 +588,7 @@ const servicesContent = `
         <!-- 8. Landscaping, Farms & Forests -->
         <div class="interior-card" id="civil-landscaping">
           <div class="interior-card-image-wrap">
-            <img src="/assets/images/projects/al-qua-school-infrastructure.jpg" alt="Landscaping, Farms and Forestry Development" class="interior-card-img" loading="lazy">
+            <img src="/assets/services/landscaping-farms-forests.jpg" alt="Landscaping, Farms and Forestry Development" class="interior-card-img" loading="lazy">
             <span class="civil-scope-badge">LANDSCAPING &amp; EXTERNAL</span>
           </div>
           <div class="interior-card-body">
@@ -1329,7 +1329,7 @@ const servicesContent = `
         <!-- FM Scope 5: Swimming Pool Services -->
         <div class="interior-card" id="fm-pool-landscaping">
           <div class="interior-card-image-wrap">
-            <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Swimming Pool Services and Maintenance" class="interior-card-img" loading="lazy">
+            <img src="/assets/services/swimming-pool-service.jpg" alt="Swimming Pool Services and Maintenance" class="interior-card-img" loading="lazy">
             <span class="interior-scope-badge" style="background: rgba(16,185,129,0.9); border-color: #10b981;">SWIMMING POOL CARE</span>
           </div>
           <div class="interior-card-body">
@@ -1381,7 +1381,7 @@ const servicesContent = `
         <!-- FM Scope 7: Landscaping & Pest Control -->
         <div class="interior-card">
           <div class="interior-card-image-wrap">
-            <img src="/assets/images/projects/al-qua-school-infrastructure.jpg" alt="Landscaping and Pest Control" class="interior-card-img" loading="lazy">
+            <img src="/assets/services/landscaping-maintenance.jpg" alt="Landscaping and Pest Control" class="interior-card-img" loading="lazy">
             <span class="interior-scope-badge" style="background: rgba(16,185,129,0.9); border-color: #10b981;">LANDSCAPING &amp; PEST</span>
           </div>
           <div class="interior-card-body">
@@ -1599,7 +1599,7 @@ const servicesContent = `
         <!-- 5. Pool Tile Refurbishment -->
         <div class="fm-project-card">
           <div class="fm-project-thumb">
-            <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Pool Tile Refurbishment" class="fm-project-img" loading="lazy">
+            <img src="/assets/services/infinity-pool-tile.jpg" alt="Pool Tile Refurbishment" class="fm-project-img" loading="lazy">
             <span class="fm-project-tag">POOL REFURBISHMENT</span>
           </div>
           <div class="fm-project-body">
