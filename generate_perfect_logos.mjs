@@ -26,7 +26,7 @@ const pdfList = [
   },
   {
     id: 'ashaz-engineering',
-    path: 'c:/Users/krish/Downloads/Logo-2 (2).pdf',
+    path: fs.existsSync('c:/Users/krish/Downloads/Logo-4.pdf') ? 'c:/Users/krish/Downloads/Logo-4.pdf' : 'public/assets/logos/ashaz-engineering-source.pdf',
     brandName: 'Ashaz Engineering (India)'
   }
 ];
@@ -100,25 +100,25 @@ function processImage(ctx, width, height, isAshaz = false) {
         const isVibrantColor = (g > 110 && g > r + 30) || (b > 130 && b > r + 30) || (g > 140 && r < 50);
 
         if (isAshaz) {
-          // In Ashaz: gear is silver/gray (r ~ g ~ b between 130 and 230), wave is teal (g > 110, r < 50), text is navy
-          const isWave = (g > 110 && r < 60);
-          const isGear = (!isWave && Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && r > 110);
-          const isText = (r < 70 && g < 70 && b < 80);
+          // In Ashaz: gear is silver/gray (r ~ g ~ b > 130), wave is teal (g > 105, r < 75), text is teal, RAYAN Group is slate/gray
+          const isTeal = (g > 105 && r < 75 && b > 105);
+          const isDarkGray = (Math.abs(r - g) < 25 && Math.abs(g - b) < 25 && r < 140);
+          const isGear = (Math.abs(r - g) < 25 && Math.abs(g - b) < 25 && r >= 140);
 
-          if (isWave) {
+          if (isTeal) {
             whiteData.data[destIdx] = r;
             whiteData.data[destIdx + 1] = g;
             whiteData.data[destIdx + 2] = b;
-          } else if (isGear) {
-            // Keep gear light metallic silver
-            whiteData.data[destIdx] = Math.min(255, r + 40);
-            whiteData.data[destIdx + 1] = Math.min(255, g + 40);
-            whiteData.data[destIdx + 2] = Math.min(255, b + 40);
-          } else if (isText) {
-            // Dark navy "ASHAZ ENGINEERING" becomes crisp pure white
+          } else if (isDarkGray) {
+            // Dark gray "RAYAN Group" becomes crisp pure white on dark cards
             whiteData.data[destIdx] = 255;
             whiteData.data[destIdx + 1] = 255;
             whiteData.data[destIdx + 2] = 255;
+          } else if (isGear) {
+            // Keep gear light metallic silver
+            whiteData.data[destIdx] = Math.min(255, r + 20);
+            whiteData.data[destIdx + 1] = Math.min(255, g + 20);
+            whiteData.data[destIdx + 2] = Math.min(255, b + 20);
           } else {
             whiteData.data[destIdx] = r;
             whiteData.data[destIdx + 1] = g;

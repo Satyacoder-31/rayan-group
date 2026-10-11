@@ -1304,7 +1304,7 @@ function renderBusinessUnitsSection() {
             <!-- Slide 3: Ashaz Engineering (India) -->
             <div class="bu-slide" data-slide="3">
               <div class="bu-logo-col">
-                <img src="/assets/logos/ashaz-engineering-white.png" alt="Ashaz Engineering (India)" width="200" height="150" loading="lazy">
+                <img src="/assets/logos/ashaz-engineering-white.png" alt="Ashaz Engineering (India)" width="250" height="60" loading="lazy">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
