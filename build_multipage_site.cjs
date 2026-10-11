@@ -234,8 +234,8 @@ function renderHeader(activePath = '/') {
                       <div class="mega-link-desc">Large-scale civil works, earthmoving, piling &amp; foundations.</div>
                     </a>
                     <a href="/services/#civil-roads" class="mega-sub-link">
-                      <div class="mega-link-title"><span>Roads, Highways &amp; Airfields</span><span>→</span></div>
-                      <div class="mega-link-desc">Expressways, internal community roads, asphalt paving &amp; runways.</div>
+                      <div class="mega-link-title"><span>Roads, Parking Shades &amp; Airfields</span><span>→</span></div>
+                      <div class="mega-link-desc">Expressways, internal roads, tensile car parking shades &amp; runways.</div>
                     </a>
                     <a href="/services/#civil-bridges" class="mega-sub-link">
                       <div class="mega-link-title"><span>Bridges &amp; Deep Structures</span><span>→</span></div>
@@ -526,7 +526,7 @@ function renderMobileDrawer(activePath = '/') {
             <a href="/services/#custom-joinery" class="mobile-sublink">Custom Joinery &amp; Bespoke Furniture</a>
             <div style="font-size: 0.68rem; font-weight: 800; color: #f59e0b; text-transform: uppercase; padding: 0.6rem 0.75rem 0.15rem; letter-spacing: 0.08em;">Civil &amp; Infrastructure:</div>
             <a href="/services/#civil-infrastructure" class="mobile-sublink">Civil Engineering &amp; Heavy Infrastructure</a>
-            <a href="/services/#civil-roads" class="mobile-sublink">Roads, Highways &amp; Internal Networks</a>
+            <a href="/services/#civil-roads" class="mobile-sublink">Roads, Parking Shades &amp; Internal Networks</a>
             <a href="/services/#civil-airports" class="mobile-sublink">Airports &amp; Airfield Infrastructure</a>
             <a href="/services/#civil-bridges" class="mobile-sublink">Bridges, Piling &amp; Civil Structures</a>
             <a href="/services/#civil-drainage" class="mobile-sublink">Drainage &amp; Sewerage Pumping Stations</a>

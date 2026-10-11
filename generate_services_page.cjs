@@ -403,27 +403,27 @@ const servicesContent = `
       </div>
 
       <div class="interior-scope-grid">
-        <!-- 1. Roads, Highways & Internal Roads -->
-        <div class="interior-card" id="civil-roads">
+        <!-- 1. Bridges & Civil Structures -->
+        <div class="interior-card" id="civil-bridges">
           <div class="interior-card-image-wrap">
-            <img src="/assets/services/03-civil-engineering.jpg" alt="Roads and Highways Construction" class="interior-card-img" loading="lazy">
-            <span class="civil-scope-badge">HIGHWAYS &amp; ROADS</span>
+            <img src="/assets/services/03-civil-engineering.jpg" alt="Bridges and Civil Structures Engineering" class="interior-card-img" loading="lazy">
+            <span class="civil-scope-badge">BRIDGES &amp; STRUCTURES</span>
           </div>
           <div class="interior-card-body">
             <span class="interior-card-num" style="color: #f59e0b;">CIVIL SCOPE 01</span>
-            <h3 class="interior-card-title">Roads, Highways &amp; Internal Roads</h3>
+            <h3 class="interior-card-title">Bridges &amp; Civil Structures</h3>
             <p class="interior-card-desc">
-              Turnkey arterial highways, dual carriageways, industrial corridors, and master community internal road infrastructure built to international heavy-load standards.
+              Monumental reinforced concrete bridge engineering, flyovers, pedestrian underpasses, and transportation viaducts built for multi-decade durability.
             </p>
             <ul class="interior-card-list">
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Main roads and highway construction</strong> including multi-lane expressways and interchanges</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Internal roads for master residential developments</strong>, industrial cities &amp; commercial zones</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Road foundations, sub-grade stabilization</strong>, aggregate base course, and high-performance asphalt pavement</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Road rehabilitation, asphalt milling</strong>, deep pavement rejuvenation, and geometric improvements</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Thermoplastic road markings, regulatory signage</strong>, cat eyes, and associated road furniture</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Bridge construction, flyovers</strong>, and grade-separated road interchange structures</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Deep pile foundations, pile caps</strong>, reinforced concrete piers, and abutment walls</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Pre-stressed &amp; post-tensioned bridge decks</strong>, elastomeric bearings, and expansion joints</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Road connections, approach ramps</strong>, Mechanically Stabilized Earth (MSE) retaining walls</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Precast concrete box culverts</strong>, underground animal crossings, and pedestrian underpasses</span></li>
             </ul>
             <div class="interior-card-footer">
-              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Expressways • Pavements • Interchanges</span>
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Flyovers • Piling • Viaducts</span>
               <a href="#consultation" style="font-size: 0.82rem; color: #f59e0b; font-weight: 700; text-decoration: none;">Inquire Scope →</a>
             </div>
           </div>
@@ -455,27 +455,28 @@ const servicesContent = `
           </div>
         </div>
 
-        <!-- 3. Bridges & Civil Structures -->
-        <div class="interior-card" id="civil-bridges">
+        <!-- 3. Roads, Pavements & Car Parking Shades -->
+        <div class="interior-card" id="civil-roads">
           <div class="interior-card-image-wrap">
-            <img src="/assets/images/business/03-infrastructure.jpg" alt="Bridges and Civil Structures Engineering" class="interior-card-img" loading="lazy">
-            <span class="civil-scope-badge">BRIDGES &amp; STRUCTURES</span>
+            <img src="/assets/services/car-parking-shades.jpg" alt="Roads, Pavements and Car Parking Shades" class="interior-card-img" loading="lazy">
+            <span class="civil-scope-badge">ROADS &amp; PARKING SHADES</span>
           </div>
           <div class="interior-card-body">
             <span class="interior-card-num" style="color: #f59e0b;">CIVIL SCOPE 03</span>
-            <h3 class="interior-card-title">Bridges &amp; Civil Structures</h3>
+            <h3 class="interior-card-title">Roads, Highways &amp; Car Parking Shades</h3>
             <p class="interior-card-desc">
-              Monumental reinforced concrete bridge engineering, flyovers, pedestrian underpasses, and transportation viaducts built for multi-decade durability.
+              Turnkey arterial highways, dual carriageways, industrial corridors, high-performance asphalt pavements, and architectural tensile fabric car parking shade structures.
             </p>
             <ul class="interior-card-list">
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Bridge construction, flyovers</strong>, and grade-separated road interchange structures</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Deep pile foundations, pile caps</strong>, reinforced concrete piers, and abutment walls</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Pre-stressed &amp; post-tensioned bridge decks</strong>, elastomeric bearings, and expansion joints</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Road connections, approach ramps</strong>, Mechanically Stabilized Earth (MSE) retaining walls</span></li>
-              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Precast concrete box culverts</strong>, underground animal crossings, and pedestrian underpasses</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Main roads and highway construction</strong> including multi-lane expressways, access corridors &amp; interchanges</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Internal roads for master residential developments</strong>, industrial cities &amp; commercial zones</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Architectural tensile car parking shades</strong> (cantilever, conical, arch &amp; sail designs with high-grade UV-resistant HDPE/PVC/PTFE fabrics)</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Commercial &amp; institutional parking lots</strong> with interlock paving, thermoplastic markings &amp; wheel stoppers</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Road foundations, sub-grade stabilization</strong>, aggregate base course, and high-performance asphalt pavement</span></li>
+              <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>Road rehabilitation, asphalt milling</strong>, deep pavement rejuvenation, and regulatory signage</span></li>
             </ul>
             <div class="interior-card-footer">
-              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Flyovers • Piling • Culverts</span>
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Expressways • Parking Shades • Pavements</span>
               <a href="#consultation" style="font-size: 0.82rem; color: #f59e0b; font-weight: 700; text-decoration: none;">Inquire Scope →</a>
             </div>
           </div>
@@ -1707,7 +1708,7 @@ const servicesContent = `
         <button type="button" class="service-tab-btn" data-cat="plumbing">Plumbing &amp; Leakage</button>
         <button type="button" class="service-tab-btn" data-cat="pools">Swimming Pools</button>
         <button type="button" class="service-tab-btn" data-cat="trades">Specialist Trades &amp; Handyman</button>
-        <button type="button" class="service-tab-btn" data-cat="roads">Roads &amp; Highways</button>
+        <button type="button" class="service-tab-btn" data-cat="roads">Roads &amp; Parking Shades</button>
         <button type="button" class="service-tab-btn" data-cat="civil">Bridges &amp; Structures</button>
         <button type="button" class="service-tab-btn" data-cat="airports">Airports &amp; Airfields</button>
         <button type="button" class="service-tab-btn" data-cat="utilities">Drainage, Sewerage &amp; Water</button>
@@ -1762,9 +1763,9 @@ const servicesContent = `
 
         <div class="matrix-card" data-matrix-cat="roads" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.75rem;">
           <span style="color: #f59e0b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.35rem;">Civil Discipline</span>
-          <h4 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; font-weight: 700; margin-bottom: 0.5rem;">Roads &amp; Highways</h4>
-          <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1rem;">Main highways, expressways, residential community internal roads, pavement asphalt paving, and rehabilitation.</p>
-          <a href="#consultation" style="font-size: 0.8rem; color: #f59e0b; font-weight: 700; text-decoration: none;">Inquire Roads →</a>
+          <h4 style="font-family: var(--font-heading); font-size: 1.2rem; color: #fff; font-weight: 700; margin-bottom: 0.5rem;">Roads, Pavements &amp; Car Parking Shades</h4>
+          <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1rem;">Main highways, expressways, residential community roads, architectural tensile car parking shades &amp; asphalt paving.</p>
+          <a href="#civil-roads" style="font-size: 0.8rem; color: #f59e0b; font-weight: 700; text-decoration: none;">Inquire Roads &amp; Shades →</a>
         </div>
 
         <div class="matrix-card" data-matrix-cat="civil" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.75rem;">
@@ -1970,7 +1971,7 @@ const servicesContent = `
                   <option value="fm-emergency">24/7 Rapid Emergency Repair Call-Out</option>
                 </optgroup>
                 <optgroup label="Civil &amp; Heavy Infrastructure">
-                  <option value="civil-highways">Roads, Highways &amp; Internal Road Networks</option>
+                  <option value="civil-highways">Roads, Car Parking Shades &amp; Internal Networks</option>
                   <option value="civil-airports">Airports &amp; Airfield Infrastructure</option>
                   <option value="civil-bridges">Bridges, Piling &amp; Civil Structures</option>
                   <option value="civil-drainage">Stormwater Drainage &amp; Sewerage Networks</option>
@@ -2019,7 +2020,7 @@ const servicesContent = `
                   <input type="checkbox"> <span>Heavy Civil Engineering</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Asphalt Paving &amp; Roads</span>
+                  <input type="checkbox"> <span>Asphalt Roads &amp; Car Parking Shades</span>
                 </label>
                 <label class="checkbox-chip">
                   <input type="checkbox"> <span>Deep Utilities &amp; Drainage</span>
