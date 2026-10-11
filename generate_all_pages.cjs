@@ -333,7 +333,7 @@ createRoute('about/index.html', {
             <a href="/leadership/#chairman-message" class="btn-enterprise-primary" style="background: #0099e6; border-color: #0099e6; color: #fff; font-weight: 800;">
               READ CHAIRMAN’S ADDRESS →
             </a>
-            <a href="/leadership/#ceo-message" class="btn-enterprise-secondary" style="border-color: #00c7b3; color: #00c7b3;">
+            <a href="/leadership/#ceo-message" class="btn-enterprise-secondary" style="border-color: #0099e6; color: #0099e6;">
               READ CEO’S ADDRESS →
             </a>
           </div>
@@ -343,9 +343,9 @@ createRoute('about/index.html', {
             <p style="font-style: italic; color: #e2e8f0; font-size: 0.9rem; margin: 0 0 0.5rem; line-height: 1.5;">“Success is measured not only by the projects we complete, but by the trust we build and the value we contribute to the communities in which we operate.”</p>
             <div style="font-size: 0.78rem; font-weight: 700; color: #0099e6;">&mdash; Mr. Arshad Alam Shaikh, Founder &amp; Chairman</div>
           </div>
-          <div style="background: rgba(0,199,179,0.08); border-left: 3px solid #00c7b3; padding: 1.25rem 1.5rem; border-radius: 0 8px 8px 0;">
+          <div style="background: rgba(0,153,230,0.08); border-left: 3px solid #0099e6; padding: 1.25rem 1.5rem; border-radius: 0 8px 8px 0;">
             <p style="font-style: italic; color: #e2e8f0; font-size: 0.9rem; margin: 0 0 0.5rem; line-height: 1.5;">“Our mission: creating lasting value today while building transformational opportunities for tomorrow.”</p>
-            <div style="font-size: 0.78rem; font-weight: 700; color: #00c7b3;">&mdash; Mrs. Sadaf Fatma, Chief Executive Officer (CEO)</div>
+            <div style="font-size: 0.78rem; font-weight: 700; color: #0099e6;">&mdash; Mrs. Sadaf Fatma, Chief Executive Officer (CEO)</div>
           </div>
         </div>
       </div>
@@ -642,16 +642,16 @@ createRoute('leadership/index.html', {
   <!-- ========================================================================= -->
   <!-- CEO'S MESSAGE SECTION                                                     -->
   <!-- ========================================================================= -->
-  <section id="ceo-message" class="section" style="padding: 6.5rem 0; background: linear-gradient(180deg, #0a1728 0%, #07111e 100%); border-bottom: 1px solid rgba(0,199,179,0.25); position: relative; overflow: hidden;">
-    <div style="position: absolute; bottom: -120px; left: -120px; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(0,199,179,0.08) 0%, transparent 70%); pointer-events: none;"></div>
+  <section id="ceo-message" class="section" style="padding: 6.5rem 0; background: linear-gradient(180deg, #0a1728 0%, #07111e 100%); border-bottom: 1px solid rgba(0,153,230,0.25); position: relative; overflow: hidden;">
+    <div style="position: absolute; bottom: -120px; left: -120px; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(0,153,230,0.08) 0%, transparent 70%); pointer-events: none;"></div>
 
     <div class="container">
-      <div style="max-width: 1040px; margin: 0 auto; background: #0c1828; border: 1px solid rgba(0,199,179,0.35); border-radius: 16px; padding: clamp(2rem, 5vw, 4.5rem); box-shadow: 0 25px 60px rgba(0,0,0,0.45); position: relative;">
+      <div style="max-width: 1040px; margin: 0 auto; background: #0c1828; border: 1px solid rgba(0,153,230,0.35); border-radius: 16px; padding: clamp(2rem, 5vw, 4.5rem); box-shadow: 0 25px 60px rgba(0,0,0,0.45); position: relative;">
         
         <!-- Header Meta -->
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(0,199,179,0.25);">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(0,153,230,0.25);">
           <div>
-            <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #00c7b3; margin-bottom: 0.5rem;">
+            <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #0099e6; margin-bottom: 0.5rem;">
               EXECUTIVE ADDRESS // CHIEF EXECUTIVE OFFICER
             </span>
             <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; margin: 0; line-height: 1.2;">
@@ -662,19 +662,19 @@ createRoute('leadership/index.html', {
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 64px; height: 64px; border-radius: 50%; border: 2.5px solid #00c7b3; background: radial-gradient(circle, rgba(0,199,179,0.25) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 1.25rem;">
-              SF
+            <div style="width: 64px; height: 64px; border-radius: 50%; border: 2.5px solid #0099e6; background: radial-gradient(circle, rgba(0,153,230,0.25) 0%, #07111e 70%); display: flex; align-items: center; justify-content: center; color: #0099e6;">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
             </div>
             <div style="text-align: left;">
               <div style="color: #fff; font-weight: 700; font-size: 1.05rem;">Mrs. Sadaf Fatma</div>
-              <div style="color: #00c7b3; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">Chief Executive Officer (CEO)</div>
+              <div style="color: #0099e6; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">Chief Executive Officer (CEO)</div>
               <div style="color: #64748b; font-size: 0.74rem;">Rayan Group (UAE &amp; India)</div>
             </div>
           </div>
         </div>
 
         <!-- Pull Quote -->
-        <div style="background: rgba(0,199,179,0.06); border-left: 4px solid #00c7b3; padding: 1.5rem 1.75rem; border-radius: 0 10px 10px 0; margin-bottom: 2.5rem;">
+        <div style="background: rgba(0,153,230,0.06); border-left: 4px solid #0099e6; padding: 1.5rem 1.75rem; border-radius: 0 10px 10px 0; margin-bottom: 2.5rem;">
           <p style="font-family: var(--font-heading); font-size: clamp(1.05rem, 1.8vw, 1.25rem); font-style: italic; color: #f1f5f9; line-height: 1.6; margin: 0;">
             “Great enterprises are forged through inspired people, resilient partnerships, disciplined execution, and an unshakeable clarity of purpose. At RAYAN Group, our mission is simple yet profound: to create lasting value today while building stronger opportunities for tomorrow.”
           </p>
@@ -699,8 +699,8 @@ createRoute('leadership/index.html', {
           </p>
 
           <!-- Twin Pillars Highlight -->
-          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,199,179,0.25); border-radius: 12px; padding: 1.75rem; margin: 0.5rem 0;">
-            <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.75rem;">
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0,153,230,0.25); border-radius: 12px; padding: 1.75rem; margin: 0.5rem 0;">
+            <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.75rem;">
               Twin Pillars of Strategic Growth: UAE &amp; India
             </h4>
             <p style="margin: 0; color: #94a3b8; font-size: 0.95rem; line-height: 1.7;">
@@ -730,13 +730,13 @@ createRoute('leadership/index.html', {
         </div>
 
         <!-- Signature Block -->
-        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,199,179,0.25); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.5rem;">
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,153,230,0.25); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.5rem;">
           <div>
             <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">With warm regards and shared dedication,</div>
             <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.01em;">
               Mrs. Sadaf Fatma
             </div>
-            <div style="font-size: 0.85rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem;">
               Chief Executive Officer (CEO)
             </div>
             <div style="color: #94a3b8; font-size: 0.825rem; margin-top: 0.15rem;">
@@ -744,7 +744,7 @@ createRoute('leadership/index.html', {
             </div>
           </div>
           <div style="text-align: right;">
-            <div style="display: inline-block; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(0,199,179,0.1); border: 1px solid rgba(0,199,179,0.3); font-size: 0.8rem; color: #00c7b3; font-weight: 700;">
+            <div style="display: inline-block; padding: 0.5rem 1rem; border-radius: 6px; background: rgba(0,153,230,0.1); border: 1px solid rgba(0,153,230,0.3); font-size: 0.8rem; color: #0099e6; font-weight: 700;">
               DISCIPLINED EXECUTION &bull; SUSTAINABLE GROWTH
             </div>
           </div>
