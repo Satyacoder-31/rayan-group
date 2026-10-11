@@ -255,7 +255,6 @@ export const FEATURED_PROJECTS = [
     location: "Al Hamra, Ras Al Khaimah, UAE",
     client: "Waldorf Astoria / SPECON LLC",
     year: "2024",
-    value: "AED 92.5M",
     scope: "5-Star Ultra-Luxury Hospitality Overhaul, Presidential Suites Refurbishment, MEP Modernization & Grand Lobby Fit-Out.",
     image: "/assets/images/projects/waldorf-astoria-renovation-rak.jpg",
     featured: true
@@ -269,7 +268,6 @@ export const FEATURED_PROJECTS = [
     location: "Palm Jumeirah, Dubai, UAE",
     client: "REC Contracting LLC / Royal Estate Corp",
     year: "2024",
-    value: "AED 115.0M",
     scope: "Ultra-Luxury Coastal Villa Construction, Bespoke Marble, Structural Works & Panoramic Glazing.",
     image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg",
     featured: true
@@ -283,7 +281,6 @@ export const FEATURED_PROJECTS = [
     location: "Al Bateen, Abu Dhabi, UAE",
     client: "Ayat Contracting LLC / Prestige Real Estate",
     year: "2024",
-    value: "AED 142.8M",
     scope: "Twin 22-Story Waterfront Towers Architectural Gypsum, Vaulted Ceilings, Interior Partitions & Turnkey Fit-Out.",
     image: "/assets/images/projects/c2-towers-al-bateen.jpg",
     featured: true
@@ -297,7 +294,6 @@ export const FEATURED_PROJECTS = [
     location: "Abu Dhabi, UAE",
     client: "EDGE Group / REMAYA International",
     year: "2024",
-    value: "AED 78.4M",
     scope: "Specialized Defense Training Facilities, Ballistic Partitions, Heavy Engineering & Architectural Fit-Out.",
     image: "/assets/images/projects/edge-group-remaya.jpg",
     featured: true
@@ -311,7 +307,6 @@ export const FEATURED_PROJECTS = [
     location: "Al Rowaiyah, Dubai, UAE",
     client: "Dubai Police GHQ / Top Rock Contracting",
     year: "2024",
-    value: "AED 64.0M",
     scope: "Institutional Complex Construction, Tactical Infrastructure, Heavy Gypsum & Security Partitions.",
     image: "/assets/images/projects/dubai-police-academy.jpg",
     featured: true
@@ -325,7 +320,6 @@ export const FEATURED_PROJECTS = [
     location: "Dubai Hills Mall, Dubai, UAE",
     client: "Dubai Holding / Roxy Cinemas",
     year: "2023",
-    value: "AED 38.6M",
     scope: "Acoustic Soundproofing Engineering, VIP Cinema Auditorium Fit-Out, Stadium Tier Seating & Stepped Gypsum.",
     image: "/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg",
     featured: true
@@ -339,7 +333,6 @@ export const FEATURED_PROJECTS = [
     location: "Private Luxury Island, Abu Dhabi, UAE",
     client: "Brock Construction / Private Island Estate",
     year: "2024",
-    value: "AED 46.2M",
     scope: "Cantilevered Structural Concrete Pool Engineering, Horizon Waterfalls, Mosaic Tiling & Coastal Landscaping.",
     image: "/assets/images/projects/luxury-island-infinity-pool.jpg",
     featured: true
@@ -353,7 +346,6 @@ export const FEATURED_PROJECTS = [
     location: "Private Luxury Island, Abu Dhabi, UAE",
     client: "Private Royal Estate Development",
     year: "2024",
-    value: "AED 28.5M",
     scope: "Italian Calacatta & Statuario Marble Cladding, Precision Waterjet Inlays & Luxury Flooring.",
     image: "/assets/images/projects/luxury-island-marble-works.jpg",
     featured: false
@@ -367,7 +359,6 @@ export const FEATURED_PROJECTS = [
     location: "Al Wahda Mall, Abu Dhabi, UAE",
     client: "Landmark Group / HLN Technical Services LLC",
     year: "2024",
-    value: "AED 32.4M",
     scope: "Large-Format Anchor Retail Fit-Out, Heavy Duty Flooring, Structural MEP & Architectural Gypsum.",
     image: "/assets/images/projects/max-fashion-al-wahda-mall.jpg",
     featured: false
@@ -381,7 +372,6 @@ export const FEATURED_PROJECTS = [
     location: "Al Lisaili, Dubai, UAE",
     client: "Private High-Net-Worth Client",
     year: "2025",
-    value: "AED 52.0M",
     scope: "Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes.",
     image: "/assets/images/projects/al-lisaili-villa.jpg",
     featured: false
@@ -395,7 +385,6 @@ export const FEATURED_PROJECTS = [
     location: "Al Qua'a, Abu Dhabi, UAE",
     client: "Abu Dhabi ADEK / PASCO Paving",
     year: "2023",
-    value: "AED 21.8M",
     scope: "External Civil Engineering, Heavy Interlock Paving, Campus Utility Walkways & Stormwater Drainage.",
     image: "/assets/images/projects/al-qua-school-infrastructure.jpg",
     featured: false
@@ -409,7 +398,6 @@ export const FEATURED_PROJECTS = [
     location: "Yas Island, Abu Dhabi",
     client: "Café Bateel / Top Rock Interiors LLC",
     year: "2023",
-    value: "AED 54.2M",
     scope: "High-spec mechanical, electrical and plumbing infrastructure, specialty architectural ceilings, and commercial hospitality fit-out.",
     image: "/assets/images/projects/yas-mall.jpg",
     featured: true
@@ -423,7 +411,6 @@ export const FEATURED_PROJECTS = [
     location: "MBZ Mall, Abu Dhabi, UAE",
     client: "Top Rock Interiors / Chipotle Middle East",
     year: "2024",
-    value: "AED 8.9M",
     scope: "Turnkey F&B Retail Fit-Out, Custom Metalwork, Acoustic Ceilings & Specialized MEP.",
     image: "/assets/images/projects/chipotle-mbz-mall.jpg",
     featured: false
@@ -437,7 +424,6 @@ export const FEATURED_PROJECTS = [
     location: "Dubai Marina, Dubai, UAE",
     client: "Andina Hospitality Group",
     year: "2023",
-    value: "AED 14.5M",
     scope: "Bespoke Restaurant Fit-Out, Luxury Woodwork, Commercial Kitchen MEP & Bar Joinery.",
     image: "/assets/images/projects/andina-restaurant-marina.jpg",
     featured: false
@@ -451,7 +437,6 @@ export const FEATURED_PROJECTS = [
     location: "City Walk, Dubai, UAE",
     client: "Sarood Hospitality / Dubai Holding",
     year: "2023",
-    value: "AED 11.2M",
     scope: "Contemporary Asian Restaurant Interior Fit-Out, Open Kitchen Joinery, Lighting & MEP Engineering.",
     image: "/assets/images/projects/the-noodle-house-city-walk.jpg",
     featured: false
@@ -465,7 +450,6 @@ export const FEATURED_PROJECTS = [
     location: "Dubai Marina, Dubai, UAE",
     client: "CRC Real Estate Group",
     year: "2023",
-    value: "AED 16.8M",
     scope: "Grade-A Executive Office Fit-Out, Acoustic Glass Partitions, Ergonomic Workstations & MEP.",
     image: "/assets/images/projects/crc-office-marina-palace.jpg",
     featured: false
@@ -479,7 +463,6 @@ export const FEATURED_PROJECTS = [
     location: "Dubai Silicon Oasis, Dubai, UAE",
     client: "Private Residential Investor",
     year: "2024",
-    value: "AED 7.4M",
     scope: "Turnkey Apartment Modernization, Premium Joinery, Recessed Lighting & Bespoke Kitchen.",
     image: "/assets/images/projects/silicon-oasis-residence.jpg",
     featured: false

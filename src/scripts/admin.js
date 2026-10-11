@@ -535,7 +535,7 @@ class RayanAdminPortal {
               </div>
               <button type="button" class="admin-btn-danger btn-delete-project" data-idx="${idx}" style="padding: 0.3rem 0.7rem; font-size: 0.72rem;">Delete</button>
             </div>
-            <div class="admin-grid-3">
+            <div class="admin-grid-2">
               <div class="admin-field-group">
                 <label class="admin-label">Project Title</label>
                 <input type="text" class="admin-input proj-field" data-idx="${idx}" data-field="title" value="${this.escapeAttr(p.title || '')}">
@@ -543,10 +543,6 @@ class RayanAdminPortal {
               <div class="admin-field-group">
                 <label class="admin-label">Location</label>
                 <input type="text" class="admin-input proj-field" data-idx="${idx}" data-field="location" value="${this.escapeAttr(p.location || '')}">
-              </div>
-              <div class="admin-field-group">
-                <label class="admin-label">Contract Value</label>
-                <input type="text" class="admin-input proj-field" data-idx="${idx}" data-field="value" value="${this.escapeAttr(p.value || '')}">
               </div>
             </div>
             <div class="admin-field-group" style="margin-top: 0.75rem;">
@@ -759,7 +755,6 @@ class RayanAdminPortal {
           location: 'Abu Dhabi, UAE',
           client: 'Client Entity',
           year: '2025',
-          value: 'AED 50M',
           scope: 'Turnkey Civil EPC, framework construction and MEP modern engineering.',
           image: '/assets/images/hero/hero-1-skyline.jpg'
         };

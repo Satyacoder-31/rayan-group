@@ -11,8 +11,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'HOSPITALITY / RAS AL KHAIMAH',
     location: 'Al Hamra, Ras Al Khaimah, UAE',
     client: 'Waldorf Astoria Hotels & Resorts / SPECON LLC',
-    value: 'AED 92,500,000',
-    valueShort: 'AED 92.5M',
     status: 'Completed',
     heroImage: '/assets/images/projects/waldorf-astoria-renovation-rak.jpg',
     scope: '5-Star Ultra-Luxury Hospitality Overhaul, Presidential Suites Refurbishment, MEP Modernization & Grand Lobby Fit-Out',
@@ -34,8 +32,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'RESIDENTIAL / PALM JUMEIRAH',
     location: 'Palm Jumeirah Frond, Dubai, UAE',
     client: 'REC Contracting LLC / Royal Estate Corp',
-    value: 'AED 115,000,000',
-    valueShort: 'AED 115.0M',
     status: 'Completed',
     heroImage: '/assets/images/projects/palm-jumeirah-rec-estate.jpg',
     scope: 'Ultra-Luxury Coastal Villa Construction, Bespoke Marble, Structural Works & Panoramic Glazing',
@@ -57,8 +53,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'DEFENSE & CIVIC / ABU DHABI',
     location: 'Abu Dhabi, UAE',
     client: 'EDGE Group / REMAYA International',
-    value: 'AED 78,400,000',
-    valueShort: 'AED 78.4M',
     status: 'Completed',
     heroImage: '/assets/images/projects/edge-group-remaya.jpg',
     scope: 'Specialized Defense Training Facilities, Ballistic Partitions, Heavy Engineering & Architectural Fit-Out',
@@ -80,8 +74,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'CIVIC & DEFENSE / DUBAI',
     location: 'Al Rowaiyah, Dubai, UAE',
     client: 'Dubai Police GHQ / Top Rock Contracting',
-    value: 'AED 64,000,000',
-    valueShort: 'AED 64.0M',
     status: 'Under Construction',
     heroImage: '/assets/images/projects/dubai-police-academy.jpg',
     scope: 'Institutional Complex Construction, Tactical Infrastructure, Heavy Gypsum & Security Partitions',
@@ -103,8 +95,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'RESIDENTIAL & HIGH-RISE / ABU DHABI',
     location: 'Al Bateen, Abu Dhabi, UAE',
     client: 'Ayat Contracting LLC / Prestige Real Estate',
-    value: 'AED 142,800,000',
-    valueShort: 'AED 142.8M',
     status: 'Completed',
     heroImage: '/assets/images/projects/c2-towers-al-bateen.jpg',
     scope: 'High-Rise Architectural Gypsum, Vaulted Ceilings, Interior Partitions & Turnkey Fit-Out',
@@ -126,8 +116,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'COMMERCIAL & ENTERTAINMENT / DUBAI',
     location: 'Dubai Hills Mall, Dubai, UAE',
     client: 'Dubai Holding / Roxy Cinemas',
-    value: 'AED 38,600,000',
-    valueShort: 'AED 38.6M',
     status: 'Completed',
     heroImage: '/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg',
     scope: 'Acoustic Soundproofing Engineering, VIP Cinema Auditorium Fit-Out, Stadium Tier Seating & Stepped Gypsum',
@@ -149,8 +137,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'COMMERCIAL RETAIL / ABU DHABI',
     location: 'Al Wahda Mall, Abu Dhabi, UAE',
     client: 'Landmark Group / HLN Technical Services LLC',
-    value: 'AED 32,400,000',
-    valueShort: 'AED 32.4M',
     status: 'Completed',
     heroImage: '/assets/images/projects/max-fashion-al-wahda-mall.jpg',
     scope: 'Large-Format Anchor Retail Fit-Out, Heavy Duty Flooring, Structural MEP & Architectural Gypsum',
@@ -172,8 +158,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'AQUATIC & RESIDENTIAL / ABU DHABI',
     location: 'Private Luxury Island, Abu Dhabi, UAE',
     client: 'Brock Construction / Private Island Estate',
-    value: 'AED 46,200,000',
-    valueShort: 'AED 46.2M',
     status: 'Completed',
     heroImage: '/assets/images/projects/luxury-island-infinity-pool.jpg',
     scope: 'Cantilevered Structural Concrete Pool Engineering, Horizon Waterfalls, Mosaic Tiling & Coastal Landscaping',
@@ -195,8 +179,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'MASONRY & STONE / ABU DHABI',
     location: 'Private Luxury Island, Abu Dhabi, UAE',
     client: 'Private Royal Estate Development',
-    value: 'AED 28,500,000',
-    valueShort: 'AED 28.5M',
     status: 'Completed',
     heroImage: '/assets/images/projects/luxury-island-marble-works.jpg',
     scope: 'Italian Calacatta & Statuario Marble Cladding, Precision Waterjet Inlays & Luxury Flooring',
@@ -218,8 +200,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'RESIDENTIAL / DUBAI',
     location: 'Al Lisaili, Dubai, UAE',
     client: 'Private High-Net-Worth Client',
-    value: 'AED 52,000,000',
-    valueShort: 'AED 52.0M',
     status: 'Under Construction',
     heroImage: '/assets/images/projects/al-lisaili-villa.jpg',
     scope: 'Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes',
@@ -241,8 +221,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'INFRASTRUCTURE & CIVIC / AL AIN',
     location: 'Al Qua\'a, Abu Dhabi / Al Ain, UAE',
     client: 'Abu Dhabi ADEK / PASCO Paving',
-    value: 'AED 21,800,000',
-    valueShort: 'AED 21.8M',
     status: 'Completed',
     heroImage: '/assets/images/projects/al-qua-school-infrastructure.jpg',
     scope: 'External Civil Engineering, Heavy Interlock Paving, Campus Utility Walkways & Stormwater Drainage',
@@ -264,8 +242,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'COMMERCIAL F&B / ABU DHABI',
     location: 'MBZ Mall, Mohamed Bin Zayed City, Abu Dhabi, UAE',
     client: 'Top Rock Interiors / Chipotle Middle East',
-    value: 'AED 8,900,000',
-    valueShort: 'AED 8.9M',
     status: 'Completed',
     heroImage: '/assets/images/projects/chipotle-mbz-mall.jpg',
     scope: 'Turnkey F&B Retail Fit-Out, Custom Metalwork, Acoustic Ceilings & Specialized MEP',
@@ -287,8 +263,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'HOSPITALITY & DINING / DUBAI',
     location: 'Dubai Marina Waterfront, Dubai, UAE',
     client: 'Andina Hospitality Group',
-    value: 'AED 14,500,000',
-    valueShort: 'AED 14.5M',
     status: 'Completed',
     heroImage: '/assets/images/projects/andina-restaurant-marina.jpg',
     scope: 'Bespoke Restaurant Fit-Out, Luxury Woodwork, Commercial Kitchen MEP & Bar Joinery',
@@ -310,8 +284,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'COMMERCIAL DINING / DUBAI',
     location: 'City Walk Phase 2, Dubai, UAE',
     client: 'Sarood Hospitality / Dubai Holding',
-    value: 'AED 11,200,000',
-    valueShort: 'AED 11.2M',
     status: 'Completed',
     heroImage: '/assets/images/projects/the-noodle-house-city-walk.jpg',
     scope: 'Contemporary Asian Restaurant Interior Fit-Out, Open Kitchen Joinery, Lighting & MEP Engineering',
@@ -333,8 +305,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'CORPORATE WORKSPACE / DUBAI',
     location: 'Marina Palace, Dubai Marina, UAE',
     client: 'CRC Real Estate / Commercial Real Estate Group',
-    value: 'AED 16,800,000',
-    valueShort: 'AED 16.8M',
     status: 'Completed',
     heroImage: '/assets/images/projects/crc-office-marina-palace.jpg',
     scope: 'Grade-A Executive Office Fit-Out, Acoustic Glass Partitions, Ergonomic Workstations & MEP',
@@ -356,8 +326,6 @@ const NEW_EXTRACTED_PROJECTS = [
     categoryLabel: 'RESIDENTIAL / DUBAI',
     location: 'Dubai Silicon Oasis (DSO), Dubai, UAE',
     client: 'Private Residential Investor',
-    value: 'AED 7,400,000',
-    valueShort: 'AED 7.4M',
     status: 'Completed',
     heroImage: '/assets/images/projects/silicon-oasis-residence.jpg',
     scope: 'Turnkey Apartment Modernization, Premium Joinery, Recessed Lighting & Bespoke Kitchen',
@@ -481,7 +449,6 @@ for (const proj of COMBINED_PROJECTS) {
           <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
             <div style="height: 200px; overflow: hidden; position: relative;">
               <img src="${rel.heroImage}" alt="${rel.title}" style="width: 100%; height: 100%; object-fit: cover;">
-              <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6;">${rel.valueShort}</span>
             </div>
             <div style="padding: 1.75rem;">
               <span style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">${rel.categoryLabel}</span>
@@ -524,11 +491,6 @@ for (const proj of COMBINED_PROJECTS) {
         <div>
           <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.25rem; position: sticky; top: 100px;" id="specs">
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #0099e6; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em;">PROJECT SPECIFICATIONS</h3>
-            
-            <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.85rem; margin-bottom: 0.85rem;">
-              <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.25rem;">Contract Value</span>
-              <div style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff;">${proj.value}</div>
-            </div>
 
             <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.85rem; margin-bottom: 0.85rem;">
               <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.25rem;">Client / Partner</span>
@@ -570,7 +532,7 @@ for (const proj of COMBINED_PROJECTS) {
 
   createRoute(`projects/${proj.slug}/index.html`, {
     title: `${proj.title} Case Study | Rayan Group`,
-    description: `${proj.valueShort} ${proj.scope} delivered by Rayan Group in ${proj.location}.`,
+    description: `${proj.scope} delivered by Rayan Group in ${proj.location}.`,
     activePath: `/projects/${proj.slug}/`,
     heroHtml,
     content: pageContent
@@ -636,7 +598,6 @@ const portfolioContent = `
         <article class="project-editorial-card" data-project-cat="${filterCat}" data-project-title="${proj.title.toLowerCase()}" data-project-client="${proj.client.toLowerCase()}" data-project-loc="${proj.location.toLowerCase()}" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
           <div style="height: 240px; overflow: hidden; position: relative;">
             <img src="${proj.heroImage}" alt="${proj.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);" loading="lazy">
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.88); backdrop-filter: blur(8px); padding: 0.35rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800; color: #0099e6; border: 1px solid rgba(0,153,230,0.3);">${proj.valueShort}</span>
             <span style="position: absolute; bottom: 1rem; left: 1rem; background: ${proj.status === 'Completed' ? 'rgba(16,185,129,0.9)' : 'rgba(245,158,11,0.9)'}; color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 3px; letter-spacing: 0.05em;">${proj.status.toUpperCase()}</span>
           </div>
           <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
