@@ -152,7 +152,7 @@ const servicesContent = `
         <!-- 1. Residential Interior Design -->
         <div class="interior-card" id="residential">
           <div class="interior-card-image-wrap">
-            <img src="/assets/images/projects/al-lisaili-villa.jpg" alt="Residential Interior Design - Luxury Villa" class="interior-card-img" loading="lazy">
+            <img src="/assets/services/13-interior-design.jpg" alt="Residential Interior Design - Luxury Villa" class="interior-card-img" loading="lazy">
             <span class="interior-card-badge">RESIDENTIAL EXCELLENCE</span>
           </div>
           <div class="interior-card-body">
@@ -536,7 +536,7 @@ const servicesContent = `
         <!-- 6. Water Distribution Networks -->
         <div class="interior-card" id="civil-water">
           <div class="interior-card-image-wrap">
-            <img src="/assets/services/03-civil-engineering.jpg" alt="Water Distribution Networks" class="interior-card-img" loading="lazy">
+            <img src="/assets/services/09-mechanical-contracting.jpg" alt="Water Distribution Networks" class="interior-card-img" loading="lazy">
             <span class="civil-scope-badge">POTABLE WATER NETWORKS</span>
           </div>
           <div class="interior-card-body">
@@ -614,7 +614,7 @@ const servicesContent = `
         <!-- 9. Road Furniture & Supporting Infrastructure -->
         <div class="interior-card" id="civil-safety">
           <div class="interior-card-image-wrap">
-            <img src="/assets/services/03-civil-engineering.jpg" alt="Road Furniture and Traffic Safety Infrastructure" class="interior-card-img" loading="lazy">
+            <img src="/assets/services/07-safety-compliance.jpg" alt="Road Furniture and Traffic Safety Infrastructure" class="interior-card-img" loading="lazy">
             <span class="civil-scope-badge">TRAFFIC SAFETY &amp; FURNITURE</span>
           </div>
           <div class="interior-card-body">
@@ -1535,7 +1535,7 @@ const servicesContent = `
         <!-- 1. Office Renovation -->
         <div class="fm-project-card">
           <div class="fm-project-thumb">
-            <img src="/assets/images/projects/crc-office-marina-palace.jpg" alt="Commercial Office Renovation" class="fm-project-img" loading="lazy">
+            <img src="/assets/services/06-project-management.jpg" alt="Commercial Office Renovation" class="fm-project-img" loading="lazy">
             <span class="fm-project-tag">OFFICE RENOVATION</span>
           </div>
           <div class="fm-project-body">
