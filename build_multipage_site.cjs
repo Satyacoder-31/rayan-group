@@ -256,17 +256,25 @@ function renderHeader(activePath = '/') {
                       <div class="mega-link-title"><span>Facilities Management &amp; AMC <span style="font-size: 0.6rem; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); border-radius: 999px; padding: 0.1rem 0.4rem; margin-left: 0.3rem; vertical-align: middle;">24/7</span></span><span>→</span></div>
                       <div class="mega-link-desc">Integrated property maintenance, annual packages &amp; asset lifecycle.</div>
                     </a>
+                    <a href="/services/#fm-electrical" class="mega-sub-link">
+                      <div class="mega-link-title"><span>Electrical Maintenance &amp; Power <span style="font-size: 0.6rem; background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); border-radius: 999px; padding: 0.1rem 0.4rem; margin-left: 0.3rem; vertical-align: middle;">CORE</span></span><span>→</span></div>
+                      <div class="mega-link-desc">DB panels, short circuits, load balancing, rewiring &amp; smart lighting.</div>
+                    </a>
                     <a href="/services/#fm-hvac" class="mega-sub-link">
                       <div class="mega-link-title"><span>HVAC &amp; AC Duct Cleaning</span><span>→</span></div>
                       <div class="mega-link-desc">AC servicing, coil chemical cleaning &amp; antimicrobial duct care.</div>
                     </a>
-                    <a href="/services/#fm-plumbing-electrical" class="mega-sub-link">
-                      <div class="mega-link-title"><span>Plumbing, Leakage &amp; Electrical</span><span>→</span></div>
-                      <div class="mega-link-desc">Acoustic leak detection, drain blockages, DB panels &amp; pumps.</div>
+                    <a href="/services/#fm-plumbing" class="mega-sub-link">
+                      <div class="mega-link-title"><span>Plumbing &amp; Water Systems</span><span>→</span></div>
+                      <div class="mega-link-desc">Acoustic leak detection, drain jetting, boilers &amp; sanitary fixtures.</div>
                     </a>
-                    <a href="/services/#fm-pool-landscaping" class="mega-sub-link">
-                      <div class="mega-link-title"><span>Pools, Landscaping &amp; Trades</span><span>→</span></div>
-                      <div class="mega-link-desc">Swimming pool maintenance, smart irrigation, painting &amp; handyman.</div>
+                    <a href="/services/#fm-civil" class="mega-sub-link">
+                      <div class="mega-link-title"><span>Civil Maintenance &amp; Renovation</span><span>→</span></div>
+                      <div class="mega-link-desc">Bathroom remodeling, tiling, regrouting, waterproofing &amp; masonry.</div>
+                    </a>
+                    <a href="/services/#fm-pools" class="mega-sub-link">
+                      <div class="mega-link-title"><span>Pools, Cleaning &amp; Landscaping</span><span>→</span></div>
+                      <div class="mega-link-desc">Swimming pool care, deep sanitization, smart irrigation &amp; handyman.</div>
                     </a>
                   </div>
                 </div>
@@ -535,11 +543,14 @@ function renderMobileDrawer(activePath = '/') {
             <div style="font-size: 0.68rem; font-weight: 800; color: #10b981; text-transform: uppercase; padding: 0.6rem 0.75rem 0.15rem; letter-spacing: 0.08em;">Facilities Management &amp; AMC:</div>
             <a href="/services/#facilities-management" class="mobile-sublink">Facilities Management Overview</a>
             <a href="/services/#fm-amc-packages" class="mobile-sublink">Annual Maintenance Packages (AMC)</a>
-            <a href="/services/#fm-hvac" class="mobile-sublink">HVAC &amp; AC Deep Duct Cleaning</a>
-            <a href="/services/#fm-plumbing-electrical" class="mobile-sublink">Plumbing, Leakage &amp; Electrical</a>
-            <a href="/services/#fm-civil" class="mobile-sublink">Civil Maintenance &amp; Renovation</a>
-            <a href="/services/#fm-pool-landscaping" class="mobile-sublink">Swimming Pools &amp; Landscaping Care</a>
-            <a href="/services/#fm-specialist" class="mobile-sublink">Painting, Carpentry &amp; Handyman</a>
+            <a href="/services/#fm-electrical" class="mobile-sublink">⚡ Electrical Maintenance &amp; Power</a>
+            <a href="/services/#fm-hvac" class="mobile-sublink">❄️ HVAC &amp; AC Deep Duct Cleaning</a>
+            <a href="/services/#fm-plumbing" class="mobile-sublink">🚰 Plumbing &amp; Acoustic Leak Detection</a>
+            <a href="/services/#fm-civil" class="mobile-sublink">🏗️ Civil Maintenance &amp; Renovation</a>
+            <a href="/services/#fm-cleaning" class="mobile-sublink">✨ Specialist Cleaning &amp; Sanitization</a>
+            <a href="/services/#fm-pools" class="mobile-sublink">🏊 Swimming Pool Care &amp; Water Treatment</a>
+            <a href="/services/#fm-landscaping" class="mobile-sublink">🌿 Landscaping, Irrigation &amp; Pest Control</a>
+            <a href="/services/#fm-specialist" class="mobile-sublink">🎨 Painting, Carpentry &amp; Handyman</a>
             <a href="/services/#fm-emergency" class="mobile-sublink" style="color: #ef4444; font-weight: 700;">24/7 Rapid Emergency Dispatch</a>
             <a href="/services/#consultation" class="mobile-sublink" style="color: #38bdf8; font-weight: 700;">Request RFP / AMC Quote →</a>
           </div>
@@ -799,7 +810,9 @@ function renderFooter() {
             <li><a href="/services/#civil-infrastructure" class="footer-link">Civil &amp; Heavy Infrastructure</a></li>
             <li><a href="/services/#facilities-management" class="footer-link">Facilities Management (FM)</a></li>
             <li><a href="/services/#fm-amc-packages" class="footer-link">Annual Maintenance (AMC)</a></li>
+            <li><a href="/services/#fm-electrical" class="footer-link">Electrical Maintenance &amp; Power</a></li>
             <li><a href="/services/#fm-hvac" class="footer-link">HVAC &amp; AC Duct Cleaning</a></li>
+            <li><a href="/services/#fm-plumbing" class="footer-link">Plumbing &amp; Leak Detection</a></li>
             <li><a href="/proposal/" class="footer-link">Request a Proposal (RFP)</a></li>
             <li><a href="/procurement/" class="footer-link">Suppliers &amp; Procurement</a></li>
             <li><a href="/billing/" class="footer-link">Billing &amp; Accounts Desk</a></li>
