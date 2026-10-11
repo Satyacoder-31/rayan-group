@@ -55,14 +55,14 @@ const NEW_EXTRACTED_PROJECTS = [
     client: 'EDGE Group / REMAYA International',
     status: 'Completed',
     heroImage: '/assets/images/projects/edge-group-remaya.jpg',
-    scope: 'Specialized Defense Training Facilities, Ballistic Partitions, Heavy Engineering & Architectural Fit-Out',
+    scope: 'Civil Excavation & Earthworks, Ballistic Heavy Engineering, Reinforced Substructure & Turnkey Delivery',
     highlights: [
-      'Ballistic-rated heavy reinforced concrete walls and ricochet-proof ceiling baffles',
-      'Advanced negative-pressure HVAC ventilation system for tactical lead dust extraction',
-      'High-security biometric access control zones, armory vaults, and reinforced target corridors',
-      'Strict compliance with UAE Armed Forces and international military training specifications'
+      'Mass civil excavation, desert earthworks, and laser-guided structural platform grading',
+      'Ballistic-rated heavy reinforced concrete foundations and ricochet-proof wall assemblies',
+      'Heavy plant fleet mobilization including CAT excavators, telehandlers, and trench shoring systems',
+      'Strict compliance with UAE Armed Forces and international defense facility specifications'
     ],
-    narrative: `Rayan Group delivered mission-critical civil contracting and specialized interior engineering for EDGE Group's premier tactical subsidiary, REMAYA International, in Abu Dhabi. The state-of-the-art facility encompasses indoor live-fire tactical ranges, simulation training auditoriums, secure armory vaults, and high-security administrative command centers.\n\nThe engineering specifications demanded specialized ballistic baffling, anti-ricochet rubber composite tiles, and high-volume laminar airflow ventilation systems designed to capture and filter particulate emissions instantly. Rayan Group delivered the facility with zero lost-time incidents and full defense-grade accreditation.`,
+    narrative: `Rayan Group delivered mission-critical civil excavation, substructure engineering, and specialized contracting for EDGE Group's premier tactical subsidiary, REMAYA International, in Abu Dhabi. The state-of-the-art complex required extensive site preparation across vast desert terrain, comprising mass cut-and-fill earthmoving, deep foundation trenching, and heavy reinforced concrete footings.\n\nThe engineering specifications demanded precision laser-guided subgrade compaction, heavy ballistic concrete wall framing, and specialized safety perimeter works. Deployed with Caterpillar heavy excavators, JCB telehandlers, and modern vibration rollers, Rayan Group completed all enabling civil earthworks with zero lost-time incidents and full defense-grade accreditation.`,
     imgDir: 'edge-group-remaya',
     imgCount: 4
   },
