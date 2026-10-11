@@ -1231,7 +1231,7 @@ function renderBusinessUnitsSection() {
             <!-- Slide 1: Rayan Engineering -->
             <div class="bu-slide" data-slide="1">
               <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-engineering-white.png" alt="Rayan Engineering" width="240" height="75" loading="lazy">
+                <img src="/assets/logos/rayan-group-white.png" alt="Rayan Engineering" width="240" height="75" loading="lazy">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
@@ -1358,7 +1358,7 @@ function renderBusinessUnitsSection() {
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="1" role="tab" aria-selected="false">
-              ${renderPillSymbol('#002136', '#00c7b3')}
+              ${renderPillSymbol('#ffffff', '#008ac3', true)}
               <div>
                 <span class="bu-pill-label">Rayan Engineering</span>
                 <span class="bu-pill-subtag" style="color: #00c7b3;">Civil &amp; Interiors EPC</span>
