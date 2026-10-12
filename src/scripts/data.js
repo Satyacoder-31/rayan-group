@@ -77,7 +77,7 @@ export const GROUP_COMPANIES = [
     description: "The flagship enterprise executing turnkey civil engineering, high-rise frameworks, and large-scale industrial complexes across the UAE with 500+ executed projects.",
     href: "/business/engineering/",
     image: "/assets/images/business/01-engineering.jpg",
-    logo: "/assets/logos/rayan-group-white.png",
+    logo: "/assets/logos/rayan-engineering-white.png",
     stats: "500+ Projects Delivered",
     status: "active"
   },

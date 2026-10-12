@@ -1244,7 +1244,7 @@ function renderBusinessUnitsSection() {
             <!-- Slide 1: Rayan Engineering -->
             <div class="bu-slide" data-slide="1">
               <div class="bu-logo-col">
-                <img src="/assets/logos/rayan-group-white.png" alt="Rayan Engineering" width="240" height="75" loading="lazy">
+                <img src="/assets/logos/rayan-engineering-white.png" alt="Rayan Engineering" width="240" height="75" loading="lazy">
               </div>
               <div class="bu-info-col">
                 <div class="bu-title-row">
@@ -1339,19 +1339,19 @@ function renderBusinessUnitsSection() {
               <div class="bu-info-col">
                 <div class="bu-title-row">
                   <h3 class="bu-company-title">Rayan Properties</h3>
-                  <span class="bu-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35);">UPCOMING PROPERTY VENTURES</span>
+                  <span class="bu-badge" style="background: rgba(36, 140, 145, 0.15); color: #2dd4bf; border: 1px solid rgba(36, 140, 145, 0.35);">UPCOMING PROPERTY VENTURES</span>
                 </div>
                 <p class="bu-company-desc">
                   Rayan Group's upcoming premier real estate development enterprise, curating luxury residential communities, waterfront estates, commercial assets, and visionary architectural master-plans across the United Arab Emirates.
                 </p>
                 <div style="margin: 0.85rem 0 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.75rem 1rem;">
-                  <span style="font-size: 0.68rem; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
+                  <span style="font-size: 0.68rem; font-weight: 700; color: #2dd4bf; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.4rem;">PRIMARY SCOPE OF WORK:</span>
                   <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Master-Planned Residential Communities</span>
-                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Ultra-Luxury Waterfront Mansions</span>
-                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Grade-A Smart Commercial Towers</span>
-                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Branded Hospitality Residences</span>
-                    <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: #fde68a; padding: 0.2rem 0.55rem; border-radius: 4px;">Turnkey Development Lifecycle</span>
+                    <span style="font-size: 0.75rem; background: rgba(36, 140, 145, 0.1); border: 1px solid rgba(36, 140, 145, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Master-Planned Residential Communities</span>
+                    <span style="font-size: 0.75rem; background: rgba(36, 140, 145, 0.1); border: 1px solid rgba(36, 140, 145, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Ultra-Luxury Waterfront Mansions</span>
+                    <span style="font-size: 0.75rem; background: rgba(36, 140, 145, 0.1); border: 1px solid rgba(36, 140, 145, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Grade-A Smart Commercial Towers</span>
+                    <span style="font-size: 0.75rem; background: rgba(36, 140, 145, 0.1); border: 1px solid rgba(36, 140, 145, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Branded Hospitality Residences</span>
+                    <span style="font-size: 0.75rem; background: rgba(36, 140, 145, 0.1); border: 1px solid rgba(36, 140, 145, 0.25); color: #99f6e4; padding: 0.2rem 0.55rem; border-radius: 4px;">Turnkey Development Lifecycle</span>
                   </div>
                 </div>
                 <a href="/business/properties/" class="bu-action-link" style="border-color: rgba(36, 140, 145, 0.4); color: #2dd4bf;">
@@ -1371,31 +1371,31 @@ function renderBusinessUnitsSection() {
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="1" role="tab" aria-selected="false">
-              ${renderPillSymbol('#ffffff', '#008ac3', true)}
+              ${renderPillSymbol('#ffffff', '#00c7b3', true)}
               <div>
                 <span class="bu-pill-label">Rayan Engineering</span>
                 <span class="bu-pill-subtag" style="color: #00c7b3;">Civil &amp; Interiors EPC</span>
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="2" role="tab" aria-selected="false">
-              ${renderPillSymbol('#15803d', '#22c55e')}
+              ${renderPillSymbol('#ffffff', '#10b981')}
               <div>
                 <span class="bu-pill-label">Rayan Energy</span>
                 <span class="bu-pill-subtag" style="color: #10b981;">Electrical &amp; Mechanical EPC</span>
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="3" role="tab" aria-selected="false">
-              ${renderPillSymbol('#0f766e', '#14949b')}
+              ${renderPillSymbol('#ffffff', '#14949b')}
               <div>
                 <span class="bu-pill-label">Ashaz Engineering</span>
                 <span class="bu-pill-subtag" style="color: #248c91;">India Regional Hub</span>
               </div>
             </button>
             <button type="button" class="bu-pill" data-pill="4" role="tab" aria-selected="false">
-              ${renderPillSymbol('#92400e', '#f59e0b')}
+              ${renderPillSymbol('#ffffff', '#248c91')}
               <div>
                 <span class="bu-pill-label">Rayan Properties</span>
-                <span class="bu-pill-subtag" style="color: #fbbf24;">Upcoming</span>
+                <span class="bu-pill-subtag" style="color: #2dd4bf;">Upcoming</span>
               </div>
             </button>
           </div>
