@@ -1151,8 +1151,8 @@
   </section>
 
   <!-- INTERACTIVE NEWS SUMMARY MODAL -->
-  <div id="news-summary-modal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(3, 8, 16, 0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 1.5rem;">
-    <div style="background: #0c1828; border: 1px solid rgba(0, 199, 179, 0.4); border-radius: 16px; max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2.5rem; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.7);">
+  <div id="news-summary-modal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(3, 8, 16, 0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 1.5rem;" onclick="if(event.target===this)closeNewsModal()">
+    <div style="background: #0c1828; border: 1px solid rgba(0, 199, 179, 0.4); border-radius: 16px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2.5rem; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.7);">
       <button type="button" onclick="closeNewsModal()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; color: #fff; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
       <div id="modal-content-body">
         <!-- Injected via Javascript -->
@@ -1261,16 +1261,63 @@
 
     var newsModalData = {
       'article-1': {
-        category: 'CONTRACT AWARD // OCTOBER 2026',
+        category: 'CONTRACT AWARD // ABU DHABI EPC',
         title: 'Rayan Group Awarded Major Turnkey Commercial & Infrastructure EPC Works in Abu Dhabi',
-        body: '<p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 1.25rem;"><strong>ABU DHABI, UAE</strong> &mdash; Rayan Group, a premier multinational engineering, infrastructure, and energy conglomerate, today announced the formal award of a landmark turnkey EPC contract in Abu Dhabi.</p><p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 1.25rem;">The multi-million-dirham undertaking includes full structural steel framing, precast foundations, and high-specification MEP systems for mixed-use developments, adhering to Estidama Pearl ratings and certified ISO 45001 safety mandates.</p><div style="background: rgba(0, 199, 179, 0.08); border-left: 3px solid #00c7b3; padding: 1rem 1.25rem; border-radius: 0 6px 6px 0; margin-bottom: 1.5rem;"><p style="font-style: italic; color: #fff; margin: 0;">“This milestone award underscores our multi-decade engineering agility and execution standard across the UAE.” &mdash; Executive Committee, Rayan Group</p></div>',
-        link: '/news/rayan-group-expands-offshore-portfolio/'
+        body: '<p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.25rem;"><strong>ABU DHABI, UAE</strong> &mdash; Rayan Group has been awarded a flagship multi-discipline turnkey EPC contract encompassing structural civil works, heavy structural framing, and high-precision MEP systems for landmark commercial and mixed-use infrastructure developments in Abu Dhabi.</p>' +
+          '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem;">' +
+            '<div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;">' +
+              '<div style="font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">📍 Location</div>' +
+              '<div style="font-size: 0.875rem; color: #fff; font-weight: 600;">Abu Dhabi, United Arab Emirates</div>' +
+            '</div>' +
+            '<div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;">' +
+              '<div style="font-size: 0.7rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">🏗️ Execution Model</div>' +
+              '<div style="font-size: 0.875rem; color: #fff; font-weight: 600;">Full Turnkey EPC &amp; Contracting</div>' +
+            '</div>' +
+            '<div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;">' +
+              '<div style="font-size: 0.7rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">🌱 Green Mandate</div>' +
+              '<div style="font-size: 0.875rem; color: #fff; font-weight: 600;">Estidama Pearl Sustainability Guidelines</div>' +
+            '</div>' +
+            '<div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;">' +
+              '<div style="font-size: 0.7rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">🛡️ QHSE Safety Mandate</div>' +
+              '<div style="font-size: 0.875rem; color: #fff; font-weight: 600;">Zero-Harm &bull; ISO 45001:2018 Certified</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="background: #07111e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 1.15rem 1.35rem; margin-bottom: 1.5rem;">' +
+            '<div style="font-size: 0.75rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.65rem;">Key Scope Breakdown</div>' +
+            '<ul style="margin: 0; padding-left: 1.15rem; color: #cbd5e1; font-size: 0.85rem; line-height: 1.65;">' +
+              '<li><strong style="color: #fff;">Structural &amp; Civil Works:</strong> Deep foundation stabilization, reinforced substructures, and precast casting.</li>' +
+              '<li><strong style="color: #fff;">Heavy Steel Framing:</strong> Precision structural steel design, heavy fabrication, and crane erection.</li>' +
+              '<li><strong style="color: #fff;">Turnkey MEP &amp; HVAC:</strong> High-capacity ventilation, chillers, power distribution switchgear, and plumbing.</li>' +
+              '<li><strong style="color: #fff;">Life-Safety Systems:</strong> Intelligent addressable fire detection, deluge suppression, and emergency networks.</li>' +
+            '</ul>' +
+          '</div>' +
+          '<div style="background: rgba(0, 199, 179, 0.06); border-left: 3px solid #00c7b3; padding: 0.9rem 1.15rem; border-radius: 0 8px 8px 0; margin-bottom: 1.5rem;">' +
+            '<p style="font-style: italic; color: #e2e8f0; font-size: 0.85rem; line-height: 1.6; margin: 0;">“This landmark turnkey award demonstrates our multi-decade engineering agility, cross-border execution strength between UAE and India, and unyielding adherence to world-class safety.”</p>' +
+            '<span style="display: block; font-size: 0.72rem; color: #00c7b3; font-weight: 700; margin-top: 0.35rem; text-transform: uppercase;">&mdash; Executive Leadership, RAYAN Group</span>' +
+          '</div>',
+        link: '/news/rayan-group-expands-offshore-portfolio/',
+        secondaryLink: '/business/engineering/',
+        secondaryLinkText: 'VIEW EPC CAPABILITIES →'
       },
       'article-2': {
         category: 'CORPORATE & INTELLECTUAL PROPERTY // AUGUST 2026',
         title: 'Rayan Group (India) Officially Awarded Registered Trade Mark No. 6580565 Under Class 37',
-        body: '<p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 1.25rem;"><strong>MUMBAI / NEW DELHI, INDIA</strong> &mdash; The Trade Marks Registry, Government of India, has officially issued the Certificate of Registration of Trade Mark (No. 6580565) to Rayan Group under Class 37 (Construction Services) of the Trade Marks Act, 1999.</p><p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 1.25rem;">This seals proprietary intellectual property protection for the Group's expanding South Asia engineering and regional contracting operations led by Ashaz Engineering.</p><div style="background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8; padding: 1rem 1.25rem; border-radius: 0 6px 6px 0; margin-bottom: 1.5rem;"><p style="font-style: italic; color: #fff; margin: 0;">“Protected branding reinforces our cross-border synergy between the UAE capital hub and South Asia regional operations.” &mdash; Mr. Arshad Alam Shaikh, Founder & Chairman</p></div>',
-        link: '/about/#timeline'
+        body: '<p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 1.25rem;"><strong>MUMBAI / NEW DELHI, INDIA</strong> &mdash; The Trade Marks Registry, Government of India, has officially issued the Certificate of Registration of Trade Mark (No. 6580565) to Rayan Group under Class 37 (Construction Services) of the Trade Marks Act, 1999.</p>' +
+          '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem;">' +
+            '<div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;">' +
+              '<div style="font-size: 0.7rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">📜 Certificate No.</div>' +
+              '<div style="font-size: 0.875rem; color: #fff; font-weight: 600;">Trade Mark No. 6580565</div>' +
+            '</div>' +
+            '<div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;">' +
+              '<div style="font-size: 0.7rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">🏛️ Jurisdiction</div>' +
+              '<div style="font-size: 0.875rem; color: #fff; font-weight: 600;">Govt. of India &bull; Class 37</div>' +
+            '</div>' +
+          '</div>' +
+          '<p style="color: #cbd5e1; line-height: 1.7; margin-bottom: 1.25rem;">This seals proprietary intellectual property protection for the Group\'s expanding South Asia engineering and regional contracting operations led by Ashaz Engineering.</p>' +
+          '<div style="background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8; padding: 1rem 1.25rem; border-radius: 0 6px 6px 0; margin-bottom: 1.5rem;"><p style="font-style: italic; color: #fff; margin: 0;">“Protected branding reinforces our cross-border synergy between the UAE capital hub and South Asia regional operations.” &mdash; Mr. Arshad Alam Shaikh, Founder &amp; Chairman</p></div>',
+        link: '/about/#timeline',
+        secondaryLink: '/business/ashaz/',
+        secondaryLinkText: 'EXPLORE ASHAZ ENGINEERING →'
       }
     };
 
@@ -1280,21 +1327,39 @@
       var item = newsModalData[id];
       if (!modal || !container || !item) return;
 
-      container.innerHTML = '<span style="font-size: 0.72rem; font-weight: 700; color: #00c7b3; letter-spacing: 0.1em; text-transform: uppercase;">' + item.category + '</span>' +
-        '<h2 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1.25rem; line-height: 1.3;">' + item.title + '</h2>' +
-        item.body +
-        '<div style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem;">' +
-        '<a href="' + item.link + '" class="btn-enterprise-primary" style="background: #00c7b3; border-color: #00c7b3;">FULL ARTICLE PAGE →</a>' +
-        '<button type="button" onclick="closeNewsModal()" class="btn-enterprise-secondary">CLOSE</button>' +
+      var buttonsHtml = '<div style="display: flex; gap: 0.85rem; align-items: center; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; flex-wrap: wrap;">' +
+        '<a href="' + item.link + '" class="btn-enterprise-primary" style="background: #00c7b3; border-color: #00c7b3; font-size: 0.825rem; padding: 0.65rem 1.25rem;">FULL ARTICLE PAGE →</a>';
+      
+      if (item.secondaryLink) {
+        buttonsHtml += '<a href="' + item.secondaryLink + '" class="btn-enterprise-secondary" style="font-size: 0.825rem; padding: 0.65rem 1.25rem; border-color: rgba(0,153,230,0.4); color: #38bdf8;">' + item.secondaryLinkText + '</a>';
+      }
+
+      buttonsHtml += '<button type="button" onclick="closeNewsModal()" class="btn-enterprise-secondary" style="font-size: 0.825rem; padding: 0.65rem 1.25rem; margin-left: auto;">CLOSE ✕</button>' +
         '</div>';
 
+      container.innerHTML = '<span style="font-size: 0.72rem; font-weight: 700; color: #00c7b3; letter-spacing: 0.12em; text-transform: uppercase; display: inline-block; margin-bottom: 0.5rem;">' + item.category + '</span>' +
+        '<h2 style="font-family: var(--font-heading); font-size: clamp(1.25rem, 2vw, 1.6rem); font-weight: 800; color: #fff; margin: 0 0 1rem; line-height: 1.3;">' + item.title + '</h2>' +
+        item.body +
+        buttonsHtml;
+
       modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
     }
 
     function closeNewsModal() {
       var modal = document.getElementById('news-summary-modal');
-      if (modal) modal.style.display = 'none';
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
     }
+
+    window.openNewsModal = openNewsModal;
+    window.closeNewsModal = closeNewsModal;
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeNewsModal();
+    });
 
     function downloadFactsheetNotice() {
       alert('Rayan Group Corporate Factsheet (2026 Edition): Initiating secure download.');
