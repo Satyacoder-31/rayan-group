@@ -774,8 +774,9 @@ createRoute('leadership/index.html', {
 
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">ESG &amp; Sustainability Steering</h4>
-            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">Guides decarbonization roadmap, environmental compliance, workforce health &amp; safety, and community impact.</p>
+            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">ESG &amp; Sustainability Steering Committee</h4>
+            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.85rem;">RAYAN Group drives the integration of Environmental, Social, and Governance (ESG) principles across the Group’s engineering, infrastructure, energy, real estate, and property management operations in the UAE and India.</p>
+            <p style="color: #94a3b8; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">The Committee promotes responsible resource management, environmental stewardship, workplace health and safety, employee welfare, ethical business practices, and transparent corporate governance. Through sustainability-focused initiatives, performance monitoring, and continuous improvement, RAYAN Group strives to reduce environmental impact, create long-term stakeholder value, and support resilient, responsible, and sustainable business growth.</p>
           </div>
           <span style="font-size: 0.75rem; color: #10b981; font-weight: 700;">Net-Zero 2050 Mandate</span>
         </div>
