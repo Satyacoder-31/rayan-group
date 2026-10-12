@@ -807,7 +807,7 @@ createRoute('sustainability/index.html', {
     title: 'SUSTAINABILITY AT OUR CORE',
     description: '<strong>RAYAN Group</strong> is advancing sustainable development through decarbonization, biodiversity conservation, and a zero-harm workplace safety culture across its engineering, infrastructure, energy, construction, real estate, and property management operations in the UAE, India, and across South Asia.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Sustainability', href: '/sustainability/' }],
-    bgImage: '/assets/images/sustainability/renewable-energy.jpg',
+    bgImage: '/assets/images/sustainability/sustainable-eco-infrastructure.jpg',
     subnav: [
       { label: 'ESG Pillars', href: '#pillars', active: true },
       { label: 'Carbon Reduction', href: '#carbon', active: false },
