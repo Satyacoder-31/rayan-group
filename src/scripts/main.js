@@ -7,20 +7,26 @@ import { applyLiveOverrides } from './live-overrides.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Ensure viewport resets to top on initial load and refresh
+// Ensure viewport resets to top on initial load and refresh unless URL contains an anchor hash
 if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
-window.scrollTo(0, 0);
+if (!window.location.hash) {
+  window.scrollTo(0, 0);
+}
 
 window.addEventListener('beforeunload', () => {
-  window.scrollTo(0, 0);
+  if (!window.location.hash) {
+    window.scrollTo(0, 0);
+  }
 });
 
 window.addEventListener('pageshow', () => {
-  window.scrollTo(0, 0);
-  if (lenis) {
-    lenis.scrollTo(0, { immediate: true });
+  if (!window.location.hash) {
+    window.scrollTo(0, 0);
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
   }
 });
 
@@ -42,7 +48,9 @@ if (!prefersReducedMotion) {
       infinite: false,
     });
 
-    lenis.scrollTo(0, { immediate: true });
+    if (!window.location.hash) {
+      lenis.scrollTo(0, { immediate: true });
+    }
 
     lenis.on('scroll', ScrollTrigger.update);
 
@@ -82,6 +90,100 @@ function initHeader() {
       link.classList.add('active');
     }
   });
+}
+
+// ==========================================================================
+// 2b. HASH & ANCHOR NAVIGATION (Lenis-Compatible & Sticky Header Offset)
+// ==========================================================================
+function resolveTargetElement(hash) {
+  if (!hash) return null;
+  const clean = hash.replace(/^#/, '').trim();
+  if (!clean) return null;
+
+  // Aliases / fallbacks
+  if (clean === 'civil-utilities') {
+    return document.getElementById('civil-utilities') || document.getElementById('civil-drainage');
+  }
+
+  try {
+    return document.getElementById(clean) || document.querySelector(`[name="${clean}"]`) || document.querySelector(hash);
+  } catch (err) {
+    return document.getElementById(clean);
+  }
+}
+
+function handleHashNavigation(hash, smooth = true) {
+  const target = resolveTargetElement(hash);
+  if (!target) return false;
+
+  const headerOffset = 105;
+  if (lenis) {
+    lenis.scrollTo(target, { offset: -headerOffset, immediate: !smooth });
+  } else {
+    const targetY = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({
+      top: Math.max(0, targetY),
+      behavior: smooth ? 'smooth' : 'auto'
+    });
+  }
+  return true;
+}
+
+function initAnchorNavigation() {
+  // Delegate click for internal anchor navigation
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
+
+    const hashIndex = href.indexOf('#');
+    if (hashIndex === -1) return;
+
+    const hash = href.substring(hashIndex);
+    const linkPath = href.substring(0, hashIndex);
+
+    const currentPath = window.location.pathname;
+    const isSamePage = !linkPath ||
+      linkPath === '' ||
+      linkPath === '#' ||
+      linkPath === currentPath ||
+      (linkPath.endsWith('/') && currentPath.endsWith('/') && linkPath === currentPath) ||
+      (currentPath.replace(/\/index\.html$/, '/') === linkPath.replace(/\/index\.html$/, '/'));
+
+    if (isSamePage) {
+      const handled = handleHashNavigation(hash, true);
+      if (handled) {
+        e.preventDefault();
+        try {
+          history.pushState(null, '', hash);
+        } catch (_) {}
+
+        // Close mobile drawer if open
+        const drawer = document.getElementById('mobileNavDrawer');
+        if (drawer && drawer.classList.contains('open')) {
+          drawer.classList.remove('open');
+          const toggleBtn = document.querySelector('.mobile-menu-toggle');
+          if (toggleBtn) {
+            toggleBtn.classList.remove('active');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+          }
+          document.body.style.overflow = '';
+        }
+      }
+    }
+  });
+
+  // Handle initial page load with hash
+  if (window.location.hash) {
+    const triggerInitialScroll = () => {
+      handleHashNavigation(window.location.hash, false);
+    };
+    setTimeout(triggerInitialScroll, 80);
+    setTimeout(triggerInitialScroll, 350);
+  }
 }
 
 // ==========================================================================
@@ -1415,14 +1517,19 @@ if (document.readyState === 'loading') {
 // DOM READY INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
-  window.scrollTo(0, 0);
-  if (lenis) {
-    lenis.scrollTo(0, { immediate: true });
+  if (!window.location.hash) {
+    window.scrollTo(0, 0);
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
+  } else {
+    handleHashNavigation(window.location.hash, false);
   }
 
   initCustomCursor();
   initThemeToggle();
   initHeader();
+  initAnchorNavigation();
   initMobileNavigation();
   initSearchModal();
   initHeroSlideshow();
@@ -1462,11 +1569,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Window load safety check to guarantee viewport is anchored to top
+// Window load safety check to guarantee viewport is anchored properly
 window.addEventListener('load', () => {
-  window.scrollTo(0, 0);
-  if (lenis) {
-    lenis.scrollTo(0, { immediate: true });
+  if (!window.location.hash) {
+    window.scrollTo(0, 0);
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
+  } else {
+    handleHashNavigation(window.location.hash, false);
   }
   ScrollTrigger.refresh();
 });

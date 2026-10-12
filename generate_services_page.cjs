@@ -491,7 +491,8 @@ const servicesContent = `
         </div>
 
         <!-- 4. Drainage Systems -->
-        <div class="interior-card" id="civil-drainage">
+        <span id="civil-utilities" style="display:block; position:relative; top:-110px; visibility:hidden;" aria-hidden="true"></span>
+        <div class="interior-card" id="civil-drainage" data-anchor-alias="civil-utilities">
           <div class="interior-card-image-wrap">
             <img src="/assets/services/01-building-construction.jpg" alt="Stormwater Drainage Systems" class="interior-card-img" loading="lazy">
             <span class="civil-scope-badge">STORMWATER &amp; DRAINAGE</span>

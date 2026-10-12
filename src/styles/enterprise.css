@@ -23,6 +23,15 @@
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--header-height, 105px);
+}
+
+[id] {
+  scroll-margin-top: var(--header-height, 105px);
+}
+
 /* ==========================================================================
    1. GLOBAL HEADER & UTILITY TICKER BAR
    ========================================================================== */
