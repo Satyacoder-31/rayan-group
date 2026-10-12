@@ -707,44 +707,50 @@ createRoute('news/index.html', {
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
-          <!-- Kit 1 -->
-          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column;">
+          <!-- Kit 1: Official Logo Pack -->
+          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column; cursor: pointer;" onclick="if(!event.target.closest('a, button')) document.getElementById('btn-download-logo-pack').click()">
             <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(0, 153, 230, 0.15); color: #0099e6; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 1rem;">
               📁
             </div>
             <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0 0 0.4rem;">Official Logo Pack</h4>
             <p style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5; margin: 0 0 1.25rem; flex: 1;">Vector SVG, transparent PNG, light and dark variations with brand guidelines.</p>
-            <a href="/assets/logos/rayan-group.png" download class="btn-kit-download">DOWNLOAD (ZIP/PNG) ↓</a>
+            <a href="/assets/downloads/rayan-group-brand-logo-pack.zip" download="rayan-group-brand-logo-pack.zip" id="btn-download-logo-pack" class="btn-kit-download">DOWNLOAD (ZIP/PNG) ↓</a>
           </div>
 
-          <!-- Kit 2 -->
-          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column;">
+          <!-- Kit 2: Group Factsheet 2026 -->
+          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(0, 199, 179, 0.25); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column; cursor: pointer;" onclick="if(!event.target.closest('a, button')) openNewsModal('factsheet')">
             <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(0, 199, 179, 0.15); color: #00c7b3; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 1rem;">
               📄
             </div>
             <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0 0 0.4rem;">Group Factsheet 2026</h4>
             <p style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5; margin: 0 0 1.25rem; flex: 1;">Key operational metrics, dual-hub footprint, entity overviews, and milestone timeline.</p>
-            <button type="button" onclick="downloadFactsheetNotice()" class="btn-kit-download">DOWNLOAD FACTSHEET ↓</button>
+            <div style="display: flex; gap: 0.5rem; flex-direction: column; margin-top: auto;">
+              <a href="/assets/downloads/rayan-group-corporate-factsheet-2026.pdf" download="rayan-group-corporate-factsheet-2026.pdf" class="btn-kit-download" style="background: rgba(0, 199, 179, 0.15); border-color: #00c7b3; color: #00c7b3;">DOWNLOAD FACTSHEET ↓</a>
+              <button type="button" onclick="openNewsModal('factsheet')" style="background: none; border: none; padding: 0.2rem 0; color: #94a3b8; font-size: 0.72rem; font-weight: 700; cursor: pointer; text-align: center; text-decoration: underline;">QUICK VIEW DOSSIER ↗</button>
+            </div>
           </div>
 
-          <!-- Kit 3 -->
-          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column;">
+          <!-- Kit 3: Accreditations & IP -->
+          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/sustainability/#certifications'">
             <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 1rem;">
               🛡️
             </div>
             <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0 0 0.4rem;">Accreditations &amp; IP</h4>
             <p style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5; margin: 0 0 1.25rem; flex: 1;">Triple ISO 9001/14001/45001 certificates &amp; Govt. of India Trademark No. 6580565.</p>
-            <a href="/sustainability/" class="btn-kit-download">VIEW COMPLIANCE HUB →</a>
+            <div style="display: flex; gap: 0.5rem; flex-direction: column; margin-top: auto;">
+              <a href="/sustainability/#certifications" class="btn-kit-download">VIEW COMPLIANCE HUB →</a>
+              <button type="button" onclick="openNewsModal('compliance')" style="background: none; border: none; padding: 0.2rem 0; color: #94a3b8; font-size: 0.72rem; font-weight: 700; cursor: pointer; text-align: center; text-decoration: underline;">VIEW CERTIFICATES &amp; TM ↗</button>
+            </div>
           </div>
 
-          <!-- Kit 4 -->
-          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column;">
+          <!-- Kit 4: Leadership Portraits & Governance -->
+          <div class="press-kit-box" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/leadership/#profiles'">
             <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 1rem;">
               📸
             </div>
             <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0 0 0.4rem;">Leadership Portraits</h4>
             <p style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5; margin: 0 0 1.25rem; flex: 1;">High-resolution executive photography, official executive bios, and governance credentials.</p>
-            <a href="/leadership/" class="btn-kit-download">VIEW GOVERNANCE →</a>
+            <a href="/leadership/#profiles" class="btn-kit-download">VIEW GOVERNANCE →</a>
           </div>
         </div>
       </div>
@@ -851,6 +857,14 @@ createRoute('news/index.html', {
       color: #07111e;
     }
     .news-card-item:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0, 199, 179, 0.4) !important;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+    .press-kit-box {
+      transition: all 0.25s ease;
+    }
+    .press-kit-box:hover {
       transform: translateY(-4px);
       border-color: rgba(0, 199, 179, 0.4) !important;
       box-shadow: 0 15px 35px rgba(0,0,0,0.4);
@@ -1040,6 +1054,74 @@ createRoute('news/index.html', {
         link: '/about/#timeline',
         secondaryLink: '/business/ashaz/',
         secondaryLinkText: 'EXPLORE ASHAZ ENGINEERING →'
+      },
+      'factsheet': {
+        category: 'CORPORATE MEDIA DOSSIER // 2026 EDITION',
+        title: 'RAYAN Group Official Factsheet & Executive Metrics (2026)',
+        body: '<p style=\"color: #cbd5e1; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.25rem;\"><strong>ABU DHABI &amp; MUMBAI</strong> &mdash; The official Rayan Group corporate factsheet provides verified institutional metrics, multinational footprint breakdowns, operating entities, and accredited execution capabilities.</p>' +
+          '<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem;\">' +
+            '<div style=\"background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase; margin-bottom: 0.25rem;\">📍 Corporate Footprint</div>' +
+              '<div style=\"font-size: 0.875rem; color: #fff; font-weight: 600;\">Dual-Hub: UAE 🇦🇪 &bull; India 🇮🇳</div>' +
+            '</div>' +
+            '<div style=\"background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #00c7b3; text-transform: uppercase; margin-bottom: 0.25rem;\">🏛️ Enterprise Structure</div>' +
+              '<div style=\"font-size: 0.875rem; color: #fff; font-weight: 600;\">100% Privately Held L.L.C - S.P.C</div>' +
+            '</div>' +
+            '<div style=\"background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #10b981; text-transform: uppercase; margin-bottom: 0.25rem;\">🛡️ Accreditations</div>' +
+              '<div style=\"font-size: 0.875rem; color: #fff; font-weight: 600;\">Triple ISO 9001 / 14001 / 45001</div>' +
+            '</div>' +
+            '<div style=\"background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-bottom: 0.25rem;\">🌐 Procurement Network</div>' +
+              '<div style=\"font-size: 0.875rem; color: #fff; font-weight: 600;\">SAP Ariba ANID: AN11136910824</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style=\"background: #07111e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 1.15rem 1.35rem; margin-bottom: 1.5rem;\">' +
+            '<div style=\"font-size: 0.75rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 0.65rem;\">Operating Divisions</div>' +
+            '<ul style=\"margin: 0; padding-left: 1.15rem; color: #cbd5e1; font-size: 0.85rem; line-height: 1.65;\">' +
+              '<li><strong style=\"color: #fff;\">Rayan Engineering (UAE):</strong> Turnkey civil contracting, high-rise construction, and heavy infrastructure.</li>' +
+              '<li><strong style=\"color: #fff;\">Rayan Energy (UAE):</strong> High-voltage substations, electrical distribution, and industrial piping.</li>' +
+              '<li><strong style=\"color: #fff;\">Ashaz Engineering (India):</strong> South Asia fabrication hub, automated CNC steel profiling, and PEB structures.</li>' +
+              '<li><strong style=\"color: #fff;\">Interiors &amp; FM:</strong> Luxury architectural fit-out and 24/7 preventive AMC maintenance.</li>' +
+            '</ul>' +
+          '</div>',
+        link: '/assets/downloads/rayan-group-corporate-factsheet-2026.pdf',
+        download: true,
+        buttonText: 'DOWNLOAD FACTSHEET PDF ↓',
+        secondaryLink: '/about/',
+        secondaryLinkText: 'EXPLORE ABOUT GROUP →'
+      },
+      'compliance': {
+        category: 'GOVERNANCE, ACCREDITATIONS &amp; IP // QUALITY ASSURANCE',
+        title: 'Global Compliance, Triple ISO Certifications &amp; Registered IP',
+        body: '<p style=\"color: #cbd5e1; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.25rem;\"><strong>VERIFIED GOVERNANCE</strong> &mdash; Rayan Group maintains active international accreditations across quality, environmental management, and workplace health and safety:</p>' +
+          '<div style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem;\">' +
+            '<div style=\"background: rgba(0, 153, 230, 0.08); border: 1px solid rgba(0, 153, 230, 0.25); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #0099e6; text-transform: uppercase;\">ISO 9001:2015</div>' +
+              '<div style=\"font-size: 0.85rem; color: #fff; font-weight: 600; margin-top: 0.2rem;\">Quality Management</div>' +
+              '<div style=\"font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;\">Civil EPC &amp; Contracting Audit</div>' +
+            '</div>' +
+            '<div style=\"background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #10b981; text-transform: uppercase;\">ISO 14001:2015</div>' +
+              '<div style=\"font-size: 0.85rem; color: #fff; font-weight: 600; margin-top: 0.2rem;\">Environmental Management</div>' +
+              '<div style=\"font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;\">Estidama &amp; Sustainability</div>' +
+            '</div>' +
+            '<div style=\"background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #f59e0b; text-transform: uppercase;\">ISO 45001:2018</div>' +
+              '<div style=\"font-size: 0.85rem; color: #fff; font-weight: 600; margin-top: 0.2rem;\">Occupational Health &amp; Safety</div>' +
+              '<div style=\"font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;\">Zero-Harm Certified Procedures</div>' +
+            '</div>' +
+            '<div style=\"background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 0.9rem;\">' +
+              '<div style=\"font-size: 0.7rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;\">GOVT. OF INDIA TRADEMARK</div>' +
+              '<div style=\"font-size: 0.85rem; color: #fff; font-weight: 600; margin-top: 0.2rem;\">Trade Mark No. 6580565</div>' +
+              '<div style=\"font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;\">Class 37 Construction Services</div>' +
+            '</div>' +
+          '</div>',
+        link: '/sustainability/#certifications',
+        buttonText: 'VIEW COMPLIANCE HUB →',
+        secondaryLink: '/about/#timeline',
+        secondaryLinkText: 'VIEW TRADEMARK TIMELINE →'
       }
     };
 
@@ -1049,8 +1131,10 @@ createRoute('news/index.html', {
       var item = newsModalData[id];
       if (!modal || !container || !item) return;
 
+      var downloadAttr = item.download ? ' download=\"' + (item.downloadFilename || 'rayan-group-corporate-factsheet-2026.pdf') + '\"' : '';
+      var mainBtnText = item.buttonText || 'FULL ARTICLE PAGE →';
       var buttonsHtml = '<div style=\"display: flex; gap: 0.85rem; align-items: center; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; flex-wrap: wrap;\">' +
-        '<a href=\"' + item.link + '\" class=\"btn-enterprise-primary\" style=\"background: #00c7b3; border-color: #00c7b3; font-size: 0.825rem; padding: 0.65rem 1.25rem;\">FULL ARTICLE PAGE →</a>';
+        '<a href=\"' + item.link + '\"' + downloadAttr + ' class=\"btn-enterprise-primary\" style=\"background: #00c7b3; border-color: #00c7b3; font-size: 0.825rem; padding: 0.65rem 1.25rem;\">' + mainBtnText + '</a>';
       
       if (item.secondaryLink) {
         buttonsHtml += '<a href=\"' + item.secondaryLink + '\" class=\"btn-enterprise-secondary\" style=\"font-size: 0.825rem; padding: 0.65rem 1.25rem; border-color: rgba(0,153,230,0.4); color: #38bdf8;\">' + item.secondaryLinkText + '</a>';
@@ -1083,8 +1167,14 @@ createRoute('news/index.html', {
       if (e.key === 'Escape') closeNewsModal();
     });
 
-    function downloadFactsheetNotice() {
-      alert('Rayan Group Corporate Factsheet (2026 Edition): Initiating secure download.');
+    function downloadFactsheetNotice(e) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      var link = document.createElement('a');
+      link.href = '/assets/downloads/rayan-group-corporate-factsheet-2026.pdf';
+      link.download = 'rayan-group-corporate-factsheet-2026.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function handlePressSubscribe(e) {
