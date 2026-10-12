@@ -27,9 +27,11 @@
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
-      window.scrollTo(0, 0);
-      window.addEventListener('beforeunload', function() { window.scrollTo(0, 0); });
-      window.addEventListener('pageshow', function() { window.scrollTo(0, 0); });
+      if (!window.location.hash) {
+        window.scrollTo(0, 0);
+      }
+      window.addEventListener('beforeunload', function() { if (!window.location.hash) window.scrollTo(0, 0); });
+      window.addEventListener('pageshow', function() { if (!window.location.hash) window.scrollTo(0, 0); });
     })();
   </script>
 
@@ -1218,14 +1220,14 @@
             <span class="footer-hub-label">UAE CORPORATE HQ</span>
             <p class="footer-hub-text">Plot No. 42, Mussafah M-36, Abu Dhabi, United Arab Emirates</p>
             <div class="footer-hub-contact">
-              <span>T: +971-25654497</span> &bull; <span>E: rayan@rayan-group.com</span>
+              <span>T: <a href="tel:+97125654497" class="footer-contact-link">+971-25654497</a></span> &bull; <span>E: <a href="mailto:rayan@rayan-group.com" class="footer-contact-link">rayan@rayan-group.com</a></span>
             </div>
           </div>
           <div class="footer-hub-card">
             <span class="footer-hub-label">INDIA REGIONAL HUB</span>
             <p class="footer-hub-text">Bettiah, West Champaran, Bihar - 845438</p>
             <div class="footer-hub-contact">
-              <span>T: +91-9973086910</span> &bull; <span>E: ashaz@rayan-group.com</span>
+              <span>T: <a href="tel:+919973086910" class="footer-contact-link">+91-9973086910</a></span> &bull; <span>E: <a href="mailto:ashaz@rayan-group.com" class="footer-contact-link">ashaz@rayan-group.com</a></span>
             </div>
           </div>
           <div class="footer-iso-strip">

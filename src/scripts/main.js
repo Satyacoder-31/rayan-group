@@ -129,8 +129,13 @@ function handleHashNavigation(hash, smooth = true) {
   return true;
 }
 
+function normalizePath(p) {
+  if (!p) return '';
+  return p.replace(/\/index\.html$/, '').replace(/\/+$/, '') || '/';
+}
+
 function initAnchorNavigation() {
-  // Delegate click for internal anchor navigation
+  // Delegate click for internal anchor and same-page navigation
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
     if (!link) return;
@@ -140,18 +145,30 @@ function initAnchorNavigation() {
     if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
 
     const hashIndex = href.indexOf('#');
-    if (hashIndex === -1) return;
+    const currentPath = window.location.pathname;
+
+    // Handle clicking same-page links with NO hash (e.g., clicking /services/ while on /services/)
+    if (hashIndex === -1) {
+      if (normalizePath(href) === normalizePath(currentPath)) {
+        if (window.scrollY > 20) {
+          e.preventDefault();
+          if (lenis) {
+            lenis.scrollTo(0, { duration: 0.8 });
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }
+      }
+      return;
+    }
 
     const hash = href.substring(hashIndex);
     const linkPath = href.substring(0, hashIndex);
 
-    const currentPath = window.location.pathname;
     const isSamePage = !linkPath ||
       linkPath === '' ||
       linkPath === '#' ||
-      linkPath === currentPath ||
-      (linkPath.endsWith('/') && currentPath.endsWith('/') && linkPath === currentPath) ||
-      (currentPath.replace(/\/index\.html$/, '/') === linkPath.replace(/\/index\.html$/, '/'));
+      normalizePath(linkPath) === normalizePath(currentPath);
 
     if (isSamePage) {
       const handled = handleHashNavigation(hash, true);
@@ -1113,19 +1130,30 @@ function initPreloader() {
     if (percent) percent.textContent = '100%';
     if (status) status.textContent = 'EXPERIENCE READY';
 
-    window.scrollTo(0, 0);
-    if (lenis) {
-      lenis.scrollTo(0, { immediate: true });
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+      if (lenis) {
+        lenis.scrollTo(0, { immediate: true });
+      }
     }
 
     setTimeout(() => {
       preloader.classList.add('preloader-done');
       document.body.classList.remove('preloader-active');
-      window.scrollTo(0, 0);
-      if (lenis) {
-        lenis.scrollTo(0, { immediate: true });
-      }
       ScrollTrigger.refresh();
+
+      if (window.location.hash) {
+        // Allow layout and ScrollTrigger to refresh, then smoothly glide to the target anchor
+        setTimeout(() => {
+          handleHashNavigation(window.location.hash, true);
+        }, 120);
+      } else {
+        window.scrollTo(0, 0);
+        if (lenis) {
+          lenis.scrollTo(0, { immediate: true });
+        }
+      }
+
       setTimeout(() => {
         if (preloader.parentNode) {
           preloader.parentNode.removeChild(preloader);
