@@ -26,7 +26,171 @@ async function main() {
     return canvas;
   }
 
+  function processAshazLogo(canvas) {
+    const width = canvas.width;
+    const height = canvas.height;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+
+    // 1. Flood-fill from borders to identify outer background ONLY
+    const isBg = new Uint8Array(width * height);
+    const queue = [];
+    for (let x = 0; x < width; x++) {
+      queue.push(x, 0);
+      queue.push(x, height - 1);
+    }
+    for (let y = 0; y < height; y++) {
+      queue.push(0, y);
+      queue.push(width - 1, y);
+    }
+
+    let qHead = 0;
+    while (qHead < queue.length) {
+      const x = queue[qHead++];
+      const y = queue[qHead++];
+      const idx = y * width + x;
+      if (isBg[idx]) continue;
+      const pIdx = idx * 4;
+      const r = data[pIdx], g = data[pIdx + 1], b = data[pIdx + 2];
+      if (r >= 248 && g >= 248 && b >= 248) {
+        isBg[idx] = 1;
+        if (x > 0 && !isBg[idx - 1]) queue.push(x - 1, y);
+        if (x < width - 1 && !isBg[idx + 1]) queue.push(x + 1, y);
+        if (y > 0 && !isBg[idx - width]) queue.push(x, y - 1);
+        if (y < height - 1 && !isBg[idx + width]) queue.push(x, y + 1);
+      }
+    }
+
+    // In the text region (x >= 310), whitespace between & inside letter counters is transparent
+    for (let y = 0; y < height; y++) {
+      for (let x = 310; x < width; x++) {
+        const idx = y * width + x;
+        const pIdx = idx * 4;
+        const r = data[pIdx], g = data[pIdx + 1], b = data[pIdx + 2];
+        if (r >= 245 && g >= 245 && b >= 245) {
+          isBg[idx] = 1;
+        }
+      }
+    }
+
+    // 2. Find content bounding box
+    let minX = width, maxX = 0, minY = height, maxY = 0;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x;
+        if (!isBg[idx]) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    const pad = 16;
+    minX = Math.max(0, minX - pad);
+    maxX = Math.min(width - 1, maxX + pad);
+    minY = Math.max(0, minY - pad);
+    maxY = Math.min(height - 1, maxY + pad);
+
+    const cropW = maxX - minX + 1;
+    const cropH = maxY - minY + 1;
+
+    const stdCanvas = createCanvas(cropW, cropH);
+    const stdCtx = stdCanvas.getContext('2d');
+    const stdData = stdCtx.createImageData(cropW, cropH);
+
+    const whiteCanvas = createCanvas(cropW, cropH);
+    const whiteCtx = whiteCanvas.getContext('2d');
+    const whiteData = whiteCtx.createImageData(cropW, cropH);
+
+    for (let y = 0; y < cropH; y++) {
+      for (let x = 0; x < cropW; x++) {
+        const srcX = x + minX;
+        const srcY = y + minY;
+        const srcIdx = srcY * width + srcX;
+        const destIdx = (y * cropW + x) * 4;
+        const pIdx = srcIdx * 4;
+
+        if (isBg[srcIdx]) {
+          stdData.data[destIdx + 3] = 0;
+          whiteData.data[destIdx + 3] = 0;
+          continue;
+        }
+
+        const r = data[pIdx];
+        const g = data[pIdx + 1];
+        const b = data[pIdx + 2];
+
+        // Anti-aliased feathering
+        const minVal = Math.min(r, g, b);
+        let alpha = 1.0;
+        if (minVal > 240) {
+          alpha = (255 - minVal) / 15.0;
+        }
+        alpha = Math.max(0, Math.min(1, alpha));
+        const aByte = Math.round(alpha * 255);
+
+        if (aByte === 0) {
+          stdData.data[destIdx + 3] = 0;
+          whiteData.data[destIdx + 3] = 0;
+          continue;
+        }
+
+        const fgR = Math.max(0, Math.min(255, Math.round(255 - (255 - r) / Math.max(alpha, 0.1))));
+        const fgG = Math.max(0, Math.min(255, Math.round(255 - (255 - g) / Math.max(alpha, 0.1))));
+        const fgB = Math.max(0, Math.min(255, Math.round(255 - (255 - b) / Math.max(alpha, 0.1))));
+
+        // 1. Standard variant (exact original colors from PDF: metallic gear, teal ASHAZ ENGINEERING, charcoal RAYAN Group)
+        stdData.data[destIdx] = fgR;
+        stdData.data[destIdx + 1] = fgG;
+        stdData.data[destIdx + 2] = fgB;
+        stdData.data[destIdx + 3] = aByte;
+
+        // 2. White variant for dark backgrounds
+        const inIcon = srcX < 310;
+        const isTealText = (!inIcon && fgG > 75 && fgB > 75 && fgR < 80);
+        const isDarkText = (!inIcon && fgR < 115 && fgG < 115 && fgB < 115 && !isTealText);
+
+        if (inIcon) {
+          // Gear emblem: solid metallic gear, silver wave, teal wave
+          whiteData.data[destIdx] = fgR;
+          whiteData.data[destIdx + 1] = fgG;
+          whiteData.data[destIdx + 2] = fgB;
+          whiteData.data[destIdx + 3] = aByte;
+        } else if (isTealText) {
+          // "ASHAZ ENGINEERING" becomes pure, crisp, high-contrast brilliant WHITE
+          whiteData.data[destIdx] = 255;
+          whiteData.data[destIdx + 1] = 255;
+          whiteData.data[destIdx + 2] = 255;
+          whiteData.data[destIdx + 3] = aByte;
+        } else if (isDarkText) {
+          // "RAYAN Group" becomes vibrant brand TEAL (#2dd4bf)
+          whiteData.data[destIdx] = 45;
+          whiteData.data[destIdx + 1] = 212;
+          whiteData.data[destIdx + 2] = 191;
+          whiteData.data[destIdx + 3] = aByte;
+        } else {
+          whiteData.data[destIdx] = fgR;
+          whiteData.data[destIdx + 1] = fgG;
+          whiteData.data[destIdx + 2] = fgB;
+          whiteData.data[destIdx + 3] = aByte;
+        }
+      }
+    }
+
+    stdCtx.putImageData(stdData, 0, 0);
+    whiteCtx.putImageData(whiteData, 0, 0);
+
+    return { stdCanvas, whiteCanvas, cropW, cropH };
+  }
+
   function processLogo(canvas, isAshaz = false) {
+    if (isAshaz) {
+      return processAshazLogo(canvas);
+    }
+
     const width = canvas.width;
     const height = canvas.height;
     const ctx = canvas.getContext('2d');
@@ -107,41 +271,18 @@ async function main() {
         stdData.data[destIdx + 2] = fgB;
         stdData.data[destIdx + 3] = aByte;
 
-        // 2. White variant (for dark cards)
-        if (isAshaz) {
-          const inIconRegion = x < cropW * 0.30;
-          const isTeal = (fgG > 95 && fgB > 95 && fgR < 75);
-          const isDarkText = (!inIconRegion && fgR < 115 && fgG < 115 && fgB < 115 && !isTeal);
+        // 2. White variant (for dark cards) - Rayan Engineering / Energy / Properties
+        const isColoredWing = (fgG > 90 && (fgG > fgR + 30 || fgB > fgR + 30));
 
-          if (isDarkText) {
-            // "RAYAN Group" becomes pure crisp white
-            whiteData.data[destIdx]     = 255;
-            whiteData.data[destIdx + 1] = 255;
-            whiteData.data[destIdx + 2] = 255;
-          } else if (isTeal) {
-            whiteData.data[destIdx]     = fgR;
-            whiteData.data[destIdx + 1] = fgG;
-            whiteData.data[destIdx + 2] = fgB;
-          } else {
-            // Metallic gear & silver waves
-            whiteData.data[destIdx]     = fgR;
-            whiteData.data[destIdx + 1] = fgG;
-            whiteData.data[destIdx + 2] = fgB;
-          }
+        if (isColoredWing) {
+          whiteData.data[destIdx]     = fgR;
+          whiteData.data[destIdx + 1] = fgG;
+          whiteData.data[destIdx + 2] = fgB;
         } else {
-          // Rayan Engineering / Energy / Properties
-          const isColoredWing = (fgG > 90 && (fgG > fgR + 30 || fgB > fgR + 30));
-
-          if (isColoredWing) {
-            whiteData.data[destIdx]     = fgR;
-            whiteData.data[destIdx + 1] = fgG;
-            whiteData.data[destIdx + 2] = fgB;
-          } else {
-            // Turn dark navy "RAYAN" and charcoal wordmarks ("ENGINEERING", "ENERGY", "PROPERTIES") into pure white!
-            whiteData.data[destIdx]     = 255;
-            whiteData.data[destIdx + 1] = 255;
-            whiteData.data[destIdx + 2] = 255;
-          }
+          // Turn dark navy "RAYAN" and charcoal wordmarks ("ENGINEERING", "ENERGY", "PROPERTIES") into pure white!
+          whiteData.data[destIdx]     = 255;
+          whiteData.data[destIdx + 1] = 255;
+          whiteData.data[destIdx + 2] = 255;
         }
         whiteData.data[destIdx + 3] = aByte;
       }
