@@ -805,7 +805,7 @@ createRoute('sustainability/index.html', {
   heroHtml: renderPageHero({
     category: 'ESG STRATEGY',
     title: 'SUSTAINABILITY AT OUR CORE',
-    description: 'Pioneering decarbonization, biodiversity protection, and zero-harm workplace safety across all multinational projects.',
+    description: '<strong>RAYAN Group</strong> is advancing sustainable development through decarbonization, biodiversity conservation, and a zero-harm workplace safety culture across its engineering, infrastructure, energy, construction, real estate, and property management operations in the UAE, India, and across South Asia.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Sustainability', href: '/sustainability/' }],
     bgImage: '/assets/images/sustainability/renewable-energy.jpg',
     subnav: [
