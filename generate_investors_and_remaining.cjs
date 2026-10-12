@@ -106,7 +106,7 @@ createRoute('careers/index.html', {
     title: 'BUILD YOUR FUTURE WITH US',
     description: 'Join a dynamic, multinational engineering conglomerate executing high-impact infrastructure, energy, and civil contracting projects across the UAE and South Asia.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Careers', href: '/careers/' }],
-    bgImage: '/assets/images/careers/careers-hero.jpg'
+    bgImage: '/assets/images/careers/careers-corporate-hero.jpg'
   }),
   content: `
   <!-- Why Work With Rayan (EthosEnergy / Khansaheb Pattern) -->
