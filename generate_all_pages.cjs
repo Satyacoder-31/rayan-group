@@ -39,7 +39,7 @@ createRoute('about/index.html', {
   heroHtml: renderPageHero({
     category: 'CORPORATE OVERVIEW',
     title: 'WHO WE ARE',
-    description: 'A premier multinational engineering, infrastructure, and energy conglomerate with an 18+ year execution heritage since 2008, delivering landmark turnkey EPC projects and high-precision contracting across the UAE and India.',
+    description: 'RAYAN Group is a premier multinational business group with a legacy of execution excellence spanning over 18 years since 2008, with diversified operations across engineering, infrastructure, energy, real estate, and property management. With a strong presence in the UAE and India, we deliver landmark turnkey Engineering, Procurement, and Construction (EPC) solutions and precision-driven contracting services, backed by a commitment to quality, innovation, and sustainable growth.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'About', href: '/about/' }, { label: 'Who We Are', href: '/about/' }],
     bgImage: '/assets/images/about/overview.jpg',
     subnav: [
