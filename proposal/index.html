@@ -742,7 +742,7 @@
           </div>
 
           <div class="service-form-card">
-            <form id="rfpForm" onsubmit="event.preventDefault(); alert('Thank you. Your proposal inquiry has been registered. Reference: RFP-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Our commercial team will contact you within 48 hours.'); this.reset();">
+            <form id="rfpForm">
               
               <!-- Contact Details -->
               <h3 style="font-size: 1.1rem; color: #0099e6; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem;">1. CLIENT / CONTACT INFORMATION</h3>
@@ -750,22 +750,22 @@
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-name">Full Name <span class="req">*</span></label>
-                  <input type="text" id="rfp-name" class="service-form-input" required placeholder="e.g. Tariq Al Mansoori">
+                  <input type="text" id="rfp-name" name="clientName" class="service-form-input" required placeholder="e.g. Tariq Al Mansoori">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-company">Company / Organization <span class="req">*</span></label>
-                  <input type="text" id="rfp-company" class="service-form-input" required placeholder="e.g. Emaar Properties / Aldar / ADNOC">
+                  <input type="text" id="rfp-company" name="clientCompany" class="service-form-input" required placeholder="e.g. Emaar Properties / Aldar / ADNOC">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.75rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-email">Corporate Email <span class="req">*</span></label>
-                  <input type="email" id="rfp-email" class="service-form-input" required placeholder="name@company.com">
+                  <input type="email" id="rfp-email" name="corporateEmail" class="service-form-input" required placeholder="name@company.com">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-phone">Phone / WhatsApp Number <span class="req">*</span></label>
-                  <input type="tel" id="rfp-phone" class="service-form-input" required placeholder="+971 50 123 4567">
+                  <input type="tel" id="rfp-phone" name="phoneNumber" class="service-form-input" required placeholder="+971 50 123 4567">
                 </div>
               </div>
 
@@ -775,29 +775,29 @@
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-division">Required Business Division <span class="req">*</span></label>
-                  <select id="rfp-division" class="service-form-select" required>
+                  <select id="rfp-division" name="businessDivision" class="service-form-select" required>
                     <option value="" disabled selected>Select Business Division</option>
-                    <option value="engineering">Rayan Engineering &amp; Turnkey Contracting</option>
-                    <option value="energy">Rayan Energy &amp; Process EPC</option>
-                    <option value="ashaz">Ashaz Engineering (India Regional Hub)</option>
-                    <option value="properties">Rayan Properties (Upcoming)</option>
-                    <option value="multiple">Multi-Disciplinary / Integrated Group Scope</option>
+                    <option value="Rayan Engineering">Rayan Engineering &amp; Turnkey Contracting</option>
+                    <option value="Rayan Energy">Rayan Energy &amp; Process EPC</option>
+                    <option value="Ashaz Engineering">Ashaz Engineering (India Regional Hub)</option>
+                    <option value="Rayan Properties">Rayan Properties (Upcoming)</option>
+                    <option value="Multi-Disciplinary">Multi-Disciplinary / Integrated Group Scope</option>
                   </select>
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-type">Project Sector / Type <span class="req">*</span></label>
-                  <select id="rfp-type" class="service-form-select" required>
+                  <select id="rfp-type" name="projectSector" class="service-form-select" required>
                     <option value="" disabled selected>Select Sector</option>
-                    <option value="commercial">Commercial High-Rise / Mixed-Use</option>
-                    <option value="hospitality">Luxury Hospitality &amp; Resort Overhaul</option>
-                    <option value="residential">Bespoke Coastal Residential / Villas</option>
-                    <option value="interior">Interior Design &amp; Turnkey Fit-Out</option>
-                    <option value="facilities-management">Facilities Management &amp; Property Maintenance (FM / AMC)</option>
-                    <option value="defense">Defense, Security &amp; Special Tactical</option>
-                    <option value="energy">Oil &amp; Gas / Process Piping</option>
-                    <option value="fabrication">Heavy Structural Steel / Fabrication</option>
-                    <option value="infrastructure">Civic Infrastructure &amp; Paving Works</option>
-                    <option value="other">Other Specialized Contracting</option>
+                    <option value="Commercial High-Rise / Mixed-Use">Commercial High-Rise / Mixed-Use</option>
+                    <option value="Luxury Hospitality & Resort">Luxury Hospitality &amp; Resort Overhaul</option>
+                    <option value="Bespoke Coastal Residential">Bespoke Coastal Residential / Villas</option>
+                    <option value="Interior Design & Turnkey Fit-Out">Interior Design &amp; Turnkey Fit-Out</option>
+                    <option value="Facilities Management & AMC">Facilities Management &amp; Property Maintenance (FM / AMC)</option>
+                    <option value="Defense & Special Tactical">Defense, Security &amp; Special Tactical</option>
+                    <option value="Oil & Gas / Process Piping">Oil &amp; Gas / Process Piping</option>
+                    <option value="Heavy Structural Steel">Heavy Structural Steel / Fabrication</option>
+                    <option value="Civic Infrastructure">Civic Infrastructure &amp; Paving Works</option>
+                    <option value="Other Contracting">Other Specialized Contracting</option>
                   </select>
                 </div>
               </div>
@@ -805,31 +805,31 @@
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-location">Project Location (Emirate / Region) <span class="req">*</span></label>
-                  <input type="text" id="rfp-location" class="service-form-input" required placeholder="e.g. Abu Dhabi, Dubai, RAK, India">
+                  <input type="text" id="rfp-location" name="projectLocation" class="service-form-input" required placeholder="e.g. Abu Dhabi, Dubai, RAK, India">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-budget">Estimated Project Budget (AED) <span class="req">*</span></label>
-                  <select id="rfp-budget" class="service-form-select" required>
+                  <select id="rfp-budget" name="estimatedBudget" class="service-form-select" required>
                     <option value="" disabled selected>Select Budget Range</option>
-                    <option value="under10m">Under AED 10 Million</option>
-                    <option value="10m-50m">AED 10M – 50 Million</option>
-                    <option value="50m-200m">AED 50M – 200 Million</option>
-                    <option value="over200m">AED 200 Million+</option>
-                    <option value="tender">Formal Tender Stage / Confidential</option>
+                    <option value="Under AED 10 Million">Under AED 10 Million</option>
+                    <option value="AED 10M – 50 Million">AED 10M – 50 Million</option>
+                    <option value="AED 50M – 200 Million">AED 50M – 200 Million</option>
+                    <option value="AED 200 Million+">AED 200 Million+</option>
+                    <option value="Formal Tender Stage / Confidential">Formal Tender Stage / Confidential</option>
                   </select>
                 </div>
               </div>
 
               <div class="service-form-group" style="margin-bottom: 1.5rem;">
                 <label class="service-form-label" for="rfp-desc">Scope Description &amp; Technical Requirements <span class="req">*</span></label>
-                <textarea id="rfp-desc" class="service-form-textarea" rows="4" required placeholder="Provide an overview of the scope of work, timeline, site constraints, and specific engineering or equipment requirements..."></textarea>
+                <textarea id="rfp-desc" name="scopeDescription" class="service-form-textarea" rows="4" required placeholder="Provide an overview of the scope of work, timeline, site constraints, and specific engineering or equipment requirements..."></textarea>
               </div>
 
               <!-- Document Upload -->
               <div class="service-form-group" style="margin-bottom: 2rem;">
                 <label class="service-form-label">Tender Documents / BOQ / Drawings (Optional)</label>
                 <div class="file-dropzone" onclick="document.getElementById('rfp-file').click();">
-                  <input type="file" id="rfp-file" multiple style="display: none;" onchange="const list = document.getElementById('rfp-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
+                  <input type="file" id="rfp-file" name="tenderFiles" multiple style="display: none;" onchange="const list = document.getElementById('rfp-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
                   <div class="file-dropzone-icon">📁</div>
                   <div class="file-dropzone-title">Click or drag files here to upload</div>
                   <div class="file-dropzone-desc">Supports PDF, DWG, ZIP, XLSX, DOCX (Up to 50MB per file)</div>

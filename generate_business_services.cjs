@@ -40,7 +40,7 @@ createRoute('proposal/index.html', {
           </div>
 
           <div class="service-form-card">
-            <form id="rfpForm" onsubmit="event.preventDefault(); alert('Thank you. Your proposal inquiry has been registered. Reference: RFP-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Our commercial team will contact you within 48 hours.'); this.reset();">
+            <form id="rfpForm">
               
               <!-- Contact Details -->
               <h3 style="font-size: 1.1rem; color: #0099e6; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem;">1. CLIENT / CONTACT INFORMATION</h3>
@@ -48,22 +48,22 @@ createRoute('proposal/index.html', {
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-name">Full Name <span class="req">*</span></label>
-                  <input type="text" id="rfp-name" class="service-form-input" required placeholder="e.g. Tariq Al Mansoori">
+                  <input type="text" id="rfp-name" name="clientName" class="service-form-input" required placeholder="e.g. Tariq Al Mansoori">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-company">Company / Organization <span class="req">*</span></label>
-                  <input type="text" id="rfp-company" class="service-form-input" required placeholder="e.g. Emaar Properties / Aldar / ADNOC">
+                  <input type="text" id="rfp-company" name="clientCompany" class="service-form-input" required placeholder="e.g. Emaar Properties / Aldar / ADNOC">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.75rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-email">Corporate Email <span class="req">*</span></label>
-                  <input type="email" id="rfp-email" class="service-form-input" required placeholder="name@company.com">
+                  <input type="email" id="rfp-email" name="corporateEmail" class="service-form-input" required placeholder="name@company.com">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-phone">Phone / WhatsApp Number <span class="req">*</span></label>
-                  <input type="tel" id="rfp-phone" class="service-form-input" required placeholder="+971 50 123 4567">
+                  <input type="tel" id="rfp-phone" name="phoneNumber" class="service-form-input" required placeholder="+971 50 123 4567">
                 </div>
               </div>
 
@@ -73,29 +73,29 @@ createRoute('proposal/index.html', {
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-division">Required Business Division <span class="req">*</span></label>
-                  <select id="rfp-division" class="service-form-select" required>
+                  <select id="rfp-division" name="businessDivision" class="service-form-select" required>
                     <option value="" disabled selected>Select Business Division</option>
-                    <option value="engineering">Rayan Engineering &amp; Turnkey Contracting</option>
-                    <option value="energy">Rayan Energy &amp; Process EPC</option>
-                    <option value="ashaz">Ashaz Engineering (India Regional Hub)</option>
-                    <option value="properties">Rayan Properties (Upcoming)</option>
-                    <option value="multiple">Multi-Disciplinary / Integrated Group Scope</option>
+                    <option value="Rayan Engineering">Rayan Engineering &amp; Turnkey Contracting</option>
+                    <option value="Rayan Energy">Rayan Energy &amp; Process EPC</option>
+                    <option value="Ashaz Engineering">Ashaz Engineering (India Regional Hub)</option>
+                    <option value="Rayan Properties">Rayan Properties (Upcoming)</option>
+                    <option value="Multi-Disciplinary">Multi-Disciplinary / Integrated Group Scope</option>
                   </select>
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-type">Project Sector / Type <span class="req">*</span></label>
-                  <select id="rfp-type" class="service-form-select" required>
+                  <select id="rfp-type" name="projectSector" class="service-form-select" required>
                     <option value="" disabled selected>Select Sector</option>
-                    <option value="commercial">Commercial High-Rise / Mixed-Use</option>
-                    <option value="hospitality">Luxury Hospitality &amp; Resort Overhaul</option>
-                    <option value="residential">Bespoke Coastal Residential / Villas</option>
-                    <option value="interior">Interior Design &amp; Turnkey Fit-Out</option>
-                    <option value="facilities-management">Facilities Management &amp; Property Maintenance (FM / AMC)</option>
-                    <option value="defense">Defense, Security &amp; Special Tactical</option>
-                    <option value="energy">Oil &amp; Gas / Process Piping</option>
-                    <option value="fabrication">Heavy Structural Steel / Fabrication</option>
-                    <option value="infrastructure">Civic Infrastructure &amp; Paving Works</option>
-                    <option value="other">Other Specialized Contracting</option>
+                    <option value="Commercial High-Rise / Mixed-Use">Commercial High-Rise / Mixed-Use</option>
+                    <option value="Luxury Hospitality & Resort">Luxury Hospitality &amp; Resort Overhaul</option>
+                    <option value="Bespoke Coastal Residential">Bespoke Coastal Residential / Villas</option>
+                    <option value="Interior Design & Turnkey Fit-Out">Interior Design &amp; Turnkey Fit-Out</option>
+                    <option value="Facilities Management & AMC">Facilities Management &amp; Property Maintenance (FM / AMC)</option>
+                    <option value="Defense & Special Tactical">Defense, Security &amp; Special Tactical</option>
+                    <option value="Oil & Gas / Process Piping">Oil &amp; Gas / Process Piping</option>
+                    <option value="Heavy Structural Steel">Heavy Structural Steel / Fabrication</option>
+                    <option value="Civic Infrastructure">Civic Infrastructure &amp; Paving Works</option>
+                    <option value="Other Contracting">Other Specialized Contracting</option>
                   </select>
                 </div>
               </div>
@@ -103,31 +103,31 @@ createRoute('proposal/index.html', {
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-location">Project Location (Emirate / Region) <span class="req">*</span></label>
-                  <input type="text" id="rfp-location" class="service-form-input" required placeholder="e.g. Abu Dhabi, Dubai, RAK, India">
+                  <input type="text" id="rfp-location" name="projectLocation" class="service-form-input" required placeholder="e.g. Abu Dhabi, Dubai, RAK, India">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="rfp-budget">Estimated Project Budget (AED) <span class="req">*</span></label>
-                  <select id="rfp-budget" class="service-form-select" required>
+                  <select id="rfp-budget" name="estimatedBudget" class="service-form-select" required>
                     <option value="" disabled selected>Select Budget Range</option>
-                    <option value="under10m">Under AED 10 Million</option>
-                    <option value="10m-50m">AED 10M – 50 Million</option>
-                    <option value="50m-200m">AED 50M – 200 Million</option>
-                    <option value="over200m">AED 200 Million+</option>
-                    <option value="tender">Formal Tender Stage / Confidential</option>
+                    <option value="Under AED 10 Million">Under AED 10 Million</option>
+                    <option value="AED 10M – 50 Million">AED 10M – 50 Million</option>
+                    <option value="AED 50M – 200 Million">AED 50M – 200 Million</option>
+                    <option value="AED 200 Million+">AED 200 Million+</option>
+                    <option value="Formal Tender Stage / Confidential">Formal Tender Stage / Confidential</option>
                   </select>
                 </div>
               </div>
 
               <div class="service-form-group" style="margin-bottom: 1.5rem;">
                 <label class="service-form-label" for="rfp-desc">Scope Description &amp; Technical Requirements <span class="req">*</span></label>
-                <textarea id="rfp-desc" class="service-form-textarea" rows="4" required placeholder="Provide an overview of the scope of work, timeline, site constraints, and specific engineering or equipment requirements..."></textarea>
+                <textarea id="rfp-desc" name="scopeDescription" class="service-form-textarea" rows="4" required placeholder="Provide an overview of the scope of work, timeline, site constraints, and specific engineering or equipment requirements..."></textarea>
               </div>
 
               <!-- Document Upload -->
               <div class="service-form-group" style="margin-bottom: 2rem;">
                 <label class="service-form-label">Tender Documents / BOQ / Drawings (Optional)</label>
                 <div class="file-dropzone" onclick="document.getElementById('rfp-file').click();">
-                  <input type="file" id="rfp-file" multiple style="display: none;" onchange="const list = document.getElementById('rfp-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
+                  <input type="file" id="rfp-file" name="tenderFiles" multiple style="display: none;" onchange="const list = document.getElementById('rfp-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
                   <div class="file-dropzone-icon">📁</div>
                   <div class="file-dropzone-title">Click or drag files here to upload</div>
                   <div class="file-dropzone-desc">Supports PDF, DWG, ZIP, XLSX, DOCX (Up to 50MB per file)</div>
@@ -281,46 +281,46 @@ createRoute('procurement/index.html', {
           </div>
 
           <div class="service-form-card">
-            <form id="vendorForm" onsubmit="event.preventDefault(); alert('Vendor registration received. Reference: VND-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Dossier routed to vendors@rayan-group.com. Our procurement audit team will verify your documentation within 3-5 business days.'); this.reset();">
+            <form id="vendorForm">
               
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-company">Company Legal Name <span class="req">*</span></label>
-                  <input type="text" id="vnd-company" class="service-form-input" required placeholder="e.g. Gulf Structural Steel L.L.C.">
+                  <input type="text" id="vnd-company" name="companyLegalName" class="service-form-input" required placeholder="e.g. Gulf Structural Steel L.L.C.">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-license">Trade License / Commercial Reg. No <span class="req">*</span></label>
-                  <input type="text" id="vnd-license" class="service-form-input" required placeholder="e.g. CN-1234567">
+                  <input type="text" id="vnd-license" name="tradeLicenseNo" class="service-form-input" required placeholder="e.g. CN-1234567">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-country">Jurisdiction / Emirate <span class="req">*</span></label>
-                  <select id="vnd-country" class="service-form-select" required>
+                  <select id="vnd-country" name="jurisdiction" class="service-form-select" required>
                     <option value="" disabled selected>Select Jurisdiction</option>
-                    <option value="ad">Abu Dhabi, UAE</option>
-                    <option value="dxb">Dubai, UAE</option>
-                    <option value="rak">Ras Al Khaimah / Northern Emirates, UAE</option>
-                    <option value="ksa">Kingdom of Saudi Arabia</option>
-                    <option value="in">India / South Asia</option>
-                    <option value="intl">Other International</option>
+                    <option value="Abu Dhabi, UAE">Abu Dhabi, UAE</option>
+                    <option value="Dubai, UAE">Dubai, UAE</option>
+                    <option value="Ras Al Khaimah / Northern Emirates, UAE">Ras Al Khaimah / Northern Emirates, UAE</option>
+                    <option value="Kingdom of Saudi Arabia">Kingdom of Saudi Arabia</option>
+                    <option value="India / South Asia">India / South Asia</option>
+                    <option value="Other International">Other International</option>
                   </select>
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-category">Primary Supply Category <span class="req">*</span></label>
-                  <select id="vnd-category" class="service-form-select" required>
+                  <select id="vnd-category" name="primarySupplyCategory" class="service-form-select" required>
                     <option value="" disabled selected>Select Supply Category</option>
-                    <option value="civil-materials">Civil &amp; Structural Building Materials (Steel, Concrete, Aggregates)</option>
-                    <option value="interior-design">Interior Design &amp; Turnkey Fit-Out (Residential, Commercial &amp; Joinery)</option>
-                    <option value="facilities-management">Facilities Management &amp; Property Maintenance (FM / AMC, HVAC, MEP)</option>
-                    <option value="mep">MEP Equipment, Switchgear &amp; HVAC</option>
-                    <option value="fabrication">Structural Steel, Precast &amp; Fabrication Modules</option>
-                    <option value="energy">Piping, Valves, Pressure Vessels &amp; Process Equipment</option>
-                    <option value="machinery">Heavy Equipment Rental &amp; Logistics Fleets</option>
-                    <option value="subcontracting">Specialized Subcontracting (Civil, Waterproofing, Piling)</option>
-                    <option value="safety">QHSE, Safety Wear &amp; Environmental Services</option>
-                    <option value="other">Other Commercial Services</option>
+                    <option value="Civil & Structural Building Materials">Civil &amp; Structural Building Materials (Steel, Concrete, Aggregates)</option>
+                    <option value="Interior Design & Turnkey Fit-Out">Interior Design &amp; Turnkey Fit-Out (Residential, Commercial &amp; Joinery)</option>
+                    <option value="Facilities Management & Property Maintenance">Facilities Management &amp; Property Maintenance (FM / AMC, HVAC, MEP)</option>
+                    <option value="MEP Equipment, Switchgear & HVAC">MEP Equipment, Switchgear &amp; HVAC</option>
+                    <option value="Structural Steel, Precast & Fabrication Modules">Structural Steel, Precast &amp; Fabrication Modules</option>
+                    <option value="Piping, Valves & Process Equipment">Piping, Valves, Pressure Vessels &amp; Process Equipment</option>
+                    <option value="Heavy Equipment Rental & Logistics Fleets">Heavy Equipment Rental &amp; Logistics Fleets</option>
+                    <option value="Specialized Subcontracting">Specialized Subcontracting (Civil, Waterproofing, Piling)</option>
+                    <option value="QHSE & Safety Services">QHSE, Safety Wear &amp; Environmental Services</option>
+                    <option value="Other Commercial Services">Other Commercial Services</option>
                   </select>
                 </div>
               </div>
@@ -328,22 +328,22 @@ createRoute('procurement/index.html', {
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-contact">Primary Contact Person <span class="req">*</span></label>
-                  <input type="text" id="vnd-contact" class="service-form-input" required placeholder="Name &amp; Designation">
+                  <input type="text" id="vnd-contact" name="contactPerson" class="service-form-input" required placeholder="Name &amp; Designation">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-email">Corporate Email Address <span class="req">*</span></label>
-                  <input type="email" id="vnd-email" class="service-form-input" required placeholder="procurement@yourcompany.com">
+                  <input type="email" id="vnd-email" name="corporateEmail" class="service-form-input" required placeholder="procurement@yourcompany.com">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.5rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-phone">Telephone / Mobile Number <span class="req">*</span></label>
-                  <input type="tel" id="vnd-phone" class="service-form-input" required placeholder="+971 2 123 4567">
+                  <input type="tel" id="vnd-phone" name="telephoneNumber" class="service-form-input" required placeholder="+971 2 123 4567">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-vat">VAT / TRN Registration No <span class="req">*</span></label>
-                  <input type="text" id="vnd-vat" class="service-form-input" required placeholder="100-XXXX-XXXX-XXXX">
+                  <input type="text" id="vnd-vat" name="vatTrnRegistration" class="service-form-input" required placeholder="100-XXXX-XXXX-XXXX">
                 </div>
               </div>
 
@@ -351,7 +351,7 @@ createRoute('procurement/index.html', {
               <div class="service-form-group" style="margin-bottom: 2rem;">
                 <label class="service-form-label">Vendor Dossier Upload (Trade License, VAT Certificate &amp; Profile) <span class="req">*</span></label>
                 <div class="file-dropzone" onclick="document.getElementById('vnd-file').click();">
-                  <input type="file" id="vnd-file" multiple style="display: none;" required onchange="const list = document.getElementById('vnd-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
+                  <input type="file" id="vnd-file" name="dossierFiles" multiple style="display: none;" required onchange="const list = document.getElementById('vnd-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
                   <div class="file-dropzone-icon">📋</div>
                   <div class="file-dropzone-title">Upload Prequalification Dossier</div>
                   <div class="file-dropzone-desc">Attach Trade License, VAT certificate, company profile, and ISO certifications (PDF, ZIP up to 50MB)</div>
@@ -361,7 +361,7 @@ createRoute('procurement/index.html', {
 
               <div style="margin-bottom: 1.5rem;">
                 <label style="display: flex; gap: 0.65rem; font-size: 0.85rem; color: #94a3b8; cursor: pointer;">
-                  <input type="checkbox" required style="accent-color: #0099e6; margin-top: 0.2rem;">
+                  <input type="checkbox" name="complianceCertification" required style="accent-color: #0099e6; margin-top: 0.2rem;">
                   <span>I certify that all information submitted is true and accurate, and that my organization adheres to Rayan Group's Supplier Code of Conduct and Zero-Bribery standards.</span>
                 </label>
               </div>
@@ -519,29 +519,29 @@ createRoute('billing/index.html', {
           </div>
 
           <div class="service-form-card">
-            <form id="billingForm" onsubmit="event.preventDefault(); alert('Billing inquiry received. Reference: ACC-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Our finance department will review your ledger status and respond via email within 2 business days.'); this.reset();">
+            <form id="billingForm">
               
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-type">Inquiry Nature <span class="req">*</span></label>
-                  <select id="bill-type" class="service-form-select" required>
+                  <select id="bill-type" name="inquiryNature" class="service-form-select" required>
                     <option value="" disabled selected>Select Inquiry Type</option>
-                    <option value="invoice-status">Vendor Invoice Status Verification</option>
-                    <option value="payment-advice">Payment Remittance Advice Request</option>
-                    <option value="po-query">Purchase Order / Contract Value Query</option>
-                    <option value="statement">Statement of Account (SOA) Reconciliation</option>
-                    <option value="client-billing">Client Milestone Billing Query</option>
+                    <option value="Vendor Invoice Status Verification">Vendor Invoice Status Verification</option>
+                    <option value="Payment Remittance Advice Request">Payment Remittance Advice Request</option>
+                    <option value="Purchase Order / Contract Value Query">Purchase Order / Contract Value Query</option>
+                    <option value="Statement of Account Reconciliation">Statement of Account (SOA) Reconciliation</option>
+                    <option value="Client Milestone Billing Query">Client Milestone Billing Query</option>
                   </select>
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-entity">Rayan Group Entity Billed <span class="req">*</span></label>
-                  <select id="bill-entity" class="service-form-select" required>
+                  <select id="bill-entity" name="entityBilled" class="service-form-select" required>
                     <option value="" disabled selected>Select Operating Entity</option>
-                    <option value="rayan-group">Rayan Group</option>
-                    <option value="engineering">Rayan Engineering</option>
-                    <option value="energy">Rayan Energy</option>
-                    <option value="ashaz">Ashaz Engineering (India)</option>
-                    <option value="properties">Rayan Properties</option>
+                    <option value="Rayan Group">Rayan Group</option>
+                    <option value="Rayan Engineering">Rayan Engineering</option>
+                    <option value="Rayan Energy">Rayan Energy</option>
+                    <option value="Ashaz Engineering (India)">Ashaz Engineering (India)</option>
+                    <option value="Rayan Properties">Rayan Properties</option>
                   </select>
                 </div>
               </div>
@@ -549,57 +549,57 @@ createRoute('billing/index.html', {
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-vendor">Company / Vendor Name <span class="req">*</span></label>
-                  <input type="text" id="bill-vendor" class="service-form-input" required placeholder="Your registered company name">
+                  <input type="text" id="bill-vendor" name="vendorName" class="service-form-input" required placeholder="Your registered company name">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-contact">Contact Person <span class="req">*</span></label>
-                  <input type="text" id="bill-contact" class="service-form-input" required placeholder="Name &amp; Finance Designation">
+                  <input type="text" id="bill-contact" name="contactPerson" class="service-form-input" required placeholder="Name &amp; Finance Designation">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-email">Accounts Email Address <span class="req">*</span></label>
-                  <input type="email" id="bill-email" class="service-form-input" required placeholder="finance@yourcompany.com">
+                  <input type="email" id="bill-email" name="accountsEmail" class="service-form-input" required placeholder="finance@yourcompany.com">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-phone">Phone Number <span class="req">*</span></label>
-                  <input type="tel" id="bill-phone" class="service-form-input" required placeholder="+971 50 123 4567">
+                  <input type="tel" id="bill-phone" name="phoneNumber" class="service-form-input" required placeholder="+971 50 123 4567">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-po">Purchase Order / Contract No <span class="req">*</span></label>
-                  <input type="text" id="bill-po" class="service-form-input" required placeholder="e.g. PO-2024-XXXX">
+                  <input type="text" id="bill-po" name="purchaseOrderNo" class="service-form-input" required placeholder="e.g. PO-2024-XXXX">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-inv">Tax Invoice Number <span class="req">*</span></label>
-                  <input type="text" id="bill-inv" class="service-form-input" required placeholder="e.g. INV-10928">
+                  <input type="text" id="bill-inv" name="taxInvoiceNo" class="service-form-input" required placeholder="e.g. INV-10928">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.5rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-amount">Invoice Amount &amp; Currency <span class="req">*</span></label>
-                  <input type="text" id="bill-amount" class="service-form-input" required placeholder="e.g. AED 125,000.00">
+                  <input type="text" id="bill-amount" name="invoiceAmount" class="service-form-input" required placeholder="e.g. AED 125,000.00">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-date">Invoice Date <span class="req">*</span></label>
-                  <input type="date" id="bill-date" class="service-form-input" required>
+                  <input type="date" id="bill-date" name="invoiceDate" class="service-form-input" required>
                 </div>
               </div>
 
               <div class="service-form-group" style="margin-bottom: 1.5rem;">
                 <label class="service-form-label" for="bill-notes">Inquiry Details &amp; Additional Information</label>
-                <textarea id="bill-notes" class="service-form-textarea" rows="3" placeholder="Provide any additional context, delivery note references, or site engineer sign-off details..."></textarea>
+                <textarea id="bill-notes" name="inquiryNotes" class="service-form-textarea" rows="3" placeholder="Provide any additional context, delivery note references, or site engineer sign-off details..."></textarea>
               </div>
 
               <!-- File Upload for Invoice Copy -->
               <div class="service-form-group" style="margin-bottom: 2rem;">
                 <label class="service-form-label">Attach Tax Invoice &amp; Delivery Note / Sign-off (PDF)</label>
                 <div class="file-dropzone" onclick="document.getElementById('bill-file').click();">
-                  <input type="file" id="bill-file" multiple style="display: none;" onchange="const list = document.getElementById('bill-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
+                  <input type="file" id="bill-file" name="invoiceDocuments" multiple style="display: none;" onchange="const list = document.getElementById('bill-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
                   <div class="file-dropzone-icon">📑</div>
                   <div class="file-dropzone-title">Upload Invoice or Delivery Documents</div>
                   <div class="file-dropzone-desc">Attach signed delivery notes, approved inspection requests, or tax invoice PDFs (Up to 25MB)</div>

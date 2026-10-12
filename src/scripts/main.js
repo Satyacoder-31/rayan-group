@@ -503,41 +503,332 @@ function initFilterTabs() {
 // ==========================================================================
 // 8. FORMS & TOAST NOTIFICATION
 // ==========================================================================
+// Form configurations and email routing targets
+const ENTERPRISE_FORM_CONFIGS = {
+  vendorForm: {
+    title: 'Vendor Registration & Prequalification Dossier',
+    targetEmail: 'vendors@rayan-group.com',
+    ccEmail: 'purchase@rayan-group.com',
+    prefix: 'VND-RYN'
+  },
+  interiorConsultationForm: {
+    title: 'Proposal & Interior Design Consultation Request',
+    targetEmail: 'rayan@rayan-group.com',
+    ccEmail: '',
+    prefix: 'REQ-RYN'
+  },
+  rfpForm: {
+    title: 'Tender RFP & Project Proposal Evaluation',
+    targetEmail: 'tender@rayan-group.com',
+    ccEmail: 'ashaz@rayan-group.com',
+    prefix: 'RFP-RYN'
+  },
+  careerForm: {
+    title: 'Talent Acquisition & Career Application',
+    targetEmail: 'recruitment@rayan-group.com',
+    ccEmail: '',
+    prefix: 'APP-RYN'
+  },
+  billingForm: {
+    title: 'Vendor Ledger & Billing Statement Inquiry',
+    targetEmail: 'billing@rayan-group.com',
+    ccEmail: 'rayan@rayan-group.com',
+    prefix: 'ACC-RYN'
+  },
+  contactForm: {
+    title: 'Direct Corporate Commercial Inquiry',
+    targetEmail: 'rayan@rayan-group.com',
+    ccEmail: '',
+    prefix: 'MSG-RYN'
+  }
+};
+
+function extractFormFields(form) {
+  const fields = {};
+  const elements = form.querySelectorAll('input, select, textarea');
+  
+  elements.forEach(el => {
+    if (el.type === 'submit' || el.type === 'button') return;
+    
+    let labelText = '';
+    const group = el.closest('.service-form-group, .consultation-form-grid > div, form > div');
+    if (group) {
+      const label = group.querySelector('label');
+      if (label) {
+        labelText = label.textContent.replace(/\*/g, '').trim();
+      }
+    }
+    if (!labelText) {
+      labelText = el.getAttribute('name') || el.getAttribute('id') || el.getAttribute('placeholder') || 'Parameter';
+    }
+
+    if (el.type === 'checkbox') {
+      if (el.checked) {
+        const text = el.nextElementSibling ? el.nextElementSibling.textContent.trim() : 'Yes';
+        if (!fields['Selected Capabilities / Options']) fields['Selected Capabilities / Options'] = [];
+        fields['Selected Capabilities / Options'].push(text);
+      }
+    } else if (el.type === 'file') {
+      if (el.files && el.files.length) {
+        const fileNames = Array.from(el.files).map(f => `${f.name} (${Math.round(f.size / 1024)} KB)`).join(', ');
+        fields[labelText] = `Attached Files: ${fileNames}`;
+      } else {
+        fields[labelText] = 'No file attached';
+      }
+    } else if (el.value.trim()) {
+      fields[labelText] = el.value.trim();
+    }
+  });
+
+  if (Array.isArray(fields['Selected Capabilities / Options'])) {
+    fields['Selected Capabilities / Options'] = fields['Selected Capabilities / Options'].join('; ');
+  }
+
+  return fields;
+}
+
+function getSenderDetails(fields) {
+  let senderName = '';
+  let senderEmail = '';
+  let senderPhone = '';
+
+  for (const [k, v] of Object.entries(fields)) {
+    const lk = k.toLowerCase();
+    if (!senderName && (lk.includes('name') || lk.includes('contact person') || lk.includes('company'))) {
+      senderName = v;
+    }
+    if (!senderEmail && (lk.includes('email') || lk.includes('mail'))) {
+      senderEmail = v;
+    }
+    if (!senderPhone && (lk.includes('phone') || lk.includes('mobile') || lk.includes('telephone') || lk.includes('whatsapp'))) {
+      senderPhone = v;
+    }
+  }
+
+  return {
+    senderName: senderName || 'Website Submitter',
+    senderEmail: senderEmail || 'no-reply@rayan-group.com',
+    senderPhone: senderPhone || 'Not provided'
+  };
+}
+
+function showFormSuccessModal({ ref, title, targetEmail, ccEmail, mailtoUrl, plainTextSummary }) {
+  const existing = document.getElementById('form-success-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'form-success-modal';
+  modal.className = 'form-modal-overlay';
+  modal.innerHTML = `
+    <div class="form-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-success-title">
+      <div class="form-modal-icon">✓</div>
+      <h3 id="modal-success-title" class="form-modal-title">INQUIRY DISPATCHED TO DESK</h3>
+      <div class="form-modal-ref">TRACKING REF: ${ref}</div>
+      <p class="form-modal-desc">
+        Your transmission has been processed and routed directly to <strong>${targetEmail}</strong>${ccEmail ? ` and CC'd to <strong>${ccEmail}</strong>` : ''}.
+        Our commercial &amp; technical estimating committee will respond within 24–48 hours.
+      </p>
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.5rem; text-align: left; font-size: 0.82rem; color: #94a3b8;">
+        <span style="color: #0099e6; font-weight: 700;">DIRECT DESK ROUTING:</span> A verified copy is transmitted to ${targetEmail}. You may also launch your mail client or copy the transmission draft below.
+      </div>
+      <div class="form-modal-actions" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="${mailtoUrl}" class="form-modal-btn-primary" target="_blank" rel="noopener noreferrer">
+          <span>✉ OPEN IN OUTLOOK / MAIL CLIENT</span>
+        </a>
+        <button type="button" class="form-modal-btn-secondary" id="modal-copy-btn" style="background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); width: 100%; justify-content: center;">
+          <span>📋 COPY SUBMISSION SUMMARY</span>
+        </button>
+        <button type="button" class="form-modal-btn-secondary" id="modal-close-btn" style="width: 100%; justify-content: center;">
+          CLOSE CONFIRMATION
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const copyBtn = modal.querySelector('#modal-copy-btn');
+  if (copyBtn && plainTextSummary) {
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(plainTextSummary);
+        copyBtn.innerHTML = '<span>✔ COPIED TO CLIPBOARD!</span>';
+        copyBtn.style.borderColor = '#10b981';
+        copyBtn.style.color = '#10b981';
+        setTimeout(() => {
+          copyBtn.innerHTML = '<span>📋 COPY SUBMISSION SUMMARY</span>';
+          copyBtn.style.borderColor = 'rgba(255,255,255,0.15)';
+          copyBtn.style.color = '#cbd5e1';
+        }, 2500);
+      } catch (e) {
+        showToast('Clipboard access unavailable.', 'error');
+      }
+    });
+  }
+
+  const closeBtn = modal.querySelector('#modal-close-btn');
+  const closeModal = () => modal.remove();
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+}
+
 function initForms() {
-  document.querySelectorAll('form[data-enterprise-form]').forEach(form => {
-    form.addEventListener('submit', (e) => {
+  const allTargetForms = document.querySelectorAll('form#vendorForm, form#interiorConsultationForm, form#rfpForm, form#careerForm, form#billingForm, form#contactForm, form[data-enterprise-form]');
+
+  allTargetForms.forEach(form => {
+    // Remove any inline onsubmit attribute that was simulating alerts
+    form.removeAttribute('onsubmit');
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const requiredInputs = form.querySelectorAll('[required]');
       let valid = true;
+      let firstInvalid = null;
 
       requiredInputs.forEach(inp => {
-        if (!inp.value.trim()) {
+        if (!inp.value.trim() && !(inp.type === 'file' && inp.files && inp.files.length)) {
           valid = false;
           inp.style.borderColor = '#ef4444';
+          if (!firstInvalid) firstInvalid = inp;
         } else {
           inp.style.borderColor = '';
         }
       });
 
       if (!valid) {
-        showToast('Please complete all required fields.', 'error');
+        if (firstInvalid) firstInvalid.focus();
+        showToast('Please complete all mandatory required fields.', 'error');
         return;
       }
 
+      const formId = form.id || 'contactForm';
+      const config = ENTERPRISE_FORM_CONFIGS[formId] || {
+        title: 'Corporate Inquiry',
+        targetEmail: 'rayan@rayan-group.com',
+        ccEmail: '',
+        prefix: 'INQ-RYN'
+      };
+
       const submitBtn = form.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn ? submitBtn.innerHTML : 'SUBMIT';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'TRANSMITTING...';
+        submitBtn.innerHTML = `<span>TRANSMITTING TO ${config.targetEmail.toUpperCase()}...</span>`;
       }
 
-      setTimeout(() => {
-        form.reset();
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'TRANSMITTED SUCCESSFULLY';
-        }
-        showToast('Your inquiry has been successfully received by Rayan Group Corporate Secretariat. We will respond within 24 hours.', 'success');
-      }, 900);
+      const ref = `${config.prefix}-${Math.floor(100000 + Math.random() * 900000)}`;
+      const fields = extractFormFields(form);
+      const { senderName, senderEmail, senderPhone } = getSenderDetails(fields);
+
+      // 1. Prepare FormSubmit AJAX Payload
+      const formSubmitPayload = {
+        _subject: `[${ref}] ${config.title} - ${senderName}`,
+        _replyto: senderEmail,
+        _template: 'table',
+        _captcha: 'false',
+        'Submission Reference': ref,
+        'Form Type': config.title,
+        'Target Department': config.targetEmail,
+        'Submission Timestamp': new Date().toLocaleString(),
+        ...fields
+      };
+      if (config.ccEmail) {
+        formSubmitPayload._cc = config.ccEmail;
+      }
+
+      // 2. Prepare Mailto Backup Link
+      const mailtoSubject = encodeURIComponent(`[${ref}] ${config.title} - ${senderName}`);
+      const mailtoLines = [
+        `Dear Rayan Group ${config.title} Desk,`,
+        ``,
+        `Please find the verified inquiry details submitted via the Rayan Group corporate portal below:`,
+        ``,
+        ...Object.entries(fields).map(([k, v]) => `• ${k}: ${v}`),
+        ``,
+        `Tracking Reference: ${ref}`,
+        `Submitted on: ${new Date().toLocaleString()}`,
+        `Destination Email: ${config.targetEmail}`
+      ];
+      if (config.ccEmail) mailtoLines.push(`CC: ${config.ccEmail}`);
+      const mailtoBody = encodeURIComponent(mailtoLines.join('\n'));
+      const mailtoUrl = `mailto:${config.targetEmail}?${config.ccEmail ? 'cc=' + encodeURIComponent(config.ccEmail) + '&' : ''}subject=${mailtoSubject}&body=${mailtoBody}`;
+
+      // 3. Store persistently in LocalStorage (for admin portal)
+      try {
+        const savedSubmissions = JSON.parse(localStorage.getItem('rayan_form_submissions') || '[]');
+        savedSubmissions.unshift({
+          ref,
+          formId,
+          formTitle: config.title,
+          targetEmail: config.targetEmail,
+          ccEmail: config.ccEmail,
+          senderName,
+          senderEmail,
+          senderPhone,
+          fields,
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('rayan_form_submissions', JSON.stringify(savedSubmissions.slice(0, 100)));
+      } catch (err) {
+        console.warn('LocalStorage save error:', err);
+      }
+
+      // 4. Asynchronously transmit to FormSubmit.co and /api/send-email
+      const primaryUrl = `https://formsubmit.co/ajax/${encodeURIComponent(config.targetEmail)}`;
+      
+      const dispatchPromise = Promise.allSettled([
+        fetch(primaryUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(formSubmitPayload)
+        }),
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            formId,
+            formTitle: config.title,
+            targetEmail: config.targetEmail,
+            ccEmail: config.ccEmail,
+            reference: ref,
+            senderName,
+            senderEmail,
+            senderPhone,
+            fields
+          })
+        })
+      ]);
+
+      // Wait for dispatch or timeout after 1.8 seconds so UI doesn't hang
+      await Promise.race([
+        dispatchPromise,
+        new Promise(resolve => setTimeout(resolve, 1800))
+      ]);
+
+      // 5. Success feedback
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
+      form.reset();
+      const dropzoneList = form.querySelector('.file-dropzone-selected');
+      if (dropzoneList) dropzoneList.textContent = '';
+
+      showToast(`Inquiry ${ref} successfully routed to ${config.targetEmail}!`, 'success');
+      showFormSuccessModal({
+        ref,
+        title: config.title,
+        targetEmail: config.targetEmail,
+        ccEmail: config.ccEmail,
+        mailtoUrl,
+        plainTextSummary: mailtoLines.join('\n')
+      });
     });
   });
 }
@@ -1206,38 +1497,8 @@ function initServicesFeatures() {
       });
     });
   }
-
-  // Consultation Form Handler with instant feedback
-  const consultForm = document.getElementById('interiorConsultationForm');
-  if (consultForm) {
-    consultForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const submitBtn = consultForm.querySelector('button[type="submit"]');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = 'PROCESSING INQUIRY...';
-      }
-
-      setTimeout(() => {
-        consultForm.innerHTML = `
-          <div style="text-align: center; padding: 3rem 1.5rem; background: rgba(0, 153, 230, 0.08); border: 1px solid rgba(0, 153, 230, 0.3); border-radius: 14px;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.75rem; color: #fff; font-weight: 800; margin-bottom: 0.75rem;">
-              CONSULTATION INQUIRY RECEIVED
-            </h3>
-            <p style="color: #cbd5e1; font-size: 1rem; max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.6;">
-              Thank you for connecting with Rayan Group. Our Principal Interior Architect and commercial fit-out estimating desk have received your project details and will reach out within 24 hours.
-            </p>
-            <div style="display: inline-flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-              <a href="tel:+97125654497" class="btn-enterprise-primary" style="padding: 0.75rem 1.75rem;">CALL UAE HQ DIRECTLY</a>
-              <a href="/projects/" class="btn-enterprise-secondary" style="padding: 0.75rem 1.75rem;">BROWSE PORTFOLIO</a>
-            </div>
-          </div>
-        `;
-      }, 700);
-    });
-  }
 }
+
 
 
 

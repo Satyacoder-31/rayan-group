@@ -224,67 +224,67 @@ createRoute('careers/index.html', {
           </div>
 
           <div class="service-form-card">
-            <form id="careerForm" onsubmit="event.preventDefault(); alert('Thank you for your application. Reference: APP-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Your resume has been entered into the Rayan Group talent database. Our HR recruitment team will contact qualified candidates.'); this.reset();">
+            <form id="careerForm">
               
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="car-name">Full Legal Name <span class="req">*</span></label>
-                  <input type="text" id="car-name" class="service-form-input" required placeholder="e.g. Rahul Sharma / Omar Khalid">
+                  <input type="text" id="car-name" name="candidateName" class="service-form-input" required placeholder="e.g. Rahul Sharma / Omar Khalid">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="car-email">Email Address <span class="req">*</span></label>
-                  <input type="email" id="car-email" class="service-form-input" required placeholder="name@email.com">
+                  <input type="email" id="car-email" name="candidateEmail" class="service-form-input" required placeholder="name@email.com">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="car-phone">Phone / WhatsApp Number <span class="req">*</span></label>
-                  <input type="tel" id="car-phone" class="service-form-input" required placeholder="+971 50 123 4567">
+                  <input type="tel" id="car-phone" name="phoneNumber" class="service-form-input" required placeholder="+971 50 123 4567">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="car-location">Current Residence / Location <span class="req">*</span></label>
-                  <input type="text" id="car-location" class="service-form-input" required placeholder="e.g. Abu Dhabi, Dubai, India">
+                  <input type="text" id="car-location" name="currentLocation" class="service-form-input" required placeholder="e.g. Abu Dhabi, Dubai, India">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="car-dept">Target Department / Discipline <span class="req">*</span></label>
-                  <select id="car-dept" class="service-form-select" required>
+                  <select id="car-dept" name="targetDiscipline" class="service-form-select" required>
                     <option value="" disabled selected>Select Discipline</option>
-                    <option value="civil">Civil &amp; Structural Engineering</option>
-                    <option value="ashaz">Ashaz Engineering (India Hub)</option>
-                    <option value="energy">Energy, Piping &amp; Process EPC</option>
-                    <option value="infrastructure">Highway &amp; Heavy Civil Infrastructure</option>
-                    <option value="logistics">Heavy Fleet &amp; Crane Operations</option>
-                    <option value="qhse">QHSE &amp; Environmental Safety</option>
-                    <option value="commercial">Commercial, Estimating &amp; Quantity Surveying</option>
-                    <option value="corporate">Finance, HR &amp; Corporate Administration</option>
+                    <option value="Civil & Structural Engineering">Civil &amp; Structural Engineering</option>
+                    <option value="Ashaz Engineering (India Hub)">Ashaz Engineering (India Hub)</option>
+                    <option value="Energy, Piping & Process EPC">Energy, Piping &amp; Process EPC</option>
+                    <option value="Highway & Civil Infrastructure">Highway &amp; Heavy Civil Infrastructure</option>
+                    <option value="Heavy Fleet & Logistics">Heavy Fleet &amp; Crane Operations</option>
+                    <option value="QHSE & Environmental Safety">QHSE &amp; Environmental Safety</option>
+                    <option value="Commercial & Estimating">Commercial, Estimating &amp; Quantity Surveying</option>
+                    <option value="Finance & Administration">Finance, HR &amp; Corporate Administration</option>
                   </select>
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="car-exp">Total Years of Experience <span class="req">*</span></label>
-                  <select id="car-exp" class="service-form-select" required>
+                  <select id="car-exp" name="experienceLevel" class="service-form-select" required>
                     <option value="" disabled selected>Select Experience Range</option>
-                    <option value="entry">Entry Level / Graduate (0 - 2 Years)</option>
-                    <option value="mid">Mid-Level Professional (3 - 7 Years)</option>
-                    <option value="senior">Senior Engineer / Specialist (8 - 12 Years)</option>
-                    <option value="lead">Project Director / Management (13+ Years)</option>
+                    <option value="0 - 2 Years (Entry Level)">Entry Level / Graduate (0 - 2 Years)</option>
+                    <option value="3 - 7 Years (Mid-Level)">Mid-Level Professional (3 - 7 Years)</option>
+                    <option value="8 - 12 Years (Senior Specialist)">Senior Engineer / Specialist (8 - 12 Years)</option>
+                    <option value="13+ Years (Project Director)">Project Director / Management (13+ Years)</option>
                   </select>
                 </div>
               </div>
 
               <div class="service-form-group" style="margin-bottom: 1.5rem;">
                 <label class="service-form-label" for="car-notes">Cover Note / Key Projects Handled</label>
-                <textarea id="car-notes" class="service-form-textarea" rows="3" placeholder="Briefly highlight your technical specialties, key past projects, software proficiencies, or availability timeline..."></textarea>
+                <textarea id="car-notes" name="coverNote" class="service-form-textarea" rows="3" placeholder="Briefly highlight your technical specialties, key past projects, software proficiencies, or availability timeline..."></textarea>
               </div>
 
               <!-- CV / Resume Upload Dropzone -->
               <div class="service-form-group" style="margin-bottom: 2rem;">
                 <label class="service-form-label">Upload CV / Resume (PDF / DOCX) <span class="req">*</span></label>
                 <div class="file-dropzone" onclick="document.getElementById('car-file').click();">
-                  <input type="file" id="car-file" style="display: none;" required onchange="const list = document.getElementById('car-file-name'); list.textContent = this.files.length ? this.files[0].name : '';">
+                  <input type="file" id="car-file" name="resumeFile" style="display: none;" required onchange="const list = document.getElementById('car-file-name'); list.textContent = this.files.length ? this.files[0].name : '';">
                   <div class="file-dropzone-icon">📄</div>
                   <div class="file-dropzone-title">Upload Your Resume / CV</div>
                   <div class="file-dropzone-desc">Accepted formats: PDF, DOCX (Up to 15MB)</div>
@@ -1243,38 +1243,38 @@ createRoute('contact/index.html', {
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">DIRECT INQUIRY</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.5rem); font-weight: 800; color: #fff; margin: 0.5rem 0 2rem;">SEND A MESSAGE</h2>
 
-          <form onsubmit="event.preventDefault(); alert('Your message has been received. Our team will contact you shortly.'); this.reset();" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+          <form id="contactForm" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Full Name *</label>
-              <input type="text" required placeholder="e.g. Tariq Al Mansoori" class="service-form-input">
+              <input type="text" name="fullName" required placeholder="e.g. Tariq Al Mansoori" class="service-form-input">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="intro-grid-responsive">
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Corporate Email *</label>
-                <input type="email" required placeholder="name@company.com" class="service-form-input">
+                <input type="email" name="corporateEmail" required placeholder="name@company.com" class="service-form-input">
               </div>
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Contact Number</label>
-                <input type="tel" placeholder="+971 50 123 4567" class="service-form-input">
+                <input type="tel" name="contactNumber" placeholder="+971 50 123 4567" class="service-form-input">
               </div>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Inquiry Nature *</label>
-              <select required class="service-form-select">
+              <select name="inquiryNature" required class="service-form-select">
                 <option value="">Select Category...</option>
-                <option value="proposal">Request a Proposal / Tenders</option>
-                <option value="procurement">Suppliers &amp; Procurement</option>
-                <option value="billing">Billing &amp; Accounts Desk</option>
-                <option value="careers">Careers &amp; Recruitment</option>
-                <option value="general">General Commercial Inquiry</option>
+                <option value="Proposal & Tenders">Request a Proposal / Tenders</option>
+                <option value="Suppliers & Procurement">Suppliers &amp; Procurement</option>
+                <option value="Billing & Accounts Desk">Billing &amp; Accounts Desk</option>
+                <option value="Careers & Recruitment">Careers &amp; Recruitment</option>
+                <option value="General Commercial Inquiry">General Commercial Inquiry</option>
               </select>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Message / Scope Details *</label>
-              <textarea required rows="4" placeholder="Detail your project requirements, scope of work, or inquiry..." class="service-form-textarea"></textarea>
+              <textarea name="messageDetails" required rows="4" placeholder="Detail your project requirements, scope of work, or inquiry..." class="service-form-textarea"></textarea>
             </div>
 
             <button type="submit" class="btn-enterprise-primary" style="padding: 1rem; width: 100%; justify-content: center;">SUBMIT INQUIRY →</button>

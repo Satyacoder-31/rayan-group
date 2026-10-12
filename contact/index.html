@@ -855,38 +855,38 @@
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">DIRECT INQUIRY</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.5rem); font-weight: 800; color: #fff; margin: 0.5rem 0 2rem;">SEND A MESSAGE</h2>
 
-          <form onsubmit="event.preventDefault(); alert('Your message has been received. Our team will contact you shortly.'); this.reset();" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+          <form id="contactForm" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Full Name *</label>
-              <input type="text" required placeholder="e.g. Tariq Al Mansoori" class="service-form-input">
+              <input type="text" name="fullName" required placeholder="e.g. Tariq Al Mansoori" class="service-form-input">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="intro-grid-responsive">
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Corporate Email *</label>
-                <input type="email" required placeholder="name@company.com" class="service-form-input">
+                <input type="email" name="corporateEmail" required placeholder="name@company.com" class="service-form-input">
               </div>
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Contact Number</label>
-                <input type="tel" placeholder="+971 50 123 4567" class="service-form-input">
+                <input type="tel" name="contactNumber" placeholder="+971 50 123 4567" class="service-form-input">
               </div>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Inquiry Nature *</label>
-              <select required class="service-form-select">
+              <select name="inquiryNature" required class="service-form-select">
                 <option value="">Select Category...</option>
-                <option value="proposal">Request a Proposal / Tenders</option>
-                <option value="procurement">Suppliers &amp; Procurement</option>
-                <option value="billing">Billing &amp; Accounts Desk</option>
-                <option value="careers">Careers &amp; Recruitment</option>
-                <option value="general">General Commercial Inquiry</option>
+                <option value="Proposal & Tenders">Request a Proposal / Tenders</option>
+                <option value="Suppliers & Procurement">Suppliers &amp; Procurement</option>
+                <option value="Billing & Accounts Desk">Billing &amp; Accounts Desk</option>
+                <option value="Careers & Recruitment">Careers &amp; Recruitment</option>
+                <option value="General Commercial Inquiry">General Commercial Inquiry</option>
               </select>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.5rem; text-transform: uppercase;">Message / Scope Details *</label>
-              <textarea required rows="4" placeholder="Detail your project requirements, scope of work, or inquiry..." class="service-form-textarea"></textarea>
+              <textarea name="messageDetails" required rows="4" placeholder="Detail your project requirements, scope of work, or inquiry..." class="service-form-textarea"></textarea>
             </div>
 
             <button type="submit" class="btn-enterprise-primary" style="padding: 1rem; width: 100%; justify-content: center;">SUBMIT INQUIRY →</button>

@@ -2719,71 +2719,71 @@
           <div class="consultation-form-grid">
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Full Name *</label>
-              <input type="text" class="consultation-input" placeholder="e.g. Tariq Al Mansoori" required>
+              <input type="text" name="fullName" class="consultation-input" placeholder="e.g. Tariq Al Mansoori" required>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Corporate / Entity Name</label>
-              <input type="text" class="consultation-input" placeholder="e.g. Government Authority / Apex Contracting">
+              <input type="text" name="corporateEntity" class="consultation-input" placeholder="e.g. Government Authority / Apex Contracting">
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Email Address *</label>
-              <input type="email" class="consultation-input" placeholder="name@domain.com" required>
+              <input type="email" name="clientEmail" class="consultation-input" placeholder="name@domain.com" required>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Phone / WhatsApp *</label>
-              <input type="tel" class="consultation-input" placeholder="+971 50 000 0000" required>
+              <input type="tel" name="phoneNumber" class="consultation-input" placeholder="+971 50 000 0000" required>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Project Category *</label>
-              <select class="consultation-select" required>
+              <select name="projectCategory" class="consultation-select" required>
                 <option value="">Select Project Scope...</option>
                 <optgroup label="Facilities Management &amp; AMC Packages">
-                  <option value="amc-executive">Executive Villa AMC (Bi-Monthly &bull; Recommended)</option>
-                  <option value="amc-prestige">Prestige / Royal Villa AMC (Monthly VIP)</option>
-                  <option value="amc-essential">Essential Care AMC (Standard Residential)</option>
-                  <option value="amc-corporate">Corporate &amp; Commercial Building FM</option>
-                  <option value="fm-electrical">Electrical Maintenance, DB Panels &amp; Rewiring</option>
-                  <option value="fm-hvac-duct">HVAC Servicing &amp; Deep AC Duct Cleaning</option>
-                  <option value="fm-plumbing-leak">Plumbing &amp; Acoustic Leak Detection</option>
-                  <option value="fm-mechanical-pumps">Water Booster Pumps &amp; Mechanical Plant</option>
-                  <option value="fm-renovation">Turnkey Bathroom / Kitchen Renovation</option>
-                  <option value="fm-cleaning-deep">Specialist Deep Cleaning &amp; IAQ Decontamination</option>
-                  <option value="fm-pool-care">Swimming Pool Care &amp; Refurbishment</option>
-                  <option value="fm-landscaping">Landscaping, Smart Irrigation &amp; Pest Control</option>
-                  <option value="fm-emergency">24/7 Rapid Emergency Repair Call-Out</option>
+                  <option value="Executive Villa AMC">Executive Villa AMC (Bi-Monthly &bull; Recommended)</option>
+                  <option value="Prestige / Royal Villa AMC">Prestige / Royal Villa AMC (Monthly VIP)</option>
+                  <option value="Essential Care AMC">Essential Care AMC (Standard Residential)</option>
+                  <option value="Corporate & Commercial Building FM">Corporate &amp; Commercial Building FM</option>
+                  <option value="Electrical Maintenance & DB Panels">Electrical Maintenance, DB Panels &amp; Rewiring</option>
+                  <option value="HVAC Servicing & Duct Cleaning">HVAC Servicing &amp; Deep AC Duct Cleaning</option>
+                  <option value="Plumbing & Leak Detection">Plumbing &amp; Acoustic Leak Detection</option>
+                  <option value="Booster Pumps & Mechanical Plant">Water Booster Pumps &amp; Mechanical Plant</option>
+                  <option value="Turnkey Bathroom / Kitchen Renovation">Turnkey Bathroom / Kitchen Renovation</option>
+                  <option value="Specialist Deep Cleaning">Specialist Deep Cleaning &amp; IAQ Decontamination</option>
+                  <option value="Swimming Pool Care">Swimming Pool Care &amp; Refurbishment</option>
+                  <option value="Landscaping & Pest Control">Landscaping, Smart Irrigation &amp; Pest Control</option>
+                  <option value="24/7 Rapid Emergency Repair">24/7 Rapid Emergency Repair Call-Out</option>
                 </optgroup>
                 <optgroup label="Civil &amp; Heavy Infrastructure">
-                  <option value="civil-highways">Roads, Car Parking Shades &amp; Internal Networks</option>
-                  <option value="civil-airports">Airports &amp; Airfield Infrastructure</option>
-                  <option value="civil-bridges">Bridges, Piling &amp; Civil Structures</option>
-                  <option value="civil-drainage">Stormwater Drainage &amp; Sewerage Networks</option>
-                  <option value="civil-water-power">Potable Water &amp; Substation Civil Works</option>
-                  <option value="civil-landscaping">Landscaping, External Works &amp; Road Furniture</option>
+                  <option value="Roads & Parking Shades">Roads, Car Parking Shades &amp; Internal Networks</option>
+                  <option value="Airports & Airfield Infrastructure">Airports &amp; Airfield Infrastructure</option>
+                  <option value="Bridges, Piling & Civil Structures">Bridges, Piling &amp; Civil Structures</option>
+                  <option value="Stormwater Drainage & Sewerage">Stormwater Drainage &amp; Sewerage Networks</option>
+                  <option value="Potable Water & Substation Civil">Potable Water &amp; Substation Civil Works</option>
+                  <option value="Civil Landscaping & Road Furniture">Landscaping, External Works &amp; Road Furniture</option>
                 </optgroup>
                 <optgroup label="Interior Design &amp; Fit-Out">
-                  <option value="residential-villa">Residential — Luxury Villa / Penthouse</option>
-                  <option value="commercial-office">Commercial — Corporate Office / Workspace</option>
-                  <option value="hospitality-hotel">Hospitality — Hotel / Resort / Lounge</option>
-                  <option value="renovation-complete">Full Turnkey Renovation &amp; Remodeling</option>
-                  <option value="custom-joinery">Custom Furniture &amp; Bespoke Joinery Only</option>
-                  <option value="property-staging">Property Staging &amp; Turnkey Furnishing</option>
+                  <option value="Residential Luxury Villa">Residential — Luxury Villa / Penthouse</option>
+                  <option value="Commercial Office Fit-Out">Commercial — Corporate Office / Workspace</option>
+                  <option value="Hospitality Hotel Fit-Out">Hospitality — Hotel / Resort / Lounge</option>
+                  <option value="Full Turnkey Renovation">Full Turnkey Renovation &amp; Remodeling</option>
+                  <option value="Custom Furniture & Joinery">Custom Furniture &amp; Bespoke Joinery Only</option>
+                  <option value="Property Staging & Furnishing">Property Staging &amp; Turnkey Furnishing</option>
                 </optgroup>
               </select>
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Project Location *</label>
-              <select class="consultation-select" required>
+              <select name="projectLocation" class="consultation-select" required>
                 <option value="">Select Region...</option>
-                <option value="abu-dhabi">Abu Dhabi (Al Raha, Yas, Saadiyat, Reem, City)</option>
-                <option value="dubai">Dubai (Palm Jumeirah, Hills, Marina, Downtown)</option>
-                <option value="sharjah">Sharjah &amp; Northern Emirates</option>
-                <option value="india">India (Ashaz Engineering Regional Hub)</option>
-                <option value="international">Other Regional / International</option>
+                <option value="Abu Dhabi">Abu Dhabi (Al Raha, Yas, Saadiyat, Reem, City)</option>
+                <option value="Dubai">Dubai (Palm Jumeirah, Hills, Marina, Downtown)</option>
+                <option value="Sharjah & Northern Emirates">Sharjah &amp; Northern Emirates</option>
+                <option value="India Hub">India (Ashaz Engineering Regional Hub)</option>
+                <option value="Other Regional / International">Other Regional / International</option>
               </select>
             </div>
 
@@ -2791,50 +2791,50 @@
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Required Capabilities (Select All That Apply):</label>
               <div class="checkbox-chips-grid">
                 <label class="checkbox-chip">
-                  <input type="checkbox" checked> <span>Annual Maintenance Contract (AMC)</span>
+                  <input type="checkbox" name="capabilities" value="Annual Maintenance Contract (AMC)" checked> <span>Annual Maintenance Contract (AMC)</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Electrical Maintenance &amp; DB Panels</span>
+                  <input type="checkbox" name="capabilities" value="Electrical Maintenance & DB Panels"> <span>Electrical Maintenance &amp; DB Panels</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>HVAC &amp; AC Duct Cleaning</span>
+                  <input type="checkbox" name="capabilities" value="HVAC & AC Duct Cleaning"> <span>HVAC &amp; AC Duct Cleaning</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Plumbing &amp; Leak Detection</span>
+                  <input type="checkbox" name="capabilities" value="Plumbing & Leak Detection"> <span>Plumbing &amp; Leak Detection</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Swimming Pool Care</span>
+                  <input type="checkbox" name="capabilities" value="Swimming Pool Care"> <span>Swimming Pool Care</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Heavy Civil Engineering</span>
+                  <input type="checkbox" name="capabilities" value="Heavy Civil Engineering"> <span>Heavy Civil Engineering</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Asphalt Roads &amp; Car Parking Shades</span>
+                  <input type="checkbox" name="capabilities" value="Asphalt Roads & Car Parking Shades"> <span>Asphalt Roads &amp; Car Parking Shades</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Deep Utilities &amp; Drainage</span>
+                  <input type="checkbox" name="capabilities" value="Deep Utilities & Drainage"> <span>Deep Utilities &amp; Drainage</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Architectural Interior Fit-Out</span>
+                  <input type="checkbox" name="capabilities" value="Architectural Interior Fit-Out"> <span>Architectural Interior Fit-Out</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>In-House Custom Joinery</span>
+                  <input type="checkbox" name="capabilities" value="In-House Custom Joinery"> <span>In-House Custom Joinery</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Class-A Authority Permits (NOC)</span>
+                  <input type="checkbox" name="capabilities" value="Class-A Authority Permits (NOC)"> <span>Class-A Authority Permits (NOC)</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>MEP &amp; Substation Works</span>
+                  <input type="checkbox" name="capabilities" value="MEP & Substation Works"> <span>MEP &amp; Substation Works</span>
                 </label>
                 <label class="checkbox-chip">
-                  <input type="checkbox"> <span>Painting &amp; Handyman Trades</span>
+                  <input type="checkbox" name="capabilities" value="Painting & Handyman Trades"> <span>Painting &amp; Handyman Trades</span>
                 </label>
               </div>
             </div>
 
             <div class="form-group-full">
               <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Project Scope &amp; Specification Details</label>
-              <textarea class="consultation-textarea" rows="4" placeholder="Briefly specify property type (villa, apartment, commercial building), community location, required AMC package or civil/interior package details, and timeline..."></textarea>
+              <textarea name="projectScopeDetails" class="consultation-textarea" rows="4" placeholder="Briefly specify property type (villa, apartment, commercial building), community location, required AMC package or civil/interior package details, and timeline..."></textarea>
             </div>
           </div>
 

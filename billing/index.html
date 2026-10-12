@@ -758,29 +758,29 @@
           </div>
 
           <div class="service-form-card">
-            <form id="billingForm" onsubmit="event.preventDefault(); alert('Billing inquiry received. Reference: ACC-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Our finance department will review your ledger status and respond via email within 2 business days.'); this.reset();">
+            <form id="billingForm">
               
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-type">Inquiry Nature <span class="req">*</span></label>
-                  <select id="bill-type" class="service-form-select" required>
+                  <select id="bill-type" name="inquiryNature" class="service-form-select" required>
                     <option value="" disabled selected>Select Inquiry Type</option>
-                    <option value="invoice-status">Vendor Invoice Status Verification</option>
-                    <option value="payment-advice">Payment Remittance Advice Request</option>
-                    <option value="po-query">Purchase Order / Contract Value Query</option>
-                    <option value="statement">Statement of Account (SOA) Reconciliation</option>
-                    <option value="client-billing">Client Milestone Billing Query</option>
+                    <option value="Vendor Invoice Status Verification">Vendor Invoice Status Verification</option>
+                    <option value="Payment Remittance Advice Request">Payment Remittance Advice Request</option>
+                    <option value="Purchase Order / Contract Value Query">Purchase Order / Contract Value Query</option>
+                    <option value="Statement of Account Reconciliation">Statement of Account (SOA) Reconciliation</option>
+                    <option value="Client Milestone Billing Query">Client Milestone Billing Query</option>
                   </select>
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-entity">Rayan Group Entity Billed <span class="req">*</span></label>
-                  <select id="bill-entity" class="service-form-select" required>
+                  <select id="bill-entity" name="entityBilled" class="service-form-select" required>
                     <option value="" disabled selected>Select Operating Entity</option>
-                    <option value="rayan-group">Rayan Group</option>
-                    <option value="engineering">Rayan Engineering</option>
-                    <option value="energy">Rayan Energy</option>
-                    <option value="ashaz">Ashaz Engineering (India)</option>
-                    <option value="properties">Rayan Properties</option>
+                    <option value="Rayan Group">Rayan Group</option>
+                    <option value="Rayan Engineering">Rayan Engineering</option>
+                    <option value="Rayan Energy">Rayan Energy</option>
+                    <option value="Ashaz Engineering (India)">Ashaz Engineering (India)</option>
+                    <option value="Rayan Properties">Rayan Properties</option>
                   </select>
                 </div>
               </div>
@@ -788,57 +788,57 @@
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-vendor">Company / Vendor Name <span class="req">*</span></label>
-                  <input type="text" id="bill-vendor" class="service-form-input" required placeholder="Your registered company name">
+                  <input type="text" id="bill-vendor" name="vendorName" class="service-form-input" required placeholder="Your registered company name">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-contact">Contact Person <span class="req">*</span></label>
-                  <input type="text" id="bill-contact" class="service-form-input" required placeholder="Name &amp; Finance Designation">
+                  <input type="text" id="bill-contact" name="contactPerson" class="service-form-input" required placeholder="Name &amp; Finance Designation">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-email">Accounts Email Address <span class="req">*</span></label>
-                  <input type="email" id="bill-email" class="service-form-input" required placeholder="finance@yourcompany.com">
+                  <input type="email" id="bill-email" name="accountsEmail" class="service-form-input" required placeholder="finance@yourcompany.com">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-phone">Phone Number <span class="req">*</span></label>
-                  <input type="tel" id="bill-phone" class="service-form-input" required placeholder="+971 50 123 4567">
+                  <input type="tel" id="bill-phone" name="phoneNumber" class="service-form-input" required placeholder="+971 50 123 4567">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-po">Purchase Order / Contract No <span class="req">*</span></label>
-                  <input type="text" id="bill-po" class="service-form-input" required placeholder="e.g. PO-2024-XXXX">
+                  <input type="text" id="bill-po" name="purchaseOrderNo" class="service-form-input" required placeholder="e.g. PO-2024-XXXX">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-inv">Tax Invoice Number <span class="req">*</span></label>
-                  <input type="text" id="bill-inv" class="service-form-input" required placeholder="e.g. INV-10928">
+                  <input type="text" id="bill-inv" name="taxInvoiceNo" class="service-form-input" required placeholder="e.g. INV-10928">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.5rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-amount">Invoice Amount &amp; Currency <span class="req">*</span></label>
-                  <input type="text" id="bill-amount" class="service-form-input" required placeholder="e.g. AED 125,000.00">
+                  <input type="text" id="bill-amount" name="invoiceAmount" class="service-form-input" required placeholder="e.g. AED 125,000.00">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="bill-date">Invoice Date <span class="req">*</span></label>
-                  <input type="date" id="bill-date" class="service-form-input" required>
+                  <input type="date" id="bill-date" name="invoiceDate" class="service-form-input" required>
                 </div>
               </div>
 
               <div class="service-form-group" style="margin-bottom: 1.5rem;">
                 <label class="service-form-label" for="bill-notes">Inquiry Details &amp; Additional Information</label>
-                <textarea id="bill-notes" class="service-form-textarea" rows="3" placeholder="Provide any additional context, delivery note references, or site engineer sign-off details..."></textarea>
+                <textarea id="bill-notes" name="inquiryNotes" class="service-form-textarea" rows="3" placeholder="Provide any additional context, delivery note references, or site engineer sign-off details..."></textarea>
               </div>
 
               <!-- File Upload for Invoice Copy -->
               <div class="service-form-group" style="margin-bottom: 2rem;">
                 <label class="service-form-label">Attach Tax Invoice &amp; Delivery Note / Sign-off (PDF)</label>
                 <div class="file-dropzone" onclick="document.getElementById('bill-file').click();">
-                  <input type="file" id="bill-file" multiple style="display: none;" onchange="const list = document.getElementById('bill-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
+                  <input type="file" id="bill-file" name="invoiceDocuments" multiple style="display: none;" onchange="const list = document.getElementById('bill-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
                   <div class="file-dropzone-icon">📑</div>
                   <div class="file-dropzone-title">Upload Invoice or Delivery Documents</div>
                   <div class="file-dropzone-desc">Attach signed delivery notes, approved inspection requests, or tax invoice PDFs (Up to 25MB)</div>

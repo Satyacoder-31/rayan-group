@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { readdirSync } from 'fs';
 import chatHandler from './api/chat.js';
 import gitHandler from './api/git.js';
+import emailHandler from './api/send-email.js';
 
 function apiMiddlewarePlugin() {
   return {
@@ -45,6 +46,28 @@ function apiMiddlewarePlugin() {
             };
             try {
               await gitHandler(req, res);
+            } catch (err) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
+        if (req.url.startsWith('/api/send-email')) {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', async () => {
+            if (body) {
+              try { req.body = JSON.parse(body); } catch (e) { req.body = body; }
+            }
+            res.status = (code) => { res.statusCode = code; return res; };
+            res.json = (data) => {
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify(data));
+            };
+            try {
+              await emailHandler(req, res);
             } catch (err) {
               res.statusCode = 500;
               res.end(JSON.stringify({ error: err.message }));

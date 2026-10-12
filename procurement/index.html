@@ -782,46 +782,46 @@
           </div>
 
           <div class="service-form-card">
-            <form id="vendorForm" onsubmit="event.preventDefault(); alert('Vendor registration received. Reference: VND-RYN-' + Math.floor(100000 + Math.random() * 900000) + '. Dossier routed to vendors@rayan-group.com. Our procurement audit team will verify your documentation within 3-5 business days.'); this.reset();">
+            <form id="vendorForm">
               
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-company">Company Legal Name <span class="req">*</span></label>
-                  <input type="text" id="vnd-company" class="service-form-input" required placeholder="e.g. Gulf Structural Steel L.L.C.">
+                  <input type="text" id="vnd-company" name="companyLegalName" class="service-form-input" required placeholder="e.g. Gulf Structural Steel L.L.C.">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-license">Trade License / Commercial Reg. No <span class="req">*</span></label>
-                  <input type="text" id="vnd-license" class="service-form-input" required placeholder="e.g. CN-1234567">
+                  <input type="text" id="vnd-license" name="tradeLicenseNo" class="service-form-input" required placeholder="e.g. CN-1234567">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-country">Jurisdiction / Emirate <span class="req">*</span></label>
-                  <select id="vnd-country" class="service-form-select" required>
+                  <select id="vnd-country" name="jurisdiction" class="service-form-select" required>
                     <option value="" disabled selected>Select Jurisdiction</option>
-                    <option value="ad">Abu Dhabi, UAE</option>
-                    <option value="dxb">Dubai, UAE</option>
-                    <option value="rak">Ras Al Khaimah / Northern Emirates, UAE</option>
-                    <option value="ksa">Kingdom of Saudi Arabia</option>
-                    <option value="in">India / South Asia</option>
-                    <option value="intl">Other International</option>
+                    <option value="Abu Dhabi, UAE">Abu Dhabi, UAE</option>
+                    <option value="Dubai, UAE">Dubai, UAE</option>
+                    <option value="Ras Al Khaimah / Northern Emirates, UAE">Ras Al Khaimah / Northern Emirates, UAE</option>
+                    <option value="Kingdom of Saudi Arabia">Kingdom of Saudi Arabia</option>
+                    <option value="India / South Asia">India / South Asia</option>
+                    <option value="Other International">Other International</option>
                   </select>
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-category">Primary Supply Category <span class="req">*</span></label>
-                  <select id="vnd-category" class="service-form-select" required>
+                  <select id="vnd-category" name="primarySupplyCategory" class="service-form-select" required>
                     <option value="" disabled selected>Select Supply Category</option>
-                    <option value="civil-materials">Civil &amp; Structural Building Materials (Steel, Concrete, Aggregates)</option>
-                    <option value="interior-design">Interior Design &amp; Turnkey Fit-Out (Residential, Commercial &amp; Joinery)</option>
-                    <option value="facilities-management">Facilities Management &amp; Property Maintenance (FM / AMC, HVAC, MEP)</option>
-                    <option value="mep">MEP Equipment, Switchgear &amp; HVAC</option>
-                    <option value="fabrication">Structural Steel, Precast &amp; Fabrication Modules</option>
-                    <option value="energy">Piping, Valves, Pressure Vessels &amp; Process Equipment</option>
-                    <option value="machinery">Heavy Equipment Rental &amp; Logistics Fleets</option>
-                    <option value="subcontracting">Specialized Subcontracting (Civil, Waterproofing, Piling)</option>
-                    <option value="safety">QHSE, Safety Wear &amp; Environmental Services</option>
-                    <option value="other">Other Commercial Services</option>
+                    <option value="Civil & Structural Building Materials">Civil &amp; Structural Building Materials (Steel, Concrete, Aggregates)</option>
+                    <option value="Interior Design & Turnkey Fit-Out">Interior Design &amp; Turnkey Fit-Out (Residential, Commercial &amp; Joinery)</option>
+                    <option value="Facilities Management & Property Maintenance">Facilities Management &amp; Property Maintenance (FM / AMC, HVAC, MEP)</option>
+                    <option value="MEP Equipment, Switchgear & HVAC">MEP Equipment, Switchgear &amp; HVAC</option>
+                    <option value="Structural Steel, Precast & Fabrication Modules">Structural Steel, Precast &amp; Fabrication Modules</option>
+                    <option value="Piping, Valves & Process Equipment">Piping, Valves, Pressure Vessels &amp; Process Equipment</option>
+                    <option value="Heavy Equipment Rental & Logistics Fleets">Heavy Equipment Rental &amp; Logistics Fleets</option>
+                    <option value="Specialized Subcontracting">Specialized Subcontracting (Civil, Waterproofing, Piling)</option>
+                    <option value="QHSE & Safety Services">QHSE, Safety Wear &amp; Environmental Services</option>
+                    <option value="Other Commercial Services">Other Commercial Services</option>
                   </select>
                 </div>
               </div>
@@ -829,22 +829,22 @@
               <div class="form-grid-2col" style="margin-bottom: 1.25rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-contact">Primary Contact Person <span class="req">*</span></label>
-                  <input type="text" id="vnd-contact" class="service-form-input" required placeholder="Name &amp; Designation">
+                  <input type="text" id="vnd-contact" name="contactPerson" class="service-form-input" required placeholder="Name &amp; Designation">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-email">Corporate Email Address <span class="req">*</span></label>
-                  <input type="email" id="vnd-email" class="service-form-input" required placeholder="procurement@yourcompany.com">
+                  <input type="email" id="vnd-email" name="corporateEmail" class="service-form-input" required placeholder="procurement@yourcompany.com">
                 </div>
               </div>
 
               <div class="form-grid-2col" style="margin-bottom: 1.5rem;">
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-phone">Telephone / Mobile Number <span class="req">*</span></label>
-                  <input type="tel" id="vnd-phone" class="service-form-input" required placeholder="+971 2 123 4567">
+                  <input type="tel" id="vnd-phone" name="telephoneNumber" class="service-form-input" required placeholder="+971 2 123 4567">
                 </div>
                 <div class="service-form-group">
                   <label class="service-form-label" for="vnd-vat">VAT / TRN Registration No <span class="req">*</span></label>
-                  <input type="text" id="vnd-vat" class="service-form-input" required placeholder="100-XXXX-XXXX-XXXX">
+                  <input type="text" id="vnd-vat" name="vatTrnRegistration" class="service-form-input" required placeholder="100-XXXX-XXXX-XXXX">
                 </div>
               </div>
 
@@ -852,7 +852,7 @@
               <div class="service-form-group" style="margin-bottom: 2rem;">
                 <label class="service-form-label">Vendor Dossier Upload (Trade License, VAT Certificate &amp; Profile) <span class="req">*</span></label>
                 <div class="file-dropzone" onclick="document.getElementById('vnd-file').click();">
-                  <input type="file" id="vnd-file" multiple style="display: none;" required onchange="const list = document.getElementById('vnd-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
+                  <input type="file" id="vnd-file" name="dossierFiles" multiple style="display: none;" required onchange="const list = document.getElementById('vnd-file-name'); list.textContent = this.files.length ? Array.from(this.files).map(f => f.name).join(', ') : '';">
                   <div class="file-dropzone-icon">📋</div>
                   <div class="file-dropzone-title">Upload Prequalification Dossier</div>
                   <div class="file-dropzone-desc">Attach Trade License, VAT certificate, company profile, and ISO certifications (PDF, ZIP up to 50MB)</div>
@@ -862,7 +862,7 @@
 
               <div style="margin-bottom: 1.5rem;">
                 <label style="display: flex; gap: 0.65rem; font-size: 0.85rem; color: #94a3b8; cursor: pointer;">
-                  <input type="checkbox" required style="accent-color: #0099e6; margin-top: 0.2rem;">
+                  <input type="checkbox" name="complianceCertification" required style="accent-color: #0099e6; margin-top: 0.2rem;">
                   <span>I certify that all information submitted is true and accurate, and that my organization adheres to Rayan Group's Supplier Code of Conduct and Zero-Bribery standards.</span>
                 </label>
               </div>
