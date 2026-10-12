@@ -119,13 +119,13 @@ function renderHeader(activePath = '/') {
                     <div class="mega-link-title"><span>Chairman’s Message</span><span>→</span></div>
                     <div class="mega-link-desc">Strategic address from Founder &amp; Chairman Mr. Arshad Alam Shaikh.</div>
                   </a>
-                  <a href="/leadership/#ceo-message" class="mega-sub-link">
-                    <div class="mega-link-title"><span>CEO’s Message</span><span>→</span></div>
-                    <div class="mega-link-desc">Enterprise vision &amp; execution roadmap from CEO Mrs. Sadaf Fatma.</div>
-                  </a>
                   <a href="/about/#timeline" class="mega-sub-link">
                     <div class="mega-link-title"><span>Corporate Timeline</span><span>→</span></div>
                     <div class="mega-link-desc">Milestones from 2021 founding to multinational expansion.</div>
+                  </a>
+                  <a href="/leadership/#ceo-message" class="mega-sub-link">
+                    <div class="mega-link-title"><span>CEO’s Message</span><span>→</span></div>
+                    <div class="mega-link-desc">Enterprise vision &amp; execution roadmap from CEO Mrs. Sadaf Fatma.</div>
                   </a>
                   <a href="/news/" class="mega-sub-link">
                     <div class="mega-link-title"><span>Corporate Newsroom</span><span>→</span></div>
