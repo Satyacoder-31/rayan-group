@@ -434,15 +434,15 @@ createRoute('news/index.html', {
       <!-- FILTER TABS & INSTANT SEARCH BAR -->
       <div style="background: #091424; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem 1.75rem; margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="news-filter-tabs">
-          <button type="button" class="news-tab-btn active" data-filter="all">All Announcements (8)</button>
-          <button type="button" class="news-tab-btn" data-filter="contracts">Contract Awards (2)</button>
-          <button type="button" class="news-tab-btn" data-filter="handover">Project Handover (2)</button>
-          <button type="button" class="news-tab-btn" data-filter="corporate">Corporate &amp; Legal (2)</button>
-          <button type="button" class="news-tab-btn" data-filter="qhse">QHSE &amp; Safety (1)</button>
-          <button type="button" class="news-tab-btn" data-filter="regional">Regional Hubs (1)</button>
+          <button type="button" class="news-tab-btn active" data-filter="all" onclick="filterNewsCategory('all', this)">All Announcements (8)</button>
+          <button type="button" class="news-tab-btn" data-filter="contracts" onclick="filterNewsCategory('contracts', this)">Contract Awards (2)</button>
+          <button type="button" class="news-tab-btn" data-filter="handover" onclick="filterNewsCategory('handover', this)">Project Handover (2)</button>
+          <button type="button" class="news-tab-btn" data-filter="corporate" onclick="filterNewsCategory('corporate', this)">Corporate &amp; Legal (2)</button>
+          <button type="button" class="news-tab-btn" data-filter="qhse" onclick="filterNewsCategory('qhse', this)">QHSE &amp; Safety (1)</button>
+          <button type="button" class="news-tab-btn" data-filter="regional" onclick="filterNewsCategory('regional', this)">Regional Hubs (1)</button>
         </div>
         <div style="min-width: 260px; position: relative;">
-          <input type="text" id="news-search-input" placeholder="Search news, contracts, keywords..." style="width: 100%; background: #06101c; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.65rem 1rem 0.65rem 2.25rem; border-radius: 8px; font-size: 0.85rem; outline: none; transition: border-color 0.2s ease;">
+          <input type="text" id="news-search-input" oninput="filterNewsSearch(this.value)" placeholder="Search news, contracts, keywords..." style="width: 100%; background: #06101c; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.65rem 1rem 0.65rem 2.25rem; border-radius: 8px; font-size: 0.85rem; outline: none; transition: border-color 0.2s ease;">
           <svg style="position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #94a3b8;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
         </div>
       </div>
@@ -451,10 +451,12 @@ createRoute('news/index.html', {
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2.25rem; margin-bottom: 5rem;" id="news-grid-container">
         
         <!-- Article 1: Contract Award -->
-        <article class="news-card-item" data-category="contracts" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="contracts" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/news/rayan-group-expands-offshore-portfolio/'">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/news/contract-signing.jpg" alt="Commercial EPC Award" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 153, 230, 0.3);">
+            <a href="/news/rayan-group-expands-offshore-portfolio/" style="display: block; width: 100%; height: 100%;">
+              <img src="/assets/images/news/contract-signing.jpg" alt="Commercial EPC Award" style="width: 100%; height: 100%; object-fit: cover;">
+            </a>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 153, 230, 0.3); pointer-events: none;">
               ABU DHABI HQ
             </span>
           </div>
@@ -465,7 +467,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">OCTOBER 2026</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Rayan Group Awarded Major Turnkey Commercial &amp; Infrastructure EPC Works
+              <a href="/news/rayan-group-expands-offshore-portfolio/" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Rayan Group Awarded Major Turnkey Commercial &amp; Infrastructure EPC Works</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Turnkey civil construction, MEP integration, and advanced structural execution for landmark developments in Abu Dhabi.
@@ -478,10 +480,12 @@ createRoute('news/index.html', {
         </article>
 
         <!-- Article 2: India Registered Trademark Awarded -->
-        <article class="news-card-item" data-category="corporate" style="background: #0c1828; border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="corporate" style="background: #0c1828; border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) openNewsModal('article-2')">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/news/ashaz-expansion.jpg" alt="India Trademark Sealed" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #38bdf8; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.3);">
+            <div role="button" tabindex="0" onclick="openNewsModal('article-2')" style="display: block; width: 100%; height: 100%; cursor: pointer;">
+              <img src="/assets/images/news/ashaz-expansion.jpg" alt="India Trademark Sealed" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #38bdf8; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.3); pointer-events: none;">
               GOVT. OF INDIA TRADEMARK
             </span>
           </div>
@@ -492,7 +496,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">AUGUST 2026</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Rayan Group (India) Officially Awarded Registered Trade Mark No. 6580565 Under Class 37
+              <a href="javascript:void(0)" onclick="openNewsModal('article-2')" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Rayan Group (India) Officially Awarded Registered Trade Mark No. 6580565 Under Class 37</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Certificate of Registration sealed by Trade Marks Registry, Mumbai, establishing protected intellectual property across construction contracting and civil engineering services.
@@ -505,10 +509,12 @@ createRoute('news/index.html', {
         </article>
 
         <!-- Article 3: Project Handover (Waldorf Astoria) -->
-        <article class="news-card-item" data-category="handover" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="handover" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/projects/waldorf-astoria-renovation-rak/'">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Overhaul" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #10b981; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+            <a href="/projects/waldorf-astoria-renovation-rak/" style="display: block; width: 100%; height: 100%;">
+              <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Overhaul" style="width: 100%; height: 100%; object-fit: cover;">
+            </a>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #10b981; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3); pointer-events: none;">
               HOSPITALITY FIT-OUT
             </span>
           </div>
@@ -519,7 +525,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">NOVEMBER 2025</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Successful Handover: Waldorf Astoria Luxury Hospitality Overhaul in RAK
+              <a href="/projects/waldorf-astoria-renovation-rak/" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Successful Handover: Waldorf Astoria Luxury Hospitality Overhaul in RAK</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Full-scope interior fit-out, acoustic MEP reconfiguration, and luxury guestroom modernization delivered in partnership with Brock Construction.
@@ -532,10 +538,12 @@ createRoute('news/index.html', {
         </article>
 
         <!-- Article 4: Triple ISO Accreditation -->
-        <article class="news-card-item" data-category="qhse" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="qhse" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/sustainability/'">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/sustainability/iso-45001.jpg" alt="Triple ISO Accreditation" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #00c7b3; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 199, 179, 0.3);">
+            <a href="/sustainability/" style="display: block; width: 100%; height: 100%;">
+              <img src="/assets/images/sustainability/iso-45001.jpg" alt="Triple ISO Accreditation" style="width: 100%; height: 100%; object-fit: cover;">
+            </a>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #00c7b3; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 199, 179, 0.3); pointer-events: none;">
               TRIPLE ACCREDITATION
             </span>
           </div>
@@ -546,7 +554,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">JANUARY 2026</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Rayan Group Successfully Renews Global Triple ISO Quality &amp; Safety Certifications
+              <a href="/sustainability/" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Rayan Group Successfully Renews Global Triple ISO Quality &amp; Safety Certifications</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Achieving full compliance across ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 audits across all construction yards and regional engineering hubs.
@@ -559,10 +567,12 @@ createRoute('news/index.html', {
         </article>
 
         <!-- Article 5: Ashaz Engineering Steel Fabrication -->
-        <article class="news-card-item" data-category="regional" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="regional" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/business/ashaz/'">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/business/01-engineering.jpg" alt="Ashaz Steel Fabrication" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #00c7b3; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 199, 179, 0.3);">
+            <a href="/business/ashaz/" style="display: block; width: 100%; height: 100%;">
+              <img src="/assets/images/business/01-engineering.jpg" alt="Ashaz Steel Fabrication" style="width: 100%; height: 100%; object-fit: cover;">
+            </a>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #00c7b3; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 199, 179, 0.3); pointer-events: none;">
               SOUTH ASIA HUB
             </span>
           </div>
@@ -573,7 +583,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">SEPTEMBER 2025</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Ashaz Engineering Expands Heavy Structural Steel Fabrication Facilities
+              <a href="/business/ashaz/" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Ashaz Engineering Expands Heavy Structural Steel Fabrication Facilities</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Commissioning advanced CNC profiling, automated submerged arc welding lines, and pre-engineered building fabrication capacity in Bettiah (Bihar) and New Delhi.
@@ -586,10 +596,12 @@ createRoute('news/index.html', {
         </article>
 
         <!-- Article 6: Energy Substation EPC -->
-        <article class="news-card-item" data-category="contracts" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="contracts" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/business/energy/'">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/business/04-energy.jpg" alt="Rayan Energy Substation" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #10b981; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">
+            <a href="/business/energy/" style="display: block; width: 100%; height: 100%;">
+              <img src="/assets/images/business/04-energy.jpg" alt="Rayan Energy Substation" style="width: 100%; height: 100%; object-fit: cover;">
+            </a>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #10b981; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3); pointer-events: none;">
               POWER INFRASTRUCTURE
             </span>
           </div>
@@ -600,7 +612,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">JULY 2025</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Rayan Energy Delivers High-Precision Substation &amp; Industrial Piping Infrastructure
+              <a href="/business/energy/" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Rayan Energy Delivers High-Precision Substation &amp; Industrial Piping Infrastructure</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Executing turnkey high-voltage transmission, automated substation switchgear, and process pipeline works delivered to stringent international safety standards.
@@ -613,10 +625,12 @@ createRoute('news/index.html', {
         </article>
 
         <!-- Article 7: Interior Design Launch -->
-        <article class="news-card-item" data-category="handover" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="handover" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/services/#interior-work'">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/business/07-interiors.jpg" alt="Interior Fit-Out Launch" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #00c7b3; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 199, 179, 0.3);">
+            <a href="/services/#interior-work" style="display: block; width: 100%; height: 100%;">
+              <img src="/assets/images/business/07-interiors.jpg" alt="Interior Fit-Out Launch" style="width: 100%; height: 100%; object-fit: cover;">
+            </a>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #00c7b3; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 199, 179, 0.3); pointer-events: none;">
               DUBAI DESIGN HUB
             </span>
           </div>
@@ -627,7 +641,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">MARCH 2026</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Rayan Group Introduces Turnkey Interior Design &amp; Architectural Fit-Out Division
+              <a href="/services/#interior-work" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Rayan Group Introduces Turnkey Interior Design &amp; Architectural Fit-Out Division</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Providing luxury residential interior styling, bespoke corporate workspace design, space planning, and turnkey joinery contracting across Dubai and Abu Dhabi.
@@ -640,10 +654,12 @@ createRoute('news/index.html', {
         </article>
 
         <!-- Article 8: Facilities Management Nationwide Expansion -->
-        <article class="news-card-item" data-category="corporate" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="news-card-item" data-category="corporate" style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer;" onclick="if(!event.target.closest('a, button')) window.location.href='/services/#facilities-management'">
           <div style="height: 220px; overflow: hidden; position: relative;">
-            <img src="/assets/images/business/06-mep.jpg" alt="Facilities Management Expansion" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 153, 230, 0.3);">
+            <a href="/services/#facilities-management" style="display: block; width: 100%; height: 100%;">
+              <img src="/assets/images/business/06-mep.jpg" alt="Facilities Management Expansion" style="width: 100%; height: 100%; object-fit: cover;">
+            </a>
+            <span style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(7, 17, 30, 0.85); backdrop-filter: blur(6px); font-size: 0.7rem; font-weight: 700; color: #0099e6; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid rgba(0, 153, 230, 0.3); pointer-events: none;">
               UAE NATIONWIDE
             </span>
           </div>
@@ -654,7 +670,7 @@ createRoute('news/index.html', {
               <span style="font-size: 0.72rem; color: #94a3b8;">APRIL 2026</span>
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 0.85rem;">
-              Rayan Group Announces 24/7 Total Facilities Management &amp; Preventive AMC Packages
+              <a href="/services/#facilities-management" style="color: #fff; text-decoration: none; transition: color 0.2s ease;">Rayan Group Announces 24/7 Total Facilities Management &amp; Preventive AMC Packages</a>
             </h3>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; flex: 1;">
               Full-spectrum HVAC duct cleaning, electrical maintenance, plumbing overhauls, and annual preventive servicing contracts for commercial and residential estates.
@@ -665,6 +681,16 @@ createRoute('news/index.html', {
             </div>
           </div>
         </article>
+
+        <!-- No Results Fallback State -->
+        <div id="news-no-results" style="display: none; grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; background: #0c1828; border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px;">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
+          <h4 style="color: #fff; font-size: 1.2rem; margin-bottom: 0.5rem; font-family: var(--font-heading);">No Announcements Found</h4>
+          <p style="color: #94a3b8; font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">We couldn't find any announcements matching your current category or search criteria.</p>
+          <button type="button" onclick="filterNewsCategory('all', document.querySelector('.news-tab-btn[data-filter=\'all\']'))" class="btn-enterprise-primary" style="background: #00c7b3; border-color: #00c7b3; font-size: 0.85rem; padding: 0.5rem 1.25rem;">
+            VIEW ALL ANNOUNCEMENTS (8)
+          </button>
+        </div>
 
       </div>
 
@@ -859,44 +885,101 @@ createRoute('news/index.html', {
   </style>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Filter Tabs Logic
-      var tabs = document.querySelectorAll('.news-tab-btn');
-      var cards = document.querySelectorAll('.news-card-item');
-      var searchInput = document.getElementById('news-search-input');
+    // Robust Global News Filter Logic
+    var currentNewsCategory = 'all';
+    var currentNewsQuery = '';
 
+    function filterNewsCategory(category, buttonElement) {
+      currentNewsCategory = category || 'all';
+
+      // Update active state on buttons
+      var tabs = document.querySelectorAll('.news-tab-btn');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      if (buttonElement) {
+        buttonElement.classList.add('active');
+      } else {
+        var matching = document.querySelector('.news-tab-btn[data-filter="' + currentNewsCategory + '"]');
+        if (matching) matching.classList.add('active');
+      }
+
+      // Sync URL hash without abrupt jumps
+      try {
+        if (history.replaceState) {
+          var newHash = currentNewsCategory === 'all' ? window.location.pathname + window.location.search : '#' + currentNewsCategory;
+          history.replaceState(null, '', newHash);
+        }
+      } catch (e) {}
+
+      applyNewsFilters();
+    }
+
+    function filterNewsSearch(query) {
+      currentNewsQuery = (query || '').toLowerCase().trim();
+      applyNewsFilters();
+    }
+
+    function applyNewsFilters() {
+      var cards = document.querySelectorAll('.news-card-item');
+      var noResults = document.getElementById('news-no-results');
+      var visibleCount = 0;
+
+      cards.forEach(function(card) {
+        var cardCategory = card.getAttribute('data-category') || '';
+        var cardText = (card.textContent || '').toLowerCase();
+        var matchesCategory = (currentNewsCategory === 'all' || cardCategory === currentNewsCategory);
+        var matchesQuery = (!currentNewsQuery || cardText.indexOf(currentNewsQuery) !== -1);
+
+        if (matchesCategory && matchesQuery) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      if (noResults) {
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+    }
+
+    window.filterNewsCategory = filterNewsCategory;
+    window.filterNewsSearch = filterNewsSearch;
+    window.applyNewsFilters = applyNewsFilters;
+
+    function initNewsOnReady() {
+      // Add event listeners as fallback
+      var tabs = document.querySelectorAll('.news-tab-btn');
       tabs.forEach(function(tab) {
-        tab.addEventListener('click', function() {
-          tabs.forEach(function(t) { t.classList.remove('active'); });
-          tab.classList.add('active');
+        tab.addEventListener('click', function(e) {
           var filter = tab.getAttribute('data-filter');
-          applyFilters(filter, searchInput ? searchInput.value.toLowerCase() : '');
+          filterNewsCategory(filter, tab);
         });
       });
 
+      var searchInput = document.getElementById('news-search-input');
       if (searchInput) {
         searchInput.addEventListener('input', function() {
-          var activeTab = document.querySelector('.news-tab-btn.active');
-          var filter = activeTab ? activeTab.getAttribute('data-filter') : 'all';
-          applyFilters(filter, searchInput.value.toLowerCase());
+          filterNewsSearch(searchInput.value);
         });
       }
 
-      function applyFilters(category, query) {
-        cards.forEach(function(card) {
-          var cardCategory = card.getAttribute('data-category');
-          var cardText = card.textContent.toLowerCase();
-          var matchesCategory = (category === 'all' || cardCategory === category);
-          var matchesQuery = !query || cardText.indexOf(query) !== -1;
-
-          if (matchesCategory && matchesQuery) {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
-        });
+      // Check initial URL hash
+      var hash = (window.location.hash || '').replace('#', '').trim();
+      if (hash && ['contracts', 'handover', 'corporate', 'qhse', 'regional', 'all'].indexOf(hash) !== -1) {
+        var targetTab = document.querySelector('.news-tab-btn[data-filter="' + hash + '"]');
+        if (targetTab) {
+          filterNewsCategory(hash, targetTab);
+          return;
+        }
       }
-    });
+      applyNewsFilters();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initNewsOnReady);
+    } else {
+      initNewsOnReady();
+    }
 
     var newsModalData = {
       'article-1': {
