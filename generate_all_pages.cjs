@@ -838,8 +838,8 @@ createRoute('sustainability/index.html', {
         <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.5rem;">
           <span style="font-size: 0.75rem; font-weight: 700; color: #c5a059; letter-spacing: 0.1em; text-transform: uppercase;">PILLAR 03</span>
           <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1rem; text-transform: uppercase;">FIDUCIARY GOVERNANCE</h3>
-          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
-            Zero-tolerance bribery and corruption policy, transparent ESG disclosures, independent audit committees, and strict corporate ethics compliance.
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.7;">
+            RAYAN Group upholds the highest standards of corporate governance, integrity, and accountability through a <strong style="color: #fbbf24;">zero-tolerance policy toward bribery and corruption</strong>, transparent ESG reporting, independent audit oversight, and rigorous compliance with applicable laws, regulations, and ethical business practices across all operations.
           </p>
         </div>
       </div>
