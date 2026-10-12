@@ -214,7 +214,7 @@ const servicesContent = `
         <!-- 3. Hospitality Interior Design -->
         <div class="interior-card" id="hospitality">
           <div class="interior-card-image-wrap">
-            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Hospitality Interior Design - 5-Star Hotel Renovation" class="interior-card-img" loading="lazy">
+            <img src="/assets/images/services/hospitality-interior-luxury-suite.jpg" alt="Hospitality Interior Design - 5-Star Hotel Grand Lounge &amp; Suite Overhaul" class="interior-card-img" loading="lazy">
             <span class="interior-card-badge">5-STAR HOSPITALITY</span>
           </div>
           <div class="interior-card-body">
