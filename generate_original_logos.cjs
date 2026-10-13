@@ -304,7 +304,7 @@ async function main() {
   const brands = [
     { id: 'rayan-energy', file: 'Logo-1.pdf', ashaz: false, themeColor: '#10b981' },
     { id: 'rayan-engineering', file: 'Logo-2 (1).pdf', ashaz: false, themeColor: '#00c7b3' },
-    { id: 'rayan-properties', file: 'Logo-1 (1).pdf', ashaz: false, themeColor: '#248c91' },
+    { id: 'rayan-properties', file: 'Logo-1 (1).pdf', ashaz: false, themeColor: '#fbbf24' },
     { id: 'ashaz-engineering', file: 'Logo-4.pdf', ashaz: true, themeColor: '#14949b' }
   ];
 

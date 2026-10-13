@@ -39,12 +39,12 @@ const brands = [
     label: 'PROPERTIES',
     fontSpacing: '0.22em',
     textX: 118,
-    // Symbol colors from official PDF logo:
+    // Symbol colors for Rayan Properties (Upcoming):
     upperLight: '#002136', // deep navy
-    lowerLight: '#248c91', // teal
-    upperDark: '#cbd5e1',  // light slate on dark card
-    lowerDark: '#248c91',  // vivid teal
-    themeColor: '#248c91'
+    lowerLight: '#d97706', // warm amber on light background
+    upperDark: '#ffffff',  // clean white on dark card
+    lowerDark: '#fbbf24',  // golden yellow / amber
+    themeColor: '#fbbf24'  // golden yellow / amber
   }
 ];
 
