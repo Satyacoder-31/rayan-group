@@ -19,14 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $configFile = __DIR__ . '/config.php';
 
 function getActiveAdminPassword($configFile, $pdo) {
-    // 1. Check config.php (highest priority for Hostinger File Manager edits)
+    // 1. Check config.php via direct read (bypasses PHP OPcache bytecode caching for instant updates)
     if (file_exists($configFile)) {
-        try {
-            $conf = include $configFile;
-            if (is_array($conf) && !empty($conf['admin_password'])) {
-                return (string)$conf['admin_password'];
-            }
-        } catch (Exception $e) {}
+        $content = @file_get_contents($configFile);
+        if ($content && preg_match("/['\"]admin_password['\"]\s*=>\s*['\"]([^'\"]+)['\"]/", $content, $matches)) {
+            return (string)$matches[1];
+        }
     }
 
     // 2. Check MySQL admin_settings table
