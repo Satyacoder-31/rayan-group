@@ -59,6 +59,43 @@ $response = [
     'sync_results' => []
 ];
 
+if (isset($_GET['inspect'])) {
+    $target = $_GET['inspect'];
+    $out = [];
+    if ($target === 'waldorf') {
+        $rootWaldorf = $rootDir . '/projects/waldorf-astoria-renovation-rak/index.html';
+        $siteWaldorf = $siteDir . '/projects/waldorf-astoria-renovation-rak/index.html';
+        $distWaldorf = $sourceDir . '/projects/waldorf-astoria-renovation-rak/index.html';
+        $out['root_exists'] = file_exists($rootWaldorf);
+        $out['root_mtime'] = file_exists($rootWaldorf) ? date('Y-m-d H:i:s', filemtime($rootWaldorf)) : null;
+        $out['site_exists'] = file_exists($siteWaldorf);
+        $out['site_mtime'] = file_exists($siteWaldorf) ? date('Y-m-d H:i:s', filemtime($siteWaldorf)) : null;
+        $out['dist_exists'] = file_exists($distWaldorf);
+        $out['dist_mtime'] = file_exists($distWaldorf) ? date('Y-m-d H:i:s', filemtime($distWaldorf)) : null;
+
+        // Check git status in siteDir if possible
+        if (is_dir($siteDir . '/.git')) {
+            $gitStatus = @shell_exec("cd " . escapeshellarg($siteDir) . " && git status -s 2>&1");
+            $out['git_status'] = $gitStatus;
+            $gitLog = @shell_exec("cd " . escapeshellarg($siteDir) . " && git log -n 1 --oneline 2>&1");
+            $out['git_latest_commit'] = $gitLog;
+        }
+        // Check root index.html featured projects
+        $rootIndex = $rootDir . '/index.html';
+        if (file_exists($rootIndex)) {
+            $content = file_get_contents($rootIndex);
+            $out['root_index_contains_police'] = strpos($content, 'Dubai Police Academy Tactical Facility') !== false;
+            $out['root_index_contains_waldorf'] = strpos($content, 'Waldorf Astoria Hotel Luxury Renovation') !== false;
+            $posPolice = strpos($content, 'Dubai Police Academy');
+            $posWaldorf = strpos($content, 'Waldorf Astoria');
+            $out['order'] = ($posPolice !== false && $posWaldorf !== false) ? ($posPolice < $posWaldorf ? 'Police before Waldorf' : 'Waldorf before Police') : 'not found';
+        }
+    }
+    $response['inspection'] = $out;
+    echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
 // 2. Verify and initialize Hostinger MySQL Database
 if (file_exists(__DIR__ . '/db.php')) {
     require_once __DIR__ . '/db.php';
