@@ -23,7 +23,13 @@ createRoute('investors/index.html', {
     title: 'PRIVATE GROUP PROFILE',
     description: 'Operating as a privately held multinational conglomerate with prudent capital allocation, independent oversight, and long-term industrial commitment.',
     breadcrumb: [{ label: 'Home', href: '/' }, { label: 'Corporate Profile', href: '/investors/' }],
-    bgImage: '/assets/images/about/overview.jpg'
+    bgImage: '/assets/images/about/overview.jpg',
+    subnav: [
+      { label: 'Corporate Profile', href: '/investors/', active: true },
+      { label: 'Governance Charters', href: '/investors/corporate-governance/', active: false },
+      { label: 'Executive Leadership', href: '/leadership/', active: false },
+      { label: 'Board Committees', href: '/leadership/#committees', active: false }
+    ]
   }),
   content: `
   <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
@@ -77,6 +83,16 @@ createRoute('investors/index.html', {
               <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">Strict corporate safety governance aligned with ISO 9001:2015, ISO 14001:2015, and ISO 45001:2018 certifications.</p>
             </div>
           </div>
+        <!-- Corporate Governance Charters Link -->
+        <div style="background: rgba(0,153,230,0.06); border: 1px solid rgba(0,153,230,0.25); border-radius: 12px; padding: 2rem; margin-bottom: 3.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
+          <div>
+            <span style="font-size: 0.72rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.1em;">BOARD MANDATES &amp; COMPLIANCE</span>
+            <h4 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0.25rem 0 0.4rem;">Corporate Governance Charters &amp; Framework</h4>
+            <p style="color: #94a3b8; font-size: 0.88rem; margin: 0; line-height: 1.6;">Detailed institutional charters, committee mandates, statutory IFRS auditing controls, and anti-corruption policies.</p>
+          </div>
+          <a href="/investors/corporate-governance/" class="btn-enterprise-secondary" style="padding: 0.55rem 1.25rem; font-size: 0.82rem;">
+            <span>VIEW CHARTERS</span> <span>→</span>
+          </a>
         </div>
 
         <!-- Partnership Contact -->

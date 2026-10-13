@@ -373,7 +373,7 @@ createRoute('leadership/index.html', {
       { label: 'CEO’s Message', href: '#ceo-message', active: false },
       { label: 'Ashaz India Board', href: '#ashaz-board', active: false },
       { label: 'Board Committees', href: '#committees', active: false },
-      { label: 'Corporate Governance', href: '/investors/corporate-governance/', active: false }
+      { label: 'Corporate Governance', href: '#governance', active: false }
     ]
   }),
   content: `
@@ -792,6 +792,110 @@ createRoute('leadership/index.html', {
       </div>
     </div>
   </section>
+
+  <!-- ========================================================================= -->
+  <!-- CORPORATE GOVERNANCE FRAMEWORK SECTION                                    -->
+  <!-- ========================================================================= -->
+  <section id="governance" class="section" style="padding: 6.5rem 0; background: linear-gradient(180deg, #050b14 0%, #07111e 100%); border-top: 1px solid rgba(255,255,255,0.08);">
+    <div class="container">
+      <div style="text-align: center; max-width: 820px; margin: 0 auto 4rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">INSTITUTIONAL INTEGRITY &amp; FIDUCIARY RIGOR</span>
+        <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 2.75rem); font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.5rem 0 1rem;">CORPORATE GOVERNANCE FRAMEWORK</h2>
+        <p style="color: #94a3b8; font-size: 1.05rem; line-height: 1.7; margin: 0;">
+          RAYAN Group upholds rigorous institutional governance, statutory compliance, board accountability, and transparent fiduciary oversight across all operations in the United Arab Emirates and the Republic of India.
+        </p>
+      </div>
+
+      <!-- Core Governance Pillars -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+        
+        <!-- Pillar 1 -->
+        <div style="background: #0c1828; border: 1px solid rgba(0,153,230,0.25); border-radius: 12px; padding: 2.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="width: 48px; height: 48px; border-radius: 10px; background: rgba(0,153,230,0.12); border: 1px solid rgba(0,153,230,0.3); display: flex; align-items: center; justify-content: center; color: #0099e6; margin-bottom: 1.25rem;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Board Oversight &amp; Fiduciary Responsibility</h3>
+            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0;">
+              Clear segregation between strategic board guidance and executive management ensures unbiased scrutiny, prudential risk limits, and disciplined capital allocation across multibillion-dirham EPC undertakings.
+            </p>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem; color: #0099e6; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
+            Executive Board Stewardship
+          </div>
+        </div>
+
+        <!-- Pillar 2 -->
+        <div style="background: #0c1828; border: 1px solid rgba(0,199,179,0.25); border-radius: 12px; padding: 2.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="width: 48px; height: 48px; border-radius: 10px; background: rgba(0,199,179,0.12); border: 1px solid rgba(0,199,179,0.3); display: flex; align-items: center; justify-content: center; color: #00c7b3; margin-bottom: 1.25rem;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Independent Financial Audits &amp; IFRS</h3>
+            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0;">
+              Annual accounts, project-level balance sheets, and tax filings undergo comprehensive external audits by licensed international accounting firms, adhering strictly to International Financial Reporting Standards (IFRS).
+            </p>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem; color: #00c7b3; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
+            IFRS &amp; Statutory Alignment
+          </div>
+        </div>
+
+        <!-- Pillar 3 -->
+        <div style="background: #0c1828; border: 1px solid rgba(245,158,11,0.25); border-radius: 12px; padding: 2.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="width: 48px; height: 48px; border-radius: 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); display: flex; align-items: center; justify-content: center; color: #fbbf24; margin-bottom: 1.25rem;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 6 4-6 4Z"/></svg>
+            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Zero-Tolerance Anti-Bribery &amp; Ethics</h3>
+            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0;">
+              Mandatory Code of Business Conduct across 100% of executive staff and subcontractors. Strict zero-tolerance against bribery, conflicts of interest, and corrupt practices across procurement and tendering.
+            </p>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
+            Ethical Supply Chain Mandate
+          </div>
+        </div>
+
+        <!-- Pillar 4 -->
+        <div style="background: #0c1828; border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; padding: 2.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="width: 48px; height: 48px; border-radius: 10px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; color: #10b981; margin-bottom: 1.25rem;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem;">Whistleblower &amp; Integrity Reporting</h3>
+            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0;">
+              Secure, confidential, and anonymous reporting channel routed directly to the independent Audit &amp; Risk Committee, ensuring complete protection from retaliation for all employees and partners.
+            </p>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
+            Confidential Reporting Hotline
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Governance Deep-Dive Banner -->
+      <div style="background: linear-gradient(135deg, #091a2e 0%, #061320 100%); border: 1px solid rgba(0,153,230,0.3); border-radius: 16px; padding: clamp(2rem, 4vw, 3rem); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+        <div style="max-width: 650px;">
+          <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #0099e6;">STATUTORY &amp; PRIVATE ENTERPRISE DISCLOSURES</span>
+          <h3 style="font-family: var(--font-heading); font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Explore Full Corporate Governance Charters</h3>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin: 0;">
+            Review our complete private multinational structure, legal charters, statutory audit standards, and joint venture governance protocols.
+          </p>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <a href="/investors/corporate-governance/" class="btn-enterprise-primary">
+            <span>GOVERNANCE CHARTERS</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="/investors/" class="btn-enterprise-secondary">
+            <span>CORPORATE PROFILE</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
   `
 });
 
@@ -882,4 +986,218 @@ createRoute('sustainability/index.html', {
   `
 });
 
-console.log('Generated About, Leadership & Sustainability pages.');
+// ============================================================================
+// 15. CORPORATE GOVERNANCE PAGE (investors/corporate-governance/index.html)
+// ============================================================================
+createRoute('investors/corporate-governance/index.html', {
+  title: 'Corporate Governance Charters & Framework',
+  description: 'Rayan Group corporate governance charters, board oversight, independent audit policies, and statutory compliance standards directing operations across UAE and India.',
+  activePath: '/investors/corporate-governance/',
+  heroHtml: renderPageHero({
+    category: 'GOVERNANCE & FIDUCIARY EXCELLENCE',
+    title: 'CORPORATE GOVERNANCE CHARTERS',
+    description: 'Institutional governance architecture, board committee mandates, independent auditing controls, and statutory compliance standards directing Rayan Group across the UAE and South Asia.',
+    breadcrumb: [
+      { label: 'Home', href: '/' },
+      { label: 'Corporate Profile', href: '/investors/' },
+      { label: 'Corporate Governance', href: '/investors/corporate-governance/' }
+    ],
+    bgImage: '/assets/images/investors/boardroom-governance.jpg',
+    subnav: [
+      { label: 'Corporate Profile', href: '/investors/', active: false },
+      { label: 'Governance Charters', href: '/investors/corporate-governance/', active: true },
+      { label: 'Executive Leadership', href: '/leadership/', active: false },
+      { label: 'Board Committees', href: '/leadership/#committees', active: false }
+    ]
+  }),
+  content: `
+  <section class="section" style="padding: 5rem 0; background: var(--bg-dark);">
+    <div class="container">
+      <div style="max-width: 920px; margin: 0 auto;">
+
+        <!-- Governance Statement -->
+        <div style="background: #0c1828; border: 1px solid rgba(0,153,230,0.3); border-radius: 14px; padding: clamp(2rem, 4vw, 3.5rem); margin-bottom: 3.5rem; position: relative;">
+          <div style="display: inline-block; font-size: 0.75rem; font-weight: 700; color: #0099e6; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 0.5rem;">
+            INSTITUTIONAL FIDUCIARY STEWARDSHIP
+          </div>
+          <h2 style="font-family: var(--font-heading); font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 800; color: #fff; margin: 0 0 1.25rem;">
+            PRINCIPLED GOVERNANCE ARCHITECTURE
+          </h2>
+          <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.25rem;">
+            At <strong>RAYAN Group</strong>, corporate governance is the institutional bedrock that protects enterprise value, maintains trust with sovereign partners, and delivers predictable execution across our multibillion-dirham engineering, energy, infrastructure, and property portfolios.
+          </p>
+          <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65; margin-bottom: 2rem;">
+            Operating as a 100% privately held enterprise across our primary hubs in the United Arab Emirates and India, the Group maintains institutional governance standards benchmarking premier listed corporations—ensuring rigorous capital allocation, independent auditing oversight, and zero-compromise compliance.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <div>
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Legal Entity (UAE)</span>
+              <div style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">RAYAN GROUP L.L.C - S.P.C</div>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">South Asia Hub</span>
+              <div style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">ASHAZ ENGINEERING PVT. LTD.</div>
+            </div>
+            <div>
+              <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Accounting Standard</span>
+              <div style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: #0099e6; margin-top: 0.25rem;">IFRS &amp; Statutory Audited</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Core Governance Charters -->
+        <div style="margin-bottom: 4rem;">
+          <div style="text-align: center; margin-bottom: 2.5rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">OPERATIONAL CHARTERS</span>
+            <h3 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0.35rem 0 0;">FOUR PILLARS OF COMPLIANCE</h3>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem;">
+            
+            <!-- Charter 1 -->
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(0,153,230,0.12); border: 1px solid rgba(0,153,230,0.3); display: flex; align-items: center; justify-content: center; color: #0099e6; font-weight: 800; font-size: 0.85rem;">01</div>
+                <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">Board Terms of Reference &amp; Delegation</h4>
+              </div>
+              <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0 0 1rem;">
+                The Board of Directors establishes strategic corporate direction, reviews major capital commitments exceeding established thresholds, and maintains strict segregation between non-executive supervisory oversight and operational management.
+              </p>
+              <ul style="color: #cbd5e1; font-size: 0.825rem; line-height: 1.6; margin: 0; padding-left: 1.25rem;">
+                <li>Separation of Chairman and CEO executive functions</li>
+                <li>Quarterly enterprise performance and fiduciary review</li>
+                <li>Comprehensive Delegation of Authority (DoA) matrix</li>
+              </ul>
+            </div>
+
+            <!-- Charter 2 -->
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(0,199,179,0.12); border: 1px solid rgba(0,199,179,0.3); display: flex; align-items: center; justify-content: center; color: #00c7b3; font-weight: 800; font-size: 0.85rem;">02</div>
+                <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">Statutory Auditing &amp; Financial Integrity</h4>
+              </div>
+              <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0 0 1rem;">
+                Every subsidiary within Rayan Group produces annual standalone and consolidated financial statements audited by accredited independent audit firms in accordance with International Financial Reporting Standards (IFRS).
+              </p>
+              <ul style="color: #cbd5e1; font-size: 0.825rem; line-height: 1.6; margin: 0; padding-left: 1.25rem;">
+                <li>Full statutory compliance with UAE Corporate Tax regulations</li>
+                <li>Independent verification of bank covenants and credit lines</li>
+                <li>Standardized ERP accounting controls across all operational units</li>
+              </ul>
+            </div>
+
+            <!-- Charter 3 -->
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); display: flex; align-items: center; justify-content: center; color: #fbbf24; font-weight: 800; font-size: 0.85rem;">03</div>
+                <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">Code of Ethics &amp; Anti-Corruption Policy</h4>
+              </div>
+              <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0 0 1rem;">
+                Rayan Group enforces an uncompromising zero-tolerance policy regarding bribery, facilitation payments, conflicts of interest, and anti-competitive practices across all procurement, tendering, and field operations.
+              </p>
+              <ul style="color: #cbd5e1; font-size: 0.825rem; line-height: 1.6; margin: 0; padding-left: 1.25rem;">
+                <li>Mandatory supplier code of conduct for all subcontractors</li>
+                <li>Annual conflict of interest disclosures for executive leadership</li>
+                <li>Strict adherence to UAE Federal Law No. 3 and international trade laws</li>
+              </ul>
+            </div>
+
+            <!-- Charter 4 -->
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; color: #10b981; font-weight: 800; font-size: 0.85rem;">04</div>
+                <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">Whistleblower &amp; Integrity Reporting</h4>
+              </div>
+              <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.65; margin: 0 0 1rem;">
+                A confidential, anonymous reporting mechanism empowers employees, contractors, and partners to report suspected violations of law, safety codes, or financial impropriety without fear of reprisal.
+              </p>
+              <ul style="color: #cbd5e1; font-size: 0.825rem; line-height: 1.6; margin: 0; padding-left: 1.25rem;">
+                <li>Direct routing of disclosures to the Audit &amp; Risk Committee</li>
+                <li>Guaranteed legal protections and anti-retaliation assurances</li>
+                <li>Independent investigative protocols for all substantiated claims</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Board Committees Cross-Link -->
+        <div style="background: linear-gradient(135deg, #091a2e 0%, #061320 100%); border: 1px solid rgba(0,153,230,0.3); border-radius: 14px; padding: clamp(2rem, 3.5vw, 3rem); margin-bottom: 3.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div>
+              <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #0099e6;">BOARD OF DIRECTORS COMMITTEES</span>
+              <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.5rem;">Dedicated Oversight Committees</h3>
+              <p style="color: #94a3b8; font-size: 0.9rem; margin: 0; max-width: 580px;">
+                Our Board of Directors maintains active standing committees: Audit &amp; Risk, ESG &amp; Sustainability Steering, and Nomination &amp; Remuneration.
+              </p>
+            </div>
+            <a href="/leadership/#committees" class="btn-enterprise-primary">
+              <span>VIEW BOARD COMMITTEES</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Official Registrations & Certifications Strip -->
+        <div style="margin-bottom: 3.5rem;">
+          <div style="text-align: center; margin-bottom: 2rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #00c7b3;">ACCREDITED STANDARDS</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0;">CERTIFICATIONS &amp; LEGAL MARKS</h3>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; text-align: center;">
+              <div style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #0099e6;">ISO 9001:2015</div>
+              <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 0.25rem;">Quality Management</div>
+              <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.25rem;">ANID: AN11136910824</div>
+            </div>
+
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; text-align: center;">
+              <div style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #10b981;">ISO 14001:2015</div>
+              <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 0.25rem;">Environmental Mgmt</div>
+              <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.25rem;">EMS-RE-23051702YJRJW52</div>
+            </div>
+
+            <div style="background: #0c1828; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.5rem; text-align: center;">
+              <div style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #f59e0b;">ISO 45001:2018</div>
+              <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 0.25rem;">Occupational Health &amp; Safety</div>
+              <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.25rem;">OHS-RE-23051702YJRJW52</div>
+            </div>
+
+            <div style="background: #0c1828; border: 1px solid rgba(56,189,248,0.3); border-radius: 10px; padding: 1.5rem; text-align: center;">
+              <div style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #38bdf8;">CLASS 37 TM</div>
+              <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 0.25rem;">Registered Trade Mark</div>
+              <div style="font-size: 0.72rem; color: #38bdf8; margin-top: 0.25rem;">No. 6580565 (Govt. of India)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Partnership Contact Block -->
+        <div style="background: #071524; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+          <div>
+            <h4 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0 0 0.35rem;">
+              Institutional Enquiries &amp; Banking Verifications
+            </h4>
+            <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">
+              For governance verification or joint-venture compliance inquiries, connect with our executive office.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="/leadership/" class="btn-enterprise-secondary" style="padding: 0.55rem 1.25rem; font-size: 0.82rem;">
+              EXECUTIVE LEADERSHIP →
+            </a>
+            <a href="/contact/" class="btn-enterprise-primary" style="padding: 0.55rem 1.25rem; font-size: 0.82rem;">
+              EXECUTIVE CONTACT →
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+  `
+});
+
+console.log('Generated About, Leadership, Sustainability & Corporate Governance pages.');
+

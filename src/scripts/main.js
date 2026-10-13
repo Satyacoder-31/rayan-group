@@ -178,6 +178,15 @@ function initAnchorNavigation() {
           history.pushState(null, '', hash);
         } catch (_) {}
 
+        // Update active class on subnav tab pills
+        if (link.classList.contains('subnav-tab-link')) {
+          const subnavBar = link.closest('.page-subnav-bar');
+          if (subnavBar) {
+            subnavBar.querySelectorAll('.subnav-tab-link').forEach(t => t.classList.remove('active'));
+            link.classList.add('active');
+          }
+        }
+
         // Close mobile drawer if open
         const drawer = document.getElementById('mobileNavDrawer');
         if (drawer && drawer.classList.contains('open')) {
@@ -195,11 +204,50 @@ function initAnchorNavigation() {
 
   // Handle initial page load with hash
   if (window.location.hash) {
+    const activeSubnavLink = document.querySelector(`.page-subnav-bar .subnav-tab-link[href="${window.location.hash}"]`);
+    if (activeSubnavLink) {
+      const subnavBar = activeSubnavLink.closest('.page-subnav-bar');
+      if (subnavBar) {
+        subnavBar.querySelectorAll('.subnav-tab-link').forEach(t => t.classList.remove('active'));
+        activeSubnavLink.classList.add('active');
+      }
+    }
     const triggerInitialScroll = () => {
       handleHashNavigation(window.location.hash, false);
     };
     setTimeout(triggerInitialScroll, 80);
     setTimeout(triggerInitialScroll, 350);
+  }
+
+  // Scroll spy for in-page subnav bar tabs
+  const subnavBar = document.querySelector('.page-subnav-bar');
+  if (subnavBar) {
+    const tabLinks = Array.from(subnavBar.querySelectorAll('.subnav-tab-link[href^="#"]'));
+    const sectionTargets = tabLinks.map(t => {
+      const id = t.getAttribute('href').slice(1);
+      return { tab: t, el: document.getElementById(id) };
+    }).filter(item => !!item.el);
+
+    if (sectionTargets.length > 0) {
+      let scrollTimer = null;
+      window.addEventListener('scroll', () => {
+        if (scrollTimer) return;
+        scrollTimer = setTimeout(() => {
+          scrollTimer = null;
+          const scrollY = window.scrollY + 160;
+          let currentTarget = null;
+          for (const item of sectionTargets) {
+            if (scrollY >= item.el.offsetTop) {
+              currentTarget = item;
+            }
+          }
+          if (currentTarget) {
+            tabLinks.forEach(t => t.classList.remove('active'));
+            currentTarget.tab.classList.add('active');
+          }
+        }, 60);
+      }, { passive: true });
+    }
   }
 }
 
