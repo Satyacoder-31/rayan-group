@@ -51,8 +51,8 @@
 
   /* Layout */
   --header-height: 88px;
-  --container-max: 1440px;
-  --container-padding: clamp(1.25rem, 4vw, 4rem);
+  --container-max: min(94vw, 1780px);
+  --container-padding: clamp(1.25rem, 3.5vw, 4rem);
 
   /* Transitions */
   --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -64,6 +64,20 @@
   --z-header: 100;
   --z-modal: 500;
   --z-cursor: 999;
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --container-max: min(94vw, 1920px);
+    --container-padding: clamp(2rem, 4vw, 5rem);
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --container-max: min(94vw, 2400px);
+    --container-padding: clamp(2.5rem, 4.5vw, 6rem);
+  }
 }
 
 /* Reset & Base */

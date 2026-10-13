@@ -19,6 +19,7 @@
   --border-medium: rgba(255, 255, 255, 0.15);
   --border-cyan: rgba(0, 153, 230, 0.35);
   --header-height: 105px;
+  --container-max: min(94vw, 1780px);
   --font-heading: 'Outfit', 'Poppins', sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -63,9 +64,9 @@ html {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 1400px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0.38rem clamp(1rem, 2.5vw, 2.5rem);
+  padding: 0.38rem clamp(1rem, 2.5vw, 3.5rem);
   box-sizing: border-box;
   font-size: 0.75rem;
   letter-spacing: 0.035em;
@@ -205,9 +206,9 @@ html {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 1420px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0 clamp(1rem, 2.5vw, 2.5rem);
+  padding: 0 clamp(1rem, 2.5vw, 3.5rem);
   box-sizing: border-box;
   height: 70px;
   flex-wrap: nowrap;
@@ -737,7 +738,7 @@ html {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 1440px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 4rem);
   box-sizing: border-box;
@@ -852,7 +853,7 @@ html {
 }
 
 .hero-controls-inner {
-  max-width: 1440px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 4rem);
   display: flex;
@@ -943,8 +944,8 @@ html {
    ========================================================================== */
 .page-hero {
   position: relative;
-  min-height: 380px;
-  max-height: 560px;
+  min-height: clamp(380px, 45vh, 580px);
+  width: 100%;
   display: flex;
   align-items: flex-end;
   padding-bottom: 3.5rem;
@@ -1027,13 +1028,13 @@ html {
   line-height: 1.1;
   margin-bottom: 1rem;
   text-transform: uppercase;
-  max-width: 900px;
+  max-width: 1200px;
 }
 
 .page-hero-desc {
   font-size: clamp(1rem, 1.25vw, 1.2rem);
   color: #94a3b8;
-  max-width: 700px;
+  max-width: 950px;
   line-height: 1.6;
   margin-bottom: 1.75rem;
 }
@@ -2991,7 +2992,7 @@ body.preloader-active {
 }
 
 .bu-card-container {
-  max-width: 1140px;
+  max-width: var(--container-max);
   margin: 0 auto;
   position: relative;
   z-index: 2;
