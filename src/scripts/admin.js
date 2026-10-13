@@ -169,20 +169,60 @@ class RayanAdminPortal {
     const form = document.getElementById('admin-lock-form');
     const pinInput = document.getElementById('admin-lock-pin');
     const errorMsg = document.getElementById('admin-lock-error');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
 
     if (form) {
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const pin = pinInput.value.trim();
-        const savedPin = localStorage.getItem('rayan_admin_pin') || 'rayan2026';
+        if (!pin) return;
 
-        if (pin === savedPin) {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Verifying...';
+        }
+
+        let verified = false;
+
+        // 1. Check server-side authentication (Hostinger config.php / MySQL / Vercel proxy)
+        try {
+          const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/auth';
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'verify', password: pin })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.authorized) {
+              verified = true;
+            }
+          }
+        } catch (err) {
+          // Network failure fallback
+        }
+
+        // 2. Offline / local storage fallback
+        if (!verified) {
+          const savedPin = localStorage.getItem('rayan_admin_pin') || 'rayan2026';
+          if (pin === savedPin) {
+            verified = true;
+          }
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>AUTHENTICATE &amp; ENTER →</span>';
+        }
+
+        if (verified) {
+          localStorage.setItem('rayan_admin_pin', pin);
           sessionStorage.setItem('rayan_admin_auth', 'true');
           this.isAuthenticated = true;
           this.revealDashboard();
         } else {
           if (errorMsg) {
-            errorMsg.textContent = 'Invalid corporate access key. Please try again.';
+            errorMsg.textContent = 'Invalid corporate access key. Please verify passcode or Hostinger config.';
             errorMsg.style.display = 'block';
           }
           pinInput.value = '';
@@ -275,7 +315,8 @@ class RayanAdminPortal {
         timeline: 'Corporate Milestone Timeline',
         contacts: 'Dual-Hub Headquarters & Social Channels',
         widget: 'Corporate Assistance Widget Configuration',
-        git: 'Git Push & Instant Vercel Deployment Engine'
+        git: 'Git Push & Instant Vercel Deployment Engine',
+        security: 'Security & Hostinger Admin Passcode'
       };
       headerTitle.textContent = titles[tabId] || 'Corporate Command Center';
     }
@@ -831,6 +872,78 @@ class RayanAdminPortal {
         this.state.timeline.push(newTimeline);
         this.renderTimelineList();
         this.showToast('Added new timeline milestone.');
+      });
+    }
+
+    // Change Password Form listener
+    const changePassForm = document.getElementById('form-change-password');
+    if (changePassForm) {
+      changePassForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const currentInput = document.getElementById('pass-current');
+        const newInput = document.getElementById('pass-new');
+        const statusEl = document.getElementById('pass-change-status');
+        const submitBtn = document.getElementById('btn-save-passcode');
+
+        const current = currentInput ? currentInput.value.trim() : '';
+        const next = newInput ? newInput.value.trim() : '';
+
+        if (!current || !next) return;
+        if (next.length < 4) {
+          alert('New passcode must be at least 4 characters long.');
+          return;
+        }
+
+        if (submitBtn) submitBtn.disabled = true;
+        if (statusEl) {
+          statusEl.style.color = '#38bdf8';
+          statusEl.textContent = 'Updating passcode in Hostinger config & database...';
+        }
+
+        try {
+          const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/auth';
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'change_password',
+              current_password: current,
+              new_password: next
+            })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            localStorage.setItem('rayan_admin_pin', next);
+            if (statusEl) {
+              statusEl.style.color = '#22c55e';
+              statusEl.textContent = '✓ Passcode updated successfully in Hostinger config & database!';
+            }
+            this.showToast('Admin passcode updated successfully!');
+            changePassForm.reset();
+          } else {
+            if (statusEl) {
+              statusEl.style.color = '#ef4444';
+              statusEl.textContent = data.error || 'Failed to update passcode';
+            }
+            alert(data.error || 'Failed to update passcode. Please verify current password.');
+          }
+        } catch (err) {
+          // Local fallback
+          const savedPin = localStorage.getItem('rayan_admin_pin') || 'rayan2026';
+          if (current === savedPin) {
+            localStorage.setItem('rayan_admin_pin', next);
+            if (statusEl) {
+              statusEl.style.color = '#22c55e';
+              statusEl.textContent = '✓ Passcode updated locally!';
+            }
+            this.showToast('Passcode updated locally.');
+            changePassForm.reset();
+          } else {
+            alert('Current passcode is incorrect.');
+          }
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
       });
     }
   }

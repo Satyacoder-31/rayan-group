@@ -160,6 +160,12 @@
             <span>Git Push &amp; Deploy</span>
           </button>
         </li>
+        <li class="admin-nav-item">
+          <button type="button" data-tab="security" style="color: #e5c07b;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Security &amp; Passcode</span>
+          </button>
+        </li>
       </ul>
 
       <div class="admin-sidebar-footer">
@@ -807,6 +813,67 @@ Ready for git synchronization.
 Click "Push All Changes to Git & Trigger Vercel Deploy" to commit directly to branch main.
               </div>
 
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB 13: SECURITY & ACCESS -->
+        <div class="admin-tab-pane" id="tab-security">
+          <div class="admin-card">
+            <h2 style="margin:0 0 0.5rem; font-size:1.6rem; color:#fff;">🔐 Security &amp; Admin Access Passcode</h2>
+            <p style="margin:0; color:#cbd5e1; font-size:0.92rem; max-width:750px; line-height:1.6;">
+              Manage the executive passcode protecting this administrative control desk. You can update your passcode directly from this form, or configure it anytime from your Hostinger control panel.
+            </p>
+
+            <!-- Method 1: In-Dashboard Change Form -->
+            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:1.5rem; margin-top:1.5rem;">
+              <h3 style="color:#00c7b3; font-size:1.1rem; margin-bottom:1rem;">Update Passcode from Admin Panel</h3>
+              <form id="form-change-password">
+                <div class="admin-grid-2">
+                  <div class="admin-field-group">
+                    <label class="admin-label">Current Passcode</label>
+                    <input type="password" class="admin-input" id="pass-current" placeholder="Enter current passcode" required>
+                  </div>
+                  <div class="admin-field-group">
+                    <label class="admin-label">New Passcode</label>
+                    <input type="password" class="admin-input" id="pass-new" placeholder="Enter new passcode (min. 4 characters)" required>
+                  </div>
+                </div>
+                <div style="margin-top: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                  <button type="submit" class="admin-btn-primary" id="btn-save-passcode">
+                    <span>🔐 Update Passcode</span>
+                  </button>
+                  <span id="pass-change-status" style="font-size: 0.85rem; color: #94a3b8;"></span>
+                </div>
+              </form>
+            </div>
+
+            <!-- Method 2: Hostinger File Manager Guide -->
+            <div style="background:rgba(197, 160, 89, 0.08); border:1px solid rgba(197, 160, 89, 0.3); border-radius:14px; padding:1.5rem; margin-top:1.5rem;">
+              <h3 style="color:#e5c07b; font-size:1.1rem; margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem;">
+                <span>🌐 How to Change Password Directly in Hostinger</span>
+              </h3>
+              <p style="color:#cbd5e1; font-size:0.9rem; line-height:1.6; margin-bottom:1rem;">
+                If you ever get locked out or want to change the passcode from your Hostinger control panel:
+              </p>
+              <ol style="color:#94a3b8; font-size:0.88rem; line-height:1.8; padding-left:1.5rem; margin:0;">
+                <li>Log in to your <strong>Hostinger hPanel</strong> (<a href="https://hpanel.hostinger.com" target="_blank" style="color:#38bdf8; text-decoration:none;">hpanel.hostinger.com &nearr;</a>).</li>
+                <li>Go to <strong>Websites</strong> &rarr; Click <strong>Dashboard</strong> for <code>rayan-group.com</code>.</li>
+                <li>Under <strong>Files</strong>, open <strong>File Manager</strong>.</li>
+                <li>Navigate to: <code style="color:#00c7b3; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px;">public_html/api/config.php</code></li>
+                <li>Right-click <code style="color:#00c7b3;">config.php</code> &rarr; Click <strong>Edit</strong>.</li>
+                <li>Change <code style="color:#fbbf24;">'admin_password' => 'your_new_password'</code> to your desired password.</li>
+                <li>Click <strong>Save</strong>. The change takes effect immediately!</li>
+              </ol>
+            </div>
+
+            <!-- Method 3: Hostinger phpMyAdmin Guide -->
+            <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:1.5rem; margin-top:1.25rem;">
+              <h3 style="color:#38bdf8; font-size:1.05rem; margin-bottom:0.5rem;">Alternative: Hostinger phpMyAdmin (MySQL Database)</h3>
+              <p style="color:#94a3b8; font-size:0.86rem; line-height:1.6; margin:0;">
+                In Hostinger hPanel &rarr; <strong>Databases</strong> &rarr; <strong>phpMyAdmin</strong> (<code style="color:#cbd5e1;">u575992126_rayan_app</code>), you can also view or edit the <code style="color:#38bdf8;">admin_settings</code> table directly!
+              </p>
             </div>
 
           </div>
