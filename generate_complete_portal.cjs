@@ -261,7 +261,7 @@ function renderDivisionPage({
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">PROVEN DELIVERIES</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(1.85rem, 3vw, 2.5rem); font-weight: 800; color: #fff; margin-top: 0.35rem;">FEATURED PROJECTS</h2>
         </div>
-        <a href="/projects/" class="btn-enterprise-secondary">ALL 16 PROJECTS SHOWCASE →</a>
+        <a href="/projects/" class="btn-enterprise-secondary">EXPLORE ALL PROJECTS →</a>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
