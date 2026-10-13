@@ -327,19 +327,6 @@ const homeContent = `
           </div>
         </article>
 
-        <!-- Project 3 -->
-        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-          <div style="height: 240px; overflow: hidden; position: relative;">
-            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Renovation" style="width: 100%; height: 100%; object-fit: cover;">
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6;">HOSPITALITY</span>
-          </div>
-          <div style="padding: 2rem;">
-            <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">BROCK CONSTRUCTION PARTNERSHIP</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Waldorf Astoria Hotel Luxury Renovation</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Full-scope 5-star hospitality refurbishment, presidential suites, acoustic ceiling isolation, and luxury finishes in Ras Al Khaimah.</p>
-            <a href="/projects/waldorf-astoria-renovation-rak/" style="color: #0099e6; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
-          </div>
-        </article>
 
         <!-- Project 2 -->
         <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
