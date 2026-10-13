@@ -3240,7 +3240,8 @@ body.preloader-active {
   transform: translateY(-2px);
 }
 
-.bu-pill.active {
+.bu-pill.active,
+.bu-pill.active:hover {
   background: #ffffff !important;
   border-color: #ffffff !important;
   color: #071524 !important;
@@ -3269,11 +3270,17 @@ body.preloader-active {
   transform: scale(1.12);
 }
 
-.bu-pill.active .bu-pill-symbol {
+.bu-pill.active .bu-pill-symbol,
+.bu-pill.active:hover .bu-pill-symbol {
   transform: scale(1.08);
 }
 
-.bu-pill.active .sym-upper-group {
+.bu-pill.active .sym-upper,
+.bu-pill.active .sym-upper-group,
+.bu-pill.active:hover .sym-upper,
+.bu-pill.active:hover .sym-upper-group,
+.bu-pill.active svg path:first-child,
+.bu-pill.active:hover svg path:first-child {
   fill: #071524 !important;
 }
 
@@ -3293,8 +3300,9 @@ body.preloader-active {
   display: block;
 }
 
-.bu-pill.active .bu-pill-label {
-  color: #071524;
+.bu-pill.active .bu-pill-label,
+.bu-pill.active:hover .bu-pill-label {
+  color: #071524 !important;
   font-weight: 800;
 }
 
@@ -3305,7 +3313,8 @@ body.preloader-active {
   font-weight: 600;
 }
 
-.bu-pill.active .bu-pill-subtag {
+.bu-pill.active .bu-pill-subtag,
+.bu-pill.active:hover .bu-pill-subtag {
   color: #334155 !important;
   opacity: 0.95;
 }
