@@ -199,7 +199,7 @@ const homeContent = `
 
         <div class="stat-counter-card">
           <div class="stat-counter-number-wrap">
-            <span class="stat-counter-val" data-counter-target="16" data-counter-duration="1500">16</span>
+            <span class="stat-counter-val" data-counter-target="116" data-counter-suffix="+" data-counter-duration="1500">116+</span>
           </div>
           <div class="stat-counter-label">VERIFIED PROJECTS</div>
           <div class="stat-counter-desc">Landmark hospitality, retail &amp; towers</div>

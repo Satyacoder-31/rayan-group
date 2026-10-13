@@ -68,7 +68,7 @@ const DEFAULT_HERO_SLIDES = [
 const DEFAULT_STATS = {
   heritageYears: '18+',
   heritageDesc: 'Proven industry track record since 2008',
-  verifiedProjects: '16',
+  verifiedProjects: '116+',
   projectsDesc: 'Landmark hospitality, retail & towers',
   operatingEntities: '4',
   entitiesDesc: 'Engineering, Energy, Ashaz India, Properties',
