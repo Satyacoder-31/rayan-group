@@ -946,6 +946,7 @@ function initForms() {
       // 4. Asynchronously transmit to FormSubmit.co and /api/send-email
       const primaryUrl = `https://formsubmit.co/ajax/${encodeURIComponent(config.targetEmail)}`;
       
+      const sendEmailEndpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/send-email';
       const dispatchPromise = Promise.allSettled([
         fetch(primaryUrl, {
           method: 'POST',
@@ -955,7 +956,7 @@ function initForms() {
           },
           body: JSON.stringify(formSubmitPayload)
         }),
-        fetch('/api/send-email', {
+        fetch(sendEmailEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

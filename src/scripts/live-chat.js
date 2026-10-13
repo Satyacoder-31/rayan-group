@@ -312,7 +312,8 @@ class LiveAssistanceChat {
 
     // Send to backend API with matching ID and timestamp
     try {
-      await fetch('/api/chat', {
+      const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/chat';
+      await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -397,7 +398,8 @@ class LiveAssistanceChat {
     const poll = async () => {
       try {
         const lastTs = this.messages.length > 0 ? this.messages[this.messages.length - 1].timestamp : 0;
-        const res = await fetch(`/api/chat?action=poll&sessionId=${encodeURIComponent(this.sessionId)}&since=${lastTs}`);
+        const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + `/api/chat?action=poll&sessionId=${encodeURIComponent(this.sessionId)}&since=${lastTs}`;
+        const res = await fetch(endpoint);
         if (!res.ok) return;
         const data = await res.json();
         if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {

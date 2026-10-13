@@ -1023,7 +1023,8 @@ class RayanAdminPortal {
   async refreshSessionsList() {
     let remoteSessions = [];
     try {
-      const res = await fetch('/api/chat?action=list_sessions');
+      const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/chat?action=list_sessions';
+      const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.sessions)) {
@@ -1219,7 +1220,8 @@ class RayanAdminPortal {
     this.fetchActiveSessionMessages(sessionId);
 
     // Mark as read on server
-    fetch('/api/chat', {
+    const markReadEndpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/chat';
+    fetch(markReadEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'mark_read', sessionId, by: 'admin' })
@@ -1231,7 +1233,8 @@ class RayanAdminPortal {
     let sessionData = this.sessions.find(s => s.id === sessionId);
 
     try {
-      const res = await fetch(`/api/chat?action=get_messages&sessionId=${encodeURIComponent(sessionId)}`);
+      const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + `/api/chat?action=get_messages&sessionId=${encodeURIComponent(sessionId)}`;
+      const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.messages)) {
@@ -1347,7 +1350,8 @@ class RayanAdminPortal {
     }
 
     try {
-      await fetch('/api/chat', {
+      const replyEndpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/chat';
+      await fetch(replyEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
