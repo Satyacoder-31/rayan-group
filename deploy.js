@@ -24,7 +24,22 @@ async function deploy() {
 
   console.log('\n🔄 [3/5] Triggering Hostinger deploy webhook...');
   try {
-    const res = await fetch(WEBHOOK_URL, { method: 'POST' });
+    const payload = {
+      ref: 'refs/heads/main',
+      repository: {
+        name: 'rayan-group',
+        clone_url: 'https://github.com/Satyacoder-31/rayan-group.git'
+      }
+    };
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-GitHub-Event': 'push',
+        'User-Agent': 'GitHub-Hookshot/123456'
+      },
+      body: JSON.stringify(payload)
+    });
     console.log('Hostinger Webhook Status:', res.status);
   } catch (err) {
     console.warn('Webhook warning:', err.message);
