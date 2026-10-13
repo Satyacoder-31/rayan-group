@@ -1470,20 +1470,6 @@ function initScrollAnimations() {
     }
   });
 
-  // Division and operating company cards reveal
-  if (document.querySelector('.division-card')) {
-    gsap.from('.division-card', {
-      opacity: 0,
-      y: 40,
-      stagger: 0.12,
-      duration: 0.85,
-      ease: 'power3.out',
-      scrollTrigger: {
-        trigger: '.division-card',
-        start: 'top 85%',
-      }
-    });
-  }
 
   // Project cards reveal
   if (document.querySelector('.project-card, .project-editorial-card')) {
