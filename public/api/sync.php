@@ -13,12 +13,15 @@ if (($_GET['token'] ?? '') !== $expectedToken) {
     exit;
 }
 
+$siteDir = realpath(__DIR__ . '/..');
+$rootDir = realpath($siteDir . '/..');
+
 $response = [
     'success' => true,
     'timestamp' => date('Y-m-d H:i:s'),
     'php_version' => phpversion(),
-    'site_dir' => realpath(__DIR__ . '/..'),
-    'root_dir' => realpath(__DIR__ . '/../..'),
+    'site_dir' => $siteDir,
+    'root_dir' => $rootDir,
     'database' => [],
     'sync_results' => []
 ];
@@ -49,9 +52,6 @@ try {
 }
 
 // 2. Perform file synchronization from site/dist or site/ into website root (public_html)
-$siteDir = realpath(__DIR__ . '/..');
-$rootDir = realpath($siteDir . '/..');
-
 if (!$rootDir || !is_writable($rootDir)) {
     $response['sync_results']['writable'] = false;
     $response['sync_results']['error'] = "Root directory ($rootDir) is not writable";
@@ -69,79 +69,56 @@ if (!$rootDir || !is_writable($rootDir)) {
         }
         $dir = opendir($src);
         $copiedCount = 0;
-        while (false !== ($file = readdir($dir))) {
-            if ($file != '.' && $file != '..') {
-                if (is_dir($src . '/' . $file)) {
-                    $copiedCount += copyFolder($src . '/' . $file, $dst . '/' . $file);
-                } else {
-                    if (@copy($src . '/' . $file, $dst . '/' . $file)) {
-                        $copiedCount++;
+        if ($dir) {
+            while (false !== ($file = readdir($dir))) {
+                if ($file !== '.' && $file !== '..') {
+                    $srcFile = $src . '/' . $file;
+                    $dstFile = $dst . '/' . $file;
+                    if (is_dir($srcFile)) {
+                        $copiedCount += copyFolder($srcFile, $dstFile);
+                    } else {
+                        if (@copy($srcFile, $dstFile)) {
+                            $copiedCount++;
+                        }
                     }
                 }
             }
+            closedir($dir);
         }
-        closedir($dir);
         return $copiedCount;
     }
 
-    // List of essential items to copy to root
-    $itemsToCopy = [
-        'index.html',
-        '.htaccess',
-        'assets',
-        'api',
-        'about',
-        'admin',
-        'billing',
-        'business',
-        'careers',
-        'contact',
-        'cookies',
-        'disclaimer',
-        'investors',
-        'leadership',
-        'media',
-        'news',
-        'privacy',
-        'procurement',
-        'projects',
-        'proposal',
-        'services',
-        'sitemap',
-        'sustainability',
-        'terms',
-        'gallery.html'
-    ];
-
+    // Determine all items to copy dynamically from $sourceDir
+    $items = scandir($sourceDir);
     $copiedSummary = [];
-    foreach ($itemsToCopy as $item) {
+    $ignored = ['.', '..', '.git', '.github', '.vercel', 'node_modules'];
+
+    foreach ($items as $item) {
+        if (in_array($item, $ignored)) continue;
+
         $srcPath = $sourceDir . '/' . $item;
         $dstPath = $rootDir . '/' . $item;
 
-        if (file_exists($srcPath)) {
-            if (is_dir($srcPath)) {
-                $count = copyFolder($srcPath, $dstPath);
-                $copiedSummary[$item] = "Directory copied ($count files)";
-            } else {
-                $ok = @copy($srcPath, $dstPath);
-                $copiedSummary[$item] = $ok ? 'File copied' : 'Copy failed';
-            }
+        if (is_dir($srcPath)) {
+            $count = copyFolder($srcPath, $dstPath);
+            $copiedSummary[$item] = "Directory copied ($count files)";
         } else {
-            // Check fallback from site root if not in dist
-            $altSrc = $siteDir . '/' . $item;
-            if (file_exists($altSrc)) {
-                if (is_dir($altSrc)) {
-                    $count = copyFolder($altSrc, $dstPath);
-                    $copiedSummary[$item] = "Fallback directory copied ($count files)";
-                } else {
-                    $ok = @copy($altSrc, $dstPath);
-                    $copiedSummary[$item] = $ok ? 'Fallback file copied' : 'Fallback copy failed';
-                }
-            } else {
-                $copiedSummary[$item] = 'Source not found';
-            }
+            $ok = @copy($srcPath, $dstPath);
+            $copiedSummary[$item] = $ok ? 'File copied (' . filesize($srcPath) . ' bytes)' : 'Copy failed';
         }
     }
+
+    // If source was site/dist, also ensure api/ endpoints are refreshed at root
+    if ($sourceDir !== $siteDir && is_dir($siteDir . '/api')) {
+        copyFolder($siteDir . '/api', $rootDir . '/api');
+        $copiedSummary['api_sync'] = 'Root API updated from site/api';
+    }
+
+    // Check for css & js bundles in root assets
+    $cssFiles = glob($rootDir . '/assets/*.css');
+    $jsFiles = glob($rootDir . '/assets/*.js');
+    $response['sync_results']['css_bundles'] = array_map('basename', $cssFiles ?: []);
+    $response['sync_results']['js_bundles'] = array_map('basename', $jsFiles ?: []);
 
     // Safely rename or backup old WordPress index.php so index.html is primary
     if (file_exists($rootDir . '/index.php') && !file_exists($rootDir . '/index.php.wp_backup')) {
