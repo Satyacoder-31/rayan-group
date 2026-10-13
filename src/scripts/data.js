@@ -282,7 +282,7 @@ export const FEATURED_PROJECTS = [
     client: "Ayat Contracting LLC / Prestige Real Estate",
     year: "2024",
     scope: "Twin 22-Story Waterfront Towers Architectural Gypsum, Vaulted Ceilings, Interior Partitions & Turnkey Fit-Out.",
-    image: "/assets/images/projects/c2-towers-al-bateen.jpg",
+    image: "/assets/images/projects/c2-towers-al-bateen.jpg?v=2",
     featured: true
   },
   {
@@ -604,7 +604,7 @@ export const CAREER_OPPORTUNITIES = [
 export const MEDIA_GALLERY = [
   { title: "Waldorf Astoria Hotel Luxury Renovation", category: "Hospitality", image: "/assets/images/projects/waldorf-astoria-renovation-rak.jpg", caption: "5-Star Ultra-Luxury Hospitality Overhaul & Presidential Suites in Ras Al Khaimah." },
   { title: "Palm Jumeirah Luxury Waterfront Estate", category: "Residential", image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg", caption: "Ultra-luxury coastal villa structural concrete and bespoke Italian marble on Palm Jumeirah." },
-  { title: "C2 Towers Al Bateen Waterfront Development", category: "High-Rise", image: "/assets/images/projects/c2-towers-al-bateen.jpg", caption: "Twin 22-story luxury waterfront residential towers architectural finishes in Abu Dhabi." },
+  { title: "C2 Towers Al Bateen Waterfront Development", category: "High-Rise", image: "/assets/images/projects/c2-towers-al-bateen.jpg?v=2", caption: "Twin 22-story luxury waterfront residential towers architectural finishes in Abu Dhabi." },
   { title: "Edge Group - REMAYA Tactical Complex", category: "Defense", image: "/assets/images/projects/edge-group-remaya.jpg", caption: "Civil excavation, mass earthworks, ballistic partitions, and heavy defense engineering." },
   { title: "Luxury Island Oceanfront Infinity Pool", category: "Aquatic", image: "/assets/images/projects/luxury-island-infinity-pool.jpg", caption: "50-meter cantilevered structural concrete horizon pool on Private Luxury Island." },
   { title: "Roxy Cinemas VIP Auditoriums - Dubai Hills", category: "Entertainment", image: "/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg", caption: "Precision acoustic sound isolation and VIP cinema auditorium engineering in Dubai." },
