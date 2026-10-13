@@ -1,7 +1,7 @@
 <?php
 /**
  * Rayan Group — Production Server Sync & Hostinger Database Setup
- * Execution Endpoint: https://rayan-group.com/site/api/sync.php?token=rayan_deploy_2026_secret_key
+ * Execution Endpoint: https://rayan-group.com/api/sync.php?token=rayan_deploy_2026_secret_key
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -13,8 +13,40 @@ if (($_GET['token'] ?? '') !== $expectedToken) {
     exit;
 }
 
-$siteDir = realpath(__DIR__ . '/..');
-$rootDir = realpath($siteDir . '/..');
+// 1. Determine public_html directory
+$current = __DIR__;
+$publicHtmlDir = null;
+$temp = $current;
+while ($temp && $temp !== '/' && $temp !== '.') {
+    if (basename($temp) === 'public_html') {
+        $publicHtmlDir = $temp;
+        break;
+    }
+    $parent = dirname($temp);
+    if ($parent === $temp) break;
+    $temp = $parent;
+}
+
+if (!$publicHtmlDir) {
+    if (is_dir('/home/u575992126/domains/rayan-group.com/public_html')) {
+        $publicHtmlDir = '/home/u575992126/domains/rayan-group.com/public_html';
+    } else {
+        $publicHtmlDir = realpath(__DIR__ . '/../..') ?: realpath(__DIR__ . '/..');
+    }
+}
+
+// Target directory is ALWAYS the live website public_html
+$rootDir = $publicHtmlDir;
+
+// Determine source directory: git clone is at public_html/site
+$siteDir = is_dir($publicHtmlDir . '/site') ? ($publicHtmlDir . '/site') : (realpath(__DIR__ . '/..'));
+if (is_dir($siteDir . '/dist')) {
+    $sourceDir = $siteDir . '/dist';
+} elseif (is_dir($publicHtmlDir . '/dist')) {
+    $sourceDir = $publicHtmlDir . '/dist';
+} else {
+    $sourceDir = $siteDir;
+}
 
 $response = [
     'success' => true,
@@ -22,76 +54,71 @@ $response = [
     'php_version' => phpversion(),
     'site_dir' => $siteDir,
     'root_dir' => $rootDir,
+    'source_dir' => $sourceDir,
     'database' => [],
     'sync_results' => []
 ];
 
-// 1. Verify and initialize Hostinger MySQL Database
-require_once __DIR__ . '/db.php';
-try {
-    $pdo = getDbConnection();
-    if ($pdo) {
-        $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-        $response['database'] = [
-            'status' => 'connected',
-            'name' => 'u575992126_rayan_app',
-            'host' => 'localhost',
-            'tables' => $tables
-        ];
-    } else {
-        $response['database'] = [
-            'status' => 'error',
-            'message' => 'PDO connection returned null'
-        ];
+// 2. Verify and initialize Hostinger MySQL Database
+if (file_exists(__DIR__ . '/db.php')) {
+    require_once __DIR__ . '/db.php';
+    try {
+        if (function_exists('getDbConnection')) {
+            $pdo = getDbConnection();
+            if ($pdo) {
+                $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+                $response['database'] = [
+                    'status' => 'connected',
+                    'name' => 'u575992126_rayan_app',
+                    'host' => 'localhost',
+                    'tables' => $tables
+                ];
+            } else {
+                $response['database'] = ['status' => 'error', 'message' => 'PDO connection returned null'];
+            }
+        }
+    } catch (Exception $e) {
+        $response['database'] = ['status' => 'exception', 'message' => $e->getMessage()];
     }
-} catch (Exception $e) {
-    $response['database'] = [
-        'status' => 'exception',
-        'message' => $e->getMessage()
-    ];
 }
 
-// 2. Perform file synchronization from site/dist or site/ into website root (public_html)
+// 3. Helper function to copy recursively
+function copyFolder($src, $dst) {
+    if (!is_dir($dst)) {
+        @mkdir($dst, 0755, true);
+    }
+    $dir = opendir($src);
+    $copiedCount = 0;
+    if ($dir) {
+        while (false !== ($file = readdir($dir))) {
+            if ($file !== '.' && $file !== '..') {
+                $srcFile = $src . '/' . $file;
+                $dstFile = $dst . '/' . $file;
+                if (is_dir($srcFile)) {
+                    $copiedCount += copyFolder($srcFile, $dstFile);
+                } else {
+                    if (@copy($srcFile, $dstFile)) {
+                        $copiedCount++;
+                    }
+                }
+            }
+        }
+        closedir($dir);
+    }
+    return $copiedCount;
+}
+
+// 4. Perform file synchronization
 if (!$rootDir || !is_writable($rootDir)) {
     $response['sync_results']['writable'] = false;
     $response['sync_results']['error'] = "Root directory ($rootDir) is not writable";
 } else {
     $response['sync_results']['writable'] = true;
-    
-    // Check if dist/ exists, otherwise use site root
-    $sourceDir = is_dir($siteDir . '/dist') ? ($siteDir . '/dist') : $siteDir;
-    $response['sync_results']['source_dir'] = $sourceDir;
-
-    // Helper function to copy recursively
-    function copyFolder($src, $dst) {
-        if (!is_dir($dst)) {
-            @mkdir($dst, 0755, true);
-        }
-        $dir = opendir($src);
-        $copiedCount = 0;
-        if ($dir) {
-            while (false !== ($file = readdir($dir))) {
-                if ($file !== '.' && $file !== '..') {
-                    $srcFile = $src . '/' . $file;
-                    $dstFile = $dst . '/' . $file;
-                    if (is_dir($srcFile)) {
-                        $copiedCount += copyFolder($srcFile, $dstFile);
-                    } else {
-                        if (@copy($srcFile, $dstFile)) {
-                            $copiedCount++;
-                        }
-                    }
-                }
-            }
-            closedir($dir);
-        }
-        return $copiedCount;
-    }
 
     // Determine all items to copy dynamically from $sourceDir
     $items = scandir($sourceDir);
     $copiedSummary = [];
-    $ignored = ['.', '..', '.git', '.github', '.vercel', 'node_modules'];
+    $ignored = ['.', '..', '.git', '.github', '.vercel', 'node_modules', 'site'];
 
     foreach ($items as $item) {
         if (in_array($item, $ignored)) continue;
@@ -108,10 +135,13 @@ if (!$rootDir || !is_writable($rootDir)) {
         }
     }
 
-    // If source was site/dist, also ensure api/ endpoints are refreshed at root
-    if ($sourceDir !== $siteDir && is_dir($siteDir . '/api')) {
-        copyFolder($siteDir . '/api', $rootDir . '/api');
-        $copiedSummary['api_sync'] = 'Root API updated from site/api';
+    // Ensure api/ endpoints are refreshed at root
+    if (is_dir($siteDir . '/public/api')) {
+        copyFolder($siteDir . '/public/api', $rootDir . '/api');
+        $copiedSummary['api_sync'] = 'Root API updated from site/public/api';
+    } elseif (is_dir($sourceDir . '/api')) {
+        copyFolder($sourceDir . '/api', $rootDir . '/api');
+        $copiedSummary['api_sync'] = 'Root API updated from dist/api';
     }
 
     // Check for css & js bundles in root assets
