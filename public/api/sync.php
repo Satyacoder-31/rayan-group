@@ -68,18 +68,12 @@ if (isset($_GET['inspect'])) {
         $distWaldorf = $sourceDir . '/projects/waldorf-astoria-renovation-rak/index.html';
         $out['root_exists'] = file_exists($rootWaldorf);
         $out['root_mtime'] = file_exists($rootWaldorf) ? date('Y-m-d H:i:s', filemtime($rootWaldorf)) : null;
+        $out['root_size'] = file_exists($rootWaldorf) ? filesize($rootWaldorf) : 0;
         $out['site_exists'] = file_exists($siteWaldorf);
         $out['site_mtime'] = file_exists($siteWaldorf) ? date('Y-m-d H:i:s', filemtime($siteWaldorf)) : null;
         $out['dist_exists'] = file_exists($distWaldorf);
         $out['dist_mtime'] = file_exists($distWaldorf) ? date('Y-m-d H:i:s', filemtime($distWaldorf)) : null;
 
-        // Check git status in siteDir if possible
-        if (is_dir($siteDir . '/.git')) {
-            $gitStatus = @shell_exec("cd " . escapeshellarg($siteDir) . " && git status -s 2>&1");
-            $out['git_status'] = $gitStatus;
-            $gitLog = @shell_exec("cd " . escapeshellarg($siteDir) . " && git log -n 1 --oneline 2>&1");
-            $out['git_latest_commit'] = $gitLog;
-        }
         // Check root index.html featured projects
         $rootIndex = $rootDir . '/index.html';
         if (file_exists($rootIndex)) {
