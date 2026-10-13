@@ -309,7 +309,25 @@ const homeContent = `
           </div>
         </article>
 
-        <!-- Project 2 -->
+        <!-- Project 2: Dubai Police Academy (Under Construction) -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.3); display: flex; flex-direction: column;">
+          <div style="height: 240px; overflow: hidden; position: relative;">
+            <img src="/assets/images/projects/dubai-police-academy.jpg" alt="Dubai Police Academy Tactical Facility" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(245,158,11,0.9); color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 4px; letter-spacing: 0.05em;">UNDER CONSTRUCTION</span>
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #f59e0b;">CIVIC &amp; DEFENSE</span>
+          </div>
+          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
+            <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">AL ROWAIYAH, DUBAI</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Dubai Police Academy Tactical Facility</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Institutional complex masonry, tactical training infrastructure, heavy acoustic gypsum partitions &amp; security facility delivery.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1rem; margin-top: auto;">
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: Dubai Police GHQ</span>
+              <a href="/projects/dubai-police-academy/" style="color: #f59e0b; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Project 3 -->
         <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 240px; overflow: hidden; position: relative;">
             <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Renovation" style="width: 100%; height: 100%; object-fit: cover;">
