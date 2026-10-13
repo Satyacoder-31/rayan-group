@@ -477,15 +477,22 @@ for (const proj of COMBINED_PROJECTS) {
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
         ${related.map(rel => `
-          <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+          <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
             <div style="height: 200px; overflow: hidden; position: relative;">
-              <img src="${rel.heroImage}" alt="${rel.title}" style="width: 100%; height: 100%; object-fit: cover;">
+              <a href="/projects/${rel.slug}/" style="display: block; width: 100%; height: 100%;">
+                <img src="${rel.heroImage}" alt="${rel.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+              </a>
             </div>
-            <div style="padding: 1.75rem;">
+            <div style="padding: 1.75rem; flex-grow: 1; display: flex; flex-direction: column;">
               <span style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">${rel.categoryLabel}</span>
-              <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0.4rem 0 0.75rem;">${rel.shortTitle}</h3>
-              <p style="font-size: 0.825rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.25rem;">${rel.scope}</p>
-              <a href="/projects/${rel.slug}/" style="font-size: 0.8rem; font-weight: 700; color: #0099e6; text-decoration: none;">EXPLORE CASE STUDY →</a>
+              <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0.4rem 0 0.75rem;">
+                <a href="/projects/${rel.slug}/" style="color: inherit; text-decoration: none;">${rel.shortTitle}</a>
+              </h3>
+              <p style="font-size: 0.825rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.25rem; flex-grow: 1;">${rel.scope}</p>
+              <a href="/projects/${rel.slug}/" class="project-btn-cta ${rel.status === 'Under Construction' ? 'under-construction' : ''}">
+                <span>EXPLORE CASE STUDY</span>
+                <span class="btn-arrow">→</span>
+              </a>
             </div>
           </article>
         `).join('')}
@@ -645,17 +652,25 @@ const portfolioContent = `
         return `
         <article class="project-editorial-card" data-project-cat="${filterCat}" data-project-title="${proj.title.toLowerCase()}" data-project-client="${proj.client.toLowerCase()}" data-project-loc="${proj.location.toLowerCase()}" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <img src="${proj.heroImage}" alt="${proj.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);" loading="lazy">
-            <span style="position: absolute; bottom: 1rem; left: 1rem; background: ${proj.status === 'Completed' ? 'rgba(16,185,129,0.9)' : 'rgba(245,158,11,0.9)'}; color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 3px; letter-spacing: 0.05em;">${proj.status.toUpperCase()}</span>
+            <a href="/projects/${proj.slug}/" style="display: block; width: 100%; height: 100%;">
+              <img src="${proj.heroImage}" alt="${proj.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);" loading="lazy">
+            </a>
+            <span style="position: absolute; bottom: 1rem; left: 1rem; background: ${proj.status === 'Completed' ? 'rgba(16,185,129,0.9)' : 'rgba(245,158,11,0.9)'}; color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 3px; letter-spacing: 0.05em; pointer-events: none;">${proj.status.toUpperCase()}</span>
           </div>
           <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.35rem;">${proj.categoryLabel}</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 0.75rem;">${proj.shortTitle}</h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 0.75rem;">
+              <a href="/projects/${proj.slug}/" style="color: inherit; text-decoration: none; transition: color 0.2s ease;">${proj.shortTitle}</a>
+            </h3>
             <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">${proj.scope}</p>
-            <div style="padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: ${displayClient}</span>
-              <a href="/projects/${proj.slug}/" style="font-size: 0.825rem; font-weight: 700; color: #0099e6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
-                <span>EXPLORE CASE STUDY</span><span>→</span>
+            <div class="project-card-footer">
+              <div class="project-client-row">
+                <span class="project-client-label">Client</span>
+                <span class="project-client-name" title="${displayClient}">${displayClient}</span>
+              </div>
+              <a href="/projects/${proj.slug}/" class="project-btn-cta ${proj.status === 'Under Construction' ? 'under-construction' : ''}">
+                <span>EXPLORE CASE STUDY</span>
+                <span class="btn-arrow">→</span>
               </a>
             </div>
           </div>
