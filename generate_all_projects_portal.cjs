@@ -4,6 +4,34 @@ const { wrapPage, renderPageHero, ensureDir } = require('./build_multipage_site.
 
 const NEW_EXTRACTED_PROJECTS = [
   {
+    slug: 'yateem-optician-khalidiyah-mall',
+    title: 'Yateem Optician — Khalidiyah Mall Abu Dhabi',
+    shortTitle: 'Yateem Optician Khalidiyah Mall',
+    category: 'commercial',
+    categoryLabel: 'COMMERCIAL RETAIL / ABU DHABI',
+    location: 'Khalidiyah Mall, Abu Dhabi, UAE',
+    client: 'M/S Buildara General Contracting LLC',
+    status: 'Under Construction',
+    heroImage: '/assets/images/projects/yateem-optician-khalidiyah-mall.jpg',
+    scope: 'Turnkey Luxury Retail Fit-Out, Raised Flooring, Fire-Rated Gypsum Partitions, Smoked Oak Joinery & MEP Modernization',
+    contractRef: 'LPO/BD/2026/12 • Ref# RFQ-REC-RG-45017',
+    contractValue: 'AED 59,850.00 (Approved Net + VAT)',
+    highlights: [
+      'Fast-track turnkey luxury retail fit-out inside the premier Khalidiyah Mall shopping center in Abu Dhabi',
+      '150mm engineered raised floor with AAC blocks, heavy screeding, and 800x800mm porcelain tile finishes',
+      'Acoustic and fire-rated 12mm FR/MR gypsum linings, cement board partitions, and bulkheads with perimeter coves',
+      'Smoked oak laminate MDF wall panelling, custom LED eyewear display showcases, and PU black powdercoated skirtings',
+      'Executed by Rayan Engineering and Contracting LLC - SPC under Subcontract PO: LPO/BD/2026/12 (Ref# RFQ-REC-RG-45017)'
+    ],
+    narrative: `Rayan Engineering and Contracting LLC - SPC was awarded the turnkey commercial interior fit-out for the prestigious Yateem Optician retail boutique at Khalidiyah Mall in Abu Dhabi, under subcontract agreement with M/S Buildara General Contracting LLC (Ref# RFQ-REC-RG-45017 / LPO/BD/2026/12).
+
+Currently active under construction, the project encompasses comprehensive civil and architectural engineering, raised access flooring (150mm with AAC blocks), floor screeding, and heavy floor protection. The wall and ceiling scope incorporates 12mm fire-rated and moisture-resistant gypsum boards with heavy-gauge galvanized iron (GI) framing, cement boards, and reinforced MDF backing for high-impact eyewear wall displays and digital LED media screens.
+
+Premium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles with brass transition strips, Jotun Fenomastic luxury wall coatings, custom smoked oak laminate MDF cladding at the entrance portal, and 100mm black powdercoated perimeter skirting. All works adhere strictly to shopping mall tenant fit-out criteria, hot work permit safety mandates, and Rayan Group's triple ISO 9001, 14001, and 45001 accreditations.`,
+    imgDir: 'yateem-optician-khalidiyah-mall',
+    imgCount: 3
+  },
+  {
     slug: 'waldorf-astoria-renovation-rak',
     title: 'Waldorf Astoria Hotel Luxury Renovation',
     shortTitle: 'Waldorf Astoria Renovation',
@@ -341,7 +369,10 @@ const NEW_EXTRACTED_PROJECTS = [
   }
 ];
 
-const COMBINED_PROJECTS = NEW_EXTRACTED_PROJECTS;
+const COMBINED_PROJECTS = [
+  ...NEW_EXTRACTED_PROJECTS.filter(p => p.status === 'Under Construction'),
+  ...NEW_EXTRACTED_PROJECTS.filter(p => p.status !== 'Under Construction')
+];
 
 console.log(`Processing total ${COMBINED_PROJECTS.length} extracted projects...`);
 
@@ -516,6 +547,18 @@ for (const proj of COMBINED_PROJECTS) {
               <div style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">${proj.scope}</div>
             </div>
 
+            ${proj.contractRef ? `
+            <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.85rem; margin-bottom: 0.85rem;">
+              <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.25rem;">Subcontract PO &amp; Reference</span>
+              <div style="font-size: 0.95rem; color: #cbd5e1; font-weight: 600;">${proj.contractRef}</div>
+            </div>` : ''}
+
+            ${proj.contractValue ? `
+            <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.85rem; margin-bottom: 0.85rem;">
+              <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.25rem;">Subcontract Value</span>
+              <div style="font-size: 0.95rem; color: #10b981; font-weight: 700;">${proj.contractValue}</div>
+            </div>` : ''}
+
             <div>
               <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.25rem;">HSE &amp; Quality Accreditations</span>
               <div style="font-size: 0.85rem; color: #10b981; font-weight: 600;">ISO 9001:2015 • ISO 45001:2018</div>
@@ -553,12 +596,14 @@ const portfolioHeroHtml = renderPageHero({
   bgImage: '/assets/images/projects/waldorf-astoria-renovation-rak.jpg',
   subnav: [
     { label: `All Projects (${COMBINED_PROJECTS.length})`, href: '/projects/', active: true },
+    { label: 'Yateem Optician', href: '/projects/yateem-optician-khalidiyah-mall/', active: false },
+    { label: 'Dubai Police', href: '/projects/dubai-police-academy/', active: false },
+    { label: 'Al Lisaili Villa', href: '/projects/al-lisaili-villa/', active: false },
     { label: 'Waldorf Astoria', href: '/projects/waldorf-astoria-renovation-rak/', active: false },
     { label: 'Palm Jumeirah', href: '/projects/palm-jumeirah-rec-estate/', active: false },
     { label: 'C2 Towers', href: '/projects/c2-towers-al-bateen/', active: false },
     { label: 'Edge REMAYA', href: '/projects/edge-group-remaya/', active: false },
-    { label: 'Roxy Cinemas', href: '/projects/roxy-cinema-dubai-hills-mall/', active: false },
-    { label: 'Infinity Pool', href: '/projects/luxury-island-infinity-pool/', active: false }
+    { label: 'Roxy Cinemas', href: '/projects/roxy-cinema-dubai-hills-mall/', active: false }
   ]
 });
 
@@ -585,7 +630,7 @@ const portfolioContent = `
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.8rem; color: #94a3b8;">
-        <span id="projectCounter">DISPLAYING ALL ${COMBINED_PROJECTS.length} EXECUTED ASSETS</span>
+        <span id="projectCounter">DISPLAYING ALL ${COMBINED_PROJECTS.length} EXECUTED &amp; ACTIVE ASSETS</span>
         <span>DUAL-HUB DELIVERY: UNITED ARAB EMIRATES &amp; INDIA</span>
       </div>
     </div>
@@ -594,6 +639,9 @@ const portfolioContent = `
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;" id="projectsGrid">
       ${COMBINED_PROJECTS.map(proj => {
         const filterCat = proj.category;
+        const displayClient = (proj.client.includes('/') && !proj.client.toUpperCase().startsWith('M/S'))
+          ? proj.client.split('/')[0].trim()
+          : proj.client.trim();
         return `
         <article class="project-editorial-card" data-project-cat="${filterCat}" data-project-title="${proj.title.toLowerCase()}" data-project-client="${proj.client.toLowerCase()}" data-project-loc="${proj.location.toLowerCase()}" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
           <div style="height: 240px; overflow: hidden; position: relative;">
@@ -605,7 +653,7 @@ const portfolioContent = `
             <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 0.75rem;">${proj.shortTitle}</h3>
             <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">${proj.scope}</p>
             <div style="padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: ${proj.client.split('/')[0].trim()}</span>
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: ${displayClient}</span>
               <a href="/projects/${proj.slug}/" style="font-size: 0.825rem; font-weight: 700; color: #0099e6; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
                 <span>EXPLORE CASE STUDY</span><span>→</span>
               </a>

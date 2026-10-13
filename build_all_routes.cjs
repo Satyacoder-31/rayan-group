@@ -278,7 +278,7 @@ const homeContent = `
   </section>
 
   <!-- ==========================================================================
-       SECTION 5: FEATURED PROJECTS (16 Verified Real Case Studies)
+       SECTION 5: FEATURED PROJECTS (17 Verified Real Case Studies)
        ========================================================================== -->
   <section class="section" style="padding: 6rem 0; background: var(--bg-dark); border-bottom: 1px solid rgba(255,255,255,0.08);">
     <div class="container">
@@ -287,11 +287,29 @@ const homeContent = `
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.5rem;">SIGNATURE TRACK RECORD</span>
           <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #fff; text-transform: uppercase;">FEATURED PROJECTS</h2>
         </div>
-        <a href="/projects/" class="btn-enterprise-primary">VIEW ALL 16 CASE STUDIES →</a>
+        <a href="/projects/" class="btn-enterprise-primary">VIEW ALL 17 CASE STUDIES →</a>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
-        <!-- Project 1 -->
+        <!-- Project 1: Yateem Optician (Under Construction) -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.3); display: flex; flex-direction: column;">
+          <div style="height: 240px; overflow: hidden; position: relative;">
+            <img src="/assets/images/projects/yateem-optician-khalidiyah-mall.jpg" alt="Yateem Optician Khalidiyah Mall" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(245,158,11,0.9); color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 4px; letter-spacing: 0.05em;">UNDER CONSTRUCTION</span>
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #f59e0b;">RETAIL FIT-OUT</span>
+          </div>
+          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
+            <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">KHALIDIYAH MALL, ABU DHABI</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Yateem Optician Turnkey Retail Boutique</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Turnkey commercial retail fit-out, 150mm raised access floor, acoustic fire-rated gypsum wall linings, smoked oak joinery &amp; MEP execution.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1rem; margin-top: auto;">
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: M/S Buildara General Contracting</span>
+              <a href="/projects/yateem-optician-khalidiyah-mall/" style="color: #f59e0b; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Project 2 -->
         <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 240px; overflow: hidden; position: relative;">
             <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Renovation" style="width: 100%; height: 100%; object-fit: cover;">
