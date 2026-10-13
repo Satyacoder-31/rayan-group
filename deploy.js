@@ -2,7 +2,10 @@ import { execSync } from 'child_process';
 import { Configuration, HostingCacheApi } from '@hostinger/sdk';
 
 const HOSTINGER_TOKEN = 'g9EFoDsji8oMJ3dJjP7IpLkWfYSzJa0LB27lzVqi67233ccf';
-const SYNC_URL = 'https://rayan-group.com/site/api/sync.php?token=rayan_deploy_2026_secret_key';
+const SYNC_URLS = [
+  'https://rayan-group.com/api/sync.php?token=rayan_deploy_2026_secret_key',
+  'https://rayan-group.com/site/dist/api/sync.php?token=rayan_deploy_2026_secret_key'
+];
 const WEBHOOK_URL = 'https://webhooks.hostinger.com/deploy/8b37bfc2d831afd52165c2a8f6fe1551';
 
 async function deploy() {
@@ -49,16 +52,26 @@ async function deploy() {
   await new Promise(r => setTimeout(r, 6000));
 
   console.log('\n⚙️ [4/5] Synchronizing production files to web root...');
-  try {
-    const res = await fetch(SYNC_URL);
-    const json = await res.json();
-    console.log('Sync status:', json.success ? 'SUCCESS ✅' : 'FAILED ❌');
-    if (json.sync_results?.css_bundles) {
-      console.log('Active CSS:', json.sync_results.css_bundles.join(', '));
-      console.log('Active JS:', json.sync_results.js_bundles.join(', '));
+  let synced = false;
+  for (const url of SYNC_URLS) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        console.log(`Sync status (${url}):`, json.success ? 'SUCCESS ✅' : 'FAILED ❌');
+        if (json.sync_results?.css_bundles) {
+          console.log('Active CSS:', json.sync_results.css_bundles.join(', '));
+          console.log('Active JS:', json.sync_results.js_bundles.join(', '));
+        }
+        synced = true;
+        break;
+      }
+    } catch (err) {
+      console.warn(`Sync attempt to ${url} failed:`, err.message);
     }
-  } catch (err) {
-    console.error('Sync error:', err.message);
+  }
+  if (!synced) {
+    console.error('All sync endpoints failed.');
   }
 
   console.log('\n🧹 [5/5] Purging Hostinger CDN cache...');

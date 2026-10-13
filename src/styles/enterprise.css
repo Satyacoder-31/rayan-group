@@ -24,6 +24,18 @@
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+@media (min-width: 1920px) {
+  :root {
+    --container-max: min(94vw, 1920px);
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --container-max: min(94vw, 2400px);
+  }
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: var(--header-height, 105px);
