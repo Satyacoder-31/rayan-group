@@ -404,8 +404,16 @@ class LiveAssistanceChat {
         const data = await res.json();
         if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
           let hasNewAdminMsg = false;
-          data.messages.forEach(msg => {
-            if (!this.isMessageInList(msg, this.messages)) {
+          data.messages.forEach(rawMsg => {
+            const msg = {
+              id: rawMsg.id || rawMsg.msg_id || ('msg_' + (rawMsg.timestamp || Date.now())),
+              sessionId: rawMsg.sessionId || rawMsg.session_id || this.sessionId,
+              sender: rawMsg.sender || 'visitor',
+              senderName: rawMsg.senderName || rawMsg.sender_name || (rawMsg.sender === 'admin' ? '🏛️ Executive Desk' : 'Visitor'),
+              text: rawMsg.text || rawMsg.message_text || '',
+              timestamp: typeof rawMsg.timestamp === 'number' ? rawMsg.timestamp : (parseInt(rawMsg.timestamp, 10) || Date.now())
+            };
+            if (msg.text && !this.isMessageInList(msg, this.messages)) {
               this.messages.push(msg);
               this.appendMessageToDom(msg);
               if (msg.sender === 'admin') hasNewAdminMsg = true;

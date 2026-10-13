@@ -1,8 +1,8 @@
 <?php
 /**
  * Rayan Group — Hostinger Database Connection & Schema Setup
- * Database: u575992126_jE5GI (or u575992126_B3eNV)
- * Host: localhost (or srv2094.hstgr.io)
+ * Database: u575992126_rayan_app
+ * Host: localhost
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -46,23 +46,60 @@ function getDbConnection() {
             CREATE TABLE IF NOT EXISTS chat_sessions (
                 session_id VARCHAR(64) PRIMARY KEY,
                 visitor_name VARCHAR(255) DEFAULT 'Website Visitor',
+                page VARCHAR(255) DEFAULT '/',
                 status VARCHAR(32) DEFAULT 'active',
+                last_message TEXT,
+                unread_for_admin INT DEFAULT 0,
+                unread_for_visitor INT DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
             CREATE TABLE IF NOT EXISTS chat_messages (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                msg_id VARCHAR(64) DEFAULT NULL,
                 session_id VARCHAR(64) NOT NULL,
                 sender VARCHAR(32) NOT NULL,
                 sender_name VARCHAR(255) NOT NULL,
                 message_text TEXT NOT NULL,
                 timestamp BIGINT NOT NULL,
+                read_status TINYINT(1) DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_session (session_id),
-                INDEX idx_timestamp (timestamp)
+                INDEX idx_timestamp (timestamp),
+                INDEX idx_msg_id (msg_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
+
+        // Safe auto-migration for existing tables:
+        $sessionCols = [
+            'page' => "ALTER TABLE chat_sessions ADD COLUMN page VARCHAR(255) DEFAULT '/'",
+            'last_message' => "ALTER TABLE chat_sessions ADD COLUMN last_message TEXT",
+            'unread_for_admin' => "ALTER TABLE chat_sessions ADD COLUMN unread_for_admin INT DEFAULT 0",
+            'unread_for_visitor' => "ALTER TABLE chat_sessions ADD COLUMN unread_for_visitor INT DEFAULT 0"
+        ];
+        foreach ($sessionCols as $col => $alterSql) {
+            try {
+                $check = $pdo->query("SHOW COLUMNS FROM chat_sessions LIKE '$col'")->fetch();
+                if (!$check) {
+                    $pdo->exec($alterSql);
+                }
+            } catch (Exception $e) {}
+        }
+
+        try {
+            $checkMsgId = $pdo->query("SHOW COLUMNS FROM chat_messages LIKE 'msg_id'")->fetch();
+            if (!$checkMsgId) {
+                $pdo->exec("ALTER TABLE chat_messages ADD COLUMN msg_id VARCHAR(64) DEFAULT NULL, ADD INDEX idx_msg_id (msg_id)");
+            }
+        } catch (Exception $e) {}
+
+        try {
+            $checkRead = $pdo->query("SHOW COLUMNS FROM chat_messages LIKE 'read_status'")->fetch();
+            if (!$checkRead) {
+                $pdo->exec("ALTER TABLE chat_messages ADD COLUMN read_status TINYINT(1) DEFAULT 0");
+            }
+        } catch (Exception $e) {}
 
         return $pdo;
     } catch (PDOException $e) {

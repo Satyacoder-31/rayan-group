@@ -1,16 +1,18 @@
-// Serverless & Dev API Handler for Live Assistance Chat
-// Supports cross-device polling, messaging, and status management
+// Serverless & Node API Handler for Live Assistance Chat
+// Persistently proxies to the Hostinger MySQL backend so Vercel & custom domain stay 100% in sync
+// Includes local in-memory fallback for offline or detached development
 
-let sessions = {};
-let messages = {};
+const UPSTREAM_URL = 'https://rayan-group.com/api/chat';
 
-// Clean up stale sessions older than 24h
+let localSessions = {};
+let localMessages = {};
+
 function cleanOldData() {
   const now = Date.now();
-  for (const id in sessions) {
-    if (now - sessions[id].lastActivity > 24 * 60 * 60 * 1000) {
-      delete sessions[id];
-      delete messages[id];
+  for (const id in localSessions) {
+    if (now - localSessions[id].lastActivity > 48 * 60 * 60 * 1000) {
+      delete localSessions[id];
+      delete localMessages[id];
     }
   }
 }
@@ -19,7 +21,7 @@ export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -30,47 +32,81 @@ export default async function handler(req, res) {
   const url = new URL(req.url, `http://${host}`);
   const action = url.searchParams.get('action') || (req.body && req.body.action) || 'poll';
 
+  // Attempt proxy to primary Hostinger MySQL backend
+  try {
+    const upstreamUrl = `${UPSTREAM_URL}?${url.searchParams.toString()}`;
+    const fetchOptions = {
+      method: req.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Rayan-Vercel-Proxy/1.0'
+      }
+    };
+    if (req.method === 'POST') {
+      let bodyData = req.body;
+      if (typeof bodyData === 'string') {
+        try { bodyData = JSON.parse(bodyData); } catch (e) {}
+      }
+      fetchOptions.body = JSON.stringify(bodyData || {});
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    fetchOptions.signal = controller.signal;
+
+    const upstreamRes = await fetch(upstreamUrl, fetchOptions);
+    clearTimeout(timeoutId);
+
+    if (upstreamRes.ok) {
+      const data = await upstreamRes.json();
+      res.status(200).json(data);
+      return;
+    }
+  } catch (proxyErr) {
+    // Upstream error or timeout; fallback to local in-memory store
+  }
+
+  // ============================================================================
+  // LOCAL IN-MEMORY FALLBACK (when upstream is unreachable)
+  // ============================================================================
   cleanOldData();
 
-  // 1. Visitor or Admin Polls for Messages
   if (req.method === 'GET') {
     if (action === 'list_sessions') {
-      // Admin lists all sessions
-      const sessionList = Object.values(sessions).sort((a, b) => b.lastActivity - a.lastActivity);
+      const sessionList = Object.values(localSessions).sort((a, b) => b.lastActivity - a.lastActivity);
       res.status(200).json({ success: true, sessions: sessionList });
       return;
     }
 
     if (action === 'get_messages') {
-      const sessionId = url.searchParams.get('sessionId');
+      const sessionId = url.searchParams.get('sessionId') || url.searchParams.get('session_id');
       if (!sessionId) {
         res.status(400).json({ error: 'Missing sessionId' });
         return;
       }
-      const sessionMsgs = messages[sessionId] || [];
-      const session = sessions[sessionId] || null;
+      const sessionMsgs = localMessages[sessionId] || [];
+      const session = localSessions[sessionId] || null;
       res.status(200).json({ success: true, session, messages: sessionMsgs });
       return;
     }
 
     if (action === 'poll') {
-      const sessionId = url.searchParams.get('sessionId');
+      const sessionId = url.searchParams.get('sessionId') || url.searchParams.get('session_id');
       const since = parseInt(url.searchParams.get('since') || '0', 10);
-      const sessionMsgs = (messages[sessionId] || []).filter(m => m.timestamp > since);
+      const sessionMsgs = (localMessages[sessionId] || []).filter(m => m.timestamp > since);
       res.status(200).json({
         success: true,
-        session: sessions[sessionId] || null,
+        session: localSessions[sessionId] || null,
         messages: sessionMsgs,
         serverTime: Date.now()
       });
       return;
     }
 
-    res.status(200).json({ success: true, status: 'Live Assistance API Online' });
+    res.status(200).json({ success: true, status: 'Live Assistance In-Memory Fallback Online' });
     return;
   }
 
-  // 2. POST actions (Send Message, Admin Reply, Resolve, etc.)
   if (req.method === 'POST') {
     let body = req.body;
     if (typeof body === 'string') {
@@ -79,15 +115,16 @@ export default async function handler(req, res) {
     body = body || {};
 
     const subAction = body.action || action;
-    const { sessionId, text, sender, senderName, page, visitorInfo } = body;
+    const sessionId = body.sessionId || body.session_id;
+    const { text, sender, senderName, page, visitorInfo } = body;
 
     if (!sessionId) {
       res.status(400).json({ error: 'Missing sessionId' });
       return;
     }
 
-    if (!sessions[sessionId]) {
-      sessions[sessionId] = {
+    if (!localSessions[sessionId]) {
+      localSessions[sessionId] = {
         id: sessionId,
         visitorName: visitorInfo?.name || senderName || 'Website Visitor',
         page: page || '/',
@@ -97,15 +134,15 @@ export default async function handler(req, res) {
         unreadForVisitor: 0,
         status: 'active'
       };
-      messages[sessionId] = [];
+      localMessages[sessionId] = [];
     }
 
-    const session = sessions[sessionId];
+    const session = localSessions[sessionId];
     session.lastActivity = Date.now();
     if (page) session.page = page;
     if (visitorInfo?.name) session.visitorName = visitorInfo.name;
 
-    if (subAction === 'send' || subAction === 'reply') {
+    if (['send', 'reply', 'send_message'].includes(subAction)) {
       if (!text || !text.trim()) {
         res.status(400).json({ error: 'Message text cannot be empty' });
         return;
@@ -115,43 +152,25 @@ export default async function handler(req, res) {
       const msgId = body.id || ('msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
       const msgTs = body.timestamp || Date.now();
 
-      // Check if message already exists in session by ID or identical text within 5s
-      const isDuplicate = (messages[sessionId] || []).some(m =>
-        m.id === msgId || (m.sender === (isVisitor ? 'visitor' : 'admin') && m.text === text.trim() && Math.abs(m.timestamp - msgTs) < 5000)
-      );
+      const msg = {
+        id: msgId,
+        sessionId,
+        sender: isVisitor ? 'visitor' : 'admin',
+        senderName: isVisitor ? (session.visitorName || 'Visitor') : (senderName || 'Corporate Executive Desk'),
+        text: text.trim(),
+        timestamp: msgTs,
+        read: false
+      };
 
-      let msg;
-      if (isDuplicate) {
-        msg = (messages[sessionId] || []).find(m => m.id === msgId) || {
-          id: msgId,
-          sessionId,
-          sender: isVisitor ? 'visitor' : 'admin',
-          senderName: isVisitor ? (session.visitorName || 'Visitor') : (senderName || 'Corporate Executive Desk'),
-          text: text.trim(),
-          timestamp: msgTs,
-          read: false
-        };
+      localMessages[sessionId].push(msg);
+
+      if (isVisitor) {
+        session.unreadForAdmin = (session.unreadForAdmin || 0) + 1;
+        session.lastMessage = text.trim();
+        session.status = 'active';
       } else {
-        msg = {
-          id: msgId,
-          sessionId,
-          sender: isVisitor ? 'visitor' : 'admin',
-          senderName: isVisitor ? (session.visitorName || 'Visitor') : (senderName || 'Corporate Executive Desk'),
-          text: text.trim(),
-          timestamp: msgTs,
-          read: false
-        };
-
-        messages[sessionId].push(msg);
-
-        if (isVisitor) {
-          session.unreadForAdmin = (session.unreadForAdmin || 0) + 1;
-          session.lastMessage = text.trim();
-          session.status = 'active';
-        } else {
-          session.unreadForVisitor = (session.unreadForVisitor || 0) + 1;
-          session.lastMessage = text.trim();
-        }
+        session.unreadForVisitor = (session.unreadForVisitor || 0) + 1;
+        session.lastMessage = text.trim();
       }
 
       res.status(200).json({ success: true, message: msg, session });
@@ -160,15 +179,8 @@ export default async function handler(req, res) {
 
     if (subAction === 'mark_read') {
       const by = body.by || 'admin';
-      if (by === 'admin') {
-        session.unreadForAdmin = 0;
-      } else {
-        session.unreadForVisitor = 0;
-      }
-      (messages[sessionId] || []).forEach(m => {
-        if (by === 'admin' && m.sender === 'visitor') m.read = true;
-        if (by === 'visitor' && m.sender === 'admin') m.read = true;
-      });
+      if (by === 'admin') session.unreadForAdmin = 0;
+      else session.unreadForVisitor = 0;
       res.status(200).json({ success: true, session });
       return;
     }
@@ -180,8 +192,8 @@ export default async function handler(req, res) {
     }
 
     if (subAction === 'clear') {
-      delete sessions[sessionId];
-      delete messages[sessionId];
+      delete localSessions[sessionId];
+      delete localMessages[sessionId];
       res.status(200).json({ success: true, cleared: sessionId });
       return;
     }

@@ -1028,7 +1028,22 @@ class RayanAdminPortal {
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.sessions)) {
-          remoteSessions = data.sessions;
+          remoteSessions = data.sessions.map(s => {
+            const id = s.id || s.session_id;
+            const lastAct = typeof s.lastActivity === 'number' ? s.lastActivity : (s.last_activity ? new Date(s.last_activity).getTime() : Date.now());
+            const created = typeof s.createdAt === 'number' ? s.createdAt : (s.created_at ? new Date(s.created_at).getTime() : lastAct);
+            return {
+              id: id,
+              visitorName: s.visitorName || s.visitor_name || 'Website Visitor',
+              page: s.page || '/',
+              createdAt: created,
+              lastActivity: lastAct,
+              lastMessage: s.lastMessage || s.last_message || 'Active conversation',
+              unreadForAdmin: typeof s.unreadForAdmin === 'number' ? s.unreadForAdmin : (parseInt(s.unread_for_admin, 10) || 0),
+              unreadForVisitor: typeof s.unreadForVisitor === 'number' ? s.unreadForVisitor : (parseInt(s.unread_for_visitor, 10) || 0),
+              status: s.status || 'active'
+            };
+          }).filter(s => !!s.id);
         }
       }
     } catch (err) {}
@@ -1238,8 +1253,23 @@ class RayanAdminPortal {
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.messages)) {
-          remoteMsgs = data.messages;
-          if (data.session) sessionData = data.session;
+          remoteMsgs = data.messages.map(m => ({
+            id: m.id || m.msg_id || ('msg_' + (m.timestamp || Date.now())),
+            sessionId: m.sessionId || m.session_id || sessionId,
+            sender: m.sender || 'visitor',
+            senderName: m.senderName || m.sender_name || (m.sender === 'admin' ? '🏛️ Executive Desk' : 'Visitor'),
+            text: m.text || m.message_text || '',
+            timestamp: typeof m.timestamp === 'number' ? m.timestamp : (parseInt(m.timestamp, 10) || Date.now()),
+            read: !!m.read || !!m.read_status
+          }));
+          if (data.session) {
+            sessionData = {
+              id: data.session.id || data.session.session_id || sessionId,
+              visitorName: data.session.visitorName || data.session.visitor_name || 'Website Visitor',
+              page: data.session.page || '/',
+              ...data.session
+            };
+          }
         }
       }
     } catch (e) {}
