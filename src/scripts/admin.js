@@ -15,7 +15,6 @@ import {
 } from './data.js';
 
 import { getSiteOverrides, saveSiteOverrides } from './live-overrides.js';
-import { initLiveAssistanceChat } from './live-chat.js';
 
 const DEFAULT_HERO_SLIDES = [
   {
@@ -260,11 +259,6 @@ class RayanAdminPortal {
     this.bindFormEvents();
     this.bindGitPushEvents();
     this.initChatDesk();
-
-    // Initialize floating assistance widget on admin page for direct testing
-    try {
-      initLiveAssistanceChat();
-    } catch (e) {}
   }
 
   // ==========================================================================
@@ -302,7 +296,7 @@ class RayanAdminPortal {
     const headerTitle = document.getElementById('admin-header-title');
     if (headerTitle) {
       const titles = {
-        chat: 'Live Support Desk & Real-Time Assistance',
+        chat: 'Live Assistance Desk & Visitor Inquiries',
         hero: 'Homepage Hero & Cinematic Slideshow',
         profile: 'Corporate Profile & Executive Governance',
         stats: 'Institutional Statistics & Metrics',
@@ -1299,6 +1293,7 @@ class RayanAdminPortal {
       const isSelected = s.id === this.activeSessionId;
       const timeStr = new Date(s.lastActivity || s.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const unreadBadge = (s.unreadForAdmin > 0) ? `<span class="session-unread-pill">${s.unreadForAdmin}</span>` : '';
+      const replyHint = isSelected ? '✓ Active • Replying' : 'Click to Reply →';
 
       return `
         <div class="admin-chat-session-item ${isSelected ? 'selected' : ''}" data-id="${s.id}">
@@ -1306,8 +1301,11 @@ class RayanAdminPortal {
             <span class="session-visitor-name">${s.visitorName || 'Visitor'}</span>
             <span class="session-time">${timeStr}</span>
           </div>
-          <div class="session-last-msg">${s.lastMessage || 'Connected to Executive Desk'}</div>
-          <span class="session-page-meta">Page: ${s.page || '/'}</span>
+          <div class="session-last-msg">${this.escapeHtml(s.lastMessage || 'Connected to Executive Desk')}</div>
+          <div class="session-footer-row">
+            <span class="session-page-meta">Page: ${s.page || '/'}</span>
+            <span class="session-click-hint">${replyHint}</span>
+          </div>
           ${unreadBadge}
         </div>
       `;
@@ -1412,19 +1410,22 @@ class RayanAdminPortal {
     const headerTitle = document.getElementById('admin-thread-visitor-title');
     const headerMeta = document.getElementById('admin-thread-visitor-meta');
     const avatar = document.getElementById('admin-thread-avatar');
+    const targetLabel = document.getElementById('admin-composer-target-name');
     if (!msgContainer) return;
 
     const currentSession = session || this.sessions.find(s => s.id === this.activeSessionId);
     if (currentSession) {
-      if (headerTitle) headerTitle.textContent = currentSession.visitorName || 'Website Visitor';
+      const vName = currentSession.visitorName || 'Website Visitor';
+      if (headerTitle) headerTitle.textContent = vName;
       if (headerMeta) headerMeta.textContent = `Active on: ${currentSession.page || '/'} • Session: ${currentSession.id.slice(0, 16)}`;
-      if (avatar) avatar.textContent = (currentSession.visitorName || 'RD').slice(0, 2).toUpperCase();
+      if (avatar) avatar.textContent = vName.slice(0, 2).toUpperCase();
+      if (targetLabel) targetLabel.textContent = `${vName} (${currentSession.page || '/'})`;
     }
 
     if (this.activeMessages.length === 0) {
       msgContainer.innerHTML = `
         <div style="padding: 3rem 1rem; text-align: center; color: #64748b; font-size: 0.9rem;">
-          No messages exchanged yet in this conversation.<br>Type a message below to assist this visitor.
+          No messages exchanged yet in this conversation.<br>Type your reply in the input below to assist this visitor.
         </div>
       `;
       return;
@@ -1436,7 +1437,7 @@ class RayanAdminPortal {
       return `
         <div class="chat-msg-row ${isDesk ? 'msg-visitor' : 'msg-desk'}" style="${isDesk ? 'align-self:flex-end;' : 'align-self:flex-start;'}">
           <div class="chat-msg-meta" style="${isDesk ? 'justify-content:flex-end;' : ''}">
-            <span>${isDesk ? '🏛️ Corporate Executive Desk' : (m.senderName || 'Visitor')}</span>
+            <span>${isDesk ? '🏛️ Executive Desk (You)' : (m.senderName || 'Visitor')}</span>
           </div>
           <div class="chat-msg-bubble">
             ${this.escapeHtml(m.text)}
@@ -1457,7 +1458,7 @@ class RayanAdminPortal {
 
   async sendAdminReply() {
     if (!this.activeSessionId) {
-      alert('Please select an active conversation session first.');
+      alert('Please select an active conversation session from the left queue first.');
       return;
     }
     const input = document.getElementById('admin-chat-reply-input');
@@ -1477,6 +1478,19 @@ class RayanAdminPortal {
 
     this.activeMessages.push(newMsg);
     this.renderActiveMessages();
+
+    // Update active session last message & activity
+    const sess = this.sessions.find(s => s.id === this.activeSessionId);
+    if (sess) {
+      sess.lastMessage = 'You: ' + text;
+      sess.lastActivity = Date.now();
+      this.renderSessionsList();
+    }
+
+    this.showToast('✓ Reply sent to visitor in real time!');
+
+    // Refocus input for next message
+    input.focus();
 
     // Save in local storage
     try {

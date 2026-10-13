@@ -26,9 +26,9 @@
     })();
   </script>
 
-  <script type="module" crossorigin src="/assets/admin-tMU8972o.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/live-overrides-Q4HBwbfk.js">
-  <link rel="stylesheet" crossorigin href="/assets/admin-0mE07Qpw.css">
+  <script type="module" crossorigin src="/assets/admin-BGd9uPQL.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/live-overrides-Bz1C8oj0.js">
+  <link rel="stylesheet" crossorigin href="/assets/admin-BWnrhuLw.css">
 </head>
 <body class="admin-body">
 
@@ -79,7 +79,7 @@
         <li class="admin-nav-item active">
           <button type="button" data-tab="chat">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span>Live Support Desk</span>
+            <span>Live Assistance Desk</span>
             <span class="admin-nav-badge" id="nav-chat-unread-badge" style="display: none;">0</span>
           </button>
         </li>
@@ -212,35 +212,38 @@
         <div class="admin-tab-pane active" id="tab-chat">
           <div class="admin-chat-desk-wrap">
             
-            <!-- Left: Visitor Sessions -->
+            <!-- Left: Visitor Sessions Queue -->
             <div class="admin-chat-sessions-pane">
               <div class="admin-chat-sessions-header">
                 <div>
-                  <h4 style="margin:0; font-size: 0.95rem; color:#fff;">Live Visitor Queue</h4>
-                  <span style="font-size: 0.7rem; color: #94a3b8;">Active connections on site</span>
+                  <h4 style="margin:0; font-size: 0.95rem; color:#fff;">Live Assistance Queue</h4>
+                  <span style="font-size: 0.72rem; color: #94a3b8;">Active website visitor inquiries</span>
                 </div>
                 <div style="display:flex; gap:0.4rem;">
                   <button type="button" class="admin-btn-primary" id="btn-create-test-chat" style="padding: 0.35rem 0.65rem; font-size: 0.72rem;" title="Simulate a new test visitor inquiry">
                     + Test Visitor
                   </button>
                   <button type="button" class="admin-btn-secondary" onclick="window.__rayanAdminPortal.refreshSessionsList()" style="padding: 0.35rem 0.65rem; font-size: 0.72rem;" title="Refresh sessions">
-                    ↻
+                    ↻ Refresh
                   </button>
                 </div>
               </div>
               <div class="admin-chat-sessions-list" id="admin-chat-sessions-list">
-                <!-- Dynamically populated -->
+                <!-- Dynamically populated with active visitor conversations -->
               </div>
             </div>
 
-            <!-- Right: Active Chat Thread -->
+            <!-- Right: Active Chat Thread & Executive Reply Station -->
             <div class="admin-chat-thread-pane">
               <div class="admin-thread-top">
                 <div class="admin-thread-visitor-info">
                   <div class="admin-thread-avatar" id="admin-thread-avatar">RD</div>
                   <div>
-                    <h4 style="margin:0; font-size: 1rem; color:#fff;" id="admin-thread-visitor-title">Executive Support Desk</h4>
-                    <span style="font-size: 0.72rem; color: #94a3b8;" id="admin-thread-visitor-meta">Select a session from the left queue to respond</span>
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                      <h4 style="margin:0; font-size: 1.05rem; color:#fff;" id="admin-thread-visitor-title">Executive Support Desk</h4>
+                      <span class="admin-live-tag-pill">LIVE ASSISTANCE</span>
+                    </div>
+                    <span style="font-size: 0.74rem; color: #94a3b8;" id="admin-thread-visitor-meta">Select a session from the left queue to respond</span>
                   </div>
                 </div>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
@@ -263,9 +266,9 @@
                 </div>
               </div>
 
-              <!-- Canned Responses Strip -->
+              <!-- Canned Quick Replies Strip -->
               <div class="admin-canned-replies-strip">
-                <span style="font-size: 0.72rem; color: #94a3b8; display: flex; align-items: center; white-space: nowrap;">Quick Replies:</span>
+                <span style="font-size: 0.72rem; color: #94a3b8; display: flex; align-items: center; white-space: nowrap;">⚡ Quick Replies:</span>
                 <button type="button" class="admin-canned-chip" data-reply="Thank you for reaching Rayan Group Executive Desk. A project director is reviewing your inquiry.">General Welcome</button>
                 <button type="button" class="admin-canned-chip" data-reply="Please forward your drawings and tender documentation to tender@rayan-group.com for turnkey estimation.">Request Tender Docs</button>
                 <button type="button" class="admin-canned-chip" data-reply="You can reach our UAE Corporate Headquarters directly at +971-25654497 (Abu Dhabi).">UAE HQ Direct Phone</button>
@@ -273,11 +276,20 @@
                 <button type="button" class="admin-canned-chip" data-reply="Would you like us to schedule a formal briefing call with our Executive Directors?">Schedule Director Call</button>
               </div>
 
-              <!-- Composer Bar -->
-              <div class="admin-chat-composer-bar">
-                <form id="admin-chat-reply-form" style="display:flex; gap:0.75rem; width:100%;">
-                  <input type="text" class="admin-input" id="admin-chat-reply-input" placeholder="Type official executive desk response (Enter to send)..." autocomplete="off" style="flex:1;">
-                  <button type="submit" class="admin-btn-primary" style="padding: 0 1.5rem;">
+              <!-- Dedicated Reply Station / Composer Bar -->
+              <div class="admin-chat-composer-bar" id="admin-chat-composer-bar">
+                <div class="admin-composer-heading-row">
+                  <span class="admin-composer-heading-label">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <strong>Reply to Visitor:</strong>
+                    <span class="admin-composer-target" id="admin-composer-target-name">Active Conversation</span>
+                  </span>
+                  <span class="admin-composer-hint">Delivered instantly to visitor's Live Assistance widget</span>
+                </div>
+                <form id="admin-chat-reply-form" style="display:flex; gap:0.75rem; width:100%; align-items:center;">
+                  <input type="text" class="admin-input admin-chat-reply-input" id="admin-chat-reply-input" placeholder="Type official executive desk response here... (Press Enter or click Send Reply)" autocomplete="off" required style="flex:1;">
+                  <button type="submit" class="admin-btn-primary admin-btn-reply-send" id="btn-admin-reply-send">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     <span>Send Reply</span>
                   </button>
                 </form>
@@ -714,6 +726,20 @@
              TAB 13: ASSISTANCE WIDGET SETTINGS
              ================================================================== -->
         <div class="admin-tab-pane" id="tab-widget">
+          <!-- Quick Jump to Live Reply Desk Banner -->
+          <div class="admin-assistance-reply-banner">
+            <div class="banner-icon">💬</div>
+            <div class="banner-content">
+              <h4 style="margin:0 0 0.25rem; font-size:1.05rem; color:#fff;">Looking to Reply to Live Visitor Messages?</h4>
+              <p style="margin:0; font-size:0.84rem; color:#cbd5e1; line-height:1.5;">
+                All incoming live chats and official responses are managed in real time in the <strong>Live Assistance Desk</strong>.
+              </p>
+            </div>
+            <button type="button" class="admin-btn-primary" onclick="window.__rayanAdminPortal.switchTab('chat')" style="white-space:nowrap; padding: 0.75rem 1.4rem; font-size:0.85rem;">
+              <span>Open Live Reply Desk &rarr;</span>
+            </button>
+          </div>
+
           <div class="admin-card">
             <div class="admin-card-header">
               <div>
@@ -884,217 +910,6 @@ Click "Push All Changes to Git & Trigger Vercel Deploy" to commit directly to br
 
     </main>
   </div>
-
-  <!-- ==========================================================================
-       3. FLOATING LIVE ASSISTANCE WIDGET (Visible on Admin Panel for Testing & Direct Use)
-       ========================================================================== -->
-  <aside class="assistance-widget-container" id="assistance-widget" aria-label="Customer Assistance and Support">
-    <!-- Assistance Flyout Card -->
-    <div class="assistance-card" id="assistance-card" role="dialog" aria-modal="false" aria-labelledby="assistance-card-title">
-      
-      <!-- VIEW 1: Main Assistance Menu View -->
-      <div class="assistance-view" id="assistance-menu-view">
-        <div class="assistance-card-header">
-          <div class="assistance-header-left">
-            <div class="assistance-status-dot"></div>
-            <div>
-              <h4 class="assistance-header-title" id="assistance-card-title">Corporate Assistance</h4>
-              <span class="assistance-header-sub">Online &bull; Rayan Group Executive Desk</span>
-            </div>
-          </div>
-          <button type="button" class="assistance-close-btn" id="assistance-close-btn" aria-label="Close Assistance Menu">&times;</button>
-        </div>
-
-        <div class="assistance-card-body">
-          <p class="assistance-welcome-text">
-            Welcome to Rayan Group. How can our engineering and contracting team assist you today?
-          </p>
-
-          <div class="assistance-options-list">
-            <!-- Option 1: Live Corporate Assistance -->
-            <button type="button" class="assistance-option-item opt-live-chat" id="opt-start-live-chat" aria-label="Start Live Corporate Assistance">
-              <div class="assistance-opt-icon opt-icon-live-chat">
-                <span class="live-chat-ping"></span>
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  <path d="M8 10h.01M12 10h.01M16 10h.01"/>
-                </svg>
-              </div>
-              <div class="assistance-opt-text">
-                <div style="display: flex; align-items: center;">
-                  <span class="assistance-opt-title">Start Live Assistance</span>
-                  <span class="assistance-live-tag">LIVE DESK</span>
-                </div>
-                <span class="assistance-opt-desc">Direct chat with Executive Desk &bull; Instant Reply</span>
-              </div>
-              <span class="assistance-opt-arrow">&rarr;</span>
-            </button>
-
-            <!-- Option 2: Direct Call UAE -->
-            <a href="tel:+97125654497" class="assistance-option-item opt-call">
-              <div class="assistance-opt-icon opt-icon-call">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-              </div>
-              <div class="assistance-opt-text">
-                <span class="assistance-opt-title">Call UAE HQ</span>
-                <span class="assistance-opt-desc">+971-25654497 (Abu Dhabi, UAE)</span>
-              </div>
-              <span class="assistance-opt-arrow">&rarr;</span>
-            </a>
-
-            <!-- Option 2b: Direct Call India -->
-            <a href="tel:+919973086910" class="assistance-option-item opt-call">
-              <div class="assistance-opt-icon opt-icon-call" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-              </div>
-              <div class="assistance-opt-text">
-                <span class="assistance-opt-title">Call India Regional Hub</span>
-                <span class="assistance-opt-desc">+91-9973086910 (Ashaz Engineering)</span>
-              </div>
-              <span class="assistance-opt-arrow">&rarr;</span>
-            </a>
-
-            <!-- Option 3: Request Project Proposal (RFP) -->
-            <a href="/proposal/" class="assistance-option-item opt-proposal">
-              <div class="assistance-opt-icon opt-icon-proposal">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-              </div>
-              <div class="assistance-opt-text">
-                <span class="assistance-opt-title">Submit Tender / RFP</span>
-                <span class="assistance-opt-desc">Fast turnkey feasibility &amp; quotation</span>
-              </div>
-              <span class="assistance-opt-arrow">&rarr;</span>
-            </a>
-
-            <!-- Option 4: Corporate Email -->
-            <a href="mailto:rayan@rayan-group.com" class="assistance-option-item opt-email">
-              <div class="assistance-opt-icon opt-icon-email">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-              </div>
-              <div class="assistance-opt-text">
-                <span class="assistance-opt-title">Email Executive Desk</span>
-                <span class="assistance-opt-desc">rayan@rayan-group.com</span>
-              </div>
-              <span class="assistance-opt-arrow">&rarr;</span>
-            </a>
-          </div>
-
-          <!-- Quick Topic Chips -->
-          <div class="assistance-chips-section">
-            <span class="assistance-chips-title">Direct Topics:</span>
-            <div class="assistance-chips-list">
-              <button type="button" class="assistance-chip">Civil &amp; Interiors</button>
-              <button type="button" class="assistance-chip">Electrical &amp; Mechanical</button>
-              <button type="button" class="assistance-chip">Tender Proposal</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 2: Interactive Live Chat View -->
-      <div class="assistance-view assistance-chat-view view-hidden" id="assistance-chat-view">
-        <div class="chat-room-header">
-          <button type="button" class="chat-back-btn" id="chat-back-to-menu-btn" title="Back to menu">
-            <span>&larr; Menu</span>
-          </button>
-          <div class="chat-room-identity">
-            <div class="chat-agent-avatar">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-              <span class="chat-agent-pulse"></span>
-            </div>
-            <div class="chat-agent-info">
-              <h5 class="chat-agent-title">Executive Support Desk</h5>
-              <span class="chat-agent-status-text">Online &bull; Live Direct Assistance</span>
-            </div>
-          </div>
-          <div class="chat-header-actions">
-            <button type="button" class="chat-sound-toggle-btn" id="chat-sound-toggle-btn" title="Toggle audio chime" aria-label="Toggle audio chime">🔔</button>
-            <button type="button" class="assistance-close-btn" id="chat-close-btn" aria-label="Close Live Assistance">&times;</button>
-          </div>
-        </div>
-
-        <!-- Chat messages thread -->
-        <div class="chat-messages-container" id="chat-messages-container">
-          <div class="chat-time-divider">Live Advisory Connected</div>
-          
-          <div class="chat-msg-row msg-desk" id="welcome-msg-initial">
-            <div class="chat-msg-meta">
-              <span>🏛️ Rayan Executive Desk</span>
-            </div>
-            <div class="chat-msg-bubble">
-              Welcome to Rayan Group Executive Assistance. Our engineering and project advisory desk is online. How may we assist your project today?
-              <span class="chat-msg-time">Just now</span>
-            </div>
-          </div>
-
-          <!-- Quick Suggestion Prompts -->
-          <div class="chat-suggestions-wrap">
-            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to request an EPC Tender / RFP proposal.">Request Tender Proposal / RFP</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Civil Construction &amp; High-Rise contracting.">Civil &amp; High-Rise EPC</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Energy Facilities &amp; Process Pipelines.">Energy &amp; Process Infrastructure</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to connect with the Executive Directors.">Connect with Executive Director</button>
-          </div>
-
-          <!-- Typing indicator (hidden by default) -->
-          <div class="chat-typing-indicator" id="chat-typing-indicator" style="display: none;">
-            <span class="chat-typing-dot"></span>
-            <span class="chat-typing-dot"></span>
-            <span class="chat-typing-dot"></span>
-            <span class="chat-typing-dot"></span>
-          </div>
-        </div>
-
-        <!-- Visitor quick identification bar -->
-        <div class="chat-visitor-profile-bar">
-          <span style="font-size: 0.68rem; color: #94a3b8; white-space: nowrap;">Your Name / Co:</span>
-          <input type="text" class="chat-visitor-input-sm" id="chat-visitor-name-input" placeholder="e.g. Tariq (Apex Contracting)" maxlength="40">
-        </div>
-
-        <!-- Message composer -->
-        <div class="chat-composer-wrap">
-          <form class="chat-composer-form" id="chat-composer-form">
-            <input type="text" class="chat-input-field" id="chat-input-field" placeholder="Type your message..." autocomplete="off" required>
-            <button type="submit" class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-          </form>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Floating Trigger Button (Bottom-Right) -->
-    <button type="button" class="assistance-trigger-btn" id="assistance-trigger-btn" aria-label="Open Corporate Assistance" aria-expanded="false">
-      <span class="assistance-pulse-ring"></span>
-      <span class="assistance-icon-default" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          <path d="M8 10h.01M12 10h.01M16 10h.01"/>
-        </svg>
-      </span>
-      <span class="assistance-icon-close" aria-hidden="true">&times;</span>
-      <span class="assistance-badge-label">Live Assistance</span>
-      <span class="assistance-unread-badge" id="assistance-unread-badge" style="display: none;">1</span>
-    </button>
-  </aside>
 
   <!-- Admin Main JavaScript Controller -->
 </body>
