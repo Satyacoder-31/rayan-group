@@ -259,7 +259,22 @@ export const FEATURED_PROJECTS = [
     image: "/assets/images/projects/dubai-police-academy.jpg?v=3",
     featured: true,
     status: "running",
-    statusBadge: "RUNNING PROJECT • UNDER ACTIVE CONSTRUCTION"
+    statusBadge: "UNDER CONSTRUCTION"
+  },
+  {
+    id: "yateem-optician-khalidiyah-mall",
+    slug: "yateem-optician-khalidiyah-mall",
+    title: "Yateem Optician — Khalidiyah Mall Abu Dhabi",
+    category: "COMMERCIAL RETAIL",
+    filterCat: "commercial",
+    location: "Khalidiyah Mall, Abu Dhabi, UAE",
+    client: "M/S Buildara General Contracting LLC",
+    year: "2026",
+    scope: "Turnkey Luxury Retail Fit-Out, Raised Flooring, Fire-Rated Gypsum Partitions, Smoked Oak Joinery & MEP Modernization.",
+    image: "/assets/images/projects/yateem-optician-khalidiyah-mall.jpg",
+    featured: true,
+    status: "running",
+    statusBadge: "UNDER CONSTRUCTION"
   },
   {
     id: "waldorf-astoria-renovation-rak",
@@ -272,7 +287,9 @@ export const FEATURED_PROJECTS = [
     year: "2024",
     scope: "5-Star Ultra-Luxury Hospitality Overhaul, Presidential Suites Refurbishment, MEP Modernization & Grand Lobby Fit-Out.",
     image: "/assets/images/projects/waldorf-astoria-renovation-rak.jpg",
-    featured: true
+    featured: true,
+    status: "completed",
+    statusBadge: "COMPLETED"
   },
   {
     id: "palm-jumeirah-rec-estate",
@@ -376,7 +393,9 @@ export const FEATURED_PROJECTS = [
     year: "2025",
     scope: "Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes.",
     image: "/assets/images/projects/al-lisaili-villa.jpg",
-    featured: false
+    featured: false,
+    status: "running",
+    statusBadge: "UNDER CONSTRUCTION"
   },
   {
     id: "al-qua-school-infrastructure",
