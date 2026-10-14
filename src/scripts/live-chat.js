@@ -79,6 +79,33 @@ class LiveAssistanceChat {
     if (this.visitorNameInput) {
       this.visitorNameInput.value = this.visitorName === 'Guest Visitor' ? '' : this.visitorName;
     }
+
+    // Isolate scrolling from Lenis smooth-scroll on main page
+    [this.widget, this.card, this.chatView, this.messagesContainer, this.menuView].forEach(el => {
+      if (el) el.setAttribute('data-lenis-prevent', 'true');
+    });
+
+    if (this.card) {
+      this.card.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+        if (this.messagesContainer && !this.messagesContainer.contains(e.target)) {
+          this.messagesContainer.scrollTop += e.deltaY;
+        }
+      }, { passive: true });
+
+      this.card.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
+
+    if (this.messagesContainer) {
+      this.messagesContainer.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      this.messagesContainer.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
   }
 
   bindEvents() {

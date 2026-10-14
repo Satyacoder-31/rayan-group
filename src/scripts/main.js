@@ -46,6 +46,12 @@ if (!prefersReducedMotion) {
       wheelMultiplier: 1,
       touchMultiplier: 2,
       infinite: false,
+      prevent: (node) => {
+        return !!(node && (
+          node.hasAttribute('data-lenis-prevent') ||
+          node.closest('#assistance-widget, .assistance-card, .chat-messages-container, .assistance-chat-view, [data-lenis-prevent]')
+        ));
+      }
     });
 
     if (!window.location.hash) {
