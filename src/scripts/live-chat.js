@@ -627,13 +627,15 @@ class LiveAssistanceChat {
     // Convert bold **text**
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     // Convert bullet points •
-    formatted = formatted.replace(/^• (.*?)$/gm, '<div style="padding-left:0.5rem;margin:0.2rem 0;">• $1</div>');
+    formatted = formatted.replace(/^• (.*?)$/gm, '<div class="chat-bullet-item" style="padding-left:0.5rem;margin:0.25rem 0;">• $1</div>');
     // Convert emails into clickable mailto
     formatted = formatted.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi, '<a href="mailto:$1" style="color:#38bdf8;text-decoration:underline;">$1</a>');
     // Convert phone numbers
     formatted = formatted.replace(/(\+\d{1,3}-\d{6,10})/g, '<a href="tel:$1" style="color:#34d399;text-decoration:none;font-weight:600;">$1</a>');
     // Convert newlines to br
     formatted = formatted.replace(/\n/g, '<br>');
+    // Clean up excessive br right after closing divs
+    formatted = formatted.replace(/<\/div><br>/g, '</div>');
     return formatted;
   }
 
@@ -914,14 +916,33 @@ class LiveAssistanceChat {
       };
     }
 
-    // 2. Tender / RFP / Commercial Proposal / Estimation / BOQ / Pricing
-    if (
-      text.includes('tender') || text.includes('rfp') || text.includes('proposal') ||
+    // 2. Civil Construction & Quotation / Tender / BOQ (Combined Intent)
+    const isCivilIntent = text.includes('civil') || text.includes('high-rise') || text.includes('construction') ||
+      text.includes('contracting') || text.includes('fit-out') || text.includes('fitout') ||
+      text.includes('interior') || text.includes('villa') || text.includes('building') || text.includes('turnkey');
+
+    const isQuoteIntent = text.includes('tender') || text.includes('rfp') || text.includes('proposal') ||
       text.includes('quote') || text.includes('quotation') || text.includes('pricing') ||
-      text.includes('cost') || text.includes('boq') || text.includes('budget') || text.includes('bidding')
-    ) {
+      text.includes('price') || text.includes('cost') || text.includes('boq') ||
+      text.includes('budget') || text.includes('bidding') || text.includes('rate') ||
+      text.includes('estimate') || text.includes('estimating');
+
+    if (isCivilIntent && isQuoteIntent) {
       return {
-        text: "Our **Commercial & Technical Estimating Committee** reviews project parameters and turnkey RFP submissions within 24–48 hours.\n\nDirect Regional Routing:\n• **Dubai & UAE Commercial HQ:** tender@rayan-group.com\n• **South Asia Regional Hub (India):** ashaz@rayan-group.com\n\nWould you like to open our official Tender RFP submission portal to upload BOQ and drawings, or speak with an estimating officer?",
+        text: "Thank you for reaching out regarding **Civil Construction & Contracting Quotation**.\n\nOur **Commercial & Technical Estimating Directorate** reviews project scope, architectural drawings, and BOQ submissions within **24–48 hours** for turnkey commercial, residential, hospitality, and infrastructure works across the UAE and South Asia.\n\n**Direct Regional Estimating Desks:**\n• **Dubai & UAE Commercial HQ:** tender@rayan-group.com | +971-25654497\n• **South Asia Regional Hub (Ashaz Engineering):** ashaz@rayan-group.com | +91-9973086910\n\nWould you like to open our official **Tender RFP Portal** to upload your BOQ and drawings, or speak directly with an Estimating Officer right now?",
+        actions: [
+          { label: '📝 Open Tender RFP Portal', url: '/proposal/' },
+          { label: '💬 Chat with Live Human Agent', action: 'live_human', isLive: true },
+          { label: '🏢 Explore Executed Projects', url: '/projects/' },
+          { label: '✉️ Email tender@rayan-group.com', url: 'mailto:tender@rayan-group.com' }
+        ]
+      };
+    }
+
+    // 3. General Tender / RFP / Commercial Proposal / Estimation / BOQ / Pricing
+    if (isQuoteIntent) {
+      return {
+        text: "Thank you for reaching out regarding a **Turnkey Proposal & Estimation**.\n\nOur **Commercial & Technical Estimating Directorate** reviews project parameters, technical specifications, and turnkey RFP packages within **24–48 hours**.\n\n**Direct Regional Estimating Desks:**\n• **Dubai & UAE Commercial HQ:** tender@rayan-group.com | +971-25654497\n• **South Asia Regional Hub (Ashaz Engineering):** ashaz@rayan-group.com | +91-9973086910\n\nWould you like to open our official **Tender RFP Portal** to upload your BOQ and drawings, or speak with an Estimating Officer?",
         actions: [
           { label: '📝 Open Tender RFP Portal', url: '/proposal/' },
           { label: '💬 Chat with Live Human Agent', action: 'live_human', isLive: true },
@@ -930,14 +951,10 @@ class LiveAssistanceChat {
       };
     }
 
-    // 3. Civil Construction & High-Rise / Commercial Contracting / Fit-Out
-    if (
-      text.includes('civil') || text.includes('high-rise') || text.includes('construction') ||
-      text.includes('contracting') || text.includes('fit-out') || text.includes('fitout') ||
-      text.includes('interior') || text.includes('villa') || text.includes('building')
-    ) {
+    // 4. Civil Construction & High-Rise / Commercial Contracting / Fit-Out
+    if (isCivilIntent) {
       return {
-        text: "**Rayan Engineering & Contracting L.L.C** is our flagship civil delivery arm with 500+ executed landmark projects across the UAE.\n\nCore Capabilities:\n• Turnkey Commercial High-Rise Towers & Mixed-Use Frameworks\n• 5-Star Luxury Hospitality Overhauls (e.g., Waldorf Astoria RAK)\n• Retail & Anchor Fit-Out (Yas Mall, Dubai Hills, MBZ Mall)\n• Bespoke Coastal Residential & Luxury Marble Works (Palm Jumeirah)",
+        text: "**Rayan Engineering & Contracting L.L.C** is our flagship civil delivery arm with 500+ executed landmark projects across the UAE.\n\n**Core Capabilities:**\n• Turnkey Commercial High-Rise Towers & Mixed-Use Frameworks\n• 5-Star Luxury Hospitality Overhauls (e.g., Waldorf Astoria RAK)\n• Retail & Anchor Fit-Out (Yas Mall, Dubai Hills, Khalidiyah Mall)\n• Bespoke Coastal Residential & Luxury Marble Works (Palm Jumeirah)\n\nWould you like to explore our executed portfolio, submit a project RFP, or speak with an engineering specialist?",
         actions: [
           { label: '🏢 Explore Executed Projects', url: '/projects/' },
           { label: '📝 Submit Civil Tender RFP', url: '/proposal/' },
@@ -1071,7 +1088,7 @@ class LiveAssistanceChat {
 
     // 12. Fallback / Custom Live Chat Option when options run out
     return {
-      text: "Thank you for sharing your inquiry. I have recorded your details for our commercial operations desk.\n\nTo discuss customized engineering specifications, schedules, or pricing, you can chat directly with our **Live Human Agent** right now, or request an executive call-back.",
+      text: "Thank you for reaching out to **Rayan Group Executive Desk**.\n\nYour inquiry has been logged with our project operations team. To discuss technical specifications, timelines, or commercial terms, you can chat directly with our **Live Human Agent** right now, or request a priority callback from our engineering desk.",
       actions: [
         { label: '💬 Chat with Live Human Agent', action: 'live_human', isLive: true },
         { label: '📞 Request Executive Callback', action: 'request_callback' },

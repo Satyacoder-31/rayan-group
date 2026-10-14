@@ -1452,7 +1452,7 @@ class RayanAdminPortal {
             <span>${isDesk ? '🏛️ Executive Desk (You)' : (m.senderName || 'Visitor')}</span>
           </div>
           <div class="chat-msg-bubble">
-            ${this.escapeHtml(m.text)}
+            ${this.formatChatMessage(m.text)}
             <span class="chat-msg-time">${timeStr}</span>
           </div>
         </div>
@@ -1460,6 +1460,24 @@ class RayanAdminPortal {
     }).join('');
 
     msgContainer.scrollTop = msgContainer.scrollHeight;
+  }
+
+  formatChatMessage(str) {
+    if (!str) return '';
+    let formatted = this.escapeHtml(str);
+    // Convert bold **text**
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;font-weight:700;">$1</strong>');
+    // Convert bullet points •
+    formatted = formatted.replace(/^• (.*?)$/gm, '<div class="admin-msg-bullet" style="padding-left:0.6rem;margin:0.25rem 0;line-height:1.5;">• $1</div>');
+    // Convert emails into clickable mailto
+    formatted = formatted.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi, '<a href="mailto:$1" target="_blank" style="color:#7dd3fc;text-decoration:underline;font-weight:600;">$1</a>');
+    // Convert phone numbers
+    formatted = formatted.replace(/(\+\d{1,3}-\d{6,10})/g, '<a href="tel:$1" style="color:#86efac;text-decoration:none;font-weight:600;">$1</a>');
+    // Convert newlines to br
+    formatted = formatted.replace(/\n/g, '<br>');
+    // Clean up excessive br right after closing divs
+    formatted = formatted.replace(/<\/div><br>/g, '</div>');
+    return formatted;
   }
 
   escapeHtml(str) {

@@ -724,12 +724,30 @@ body.admin-body {
 }
 
 .chat-msg-bubble {
-  padding: 0.9rem 1.15rem;
+  padding: 0.95rem 1.25rem;
   border-radius: 14px;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.92rem;
+  line-height: 1.6;
   word-break: break-word;
   position: relative;
+}
+
+.chat-msg-bubble strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.chat-msg-bubble a {
+  word-break: break-all;
+}
+
+.chat-msg-bubble a:hover {
+  text-decoration: underline;
+  opacity: 0.95;
+}
+
+.chat-msg-bubble .admin-msg-bullet {
+  line-height: 1.55;
 }
 
 /* Visitor message bubble (on left in admin view) */
