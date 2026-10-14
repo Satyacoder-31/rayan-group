@@ -318,6 +318,60 @@ class LiveAssistanceChat {
         this.askAutomatedQuestion(text);
       });
     });
+
+    // Delegated click handler on messagesContainer for all dynamic action buttons & chips
+    if (this.messagesContainer) {
+      this.messagesContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.chat-action-btn, button.chat-sat-btn, .chat-suggestion-chip');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const action = btn.getAttribute('data-action');
+        const payload = btn.getAttribute('data-payload') || btn.getAttribute('data-prompt');
+        const label = btn.textContent.trim();
+
+        if (action === 'live_human') {
+          this.activateLiveHumanMode(true);
+          return;
+        }
+
+        if (action === 'show_menu' || label.includes('Ask Another Question') || label.includes('Show Topic Options') || label.includes('Other questions')) {
+          this.showTopicMenuMessage();
+          return;
+        }
+
+        if (action === 'feedback_satisfied') {
+          this.handleSatisfactionFeedback();
+          return;
+        }
+
+        if (action === 'request_callback') {
+          if (this.isLiveHumanMode) {
+            this.sendCustomMessage('I would like to request an executive phone call-back.');
+          } else {
+            this.askAutomatedQuestion('I would like to request an executive phone call-back.');
+          }
+          return;
+        }
+
+        if (action === 'send_prompt' || payload) {
+          const text = payload || label;
+          if (this.isLiveHumanMode) {
+            this.sendCustomMessage(text);
+          } else {
+            this.askAutomatedQuestion(text);
+          }
+          return;
+        }
+
+        if (action) {
+          this.handleInlineAction(action, payload, label);
+        } else {
+          this.showTopicMenuMessage();
+        }
+      });
+    }
   }
 
   renderAutomatedQuestionChips() {
@@ -587,26 +641,12 @@ class LiveAssistanceChat {
     if (!this.messagesContainer) return;
     if (msg.id && document.getElementById(msg.id)) return;
 
-    // Check if duplicate already exists in DOM
-    const domHasMsg = Array.from(this.messagesContainer.querySelectorAll('.chat-msg-row')).some(el => {
-      if (el.id && msg.id && el.id === msg.id) return true;
-      const bubble = el.querySelector('.chat-msg-bubble');
-      const isSenderMatch = (msg.sender === 'admin' ? el.classList.contains('msg-desk') : el.classList.contains('msg-visitor'));
-      if (isSenderMatch && bubble) {
-        const clone = bubble.cloneNode(true);
-        const timeEl = clone.querySelector('.chat-msg-time');
-        if (timeEl) timeEl.remove();
-        const actionsEl = clone.querySelector('.chat-inline-actions');
-        if (actionsEl) actionsEl.remove();
-        if (clone.textContent.trim() === (msg.text || '').trim()) return true;
-      }
-      return false;
-    });
-    if (domHasMsg) return;
-
     const row = document.createElement('div');
     row.className = `chat-msg-row ${msg.sender === 'admin' ? 'msg-desk' : 'msg-visitor'}`;
     row.id = msg.id;
+    if (msg.isTopicMenu) {
+      row.setAttribute('data-topic-menu', 'true');
+    }
 
     const timeStr = new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const senderDisplay = msg.sender === 'admin' 
@@ -706,12 +746,17 @@ class LiveAssistanceChat {
     const wrap = document.querySelector('.chat-suggestions-wrap');
     if (wrap) wrap.style.display = 'flex';
 
+    if (this.messagesContainer) {
+      const oldMenus = this.messagesContainer.querySelectorAll('.chat-msg-row[data-topic-menu="true"]');
+      oldMenus.forEach(el => el.remove());
+    }
+
     const menuMsg = {
       id: 'menu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
       sessionId: this.sessionId,
       sender: 'admin',
       senderName: '🤖 Rayan Automated Advisory',
-      text: 'Please select a topic or question below for immediate corporate information, or connect directly to a live human officer:',
+      text: 'Please select an automated question below for immediate operational answers, or connect to our live desk:',
       actions: [
         { label: '📋 Request Tender Proposal / RFP', action: 'send_prompt', payload: 'I would like to request an EPC Tender / RFP proposal.' },
         { label: '🏢 Civil Construction & High-Rise EPC', action: 'send_prompt', payload: 'Inquiry regarding Civil Construction & High-Rise contracting.' },
@@ -724,22 +769,25 @@ class LiveAssistanceChat {
       ],
       timestamp: Date.now(),
       isAutomated: true,
-      hideSatisfaction: true
+      hideSatisfaction: true,
+      isTopicMenu: true
     };
 
     this.messages.push(menuMsg);
     this.saveCachedMessages();
     this.appendMessageToDom(menuMsg);
-    this.scrollToBottom();
+    this.scrollToBottom(true);
+    this.playChime();
   }
 
   handleSatisfactionFeedback() {
+    this.touchActiveTimestamp();
     const ackMsg = {
       id: 'ack_' + Date.now(),
       sessionId: this.sessionId,
       sender: 'admin',
       senderName: '🤖 Rayan Automated Advisory',
-      text: 'Thank you for your feedback! We are glad this information helped.\n\nIf you have further questions or need bespoke engineering solutions, you can select another topic above or connect directly to our **Live Assistance Desk** anytime.',
+      text: 'Thank you for your feedback! We are glad this information helped.\n\nIf you have further questions or need bespoke engineering solutions, you can select another topic below or connect directly to our **Live Assistance Desk** anytime.',
       actions: [
         { label: '🔄 Ask Another Question', action: 'show_menu' },
         { label: '💬 Connect to Live Assistance Chat', action: 'live_human', isLive: true }
@@ -751,7 +799,7 @@ class LiveAssistanceChat {
     this.messages.push(ackMsg);
     this.saveCachedMessages();
     this.appendMessageToDom(ackMsg);
-    this.scrollToBottom();
+    this.scrollToBottom(true);
   }
 
   scrollToBottom(smooth = false) {
