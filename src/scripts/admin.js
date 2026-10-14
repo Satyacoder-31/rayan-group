@@ -380,6 +380,12 @@ class RayanAdminPortal {
         }
       }
     }
+
+    if (data.type === 'LIVE_AGENT_REQUESTED') {
+      this.playChime();
+      this.showToast(`🚨 Priority: ${data.visitorName || 'Visitor'} requested a Live Human Agent!`, 'info');
+      this.refreshSessionsList();
+    }
   }
 
   // ==========================================================================
@@ -1293,12 +1299,13 @@ class RayanAdminPortal {
       const isSelected = s.id === this.activeSessionId;
       const timeStr = new Date(s.lastActivity || s.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const unreadBadge = (s.unreadForAdmin > 0) ? `<span class="session-unread-pill">${s.unreadForAdmin}</span>` : '';
+      const liveBadge = (s.liveAgentRequested || s.status === 'live_agent') ? `<span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; font-size: 0.62rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px; margin-left: 0.35rem;">LIVE AGENT</span>` : '';
       const replyHint = isSelected ? '✓ Active • Replying' : 'Click to Reply →';
 
       return `
         <div class="admin-chat-session-item ${isSelected ? 'selected' : ''}" data-id="${s.id}">
           <div class="session-header-row">
-            <span class="session-visitor-name">${s.visitorName || 'Visitor'}</span>
+            <span class="session-visitor-name">${s.visitorName || 'Visitor'} ${liveBadge}</span>
             <span class="session-time">${timeStr}</span>
           </div>
           <div class="session-last-msg">${this.escapeHtml(s.lastMessage || 'Connected to Executive Desk')}</div>
