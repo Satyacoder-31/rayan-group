@@ -277,6 +277,21 @@ export const FEATURED_PROJECTS = [
     statusBadge: "UNDER CONSTRUCTION"
   },
   {
+    id: "al-lisaili-villa",
+    slug: "al-lisaili-villa",
+    title: "Al Lisaili Luxury Villa Development",
+    category: "RESIDENTIAL",
+    filterCat: "residential",
+    location: "Al Lisaili, Dubai, UAE",
+    client: "Private High-Net-Worth Client",
+    year: "2025",
+    scope: "Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes.",
+    image: "/assets/images/projects/al-lisaili-villa.jpg",
+    featured: true,
+    status: "running",
+    statusBadge: "UNDER CONSTRUCTION"
+  },
+  {
     id: "waldorf-astoria-renovation-rak",
     slug: "waldorf-astoria-renovation-rak",
     title: "Waldorf Astoria Hotel Luxury Renovation",
@@ -381,21 +396,6 @@ export const FEATURED_PROJECTS = [
     scope: "Large-Format Anchor Retail Fit-Out, Heavy Duty Flooring, Structural MEP & Architectural Gypsum.",
     image: "/assets/images/projects/max-fashion-al-wahda-mall.jpg",
     featured: false
-  },
-  {
-    id: "al-lisaili-villa",
-    slug: "al-lisaili-villa",
-    title: "Al Lisaili Luxury Villa Development",
-    category: "RESIDENTIAL",
-    filterCat: "residential",
-    location: "Al Lisaili, Dubai, UAE",
-    client: "Private High-Net-Worth Client",
-    year: "2025",
-    scope: "Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes.",
-    image: "/assets/images/projects/al-lisaili-villa.jpg",
-    featured: false,
-    status: "running",
-    statusBadge: "UNDER CONSTRUCTION"
   },
   {
     id: "al-qua-school-infrastructure",
