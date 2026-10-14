@@ -39,7 +39,7 @@ Premium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles w
     categoryLabel: 'HOSPITALITY / RAS AL KHAIMAH',
     location: 'Al Hamra, Ras Al Khaimah, UAE',
     client: 'Waldorf Astoria Hotels & Resorts / SPECON LLC',
-    status: 'Under Construction',
+    status: 'Completed',
     heroImage: '/assets/images/projects/waldorf-astoria-renovation-rak.jpg',
     scope: '5-Star Ultra-Luxury Hospitality Overhaul, Presidential Suites Refurbishment, MEP Modernization & Grand Lobby Fit-Out',
     highlights: [
