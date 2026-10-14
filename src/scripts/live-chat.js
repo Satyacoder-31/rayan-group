@@ -194,22 +194,14 @@ class LiveAssistanceChat {
 
     if (this.card) {
       this.card.addEventListener('wheel', (e) => {
-        e.stopPropagation();
         if (this.messagesContainer && !this.messagesContainer.contains(e.target)) {
           this.messagesContainer.scrollTop += e.deltaY;
         }
-      }, { passive: true });
-
-      this.card.addEventListener('touchmove', (e) => {
-        e.stopPropagation();
       }, { passive: true });
     }
 
     if (this.messagesContainer) {
       this.messagesContainer.addEventListener('wheel', (e) => {
-        e.stopPropagation();
-      }, { passive: true });
-      this.messagesContainer.addEventListener('touchmove', (e) => {
         e.stopPropagation();
       }, { passive: true });
     }
@@ -687,7 +679,7 @@ class LiveAssistanceChat {
     } else if (action === 'feedback_satisfied') {
       this.handleSatisfactionFeedback();
     } else if (action === 'show_menu') {
-      this.toggleSuggestions(true);
+      this.showTopicMenuMessage();
     } else if (action === 'request_callback') {
       if (this.isLiveHumanMode) {
         this.sendCustomMessage('I would like to request an executive phone call-back.');
@@ -707,6 +699,38 @@ class LiveAssistanceChat {
         this.askAutomatedQuestion(label);
       }
     }
+  }
+
+  showTopicMenuMessage() {
+    this.touchActiveTimestamp();
+    const wrap = document.querySelector('.chat-suggestions-wrap');
+    if (wrap) wrap.style.display = 'flex';
+
+    const menuMsg = {
+      id: 'menu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      sessionId: this.sessionId,
+      sender: 'admin',
+      senderName: '🤖 Rayan Automated Advisory',
+      text: 'Please select a topic or question below for immediate corporate information, or connect directly to a live human officer:',
+      actions: [
+        { label: '📋 Request Tender Proposal / RFP', action: 'send_prompt', payload: 'I would like to request an EPC Tender / RFP proposal.' },
+        { label: '🏢 Civil Construction & High-Rise EPC', action: 'send_prompt', payload: 'Inquiry regarding Civil Construction & High-Rise contracting.' },
+        { label: '⚡ Energy & Process Pipelines', action: 'send_prompt', payload: 'Inquiry regarding Energy Facilities & Process Pipelines.' },
+        { label: '💳 Vendor Accounts & Invoices', action: 'send_prompt', payload: 'Inquiry regarding vendor invoices, payment status, and accounts.' },
+        { label: '📦 Procurement & Supplier Onboarding', action: 'send_prompt', payload: 'Inquiry regarding vendor registration and approved supplier onboarding.' },
+        { label: '📍 Dual Corporate HQs & Direct Lines', action: 'send_prompt', payload: 'Where are your corporate offices located and how can I contact you?' },
+        { label: '🏛️ Executive Leadership & Directors', action: 'send_prompt', payload: 'I would like to connect with the Executive Directors.' },
+        { label: '💬 Connect to Live Assistance Chat', action: 'live_human', isLive: true }
+      ],
+      timestamp: Date.now(),
+      isAutomated: true,
+      hideSatisfaction: true
+    };
+
+    this.messages.push(menuMsg);
+    this.saveCachedMessages();
+    this.appendMessageToDom(menuMsg);
+    this.scrollToBottom();
   }
 
   handleSatisfactionFeedback() {
@@ -730,9 +754,19 @@ class LiveAssistanceChat {
     this.scrollToBottom();
   }
 
-  scrollToBottom() {
+  scrollToBottom(smooth = false) {
     if (this.messagesContainer) {
-      this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+      const target = this.messagesContainer.scrollHeight;
+      if (smooth && typeof this.messagesContainer.scrollTo === 'function') {
+        this.messagesContainer.scrollTo({ top: target, behavior: 'smooth' });
+      } else {
+        this.messagesContainer.scrollTop = target;
+      }
+      setTimeout(() => {
+        if (this.messagesContainer) {
+          this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        }
+      }, 50);
     }
   }
 
@@ -1190,16 +1224,7 @@ class LiveAssistanceChat {
   }
 
   toggleSuggestions(forceShow) {
-    const wrap = document.querySelector('.chat-suggestions-wrap');
-    const toggleBtn = document.getElementById('chat-toggle-topics-btn');
-    if (!wrap) return;
-    const isHidden = (wrap.style.display === 'none');
-    const shouldShow = typeof forceShow === 'boolean' ? forceShow : isHidden;
-    wrap.style.display = shouldShow ? 'flex' : 'none';
-    if (toggleBtn) {
-      toggleBtn.textContent = shouldShow ? 'Hide Topics' : 'Show Topics';
-    }
-    this.scrollToBottom();
+    this.showTopicMenuMessage();
   }
 
   updateLocalSessionIndex(lastMsg) {
