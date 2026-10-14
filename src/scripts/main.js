@@ -1446,14 +1446,22 @@ function initCustomCursor() {
   let isVisible = false;
 
   window.addEventListener('mousemove', (e) => {
+    // If hovering inside live chat widget or flyout card, hide custom cursor
+    if (e.target && e.target.closest && e.target.closest('#assistance-widget, .assistance-card, .assistance-widget-container')) {
+      cursor.style.opacity = '0';
+      dot.style.opacity = '0';
+      document.body.classList.remove('cursor-hover', 'cursor-project');
+      return;
+    }
+
     mouseX = e.clientX;
     mouseY = e.clientY;
     dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
     if (!isVisible) {
       isVisible = true;
-      cursor.style.opacity = '1';
-      dot.style.opacity = '1';
     }
+    cursor.style.opacity = '1';
+    dot.style.opacity = '1';
   }, { passive: true });
 
   function renderCursor() {

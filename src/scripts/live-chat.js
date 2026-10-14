@@ -378,7 +378,7 @@ class LiveAssistanceChat {
     if (banner) banner.style.display = 'none';
 
     if (this.statusText) {
-      this.statusText.innerHTML = '<span style="color:#38bdf8;">●</span> Automated Advisory • Instant Answers';
+      this.statusText.innerHTML = '<span style="color:#38bdf8;">●</span> Automated Advisory';
     }
     if (this.pulseDot) {
       this.pulseDot.style.background = '#38bdf8';
@@ -1084,7 +1084,7 @@ class LiveAssistanceChat {
     // Update status in header
     const statusText = document.querySelector('.chat-agent-status-text');
     if (statusText) {
-      statusText.innerHTML = '<span style="color:#10b981;">●</span> Live Agent Connected • Direct Queue';
+      statusText.innerHTML = '<span style="color:#10b981;">●</span> Live Officer Online';
     }
     const pulse = document.querySelector('.chat-agent-pulse');
     if (pulse) {
@@ -1099,11 +1099,14 @@ class LiveAssistanceChat {
       banner.id = 'chat-live-mode-banner';
       banner.className = 'chat-live-mode-banner';
       banner.innerHTML = `
-        <span>🟢 Custom Live Chat Active • Duty Officer Alerted</span>
-        <div style="display:flex; gap:0.4rem; align-items:center;">
-          <button type="button" class="chat-toggle-topics-btn" id="chat-toggle-topics-btn">Show Topics</button>
-          <button type="button" class="chat-toggle-topics-btn" id="chat-banner-new-chat-btn" style="border-color: rgba(255,255,255,0.25); color: #fff;">🔄 New Chat</button>
+        <div class="chat-banner-left">
+          <span class="live-pulse-green"></span>
+          <span>Live Duty Officer Active</span>
         </div>
+        <button type="button" class="chat-toggle-topics-btn" id="chat-toggle-topics-btn">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Topics</span>
+        </button>
       `;
       const header = this.chatView.querySelector('.chat-room-header');
       if (header && header.nextSibling) {
@@ -1112,13 +1115,24 @@ class LiveAssistanceChat {
       banner.querySelector('#chat-toggle-topics-btn').addEventListener('click', () => {
         this.toggleSuggestions();
       });
-      banner.querySelector('#chat-banner-new-chat-btn').addEventListener('click', () => {
-        if (confirm('Start a new chat session? This will clear your current conversation and start fresh.')) {
-          this.resetSession(true);
-        }
-      });
     } else if (banner) {
       banner.style.display = 'flex';
+      banner.innerHTML = `
+        <div class="chat-banner-left">
+          <span class="live-pulse-green"></span>
+          <span>Live Duty Officer Active</span>
+        </div>
+        <button type="button" class="chat-toggle-topics-btn" id="chat-toggle-topics-btn">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Topics</span>
+        </button>
+      `;
+      const topicBtn = banner.querySelector('#chat-toggle-topics-btn');
+      if (topicBtn) {
+        topicBtn.addEventListener('click', () => {
+          this.toggleSuggestions();
+        });
+      }
     }
 
     // Hide suggestions to give customer clean custom chat space

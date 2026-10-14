@@ -4299,8 +4299,8 @@ body.cursor-project #cursor-dot {
   position: absolute;
   bottom: 74px;
   right: 0;
-  width: 360px;
-  max-width: calc(100vw - 32px);
+  width: 395px;
+  max-width: calc(100vw - 24px);
   background: #071524;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
@@ -4313,6 +4313,26 @@ body.cursor-project #cursor-dot {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
+}
+
+.assistance-widget-container,
+.assistance-widget-container * {
+  cursor: auto;
+}
+
+.assistance-widget-container button,
+.assistance-widget-container a,
+.assistance-widget-container [role="button"],
+.assistance-widget-container .assistance-chip,
+.assistance-widget-container .chat-suggestion-chip,
+.assistance-widget-container .chat-action-btn,
+.assistance-widget-container .chat-sat-btn {
+  cursor: pointer !important;
+}
+
+.assistance-widget-container input,
+.assistance-widget-container textarea {
+  cursor: text !important;
 }
 
 .assistance-card.active {
