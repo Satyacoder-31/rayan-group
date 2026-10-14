@@ -561,8 +561,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Action: clear
-    if ($postAction === 'clear') {
+    // Action: clear_messages (Clears all message history in a session, keeps session record)
+    if ($postAction === 'clear_messages') {
+        if ($pdo) {
+            try {
+                $mStmt = $pdo->prepare("DELETE FROM chat_messages WHERE session_id = ?");
+                $mStmt->execute([$sessionId]);
+                $sStmt = $pdo->prepare("UPDATE chat_sessions SET last_message = '(Conversation cleared)', unread_for_admin = 0, unread_for_visitor = 0, last_activity = CURRENT_TIMESTAMP WHERE session_id = ?");
+                $sStmt->execute([$sessionId]);
+            } catch (Exception $e) {}
+        }
+
+        $fallback = getFallbackStore($storageFile);
+        $fallback['messages'][$sessionId] = [];
+        if (isset($fallback['sessions'][$sessionId])) {
+            $fallback['sessions'][$sessionId]['last_message'] = '(Conversation cleared)';
+            $fallback['sessions'][$sessionId]['unread_for_admin'] = 0;
+            $fallback['sessions'][$sessionId]['unread_for_visitor'] = 0;
+        }
+        saveFallbackStore($storageFile, $fallback);
+
+        echo json_encode(['success' => true, 'action' => 'cleared_messages', 'sessionId' => $sessionId]);
+        exit;
+    }
+
+    // Action: delete_session / delete / clear (Permanently deletes session and all associated messages)
+    if (in_array($postAction, ['delete_session', 'delete', 'clear'])) {
         if ($pdo) {
             try {
                 $mStmt = $pdo->prepare("DELETE FROM chat_messages WHERE session_id = ?");
@@ -577,7 +601,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         unset($fallback['messages'][$sessionId]);
         saveFallbackStore($storageFile, $fallback);
 
-        echo json_encode(['success' => true, 'cleared' => $sessionId]);
+        echo json_encode(['success' => true, 'action' => 'deleted_session', 'sessionId' => $sessionId]);
         exit;
     }
 

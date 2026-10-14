@@ -191,7 +191,18 @@ export default async function handler(req, res) {
       return;
     }
 
-    if (subAction === 'clear') {
+    if (subAction === 'clear_messages') {
+      localMessages[sessionId] = [];
+      if (session) {
+        session.lastMessage = '(Conversation cleared)';
+        session.unreadForAdmin = 0;
+        session.unreadForVisitor = 0;
+      }
+      res.status(200).json({ success: true, session, messages: [] });
+      return;
+    }
+
+    if (subAction === 'delete_session' || subAction === 'delete' || subAction === 'clear') {
       delete localSessions[sessionId];
       delete localMessages[sessionId];
       res.status(200).json({ success: true, cleared: sessionId });

@@ -1131,6 +1131,11 @@ class RayanAdminPortal {
     if (clearBtn) {
       clearBtn.addEventListener('click', () => this.clearActiveSession());
     }
+
+    const deleteBtn = document.getElementById('admin-btn-delete-chat');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => this.deleteActiveSession());
+    }
   }
 
   async refreshSessionsList() {
@@ -1544,14 +1549,84 @@ class RayanAdminPortal {
     }
   }
 
-  clearActiveSession() {
+  async clearActiveSession() {
     if (!this.activeSessionId) return;
-    if (confirm('Clear message history for this session?')) {
-      this.activeMessages = [];
-      localStorage.removeItem(`rayan_chat_msgs_${this.activeSessionId}`);
-      this.renderActiveMessages();
-      this.showToast('Message thread cleared.');
+    if (!confirm('Clear all messages in this conversation? The visitor session will remain active.')) return;
+
+    const sessionId = this.activeSessionId;
+    this.activeMessages = [];
+    localStorage.removeItem(`rayan_chat_msgs_${sessionId}`);
+
+    // Update active session locally
+    const sess = this.sessions.find(s => s.id === sessionId);
+    if (sess) {
+      sess.lastMessage = '(Conversation cleared)';
+      sess.unreadForAdmin = 0;
+      this.renderSessionsList();
     }
+
+    this.renderActiveMessages(sess);
+    this.showToast('✓ Conversation messages cleared.');
+
+    // Dispatch clear to server
+    try {
+      const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/chat';
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear_messages', sessionId })
+      });
+    } catch (e) {}
+  }
+
+  async deleteActiveSession() {
+    if (!this.activeSessionId) return;
+    if (!confirm('Permanently delete this chat session and all messages from the database? This cannot be undone.')) return;
+
+    const sessionId = this.activeSessionId;
+
+    // Remove from local memory list
+    const idx = this.sessions.findIndex(s => s.id === sessionId);
+    if (idx >= 0) {
+      this.sessions.splice(idx, 1);
+    }
+
+    // Clean up local storage
+    localStorage.removeItem(`rayan_chat_msgs_${sessionId}`);
+    try {
+      let indexList = JSON.parse(localStorage.getItem('rayan_chat_sessions_index') || '[]');
+      indexList = indexList.filter(s => s.id !== sessionId);
+      localStorage.setItem('rayan_chat_sessions_index', JSON.stringify(indexList));
+    } catch (e) {}
+
+    // If it was the browser's active visitor session, clean it up
+    if (localStorage.getItem('rayan_chat_session_id') === sessionId) {
+      localStorage.removeItem('rayan_chat_session_id');
+      localStorage.removeItem(`rayan_chat_live_mode_${sessionId}`);
+    }
+
+    this.activeMessages = [];
+    this.activeSessionId = this.sessions.length ? this.sessions[0].id : null;
+    this.renderSessionsList();
+    this.updateNavUnreadCount();
+
+    if (this.activeSessionId) {
+      this.selectSession(this.activeSessionId);
+    } else {
+      this.renderActiveMessages(null);
+    }
+
+    this.showToast('✓ Chat session permanently deleted.');
+
+    // Dispatch delete to server
+    try {
+      const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/chat';
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_session', sessionId })
+      });
+    } catch (e) {}
   }
 
   // ==========================================================================

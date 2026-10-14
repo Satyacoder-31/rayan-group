@@ -5,6 +5,7 @@
 
 class LiveAssistanceChat {
   constructor() {
+    this.checkInactivityReset();
     this.sessionId = this.getOrCreateSessionId();
     this.visitorName = localStorage.getItem('rayan_chat_visitor_name') || 'Guest Visitor';
     this.isMuted = localStorage.getItem('rayan_chat_muted') === 'true';
@@ -18,6 +19,7 @@ class LiveAssistanceChat {
     this.lockedBar = null;
     this.composerWrap = null;
     this.profileBar = null;
+    this.newChatBtn = null;
 
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
@@ -29,6 +31,43 @@ class LiveAssistanceChat {
     }
   }
 
+  /**
+   * Resets the chat session if the visitor has been inactive for > 1 hour
+   */
+  checkInactivityReset() {
+    const ONE_HOUR_MS = 60 * 60 * 1000; // 1 hour = 3,600,000 ms
+    const lastActiveStr = localStorage.getItem('rayan_chat_last_active_time');
+    const now = Date.now();
+
+    if (lastActiveStr) {
+      const lastActive = parseInt(lastActiveStr, 10);
+      if (!isNaN(lastActive) && lastActive > 0 && (now - lastActive) > ONE_HOUR_MS) {
+        // More than 1 hour has elapsed since last visit! Clear previous session
+        const oldId = localStorage.getItem('rayan_chat_session_id');
+        if (oldId) {
+          localStorage.removeItem(`rayan_chat_msgs_${oldId}`);
+          localStorage.removeItem(`rayan_chat_live_mode_${oldId}`);
+          try {
+            sessionStorage.removeItem(`rayan_chat_email_notified_${oldId}`);
+            sessionStorage.removeItem(`rayan_chat_human_email_notified_${oldId}`);
+          } catch (e) {}
+        }
+        localStorage.removeItem('rayan_chat_session_id');
+        this.isLiveHumanMode = false;
+        this.touchActiveTimestamp();
+        return true;
+      }
+    }
+    this.touchActiveTimestamp();
+    return false;
+  }
+
+  touchActiveTimestamp() {
+    try {
+      localStorage.setItem('rayan_chat_last_active_time', Date.now().toString());
+    } catch (e) {}
+  }
+
   getOrCreateSessionId() {
     let id = localStorage.getItem('rayan_chat_session_id');
     if (!id) {
@@ -38,7 +77,65 @@ class LiveAssistanceChat {
     return id;
   }
 
+  /**
+   * Resets the active chat session and starts fresh in Automated Advisory mode
+   */
+  resetSession(notifyUser = true) {
+    const oldSessionId = this.sessionId;
+    if (oldSessionId) {
+      localStorage.removeItem(`rayan_chat_msgs_${oldSessionId}`);
+      localStorage.removeItem(`rayan_chat_live_mode_${oldSessionId}`);
+      try {
+        sessionStorage.removeItem(`rayan_chat_email_notified_${oldSessionId}`);
+        sessionStorage.removeItem(`rayan_chat_human_email_notified_${oldSessionId}`);
+      } catch (e) {}
+    }
+
+    // Generate fresh session ID
+    this.sessionId = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
+    localStorage.setItem('rayan_chat_session_id', this.sessionId);
+    localStorage.removeItem(`rayan_chat_live_mode_${this.sessionId}`);
+
+    this.messages = [];
+    this.isLiveHumanMode = false;
+    this.touchActiveTimestamp();
+
+    // Clear messages from DOM (keep welcome-msg-initial if present)
+    if (this.messagesContainer) {
+      const items = this.messagesContainer.querySelectorAll('.chat-msg-row:not(#welcome-msg-initial)');
+      items.forEach(el => el.remove());
+    }
+
+    // Reset UI to Automated Advisory mode
+    this.setAutomatedModeUi();
+    this.scrollToBottom();
+
+    if (notifyUser) {
+      this.playChime();
+      const resetNotice = {
+        id: 'new_chat_' + Date.now(),
+        sessionId: this.sessionId,
+        sender: 'admin',
+        senderName: '🤖 Rayan Automated Advisory',
+        text: 'New chat session started. Our engineering and project advisory desk is online. Please choose from the topics below or connect with our Live Desk anytime.',
+        actions: [
+          { label: '📋 Request Tender Proposal / RFP', action: 'send_prompt', payload: 'I would like to request an EPC Tender / RFP proposal.' },
+          { label: '🏢 Civil Construction & Fit-Out', action: 'send_prompt', payload: 'Inquiry regarding Civil Construction & High-Rise contracting.' },
+          { label: '💬 Connect to Live Assistance Chat', action: 'live_human', isLive: true }
+        ],
+        timestamp: Date.now(),
+        isAutomated: true,
+        hideSatisfaction: true
+      };
+      this.messages.push(resetNotice);
+      this.saveCachedMessages();
+      this.appendMessageToDom(resetNotice);
+      this.scrollToBottom();
+    }
+  }
+
   init() {
+    this.checkInactivityReset();
     this.bindDomElements();
     this.bindEvents();
     this.loadCachedMessages();
@@ -66,6 +163,7 @@ class LiveAssistanceChat {
     this.backToMenuBtn = document.getElementById('chat-back-to-menu-btn');
     this.soundToggleBtn = document.getElementById('chat-sound-toggle-btn');
     this.unreadBadge = document.getElementById('assistance-unread-badge');
+    this.newChatBtn = document.getElementById('chat-new-chat-btn');
 
     // Chat elements
     this.messagesContainer = document.getElementById('chat-messages-container');
@@ -154,6 +252,20 @@ class LiveAssistanceChat {
   }
 
   bindEvents() {
+    if (this.newChatBtn) {
+      this.newChatBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.touchActiveTimestamp();
+        if (this.messages && this.messages.length > 0) {
+          if (confirm('Start a new chat conversation? This will clear your current conversation and start fresh.')) {
+            this.resetSession(true);
+          }
+        } else {
+          this.resetSession(true);
+        }
+      });
+    }
+
     if (this.startChatBtn) {
       this.startChatBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -280,6 +392,7 @@ class LiveAssistanceChat {
   }
 
   async askAutomatedQuestion(text) {
+    this.touchActiveTimestamp();
     const msg = {
       id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
       sessionId: this.sessionId,
@@ -301,6 +414,7 @@ class LiveAssistanceChat {
   }
 
   switchToChatView(trigger = 'opened_chat', extraMsg = '') {
+    this.touchActiveTimestamp();
     if (this.menuView) this.menuView.classList.add('view-hidden');
     if (this.chatView) this.chatView.classList.remove('view-hidden');
     this.clearUnreadBadge();
@@ -637,6 +751,7 @@ class LiveAssistanceChat {
   }
 
   async sendCustomMessage(text) {
+    this.touchActiveTimestamp();
     const msg = {
       id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
       sessionId: this.sessionId,
@@ -985,7 +1100,10 @@ class LiveAssistanceChat {
       banner.className = 'chat-live-mode-banner';
       banner.innerHTML = `
         <span>🟢 Custom Live Chat Active • Duty Officer Alerted</span>
-        <button type="button" class="chat-toggle-topics-btn" id="chat-toggle-topics-btn">Show Topics</button>
+        <div style="display:flex; gap:0.4rem; align-items:center;">
+          <button type="button" class="chat-toggle-topics-btn" id="chat-toggle-topics-btn">Show Topics</button>
+          <button type="button" class="chat-toggle-topics-btn" id="chat-banner-new-chat-btn" style="border-color: rgba(255,255,255,0.25); color: #fff;">🔄 New Chat</button>
+        </div>
       `;
       const header = this.chatView.querySelector('.chat-room-header');
       if (header && header.nextSibling) {
@@ -993,6 +1111,11 @@ class LiveAssistanceChat {
       }
       banner.querySelector('#chat-toggle-topics-btn').addEventListener('click', () => {
         this.toggleSuggestions();
+      });
+      banner.querySelector('#chat-banner-new-chat-btn').addEventListener('click', () => {
+        if (confirm('Start a new chat session? This will clear your current conversation and start fresh.')) {
+          this.resetSession(true);
+        }
       });
     } else if (banner) {
       banner.style.display = 'flex';
