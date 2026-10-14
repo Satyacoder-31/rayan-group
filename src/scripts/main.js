@@ -872,12 +872,42 @@ function initForms() {
       }
 
       const formId = form.id || 'contactForm';
-      const config = ENTERPRISE_FORM_CONFIGS[formId] || {
+      const baseConfig = ENTERPRISE_FORM_CONFIGS[formId] || {
         title: 'Corporate Inquiry',
         targetEmail: 'rayan@rayan-group.com',
         ccEmail: '',
         prefix: 'INQ-RYN'
       };
+      const config = { ...baseConfig };
+
+      const fields = extractFormFields(form);
+      const { senderName, senderEmail, senderPhone } = getSenderDetails(fields);
+
+      // Dynamic regional routing for Tenders & Project Proposals (rfpForm)
+      if (formId === 'rfpForm') {
+        const divisionEl = form.querySelector('[name="businessDivision"], #rfp-division');
+        const divisionVal = (divisionEl ? divisionEl.value : (fields['Required Business Division'] || fields['businessDivision'] || '')).toLowerCase();
+        const locationEl = form.querySelector('[name="projectLocation"], #rfp-location');
+        const locationVal = (locationEl ? locationEl.value : (fields['Project Location (Emirate / Region)'] || fields['projectLocation'] || '')).toLowerCase();
+
+        const isSouthAsia = divisionVal.includes('south asia') || 
+                            divisionVal.includes('ashaz') || 
+                            divisionVal.includes('india') || 
+                            (!divisionVal.includes('dubai') && !divisionVal.includes('uae') && !divisionVal.includes('rayan') && (locationVal.includes('south asia') || locationVal.includes('india') || locationVal.includes('bihar') || locationVal.includes('delhi')));
+
+        if (isSouthAsia) {
+          config.targetEmail = 'ashaz@rayan-group.com';
+          config.ccEmail = 'tender@rayan-group.com';
+          config.title = 'South Asia Regional Hub Tender Proposal (Ashaz Engineering)';
+          config.prefix = 'RFP-IND';
+        } else {
+          // Dubai / UAE Commercial Headquarters
+          config.targetEmail = 'tender@rayan-group.com';
+          config.ccEmail = 'ashaz@rayan-group.com';
+          config.title = 'Dubai & UAE Corporate Commercial Tender (Rayan Group)';
+          config.prefix = 'RFP-RYN';
+        }
+      }
 
       const submitBtn = form.querySelector('button[type="submit"]');
       const originalBtnText = submitBtn ? submitBtn.innerHTML : 'SUBMIT';
@@ -887,8 +917,6 @@ function initForms() {
       }
 
       const ref = `${config.prefix}-${Math.floor(100000 + Math.random() * 900000)}`;
-      const fields = extractFormFields(form);
-      const { senderName, senderEmail, senderPhone } = getSenderDetails(fields);
 
       // 1. Prepare FormSubmit AJAX Payload
       const formSubmitPayload = {
@@ -999,6 +1027,38 @@ function initForms() {
       });
     });
   });
+
+  // Live dynamic routing indicator for Tenders & Proposals form
+  const rfpDivision = document.getElementById('rfp-division');
+  if (rfpDivision) {
+    const updateRfpRoutingNotice = () => {
+      const val = (rfpDivision.value || '').toLowerCase();
+      let hint = document.getElementById('rfp-routing-notice');
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.id = 'rfp-routing-notice';
+        hint.style.cssText = 'font-size: 0.78rem; margin-top: 0.45rem; padding: 0.4rem 0.7rem; border-radius: 6px; transition: all 0.25s ease; font-weight: 500;';
+        rfpDivision.parentNode.appendChild(hint);
+      }
+      if (!val) {
+        hint.style.display = 'none';
+        return;
+      }
+      hint.style.display = 'block';
+      if (val.includes('south asia') || val.includes('ashaz') || val.includes('india')) {
+        hint.style.background = 'rgba(16, 185, 129, 0.12)';
+        hint.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+        hint.style.color = '#34d399';
+        hint.innerHTML = '📍 <strong>Direct Desk Routing:</strong> South Asia Regional Hub (<code>ashaz@rayan-group.com</code>)';
+      } else {
+        hint.style.background = 'rgba(0, 153, 230, 0.12)';
+        hint.style.border = '1px solid rgba(0, 153, 230, 0.35)';
+        hint.style.color = '#38bdf8';
+        hint.innerHTML = '📍 <strong>Direct Desk Routing:</strong> Dubai &amp; UAE Commercial HQ (<code>tender@rayan-group.com</code>)';
+      }
+    };
+    rfpDivision.addEventListener('change', updateRfpRoutingNotice);
+  }
 }
 
 function showToast(message, type = 'info') {

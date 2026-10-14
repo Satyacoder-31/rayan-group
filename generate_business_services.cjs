@@ -75,11 +75,11 @@ createRoute('proposal/index.html', {
                   <label class="service-form-label" for="rfp-division">Required Business Division <span class="req">*</span></label>
                   <select id="rfp-division" name="businessDivision" class="service-form-select" required>
                     <option value="" disabled selected>Select Business Division</option>
-                    <option value="Rayan Engineering">Rayan Engineering &amp; Turnkey Contracting</option>
-                    <option value="Rayan Energy">Rayan Energy &amp; Process EPC</option>
-                    <option value="Ashaz Engineering">Ashaz Engineering (India Regional Hub)</option>
-                    <option value="Rayan Properties">Rayan Properties (Upcoming)</option>
-                    <option value="Multi-Disciplinary">Multi-Disciplinary / Integrated Group Scope</option>
+                    <option value="Dubai — Rayan Engineering &amp; Turnkey Contracting">Dubai — Rayan Engineering &amp; Turnkey Contracting</option>
+                    <option value="Dubai — Rayan Energy &amp; Process EPC">Dubai — Rayan Energy &amp; Process EPC</option>
+                    <option value="Dubai — Rayan Properties">Dubai — Rayan Properties (Upcoming)</option>
+                    <option value="South Asia — Ashaz Engineering (India Regional Hub)">South Asia — Ashaz Engineering (India Regional Hub)</option>
+                    <option value="Multi-Disciplinary (Dubai HQ &amp; South Asia Hub)">Multi-Disciplinary / Integrated Group Scope</option>
                   </select>
                 </div>
                 <div class="service-form-group">
