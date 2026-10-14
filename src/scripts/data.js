@@ -247,6 +247,21 @@ export const LEADERSHIP_TEAM = [
 // Featured Projects Showcase
 export const FEATURED_PROJECTS = [
   {
+    id: "dubai-police-academy",
+    slug: "dubai-police-academy",
+    title: "Dubai Police Academy Tactical Facility",
+    category: "CIVIC",
+    filterCat: "infrastructure",
+    location: "Al Rowaiyah, Dubai, UAE",
+    client: "Dubai Police GHQ / Top Rock Contracting",
+    year: "2024–Present",
+    scope: "Institutional Complex Construction, Tactical Infrastructure, Heavy Gypsum & Security Partitions.",
+    image: "/assets/images/projects/dubai-police-academy.jpg",
+    featured: true,
+    status: "running",
+    statusBadge: "RUNNING PROJECT • UNDER ACTIVE CONSTRUCTION"
+  },
+  {
     id: "waldorf-astoria-renovation-rak",
     slug: "waldorf-astoria-renovation-rak",
     title: "Waldorf Astoria Hotel Luxury Renovation",
@@ -296,19 +311,6 @@ export const FEATURED_PROJECTS = [
     year: "2024",
     scope: "Civil Excavation & Earthworks, Ballistic Heavy Engineering, Reinforced Substructure & Turnkey Delivery.",
     image: "/assets/images/projects/edge-group-remaya.jpg",
-    featured: true
-  },
-  {
-    id: "dubai-police-academy",
-    slug: "dubai-police-academy",
-    title: "Dubai Police Academy Tactical Facility",
-    category: "CIVIC",
-    filterCat: "infrastructure",
-    location: "Al Rowaiyah, Dubai, UAE",
-    client: "Dubai Police GHQ / Top Rock Contracting",
-    year: "2024",
-    scope: "Institutional Complex Construction, Tactical Infrastructure, Heavy Gypsum & Security Partitions.",
-    image: "/assets/images/projects/dubai-police-academy.jpg",
     featured: true
   },
   {
@@ -602,13 +604,13 @@ export const CAREER_OPPORTUNITIES = [
 
 // Media Gallery
 export const MEDIA_GALLERY = [
+  { title: "Dubai Police Academy Tactical Facility", category: "Civic / Infrastructure", image: "/assets/images/projects/dubai-police-academy.jpg", caption: "Institutional complex sky-bridge, grand entrance, and tactical briefing halls under active construction in Dubai." },
   { title: "Waldorf Astoria Hotel Luxury Renovation", category: "Hospitality", image: "/assets/images/projects/waldorf-astoria-renovation-rak.jpg", caption: "5-Star Ultra-Luxury Hospitality Overhaul & Presidential Suites in Ras Al Khaimah." },
   { title: "Palm Jumeirah Luxury Waterfront Estate", category: "Residential", image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg", caption: "Ultra-luxury coastal villa structural concrete and bespoke Italian marble on Palm Jumeirah." },
   { title: "C2 Towers Al Bateen Waterfront Development", category: "High-Rise", image: "/assets/images/projects/c2-towers-al-bateen.jpg?v=2", caption: "Twin 22-story luxury waterfront residential towers architectural finishes in Abu Dhabi." },
   { title: "Edge Group - REMAYA Tactical Complex", category: "Defense", image: "/assets/images/projects/edge-group-remaya.jpg", caption: "Civil excavation, mass earthworks, ballistic partitions, and heavy defense engineering." },
   { title: "Luxury Island Oceanfront Infinity Pool", category: "Aquatic", image: "/assets/images/projects/luxury-island-infinity-pool.jpg", caption: "50-meter cantilevered structural concrete horizon pool on Private Luxury Island." },
   { title: "Roxy Cinemas VIP Auditoriums - Dubai Hills", category: "Entertainment", image: "/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg", caption: "Precision acoustic sound isolation and VIP cinema auditorium engineering in Dubai." },
-  { title: "Dubai Police Academy Tactical Facility", category: "Civic", image: "/assets/images/projects/dubai-police-academy.jpg", caption: "Institutional complex masonry and tactical briefing halls under construction in Dubai." },
   { title: "Commercial High-Rise Structural Framework", category: "Commercial", image: "/assets/images/hero/hero-1-skyline.jpg", caption: "Precision structural engineering and tower crane assembly for landmark commercial skyline." },
   { title: "Hydrocarbon Process Complex & Pipelines", category: "Energy", image: "/assets/images/business/energy-refinery-complex.jpg", caption: "Industrial high-pressure piping and refinery infrastructure delivered to ISO 45001 standards." },
   { title: "Max Fashion Anchor Store - Al Wahda Mall", category: "Retail", image: "/assets/images/projects/max-fashion-al-wahda-mall.jpg", caption: "High-traffic commercial retail and structural engineering development in Abu Dhabi." },
