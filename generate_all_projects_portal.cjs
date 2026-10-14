@@ -3,6 +3,30 @@ const path = require('path');
 const { wrapPage, renderPageHero, ensureDir } = require('./build_multipage_site.cjs');
 
 const NEW_EXTRACTED_PROJECTS = [
+  // =========================================================================
+  // ACTIVE UNDER CONSTRUCTION PROJECTS (ALWAYS POSITIONED AT TOP WITH YELLOW ACCENTS)
+  // =========================================================================
+  {
+    slug: 'dubai-police-academy',
+    title: 'Dubai Police Academy Tactical Facility',
+    shortTitle: 'Dubai Police Academy Complex',
+    category: 'infrastructure',
+    categoryLabel: 'CIVIL & INTERIOR / DUBAI',
+    location: 'Al Rowaiyah, Dubai, UAE',
+    client: 'Dubai Police GHQ / Top Rock Contracting',
+    status: 'Under Construction',
+    heroImage: '/assets/images/projects/dubai-police-academy.jpg?v=3',
+    scope: 'Institutional Complex Construction, Connecting Sky-Bridge, Tactical Briefing Infrastructure, Heavy Gypsum & Security Partitions',
+    highlights: [
+      'Turnkey civil masonry and structural framing for high-capacity cadet lecture halls and tactical training facilities',
+      'Acoustic tier lecture auditoriums with specialized sound dampening, recessed lighting channels, and integrated AV systems',
+      'Campus sky-bridge connecting academic pavilions with monumental cantilevered entrance portals and plaza works',
+      'Heavy-duty institutional flooring and ballistic impact-resistant wall cladding executed under Dubai Police GHQ supervision'
+    ],
+    narrative: `The Dubai Police Academy expansion at Al Rowaiyah is a premier civic and security education infrastructure project in Dubai. Rayan Group was contracted in association with Top Rock Contracting to deliver comprehensive civil framing, heavy partition engineering, connecting sky-bridge structures, and high-durability architectural fit-outs across the academy campus.\n\nThe development comprises multi-tier briefing halls, tactical observation decks, physical fitness complexes, and smart lecture theaters. Rayan Group utilized fire-rated gypsum assemblies, specialized anti-crack screeds, slotted acoustic wall paneling, and heavy-duty utility routing to ensure maximum operational durability and safety compliance.`,
+    imgDir: 'dubai-police-academy',
+    imgCount: 17
+  },
   {
     slug: 'yateem-optician-khalidiyah-mall',
     title: 'Yateem Optician — Khalidiyah Mall Abu Dhabi',
@@ -23,14 +47,182 @@ const NEW_EXTRACTED_PROJECTS = [
       'Smoked oak laminate MDF wall panelling, custom LED eyewear display showcases, and PU black powdercoated skirtings',
       'Executed by Rayan Engineering and Contracting LLC - SPC under Subcontract PO: LPO/BD/2026/12 (Ref# RFQ-REC-RG-45017)'
     ],
-    narrative: `Rayan Engineering and Contracting LLC - SPC was awarded the turnkey commercial interior fit-out for the prestigious Yateem Optician retail boutique at Khalidiyah Mall in Abu Dhabi, under subcontract agreement with M/S Buildara General Contracting LLC (Ref# RFQ-REC-RG-45017 / LPO/BD/2026/12).
-
-Currently active under construction, the project encompasses comprehensive civil and architectural engineering, raised access flooring (150mm with AAC blocks), floor screeding, and heavy floor protection. The wall and ceiling scope incorporates 12mm fire-rated and moisture-resistant gypsum boards with heavy-gauge galvanized iron (GI) framing, cement boards, and reinforced MDF backing for high-impact eyewear wall displays and digital LED media screens.
-
-Premium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles with brass transition strips, Jotun Fenomastic luxury wall coatings, custom smoked oak laminate MDF cladding at the entrance portal, and 100mm black powdercoated perimeter skirting. All works adhere strictly to shopping mall tenant fit-out criteria, hot work permit safety mandates, and Rayan Group's triple ISO 9001, 14001, and 45001 accreditations.`,
+    narrative: `Rayan Engineering and Contracting LLC - SPC was awarded the turnkey commercial interior fit-out for the prestigious Yateem Optician retail boutique at Khalidiyah Mall in Abu Dhabi, under subcontract agreement with M/S Buildara General Contracting LLC (Ref# RFQ-REC-RG-45017 / LPO/BD/2026/12).\n\nCurrently active under construction, the project encompasses comprehensive civil and architectural engineering, raised access flooring (150mm with AAC blocks), floor screeding, and heavy floor protection. The wall and ceiling scope incorporates 12mm fire-rated and moisture-resistant gypsum boards with heavy-gauge galvanized iron (GI) framing, cement boards, and reinforced MDF backing for high-impact eyewear wall displays and digital LED media screens.\n\nPremium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles with brass transition strips, Jotun Fenomastic luxury wall coatings, custom smoked oak laminate MDF cladding at the entrance portal, and 100mm black powdercoated perimeter skirting. All works adhere strictly to shopping mall tenant fit-out criteria, hot work permit safety mandates, and Rayan Group's triple ISO 9001, 14001, and 45001 accreditations.`,
     imgDir: 'yateem-optician-khalidiyah-mall',
     imgCount: 3
   },
+  {
+    slug: 'al-lisaili-villa',
+    title: 'Al Lisaili Luxury Villa Development',
+    shortTitle: 'Al Lisaili Luxury Villa',
+    category: 'residential',
+    categoryLabel: 'RESIDENTIAL / DUBAI',
+    location: 'Al Lisaili, Dubai, UAE',
+    client: 'Private High-Net-Worth Client',
+    status: 'Under Construction',
+    heroImage: '/assets/images/projects/al-lisaili-villa.jpg',
+    scope: 'Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes',
+    highlights: [
+      'Contemporary desert palace design spanning over 25,000 sq.ft of built-up area',
+      'Post-tensioned concrete structural frame engineered for expansive column-free living rooms',
+      'High-thermal-efficiency double insulated aerated blockwork suited for desert climate',
+      'Turnkey civil execution including boundary walls, majlis, pool, and staff pavilions'
+    ],
+    narrative: `Set in the serene landscape of Al Lisaili, Dubai, this palatial private villa blends contemporary architectural minimalism with classical Emirati hospitality traditions. Rayan Group is delivering turnkey engineering and contracting services, from deep foundation earthworks to structural concrete and architectural fit-outs.\n\nThe project features expansive open-span living areas made possible by post-tensioned beam systems, double-height curtain walls, private interior courtyards, and integrated smart desert landscaping with automated water recycling.`,
+    imgDir: 'al-lisaili-villa',
+    imgCount: 5
+  },
+
+  // =========================================================================
+  // COMPLETED PROJECTS (NEW FLAGSHIP PROJECTS FROM "PROJECTS 2" DRIVE FOLDER)
+  // =========================================================================
+  {
+    slug: 'arab-bank-abu-dhabi',
+    title: 'Arab Bank Commercial Branch — Abu Dhabi',
+    shortTitle: 'Arab Bank Abu Dhabi',
+    category: 'commercial',
+    categoryLabel: 'COMMERCIAL & BANKING / ABU DHABI',
+    location: 'Abu Dhabi, UAE',
+    client: 'Arab Bank plc / Luminar Engineering Group',
+    status: 'Completed',
+    heroImage: '/assets/images/projects/arab-bank-abu-dhabi.jpg',
+    scope: 'Turnkey Commercial Banking Fit-Out, Acoustic Gypsum Ceilings, Premium Parquet & Carpet Flooring, Jotun Fenomastic Finishes',
+    contractRef: 'PO No: 011, 012 & 013 • Quo Ref: RFQ-REC-RG-44093 / 44095 / 45001',
+    contractValue: 'Approved Lump Sum Subcontracts (PO 011, 012, 013)',
+    highlights: [
+      'Turnkey commercial banking hall fit-out and customer service refurbishment for Arab Bank in Abu Dhabi',
+      'Installation of premium light oak parquet timber flooring in client waiting areas and self-leveling subfloor compounds',
+      'High-grade acoustic carpeting across private wealth consultation rooms 1–4 with acoustic isolation underlay',
+      'Suspended 600x600mm aluminum ceiling tiles, gypsum board bulkheads, integrated curtain boxes, and recessed LED troughs',
+      'Jotun Fenomastic luxury paint system featuring surface preparation, primer, two coats skim putty, and durable finish coats',
+      'Executed by Rayan Engineering and Contracting LLC - SPC under Subcontract POs 011, 012, and 013'
+    ],
+    narrative: `Rayan Engineering and Contracting LLC - SPC was awarded the comprehensive commercial interior fit-out and architectural refurbishment for the Arab Bank branch in Abu Dhabi, under direct subcontract agreements with Luminar Engineering Group (POs 011, 012, and 013).\n\nThe scope spanned complete interior architectural transformations, beginning with precision floor leveling using polymer-modified self-leveling compounds across 124 sq.m. High-traffic client waiting zones were fitted with elegant parquet timber flooring, while four executive private wealth consultation suites received acoustic contract carpeting designed for acoustic absorption and corporate privacy.\n\nThe ceiling and wall assemblies feature 600x600mm lay-in aluminum ceiling tiles, precision gypsum bulkheads, aluminum F-angle edge trims, and concealed curtain boxes with integrated warm LED light channels. All wall surfaces received multi-stage surface preparation, two coats of Sticko putty, one coat primer, and two coats of premium Jotun Fenomastic paint. The branch was delivered with zero disruption and handed over on schedule to Arab Bank's stringent corporate architectural guidelines.`,
+    imgDir: 'arab-bank-abu-dhabi',
+    imgCount: 2
+  },
+  {
+    slug: 'saadiyat-mamsha-residence',
+    title: 'Saadiyat Mamsha — 3-Bedroom Luxury Apartment Renovation',
+    shortTitle: 'Saadiyat Mamsha Residence',
+    category: 'residential',
+    categoryLabel: 'LUXURY RESIDENTIAL / SAADIYAT ISLAND',
+    location: 'Mamsha Al Saadiyat, Saadiyat Cultural District, Abu Dhabi, UAE',
+    client: 'White Crescent International / Private Client',
+    status: 'Completed',
+    heroImage: '/assets/images/projects/saadiyat-mamsha-residence.jpg',
+    scope: 'Turnkey Coastal Apartment Renovation, Specialized Floor Screeding, Luxury Washroom Fit-Out & Architectural Refurbishment',
+    contractRef: 'LPO No: SC/26-138 • Qtn Ref: REC-QTN-44062',
+    contractValue: 'Approved Private Residence Subcontract',
+    highlights: [
+      'High-specification 3-bedroom residential apartment renovation in the premier Mamsha Al Saadiyat beachfront enclave',
+      'Precision supply and application of 50mm polymer-modified cement screed subflooring with laser-leveling',
+      'Full architectural remodeling of master en-suite washrooms, wet-area waterproofing, and recessed drain channels',
+      'Minimalist flush gypsum ceilings with concealed linear architectural coves and magnetic track lighting',
+      'Delivered to ultra-luxury beachfront residential standards under White Crescent International subcontract protocols'
+    ],
+    narrative: `Located on the pristine shoreline of the Saadiyat Cultural District, Mamsha Al Saadiyat is one of Abu Dhabi's most exclusive coastal residential destinations. Rayan Engineering and Contracting LLC - SPC was commissioned by White Crescent International (LPO No: SC/26-138) to execute specialized civil and architectural renovation works across a sprawling 3-bedroom luxury residence.\n\nThe project required precision leveling and application of 50mm high-performance cementitious floor screed across living areas and washrooms, creating an immaculately flat foundation for micro-cement and luxury finishes. Rayan Group's craftsmen executed wet-area surface preparations, multi-layer liquid waterproofing membranes, and architectural tile alignment.\n\nThe completed residence seamlessly merges indoor beachfront living with panoramic views of the turquoise Arabian Gulf, featuring bespoke floating vanities, minimalist ceiling coves, and premium architectural joinery that reflect Saadiyat's refined cultural aesthetic.`,
+    imgDir: 'saadiyat-mamsha-residence',
+    imgCount: 2
+  },
+  {
+    slug: 'cafe-bateel-yas-mall',
+    title: 'Cafe Bateel Luxury Boutique — Yas Mall Abu Dhabi',
+    shortTitle: 'Cafe Bateel Yas Mall',
+    category: 'commercial',
+    categoryLabel: 'HOSPITALITY & F&B / YAS ISLAND',
+    location: 'Yas Mall, Yas Island, Abu Dhabi, UAE',
+    client: 'Top Rock Interiors / Bateel International',
+    status: 'Completed',
+    heroImage: '/assets/images/projects/cafe-bateel-yas-mall.jpg',
+    scope: 'Turnkey Gourmet Cafe Fit-Out, Fire-Rated Gypsum Cladding, Covelight Ceilings & Architectural Screeding',
+    contractRef: 'PO No: PODSUB-2024/0944 • Project No: J20-005',
+    contractValue: 'Turnkey Hospitality Subcontract (Approved)',
+    highlights: [
+      'Flagship gourmet cafe and boutique interior fit-out for Bateel International at Yas Mall, Abu Dhabi',
+      'Fire-rated (FR) Gypline gypsum board claddings and partitions with specialized GTI suspension hardware',
+      'Curved sculptural ceiling bulkheads with integrated warm perimeter covelight troughs and 60x60 aluminum tiles',
+      'Heavy-duty floor screeding, cement board damp-proof partitions, and artisanal fluted timber wall paneling',
+      'Executed under Top Rock Interiors turnkey contract, fully compliant with Aldar Yas Mall tenant fit-out standards'
+    ],
+    narrative: `Cafe Bateel is globally renowned for luxury Arabian gourmet hospitality and artisanal confectionery. Rayan Engineering and Contracting partnered with Top Rock Interiors (Order No: PODSUB-2024/0944 / Project No: J20-005) to execute the specialized architectural interior contracting for the signature Cafe Bateel boutique at Yas Mall in Abu Dhabi.\n\nThe interior architecture demanded intricate multi-layered gypsum ceiling engineering, integrating organic curved bulkheads, continuous warm LED covelights, and 60x60cm decorative aluminum ceiling panels. Rayan Group erected fire-rated Gypline partitions with heavy-gauge GTI suspension systems, cement board linings for wet prep zones, and high-strength floor screeds.\n\nThe boutique features handcrafted fluted walnut paneling, bespoke brass display showcases for luxury dates and chocolates, plush emerald velvet dining booths, and terrazzo flooring. All works complied rigorously with Aldar mall management safety protocols and were delivered ready for successful public inauguration.`,
+    imgDir: 'cafe-bateel-yas-mall',
+    imgCount: 2
+  },
+  {
+    slug: 'monoprix-yas-island',
+    title: 'Monoprix Gourmet Hypermarket — Ansam Yas Island',
+    shortTitle: 'Monoprix Yas Island',
+    category: 'commercial',
+    categoryLabel: 'COMMERCIAL RETAIL / YAS ISLAND',
+    location: 'Ansam, Yas Island, Abu Dhabi, UAE',
+    client: 'Top Rock Interiors / Monoprix UAE',
+    status: 'Completed',
+    heroImage: '/assets/images/projects/monoprix-yas-island.jpg',
+    scope: 'Large-Scale Commercial Retail Fit-Out, High-Traffic Floor Tiling, Ceramic Wall Paneling & Architectural Finishes',
+    contractRef: 'PO No: PODSUB-2026/0841 • Project No: J21-054',
+    contractValue: 'Approved Commercial Retail Contract',
+    highlights: [
+      'High-volume commercial interior fit-out for Monoprix gourmet French supermarket at Ansam, Yas Island',
+      'Precision installation of heavy-traffic commercial floor tiles (300x300mm) engineered for continuous retail cart flow',
+      'Architectural glazed ceramic wall tiling (700x260mm) across gourmet bakery, fromagerie, and food preparation counters',
+      'Fast-track night and day shift execution adhering strictly to Yas Island commercial residential retail guidelines',
+      'Delivered in partnership with Top Rock Interiors with zero defects and full municipal health certification'
+    ],
+    narrative: `Rayan Engineering and Contracting was contracted by Top Rock Interiors (Order No: PODSUB-2026/0841 / Project No: J21-054) to execute extensive architectural tiling and commercial surface fit-outs for the flagship Monoprix gourmet supermarket at Ansam on Yas Island, Abu Dhabi.\n\nServing the affluent Yas Island community, Monoprix demanded robust commercial-grade finishes built for intensive footfall. Rayan Group installed 300x300mm non-slip vitrified floor tiles with heavy-duty epoxy grouting across retail aisles, and 700x260mm subway-style ceramic wall tiling across the artisanal French bakery, cheese counter, and organic fresh produce sections.\n\nThe project required round-the-clock coordination, dust-free containment, and seamless coordination with refrigeration and MEP contractors. The store opened on schedule, setting a benchmark for premium retail supermarket aesthetics in Abu Dhabi.`,
+    imgDir: 'monoprix-yas-island',
+    imgCount: 1
+  },
+  {
+    slug: 'abu-dhabi-art-manarat-saadiyat',
+    title: 'Abu Dhabi Art Pavilion — Manarat Al Saadiyat',
+    shortTitle: 'Abu Dhabi Art Pavilion',
+    category: 'infrastructure',
+    categoryLabel: 'CIVIC & CULTURAL / SAADIYAT ISLAND',
+    location: 'Manarat Al Saadiyat, Saadiyat Cultural District, Abu Dhabi, UAE',
+    client: 'Abu Dhabi Art / Map Out Decor Technical Services',
+    status: 'Completed',
+    heroImage: '/assets/images/projects/abu-dhabi-art-manarat-saadiyat.jpg',
+    scope: 'Museum-Grade Exhibition Pavilion Fit-Out, Heavy Double-Frame Gypsum Partitions & Surface Art Finishing',
+    contractRef: 'LPO No: LPO.MOD.0022025 • Qtn Ref: REC-QTN-44029',
+    contractValue: 'AED 37,464.00 (Approved Commercial Terms)',
+    highlights: [
+      'Cultural exhibition gallery pavilions for the internationally renowned Abu Dhabi Art annual fair at Manarat Al Saadiyat',
+      'Over 440 sq.m of 30cm double-frame structural gypsum gallery partitions engineered to bear heavy fine art canvases',
+      'Seamless precision jointing, acoustic tapping, and museum-grade multi-coat primer and Fenomastic matte wall finish',
+      'Intensive 6-day fast-track turnkey execution delivered on schedule for VIP opening gala and royal delegation tours'
+    ],
+    narrative: `Abu Dhabi Art at Manarat Al Saadiyat is the UAE capital's premier modern and contemporary cultural fair, bringing together blue-chip international art galleries, curators, and collectors from around the world. Rayan Group (Sole Proprietorship L.L.C.) was contracted by Map Out Decor Technical Services LLC (LPO.MOD.0022025 / Ref: REC-QTN-44029) to construct the monumental gallery pavilions.\n\nThe project demanded ultra-rigid structural partition engineering capable of supporting heavy framed museum artworks and sculptures. Rayan Group erected over 440 square meters of 30cm double-frame single-layer gypsum wall systems with heavy-gauge steel studs, precision acoustic jointing, and multi-stage Fenomastic smooth matte paint finishing.\n\nWorking within the historic Manarat Al Saadiyat exhibition halls under strict timeline constraints, Rayan Group delivered the entire pavilion network within a record 6-day turnkey turnaround, achieving flawless verticality and zero-shadow lighting planes for international art exhibitors.`,
+    imgDir: 'abu-dhabi-art-manarat-saadiyat',
+    imgCount: 1
+  },
+  {
+    slug: 'porsche-service-centre-mussafah',
+    title: 'Porsche Service Centre — Mussafah Industrial Hub',
+    shortTitle: 'Porsche Service Centre',
+    category: 'commercial',
+    categoryLabel: 'AUTOMOTIVE & COMMERCIAL / ABU DHABI',
+    location: 'Mussafah M-3, Abu Dhabi, UAE',
+    client: 'Ali & Sons Holding LLC / Porsche UAE',
+    status: 'Completed',
+    heroImage: '/assets/images/projects/porsche-service-centre-mussafah.jpg',
+    scope: 'Automotive Facility Ceiling Engineering, Weatherproofing Restoration & Heavy Commercial Fit-Out',
+    contractRef: 'PO No: 4500009126 • Vendor No: 382231',
+    contractValue: 'Approved Facility Rectification Contract',
+    highlights: [
+      'Specialized engineering and ceiling structural restoration for the flagship Porsche Service Centre in Mussafah, Abu Dhabi',
+      'High-bay acoustic ceiling panel replacement and stormwater mitigation across high-tech supercar workshop bays',
+      'High-gloss industrial epoxy floor protection and clean-room standard containment during structural works',
+      'Executed under Ali & Sons Holding LLC automotive facility standards with zero interruption to active servicing operations'
+    ],
+    narrative: `The official Porsche Service Centre in Mussafah, owned and operated by Ali & Sons Holding Company, provides cutting-edge maintenance and diagnostic services for Porsche luxury sports cars and hypercars across the UAE. Following extreme weather, Rayan Engineering and Contracting was mobilized under Purchase Order No: 4500009126 (Vendor No: 382231) to carry out urgent structural ceiling rectification and facility rehabilitation.\n\nWorking in an active automotive workshop containing multi-million dirham supercars required stringent cleanliness protocols, negative-air containment, and high-bay mobile scaffolding. Rayan Group technicians dismantled water-damaged ceiling matrices, engineered corrosion-resistant structural suspension grids, and installed moisture-resistant acoustic panels.\n\nAll lighting channels, fire sprinkler alignments, and diagnostic overhead drops were fully tested and restored. The facility was handed back to Ali & Sons and Porsche management with full certification and zero operational downtime.`,
+    imgDir: 'porsche-service-centre-mussafah',
+    imgCount: 1
+  },
+
+  // =========================================================================
+  // EXISTING COMPLETED PORTFOLIO PROJECTS
+  // =========================================================================
   {
     slug: 'waldorf-astoria-renovation-rak',
     title: 'Waldorf Astoria Hotel Luxury Renovation',
@@ -93,27 +285,6 @@ Premium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles w
     narrative: `Rayan Group delivered mission-critical civil excavation, substructure engineering, and specialized contracting for EDGE Group's premier tactical subsidiary, REMAYA International, in Abu Dhabi. The state-of-the-art complex required extensive site preparation across vast desert terrain, comprising mass cut-and-fill earthmoving, deep foundation trenching, and heavy reinforced concrete footings.\n\nThe engineering specifications demanded precision laser-guided subgrade compaction, heavy ballistic concrete wall framing, and specialized safety perimeter works. Deployed with Caterpillar heavy excavators, JCB telehandlers, and modern vibration rollers, Rayan Group completed all enabling civil earthworks with zero lost-time incidents and full defense-grade accreditation.`,
     imgDir: 'edge-group-remaya',
     imgCount: 4
-  },
-  {
-    slug: 'dubai-police-academy',
-    title: 'Dubai Police Academy Tactical Facility',
-    shortTitle: 'Dubai Police Academy Complex',
-    category: 'infrastructure',
-    categoryLabel: 'CIVIL & INTERIOR / DUBAI',
-    location: 'Al Rowaiyah, Dubai, UAE',
-    client: 'Dubai Police GHQ / Top Rock Contracting',
-    status: 'Under Construction',
-    heroImage: '/assets/images/projects/dubai-police-academy.jpg',
-    scope: 'Institutional Complex Construction, Tactical Infrastructure, Heavy Gypsum & Security Partitions',
-    highlights: [
-      'Turnkey civil masonry and structural framing for high-capacity cadet lecture halls',
-      'Acoustic tier lecture auditoriums with specialized sound dampening and integrated AV systems',
-      'Heavy-duty institutional flooring and impact-resistant wall cladding throughout',
-      'Accelerated construction schedule executed under Dubai Police GHQ supervision'
-    ],
-    narrative: `The Dubai Police Academy expansion at Al Rowaiyah is a premier civic and security education infrastructure project. Rayan Group was contracted in association with Top Rock Contracting to deliver comprehensive civil framing, heavy partition engineering, and high-durability architectural fit-outs across the academy campus.\n\nThe development comprises multi-tier briefing halls, tactical observation decks, physical fitness complexes, and smart lecture theaters. Rayan Group utilized fire-rated gypsum assemblies, specialized anti-crack screeds, and heavy-duty utility routing to ensure long-term durability and operational functionality.`,
-    imgDir: 'dubai-police-academy',
-    imgCount: 9
   },
   {
     slug: 'c2-towers-al-bateen',
@@ -218,27 +389,6 @@ Premium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles w
     ],
     narrative: `Rayan Group's specialized stone and marble division was selected to fabricate and install extraordinary architectural marble finishes across the palatial royal villas on Private Luxury Island, Abu Dhabi. Every marble slab was hand-selected in Carrara, Italy, inspected for veining uniformity, and transported under climate-controlled conditions.\n\nRayan Group master stone-masons executed intricate book-matched wall slabs, hand-beveled thresholds, carved marble bath surrounds, and monumental grand staircases. The project exemplifies the highest standard of artisanal stone craftsmanship in the Gulf.`,
     imgDir: 'luxury-island-marble-works',
-    imgCount: 5
-  },
-  {
-    slug: 'al-lisaili-villa',
-    title: 'Al Lisaili Luxury Villa Development',
-    shortTitle: 'Al Lisaili Luxury Villa',
-    category: 'residential',
-    categoryLabel: 'RESIDENTIAL / DUBAI',
-    location: 'Al Lisaili, Dubai, UAE',
-    client: 'Private High-Net-Worth Client',
-    status: 'Under Construction',
-    heroImage: '/assets/images/projects/al-lisaili-villa.jpg',
-    scope: 'Turnkey Villa Construction, Reinforced Concrete, MEP & Luxury Architectural Finishes',
-    highlights: [
-      'Contemporary desert palace design spanning over 25,000 sq.ft of built-up area',
-      'Post-tensioned concrete structural frame engineered for expansive column-free living rooms',
-      'High-thermal-efficiency double insulated aerated blockwork suited for desert climate',
-      'Turnkey civil execution including boundary walls, majlis, pool, and staff pavilions'
-    ],
-    narrative: `Set in the serene landscape of Al Lisaili, Dubai, this palatial private villa blends contemporary architectural minimalism with classical Emirati hospitality traditions. Rayan Group is delivering turnkey engineering and contracting services, from deep foundation earthworks to structural concrete and architectural fit-outs.\n\nThe project features expansive open-span living areas made possible by post-tensioned beam systems, double-height curtain walls, private interior courtyards, and integrated smart desert landscaping with automated water recycling.`,
-    imgDir: 'al-lisaili-villa',
     imgCount: 5
   },
   {
@@ -369,12 +519,13 @@ Premium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles w
   }
 ];
 
+// STRICT SORTING: Under Construction projects FIRST (with yellow theme), followed by Completed projects
 const COMBINED_PROJECTS = [
   ...NEW_EXTRACTED_PROJECTS.filter(p => p.status === 'Under Construction'),
   ...NEW_EXTRACTED_PROJECTS.filter(p => p.status !== 'Under Construction')
 ];
 
-console.log(`Processing total ${COMBINED_PROJECTS.length} extracted projects...`);
+console.log(`Processing total ${COMBINED_PROJECTS.length} portfolio assets (Under Construction: ${COMBINED_PROJECTS.filter(p => p.status === 'Under Construction').length}, Completed: ${COMBINED_PROJECTS.filter(p => p.status !== 'Under Construction').length})...`);
 
 // Helper to write an HTML page
 function createRoute(relativePath, { title, description, activePath, heroHtml, content }) {
@@ -402,7 +553,7 @@ for (const proj of COMBINED_PROJECTS) {
     }
   }
 
-  // Related projects (pick 3 other projects from the list)
+  // Related projects (prioritizing under construction first, then completed)
   const related = COMBINED_PROJECTS.filter(p => p.slug !== proj.slug).slice(0, 3);
 
   const heroSubnav = [
@@ -433,7 +584,7 @@ for (const proj of COMBINED_PROJECTS) {
       <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem;">
         <div>
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6;">PROJECT VISUAL DOCUMENTATION</span>
-          <h2 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.4rem;">SITE PHOTOGRAPHY (${galleryImages.length} ASSETS)</h2>
+          <h2 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 0.4rem;">SITE &amp; ARCHITECTURAL PHOTOGRAPHY (${galleryImages.length} ASSETS)</h2>
         </div>
         <div style="font-size: 0.85rem; color: #94a3b8;">Click any photo to enlarge in high resolution</div>
       </div>
@@ -476,12 +627,15 @@ for (const proj of COMBINED_PROJECTS) {
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
-        ${related.map(rel => `
-          <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
+        ${related.map(rel => {
+          const isUnderConst = rel.status === 'Under Construction';
+          return `
+          <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid ${isUnderConst ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.08)'}; display: flex; flex-direction: column;">
             <div style="height: 200px; overflow: hidden; position: relative;">
               <a href="/projects/${rel.slug}/" style="display: block; width: 100%; height: 100%;">
                 <img src="${rel.heroImage}" alt="${rel.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
               </a>
+              <span style="position: absolute; bottom: 0.85rem; left: 0.85rem; background: ${isUnderConst ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' : 'rgba(16,185,129,0.9)'}; color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 3px; letter-spacing: 0.05em; pointer-events: none; ${isUnderConst ? 'box-shadow: 0 4px 14px rgba(245,158,11,0.4);' : ''}">${isUnderConst ? 'UNDER CONSTRUCTION' : 'COMPLETED'}</span>
             </div>
             <div style="padding: 1.75rem; flex-grow: 1; display: flex; flex-direction: column;">
               <span style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">${rel.categoryLabel}</span>
@@ -489,13 +643,14 @@ for (const proj of COMBINED_PROJECTS) {
                 <a href="/projects/${rel.slug}/" style="color: inherit; text-decoration: none;">${rel.shortTitle}</a>
               </h3>
               <p style="font-size: 0.825rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.25rem; flex-grow: 1;">${rel.scope}</p>
-              <a href="/projects/${rel.slug}/" class="project-btn-cta ${rel.status === 'Under Construction' ? 'under-construction' : ''}">
+              <a href="/projects/${rel.slug}/" class="project-btn-cta ${isUnderConst ? 'under-construction' : ''}" style="${isUnderConst ? 'background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #fbbf24;' : ''}">
                 <span>EXPLORE CASE STUDY</span>
                 <span class="btn-arrow">→</span>
               </a>
             </div>
           </article>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     </div>
   </section>
@@ -504,7 +659,7 @@ for (const proj of COMBINED_PROJECTS) {
   const pageContent = `
   <section class="section" style="padding: 6rem 0; background: #07111e;" id="overview">
     <div class="container">
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 4rem;" class="intro-grid-responsive">
+      <div style="grid-template-columns: 2fr 1fr; gap: 4rem; display: grid;" class="intro-grid-responsive">
         <div>
           <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #0099e6; display: block; margin-bottom: 0.5rem;">CASE STUDY OVERVIEW</span>
           <h2 style="font-family: var(--font-heading); font-size: 2.25rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 1.5rem; line-height: 1.2;">${proj.title}</h2>
@@ -543,8 +698,8 @@ for (const proj of COMBINED_PROJECTS) {
             <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.85rem; margin-bottom: 0.85rem;">
               <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.25rem;">Delivery Status</span>
               <div>
-                <span style="display: inline-block; padding: 0.25rem 0.65rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; ${proj.status === 'Completed' ? 'background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);' : 'background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);'}">
-                  ${proj.status.toUpperCase()}
+                <span style="display: inline-block; padding: 0.25rem 0.65rem; border-radius: 4px; font-size: 0.75rem; font-weight: 800; ${proj.status === 'Completed' ? 'background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);' : 'background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4);'}">
+                  ${proj.status === 'Under Construction' ? 'UNDER CONSTRUCTION' : 'COMPLETED'}
                 </span>
               </div>
             </div>
@@ -568,7 +723,7 @@ for (const proj of COMBINED_PROJECTS) {
 
             <div>
               <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.25rem;">HSE &amp; Quality Accreditations</span>
-              <div style="font-size: 0.85rem; color: #10b981; font-weight: 600;">ISO 9001:2015 • ISO 45001:2018</div>
+              <div style="font-size: 0.85rem; color: #10b981; font-weight: 600;">ISO 9001:2015 • ISO 14001:2015 • ISO 45001:2018</div>
             </div>
           </div>
         </div>
@@ -603,14 +758,14 @@ const portfolioHeroHtml = renderPageHero({
   bgImage: '/assets/images/projects/waldorf-astoria-renovation-rak.jpg',
   subnav: [
     { label: `All Projects (${COMBINED_PROJECTS.length})`, href: '/projects/', active: true },
-    { label: 'Yateem Optician', href: '/projects/yateem-optician-khalidiyah-mall/', active: false },
     { label: 'Dubai Police', href: '/projects/dubai-police-academy/', active: false },
+    { label: 'Yateem Optician', href: '/projects/yateem-optician-khalidiyah-mall/', active: false },
     { label: 'Al Lisaili Villa', href: '/projects/al-lisaili-villa/', active: false },
-    { label: 'Waldorf Astoria', href: '/projects/waldorf-astoria-renovation-rak/', active: false },
-    { label: 'Palm Jumeirah', href: '/projects/palm-jumeirah-rec-estate/', active: false },
-    { label: 'C2 Towers', href: '/projects/c2-towers-al-bateen/', active: false },
-    { label: 'Edge REMAYA', href: '/projects/edge-group-remaya/', active: false },
-    { label: 'Roxy Cinemas', href: '/projects/roxy-cinema-dubai-hills-mall/', active: false }
+    { label: 'Arab Bank', href: '/projects/arab-bank-abu-dhabi/', active: false },
+    { label: 'Saadiyat Mamsha', href: '/projects/saadiyat-mamsha-residence/', active: false },
+    { label: 'Cafe Bateel', href: '/projects/cafe-bateel-yas-mall/', active: false },
+    { label: 'Monoprix', href: '/projects/monoprix-yas-island/', active: false },
+    { label: 'Waldorf Astoria', href: '/projects/waldorf-astoria-renovation-rak/', active: false }
   ]
 });
 
@@ -642,20 +797,22 @@ const portfolioContent = `
       </div>
     </div>
 
-    <!-- 22 Project Editorial Cards Grid -->
+    <!-- Project Editorial Cards Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;" id="projectsGrid">
       ${COMBINED_PROJECTS.map(proj => {
         const filterCat = proj.category;
+        const isUnderConst = proj.status === 'Under Construction';
         const displayClient = (proj.client.includes('/') && !proj.client.toUpperCase().startsWith('M/S'))
           ? proj.client.split('/')[0].trim()
           : proj.client.trim();
         return `
-        <article class="project-editorial-card" data-project-cat="${filterCat}" data-project-title="${proj.title.toLowerCase()}" data-project-client="${proj.client.toLowerCase()}" data-project-loc="${proj.location.toLowerCase()}" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease;">
+        <article class="project-editorial-card" data-project-cat="${filterCat}" data-project-title="${proj.title.toLowerCase()}" data-project-client="${proj.client.toLowerCase()}" data-project-loc="${proj.location.toLowerCase()}" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid ${isUnderConst ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.08)'}; display: flex; flex-direction: column; transition: transform 0.3s ease, border-color 0.3s ease; ${isUnderConst ? 'box-shadow: 0 10px 30px rgba(0,0,0,0.4);' : ''}">
           <div style="height: 240px; overflow: hidden; position: relative;">
             <a href="/projects/${proj.slug}/" style="display: block; width: 100%; height: 100%;">
               <img src="${proj.heroImage}" alt="${proj.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);" loading="lazy">
             </a>
-            <span style="position: absolute; bottom: 1rem; left: 1rem; background: ${proj.status === 'Completed' ? 'rgba(16,185,129,0.9)' : 'rgba(245,158,11,0.9)'}; color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 3px; letter-spacing: 0.05em; pointer-events: none;">${proj.status.toUpperCase()}</span>
+            <span style="position: absolute; bottom: 1rem; left: 1rem; background: ${isUnderConst ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' : 'rgba(16,185,129,0.9)'}; color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 4px; letter-spacing: 0.05em; pointer-events: none; ${isUnderConst ? 'box-shadow: 0 4px 14px rgba(245,158,11,0.4);' : ''}">${isUnderConst ? (proj.slug === 'dubai-police-academy' ? 'RUNNING PROJECT • UNDER CONSTRUCTION' : 'UNDER CONSTRUCTION') : 'COMPLETED'}</span>
+            ${isUnderConst ? `<span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #fbbf24; pointer-events: none;">${proj.category.toUpperCase()}</span>` : ''}
           </div>
           <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
             <span style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.35rem;">${proj.categoryLabel}</span>
@@ -668,7 +825,7 @@ const portfolioContent = `
                 <span class="project-client-label">Client</span>
                 <span class="project-client-name" title="${displayClient}">${displayClient}</span>
               </div>
-              <a href="/projects/${proj.slug}/" class="project-btn-cta ${proj.status === 'Under Construction' ? 'under-construction' : ''}">
+              <a href="/projects/${proj.slug}/" class="project-btn-cta ${isUnderConst ? 'under-construction' : ''}" style="${isUnderConst ? 'background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #fbbf24;' : ''}">
                 <span>EXPLORE CASE STUDY</span>
                 <span class="btn-arrow">→</span>
               </a>
@@ -684,7 +841,7 @@ const portfolioContent = `
 
 createRoute('projects/index.html', {
   title: 'Project Portfolio Showcase | Rayan Group',
-  description: 'Explore Rayan Group landmark projects in commercial retail, energy facilities, luxury residential, and industrial infrastructure.',
+  description: 'Explore Rayan Group landmark projects in commercial banking, luxury retail, hospitality, luxury residential, and industrial infrastructure.',
   activePath: '/projects/',
   heroHtml: portfolioHeroHtml,
   content: portfolioContent
