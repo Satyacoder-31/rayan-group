@@ -15,6 +15,9 @@ class LiveAssistanceChat {
     this.messages = [];
     this.lastPolledTimestamp = 0;
     this.broadcastChannel = null;
+    this.lockedBar = null;
+    this.composerWrap = null;
+    this.profileBar = null;
 
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
@@ -38,12 +41,13 @@ class LiveAssistanceChat {
   init() {
     this.bindDomElements();
     this.bindEvents();
-    this.ensureLiveAgentSuggestionChip();
     this.loadCachedMessages();
     this.startPolling();
 
     if (this.isLiveHumanMode) {
       this.activateLiveHumanMode(false);
+    } else {
+      this.setAutomatedModeUi();
     }
   }
 
@@ -65,9 +69,11 @@ class LiveAssistanceChat {
 
     // Chat elements
     this.messagesContainer = document.getElementById('chat-messages-container');
+    this.composerWrap = document.querySelector('.chat-composer-wrap');
     this.composerForm = document.getElementById('chat-composer-form');
     this.inputField = document.getElementById('chat-input-field');
     this.sendBtn = document.getElementById('chat-send-btn');
+    this.profileBar = document.querySelector('.chat-visitor-profile-bar');
     this.visitorNameInput = document.getElementById('chat-visitor-name-input');
     this.typingIndicator = document.getElementById('chat-typing-indicator');
 
@@ -75,6 +81,9 @@ class LiveAssistanceChat {
     this.suggestionsWrap = document.querySelector('.chat-suggestions-wrap');
     this.statusText = document.querySelector('.chat-agent-status-text');
     this.pulseDot = document.querySelector('.chat-agent-pulse');
+
+    // Ensure locked bar exists for automated mode
+    this.ensureLockedComposerBar();
 
     if (this.visitorNameInput) {
       this.visitorNameInput.value = this.visitorName === 'Guest Visitor' ? '' : this.visitorName;
@@ -105,6 +114,42 @@ class LiveAssistanceChat {
       this.messagesContainer.addEventListener('touchmove', (e) => {
         e.stopPropagation();
       }, { passive: true });
+    }
+  }
+
+  ensureLockedComposerBar() {
+    this.lockedBar = document.getElementById('chat-composer-locked-bar');
+    if (!this.lockedBar && this.chatView) {
+      this.lockedBar = document.createElement('div');
+      this.lockedBar.id = 'chat-composer-locked-bar';
+      this.lockedBar.className = 'chat-composer-locked-bar';
+      this.lockedBar.innerHTML = `
+        <div class="chat-locked-status">
+          <span class="chat-locked-badge">🤖 Automated Corporate Advisory</span>
+          <span class="chat-locked-hint">Select a question or connect with our team</span>
+        </div>
+        <button type="button" class="btn-unlock-live-chat" id="btn-unlock-live-chat" aria-label="Connect to Live Assistance Chat">
+          <span class="live-pulse-green"></span>
+          <span>💬 Connect to Live Assistance Chat</span>
+        </button>
+      `;
+
+      if (this.composerWrap && this.composerWrap.parentNode) {
+        this.composerWrap.parentNode.insertBefore(this.lockedBar, this.composerWrap);
+      } else {
+        this.chatView.appendChild(this.lockedBar);
+      }
+    }
+
+    if (this.lockedBar) {
+      const unlockBtn = this.lockedBar.querySelector('#btn-unlock-live-chat');
+      if (unlockBtn && !unlockBtn.dataset.bound) {
+        unlockBtn.dataset.bound = 'true';
+        unlockBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.activateLiveHumanMode(true);
+        });
+      }
     }
   }
 
@@ -152,7 +197,7 @@ class LiveAssistanceChat {
         e.preventDefault();
         const text = chip.textContent.trim();
         this.switchToChatView();
-        this.sendCustomMessage(`Inquiry regarding: ${text}`);
+        this.askAutomatedQuestion(`Inquiry regarding: ${text}`);
       });
     });
 
@@ -166,35 +211,109 @@ class LiveAssistanceChat {
           return;
         }
         const text = chip.getAttribute('data-prompt') || chip.textContent.trim();
-        this.sendCustomMessage(text);
+        this.askAutomatedQuestion(text);
       });
     });
   }
 
-  ensureLiveAgentSuggestionChip() {
+  renderAutomatedQuestionChips() {
     if (!this.suggestionsWrap) return;
-    if (!this.suggestionsWrap.querySelector('[data-action="live_human"]')) {
-      const liveBtn = document.createElement('button');
-      liveBtn.type = 'button';
-      liveBtn.className = 'chat-suggestion-chip';
-      liveBtn.setAttribute('data-action', 'live_human');
-      liveBtn.style.cssText = 'border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); color: #34d399; font-weight: 600;';
-      liveBtn.innerHTML = '<span>💬 Chat with Live Human Agent</span>';
-      liveBtn.addEventListener('click', (e) => {
+    this.suggestionsWrap.innerHTML = '';
+
+    const questions = [
+      { title: '📋 Request Tender Proposal / RFP', prompt: 'I would like to request an EPC Tender / RFP proposal.' },
+      { title: '🏢 Civil Construction & High-Rise EPC', prompt: 'Inquiry regarding Civil Construction & High-Rise contracting.' },
+      { title: '⚡ Energy & Process Pipelines', prompt: 'Inquiry regarding Energy Facilities & Process Pipelines.' },
+      { title: '💳 Vendor Accounts & Invoices', prompt: 'Inquiry regarding vendor invoices, payment status, and accounts.' },
+      { title: '📦 Procurement & Supplier Onboarding', prompt: 'Inquiry regarding vendor registration and approved supplier onboarding.' },
+      { title: '📍 Dual Corporate HQs & Direct Lines', prompt: 'Where are your corporate offices located and how can I contact you?' },
+      { title: '🏛️ Executive Leadership & Directors', prompt: 'I would like to connect with the Executive Directors.' }
+    ];
+
+    questions.forEach(q => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chat-suggestion-chip';
+      chip.setAttribute('data-prompt', q.prompt);
+      chip.textContent = q.title;
+      chip.addEventListener('click', (e) => {
         e.preventDefault();
-        this.activateLiveHumanMode(true);
+        this.askAutomatedQuestion(q.prompt);
       });
-      this.suggestionsWrap.appendChild(liveBtn);
+      this.suggestionsWrap.appendChild(chip);
+    });
+
+    const liveBtn = document.createElement('button');
+    liveBtn.type = 'button';
+    liveBtn.className = 'chat-suggestion-chip';
+    liveBtn.setAttribute('data-action', 'live_human');
+    liveBtn.style.cssText = 'border-color: rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.12); color: #34d399; font-weight: 700;';
+    liveBtn.innerHTML = '<span>💬 Connect to Live Assistance Chat</span>';
+    liveBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.activateLiveHumanMode(true);
+    });
+    this.suggestionsWrap.appendChild(liveBtn);
+  }
+
+  setAutomatedModeUi() {
+    this.isLiveHumanMode = false;
+    if (this.lockedBar) this.lockedBar.style.display = 'flex';
+    if (this.composerWrap) this.composerWrap.style.display = 'none';
+    if (this.profileBar) this.profileBar.style.display = 'none';
+
+    const banner = document.getElementById('chat-live-mode-banner');
+    if (banner) banner.style.display = 'none';
+
+    if (this.statusText) {
+      this.statusText.innerHTML = '<span style="color:#38bdf8;">●</span> Automated Advisory • Instant Answers';
     }
+    if (this.pulseDot) {
+      this.pulseDot.style.background = '#38bdf8';
+      this.pulseDot.style.boxShadow = '0 0 8px #38bdf8';
+    }
+
+    if (this.suggestionsWrap) {
+      this.suggestionsWrap.style.display = 'flex';
+      this.renderAutomatedQuestionChips();
+    }
+  }
+
+  async askAutomatedQuestion(text) {
+    const msg = {
+      id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      sessionId: this.sessionId,
+      sender: 'visitor',
+      senderName: this.visitorName,
+      text: text,
+      timestamp: Date.now(),
+      page: window.location.pathname
+    };
+
+    if (!this.isMessageInList(msg, this.messages)) {
+      this.messages.push(msg);
+      this.saveCachedMessages();
+      this.appendMessageToDom(msg);
+      this.scrollToBottom();
+    }
+
+    this.triggerAutomatedReply(text);
   }
 
   switchToChatView(trigger = 'opened_chat', extraMsg = '') {
     if (this.menuView) this.menuView.classList.add('view-hidden');
     if (this.chatView) this.chatView.classList.remove('view-hidden');
     this.clearUnreadBadge();
-    if (this.inputField) this.inputField.focus();
+
+    if (this.isLiveHumanMode) {
+      this.activateLiveHumanMode(false);
+      if (this.inputField) this.inputField.focus();
+      this.notifyChatOpened('live_human', extraMsg);
+    } else {
+      this.setAutomatedModeUi();
+    }
+
     this.scrollToBottom();
-    this.notifyChatOpened(trigger, extraMsg);
   }
 
   async notifyChatOpened(triggerType = 'opened_chat', extraMsg = '') {
@@ -402,6 +521,20 @@ class LiveAssistanceChat {
         });
         bodyHtml += `</div>`;
       }
+
+      // If automated response and satisfaction check is not hidden, append satisfaction prompt
+      if (msg.isAutomated && !msg.hideSatisfaction) {
+        bodyHtml += `
+          <div class="chat-satisfaction-section">
+            <div class="chat-satisfaction-title">Was this information helpful?</div>
+            <div class="chat-satisfaction-actions">
+              <button type="button" class="chat-sat-btn btn-sat-yes" data-action="feedback_satisfied">👍 Yes, thank you</button>
+              <button type="button" class="chat-sat-btn btn-sat-other" data-action="show_menu">🔄 Other questions</button>
+              <button type="button" class="chat-sat-btn btn-sat-escalate" data-action="live_human">🔴 Not satisfied? Chat with Live Desk</button>
+            </div>
+          </div>
+        `;
+      }
     } else {
       bodyHtml = this.escapeHtml(msg.text);
     }
@@ -417,7 +550,7 @@ class LiveAssistanceChat {
     `;
 
     // Bind action buttons inside bubble
-    row.querySelectorAll('button.chat-action-btn').forEach(btn => {
+    row.querySelectorAll('button.chat-action-btn, button.chat-sat-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const action = btn.getAttribute('data-action');
@@ -437,15 +570,50 @@ class LiveAssistanceChat {
   handleInlineAction(action, payload, label) {
     if (action === 'live_human') {
       this.activateLiveHumanMode(true);
-    } else if (action === 'request_callback') {
-      this.sendCustomMessage('I would like to request an executive phone call-back.');
+    } else if (action === 'feedback_satisfied') {
+      this.handleSatisfactionFeedback();
     } else if (action === 'show_menu') {
       this.toggleSuggestions(true);
+    } else if (action === 'request_callback') {
+      if (this.isLiveHumanMode) {
+        this.sendCustomMessage('I would like to request an executive phone call-back.');
+      } else {
+        this.askAutomatedQuestion('I would like to request an executive phone call-back.');
+      }
     } else if (action === 'send_prompt') {
-      this.sendCustomMessage(payload || label);
+      if (this.isLiveHumanMode) {
+        this.sendCustomMessage(payload || label);
+      } else {
+        this.askAutomatedQuestion(payload || label);
+      }
     } else {
-      this.sendCustomMessage(label);
+      if (this.isLiveHumanMode) {
+        this.sendCustomMessage(label);
+      } else {
+        this.askAutomatedQuestion(label);
+      }
     }
+  }
+
+  handleSatisfactionFeedback() {
+    const ackMsg = {
+      id: 'ack_' + Date.now(),
+      sessionId: this.sessionId,
+      sender: 'admin',
+      senderName: '🤖 Rayan Automated Advisory',
+      text: 'Thank you for your feedback! We are glad this information helped.\n\nIf you have further questions or need bespoke engineering solutions, you can select another topic above or connect directly to our **Live Assistance Desk** anytime.',
+      actions: [
+        { label: '🔄 Ask Another Question', action: 'show_menu' },
+        { label: '💬 Connect to Live Assistance Chat', action: 'live_human', isLive: true }
+      ],
+      timestamp: Date.now(),
+      isAutomated: true,
+      hideSatisfaction: true
+    };
+    this.messages.push(ackMsg);
+    this.saveCachedMessages();
+    this.appendMessageToDom(ackMsg);
+    this.scrollToBottom();
   }
 
   scrollToBottom() {
@@ -793,6 +961,11 @@ class LiveAssistanceChat {
     // High-priority notification dispatched to rayan@rayan-group.com
     this.notifyChatOpened('live_human', 'Client requested Live Human Agent assistance from the live chat desk.');
 
+    // Update UI elements: hide locked bar, show live composer and profile bar
+    if (this.lockedBar) this.lockedBar.style.display = 'none';
+    if (this.composerWrap) this.composerWrap.style.display = 'block';
+    if (this.profileBar) this.profileBar.style.display = 'flex';
+
     // Update status in header
     const statusText = document.querySelector('.chat-agent-status-text');
     if (statusText) {
@@ -984,6 +1157,9 @@ class LiveAssistanceChat {
           if (hasNewAdminMsg) {
             this.playChime();
             this.notifyVisitorReply();
+            if (!this.isLiveHumanMode) {
+              this.activateLiveHumanMode(false);
+            }
           }
         }
       } catch (err) {

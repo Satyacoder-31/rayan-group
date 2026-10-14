@@ -590,6 +590,186 @@
   color: #fff;
 }
 
+/* ============================================================================
+   AUTOMATED ADVISORY & LOCKED COMPOSER STYLES
+   Controls state before client escalates to Live Human Agent
+   ============================================================================ */
+
+/* Locked bottom bar before unlocking live chat */
+.chat-composer-locked-bar {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem 0.9rem;
+  background: linear-gradient(180deg, #091a2e 0%, #061220 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+
+.chat-locked-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chat-locked-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chat-locked-hint {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-unlock-live-chat {
+  width: 100%;
+  padding: 0.62rem 1rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(0, 153, 230, 0.22) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  border-radius: 9px;
+  color: #34d399;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.btn-unlock-live-chat:hover {
+  background: linear-gradient(135deg, #10b981 0%, #0099e6 100%);
+  border-color: #10b981;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+}
+
+.btn-unlock-live-chat:active {
+  transform: translateY(0);
+}
+
+.live-pulse-green {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseGlow 1.8s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Satisfaction Check section inside automated replies */
+.chat-satisfaction-section {
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.chat-satisfaction-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.chat-satisfaction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chat-sat-btn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+}
+
+.btn-sat-yes {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+.btn-sat-yes:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.btn-sat-other {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+.btn-sat-other:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.btn-sat-escalate {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.38);
+  color: #34d399;
+  font-weight: 700;
+}
+
+.btn-sat-escalate:hover {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3);
+}
+
+.automated-topics-divider {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin: 0.5rem 0 0.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 @media (max-width: 480px) {
   .assistance-card {
     width: calc(100vw - 20px) !important;
@@ -598,5 +778,12 @@
   }
   .assistance-chat-view {
     height: 480px;
+  }
+  .chat-satisfaction-actions {
+    flex-direction: column;
+  }
+  .chat-sat-btn {
+    width: 100%;
+    justify-content: center;
   }
 }

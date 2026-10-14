@@ -43,8 +43,8 @@
 
   <!-- Core Stylesheet -->
   <script type="module" crossorigin src="/assets/live-overrides-Bz1C8oj0.js"></script>
-  <script type="module" crossorigin src="/assets/main-Djk0Hivg.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/main-CUy5OKy2.css">
+  <script type="module" crossorigin src="/assets/main-KT2N5GRs.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/main-D4ZuibUS.css">
 </head>
 <body class="preloader-active page--">
   
@@ -2060,7 +2060,7 @@
             </div>
             <div class="chat-agent-info">
               <h5 class="chat-agent-title">Executive Support Desk</h5>
-              <span class="chat-agent-status-text">Online &bull; Live Direct Assistance</span>
+              <span class="chat-agent-status-text">Automated Advisory &bull; Instant Answers</span>
             </div>
           </div>
           <div class="chat-header-actions">
@@ -2071,24 +2071,30 @@
 
         <!-- Chat messages thread -->
         <div class="chat-messages-container" id="chat-messages-container">
-          <div class="chat-time-divider">Live Advisory Connected</div>
+          <div class="chat-time-divider">Automated Advisory Connected</div>
           
           <div class="chat-msg-row msg-desk" id="welcome-msg-initial">
             <div class="chat-msg-meta">
-              <span>🏛️ Rayan Executive Desk</span>
+              <span>🤖 Rayan Automated Advisory</span>
             </div>
             <div class="chat-msg-bubble">
-              Welcome to Rayan Group Executive Assistance. Our engineering and project advisory desk is online. How may we assist your project today?
+              Welcome to Rayan Group. Please select an automated question below for immediate answers on our contracting divisions, tender proposals, or accounts.
+              <br><br>
+              If you are not satisfied with the automated answers, click <strong>Connect to Live Assistance Chat</strong> below to chat directly with our team.
               <span class="chat-msg-time">Just now</span>
             </div>
           </div>
 
-          <!-- Quick Suggestion Prompts -->
+          <!-- Quick Suggestion Prompts / Automated Questions -->
           <div class="chat-suggestions-wrap">
-            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to request an EPC Tender / RFP proposal.">Request Tender Proposal / RFP</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Civil Construction &amp; High-Rise contracting.">Civil &amp; High-Rise EPC</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Energy Facilities &amp; Process Pipelines.">Energy &amp; Process Infrastructure</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to connect with the Executive Directors.">Connect with Executive Director</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to request an EPC Tender / RFP proposal.">📋 Request Tender Proposal / RFP</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Civil Construction &amp; High-Rise contracting.">🏢 Civil Construction &amp; Fit-Out</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Energy Facilities &amp; Process Pipelines.">⚡ Energy &amp; Process Pipelines</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding vendor invoices, payment status, and accounts.">💳 Vendor Accounts &amp; Invoices</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding vendor registration and approved supplier onboarding.">📦 Procurement &amp; Supplier Onboarding</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Where are your corporate offices located and how can I contact you?">📍 Dual Corporate HQs &amp; Direct Lines</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to connect with the Executive Directors.">🏛️ Executive Leadership &amp; Directors</button>
+            <button type="button" class="chat-suggestion-chip" data-action="live_human" style="border-color: rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.12); color: #34d399; font-weight: 700;"><span>💬 Connect to Live Assistance Chat</span></button>
           </div>
 
           <!-- Typing indicator (hidden by default) -->
@@ -2099,14 +2105,26 @@
           </div>
         </div>
 
+        <!-- Locked Composer Bar (Automated Mode Default) -->
+        <div class="chat-composer-locked-bar" id="chat-composer-locked-bar">
+          <div class="chat-locked-status">
+            <span class="chat-locked-badge">🤖 Automated Corporate Advisory</span>
+            <span class="chat-locked-hint">Select a question or connect with our team</span>
+          </div>
+          <button type="button" class="btn-unlock-live-chat" id="btn-unlock-live-chat" aria-label="Connect to Live Assistance Chat">
+            <span class="live-pulse-green"></span>
+            <span>💬 Connect to Live Assistance Chat</span>
+          </button>
+        </div>
+
         <!-- Visitor quick identification bar -->
-        <div class="chat-visitor-profile-bar">
+        <div class="chat-visitor-profile-bar" style="display: none;">
           <span style="font-size: 0.68rem; color: #94a3b8; white-space: nowrap;">Your Name / Co:</span>
           <input type="text" class="chat-visitor-input-sm" id="chat-visitor-name-input" placeholder="e.g. Tariq (Apex Contracting)" maxlength="40">
         </div>
 
-        <!-- Message composer -->
-        <div class="chat-composer-wrap">
+        <!-- Message composer (Hidden until Live Assistance Chat unlocked) -->
+        <div class="chat-composer-wrap" style="display: none;">
           <form class="chat-composer-form" id="chat-composer-form">
             <input type="text" class="chat-input-field" id="chat-input-field" placeholder="Type your message..." autocomplete="off" required>
             <button type="submit" class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
