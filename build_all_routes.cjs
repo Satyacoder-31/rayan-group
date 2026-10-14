@@ -332,7 +332,7 @@ const homeContent = `
           <div style="height: 240px; overflow: hidden; position: relative;">
             <img src="/assets/images/projects/dubai-police-academy.jpg" alt="Dubai Police Academy Tactical Facility" style="width: 100%; height: 100%; object-fit: cover;">
             <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(245,158,11,0.9); color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 4px; letter-spacing: 0.05em;">UNDER CONSTRUCTION</span>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #f59e0b;">CIVIC &amp; DEFENSE</span>
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981;">CIVIL &amp; INTERIOR</span>
           </div>
           <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">AL ROWAIYAH, DUBAI</span>

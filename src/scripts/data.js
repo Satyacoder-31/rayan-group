@@ -250,13 +250,13 @@ export const FEATURED_PROJECTS = [
     id: "dubai-police-academy",
     slug: "dubai-police-academy",
     title: "Dubai Police Academy Tactical Facility",
-    category: "CIVIC",
+    category: "CIVIL & INTERIOR",
     filterCat: "infrastructure",
     location: "Al Rowaiyah, Dubai, UAE",
     client: "Dubai Police GHQ / Top Rock Contracting",
     year: "2024–Present",
     scope: "Institutional Complex Construction, Tactical Infrastructure, Heavy Gypsum & Security Partitions.",
-    image: "/assets/images/projects/dubai-police-academy.jpg",
+    image: "/assets/images/projects/dubai-police-academy.jpg?v=3",
     featured: true,
     status: "running",
     statusBadge: "RUNNING PROJECT • UNDER ACTIVE CONSTRUCTION"
@@ -604,7 +604,7 @@ export const CAREER_OPPORTUNITIES = [
 
 // Media Gallery
 export const MEDIA_GALLERY = [
-  { title: "Dubai Police Academy Tactical Facility", category: "Civic / Infrastructure", image: "/assets/images/projects/dubai-police-academy.jpg", caption: "Institutional complex sky-bridge, grand entrance, and tactical briefing halls under active construction in Dubai." },
+  { title: "Dubai Police Academy Tactical Facility", category: "Civil & Interior", image: "/assets/images/projects/dubai-police-academy.jpg?v=3", caption: "Institutional complex sky-bridge, grand entrance, and tactical briefing halls under active construction in Dubai." },
   { title: "Waldorf Astoria Hotel Luxury Renovation", category: "Hospitality", image: "/assets/images/projects/waldorf-astoria-renovation-rak.jpg", caption: "5-Star Ultra-Luxury Hospitality Overhaul & Presidential Suites in Ras Al Khaimah." },
   { title: "Palm Jumeirah Luxury Waterfront Estate", category: "Residential", image: "/assets/images/projects/palm-jumeirah-rec-estate.jpg", caption: "Ultra-luxury coastal villa structural concrete and bespoke Italian marble on Palm Jumeirah." },
   { title: "C2 Towers Al Bateen Waterfront Development", category: "High-Rise", image: "/assets/images/projects/c2-towers-al-bateen.jpg?v=2", caption: "Twin 22-story luxury waterfront residential towers architectural finishes in Abu Dhabi." },

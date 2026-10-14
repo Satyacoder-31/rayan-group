@@ -99,7 +99,7 @@ Premium finishes feature client-supplied 800x800mm cut-to-size porcelain tiles w
     title: 'Dubai Police Academy Tactical Facility',
     shortTitle: 'Dubai Police Academy Complex',
     category: 'infrastructure',
-    categoryLabel: 'CIVIC & DEFENSE / DUBAI',
+    categoryLabel: 'CIVIL & INTERIOR / DUBAI',
     location: 'Al Rowaiyah, Dubai, UAE',
     client: 'Dubai Police GHQ / Top Rock Contracting',
     status: 'Under Construction',
