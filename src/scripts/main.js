@@ -698,7 +698,7 @@ const ENTERPRISE_FORM_CONFIGS = {
   },
   billingForm: {
     title: 'Vendor Ledger & Billing Statement Inquiry',
-    targetEmail: 'billing@rayan-group.com',
+    targetEmail: 'accounts@rayan-group.com',
     ccEmail: 'rayan@rayan-group.com',
     prefix: 'ACC-RYN'
   },
