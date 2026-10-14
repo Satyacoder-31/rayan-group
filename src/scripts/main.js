@@ -1583,6 +1583,14 @@ function initAssistanceWidget() {
     card.classList.add('active');
     triggerBtn.setAttribute('aria-expanded', 'true');
     triggerBtn.classList.add('is-open');
+
+    // If widget opens directly into chat view, notify live desk
+    const chatView = document.getElementById('assistance-chat-view');
+    if (chatView && !chatView.classList.contains('view-hidden')) {
+      if (window.__rayanLiveChat && typeof window.__rayanLiveChat.notifyChatOpened === 'function') {
+        window.__rayanLiveChat.notifyChatOpened('opened_chat');
+      }
+    }
   }
 
   function closeAssistance() {

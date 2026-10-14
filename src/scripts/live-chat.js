@@ -188,12 +188,75 @@ class LiveAssistanceChat {
     }
   }
 
-  switchToChatView() {
+  switchToChatView(trigger = 'opened_chat', extraMsg = '') {
     if (this.menuView) this.menuView.classList.add('view-hidden');
     if (this.chatView) this.chatView.classList.remove('view-hidden');
     this.clearUnreadBadge();
     if (this.inputField) this.inputField.focus();
     this.scrollToBottom();
+    this.notifyChatOpened(trigger, extraMsg);
+  }
+
+  async notifyChatOpened(triggerType = 'opened_chat', extraMsg = '') {
+    const notifKey = `rayan_chat_email_notified_${this.sessionId}`;
+    const humanNotifKey = `rayan_chat_human_email_notified_${this.sessionId}`;
+
+    if (triggerType === 'live_human') {
+      if (sessionStorage.getItem(humanNotifKey)) return;
+      sessionStorage.setItem(humanNotifKey, 'true');
+    } else {
+      if (sessionStorage.getItem(notifKey)) return;
+      sessionStorage.setItem(notifKey, 'true');
+    }
+
+    const visitorName = this.visitorName || 'Website Visitor';
+    const currentUrl = window.location.href;
+
+    // 1. Dispatch to Hostinger PHP backend (/api/chat)
+    try {
+      const endpoint = (window.location.pathname.startsWith('/site') ? '/site' : '') + '/api/chat';
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'notify_chat_open',
+          sessionId: this.sessionId,
+          visitorName: visitorName,
+          page: currentUrl,
+          trigger: triggerType,
+          message: extraMsg || '',
+          timestamp: Date.now()
+        })
+      }).catch(() => {});
+    } catch (e) {}
+
+    // 2. Dispatch via FormSubmit directly to rayan@rayan-group.com
+    try {
+      const isUrgent = (triggerType === 'live_human');
+      const payload = {
+        _subject: isUrgent
+          ? `🚨 [URGENT Live Chat] Client Requested Live Human Agent on rayan-group.com`
+          : `🔔 [Live Chat Alert] Client opened live assistance desk on rayan-group.com`,
+        _cc: 'tender@rayan-group.com',
+        "Notification Type": isUrgent ? "Human Agent Requested" : "Live Chat Opened",
+        "Visitor / Client": visitorName,
+        "Session ID": this.sessionId,
+        "Active Page URL": currentUrl,
+        "Time (GST)": new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai' }),
+        "Client Message / Note": extraMsg || "Client has opened the live chat desk and is currently waiting for assistance.",
+        "Direct Admin Desk Link": "https://rayan-group.com/admin/",
+        _template: "table"
+      };
+
+      fetch('https://formsubmit.co/ajax/rayan@rayan-group.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch (e) {}
   }
 
   switchToMenuView() {
@@ -451,6 +514,12 @@ class LiveAssistanceChat {
       }).catch(() => {});
     } catch (err) {
       console.warn('Live chat remote dispatch fallback:', err);
+    }
+
+    // Ensure email notification was dispatched to rayan@rayan-group.com
+    const notifKey = `rayan_chat_email_notified_${this.sessionId}`;
+    if (!sessionStorage.getItem(notifKey)) {
+      this.notifyChatOpened('first_message', text);
     }
 
     // Trigger Automated Reply System
@@ -720,6 +789,9 @@ class LiveAssistanceChat {
   activateLiveHumanMode(notifyUser = true) {
     this.isLiveHumanMode = true;
     localStorage.setItem(`rayan_chat_live_mode_${this.sessionId}`, 'true');
+
+    // High-priority notification dispatched to rayan@rayan-group.com
+    this.notifyChatOpened('live_human', 'Client requested Live Human Agent assistance from the live chat desk.');
 
     // Update status in header
     const statusText = document.querySelector('.chat-agent-status-text');

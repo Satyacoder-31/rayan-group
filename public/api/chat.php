@@ -84,6 +84,129 @@ function normalizeMessageRow($row) {
     ];
 }
 
+/**
+ * Dispatches an executive email notification to rayan@rayan-group.com
+ * when a client opens live chat or requests a live human agent.
+ */
+function sendLiveChatEmailNotification($sessionId, $visitorName = 'Website Visitor', $page = '/', $triggerEvent = 'opened_chat', $messageText = '') {
+    $to = 'rayan@rayan-group.com';
+    $cc = 'tender@rayan-group.com';
+    $from = 'no-reply@rayan-group.com';
+
+    $eventTitle = 'Client Opened Live Assistance Desk';
+    $badgeColor = '#0099e6';
+    $badgeBg = 'rgba(0,153,230,0.15)';
+
+    if ($triggerEvent === 'live_agent' || $triggerEvent === 'live_human') {
+        $eventTitle = '🚨 Client Requested Live Human Agent';
+        $badgeColor = '#10b981';
+        $badgeBg = 'rgba(16,185,129,0.15)';
+    } elseif ($triggerEvent === 'message' || $triggerEvent === 'first_message') {
+        $eventTitle = '💬 Client Sent Live Chat Message';
+        $badgeColor = '#f59e0b';
+        $badgeBg = 'rgba(245,158,11,0.15)';
+    }
+
+    $subject = "🔔 [Live Chat Alert] {$eventTitle} on rayan-group.com";
+    $dateGst = gmdate('d M Y, h:i A', time() + 4 * 3600) . ' GST (Gulf Standard Time)';
+    $adminUrl = 'https://rayan-group.com/admin/';
+    $safeVisitor = htmlspecialchars($visitorName ?: 'Website Visitor', ENT_QUOTES, 'UTF-8');
+    $safePage = htmlspecialchars($page ?: '/', ENT_QUOTES, 'UTF-8');
+    $safeMsg = $messageText ? nl2br(htmlspecialchars($messageText, ENT_QUOTES, 'UTF-8')) : '<em>(Client has opened the live chat desk and is awaiting assistance.)</em>';
+
+    $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{$subject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #050b14; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #050b14; padding: 30px 15px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #0c1828; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 600px; width: 100%;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #07111e 0%, #0d2238 100%); padding: 24px 30px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.15em; color: #0099e6; text-transform: uppercase;">REAL-TIME VISITOR NOTIFICATION</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #ffffff; margin-top: 4px;">RAYAN GROUP LIVE DESK</div>
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; color: {$badgeColor}; background: {$badgeBg}; border: 1px solid {$badgeColor};">
+                      ONLINE
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px 30px 10px 30px;">
+              <div style="background: rgba(0,153,230,0.08); border-left: 4px solid {$badgeColor}; padding: 14px 18px; border-radius: 4px; margin-bottom: 20px;">
+                <div style="font-size: 15px; font-weight: 700; color: #ffffff;">{$eventTitle}</div>
+                <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">A client has initiated a live assistance session on <strong>rayan-group.com</strong>.</div>
+              </div>
+              <table width="100%" cellpadding="10" cellspacing="0" style="font-size: 14px; border-collapse: collapse; margin-bottom: 24px;">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <td width="35%" style="color: #94a3b8; font-weight: 600;">Client / Visitor:</td>
+                  <td width="65%" style="color: #ffffff; font-weight: 700;">{$safeVisitor}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <td style="color: #94a3b8; font-weight: 600;">Session ID:</td>
+                  <td style="color: #38bdf8; font-family: monospace; font-size: 12px;">{$sessionId}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <td style="color: #94a3b8; font-weight: 600;">Website Page:</td>
+                  <td style="color: #cbd5e1;"><a href="{$safePage}" style="color: #38bdf8; text-decoration: none;">{$safePage}</a></td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                  <td style="color: #94a3b8; font-weight: 600;">Time:</td>
+                  <td style="color: #cbd5e1;">{$dateGst}</td>
+                </tr>
+                <tr>
+                  <td style="color: #94a3b8; font-weight: 600; vertical-align: top;">Inquiry Details:</td>
+                  <td style="color: #f1f5f9; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; line-height: 1.5;">{$safeMsg}</td>
+                </tr>
+              </table>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0 30px;">
+                <tr>
+                  <td align="center">
+                    <a href="{$adminUrl}" style="display: inline-block; background: #0099e6; color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: 0.05em; padding: 14px 28px; border-radius: 6px; text-decoration: none; box-shadow: 0 4px 16px rgba(0,153,230,0.4);">
+                      OPEN LIVE EXECUTIVE DESK &amp; REPLY NOW →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background: #07111e; padding: 16px 30px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; font-size: 12px; color: #64748b;">
+              Rayan Group Corporate Headquarters • Abu Dhabi, United Arab Emirates<br>
+              Real-Time Live Assistance Notification System • <a href="https://rayan-group.com" style="color: #94a3b8; text-decoration: none;">rayan-group.com</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+HTML;
+
+    $headers = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: Rayan Group Live Desk <{$from}>\r\n";
+    $headers .= "Reply-To: {$to}\r\n";
+    $headers .= "Cc: {$cc}\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+    $headers .= "X-Priority: 1\r\n";
+
+    return @mail($to, $subject, $html, $headers);
+}
+
 // ============================================================================
 // 1. GET REQUESTS
 // ============================================================================
@@ -356,6 +479,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sessionObj = normalizeSessionRow($fallback['sessions'][$sessionId]);
         }
 
+        // Auto-notify Rayan Group email if visitor message and email not yet sent
+        if ($sender === 'visitor') {
+            $needNotify = false;
+            if ($pdo) {
+                try {
+                    $chk = $pdo->prepare("SELECT email_notified FROM chat_sessions WHERE session_id = ?");
+                    $chk->execute([$sessionId]);
+                    $en = $chk->fetchColumn();
+                    if (!$en) {
+                        $needNotify = true;
+                        $upd = $pdo->prepare("UPDATE chat_sessions SET email_notified = 1 WHERE session_id = ?");
+                        $upd->execute([$sessionId]);
+                    }
+                } catch (Exception $e) {}
+            }
+            if (empty($fallback['sessions'][$sessionId]['email_notified'])) {
+                $needNotify = true;
+                $fallback['sessions'][$sessionId]['email_notified'] = 1;
+                saveFallbackStore($storageFile, $fallback);
+            }
+            if ($needNotify) {
+                sendLiveChatEmailNotification($sessionId, $senderName, $page, 'first_message', $text);
+            }
+        }
+
         echo json_encode([
             'success' => true,
             'message' => $msgObj,
@@ -450,6 +598,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         echo json_encode(['success' => true, 'sessionId' => $sessionId, 'visitorName' => $visitorName]);
+        exit;
+    }
+
+    // Action: notify_chat_open (Triggered when client opens live chat or requests human agent)
+    if ($postAction === 'notify_chat_open') {
+        $visitorName = $body['visitorName'] ?? $body['visitor_name'] ?? 'Website Visitor';
+        $page = $body['page'] ?? '/';
+        $trigger = $body['trigger'] ?? 'opened_chat';
+        $messageText = $body['message'] ?? $body['text'] ?? '';
+
+        $alreadyNotified = false;
+        if ($pdo) {
+            try {
+                $check = $pdo->prepare("SELECT email_notified FROM chat_sessions WHERE session_id = ?");
+                $check->execute([$sessionId]);
+                $val = $check->fetchColumn();
+                if ($val && $trigger !== 'live_agent' && $trigger !== 'live_human') {
+                    $alreadyNotified = true;
+                }
+                // Mark email_notified in DB
+                $up = $pdo->prepare("
+                    INSERT INTO chat_sessions (session_id, visitor_name, page, status, email_notified) 
+                    VALUES (?, ?, ?, 'active', 1) 
+                    ON DUPLICATE KEY UPDATE email_notified = 1, page = VALUES(page)
+                ");
+                $up->execute([$sessionId, $visitorName, $page]);
+            } catch (Exception $e) {}
+        }
+
+        $fallback = getFallbackStore($storageFile);
+        if (!empty($fallback['sessions'][$sessionId]['email_notified']) && $trigger !== 'live_agent' && $trigger !== 'live_human') {
+            $alreadyNotified = true;
+        } else {
+            if (!isset($fallback['sessions'][$sessionId])) {
+                $fallback['sessions'][$sessionId] = [
+                    'session_id' => $sessionId,
+                    'visitor_name' => $visitorName,
+                    'page' => $page,
+                    'status' => 'active',
+                    'email_notified' => 1,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'last_activity' => date('Y-m-d H:i:s')
+                ];
+            } else {
+                $fallback['sessions'][$sessionId]['email_notified'] = 1;
+            }
+            saveFallbackStore($storageFile, $fallback);
+        }
+
+        $sent = false;
+        if (!$alreadyNotified) {
+            $sent = sendLiveChatEmailNotification($sessionId, $visitorName, $page, $trigger, $messageText);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'notified' => (bool)$sent,
+            'alreadyNotified' => $alreadyNotified,
+            'sessionId' => $sessionId
+        ]);
         exit;
     }
 }

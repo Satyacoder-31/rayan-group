@@ -76,7 +76,8 @@ function getDbConnection() {
             'page' => "ALTER TABLE chat_sessions ADD COLUMN page VARCHAR(255) DEFAULT '/'",
             'last_message' => "ALTER TABLE chat_sessions ADD COLUMN last_message TEXT",
             'unread_for_admin' => "ALTER TABLE chat_sessions ADD COLUMN unread_for_admin INT DEFAULT 0",
-            'unread_for_visitor' => "ALTER TABLE chat_sessions ADD COLUMN unread_for_visitor INT DEFAULT 0"
+            'unread_for_visitor' => "ALTER TABLE chat_sessions ADD COLUMN unread_for_visitor INT DEFAULT 0",
+            'email_notified' => "ALTER TABLE chat_sessions ADD COLUMN email_notified TINYINT(1) DEFAULT 0"
         ];
         foreach ($sessionCols as $col => $alterSql) {
             try {
