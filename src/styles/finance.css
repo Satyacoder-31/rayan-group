@@ -1723,58 +1723,495 @@
   line-height: 1.6;
 }
 
-.fin-print-table {
+/* ==========================================================================
+   8. OFFICIAL RAYAN ENGINEERING PRINTABLE DOCUMENT SYSTEM
+   (Tax Invoice, Receipt Voucher, and Purchase Order - Pixel-Matched to Official PDFs)
+   ========================================================================== */
+.fin-doc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: finDocFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes finDocFadeIn {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fin-doc-toolbar {
+  height: 56px;
+  background: #090e1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.fin-doc-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.fin-doc-title-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f8fafc;
+  font-family: var(--fin-font-heading);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.fin-doc-type-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fin-doc-pill-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--fin-font-heading);
+}
+
+.fin-doc-pill-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fin-doc-pill-btn.active {
+  background: #0099e6;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 153, 230, 0.35);
+}
+
+.fin-doc-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.fin-btn-print-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--fin-font-heading);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
+}
+
+.fin-btn-print-primary {
+  background: linear-gradient(135deg, #00a699, #059669);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 166, 153, 0.35);
+}
+
+.fin-btn-print-primary:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 166, 153, 0.45);
+}
+
+.fin-btn-print-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+
+.fin-btn-print-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.fin-doc-viewport {
+  flex: 1 1 auto;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  padding: 2rem 1rem 4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Simulated A4 Paper Sheet */
+.fin-document-paper {
+  width: 210mm;
+  min-height: 297mm;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  font-family: Arial, 'Outfit', 'Helvetica Neue', sans-serif;
+  box-sizing: border-box;
+  position: relative;
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.fin-doc-inner-padding {
+  padding: 0 20px 14px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Official Rayan Engineering Header & Footer Green Bars */
+.rayan-doc-teal-bar {
+  background: #00a699;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 4px 18px;
+  text-transform: uppercase;
+  font-family: Arial, sans-serif;
+  margin-bottom: 12px;
+}
+
+.rayan-doc-footer-bar {
+  background: #00a699;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 10px;
+  letter-spacing: 0.3px;
+  font-family: Arial, sans-serif;
+}
+
+/* Brand Row: Logo, Title & Metadata */
+.rayan-doc-brand-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rayan-doc-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rayan-logo-text-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.rayan-logo-main {
+  font-size: 26px;
+  font-weight: 900;
+  color: #0c1e3d;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.rayan-logo-sub {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #00a699;
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+
+.rayan-doc-center-title {
+  text-align: center;
+}
+
+.rayan-title-ar {
+  font-size: 20px;
+  font-weight: 800;
+  color: #000000;
+  line-height: 1.2;
+  direction: rtl;
+}
+
+.rayan-title-en {
+  font-size: 16px;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: 1px;
+}
+
+.rayan-doc-right-meta {
+  text-align: right;
+  font-size: 10.5px;
+  color: #000000;
+  line-height: 1.4;
+}
+
+/* Box Tables & Grid */
+.rayan-border-box {
+  border: 1.5px solid #000000;
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1.75rem;
-  font-size: 0.82rem;
+  font-size: 10px;
+  color: #000000;
+  margin-bottom: 6px;
 }
 
-.fin-print-table th {
-  background: #f1f5f9;
-  color: #1e293b;
+.rayan-border-box td,
+.rayan-border-box th {
+  border: 1px solid #000000;
+  padding: 3px 6px;
+  vertical-align: top;
+}
+
+.rayan-project-bar {
+  border: 1.5px solid #000000;
+  padding: 4px 8px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 0.75rem;
-  border: 1px solid #cbd5e1;
+  color: #000000;
+  margin-bottom: 6px;
+  background: #ffffff;
+}
+
+/* Primary Items Data Table */
+.rayan-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5px solid #000000;
+  font-size: 9.5px;
+  color: #000000;
+  margin-bottom: 6px;
+}
+
+.rayan-data-table th {
+  border: 1px solid #000000;
+  background: #ffffff;
+  padding: 4px 4px;
+  text-align: center;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.rayan-data-table td {
+  border: 1px solid #000000;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+/* Totals Summary Row */
+.rayan-totals-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.rayan-words-amount {
+  font-size: 10px;
+  font-weight: 700;
+  color: #000000;
+  padding: 6px 0;
+  max-width: 58%;
+}
+
+.rayan-totals-table {
+  width: 40%;
+  border-collapse: collapse;
+  border: 1.5px solid #000000;
+  font-size: 10px;
+}
+
+.rayan-totals-table td {
+  border: 1px solid #000000;
+  padding: 3px 6px;
+}
+
+.rayan-totals-table td.amount-col {
+  text-align: right;
+  font-weight: 700;
+}
+
+/* Notes & General Terms */
+.rayan-terms-container {
+  border: 1.5px solid #000000;
+  padding: 4px 6px;
+  font-size: 7.5px;
+  line-height: 1.25;
+  color: #000000;
+  margin-bottom: 8px;
+}
+
+.rayan-terms-heading {
+  font-weight: 800;
   text-transform: uppercase;
-  font-size: 0.72rem;
+  margin-bottom: 3px;
+  font-size: 8px;
 }
 
-.fin-print-table td {
-  padding: 0.75rem;
-  border: 1px solid #cbd5e1;
-  color: #334155;
-}
-
-.fin-print-footer {
-  margin-top: 2.5rem;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 1.5rem;
+/* Signatures & Blue Official Stamp */
+.rayan-signatures-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  font-size: 0.8rem;
-  color: #64748b;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  position: relative;
 }
 
+.rayan-company-contact-meta {
+  font-size: 9px;
+  color: #000000;
+  line-height: 1.35;
+}
+
+.rayan-company-contact-meta strong {
+  font-size: 9.5px;
+}
+
+.rayan-company-contact-meta a {
+  color: #000000;
+  text-decoration: underline;
+}
+
+.rayan-stamp-sign-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 220px;
+}
+
+.rayan-auth-sign-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.rayan-sign-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: #000000;
+  border-top: 1px solid #000000;
+  padding-top: 3px;
+  width: 180px;
+  text-align: center;
+}
+
+.rayan-blue-stamp-svg {
+  position: absolute;
+  top: -24px;
+  right: -10px;
+  width: 110px;
+  height: 110px;
+  opacity: 0.92;
+  transform: rotate(-7deg);
+  pointer-events: none;
+  filter: contrast(1.1);
+}
+
+.rayan-signature-svg {
+  width: 140px;
+  height: 44px;
+  margin-bottom: -10px;
+}
+
+.rayan-copy-notice {
+  font-size: 9px;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+/* Print Page Counter */
+.rayan-page-counter {
+  text-align: center;
+  font-size: 9px;
+  color: #475569;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+/* Native Print Styles */
 @media print {
-  body * {
-    visibility: hidden;
+  html, body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
   }
-  .fin-printable-invoice,
-  .fin-printable-invoice * {
-    visibility: visible;
-  }
-  .fin-printable-invoice {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    box-shadow: none;
-  }
-  .no-print {
+
+  /* Hide everything in web app except the document paper sheets */
+  #main-content,
+  .fin-app-wrapper,
+  .fin-app-topbar,
+  .fin-app-body-layout,
+  .fin-doc-toolbar,
+  .site-header,
+  .site-preloader,
+  #custom-cursor,
+  #cursor-dot {
     display: none !important;
+  }
+
+  .fin-doc-modal-backdrop {
+    position: static !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .fin-doc-viewport {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .fin-document-paper {
+    box-shadow: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    page-break-after: always;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .fin-doc-page-2 {
+    page-break-before: always;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
   }
 }
