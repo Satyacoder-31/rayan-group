@@ -5,12 +5,35 @@ import chatHandler from './api/chat.js';
 import gitHandler from './api/git.js';
 import emailHandler from './api/send-email.js';
 import authHandler from './api/auth.js';
+import financeHandler from './api/finance.js';
 
 function apiMiddlewarePlugin() {
   return {
     name: 'api-middleware',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        if (req.url.startsWith('/api/finance')) {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', async () => {
+            if (body) {
+              try { req.body = JSON.parse(body); } catch (e) { req.body = body; }
+            }
+            res.status = (code) => { res.statusCode = code; return res; };
+            res.json = (data) => {
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify(data));
+            };
+            try {
+              await financeHandler(req, res);
+            } catch (err) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
         if (req.url.startsWith('/api/auth')) {
           let body = '';
           req.on('data', chunk => { body += chunk; });

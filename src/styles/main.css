@@ -8,6 +8,7 @@
 @import './enterprise.css';
 @import './live-chat.css';
 @import './services.css';
+@import './finance.css';
 
 :root {
   /* Colors */

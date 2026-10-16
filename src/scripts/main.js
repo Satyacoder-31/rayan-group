@@ -1764,8 +1764,61 @@ function initServicesFeatures() {
   }
 }
 
+function initGlobalFinanceButton() {
+  const savedUserJson = localStorage.getItem('rayan_fin_user');
+  let user = null;
+  if (savedUserJson) {
+    try { user = JSON.parse(savedUserJson); } catch (e) {}
+  }
 
+  // Ensure button exists in header-actions across all pages
+  const headerActionsList = document.querySelectorAll('.header-actions');
+  headerActionsList.forEach(actions => {
+    let btn = actions.querySelector('#header-finance-login-btn');
+    if (!btn) {
+      btn = document.createElement('a');
+      btn.id = 'header-finance-login-btn';
+      btn.href = '/billing/';
+      btn.className = 'btn-finance-portal-trigger';
+      // Insert before mobile toggle or after search trigger
+      const mobileToggle = actions.querySelector('.btn-mobile-menu-toggle');
+      if (mobileToggle) {
+        actions.insertBefore(btn, mobileToggle);
+      } else {
+        actions.appendChild(btn);
+      }
+    }
 
+    if (user) {
+      btn.innerHTML = `
+        <span class="live-pulse-dot"></span>
+        <span>ACCOUNTS DESK • ${user.role_label || 'AUTHORIZED'}</span>
+      `;
+      btn.title = `Signed in as ${user.name} (${user.email}) - Open Financial Management System`;
+    } else {
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>ACCOUNTS LOGIN</span>
+      `;
+      btn.title = 'Authorized Personnel Financial Portal Login';
+    }
+  });
 
+  // Also update top bar link if present
+  document.querySelectorAll('.header-top-link-finance, a[href="/billing/"]').forEach(link => {
+    if (link.classList.contains('header-top-link')) {
+      if (user) {
+        link.innerHTML = `💼 Finance Portal (${user.name.split(' ')[0]})`;
+      } else {
+        link.innerHTML = `🔒 Accounts Login`;
+      }
+    }
+  });
+}
 
-
+// Call on initial DOM load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGlobalFinanceButton);
+} else {
+  initGlobalFinanceButton();
+}
