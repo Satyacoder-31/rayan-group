@@ -4643,109 +4643,35 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // OFFICIAL RAYAN ENGINEERING PRINTABLE DOCUMENT GENERATORS
   // --------------------------------------------------------------------------
-  getRayanLogoSvg() {
+  getRayanLogoImg(isPO = false) {
+    const src = isPO ? '/assets/docs/rayan-doc-logo-po.png' : '/assets/docs/rayan-doc-logo.png';
     return `
       <div class="rayan-doc-logo-area">
-        <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="50,5 90,28 90,72 50,95 10,72 10,28" fill="#0c1e3d" stroke="#00a699" stroke-width="6"/>
-          <path d="M30 35H56C64 35 70 41 70 49C70 57 64 63 56 63H44V78H30V35Z" fill="#00a699"/>
-          <path d="M44 45H54C56.2 45 58 46.8 58 49C58 51.2 56.2 53 54 53H44V45Z" fill="#ffffff"/>
-          <path d="M54 57L68 78H54L44 63H52" fill="#00a699"/>
-        </svg>
-        <div class="rayan-logo-text-block">
-          <span class="rayan-logo-main">RAYAN</span>
-          <span class="rayan-logo-sub">ENGINEERING</span>
-        </div>
+        <img src="${src}" alt="RAYAN ENGINEERING" class="${isPO ? 'rayan-doc-logo-po-img' : 'rayan-doc-logo-img'}">
       </div>
     `;
   }
 
-  getRayanBarcodeSvg(text = '104937380400003') {
+  getRayanBarcode(text = '104937380400003') {
     return `
       <div style="display:flex; flex-direction:column; align-items:flex-end;">
-        <svg width="155" height="30" viewBox="0 0 155 30" xmlns="http://www.w3.org/2000/svg">
-          <rect x="0" y="0" width="3" height="28" fill="#000"/>
-          <rect x="5" y="0" width="2" height="28" fill="#000"/>
-          <rect x="9" y="0" width="4" height="28" fill="#000"/>
-          <rect x="15" y="0" width="1" height="28" fill="#000"/>
-          <rect x="18" y="0" width="3" height="28" fill="#000"/>
-          <rect x="23" y="0" width="5" height="28" fill="#000"/>
-          <rect x="30" y="0" width="2" height="28" fill="#000"/>
-          <rect x="34" y="0" width="4" height="28" fill="#000"/>
-          <rect x="40" y="0" width="1" height="28" fill="#000"/>
-          <rect x="43" y="0" width="3" height="28" fill="#000"/>
-          <rect x="48" y="0" width="6" height="28" fill="#000"/>
-          <rect x="56" y="0" width="2" height="28" fill="#000"/>
-          <rect x="60" y="0" width="4" height="28" fill="#000"/>
-          <rect x="66" y="0" width="3" height="28" fill="#000"/>
-          <rect x="71" y="0" width="2" height="28" fill="#000"/>
-          <rect x="75" y="0" width="5" height="28" fill="#000"/>
-          <rect x="82" y="0" width="2" height="28" fill="#000"/>
-          <rect x="86" y="0" width="4" height="28" fill="#000"/>
-          <rect x="92" y="0" width="1" height="28" fill="#000"/>
-          <rect x="95" y="0" width="3" height="28" fill="#000"/>
-          <rect x="100" y="0" width="6" height="28" fill="#000"/>
-          <rect x="108" y="0" width="2" height="28" fill="#000"/>
-          <rect x="112" y="0" width="4" height="28" fill="#000"/>
-          <rect x="118" y="0" width="3" height="28" fill="#000"/>
-          <rect x="123" y="0" width="2" height="28" fill="#000"/>
-          <rect x="127" y="0" width="5" height="28" fill="#000"/>
-          <rect x="134" y="0" width="2" height="28" fill="#000"/>
-          <rect x="138" y="0" width="4" height="28" fill="#000"/>
-          <rect x="144" y="0" width="2" height="28" fill="#000"/>
-          <rect x="148" y="0" width="3" height="28" fill="#000"/>
-        </svg>
-        <span style="font-size:10px; font-weight:700; font-family:monospace; color:#000; margin-top:1px;">TRN ${text}</span>
+        <span style="font-size:10px; font-weight:700; color:#000; margin-bottom:2px;">TRN ${text}</span>
+        <img src="/assets/docs/rayan-barcode-trn.jpg" alt="TRN Barcode" style="height:18px; width:140px; object-fit:contain;">
       </div>
     `;
   }
 
-  getRayanStampSvg() {
-    return `
-      <svg class="rayan-blue-stamp-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <path id="rayan-top-arc" d="M 22,100 A 78,78 0 0,1 178,100" fill="none" />
-          <path id="rayan-bottom-arc" d="M 178,100 A 78,78 0 0,1 22,100" fill="none" />
-        </defs>
-        <circle cx="100" cy="100" r="95" fill="none" stroke="#1d4ed8" stroke-width="3.5" />
-        <circle cx="100" cy="100" r="88" fill="none" stroke="#1d4ed8" stroke-width="1.5" />
-        
-        <text fill="#1d4ed8" font-size="12" font-family="'Arial', 'Tahoma', sans-serif" font-weight="bold" letter-spacing="0.5">
-          <textPath href="#rayan-top-arc" startOffset="50%" text-anchor="middle">
-            ريان الهندسية والمقاولات ذ.م.م - ش.ش.و
-          </textPath>
-        </text>
-
-        <text fill="#1d4ed8" font-size="9" font-family="'Arial', 'Helvetica', sans-serif" font-weight="bold" letter-spacing="0.2">
-          <textPath href="#rayan-bottom-arc" startOffset="50%" text-anchor="middle">
-            RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C
-          </textPath>
-        </text>
-
-        <circle cx="100" cy="100" r="58" fill="none" stroke="#1d4ed8" stroke-width="2" />
-        <circle cx="100" cy="100" r="54" fill="none" stroke="#1d4ed8" stroke-width="1" />
-
-        <polygon points="100,64 114,73 114,88 100,97 86,88 86,73" fill="none" stroke="#1d4ed8" stroke-width="2" />
-        <text x="100" y="84" text-anchor="middle" fill="#1d4ed8" font-family="'Arial Black', sans-serif" font-size="9" font-weight="900" letter-spacing="1">RAYAN</text>
-        
-        <text x="100" y="112" text-anchor="middle" fill="#1d4ed8" font-family="Arial, sans-serif" font-size="8.5" font-weight="bold">Tel: 02-5654497</text>
-        <text x="100" y="123" text-anchor="middle" fill="#1d4ed8" font-family="Arial, sans-serif" font-size="7.5" font-weight="bold">Abu Dhabi - U.A.E.</text>
-        <text x="100" y="134" text-anchor="middle" fill="#1d4ed8" font-family="'Courier New', monospace" font-size="6.5" font-weight="bold">REG. 104937380400003</text>
-      </svg>
-    `;
+  getRayanStampImg() {
+    return `<img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" class="rayan-real-stamp">`;
   }
 
-  getRayanSignatureSvg() {
-    return `
-      <svg class="rayan-signature-svg" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
-        <path d="M 15,48 Q 45,15 65,35 T 105,30 Q 125,12 140,42 Q 155,55 175,25 T 195,35 Q 205,40 215,28" 
-              fill="none" stroke="#1e40af" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M 40,38 Q 95,50 170,44" 
-              fill="none" stroke="#1e40af" stroke-width="2.2" stroke-linecap="round" />
-        <path d="M 50,25 C 62,8 80,12 92,28 C 102,45 78,55 108,48" 
-              fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" />
-      </svg>
-    `;
+  getRayanSignatureImg(type = 'default') {
+    const src = type === 'receipt' ? '/assets/docs/rayan-signature-receipt.png' : '/assets/docs/rayan-signature-official.png';
+    return `<img src="${src}" alt="Authorised Signature" class="rayan-real-signature">`;
+  }
+
+  getRayanWatermark() {
+    return `<div class="rayan-doc-watermark"><img src="/assets/docs/rayan-watermark.png" alt="" style="width:135px; opacity:0.15;"></div>`;
   }
 
   numberToEnglishWords(num) {
@@ -4822,18 +4748,20 @@ class FinanceApp {
             <div class="rayan-doc-teal-bar">RAYAN ENGINEERING</div>
 
             <div class="fin-doc-inner-padding">
+              ${this.getRayanWatermark()}
+
               <!-- Brand Header Row -->
               <div class="rayan-doc-brand-row">
-                ${this.getRayanLogoSvg()}
+                ${this.getRayanLogoImg(false)}
                 <div class="rayan-doc-center-title">
                   <div class="rayan-title-ar">فاتورة ضريبية</div>
                   <div class="rayan-title-en">TAX INVOICE</div>
                 </div>
-                ${this.getRayanBarcodeSvg(inv.company_trn || '104937380400003')}
+                ${this.getRayanBarcode(inv.company_trn || '104937380400003')}
               </div>
 
               <!-- Sub Header Box: PO NO -->
-              <div style="border:1.5px solid #000; font-size:11px; font-weight:700; text-align:center; padding:3px; margin-bottom:6px;">
+              <div style="border:1.5px solid #000; font-size:10.5px; font-weight:700; text-align:center; padding:3px; margin-bottom:5px;">
                 PO NO / امر شراء : ${inv.po_reference || 'LPO/BD/2026/12'}
               </div>
 
@@ -4865,7 +4793,7 @@ class FinanceApp {
                   <td style="width:50%; line-height:1.4;">
                     <div><strong>PO NO / امر شراء :</strong> ${inv.po_reference || 'LPO/BD/2026/12'}</div>
                     <div><strong>Date / تاريخ :</strong> ${inv.invoice_date ? this.formatDate(inv.invoice_date) : '13-Oct-2026'}</div>
-                    <div><strong>Email:</strong> <a href="mailto:${inv.email || 'buildaradevelopers@gmail.com'}" style="color:#000; text-decoration:none;">${inv.email || 'buildaradevelopers@gmail.com'}</a></div>
+                    <div><strong>Email:</strong> <a href="mailto:${inv.email || 'buildaradevelopers@gmail.com'}" class="rayan-link-blue">${inv.email || 'buildaradevelopers@gmail.com'}</a></div>
                     <div><strong>Mode/Terms of Payment:</strong> ${inv.payment_terms_label || (inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Progressive Payment')}</div>
                   </td>
                 </tr>
@@ -4908,7 +4836,7 @@ class FinanceApp {
                       <td style="text-align:center;">${item.sr || (idx + 1)}</td>
                       <td>
                         <strong>${item.name || item.description}</strong>
-                        ${item.description && item.description !== item.name ? `<br><span style="font-size:8.5px; color:#333;">${item.description}</span>` : ''}
+                        ${item.description && item.description !== item.name ? `<br><span style="font-size:8px; color:#333;">${item.description}</span>` : ''}
                       </td>
                       <td style="text-align:center;">${item.unit || item.uom || '%'}</td>
                       <td style="text-align:center;">${item.qty || 1}</td>
@@ -4956,22 +4884,22 @@ class FinanceApp {
                   <strong>Best wishes</strong><br>
                   <strong>RAYAN Group Team</strong><br>
                   Hotline : 025654497<br>
-                  <a href="mailto:cc.info@rayan-group.com">cc.info@rayan-group.com</a><br>
-                  <a href="http://rayan-group.com">http://rayan-group.com</a>
+                  <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
+                  <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
                 </div>
 
                 <div class="rayan-stamp-sign-wrap">
-                  ${this.getRayanSignatureSvg()}
+                  ${this.getRayanSignatureImg('default')}
                   <div class="rayan-sign-name">Arshad Alam Shaikh</div>
                   <div class="rayan-auth-sign-label">Authorised Signatory</div>
-                  ${this.getRayanStampSvg()}
+                  ${this.getRayanStampImg()}
                 </div>
               </div>
             </div>
 
             <!-- Bottom Teal Bar -->
             <div class="rayan-doc-footer-bar">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | <a href="mailto:info@rayan-group.com" style="color:#ffffff !important; text-decoration:none;">info@rayan-group.com</a> | <a href="http://www.rayan-group.com" style="color:#ffffff !important; text-decoration:none;">www.rayan-group.com</a>
             </div>
           </div>
         </div>
@@ -5017,9 +4945,11 @@ class FinanceApp {
             <div class="rayan-doc-teal-bar">RAYAN ENGINEERING</div>
 
             <div class="fin-doc-inner-padding">
+              ${this.getRayanWatermark()}
+
               <!-- Brand Header -->
               <div class="rayan-doc-brand-row">
-                ${this.getRayanLogoSvg()}
+                ${this.getRayanLogoImg(false)}
                 <div class="rayan-doc-center-title">
                   <div class="rayan-title-ar">سند قبض</div>
                   <div class="rayan-title-en">Receipt Voucher</div>
@@ -5029,10 +4959,10 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div style="border-top:1.5px solid #000; margin:4px 0 10px 0;"></div>
+              <div style="border-top:1.5px solid #000; margin:4px 0 8px 0;"></div>
 
               <!-- Meta Table -->
-              <table class="rayan-border-box" style="margin-bottom:12px;">
+              <table class="rayan-border-box" style="margin-bottom:8px;">
                 <tr>
                   <td style="width:25%; font-weight:700;">Date :</td>
                   <td style="width:45%;">${rec.receipt_date || '17/Sep/2026'} &nbsp; ${rec.receipt_time || '1:40 PM'}</td>
@@ -5056,8 +4986,8 @@ class FinanceApp {
               </table>
 
               <!-- Billing Info -->
-              <div style="font-size:11px; font-weight:800; border-bottom:1.5px solid #000; padding-bottom:3px; margin-bottom:6px;">Billing Information</div>
-              <table class="rayan-border-box" style="margin-bottom:16px;">
+              <div style="font-size:10.5px; font-weight:800; border-bottom:1.5px solid #000; padding-bottom:2px; margin-bottom:5px;">Billing Information</div>
+              <table class="rayan-border-box" style="margin-bottom:10px;">
                 <tr>
                   <td style="width:30%; font-weight:700;">Received from Mr./M/s:</td>
                   <td style="width:45%; font-weight:700;">${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}</td>
@@ -5070,17 +5000,17 @@ class FinanceApp {
                 </tr>
                 <tr>
                   <td style="font-weight:700;">Email :</td>
-                  <td><a href="mailto:${rec.email || 'procurementofficer@toprockinteriors.com'}" style="color:#000;">${rec.email || 'procurementofficer@toprockinteriors.com'}</a></td>
+                  <td><a href="mailto:${rec.email || 'procurementofficer@toprockinteriors.com'}" class="rayan-link-blue">${rec.email || 'procurementofficer@toprockinteriors.com'}</a></td>
                   <td style="text-align:right; font-weight:700; direction:rtl;">بريد إلكتروني</td>
                 </tr>
               </table>
 
               <!-- Payment Details Table -->
-              <div style="font-size:11px; font-weight:800; border-bottom:1.5px solid #000; padding-bottom:3px; margin-bottom:6px; display:flex; justify-content:space-between;">
+              <div style="font-size:10.5px; font-weight:800; border-bottom:1.5px solid #000; padding-bottom:2px; margin-bottom:5px; display:flex; justify-content:space-between;">
                 <span>Payment Details</span>
                 <span>Total Amount</span>
               </div>
-              <table class="rayan-border-box" style="margin-bottom:16px;">
+              <table class="rayan-border-box" style="margin-bottom:10px;">
                 <thead>
                   <tr style="background:#f8fafc;">
                     <th style="width:30%;">نقداً/شيك رقم/متصل<br>Cash/Cheque/Online</th>
@@ -5096,13 +5026,13 @@ class FinanceApp {
                     <td style="text-align:center;">${rec.payment_type || rec.payment_mode || 'Online'}</td>
                     <td style="text-align:center;">${rec.bank_name || 'First Abu Dhabi Bank'}</td>
                     <td style="text-align:center;">${rec.receipt_date || '17/09/2026'}</td>
-                    <td style="text-align:right; font-weight:800; font-size:11px;">AED ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align:right; font-weight:800; font-size:10.5px;">AED ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 </tbody>
               </table>
 
               <!-- Amount In Words -->
-              <table class="rayan-border-box" style="margin-bottom:14px;">
+              <table class="rayan-border-box" style="margin-bottom:10px;">
                 <tr>
                   <td style="width:25%; font-weight:700;">The Sum Of Dhs:</td>
                   <td style="width:50%; font-weight:700;">${rec.amount_in_words || this.numberToEnglishWords(rec.amount_received || 155837)}</td>
@@ -5110,34 +5040,34 @@ class FinanceApp {
                 </tr>
               </table>
 
-              <div class="rayan-copy-notice" style="margin-bottom:24px;">
+              <div class="rayan-copy-notice" style="margin-bottom:14px;">
                 Please keep a copy of this receipt for your records
               </div>
 
               <!-- Footer & Signatures -->
-              <div class="rayan-signatures-row" style="margin-top:auto; padding-bottom:10px;">
+              <div class="rayan-signatures-row" style="margin-top:auto; padding-bottom:8px;">
                 <div class="rayan-company-contact-meta">
                   <strong>Best wishes</strong><br>
                   <strong>RAYAN Group Team</strong><br>
                   Hotline : 025654497<br>
-                  <a href="mailto:cc.info@rayan-group.com">cc.info@rayan-group.com</a><br>
-                  <a href="http://rayan-group.com">http://rayan-group.com</a>
+                  <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
+                  <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
                 </div>
 
                 <div class="rayan-stamp-sign-wrap">
-                  ${this.getRayanSignatureSvg()}
-                  <div style="display:flex; justify-content:space-between; width:220px; font-size:10px; font-weight:700;">
+                  ${this.getRayanSignatureImg('receipt')}
+                  <div style="display:flex; justify-content:space-between; width:220px; font-size:9.5px; font-weight:700; border-top:1px solid #000; padding-top:2px;">
                     <span>Receiver 's Sign</span>
                     <span>${rec.receiver_sign || 'Arshad Alam Shaikh'}</span>
                     <span style="direction:rtl;">توقيع المستلم</span>
                   </div>
-                  ${this.getRayanStampSvg()}
+                  ${this.getRayanStampImg()}
                 </div>
               </div>
             </div>
 
             <div class="rayan-doc-footer-bar">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | <a href="mailto:info@rayan-group.com" style="color:#ffffff !important; text-decoration:none;">info@rayan-group.com</a> | <a href="http://www.rayan-group.com" style="color:#ffffff !important; text-decoration:none;">www.rayan-group.com</a>
             </div>
           </div>
         </div>
@@ -5186,10 +5116,13 @@ class FinanceApp {
             <div class="fin-doc-inner-padding">
               <!-- Brand Header Row -->
               <div class="rayan-doc-brand-row">
-                ${this.getRayanLogoSvg()}
-                <div class="rayan-doc-center-title">
-                  <div class="rayan-title-ar">امر شراء</div>
-                  <div class="rayan-title-en">PURCHASE ORDER</div>
+                ${this.getRayanLogoImg(true)}
+                <div class="rayan-doc-center-title" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                  <img src="/assets/docs/rayan-po-badge.png" alt="Certificate Badge" style="height:36px; width:auto; object-fit:contain;">
+                  <div>
+                    <div class="rayan-title-ar">امر شراء</div>
+                    <div class="rayan-title-en">PURCHASE ORDER</div>
+                  </div>
                 </div>
                 <div class="rayan-doc-right-meta">
                   <div><strong>PO Number :</strong> ${po.po_no || 'PO-REC-11008'}</div>
@@ -5204,7 +5137,7 @@ class FinanceApp {
               <!-- Supplier Details Box & Ship To Box -->
               <table class="rayan-border-box">
                 <tr>
-                  <td style="width:50%; line-height:1.45;">
+                  <td style="width:50%; line-height:1.42;">
                     <strong style="text-decoration:underline;">Supplier Details:</strong><br>
                     <strong>${po.supplier_name || po.vendor_name || 'ARIBA GM INTERIOR DÉCOR LLC'}</strong><br>
                     ${po.supplier_address || 'Abu Dhabi, P.O. Box -'}<br>
@@ -5212,9 +5145,9 @@ class FinanceApp {
                     <strong>Attn :</strong> ${po.supplier_attn || 'Mr. Mohammad Gulam'}<br>
                     <strong>TRN# :</strong> ${po.supplier_trn || '104755857000003'}<br>
                     <strong>Mobile :</strong> ${po.supplier_mobile || '+971559314189'}<br>
-                    <strong>Email :</strong> ${po.supplier_email || 'aribadecoration@gmail.com'}
+                    <strong>Email :</strong> <a href="mailto:${po.supplier_email || 'aribadecoration@gmail.com'}" class="rayan-link-blue">${po.supplier_email || 'aribadecoration@gmail.com'}</a>
                   </td>
-                  <td style="width:50%; line-height:1.45;">
+                  <td style="width:50%; line-height:1.42;">
                     <strong style="text-decoration:underline;">Ship To:</strong><br>
                     <strong>${po.ship_to_name || 'RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C'}</strong><br>
                     ${po.ship_to_address || 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800'}<br>
@@ -5223,7 +5156,7 @@ class FinanceApp {
                     <strong>Attn :</strong> ${po.ship_to_attn || 'Mr. Arshad Alam Shaikh'}<br>
                     <strong>TRN# :</strong> ${po.ship_to_trn || '104937380400003'}<br>
                     <strong>Phone :</strong> ${po.ship_to_phone || '+971 25 654497'}<br>
-                    <strong>Email :</strong> ${po.ship_to_email || 'info@rayan-group.com'}<br>
+                    <strong>Email :</strong> <a href="mailto:${po.ship_to_email || 'info@rayan-group.com'}" class="rayan-link-blue">${po.ship_to_email || 'info@rayan-group.com'}</a><br>
                     <strong>Mobile :</strong> ${po.ship_to_mobile || '+971 589827866'}
                   </td>
                 </tr>
@@ -5279,7 +5212,7 @@ class FinanceApp {
               <!-- Totals Box -->
               <div class="rayan-totals-container">
                 <div class="rayan-words-amount">
-                  <div style="color:#059669; font-size:11px; font-weight:800;">${po.amount_in_words || ('AED ' + this.numberToEnglishWords(po.total_value || po.grand_total || 10080))}</div>
+                  <div style="color:#059669; font-size:10.5px; font-weight:800;">${po.amount_in_words || ('AED ' + this.numberToEnglishWords(po.total_value || po.grand_total || 10080))}</div>
                 </div>
                 <table class="rayan-totals-table">
                   <tr>
@@ -5294,7 +5227,7 @@ class FinanceApp {
                     <td>VAT Amount:(إ.د)</td>
                     <td class="amount-col">${Number(po.vat_total || po.tax_total || 480).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#f8fafc; font-weight:800; font-size:10.5px;">
+                  <tr style="background:#f8fafc; font-weight:800; font-size:10px;">
                     <td>Total amount Incl. VAT(إ.د)</td>
                     <td class="amount-col">${Number(po.total_value || po.grand_total || 10080).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                   </tr>
@@ -5302,7 +5235,7 @@ class FinanceApp {
               </div>
 
               <!-- Notes to Supplier -->
-              <div class="rayan-terms-container" style="margin-bottom:6px;">
+              <div class="rayan-terms-container" style="margin-bottom:5px;">
                 <div class="rayan-terms-heading">Notes to Supplier:</div>
                 1. Location / Site - Al Foah Mall - Alain i. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools &amp; Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.
               </div>
@@ -5328,7 +5261,7 @@ class FinanceApp {
             <div class="rayan-doc-teal-bar">RAYAN ENGINEERING</div>
 
             <div class="fin-doc-inner-padding">
-              <div class="rayan-terms-container" style="font-size:7.8px; line-height:1.32; margin-bottom:12px;">
+              <div class="rayan-terms-container" style="font-size:7.5px; line-height:1.26; margin-bottom:10px;">
                 <strong>8. Rejection of Goods / Services:</strong> RAYAN reserves the right to withhold payment for any goods supplied or services rendered that does not comply with the specifications quoted in the order together with applying the delay penalty as specified in Article 12 herein.<br>
                 <strong>9. Cancellation of Order:</strong> RAYAN Engineering and Contracting LLC-SPC. reserves the right to cancel this Order in the case of non-delivery as stipulated by the PO date or later date that is mutually accepted.<br>
                 <strong>10. Invoices:</strong> Invoices are to be submitted immediately upon delivery of materials/completion of the services.<br>
@@ -5358,7 +5291,7 @@ class FinanceApp {
               </div>
 
               <!-- Invoice Requirements -->
-              <div style="font-size:8.5px; line-height:1.4; margin-bottom:14px;">
+              <div style="font-size:8.2px; line-height:1.35; margin-bottom:12px;">
                 <strong>Invoice Requirements:</strong><br>
                 1. Time Sheets approved by the RAYAN representative at the site.<br>
                 2. Delivery Note approved by the RAYAN representative at the site.<br>
@@ -5366,30 +5299,30 @@ class FinanceApp {
               </div>
 
               <!-- Signatories & Stamps -->
-              <div class="rayan-signatures-row" style="margin-top:auto; padding-bottom:8px;">
+              <div class="rayan-signatures-row" style="margin-top:auto; padding-bottom:6px;">
                 <div class="rayan-company-contact-meta">
                   <strong>Best Wishes</strong><br>
                   <strong>RAYAN Group Team</strong><br>
                   Hotline : 025654497<br>
-                  <a href="mailto:cc.info@rayan-group.com">cc.info@rayan-group.com</a><br>
-                  <a href="http://rayan-group.com">http://rayan-group.com</a>
+                  <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
+                  <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
                 </div>
 
                 <div class="rayan-stamp-sign-wrap">
                   <div class="rayan-auth-sign-label">Authorised Signatory</div>
-                  ${this.getRayanSignatureSvg()}
+                  ${this.getRayanSignatureImg('default')}
                   <div class="rayan-sign-name">Arshad Alam Shaikh</div>
-                  ${this.getRayanStampSvg()}
+                  ${this.getRayanStampImg()}
                 </div>
 
-                <div style="text-align:center; min-width:180px;">
+                <div style="text-align:center; min-width:170px;">
                   <div class="rayan-auth-sign-label">Authorised Signatory</div>
-                  <div style="height:44px;"></div>
+                  <div style="height:38px;"></div>
                   <div class="rayan-sign-name">${po.supplier_attn || 'Mr. Mohammad Gulam'}</div>
                 </div>
               </div>
 
-              <div class="rayan-copy-notice" style="margin-bottom:4px;">
+              <div class="rayan-copy-notice" style="margin-bottom:3px;">
                 Please keep a copy of this PO for your records
               </div>
 
@@ -5398,7 +5331,7 @@ class FinanceApp {
 
             <!-- Bottom Teal Bar -->
             <div class="rayan-doc-footer-bar">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | <a href="mailto:info@rayan-group.com" style="color:#ffffff !important; text-decoration:none;">info@rayan-group.com</a> | <a href="http://www.rayan-group.com" style="color:#ffffff !important; text-decoration:none;">www.rayan-group.com</a>
             </div>
           </div>
         </div>
