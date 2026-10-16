@@ -392,8 +392,11 @@ class FinanceApp {
         <!-- Top App Navigation Bar -->
         <header class="fin-app-topbar">
           <div class="fin-topbar-inner">
-            <!-- Left: Brand, Product Badge & Entity Switcher -->
+            <!-- Left: Sidebar Toggle, Brand, Product Badge & Entity Switcher -->
             <div class="fin-topbar-left">
+              <button type="button" class="fin-sidebar-toggle-btn" id="fin-sidebar-toggle-btn" title="Toggle Navigation Sidebar">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
               <a href="/billing/" class="fin-topbar-brand" title="Rayan Group Corporate Financial Portal">
                 <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" class="fin-topbar-logo logo-theme-dark">
                 <img src="/assets/logos/rayan-group.png" alt="Rayan Group" class="fin-topbar-logo logo-theme-light">
@@ -486,89 +489,170 @@ class FinanceApp {
           </div>
         </header>
 
-        <!-- Quick Actions Bar -->
-        <div class="fin-quick-actions-bar">
-          <div class="fin-quick-actions-inner">
-            <span class="fin-action-label">Quick Actions:</span>
-            ${this.hasPermission('create_invoice') ? `
-              <button type="button" class="fin-btn-quick primary" id="qa-btn-invoice">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span>Create Invoice</span>
+        <!-- Main Workspace: Left Sidebar + Content Stage -->
+        <div class="fin-app-body-layout">
+          <!-- Left Perspective Navigation Sidebar -->
+          <aside class="fin-app-sidebar" id="fin-app-sidebar">
+            <!-- Sidebar Quick Create Action -->
+            <div class="fin-sidebar-action-wrap">
+              <button type="button" class="fin-sidebar-create-btn" id="fin-sidebar-create-toggle" title="Create Transaction or Record">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span class="fin-create-label">+ Create New</span>
+                <svg class="fin-chevron-sm" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
               </button>
-            ` : ''}
-            ${this.hasPermission('create_bill') ? `
-              <button type="button" class="fin-btn-quick" id="qa-btn-bill">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <span>Record Bill</span>
-              </button>
-            ` : ''}
-            ${this.hasPermission('create_customer') ? `
-              <button type="button" class="fin-btn-quick" id="qa-btn-customer">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span>Add Customer</span>
-              </button>
-            ` : ''}
-            ${this.hasPermission('create_vendor') ? `
-              <button type="button" class="fin-btn-quick" id="qa-btn-vendor">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                <span>Add Vendor</span>
-              </button>
-            ` : ''}
-            ${this.hasPermission('record_receipt') ? `
-              <button type="button" class="fin-btn-quick" id="qa-btn-receipt">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                <span>Record Receipt</span>
-              </button>
-            ` : ''}
-            ${this.hasPermission('record_payment') ? `
-              <button type="button" class="fin-btn-quick" id="qa-btn-payment">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                <span>Vendor Payment</span>
-              </button>
-            ` : ''}
-            ${this.hasPermission('submit_expense') ? `
-              <button type="button" class="fin-btn-quick" id="qa-btn-expense">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span>Record Expense</span>
-              </button>
-            ` : ''}
-            ${this.hasPermission('create_po') ? `
-              <button type="button" class="fin-btn-quick" id="qa-btn-po">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                <span>Create PO</span>
-              </button>
-            ` : ''}
+              <div class="fin-quick-create-menu" id="fin-quick-create-menu" style="display: none;">
+                ${this.hasPermission('create_invoice') ? `<button type="button" class="fin-qc-item" id="qa-btn-invoice"><span class="fin-qc-icon">📄</span><span>Tax Invoice</span></button>` : ''}
+                ${this.hasPermission('create_bill') ? `<button type="button" class="fin-qc-item" id="qa-btn-bill"><span class="fin-qc-icon">📥</span><span>Purchase Bill</span></button>` : ''}
+                ${this.hasPermission('create_customer') ? `<button type="button" class="fin-qc-item" id="qa-btn-customer"><span class="fin-qc-icon">👥</span><span>New Customer</span></button>` : ''}
+                ${this.hasPermission('create_vendor') ? `<button type="button" class="fin-qc-item" id="qa-btn-vendor"><span class="fin-qc-icon">🏢</span><span>New Vendor</span></button>` : ''}
+                ${this.hasPermission('record_receipt') ? `<button type="button" class="fin-qc-item" id="qa-btn-receipt"><span class="fin-qc-icon">💳</span><span>Customer Receipt</span></button>` : ''}
+                ${this.hasPermission('record_payment') ? `<button type="button" class="fin-qc-item" id="qa-btn-payment"><span class="fin-qc-icon">💸</span><span>Vendor Payment</span></button>` : ''}
+                ${this.hasPermission('submit_expense') ? `<button type="button" class="fin-qc-item" id="qa-btn-expense"><span class="fin-qc-icon">🧾</span><span>Record Expense</span></button>` : ''}
+                ${this.hasPermission('create_po') ? `<button type="button" class="fin-qc-item" id="qa-btn-po"><span class="fin-qc-icon">📑</span><span>Purchase Order</span></button>` : ''}
+              </div>
+            </div>
+
+            <!-- Scrollable Navigation Options Menu -->
+            <nav class="fin-sidebar-nav-scroll" aria-label="Financial Modules Navigation">
+              <div class="fin-nav-category">
+                <span class="fin-nav-cat-label">CORE</span>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
+                  <span class="fin-tab-icon">📊</span>
+                  <span class="fin-tab-label">Executive Dashboard</span>
+                </button>
+              </div>
+
+              <div class="fin-nav-category">
+                <span class="fin-nav-cat-label">SALES &amp; RECEIVABLES</span>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'invoices' ? 'active' : ''}" data-tab="invoices">
+                  <span class="fin-tab-icon">📄</span>
+                  <span class="fin-tab-label">Sales &amp; Invoices</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'customers' ? 'active' : ''}" data-tab="customers">
+                  <span class="fin-tab-icon">👥</span>
+                  <span class="fin-tab-label">Customers &amp; Clients</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'payments' ? 'active' : ''}" data-tab="payments">
+                  <span class="fin-tab-icon">💳</span>
+                  <span class="fin-tab-label">Payments &amp; Receipts</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'notes' ? 'active' : ''}" data-tab="notes">
+                  <span class="fin-tab-icon">🔄</span>
+                  <span class="fin-tab-label">Credit &amp; Debit Notes</span>
+                </button>
+              </div>
+
+              <div class="fin-nav-category">
+                <span class="fin-nav-cat-label">PURCHASES &amp; PAYABLES</span>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'bills' ? 'active' : ''}" data-tab="bills">
+                  <span class="fin-tab-icon">📥</span>
+                  <span class="fin-tab-label">Purchases &amp; Bills</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'vendors' ? 'active' : ''}" data-tab="vendors">
+                  <span class="fin-tab-icon">🏢</span>
+                  <span class="fin-tab-label">Vendors &amp; Suppliers</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'pos' ? 'active' : ''}" data-tab="pos">
+                  <span class="fin-tab-icon">📑</span>
+                  <span class="fin-tab-label">Purchase Orders</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'expenses' ? 'active' : ''}" data-tab="expenses">
+                  <span class="fin-tab-icon">🧾</span>
+                  <span class="fin-tab-label">Operating Expenses</span>
+                </button>
+              </div>
+
+              <div class="fin-nav-category">
+                <span class="fin-nav-cat-label">OPERATIONS &amp; REPORTS</span>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'projects' ? 'active' : ''}" data-tab="projects">
+                  <span class="fin-tab-icon">🏗️</span>
+                  <span class="fin-tab-label">Project Accounts</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'items' ? 'active' : ''}" data-tab="items">
+                  <span class="fin-tab-icon">📦</span>
+                  <span class="fin-tab-label">Items &amp; Inventory</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'reports' ? 'active' : ''}" data-tab="reports">
+                  <span class="fin-tab-icon">📈</span>
+                  <span class="fin-tab-label">Financial Reports</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'calendar' ? 'active' : ''}" data-tab="calendar">
+                  <span class="fin-tab-icon">📅</span>
+                  <span class="fin-tab-label">Statutory Calendar</span>
+                </button>
+                <button type="button" class="fin-tab-item ${this.activeTab === 'documents' ? 'active' : ''}" data-tab="documents">
+                  <span class="fin-tab-icon">📁</span>
+                  <span class="fin-tab-label">Document Vault</span>
+                </button>
+              </div>
+
+              ${this.currentUser?.role === 'super_admin' ? `
+                <div class="fin-nav-category">
+                  <span class="fin-nav-cat-label">GOVERNANCE &amp; ADMIN</span>
+                  <button type="button" class="fin-tab-item ${this.activeTab === 'users' ? 'active' : ''}" data-tab="users">
+                    <span class="fin-tab-icon">🛡️</span>
+                    <span class="fin-tab-label">Users &amp; Audit Logs</span>
+                  </button>
+                  <button type="button" class="fin-tab-item ${this.activeTab === 'settings' ? 'active' : ''}" data-tab="settings">
+                    <span class="fin-tab-icon">⚙️</span>
+                    <span class="fin-tab-label">Entity Settings</span>
+                  </button>
+                </div>
+              ` : ''}
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="fin-sidebar-footer">
+              <div class="fin-sidebar-status">
+                <span class="live-pulse-dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+                <span class="fin-sidebar-status-text">System Live</span>
+              </div>
+              <span class="fin-sidebar-ver">v2.6 Enterprise</span>
+            </div>
+          </aside>
+
+          <!-- Sidebar Backdrop for Mobile/Tablet -->
+          <div class="fin-sidebar-backdrop" id="fin-sidebar-backdrop"></div>
+
+          <!-- Main Stage (Header Breadcrumb Strip + Content Container) -->
+          <div class="fin-main-stage">
+            <!-- Compact Context Action Bar (No horizontal scrolling) -->
+            <div class="fin-stage-action-bar">
+              <div class="fin-stage-breadcrumb" id="fin-stage-breadcrumb">
+                <span class="fin-crumb-root">Finance Desk</span>
+                <span class="fin-crumb-sep">/</span>
+                <span class="fin-crumb-active" id="fin-active-tab-title">Executive Dashboard</span>
+              </div>
+              <div class="fin-stage-quick-pills">
+                ${this.hasPermission('create_invoice') ? `
+                  <button type="button" class="fin-pill-action" onclick="document.getElementById('qa-btn-invoice')?.click()">
+                    <span>+ New Invoice</span>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('create_bill') ? `
+                  <button type="button" class="fin-pill-action" onclick="document.getElementById('qa-btn-bill')?.click()">
+                    <span>+ Record Bill</span>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('create_customer') ? `
+                  <button type="button" class="fin-pill-action" onclick="document.getElementById('qa-btn-customer')?.click()">
+                    <span>+ Customer</span>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('submit_expense') ? `
+                  <button type="button" class="fin-pill-action" onclick="document.getElementById('qa-btn-expense')?.click()">
+                    <span>+ Expense</span>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Dynamic Tab Content Root -->
+            <main class="fin-main-content" id="fin-tab-content-root">
+              <!-- Rendered via renderActiveTab() -->
+            </main>
           </div>
         </div>
-
-        <!-- Navigation Tabs (Zolvit Inspired Module Suite) -->
-        <nav class="fin-tabs-nav">
-          <div class="fin-tabs-inner">
-            <button type="button" class="fin-tab-item ${this.activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">📊 Dashboard</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'invoices' ? 'active' : ''}" data-tab="invoices">📄 Sales &amp; Invoices</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'bills' ? 'active' : ''}" data-tab="bills">📥 Purchases &amp; Bills</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'customers' ? 'active' : ''}" data-tab="customers">👥 Customers</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'vendors' ? 'active' : ''}" data-tab="vendors">🏢 Vendors</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'items' ? 'active' : ''}" data-tab="items">📦 Items &amp; Services</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'payments' ? 'active' : ''}" data-tab="payments">💳 Payments &amp; Receipts</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'notes' ? 'active' : ''}" data-tab="notes">🔄 Credit &amp; Debit Notes</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'expenses' ? 'active' : ''}" data-tab="expenses">🧾 Expenses</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'pos' ? 'active' : ''}" data-tab="pos">📑 Purchase Orders</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'projects' ? 'active' : ''}" data-tab="projects">🏗️ Project Accounts</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'reports' ? 'active' : ''}" data-tab="reports">📈 Financial Reports</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'calendar' ? 'active' : ''}" data-tab="calendar">📅 Calendar</button>
-            <button type="button" class="fin-tab-item ${this.activeTab === 'documents' ? 'active' : ''}" data-tab="documents">📁 Document Vault</button>
-            ${this.currentUser.role === 'super_admin' ? `
-              <button type="button" class="fin-tab-item ${this.activeTab === 'users' ? 'active' : ''}" data-tab="users">🛡️ Users &amp; Audit Logs</button>
-              <button type="button" class="fin-tab-item ${this.activeTab === 'settings' ? 'active' : ''}" data-tab="settings">⚙️ Settings</button>
-            ` : ''}
-          </div>
-        </nav>
-
-        <!-- Dynamic Main Content Region -->
-        <main class="fin-main-content" id="fin-tab-content-root">
-          <!-- Rendered via renderActiveTab() -->
-        </main>
       </div>
 
       <!-- Global App Modals Root Container -->
@@ -580,6 +664,48 @@ class FinanceApp {
   }
 
   bindAppEvents() {
+    // 0. Sidebar Toggle & Mobile Backdrop
+    const sidebarToggle = document.getElementById('fin-sidebar-toggle-btn');
+    const sidebar = document.getElementById('fin-app-sidebar');
+    const backdrop = document.getElementById('fin-sidebar-backdrop');
+    if (sidebarToggle && sidebar) {
+      sidebarToggle.onclick = () => {
+        if (window.innerWidth <= 992) {
+          sidebar.classList.toggle('mobile-open');
+          backdrop?.classList.toggle('active', sidebar.classList.contains('mobile-open'));
+        } else {
+          sidebar.classList.toggle('collapsed');
+        }
+      };
+    }
+    if (backdrop && sidebar) {
+      backdrop.onclick = () => {
+        sidebar.classList.remove('mobile-open');
+        backdrop.classList.remove('active');
+      };
+    }
+
+    // 0.1 Quick Create Dropdown in Sidebar
+    const createToggle = document.getElementById('fin-sidebar-create-toggle');
+    const createMenu = document.getElementById('fin-quick-create-menu');
+    if (createToggle && createMenu) {
+      createToggle.onclick = (e) => {
+        e.stopPropagation();
+        const isOpen = createMenu.style.display !== 'none';
+        createMenu.style.display = isOpen ? 'none' : 'block';
+      };
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.fin-sidebar-action-wrap')) {
+          createMenu.style.display = 'none';
+        }
+      });
+      createMenu.querySelectorAll('.fin-qc-item').forEach(item => {
+        item.addEventListener('click', () => {
+          createMenu.style.display = 'none';
+        });
+      });
+    }
+
     // 1. Entity selector
     const entitySel = document.getElementById('fin-entity-select');
     if (entitySel) {
@@ -607,12 +733,16 @@ class FinanceApp {
       };
     }
 
-    // 4. Tab navigation
+    // 4. Tab navigation (Left Sidebar Perspective)
     document.querySelectorAll('.fin-tab-item').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.fin-tab-item').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.activeTab = btn.getAttribute('data-tab');
+        if (sidebar && sidebar.classList.contains('mobile-open')) {
+          sidebar.classList.remove('mobile-open');
+          backdrop?.classList.remove('active');
+        }
         this.renderActiveTab();
       };
     });
@@ -653,7 +783,7 @@ class FinanceApp {
       };
     }
 
-    // 9. Quick Actions button bindings
+    // 9. Quick Actions button bindings (Inside Quick Create Menu)
     const qaInvoice = document.getElementById('qa-btn-invoice');
     if (qaInvoice) qaInvoice.onclick = () => this.openCreateInvoiceModal();
 
@@ -685,6 +815,36 @@ class FinanceApp {
   renderActiveTab() {
     const root = document.getElementById('fin-tab-content-root');
     if (!root) return;
+    root.scrollTop = 0;
+
+    // Update breadcrumb title
+    const titleEl = document.getElementById('fin-active-tab-title');
+    if (titleEl) {
+      const titles = {
+        dashboard: 'Executive Dashboard',
+        invoices: 'Sales & Tax Invoices',
+        bills: 'Purchases & Bills',
+        customers: 'Customers & Clients',
+        vendors: 'Vendors & Suppliers',
+        items: 'Items & Inventory',
+        payments: 'Payments & Receipts',
+        notes: 'Credit & Debit Notes',
+        expenses: 'Operating Expenses',
+        pos: 'Purchase Orders',
+        projects: 'Project Accounts',
+        reports: 'Financial Reports & Analytics',
+        calendar: 'Statutory Calendar & Compliance',
+        documents: 'Document Vault',
+        users: 'Users & Audit Logs',
+        settings: 'Entity Settings'
+      };
+      titleEl.textContent = titles[this.activeTab] || 'Executive Desk';
+    }
+
+    // Ensure active state on sidebar
+    document.querySelectorAll('.fin-tab-item').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-tab') === this.activeTab);
+    });
 
     switch (this.activeTab) {
       case 'dashboard':

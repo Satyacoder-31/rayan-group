@@ -40,16 +40,23 @@
       margin: 0;
       padding: 0;
       width: 100%;
-      min-height: 100vh;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden !important;
       background: var(--fin-bg-main, #070b12);
     }
     #main-content {
-      min-height: 100vh;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
     #finance-portal-root {
       flex: 1;
+      height: 100%;
+      max-height: 100%;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
