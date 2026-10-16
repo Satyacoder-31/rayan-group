@@ -36,7 +36,13 @@ window.addEventListener('pageshow', () => {
 let lenis = null;
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-if (!prefersReducedMotion) {
+const isBillingPage = typeof document !== 'undefined' && (
+  document.body.classList.contains('page--billing') || 
+  window.location.pathname.includes('/billing') ||
+  document.getElementById('finance-portal-root') !== null
+);
+
+if (!prefersReducedMotion && !isBillingPage) {
   try {
     lenis = new Lenis({
       duration: 1.1,
@@ -49,7 +55,7 @@ if (!prefersReducedMotion) {
       prevent: (node) => {
         return !!(node && (
           node.hasAttribute('data-lenis-prevent') ||
-          node.closest('#assistance-widget, .assistance-card, .chat-messages-container, .assistance-chat-view, [data-lenis-prevent]')
+          node.closest('#assistance-widget, .assistance-card, .chat-messages-container, .assistance-chat-view, .page--billing, #finance-portal-root, .fin-app-wrapper, .fin-main-content, [data-lenis-prevent]')
         ));
       }
     });

@@ -388,7 +388,7 @@ class FinanceApp {
     if (!portalContainer) return;
 
     portalContainer.innerHTML = `
-      <div class="fin-app-wrapper">
+      <div class="fin-app-wrapper" data-lenis-prevent="true">
         <!-- Top App Navigation Bar -->
         <header class="fin-app-topbar">
           <div class="fin-topbar-inner">
@@ -490,9 +490,9 @@ class FinanceApp {
         </header>
 
         <!-- Main Workspace: Left Sidebar + Content Stage -->
-        <div class="fin-app-body-layout">
+        <div class="fin-app-body-layout" data-lenis-prevent="true">
           <!-- Left Perspective Navigation Sidebar -->
-          <aside class="fin-app-sidebar" id="fin-app-sidebar">
+          <aside class="fin-app-sidebar" id="fin-app-sidebar" data-lenis-prevent="true">
             <!-- Sidebar Quick Create Action -->
             <div class="fin-sidebar-action-wrap">
               <button type="button" class="fin-sidebar-create-btn" id="fin-sidebar-create-toggle" title="Create Transaction or Record">
@@ -693,7 +693,7 @@ class FinanceApp {
           <div class="fin-sidebar-backdrop" id="fin-sidebar-backdrop"></div>
 
           <!-- Main Stage (Header Breadcrumb Strip + Content Container) -->
-          <div class="fin-main-stage">
+          <div class="fin-main-stage" data-lenis-prevent="true">
             <!-- Compact Context Action Bar (No horizontal scrolling) -->
             <div class="fin-stage-action-bar">
               <div class="fin-stage-breadcrumb" id="fin-stage-breadcrumb">
@@ -726,7 +726,7 @@ class FinanceApp {
             </div>
 
             <!-- Dynamic Tab Content Root -->
-            <main class="fin-main-content" id="fin-tab-content-root">
+            <main class="fin-main-content" id="fin-tab-content-root" data-lenis-prevent="true">
               <!-- Rendered via renderActiveTab() -->
             </main>
           </div>
@@ -742,6 +742,24 @@ class FinanceApp {
   }
 
   bindAppEvents() {
+    // Dismiss preloader lock on body & overlay
+    document.body.classList.remove('preloader-active');
+    const sitePreloader = document.getElementById('site-preloader');
+    if (sitePreloader) {
+      sitePreloader.classList.add('preloader-done');
+      sitePreloader.style.display = 'none';
+      sitePreloader.style.pointerEvents = 'none';
+    }
+
+    // Direct Wheel & Scroll isolation to guarantee native top-to-bottom scroll
+    const contentRoot = document.getElementById('fin-tab-content-root');
+    if (contentRoot) {
+      contentRoot.setAttribute('data-lenis-prevent', 'true');
+      contentRoot.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
+
     // 0. Sidebar Toggle & Mobile Backdrop
     const sidebarToggle = document.getElementById('fin-sidebar-toggle-btn');
     const sidebar = document.getElementById('fin-app-sidebar');
