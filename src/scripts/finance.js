@@ -392,50 +392,73 @@ class FinanceApp {
         <!-- Top App Navigation Bar -->
         <header class="fin-app-topbar">
           <div class="fin-topbar-inner">
+            <!-- Left: Brand, Product Badge & Entity Switcher -->
             <div class="fin-topbar-left">
-              <a href="/billing/" class="fin-topbar-brand">
+              <a href="/billing/" class="fin-topbar-brand" title="Rayan Group Corporate Financial Portal">
                 <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" class="fin-topbar-logo logo-theme-dark">
                 <img src="/assets/logos/rayan-group.png" alt="Rayan Group" class="fin-topbar-logo logo-theme-light">
               </a>
-              <span class="fin-topbar-badge-desk">ACCOUNTS &amp; GRC SYSTEM</span>
+              <div class="fin-brand-divider" aria-hidden="true"></div>
+              <span class="fin-topbar-badge-desk">
+                <span class="live-pulse-dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+                <span>FINANCE DESK</span>
+              </span>
 
-              <!-- Business Entity Selector -->
-              <select id="fin-entity-select" class="fin-select-pill" title="Switch Operating Legal Entity">
-                ${(this.db?.companies || []).map(c => `
-                  <option value="${c.id}" ${c.id === this.activeCompanyId ? 'selected' : ''}>
-                    ${c.name} (${c.currency_symbol || '₹'})
-                  </option>
-                `).join('')}
-              </select>
-
-              <!-- Financial Period Selector -->
-              <select id="fin-period-select" class="fin-select-pill" title="Filter Accounting Period">
-                <option value="fy-2025-26" ${this.activePeriod === 'fy-2025-26' ? 'selected' : ''}>FY 2025-2026 (Full Year)</option>
-                <option value="q4-2026" ${this.activePeriod === 'q4-2026' ? 'selected' : ''}>Q4 (Jan 2026 - Mar 2026)</option>
-                <option value="current-month" ${this.activePeriod === 'current-month' ? 'selected' : ''}>Current Month (March 2026)</option>
-                <option value="last-30-days" ${this.activePeriod === 'last-30-days' ? 'selected' : ''}>Last 30 Days</option>
-              </select>
-
-              <!-- Currency Switcher -->
-              <select id="fin-currency-select" class="fin-select-pill" style="width: auto;" title="Change Display Currency">
-                <option value="INR" ${this.activeCurrency === 'INR' ? 'selected' : ''}>INR (₹)</option>
-                <option value="AED" ${this.activeCurrency === 'AED' ? 'selected' : ''}>AED (د.إ)</option>
-                <option value="USD" ${this.activeCurrency === 'USD' ? 'selected' : ''}>USD ($)</option>
-              </select>
+              <!-- Business Entity Selector (Custom Styled) -->
+              <div class="fin-select-wrapper fin-entity-wrapper">
+                <svg class="fin-select-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+                <select id="fin-entity-select" class="fin-select-modern" title="Switch Operating Legal Entity">
+                  ${(this.db?.companies || []).map(c => {
+                    const shortName = c.name.replace('Private Limited', 'Ltd').replace('Corporate HQ', 'HQ').replace('Division', 'Div');
+                    return `<option value="${c.id}" ${c.id === this.activeCompanyId ? 'selected' : ''}>${shortName}</option>`;
+                  }).join('')}
+                </select>
+                <svg class="fin-select-arrow" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
             </div>
 
-            <div class="fin-topbar-right">
-              <!-- Global Search -->
+            <!-- Center: Global Command Search -->
+            <div class="fin-topbar-center">
               <div class="fin-global-search-wrap">
                 <svg class="fin-search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" id="fin-global-search" class="fin-global-search-input" placeholder="Search Invoices, Bills, Customers, POs... (Ctrl+K)">
+                <span class="fin-search-kbd">Ctrl K</span>
+              </div>
+            </div>
+
+            <!-- Right: Controls, Notifications & Profile -->
+            <div class="fin-topbar-right">
+              <!-- Accounting Period Selector -->
+              <div class="fin-select-wrapper fin-period-wrapper">
+                <svg class="fin-select-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <select id="fin-period-select" class="fin-select-modern" title="Filter Accounting Period">
+                  <option value="fy-2025-26" ${this.activePeriod === 'fy-2025-26' ? 'selected' : ''}>FY 2025–26</option>
+                  <option value="q4-2026" ${this.activePeriod === 'q4-2026' ? 'selected' : ''}>Q4 (Jan–Mar)</option>
+                  <option value="current-month" ${this.activePeriod === 'current-month' ? 'selected' : ''}>March 2026</option>
+                  <option value="last-30-days" ${this.activePeriod === 'last-30-days' ? 'selected' : ''}>Last 30 Days</option>
+                </select>
+                <svg class="fin-select-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
               </div>
 
+              <!-- Currency Switcher -->
+              <div class="fin-select-wrapper fin-currency-wrapper">
+                <select id="fin-currency-select" class="fin-select-modern" title="Display Currency">
+                  <option value="INR" ${this.activeCurrency === 'INR' ? 'selected' : ''}>₹ INR</option>
+                  <option value="AED" ${this.activeCurrency === 'AED' ? 'selected' : ''}>د.إ AED</option>
+                  <option value="USD" ${this.activeCurrency === 'USD' ? 'selected' : ''}>$ USD</option>
+                </select>
+                <svg class="fin-select-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+
+              <div class="fin-header-vsep" aria-hidden="true"></div>
+
               <!-- Notifications Hub -->
-              <button type="button" class="fin-icon-btn" id="fin-notif-btn" title="View Financial Notifications &amp; Alerts">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <button type="button" class="fin-icon-btn" id="fin-notif-btn" title="Financial Notifications &amp; Alerts">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 <span class="fin-badge-counter" id="fin-notif-badge">${(this.db?.notifications || []).filter(n => !n.read).length}</span>
               </button>
+
+              <div class="fin-header-vsep" aria-hidden="true"></div>
 
               <!-- User Profile Menu -->
               <div class="fin-user-chip" id="fin-user-menu-btn" title="User Profile and Security Settings">
@@ -444,18 +467,20 @@ class FinanceApp {
                   <span class="fin-user-name">${this.currentUser?.name || 'Authorized User'}</span>
                   <span class="fin-user-role-badge">${this.currentUser?.role_label || 'Staff'}</span>
                 </div>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--fin-text-dim);"><path d="M6 9l6 6 6-6"/></svg>
               </div>
 
-              <!-- Return to Corporate Website -->
-              <a href="/" class="fin-icon-btn" id="fin-return-home-btn" title="Return to Rayan Group Website" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.65rem; text-decoration:none; color:var(--fin-text-muted); font-size:0.75rem; font-weight:600; border-radius:6px; border:1px solid var(--fin-border); background:rgba(255,255,255,0.03);">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              <div class="fin-header-vsep" aria-hidden="true"></div>
+
+              <!-- Return to Main Corporate Website -->
+              <a href="/" class="fin-btn-nav-website" id="fin-return-home-btn" title="Return to Corporate Website">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 <span>Website</span>
               </a>
 
-              <!-- Sign Out -->
-              <button type="button" class="fin-icon-btn" id="fin-logout-btn" title="Secure Logout">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <!-- Sign Out Button -->
+              <button type="button" class="fin-icon-btn fin-logout-btn" id="fin-logout-btn" title="Sign Out">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               </button>
             </div>
           </div>
