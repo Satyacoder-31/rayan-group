@@ -44,6 +44,7 @@ export default async function handler(req, res) {
       try { body = JSON.parse(body); } catch (e) { body = {}; }
     }
     body = body || {};
+    const postAction = body.action || action;
 
     const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'client';
     const emailKey = (body.email || body.username || ip).toLowerCase().trim();
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
     }
 
     // 1. PIN-based login (Legacy Command Center compatibility)
-    if (action === 'verify' && (body.pin || (body.password && !body.email))) {
+    if (postAction === 'verify' && (body.pin || (body.password && !body.email))) {
       const entered = (body.password || body.pin || '').trim();
       if (entered === localPin) {
         if (failedAttempts[emailKey]) delete failedAttempts[emailKey];
@@ -73,7 +74,7 @@ export default async function handler(req, res) {
     }
 
     // 2. Email + Password Authentication for Financial Portal
-    if (action === 'login' || action === 'finance_login') {
+    if (postAction === 'login' || postAction === 'finance_login' || (body.email && body.password)) {
       const email = (body.email || '').toLowerCase().trim();
       const password = (body.password || '').trim();
 

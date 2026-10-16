@@ -1,3 +1,5 @@
+import defaultSeedData from '../../data/finance-data.json';
+
 /**
  * RAYAN GROUP — ENTERPRISE ACCOUNTS, BILLING & FINANCIAL MANAGEMENT SYSTEM
  * Inspired by Zolvit/VakilSearch Billing & GRC Dashboard functionality
@@ -6,7 +8,7 @@
 
 class FinanceApp {
   constructor() {
-    this.db = null;
+    this.db = JSON.parse(JSON.stringify(defaultSeedData));
     this.currentUser = null;
     this.activeCompanyId = 'ashaz-eng-in';
     this.activePeriod = 'fy-2025-26';
@@ -97,6 +99,10 @@ class FinanceApp {
   // DATA LAYER & API SYNC
   // --------------------------------------------------------------------------
   async loadDatabase() {
+    if (!this.db) {
+      this.db = JSON.parse(JSON.stringify(defaultSeedData));
+    }
+
     try {
       const res = await fetch('/api/finance?action=get_state');
       if (res.ok) {
@@ -111,17 +117,13 @@ class FinanceApp {
       console.warn('Server API not reachable; checking local cache or seed', e);
     }
 
-    // Fallback to cache or window seed
+    // Fallback to cache or bundled seed
     const cached = localStorage.getItem('rayan_fin_db_cache');
     if (cached) {
       try {
         this.db = JSON.parse(cached);
         return;
       } catch (err) {}
-    }
-
-    if (window.__RAYAN_FINANCE_SEED__) {
-      this.db = JSON.parse(JSON.stringify(window.__RAYAN_FINANCE_SEED__));
     }
   }
 
@@ -326,14 +328,16 @@ class FinanceApp {
             body: JSON.stringify({ action: 'login', email, password })
           });
 
-          const data = await res.json();
-          if (res.ok && data.success && data.user) {
+          let data = null;
+          try { data = await res.json(); } catch(e) {}
+
+          if (res.ok && data && data.success && data.user) {
             this.saveSession(data.user);
             this.showAppView();
             return;
           }
 
-          // Fallback check against db users
+          // Fallback check against db users (handles local or seed state)
           const localUser = this.db?.users?.find(u => u.email.toLowerCase() === email.toLowerCase());
           if (localUser && localUser.password === password) {
             const { password: _, ...safeUser } = localUser;
@@ -342,10 +346,22 @@ class FinanceApp {
             return;
           }
 
-          errorBox.textContent = data.error || 'Invalid credentials or user unauthorized. Please check role password.';
+          // Clean error message (never show confusing CMS access key error)
+          const msg = (data && data.error && !data.error.includes('corporate access key'))
+            ? data.error
+            : 'Invalid corporate email or password. Please verify your credentials.';
+          errorBox.textContent = msg;
           errorBox.style.display = 'block';
         } catch (err) {
-          errorBox.textContent = 'Network communication error. Please check server status.';
+          // Fallback check against db users on network error
+          const localUser = this.db?.users?.find(u => u.email.toLowerCase() === email.toLowerCase());
+          if (localUser && localUser.password === password) {
+            const { password: _, ...safeUser } = localUser;
+            this.saveSession(safeUser);
+            this.showAppView();
+            return;
+          }
+          errorBox.textContent = 'Invalid corporate email or password. Please verify your credentials.';
           errorBox.style.display = 'block';
         } finally {
           submitBtn.disabled = false;

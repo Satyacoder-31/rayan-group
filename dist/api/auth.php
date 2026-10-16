@@ -82,8 +82,147 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $activePassword = getActiveAdminPassword($configFile, $pdo);
 
-    // 1. Verify Passcode
-    if ($action === 'verify' || $action === 'login') {
+    // 1. Verify Passcode or Corporate Email Login
+    if ($action === 'verify' || $action === 'login' || $action === 'finance_login') {
+        // A. Corporate User Email + Password Login (Financial Portal /billing/)
+        if (!empty($body['email'])) {
+            $email = strtolower(trim($body['email']));
+            $password = trim($body['password'] ?? '');
+
+            if (!$password) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'authorized' => false, 'error' => 'Password required']);
+                exit;
+            }
+
+            // Default authorized personnel list
+            $defaultUsers = [
+                [
+                    "id" => "usr-001",
+                    "email" => "superadmin@rayangroup.com",
+                    "password" => "Rayan@Admin2026",
+                    "name" => "Arshad Alam Shaikh",
+                    "role" => "super_admin",
+                    "role_label" => "Super Administrator",
+                    "designation" => "Group Chairman & Managing Director",
+                    "department" => "Executive Board & Group Governance",
+                    "phone" => "+971 50 248 9911",
+                    "status" => "active"
+                ],
+                [
+                    "id" => "usr-002",
+                    "email" => "finance.admin@rayangroup.com",
+                    "password" => "Finance@Rayan2026",
+                    "name" => "Zameer Ahmed Khan",
+                    "role" => "finance_admin",
+                    "role_label" => "Finance Administrator",
+                    "designation" => "Chief Financial Officer (CFO)",
+                    "department" => "Group Accounts & Treasury",
+                    "phone" => "+91 98201 44521",
+                    "status" => "active"
+                ],
+                [
+                    "id" => "usr-003",
+                    "email" => "accountant@rayangroup.com",
+                    "password" => "Accounts@Rayan2026",
+                    "name" => "Pooja Sharma",
+                    "role" => "accountant",
+                    "role_label" => "Accountant",
+                    "designation" => "Senior Financial Accountant",
+                    "department" => "Accounts Payable & Receivable",
+                    "phone" => "+91 98334 11290",
+                    "status" => "active"
+                ],
+                [
+                    "id" => "usr-004",
+                    "email" => "pm.tariq@rayangroup.com",
+                    "password" => "Project@Rayan2026",
+                    "name" => "Tariq Mansoor",
+                    "role" => "project_manager",
+                    "role_label" => "Project Manager",
+                    "designation" => "Senior Project Director",
+                    "department" => "Civil Infrastructure & EPC",
+                    "phone" => "+971 52 918 3320",
+                    "status" => "active"
+                ],
+                [
+                    "id" => "usr-005",
+                    "email" => "employee.rahul@rayangroup.com",
+                    "password" => "Staff@Rayan2026",
+                    "name" => "Rahul Deshmukh",
+                    "role" => "employee",
+                    "role_label" => "Employee",
+                    "designation" => "Site MEP & Civil Engineer",
+                    "department" => "Project Field Operations",
+                    "phone" => "+91 97665 88210",
+                    "status" => "active"
+                ],
+                [
+                    "id" => "usr-006",
+                    "email" => "management@rayangroup.com",
+                    "password" => "Exec@Rayan2026",
+                    "name" => "Farhan Al Nuaimi",
+                    "role" => "management_readonly",
+                    "role_label" => "Management (Read-Only)",
+                    "designation" => "Independent Board Advisor",
+                    "department" => "Corporate Governance & Audit",
+                    "phone" => "+971 50 882 1944",
+                    "status" => "active"
+                ]
+            ];
+
+            // Attempt to load from JSON data file if exists
+            $users = $defaultUsers;
+            $dataPaths = [
+                __DIR__ . '/../../data/finance-data.json',
+                __DIR__ . '/../data/finance-data.json',
+                __DIR__ . '/data/finance-data.json'
+            ];
+            foreach ($dataPaths as $p) {
+                if (file_exists($p)) {
+                    $raw = @file_get_contents($p);
+                    if ($raw) {
+                        $parsed = json_decode($raw, true);
+                        if (!empty($parsed['users'])) {
+                            $users = $parsed['users'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $matched = null;
+            foreach ($users as $u) {
+                if (strtolower($u['email']) === $email) {
+                    $matched = $u;
+                    break;
+                }
+            }
+
+            if ($matched && hash_equals($matched['password'], $password)) {
+                if (($matched['status'] ?? 'active') === 'suspended') {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'error' => 'This account is suspended. Please contact administrator.']);
+                    exit;
+                }
+                unset($matched['password']);
+                $token = 'sess_' . bin2hex(random_bytes(16));
+                echo json_encode([
+                    'success' => true,
+                    'authorized' => true,
+                    'token' => $token,
+                    'user' => $matched,
+                    'message' => 'Authentication successful'
+                ]);
+                exit;
+            } else {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'authorized' => false, 'error' => 'Invalid corporate email or password.']);
+                exit;
+            }
+        }
+
+        // B. Admin Command Center Single-PIN Verification (/admin/)
         $entered = trim($body['password'] ?? $body['pin'] ?? '');
         if (!$entered) {
             http_response_code(400);

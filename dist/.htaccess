@@ -7,6 +7,7 @@ DirectoryIndex index.html index.php
   # 1. API routes rewrite to PHP handlers
   RewriteRule ^api/chat/?$ api/chat.php [QSA,L]
   RewriteRule ^api/auth/?$ api/auth.php [QSA,L]
+  RewriteRule ^api/finance/?$ api/finance.php [QSA,L]
   RewriteRule ^api/send-email/?$ api/send-email.php [QSA,L]
 
   # 2. Redirect /index.html to /

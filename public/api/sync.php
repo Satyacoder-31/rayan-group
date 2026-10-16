@@ -175,6 +175,22 @@ if (!$rootDir || !is_writable($rootDir)) {
         $copiedSummary['api_sync'] = 'Root API updated from dist/api';
     }
 
+    // Ensure data/ directory (finance-data.json) is refreshed at root
+    if (is_dir($siteDir . '/data')) {
+        copyFolder($siteDir . '/data', $rootDir . '/data');
+        $copiedSummary['data_sync'] = 'Root data updated from site/data';
+    } elseif (is_dir($siteDir . '/public/data')) {
+        copyFolder($siteDir . '/public/data', $rootDir . '/data');
+        $copiedSummary['data_sync'] = 'Root data updated from site/public/data';
+    }
+
+    // Ensure .htaccess with rewrite rules is up to date
+    if (file_exists($siteDir . '/public/.htaccess')) {
+        @copy($siteDir . '/public/.htaccess', $rootDir . '/.htaccess');
+    } elseif (file_exists($sourceDir . '/.htaccess')) {
+        @copy($sourceDir . '/.htaccess', $rootDir . '/.htaccess');
+    }
+
     // Check for css & js bundles in root assets
     $cssFiles = glob($rootDir . '/assets/*.css');
     $jsFiles = glob($rootDir . '/assets/*.js');
