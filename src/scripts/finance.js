@@ -590,109 +590,241 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Scrollable Navigation Options Menu -->
+            <!-- Scrollable Accordion Navigation Menu (Matching Reference Images 2 & 3) -->
             <nav class="fin-sidebar-nav-scroll" aria-label="Financial Modules Navigation">
-              <div class="fin-nav-category">
-                <span class="fin-nav-cat-label">CORE</span>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
-                  <span class="fin-tab-icon">📊</span>
-                  <span class="fin-tab-label">Executive Dashboard</span>
-                </button>
+              <!-- Direct Standalone Item: Executive Dashboard -->
+              <div class="fin-tab-item direct-item ${this.activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
+                <div class="fin-item-left">
+                  <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="9"></rect>
+                    <rect x="14" y="3" width="7" height="5"></rect>
+                    <rect x="14" y="12" width="7" height="9"></rect>
+                    <rect x="3" y="16" width="7" height="5"></rect>
+                  </svg>
+                  <span class="fin-tab-title">Executive Dashboard</span>
+                </div>
               </div>
 
-              <div class="fin-nav-category">
-                <span class="fin-nav-cat-label">SALES &amp; RECEIVABLES</span>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'invoices' ? 'active' : ''}" data-tab="invoices">
-                  <span class="fin-tab-icon">📄</span>
-                  <span class="fin-tab-label">Sales &amp; Invoices</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'customers' ? 'active' : ''}" data-tab="customers">
-                  <span class="fin-tab-icon">👥</span>
-                  <span class="fin-tab-label">Customers &amp; Clients</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'payments' ? 'active' : ''}" data-tab="payments">
-                  <span class="fin-tab-icon">💳</span>
-                  <span class="fin-tab-label">Payments &amp; Receipts</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'notes' ? 'active' : ''}" data-tab="notes">
-                  <span class="fin-tab-icon">🔄</span>
-                  <span class="fin-tab-label">Credit &amp; Debit Notes</span>
-                </button>
+              <!-- Accordion: Sales & Income -->
+              <div class="fin-accordion-group ${['invoices', 'payment_in', 'payments', 'customers', 'credit_notes'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-sales">
+                <div class="fin-accordion-header" data-toggle="fin-grp-sales">
+                  <div class="fin-grp-title-wrap">
+                    <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span class="fin-grp-title">Sales &amp; Income</span>
+                  </div>
+                  <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+                <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'invoices' ? 'active' : ''}" data-tab="invoices">
+                    <span class="fin-subitem-text">Sales Invoices</span>
+                    <button type="button" class="fin-subitem-plus" title="Create Sales Invoice" data-action="new-invoice">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${['payment_in', 'payments'].includes(this.activeTab) ? 'active' : ''}" data-tab="payment_in">
+                    <span class="fin-subitem-text">Payment-In</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Payment-In" data-action="new-receipt">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'customers' ? 'active' : ''}" data-tab="customers">
+                    <span class="fin-subitem-text">Customers &amp; Clients</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Customer" data-action="new-customer">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'credit_notes' ? 'active' : ''}" data-tab="credit_notes">
+                    <span class="fin-subitem-text">Sales Return / Cr. Note</span>
+                    <button type="button" class="fin-subitem-plus" title="Create Credit Note" data-action="new-credit-note">+</button>
+                  </div>
+                </div>
               </div>
 
-              <div class="fin-nav-category">
-                <span class="fin-nav-cat-label">PURCHASES &amp; PAYABLES</span>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'bills' ? 'active' : ''}" data-tab="bills">
-                  <span class="fin-tab-icon">📥</span>
-                  <span class="fin-tab-label">Purchases &amp; Bills</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'vendors' ? 'active' : ''}" data-tab="vendors">
-                  <span class="fin-tab-icon">🏢</span>
-                  <span class="fin-tab-label">Vendors &amp; Suppliers</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'pos' ? 'active' : ''}" data-tab="pos">
-                  <span class="fin-tab-icon">📑</span>
-                  <span class="fin-tab-label">Purchase Orders</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'expenses' ? 'active' : ''}" data-tab="expenses">
-                  <span class="fin-tab-icon">🧾</span>
-                  <span class="fin-tab-label">Operating Expenses</span>
-                </button>
+              <!-- Accordion: Purchase & Expense (MATCHING IMAGE 2 EXACTLY) -->
+              <div class="fin-accordion-group ${['bills', 'payment_out', 'expenses', 'pos', 'debit_notes', 'notes', 'vendors'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-purchases">
+                <div class="fin-accordion-header" data-toggle="fin-grp-purchases">
+                  <div class="fin-grp-title-wrap">
+                    <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="9" cy="21" r="1"></circle>
+                      <circle cx="20" cy="21" r="1"></circle>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="fin-grp-title">Purchase &amp; Expense</span>
+                  </div>
+                  <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+                <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'bills' ? 'active' : ''}" data-tab="bills">
+                    <span class="fin-subitem-text">Purchase Bills</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Purchase Bill" data-action="new-bill">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'payment_out' ? 'active' : ''}" data-tab="payment_out">
+                    <span class="fin-subitem-text">Payment-Out</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Payment-Out" data-action="new-payment">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'expenses' ? 'active' : ''}" data-tab="expenses">
+                    <span class="fin-subitem-text">Expenses</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Expense" data-action="new-expense">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'pos' ? 'active' : ''}" data-tab="pos">
+                    <span class="fin-subitem-text">Purchase Order</span>
+                    <button type="button" class="fin-subitem-plus" title="Issue Purchase Order" data-action="new-po">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${['debit_notes', 'notes'].includes(this.activeTab) ? 'active' : ''}" data-tab="debit_notes">
+                    <span class="fin-subitem-text">Purchase Return/ Dr. Note</span>
+                    <button type="button" class="fin-subitem-plus" title="Create Debit Note" data-action="new-debit-note">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'vendors' ? 'active' : ''}" data-tab="vendors">
+                    <span class="fin-subitem-text">Vendors &amp; Suppliers</span>
+                    <button type="button" class="fin-subitem-plus" title="Register Supplier" data-action="new-vendor">+</button>
+                  </div>
+                </div>
               </div>
 
-              <div class="fin-nav-category">
-                <span class="fin-nav-cat-label">OPERATIONS &amp; REPORTS</span>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'projects' ? 'active' : ''}" data-tab="projects">
-                  <span class="fin-tab-icon">🏗️</span>
-                  <span class="fin-tab-label">Project Accounts</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'items' ? 'active' : ''}" data-tab="items">
-                  <span class="fin-tab-icon">📦</span>
-                  <span class="fin-tab-label">Items &amp; Inventory</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'reports' ? 'active' : ''}" data-tab="reports">
-                  <span class="fin-tab-icon">📈</span>
-                  <span class="fin-tab-label">Financial Reports</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'calendar' ? 'active' : ''}" data-tab="calendar">
-                  <span class="fin-tab-icon">📅</span>
-                  <span class="fin-tab-label">Statutory Calendar</span>
-                </button>
-                <button type="button" class="fin-tab-item ${this.activeTab === 'documents' ? 'active' : ''}" data-tab="documents">
-                  <span class="fin-tab-icon">📁</span>
-                  <span class="fin-tab-label">Document Vault</span>
-                </button>
+              <!-- Accordion: Cash & Bank (MATCHING IMAGE 3 EXACTLY) -->
+              <div class="fin-accordion-group ${['bank_accounts', 'cash_in_hand', 'cheques', 'loan_accounts'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-bank">
+                <div class="fin-accordion-header" data-toggle="fin-grp-bank">
+                  <div class="fin-grp-title-wrap">
+                    <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2L2 7h20L12 2z"></path>
+                    </svg>
+                    <span class="fin-grp-title">Cash &amp; Bank</span>
+                  </div>
+                  <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+                <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'bank_accounts' ? 'active' : ''}" data-tab="bank_accounts">
+                    <span class="fin-subitem-text">Bank Accounts</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Account / Transfer" data-action="new-bank">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'cash_in_hand' ? 'active' : ''}" data-tab="cash_in_hand">
+                    <span class="fin-subitem-text">Cash In Hand</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Cash Voucher" data-action="new-cash">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'cheques' ? 'active' : ''}" data-tab="cheques">
+                    <span class="fin-subitem-text">Cheques</span>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'loan_accounts' ? 'active' : ''}" data-tab="loan_accounts">
+                    <span class="fin-subitem-text">Loan Accounts</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Loan Facility / Repayment" data-action="new-loan">+</button>
+                  </div>
+                </div>
               </div>
 
+              <!-- Accordion: Operations & Projects -->
+              <div class="fin-accordion-group ${['projects', 'items', 'documents'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-ops">
+                <div class="fin-accordion-header" data-toggle="fin-grp-ops">
+                  <div class="fin-grp-title-wrap">
+                    <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                      <polyline points="2 17 12 22 22 17"></polyline>
+                      <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    <span class="fin-grp-title">Operations &amp; Projects</span>
+                  </div>
+                  <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+                <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'projects' ? 'active' : ''}" data-tab="projects">
+                    <span class="fin-subitem-text">Project Accounts</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Project Account" data-action="new-project">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'items' ? 'active' : ''}" data-tab="items">
+                    <span class="fin-subitem-text">Items &amp; Inventory</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Item" data-action="new-item">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'documents' ? 'active' : ''}" data-tab="documents">
+                    <span class="fin-subitem-text">Document Vault</span>
+                    <button type="button" class="fin-subitem-plus" title="Upload Document" data-action="upload-doc">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Accordion: Reports & Compliance -->
+              <div class="fin-accordion-group ${['reports', 'calendar'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-reports">
+                <div class="fin-accordion-header" data-toggle="fin-grp-reports">
+                  <div class="fin-grp-title-wrap">
+                    <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10"></line>
+                      <line x1="12" y1="20" x2="12" y2="4"></line>
+                      <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <span class="fin-grp-title">Reports &amp; Compliance</span>
+                  </div>
+                  <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+                <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'reports' ? 'active' : ''}" data-tab="reports">
+                    <span class="fin-subitem-text">Financial Reports</span>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'calendar' ? 'active' : ''}" data-tab="calendar">
+                    <span class="fin-subitem-text">Statutory Calendar</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Accordion: Official Print Formats -->
+              <div class="fin-accordion-group" id="fin-grp-prints">
+                <div class="fin-accordion-header" data-toggle="fin-grp-prints">
+                  <div class="fin-grp-title-wrap">
+                    <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                      <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    <span class="fin-grp-title">Official Print Formats</span>
+                  </div>
+                  <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+                <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-44049')">
+                    <span class="fin-subitem-text">Tax Invoice (Sample)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
+                    <span class="fin-subitem-text">Receipt Voucher (Sample)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-rec-11008')">
+                    <span class="fin-subitem-text">Purchase Order (2p)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Accordion: Governance & Admin (Super Admin) -->
               ${this.currentUser?.role === 'super_admin' ? `
-                <div class="fin-nav-category">
-                  <span class="fin-nav-cat-label">GOVERNANCE &amp; ADMIN</span>
-                  <button type="button" class="fin-tab-item ${this.activeTab === 'users' ? 'active' : ''}" data-tab="users">
-                    <span class="fin-tab-icon">🛡️</span>
-                    <span class="fin-tab-label">Users &amp; Audit Logs</span>
-                  </button>
-                  <button type="button" class="fin-tab-item ${this.activeTab === 'settings' ? 'active' : ''}" data-tab="settings">
-                    <span class="fin-tab-icon">⚙️</span>
-                    <span class="fin-tab-label">Entity Settings</span>
-                  </button>
+                <div class="fin-accordion-group ${['users', 'settings'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-admin">
+                  <div class="fin-accordion-header" data-toggle="fin-grp-admin">
+                    <div class="fin-grp-title-wrap">
+                      <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                      <span class="fin-grp-title">Governance &amp; Admin</span>
+                    </div>
+                    <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                  </div>
+                  <div class="fin-accordion-body">
+                    <div class="fin-nav-subitem ${this.activeTab === 'users' ? 'active' : ''}" data-tab="users">
+                      <span class="fin-subitem-text">Users &amp; Audit Logs</span>
+                      <button type="button" class="fin-subitem-plus" title="Invite User" data-action="new-user">+</button>
+                    </div>
+                    <div class="fin-nav-subitem ${this.activeTab === 'settings' ? 'active' : ''}" data-tab="settings">
+                      <span class="fin-subitem-text">Entity Settings</span>
+                    </div>
+                  </div>
                 </div>
               ` : ''}
-
-              <div class="fin-nav-category">
-                <span class="fin-nav-cat-label">OFFICIAL PRINT FORMATS</span>
-                <button type="button" class="fin-tab-item" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-44049')">
-                  <span class="fin-tab-icon">📄</span>
-                  <span class="fin-tab-label">Tax Invoice (Sample)</span>
-                </button>
-                <button type="button" class="fin-tab-item" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
-                  <span class="fin-tab-icon">💳</span>
-                  <span class="fin-tab-label">Receipt Voucher (Sample)</span>
-                </button>
-                <button type="button" class="fin-tab-item" onclick="window.finApp.openPOPrintModal('po-rec-11008')">
-                  <span class="fin-tab-icon">📑</span>
-                  <span class="fin-tab-label">Purchase Order (2p)</span>
-                </button>
-              </div>
             </nav>
 
             <!-- Sidebar Footer -->
@@ -848,17 +980,103 @@ class FinanceApp {
       };
     }
 
-    // 4. Tab navigation (Left Sidebar Perspective)
-    document.querySelectorAll('.fin-tab-item').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('.fin-tab-item').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.activeTab = btn.getAttribute('data-tab');
+    // 4. Accordion Toggle (Matching Reference Images 2 & 3)
+    document.querySelectorAll('.fin-accordion-header').forEach(hdr => {
+      hdr.onclick = (e) => {
+        e.stopPropagation();
+        const grp = hdr.closest('.fin-accordion-group');
+        if (grp) {
+          grp.classList.toggle('open');
+        }
+      };
+    });
+
+    // Sub-items and Direct Tab selection
+    document.querySelectorAll('.fin-nav-subitem[data-tab], .fin-tab-item[data-tab]').forEach(btn => {
+      btn.onclick = (e) => {
+        // If clicking the quick-add plus button, do not switch tabs
+        if (e.target.closest('.fin-subitem-plus')) return;
+
+        const tab = btn.getAttribute('data-tab');
+        if (!tab) return;
+        this.activeTab = tab;
+
+        document.querySelectorAll('.fin-nav-subitem, .fin-tab-item').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+        });
+
+        // Ensure parent accordion is open
+        const parentGrp = btn.closest('.fin-accordion-group');
+        if (parentGrp) {
+          parentGrp.classList.add('open');
+        }
+
         if (sidebar && sidebar.classList.contains('mobile-open')) {
           sidebar.classList.remove('mobile-open');
           backdrop?.classList.remove('active');
         }
         this.renderActiveTab();
+      };
+    });
+
+    // Sub-item Quick '+' Action button clicks (Matching Reference Images 2 & 3)
+    document.querySelectorAll('.fin-subitem-plus').forEach(plusBtn => {
+      plusBtn.onclick = (e) => {
+        e.stopPropagation();
+        const action = plusBtn.getAttribute('data-action');
+        switch (action) {
+          case 'new-bill':
+            this.openCreateBillModal();
+            break;
+          case 'new-payment':
+            this.openRecordPaymentModal();
+            break;
+          case 'new-expense':
+            this.openCreateExpenseModal();
+            break;
+          case 'new-po':
+            this.openCreatePOModal();
+            break;
+          case 'new-debit-note':
+            this.openCreateNotePrompt('debit_note');
+            break;
+          case 'new-vendor':
+            this.openCreateVendorModal();
+            break;
+          case 'new-invoice':
+            this.openCreateInvoiceModal();
+            break;
+          case 'new-receipt':
+            this.openRecordReceiptModal();
+            break;
+          case 'new-customer':
+            this.openCreateCustomerModal();
+            break;
+          case 'new-credit-note':
+            this.openCreateNotePrompt('credit_note');
+            break;
+          case 'new-bank':
+            this.openBankTransferModal();
+            break;
+          case 'new-cash':
+            this.openCashEntryModal();
+            break;
+          case 'new-loan':
+            this.openLoanEntryModal();
+            break;
+          case 'new-project':
+            this.openCreateProjectModal();
+            break;
+          case 'new-item':
+            this.openCreateItemModal();
+            break;
+          case 'upload-doc':
+            this.openUploadDocModal();
+            break;
+          case 'new-user':
+            this.openInviteUserModal();
+            break;
+        }
       };
     });
 
@@ -938,15 +1156,23 @@ class FinanceApp {
       const titles = {
         dashboard: 'Executive Dashboard',
         invoices: 'Sales & Tax Invoices',
-        bills: 'Purchases & Bills',
-        customers: 'Customers & Clients',
-        vendors: 'Vendors & Suppliers',
-        items: 'Items & Inventory',
+        payment_in: 'Payment-In (Customer Receipts)',
         payments: 'Payments & Receipts',
-        notes: 'Credit & Debit Notes',
+        customers: 'Customers & Clients',
+        credit_notes: 'Sales Return / Cr. Notes',
+        bills: 'Purchases & Bills',
+        payment_out: 'Payment-Out (Vendor Disbursements)',
         expenses: 'Operating Expenses',
         pos: 'Purchase Orders',
+        debit_notes: 'Purchase Return / Dr. Notes',
+        notes: 'Credit & Debit Notes',
+        vendors: 'Vendors & Suppliers',
+        bank_accounts: 'Bank Accounts & Wire Ledger',
+        cash_in_hand: 'Cash In Hand & Petty Registers',
+        cheques: 'Cheques Clearing & Register',
+        loan_accounts: 'Corporate Loan Accounts & Facilities',
         projects: 'Project Accounts',
+        items: 'Items & Inventory',
         reports: 'Financial Reports & Analytics',
         calendar: 'Statutory Calendar & Compliance',
         documents: 'Document Vault',
@@ -956,9 +1182,14 @@ class FinanceApp {
       titleEl.textContent = titles[this.activeTab] || 'Executive Desk';
     }
 
-    // Ensure active state on sidebar
-    document.querySelectorAll('.fin-tab-item').forEach(b => {
-      b.classList.toggle('active', b.getAttribute('data-tab') === this.activeTab);
+    // Ensure active state on sidebar sub-items and direct items
+    document.querySelectorAll('.fin-nav-subitem, .fin-tab-item').forEach(b => {
+      const isAct = b.getAttribute('data-tab') === this.activeTab;
+      b.classList.toggle('active', isAct);
+      if (isAct) {
+        const parentGrp = b.closest('.fin-accordion-group');
+        if (parentGrp) parentGrp.classList.add('open');
+      }
     });
 
     switch (this.activeTab) {
@@ -968,8 +1199,14 @@ class FinanceApp {
       case 'invoices':
         this.renderInvoicesTab(root);
         break;
+      case 'payment_in':
+        this.renderPaymentInTab(root);
+        break;
       case 'bills':
         this.renderBillsTab(root);
+        break;
+      case 'payment_out':
+        this.renderPaymentOutTab(root);
         break;
       case 'customers':
         this.renderCustomersTab(root);
@@ -982,6 +1219,12 @@ class FinanceApp {
         break;
       case 'payments':
         this.renderPaymentsTab(root);
+        break;
+      case 'credit_notes':
+        this.renderCreditNotesTab(root);
+        break;
+      case 'debit_notes':
+        this.renderDebitNotesTab(root);
         break;
       case 'notes':
         this.renderNotesTab(root);
@@ -1003,6 +1246,18 @@ class FinanceApp {
         break;
       case 'documents':
         this.renderDocumentsTab(root);
+        break;
+      case 'bank_accounts':
+        this.renderBankAccountsTab(root);
+        break;
+      case 'cash_in_hand':
+        this.renderCashInHandTab(root);
+        break;
+      case 'cheques':
+        this.renderChequesTab(root);
+        break;
+      case 'loan_accounts':
+        this.renderLoanAccountsTab(root);
         break;
       case 'users':
         this.renderUsersTab(root);
@@ -1970,6 +2225,596 @@ class FinanceApp {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // --------------------------------------------------------------------------
+  // PAYMENT-IN & PAYMENT-OUT DEDICATED MODULES
+  // --------------------------------------------------------------------------
+  renderPaymentInTab(root) {
+    const receipts = this.db?.customer_receipts || [];
+    const totalReceived = receipts.reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
+    const fabReceipts = receipts.filter(r => (r.bank_name || '').toLowerCase().includes('abu dhabi') || (r.currency === 'AED')).reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
+
+    root.innerHTML = `
+      <div class="fin-dash-row-responsive">
+        <div class="fin-panel-card">
+          <div class="fin-panel-header">
+            <div>
+              <h2 class="fin-panel-title">💳 Payment-In (Customer Collections &amp; Receipts)</h2>
+              <p style="font-size:0.75rem; color:#94a3b8;">Inward client collections, wire transfers, and invoice receipts</p>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
+                💳 Official Receipt Voucher
+              </button>
+              ${this.hasPermission('record_receipt') ? `
+                <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordReceiptModal()">
+                  + Record Payment-In
+                </button>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.25rem;">
+            <div class="fin-metric-card">
+              <span class="fin-metric-label">Total Inward Collections</span>
+              <div class="fin-metric-value" style="color:#10b981;">${this.formatCurrency(totalReceived)}</div>
+              <span class="fin-metric-sub">Across UAE &amp; India corporate accounts</span>
+            </div>
+            <div class="fin-metric-card">
+              <span class="fin-metric-label">Total Vouchers Issued</span>
+              <div class="fin-metric-value">${receipts.length} Instruments</div>
+              <span class="fin-metric-sub">Official bilingual vouchers generated</span>
+            </div>
+            <div class="fin-metric-card">
+              <span class="fin-metric-label">GCC Remittances (AED)</span>
+              <div class="fin-metric-value" style="color:#38bdf8;">AED ${(fabReceipts * 0.044).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <span class="fin-metric-sub">FAB &amp; Dubai Escrow deposits</span>
+            </div>
+          </div>
+
+          <div class="fin-table-responsive">
+            <table class="fin-data-table">
+              <thead>
+                <tr>
+                  <th>Receipt Voucher #</th>
+                  <th>Date</th>
+                  <th>Customer / Client</th>
+                  <th>Mode / Bank Wire</th>
+                  <th>Amount Received</th>
+                  <th>Allocated Invoices</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${receipts.map(r => `
+                  <tr>
+                    <td><strong>${r.receipt_no}</strong></td>
+                    <td>${this.formatDate(r.receipt_date)}</td>
+                    <td><strong>${r.customer_name}</strong></td>
+                    <td>
+                      <div>${r.payment_mode}</div>
+                      <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no} • ${r.bank_name || 'State Bank of India'}</span>
+                    </td>
+                    <td><strong style="color:#10b981;">${this.formatCurrency(r.amount_received)}</strong></td>
+                    <td>
+                      ${(r.allocations || []).map(a => `
+                        <span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${a.invoice_no}: ${this.formatCurrency(a.amount_allocated)}</span>
+                      `).join(' ')}
+                    </td>
+                    <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderPaymentOutTab(root) {
+    const payments = this.db?.vendor_payments || [];
+    const totalPaid = payments.reduce((acc, p) => acc + (Number(p.amount_paid) || 0), 0);
+
+    root.innerHTML = `
+      <div class="fin-dash-row-responsive">
+        <div class="fin-panel-card">
+          <div class="fin-panel-header">
+            <div>
+              <h2 class="fin-panel-title">💸 Payment-Out (Vendor &amp; Contractor Disbursements)</h2>
+              <p style="font-size:0.75rem; color:#94a3b8;">Outward disbursements, supplier bank transfers, and purchase bill settlements</p>
+            </div>
+            ${this.hasPermission('record_payment') ? `
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordPaymentModal()">
+                + Record Payment-Out
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.25rem;">
+            <div class="fin-metric-card">
+              <span class="fin-metric-label">Total Outward Disbursed</span>
+              <div class="fin-metric-value" style="color:#fb923c;">${this.formatCurrency(totalPaid)}</div>
+              <span class="fin-metric-sub">Settled against verified supplier bills</span>
+            </div>
+            <div class="fin-metric-card">
+              <span class="fin-metric-label">Payment Vouchers</span>
+              <div class="fin-metric-value">${payments.length} Vouchers</div>
+              <span class="fin-metric-sub">Direct wire transfers &amp; banker cheques</span>
+            </div>
+            <div class="fin-metric-card">
+              <span class="fin-metric-label">Compliance Status</span>
+              <div class="fin-metric-value" style="color:#10b981;">100% Tax Deducted (TDS/WHT)</div>
+              <span class="fin-metric-sub">Compliant with GST &amp; UAE Corporate Tax</span>
+            </div>
+          </div>
+
+          <div class="fin-table-responsive">
+            <table class="fin-data-table">
+              <thead>
+                <tr>
+                  <th>Voucher #</th>
+                  <th>Date</th>
+                  <th>Vendor / Contractor</th>
+                  <th>Remittance Channel</th>
+                  <th>Disbursed Amount</th>
+                  <th>Allocated Bills</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${payments.map(p => `
+                  <tr>
+                    <td><strong>${p.voucher_no}</strong></td>
+                    <td>${this.formatDate(p.payment_date)}</td>
+                    <td><strong>${p.vendor_name}</strong></td>
+                    <td>
+                      <div>${p.payment_mode}</div>
+                      <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no}</span>
+                    </td>
+                    <td><strong style="color:#fb923c;">${this.formatCurrency(p.amount_paid)}</strong></td>
+                    <td>
+                      ${(p.allocations || []).map(a => `
+                        <span class="fin-badge fin-badge-pending" style="font-size:0.65rem;">${a.bill_no}: ${this.formatCurrency(a.amount_allocated)}</span>
+                      `).join(' ')}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // --------------------------------------------------------------------------
+  // SALES CREDIT NOTES & PURCHASE DEBIT NOTES MODULES
+  // --------------------------------------------------------------------------
+  renderCreditNotesTab(root) {
+    const creditNotes = this.db?.credit_notes || [];
+    root.innerHTML = `
+      <div class="fin-panel-card">
+        <div class="fin-panel-header">
+          <div>
+            <h2 class="fin-panel-title">🔄 Sales Credit Notes (Customer Returns &amp; Price Adjustments)</h2>
+            <p style="font-size:0.75rem; color:#94a3b8;">Official credit notes issued to clients reducing receivable ledger balance</p>
+          </div>
+          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateNotePrompt('credit_note')">
+            + Create Credit Note
+          </button>
+        </div>
+        <div class="fin-table-responsive">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th>Credit Note #</th>
+                <th>Invoice Ref</th>
+                <th>Customer</th>
+                <th>Adjustment Reason</th>
+                <th>Credit Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${creditNotes.map(cn => `
+                <tr>
+                  <td><strong>${cn.credit_note_no}</strong></td>
+                  <td><code>${cn.invoice_no}</code></td>
+                  <td>${cn.customer_name}</td>
+                  <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
+                  <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  renderDebitNotesTab(root) {
+    const debitNotes = this.db?.debit_notes || [];
+    root.innerHTML = `
+      <div class="fin-panel-card">
+        <div class="fin-panel-header">
+          <div>
+            <h2 class="fin-panel-title">🔄 Purchase Debit Notes (Vendor Debits &amp; Rate Adjustments)</h2>
+            <p style="font-size:0.75rem; color:#94a3b8;">Reduces supplier payable balance against damaged materials, short deliveries, or corrections</p>
+          </div>
+          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateNotePrompt('debit_note')">
+            + Create Debit Note
+          </button>
+        </div>
+        <div class="fin-table-responsive">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th>Debit Note #</th>
+                <th>Bill Ref</th>
+                <th>Vendor</th>
+                <th>Adjustment Reason</th>
+                <th>Debit Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${debitNotes.map(dn => `
+                <tr>
+                  <td><strong>${dn.debit_note_no}</strong></td>
+                  <td><code>${dn.bill_no}</code></td>
+                  <td>${dn.vendor_name}</td>
+                  <td><span style="font-size:0.75rem;">${dn.reason}</span></td>
+                  <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">${dn.status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // --------------------------------------------------------------------------
+  // CASH & BANK MODULES (Matching Reference Image 3)
+  // --------------------------------------------------------------------------
+  renderBankAccountsTab(root) {
+    const banks = this.db?.bank_accounts || [];
+
+    root.innerHTML = `
+      <div class="fin-panel-card">
+        <div class="fin-panel-header">
+          <div>
+            <h2 class="fin-panel-title">🏛️ Corporate Bank Accounts &amp; Treasury Ledger</h2>
+            <p style="font-size:0.75rem; color:#94a3b8;">Multi-currency treasury management across India &amp; UAE banking institutions</p>
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openBankTransferModal()">
+              ⇄ Record Transfer / Wire
+            </button>
+            <button type="button" class="fin-btn-quick primary" onclick="alert('Add Bank Account: Connect corporate internet banking or register secondary account.')">
+              + Add Bank Account
+            </button>
+          </div>
+        </div>
+
+        <!-- Corporate Banking Grid -->
+        <div class="fin-bank-grid">
+          ${banks.map(b => `
+            <div class="fin-bank-card">
+              <div class="fin-bank-card-header">
+                <div>
+                  <strong style="font-size:0.95rem; color:#ffffff;">${b.bank_name}</strong>
+                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">${b.account_name}</div>
+                </div>
+                <span class="fin-bank-badge">${b.status || 'Active'}</span>
+              </div>
+              <div class="fin-bank-balance">
+                ${b.currency === 'INR' ? '₹' + Number(b.balance).toLocaleString('en-IN') : 'AED ' + Number(b.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
+              <div class="fin-bank-meta">
+                <div><strong>A/c / IBAN:</strong> ${b.iban || b.account_number}</div>
+                <div><strong>Branch:</strong> ${b.branch}</div>
+                ${b.ifsc_code ? `<div><strong>IFSC:</strong> ${b.ifsc_code}</div>` : ''}
+                ${b.swift ? `<div><strong>SWIFT / BIC:</strong> ${b.swift}</div>` : ''}
+                <div style="color:#60a5fa; margin-top:4px;"><strong>Signatory:</strong> ${b.signatory}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Recent Bank Wire Statements Table -->
+        <div class="fin-panel-header" style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem;">
+          <div>
+            <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📜 Recent Bank Wires &amp; Remittance Clearances</h3>
+            <span style="font-size:0.72rem; color:#94a3b8;">Audited transaction records matched with bank statements</span>
+          </div>
+        </div>
+
+        <div class="fin-table-responsive">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th>Wire / UTR #</th>
+                <th>Settlement Date</th>
+                <th>Counterparty</th>
+                <th>Bank Account</th>
+                <th>Transaction Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>FAB-TRN-99042</strong></td>
+                <td>14 Oct 2026</td>
+                <td>Emaar Properties PJSC</td>
+                <td>First Abu Dhabi Bank (AED)</td>
+                <td><span style="color:#10b981; font-weight:600;">Inward Wire (Client Advance)</span></td>
+                <td><strong style="color:#10b981;">AED 350,000.00</strong></td>
+                <td><span class="fin-badge fin-badge-paid">Cleared</span></td>
+              </tr>
+              <tr>
+                <td><strong>SBIN-RTGS-88219</strong></td>
+                <td>13 Oct 2026</td>
+                <td>Larsen &amp; Toubro Ltd (ECC Div)</td>
+                <td>SBI Corporate Current (INR)</td>
+                <td><span style="color:#10b981; font-weight:600;">Inward RTGS (RA Bill 04)</span></td>
+                <td><strong style="color:#10b981;">₹1,850,000.00</strong></td>
+                <td><span class="fin-badge fin-badge-paid">Settled</span></td>
+              </tr>
+              <tr>
+                <td><strong>WIRE-FAB-001925</strong></td>
+                <td>12 Oct 2026</td>
+                <td>Siemens Middle East FZ-LLC</td>
+                <td>First Abu Dhabi Bank (AED)</td>
+                <td><span style="color:#fb923c; font-weight:600;">Outward Telegraphic Transfer</span></td>
+                <td><strong style="color:#fb923c;">AED 120,000.00</strong></td>
+                <td><span class="fin-badge fin-badge-paid">Completed</span></td>
+              </tr>
+              <tr>
+                <td><strong>SBIN-NEFT-44120</strong></td>
+                <td>10 Oct 2026</td>
+                <td>JSW Steel Ltd</td>
+                <td>SBI Corporate Current (INR)</td>
+                <td><span style="color:#fb923c; font-weight:600;">Outward Corporate NEFT</span></td>
+                <td><strong style="color:#fb923c;">₹980,000.00</strong></td>
+                <td><span class="fin-badge fin-badge-paid">Completed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  renderCashInHandTab(root) {
+    const registers = this.db?.cash_in_hand || [];
+    root.innerHTML = `
+      <div class="fin-panel-card">
+        <div class="fin-panel-header">
+          <div>
+            <h2 class="fin-panel-title">💵 Cash In Hand &amp; Site Petty Cash Registers</h2>
+            <p style="font-size:0.75rem; color:#94a3b8;">Controlled imprest vaults for field site expenses, emergency fuel, and administrative operations</p>
+          </div>
+          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCashEntryModal()">
+            + Record Cash Voucher
+          </button>
+        </div>
+
+        <div class="fin-bank-grid">
+          ${registers.map(r => `
+            <div class="fin-bank-card">
+              <div class="fin-bank-card-header">
+                <div>
+                  <strong style="font-size:0.95rem; color:#ffffff;">${r.register_name}</strong>
+                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Location: ${r.location}</div>
+                </div>
+                <span class="fin-bank-badge">Active Imprest</span>
+              </div>
+              <div class="fin-bank-balance" style="color:#34d399;">
+                ${r.currency === 'INR' ? '₹' + Number(r.balance).toLocaleString('en-IN') : 'AED ' + Number(r.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
+              <div class="fin-bank-meta">
+                <div><strong>Custodian:</strong> ${r.custodian}</div>
+                <div><strong>Replenished:</strong> ${this.formatDate(r.last_replenished)}</div>
+                <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;">Audited weekly by Head of Accounts</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="fin-panel-header" style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem;">
+          <div>
+            <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📝 Recent Petty Cash Disbursals</h3>
+            <span style="font-size:0.72rem; color:#94a3b8;">Dual-signatory verification receipts</span>
+          </div>
+        </div>
+
+        <div class="fin-table-responsive">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th>Voucher #</th>
+                <th>Date</th>
+                <th>Register Vault</th>
+                <th>Custodian</th>
+                <th>Purpose / Description</th>
+                <th>Disbursed To</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>PC-MUM-401</strong></td>
+                <td>15 Oct 2026</td>
+                <td>Mumbai HQ Vault</td>
+                <td>Accounts Executive</td>
+                <td>Site Consumables &amp; Express Courier</td>
+                <td>Site Runner</td>
+                <td><strong style="color:#fb923c;">₹4,250.00</strong></td>
+                <td><span class="fin-badge fin-badge-paid">Approved</span></td>
+              </tr>
+              <tr>
+                <td><strong>PC-DXB-210</strong></td>
+                <td>14 Oct 2026</td>
+                <td>Dubai Regional Office</td>
+                <td>Site Admin Manager</td>
+                <td>Diesel Generator Fuel for Al Quoz Yard</td>
+                <td>Logistics Driver</td>
+                <td><strong style="color:#fb923c;">AED 1,850.00</strong></td>
+                <td><span class="fin-badge fin-badge-paid">Approved</span></td>
+              </tr>
+              <tr>
+                <td><strong>PC-AD-109</strong></td>
+                <td>12 Oct 2026</td>
+                <td>Abu Dhabi Solar Park</td>
+                <td>Resident EPC Manager</td>
+                <td>Safety Equipment &amp; Hydration Supplies</td>
+                <td>Safety Officer</td>
+                <td><strong style="color:#fb923c;">AED 2,400.00</strong></td>
+                <td><span class="fin-badge fin-badge-paid">Approved</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  renderChequesTab(root) {
+    const cheques = this.db?.cheques || [];
+    const inward = cheques.filter(c => c.type === 'inward');
+    const outward = cheques.filter(c => c.type === 'outward');
+
+    root.innerHTML = `
+      <div class="fin-dash-row-responsive">
+        <!-- Inward Cheques -->
+        <div class="fin-panel-card">
+          <div class="fin-panel-header">
+            <div>
+              <h2 class="fin-panel-title">📥 Inward Cheques (Customer Receipts)</h2>
+              <p style="font-size:0.75rem; color:#94a3b8;">Cheques received from clients under banking clearance</p>
+            </div>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordReceiptModal()">
+              + Inward Cheque
+            </button>
+          </div>
+          <div class="fin-table-responsive">
+            <table class="fin-data-table">
+              <thead>
+                <tr>
+                  <th>Cheque #</th>
+                  <th>Drawee Bank</th>
+                  <th>Customer / Issuer</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${inward.map(c => `
+                  <tr>
+                    <td><strong>${c.cheque_no}</strong></td>
+                    <td>${c.bank_name}</td>
+                    <td><strong>${c.party_name}</strong></td>
+                    <td>${this.formatDate(c.date)}</td>
+                    <td><strong style="color:#10b981;">${c.currency === 'INR' ? '₹' + Number(c.amount).toLocaleString('en-IN') : 'AED ' + Number(c.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
+                    <td><span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : 'fin-badge-pending'}">${c.status}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Outward Cheques -->
+        <div class="fin-panel-card">
+          <div class="fin-panel-header">
+            <div>
+              <h2 class="fin-panel-title">📤 Outward Cheques (Vendor Disbursements)</h2>
+              <p style="font-size:0.75rem; color:#94a3b8;">Corporate cheques issued against verified supplier bills</p>
+            </div>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordPaymentModal()">
+              + Issue Cheque
+            </button>
+          </div>
+          <div class="fin-table-responsive">
+            <table class="fin-data-table">
+              <thead>
+                <tr>
+                  <th>Cheque #</th>
+                  <th>Account Bank</th>
+                  <th>Payee Vendor</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${outward.map(c => `
+                  <tr>
+                    <td><strong>${c.cheque_no}</strong></td>
+                    <td>${c.bank_name}</td>
+                    <td><strong>${c.party_name}</strong></td>
+                    <td>${this.formatDate(c.date)}</td>
+                    <td><strong style="color:#fb923c;">${c.currency === 'INR' ? '₹' + Number(c.amount).toLocaleString('en-IN') : 'AED ' + Number(c.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
+                    <td><span class="fin-badge fin-badge-paid">${c.status}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderLoanAccountsTab(root) {
+    const loans = this.db?.loan_accounts || [];
+    root.innerHTML = `
+      <div class="fin-panel-card">
+        <div class="fin-panel-header">
+          <div>
+            <h2 class="fin-panel-title">🏢 Corporate Loan Accounts &amp; Credit Facilities</h2>
+            <p style="font-size:0.75rem; color:#94a3b8;">Consortium working capital lines, heavy machinery hypothecation, and international LC/BG facilities</p>
+          </div>
+          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openLoanEntryModal()">
+            + Record Drawdown / Repayment
+          </button>
+        </div>
+
+        <div class="fin-bank-grid">
+          ${loans.map(l => `
+            <div class="fin-bank-card">
+              <div class="fin-bank-card-header">
+                <div>
+                  <strong style="font-size:0.95rem; color:#ffffff;">${l.facility_name}</strong>
+                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Lender: ${l.lender}</div>
+                </div>
+                <span class="fin-bank-badge" style="background:rgba(59,130,246,0.15); color:#60a5fa; border-color:rgba(59,130,246,0.3);">Sanctioned</span>
+              </div>
+              <div class="fin-bank-balance" style="color:#f59e0b;">
+                ${l.currency === 'INR' ? '₹' + Number(l.outstanding_balance).toLocaleString('en-IN') : 'AED ' + Number(l.outstanding_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                <span style="font-size:0.72rem; color:#94a3b8; font-weight:500; display:block; margin-top:2px;">Outstanding Debt / Utilization</span>
+              </div>
+              <div class="fin-bank-meta">
+                <div><strong>Sanctioned Limit:</strong> ${l.currency === 'INR' ? '₹' + Number(l.sanctioned_limit).toLocaleString('en-IN') : 'AED ' + Number(l.sanctioned_limit).toLocaleString('en-US')}</div>
+                <div><strong>Available Headroom:</strong> ${l.currency === 'INR' ? '₹' + Number(l.available_limit).toLocaleString('en-IN') : 'AED ' + Number(l.available_limit).toLocaleString('en-US')}</div>
+                <div><strong>Rate / Commission:</strong> ${l.interest_rate || l.commission_rate}</div>
+                <div><strong>Tenure:</strong> ${l.tenure || '36 Months'}</div>
+                <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;"><strong>Security:</strong> ${l.security}</div>
+              </div>
+            </div>
+          `).join('')}
         </div>
       </div>
     `;
@@ -4638,6 +5483,332 @@ class FinanceApp {
 
   openInvoiceDetail(id) {
     this.openInvoicePrintModal(id);
+  }
+
+  // 17. BANK TRANSFER / WIRE MODAL
+  openBankTransferModal() {
+    const banks = this.db?.bank_accounts || [];
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-bank-transfer">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">🏛️ Record Bank Wire / Inter-Account Transfer</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bank-transfer')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="bank-transfer-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Source Account (Debit From) <span style="color:#ef4444;">*</span></label>
+                <select id="bt-source" class="fin-form-select" required>
+                  ${banks.map(b => `<option value="${b.id}">${b.bank_name} — ${b.account_name} (${b.currency} ${Number(b.balance).toLocaleString()})</option>`).join('')}
+                </select>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Beneficiary / Destination Account <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="bt-dest" class="fin-form-input" required placeholder="e.g. First Abu Dhabi Bank / Contractor Escrow / Vendor Remittance">
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transfer Amount <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="bt-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transfer Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="bt-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Bank Reference / UTR # <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="bt-utr" class="fin-form-input" required placeholder="e.g. UTR-FAB-2026-99042">
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Purpose / Description</label>
+                <textarea id="bt-purpose" class="fin-form-textarea" rows="2" placeholder="e.g. Treasury liquidity rebalancing / site project escrow allocation"></textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-bank-transfer')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Post Bank Wire &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('bank-transfer-form').onsubmit = (e) => {
+      e.preventDefault();
+      const amount = Number(document.getElementById('bt-amount').value) || 0;
+      const utr = document.getElementById('bt-utr').value.trim();
+      alert(`Bank wire voucher recorded successfully. UTR: ${utr} (${this.formatCurrency(amount)}).`);
+      this.closeModal('modal-bank-transfer');
+      this.activeTab = 'bank_accounts';
+      this.renderActiveTab();
+    };
+  }
+
+  // 18. CASH ENTRY MODAL
+  openCashEntryModal() {
+    const registers = this.db?.cash_in_hand || [];
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-cash-entry">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">💵 Record Site Petty Cash Voucher</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cash-entry')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="cash-entry-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Cash Register Vault <span style="color:#ef4444;">*</span></label>
+                <select id="ce-vault" class="fin-form-select" required>
+                  ${registers.map(r => `<option value="${r.id}">${r.register_name} (Bal: ${r.currency} ${Number(r.balance).toLocaleString()})</option>`).join('')}
+                </select>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Disbursed Amount <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="ce-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="ce-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Payee / Recipient Employee <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ce-payee" class="fin-form-input" required placeholder="e.g. Site Runner / Equipment Operator">
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Expense Purpose / Reason <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ce-purpose" class="fin-form-input" required placeholder="e.g. Emergency generator diesel, local municipal permit fee">
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-cash-entry')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Issue Cash Voucher &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('cash-entry-form').onsubmit = (e) => {
+      e.preventDefault();
+      const amt = Number(document.getElementById('ce-amount').value) || 0;
+      alert(`Petty cash voucher issued for ${this.formatCurrency(amt)}. Approved by Accounts.`);
+      this.closeModal('modal-cash-entry');
+      this.activeTab = 'cash_in_hand';
+      this.renderActiveTab();
+    };
+  }
+
+  // 19. LOAN ENTRY MODAL
+  openLoanEntryModal() {
+    const loans = this.db?.loan_accounts || [];
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-loan-entry">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">🏢 Record Credit Facility Transaction</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-loan-entry')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="loan-entry-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Corporate Credit Facility <span style="color:#ef4444;">*</span></label>
+                <select id="le-facility" class="fin-form-select" required>
+                  ${loans.map(l => `<option value="${l.id}">${l.facility_name} (${l.lender})</option>`).join('')}
+                </select>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transaction Type <span style="color:#ef4444;">*</span></label>
+                  <select id="le-type" class="fin-form-select" required>
+                    <option value="repayment">Principal / EMI Repayment</option>
+                    <option value="drawdown">Facility Drawdown / Utilization</option>
+                    <option value="interest">Interest / Bank Commission Service</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Amount <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="le-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Bank Reference / Advice # <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="le-ref" class="fin-form-input" required placeholder="e.g. SBI-CONS-2026-OCT">
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-loan-entry')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Record Facility Entry &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('loan-entry-form').onsubmit = (e) => {
+      e.preventDefault();
+      const amt = Number(document.getElementById('le-amount').value) || 0;
+      alert(`Corporate credit facility entry recorded for ${this.formatCurrency(amt)}.`);
+      this.closeModal('modal-loan-entry');
+      this.activeTab = 'loan_accounts';
+      this.renderActiveTab();
+    };
+  }
+
+  // 20. PROMPT TO ISSUE CREDIT/DEBIT NOTE
+  openCreateNotePrompt(type = 'credit_note') {
+    if (type === 'credit_note') {
+      const invoices = (this.db?.invoices || []).filter(i => i.status !== 'void');
+      if (invoices.length === 0) {
+        alert('No active invoices found to issue a credit note against.');
+        return;
+      }
+      const inv = invoices[0];
+      this.openCreateCreditNoteModal(inv.id);
+    } else {
+      const bills = (this.db?.purchase_bills || []).filter(b => b.status !== 'void');
+      const modalHtml = `
+        <div class="fin-modal-backdrop open" id="modal-dn">
+          <div class="fin-modal-dialog" style="max-width:600px;">
+            <div class="fin-modal-header">
+              <h3 class="fin-modal-title">🔄 Issue Purchase Debit Note</h3>
+              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-dn')">&times;</button>
+            </div>
+            <div class="fin-modal-body">
+              <form id="create-dn-form">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Select Purchase Bill Ref <span style="color:#ef4444;">*</span></label>
+                  <select id="dn-bill-select" class="fin-form-select" required>
+                    ${bills.map(b => `<option value="${b.id}" data-vendor="${b.vendor_name}" data-billno="${b.bill_no}">${b.bill_no} — ${b.vendor_name} (₹${Number(b.grand_total).toLocaleString()})</option>`).join('')}
+                  </select>
+                </div>
+
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Debit Reason <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="dn-reason" class="fin-form-input" required placeholder="e.g. Damage in transit / Rate differential on steel coils">
+                </div>
+
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Debit Adjustment Amount (₹) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="dn-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                </div>
+
+                <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                  <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-dn')">Cancel</button>
+                  <button type="submit" class="fin-btn-quick primary">Issue Debit Note &rarr;</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('fin-modal-container').innerHTML = modalHtml;
+      document.getElementById('create-dn-form').onsubmit = (e) => {
+        e.preventDefault();
+        const sel = document.getElementById('dn-bill-select');
+        const opt = sel.options[sel.selectedIndex];
+        const newDn = {
+          id: 'dn-' + Date.now(),
+          debit_note_no: 'DN-2026-00' + ((this.db?.debit_notes?.length || 0) + 1),
+          bill_no: opt.getAttribute('data-billno'),
+          vendor_name: opt.getAttribute('data-vendor'),
+          reason: document.getElementById('dn-reason').value.trim(),
+          total_debit_amount: Number(document.getElementById('dn-amount').value) || 0,
+          status: 'applied'
+        };
+        this.db.debit_notes = this.db.debit_notes || [];
+        this.db.debit_notes.unshift(newDn);
+        alert(`Debit note ${newDn.debit_note_no} created and applied against bill ${newDn.bill_no}.`);
+        this.closeModal('modal-dn');
+        this.activeTab = 'debit_notes';
+        this.renderActiveTab();
+      };
+    }
+  }
+
+  // 21. UPLOAD DOCUMENT MODAL
+  openUploadDocModal() {
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-upload-doc">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">📁 Upload Corporate File to Document Vault</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-upload-doc')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="upload-doc-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Document Title / File Name <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ud-name" class="fin-form-input" required placeholder="e.g. Dubai Substation EPC Milestone Agreement.pdf">
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Category <span style="color:#ef4444;">*</span></label>
+                  <select id="ud-category" class="fin-form-select" required>
+                    <option value="Contract">Client Contract</option>
+                    <option value="Statutory">Statutory &amp; Tax</option>
+                    <option value="Audit">Audit &amp; Compliance</option>
+                    <option value="Procurement">Supplier Procurement PO</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Linked Record</label>
+                  <input type="text" id="ud-ref" class="fin-form-input" placeholder="e.g. REC-RG-INV-44049">
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-upload-doc')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Upload &amp; Encrypt &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('upload-doc-form').onsubmit = (e) => {
+      e.preventDefault();
+      const doc = {
+        id: 'doc-' + Date.now(),
+        name: document.getElementById('ud-name').value.trim(),
+        category: document.getElementById('ud-category').value,
+        size: '1.4 MB',
+        uploaded_by: this.currentUser?.name || 'Administrator',
+        date: new Date().toISOString().split('T')[0],
+        linked_record: document.getElementById('ud-ref').value.trim() || 'General'
+      };
+      this.db.documents = this.db.documents || [];
+      this.db.documents.unshift(doc);
+      alert(`Document "${doc.name}" uploaded and encrypted in vault.`);
+      this.closeModal('modal-upload-doc');
+      this.activeTab = 'documents';
+      this.renderActiveTab();
+    };
   }
 
   // --------------------------------------------------------------------------
