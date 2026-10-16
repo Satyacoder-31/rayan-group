@@ -209,11 +209,12 @@ class FinanceApp {
     const headerTriggers = document.querySelectorAll('.btn-finance-portal-trigger, #header-finance-login-btn');
     headerTriggers.forEach(btn => {
       if (this.currentUser) {
+        const shortRole = this.currentUser.role_label ? (this.currentUser.role_label.length > 12 ? 'ACTIVE' : this.currentUser.role_label) : 'ACTIVE';
         btn.innerHTML = `
           <span class="live-pulse-dot"></span>
-          <span>Accounts Desk • ${this.currentUser.role_label || 'Authorized'}</span>
+          <span>ACCOUNTS • ${shortRole}</span>
         `;
-        btn.title = `Logged in as ${this.currentUser.name} (${this.currentUser.email})`;
+        btn.title = `Logged in as ${this.currentUser.name} (${this.currentUser.email}) - Open Financial Desk`;
       } else {
         btn.innerHTML = `
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -246,7 +247,7 @@ class FinanceApp {
           <form id="fin-login-form">
             <div class="fin-form-group">
               <label class="fin-form-label" for="fin-login-email">Corporate Email / Username <span style="color:#ef4444;">*</span></label>
-              <input type="email" id="fin-login-email" class="fin-form-input" placeholder="e.g. superadmin@rayangroup.com" required autocomplete="username">
+              <input type="email" id="fin-login-email" class="fin-form-input" placeholder="name@rayangroup.com" required autocomplete="username">
             </div>
 
             <div class="fin-form-group">
@@ -272,71 +273,10 @@ class FinanceApp {
             </button>
           </form>
 
-          <!-- Pre-Configured Credential Quick Reference (Type or Click-to-Fill per instructions) -->
-          <div class="fin-cred-reference-box">
-            <div class="fin-cred-header">
-              <div class="fin-cred-title">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <span>Authorized Personnel Credentials Reference</span>
-              </div>
-              <span style="font-size:0.68rem; color:#94a3b8;">Click card to pre-fill inputs</span>
-            </div>
-            
-            <div class="fin-cred-grid">
-              <div class="fin-cred-pill" data-email="superadmin@rayangroup.com" data-pwd="Rayan@Admin2026">
-                <div class="fin-cred-pill-role">
-                  <span>Super Administrator</span>
-                  <span style="color:#10b981;">Full Access</span>
-                </div>
-                <div class="fin-cred-pill-email">superadmin@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Rayan@Admin2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="finance.admin@rayangroup.com" data-pwd="Finance@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Finance Admin (CFO)</span>
-                  <span style="color:#38bdf8;">Approvals</span>
-                </div>
-                <div class="fin-cred-pill-email">finance.admin@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Finance@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="accountant@rayangroup.com" data-pwd="Accounts@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Senior Accountant</span>
-                  <span style="color:#f59e0b;">Billing</span>
-                </div>
-                <div class="fin-cred-pill-email">accountant@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Accounts@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="pm.tariq@rayangroup.com" data-pwd="Project@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Project Manager</span>
-                  <span style="color:#a855f7;">Projects</span>
-                </div>
-                <div class="fin-cred-pill-email">pm.tariq@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Project@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="employee.rahul@rayangroup.com" data-pwd="Staff@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Site Engineer</span>
-                  <span style="color:#94a3b8;">Claims</span>
-                </div>
-                <div class="fin-cred-pill-email">employee.rahul@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Staff@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="management@rayangroup.com" data-pwd="Exec@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Management (Read-Only)</span>
-                  <span style="color:#64748b;">Reports</span>
-                </div>
-                <div class="fin-cred-pill-email">management@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Exec@Rayan2026</div>
-              </div>
-            </div>
+          <!-- Secure Corporate Notice (No Credentials Visible on UI) -->
+          <div class="fin-login-footer-security">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>256-Bit SSL Encrypted Corporate Session • Authorized Financial Personnel Only</span>
           </div>
         </div>
       </div>
@@ -364,16 +304,6 @@ class FinanceApp {
         }
       };
     }
-
-    // Credential card click to pre-fill inputs
-    document.querySelectorAll('.fin-cred-pill').forEach(pill => {
-      pill.onclick = () => {
-        emailInput.value = pill.getAttribute('data-email');
-        pwdInput.value = pill.getAttribute('data-pwd');
-        if (errorBox) errorBox.style.display = 'none';
-        pwdInput.focus();
-      };
-    });
 
     // Form submission
     if (form) {

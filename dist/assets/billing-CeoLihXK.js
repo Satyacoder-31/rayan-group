@@ -1,7 +1,7 @@
-import"./live-overrides-Bz1C8oj0.js";import"./main-CAb2rRfb.js";var e=class{constructor(){this.db=null,this.currentUser=null,this.activeCompanyId=`ashaz-eng-in`,this.activePeriod=`fy-2025-26`,this.activeCurrency=`INR`,this.activeTab=`dashboard`,this.currencyRates={INR:1,AED:.044,USD:.012},this.currencySymbols={INR:`₹`,AED:`AED `,USD:`$`}}async init(){this.initSession(),await this.loadDatabase(),this.bindGlobalEvents(),this.renderHeaderStatus(),this.currentUser?this.showAppView():this.showAuthView()}initSession(){try{let e=localStorage.getItem(`rayan_fin_user`);e&&(this.currentUser=JSON.parse(e))}catch(e){console.warn(`Could not parse saved finance user:`,e)}}saveSession(e){this.currentUser=e,localStorage.setItem(`rayan_fin_user`,JSON.stringify(e)),this.renderHeaderStatus()}clearSession(){this.currentUser=null,localStorage.removeItem(`rayan_fin_user`),this.renderHeaderStatus(),this.showAuthView()}hasPermission(e){if(!this.currentUser)return!1;let t=this.currentUser.role;return t===`super_admin`?!0:t===`finance_admin`?![`manage_companies`,`delete_user`].includes(e):t===`accountant`?[`view_dashboard`,`create_invoice`,`edit_draft_invoice`,`print_invoice`,`create_bill`,`record_receipt`,`record_payment`,`create_customer`,`create_vendor`,`create_item`,`view_reports`,`create_credit_note`,`create_debit_note`].includes(e):t===`project_manager`?[`view_dashboard`,`view_projects`,`submit_expense`,`view_pos`,`create_po`].includes(e):t===`employee`?[`view_dashboard`,`submit_expense`,`view_own_expenses`].includes(e):t===`management_readonly`&&[`view_dashboard`,`view_reports`,`export_reports`,`view_projects`,`view_invoices`,`view_bills`].includes(e)}async loadDatabase(){try{let e=await fetch(`/api/finance?action=get_state`);if(e.ok){let t=await e.json();if(t.data){this.db=t.data,localStorage.setItem(`rayan_fin_db_cache`,JSON.stringify(this.db));return}}}catch(e){console.warn(`Server API not reachable; checking local cache or seed`,e)}let e=localStorage.getItem(`rayan_fin_db_cache`);if(e)try{this.db=JSON.parse(e);return}catch{}window.__RAYAN_FINANCE_SEED__&&(this.db=JSON.parse(JSON.stringify(window.__RAYAN_FINANCE_SEED__)))}async syncApi(e,t={}){let n={action:e,...t,user_name:this.currentUser?.name,user_role:this.currentUser?.role,user_email:this.currentUser?.email};try{let e=await fetch(`/api/finance`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify(n)});if(e.ok){let t=await e.json();if(t.data)return this.db=t.data,localStorage.setItem(`rayan_fin_db_cache`,JSON.stringify(this.db)),t}}catch(e){console.warn(`API sync offline fallback:`,e)}return localStorage.setItem(`rayan_fin_db_cache`,JSON.stringify(this.db)),{success:!0,localOnly:!0,data:this.db}}formatCurrency(e,t=!0){let n=(Number(e)||0)*(this.currencyRates[this.activeCurrency]||1),r=t?this.currencySymbols[this.activeCurrency]||`₹`:``;if(this.activeCurrency===`INR`){let e=new Intl.NumberFormat(`en-IN`,{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);return r?`${r}${e}`:e}let i=new Intl.NumberFormat(`en-US`,{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);return r?`${r}${i}`:i}formatDate(e){if(!e)return`—`;try{return new Date(e).toLocaleDateString(`en-IN`,{day:`2-digit`,month:`short`,year:`numeric`})}catch{return e}}renderHeaderStatus(){document.querySelectorAll(`.header-top-link-finance`).forEach(e=>{e.innerHTML=this.currentUser?`💼 Finance (${this.currentUser.name.split(` `)[0]})`:`🔒 Accounts Login`}),document.querySelectorAll(`.btn-finance-portal-trigger, #header-finance-login-btn`).forEach(e=>{this.currentUser?(e.innerHTML=`
+import"./live-overrides-Bz1C8oj0.js";import"./main-CSxISHdW.js";var e=class{constructor(){this.db=null,this.currentUser=null,this.activeCompanyId=`ashaz-eng-in`,this.activePeriod=`fy-2025-26`,this.activeCurrency=`INR`,this.activeTab=`dashboard`,this.currencyRates={INR:1,AED:.044,USD:.012},this.currencySymbols={INR:`₹`,AED:`AED `,USD:`$`}}async init(){this.initSession(),await this.loadDatabase(),this.bindGlobalEvents(),this.renderHeaderStatus(),this.currentUser?this.showAppView():this.showAuthView()}initSession(){try{let e=localStorage.getItem(`rayan_fin_user`);e&&(this.currentUser=JSON.parse(e))}catch(e){console.warn(`Could not parse saved finance user:`,e)}}saveSession(e){this.currentUser=e,localStorage.setItem(`rayan_fin_user`,JSON.stringify(e)),this.renderHeaderStatus()}clearSession(){this.currentUser=null,localStorage.removeItem(`rayan_fin_user`),this.renderHeaderStatus(),this.showAuthView()}hasPermission(e){if(!this.currentUser)return!1;let t=this.currentUser.role;return t===`super_admin`?!0:t===`finance_admin`?![`manage_companies`,`delete_user`].includes(e):t===`accountant`?[`view_dashboard`,`create_invoice`,`edit_draft_invoice`,`print_invoice`,`create_bill`,`record_receipt`,`record_payment`,`create_customer`,`create_vendor`,`create_item`,`view_reports`,`create_credit_note`,`create_debit_note`].includes(e):t===`project_manager`?[`view_dashboard`,`view_projects`,`submit_expense`,`view_pos`,`create_po`].includes(e):t===`employee`?[`view_dashboard`,`submit_expense`,`view_own_expenses`].includes(e):t===`management_readonly`&&[`view_dashboard`,`view_reports`,`export_reports`,`view_projects`,`view_invoices`,`view_bills`].includes(e)}async loadDatabase(){try{let e=await fetch(`/api/finance?action=get_state`);if(e.ok){let t=await e.json();if(t.data){this.db=t.data,localStorage.setItem(`rayan_fin_db_cache`,JSON.stringify(this.db));return}}}catch(e){console.warn(`Server API not reachable; checking local cache or seed`,e)}let e=localStorage.getItem(`rayan_fin_db_cache`);if(e)try{this.db=JSON.parse(e);return}catch{}window.__RAYAN_FINANCE_SEED__&&(this.db=JSON.parse(JSON.stringify(window.__RAYAN_FINANCE_SEED__)))}async syncApi(e,t={}){let n={action:e,...t,user_name:this.currentUser?.name,user_role:this.currentUser?.role,user_email:this.currentUser?.email};try{let e=await fetch(`/api/finance`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify(n)});if(e.ok){let t=await e.json();if(t.data)return this.db=t.data,localStorage.setItem(`rayan_fin_db_cache`,JSON.stringify(this.db)),t}}catch(e){console.warn(`API sync offline fallback:`,e)}return localStorage.setItem(`rayan_fin_db_cache`,JSON.stringify(this.db)),{success:!0,localOnly:!0,data:this.db}}formatCurrency(e,t=!0){let n=(Number(e)||0)*(this.currencyRates[this.activeCurrency]||1),r=t?this.currencySymbols[this.activeCurrency]||`₹`:``;if(this.activeCurrency===`INR`){let e=new Intl.NumberFormat(`en-IN`,{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);return r?`${r}${e}`:e}let i=new Intl.NumberFormat(`en-US`,{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);return r?`${r}${i}`:i}formatDate(e){if(!e)return`—`;try{return new Date(e).toLocaleDateString(`en-IN`,{day:`2-digit`,month:`short`,year:`numeric`})}catch{return e}}renderHeaderStatus(){document.querySelectorAll(`.header-top-link-finance`).forEach(e=>{e.innerHTML=this.currentUser?`💼 Finance (${this.currentUser.name.split(` `)[0]})`:`🔒 Accounts Login`}),document.querySelectorAll(`.btn-finance-portal-trigger, #header-finance-login-btn`).forEach(e=>{this.currentUser?(e.innerHTML=`
           <span class="live-pulse-dot"></span>
-          <span>Accounts Desk • ${this.currentUser.role_label||`Authorized`}</span>
-        `,e.title=`Logged in as ${this.currentUser.name} (${this.currentUser.email})`):(e.innerHTML=`
+          <span>ACCOUNTS • ${this.currentUser.role_label?this.currentUser.role_label.length>12?`ACTIVE`:this.currentUser.role_label:`ACTIVE`}</span>
+        `,e.title=`Logged in as ${this.currentUser.name} (${this.currentUser.email}) - Open Financial Desk`):(e.innerHTML=`
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span>ACCOUNTS LOGIN</span>
         `,e.title=`Authorized Personnel Financial Portal Login`)})}showAuthView(){let e=document.getElementById(`finance-portal-root`);e&&(e.innerHTML=`
@@ -19,7 +19,7 @@ import"./live-overrides-Bz1C8oj0.js";import"./main-CAb2rRfb.js";var e=class{cons
           <form id="fin-login-form">
             <div class="fin-form-group">
               <label class="fin-form-label" for="fin-login-email">Corporate Email / Username <span style="color:#ef4444;">*</span></label>
-              <input type="email" id="fin-login-email" class="fin-form-input" placeholder="e.g. superadmin@rayangroup.com" required autocomplete="username">
+              <input type="email" id="fin-login-email" class="fin-form-input" placeholder="name@rayangroup.com" required autocomplete="username">
             </div>
 
             <div class="fin-form-group">
@@ -45,75 +45,14 @@ import"./live-overrides-Bz1C8oj0.js";import"./main-CAb2rRfb.js";var e=class{cons
             </button>
           </form>
 
-          <!-- Pre-Configured Credential Quick Reference (Type or Click-to-Fill per instructions) -->
-          <div class="fin-cred-reference-box">
-            <div class="fin-cred-header">
-              <div class="fin-cred-title">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <span>Authorized Personnel Credentials Reference</span>
-              </div>
-              <span style="font-size:0.68rem; color:#94a3b8;">Click card to pre-fill inputs</span>
-            </div>
-            
-            <div class="fin-cred-grid">
-              <div class="fin-cred-pill" data-email="superadmin@rayangroup.com" data-pwd="Rayan@Admin2026">
-                <div class="fin-cred-pill-role">
-                  <span>Super Administrator</span>
-                  <span style="color:#10b981;">Full Access</span>
-                </div>
-                <div class="fin-cred-pill-email">superadmin@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Rayan@Admin2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="finance.admin@rayangroup.com" data-pwd="Finance@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Finance Admin (CFO)</span>
-                  <span style="color:#38bdf8;">Approvals</span>
-                </div>
-                <div class="fin-cred-pill-email">finance.admin@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Finance@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="accountant@rayangroup.com" data-pwd="Accounts@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Senior Accountant</span>
-                  <span style="color:#f59e0b;">Billing</span>
-                </div>
-                <div class="fin-cred-pill-email">accountant@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Accounts@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="pm.tariq@rayangroup.com" data-pwd="Project@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Project Manager</span>
-                  <span style="color:#a855f7;">Projects</span>
-                </div>
-                <div class="fin-cred-pill-email">pm.tariq@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Project@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="employee.rahul@rayangroup.com" data-pwd="Staff@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Site Engineer</span>
-                  <span style="color:#94a3b8;">Claims</span>
-                </div>
-                <div class="fin-cred-pill-email">employee.rahul@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Staff@Rayan2026</div>
-              </div>
-
-              <div class="fin-cred-pill" data-email="management@rayangroup.com" data-pwd="Exec@Rayan2026">
-                <div class="fin-cred-pill-role">
-                  <span>Management (Read-Only)</span>
-                  <span style="color:#64748b;">Reports</span>
-                </div>
-                <div class="fin-cred-pill-email">management@rayangroup.com</div>
-                <div class="fin-cred-pill-pwd">PWD: Exec@Rayan2026</div>
-              </div>
-            </div>
+          <!-- Secure Corporate Notice (No Credentials Visible on UI) -->
+          <div class="fin-login-footer-security">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>256-Bit SSL Encrypted Corporate Session • Authorized Financial Personnel Only</span>
           </div>
         </div>
       </div>
-    `,this.bindAuthEvents())}bindAuthEvents(){let e=document.getElementById(`fin-login-form`),t=document.getElementById(`fin-login-email`),n=document.getElementById(`fin-login-password`),r=document.getElementById(`fin-toggle-pwd`),i=document.getElementById(`fin-login-error`);r&&(r.onclick=()=>{n.type===`password`?(n.type=`text`,r.textContent=`Hide`):(n.type=`password`,r.textContent=`Show`)}),document.querySelectorAll(`.fin-cred-pill`).forEach(e=>{e.onclick=()=>{t.value=e.getAttribute(`data-email`),n.value=e.getAttribute(`data-pwd`),i&&(i.style.display=`none`),n.focus()}}),e&&(e.onsubmit=async e=>{e.preventDefault(),i.style.display=`none`;let r=t.value.trim(),a=n.value.trim(),o=document.getElementById(`fin-login-submit-btn`);o.disabled=!0,o.innerHTML=`<span>VERIFYING CREDENTIALS...</span>`;try{let e=await fetch(`/api/auth`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({action:`login`,email:r,password:a})}),t=await e.json();if(e.ok&&t.success&&t.user){this.saveSession(t.user),this.showAppView();return}let n=this.db?.users?.find(e=>e.email.toLowerCase()===r.toLowerCase());if(n&&n.password===a){let{password:e,...t}=n;this.saveSession(t),this.showAppView();return}i.textContent=t.error||`Invalid credentials or user unauthorized. Please check role password.`,i.style.display=`block`}catch{i.textContent=`Network communication error. Please check server status.`,i.style.display=`block`}finally{o.disabled=!1,o.innerHTML=`<span>SIGN IN TO FINANCIAL PORTAL &rarr;</span>`}});let a=document.getElementById(`fin-forgot-pwd-btn`);a&&(a.onclick=()=>{let e=prompt(`Please enter your Rayan Group corporate email to receive secure password recovery link:`,t.value);e&&alert(`Password recovery instructions and security token have been transmitted to ${e}.`)})}showAppView(){let e=document.getElementById(`finance-portal-root`);e&&(e.innerHTML=`
+    `,this.bindAuthEvents())}bindAuthEvents(){let e=document.getElementById(`fin-login-form`),t=document.getElementById(`fin-login-email`),n=document.getElementById(`fin-login-password`),r=document.getElementById(`fin-toggle-pwd`),i=document.getElementById(`fin-login-error`);r&&(r.onclick=()=>{n.type===`password`?(n.type=`text`,r.textContent=`Hide`):(n.type=`password`,r.textContent=`Show`)}),e&&(e.onsubmit=async e=>{e.preventDefault(),i.style.display=`none`;let r=t.value.trim(),a=n.value.trim(),o=document.getElementById(`fin-login-submit-btn`);o.disabled=!0,o.innerHTML=`<span>VERIFYING CREDENTIALS...</span>`;try{let e=await fetch(`/api/auth`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({action:`login`,email:r,password:a})}),t=await e.json();if(e.ok&&t.success&&t.user){this.saveSession(t.user),this.showAppView();return}let n=this.db?.users?.find(e=>e.email.toLowerCase()===r.toLowerCase());if(n&&n.password===a){let{password:e,...t}=n;this.saveSession(t),this.showAppView();return}i.textContent=t.error||`Invalid credentials or user unauthorized. Please check role password.`,i.style.display=`block`}catch{i.textContent=`Network communication error. Please check server status.`,i.style.display=`block`}finally{o.disabled=!1,o.innerHTML=`<span>SIGN IN TO FINANCIAL PORTAL &rarr;</span>`}});let a=document.getElementById(`fin-forgot-pwd-btn`);a&&(a.onclick=()=>{let e=prompt(`Please enter your Rayan Group corporate email to receive secure password recovery link:`,t.value);e&&alert(`Password recovery instructions and security token have been transmitted to ${e}.`)})}showAppView(){let e=document.getElementById(`finance-portal-root`);e&&(e.innerHTML=`
       <div class="fin-app-wrapper">
         <!-- Top App Navigation Bar -->
         <header class="fin-app-topbar">

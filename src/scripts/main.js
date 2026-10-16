@@ -1780,9 +1780,12 @@ function initGlobalFinanceButton() {
       btn.id = 'header-finance-login-btn';
       btn.href = '/billing/';
       btn.className = 'btn-finance-portal-trigger';
-      // Insert before mobile toggle or after search trigger
+      // Insert before CTA button if present, or before mobile toggle
+      const ctaBtn = actions.querySelector('.btn-header-cta');
       const mobileToggle = actions.querySelector('.btn-mobile-menu-toggle');
-      if (mobileToggle) {
+      if (ctaBtn) {
+        actions.insertBefore(btn, ctaBtn);
+      } else if (mobileToggle) {
         actions.insertBefore(btn, mobileToggle);
       } else {
         actions.appendChild(btn);
@@ -1790,9 +1793,10 @@ function initGlobalFinanceButton() {
     }
 
     if (user) {
+      const shortRole = user.role_label ? (user.role_label.length > 12 ? 'ACTIVE' : user.role_label) : 'ACTIVE';
       btn.innerHTML = `
         <span class="live-pulse-dot"></span>
-        <span>ACCOUNTS DESK • ${user.role_label || 'AUTHORIZED'}</span>
+        <span>ACCOUNTS • ${shortRole}</span>
       `;
       btn.title = `Signed in as ${user.name} (${user.email}) - Open Financial Management System`;
     } else {
