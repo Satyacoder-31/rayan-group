@@ -496,19 +496,97 @@ class FinanceApp {
             <!-- Sidebar Quick Create Action -->
             <div class="fin-sidebar-action-wrap">
               <button type="button" class="fin-sidebar-create-btn" id="fin-sidebar-create-toggle" title="Create Transaction or Record">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span class="fin-create-label">+ Create New</span>
-                <svg class="fin-chevron-sm" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                <span class="fin-create-btn-left">
+                  <span class="fin-create-btn-icon">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </span>
+                  <span class="fin-create-btn-text">Create New</span>
+                </span>
+                <span class="fin-create-btn-arrow">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
               </button>
+
               <div class="fin-quick-create-menu" id="fin-quick-create-menu" style="display: none;">
-                ${this.hasPermission('create_invoice') ? `<button type="button" class="fin-qc-item" id="qa-btn-invoice"><span class="fin-qc-icon">📄</span><span>Tax Invoice</span></button>` : ''}
-                ${this.hasPermission('create_bill') ? `<button type="button" class="fin-qc-item" id="qa-btn-bill"><span class="fin-qc-icon">📥</span><span>Purchase Bill</span></button>` : ''}
-                ${this.hasPermission('create_customer') ? `<button type="button" class="fin-qc-item" id="qa-btn-customer"><span class="fin-qc-icon">👥</span><span>New Customer</span></button>` : ''}
-                ${this.hasPermission('create_vendor') ? `<button type="button" class="fin-qc-item" id="qa-btn-vendor"><span class="fin-qc-icon">🏢</span><span>New Vendor</span></button>` : ''}
-                ${this.hasPermission('record_receipt') ? `<button type="button" class="fin-qc-item" id="qa-btn-receipt"><span class="fin-qc-icon">💳</span><span>Customer Receipt</span></button>` : ''}
-                ${this.hasPermission('record_payment') ? `<button type="button" class="fin-qc-item" id="qa-btn-payment"><span class="fin-qc-icon">💸</span><span>Vendor Payment</span></button>` : ''}
-                ${this.hasPermission('submit_expense') ? `<button type="button" class="fin-qc-item" id="qa-btn-expense"><span class="fin-qc-icon">🧾</span><span>Record Expense</span></button>` : ''}
-                ${this.hasPermission('create_po') ? `<button type="button" class="fin-qc-item" id="qa-btn-po"><span class="fin-qc-icon">📑</span><span>Purchase Order</span></button>` : ''}
+                <div class="fin-qc-section-title">SALES &amp; RECEIVABLES</div>
+                ${this.hasPermission('create_invoice') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-invoice">
+                    <span class="fin-qc-badge-icon" style="background:rgba(56,189,248,0.15); color:#38bdf8;">📄</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">Tax Invoice</span>
+                      <span class="fin-qc-desc">Bill client with GST/VAT</span>
+                    </div>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('record_receipt') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-receipt">
+                    <span class="fin-qc-badge-icon" style="background:rgba(16,185,129,0.15); color:#10b981;">💳</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">Customer Receipt</span>
+                      <span class="fin-qc-desc">Record client collection</span>
+                    </div>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('create_customer') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-customer">
+                    <span class="fin-qc-badge-icon" style="background:rgba(139,92,246,0.15); color:#a78bfa;">👥</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">New Customer</span>
+                      <span class="fin-qc-desc">Add client profile</span>
+                    </div>
+                  </button>
+                ` : ''}
+
+                <div class="fin-qc-divider"></div>
+                <div class="fin-qc-section-title">PURCHASES &amp; PAYABLES</div>
+                ${this.hasPermission('create_bill') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-bill">
+                    <span class="fin-qc-badge-icon" style="background:rgba(245,158,11,0.15); color:#fbbf24;">📥</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">Purchase Bill</span>
+                      <span class="fin-qc-desc">Record vendor bill</span>
+                    </div>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('record_payment') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-payment">
+                    <span class="fin-qc-badge-icon" style="background:rgba(239,68,68,0.15); color:#f87171;">💸</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">Vendor Payment</span>
+                      <span class="fin-qc-desc">Disburse payment voucher</span>
+                    </div>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('create_po') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-po">
+                    <span class="fin-qc-badge-icon" style="background:rgba(59,130,246,0.15); color:#60a5fa;">📑</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">Purchase Order</span>
+                      <span class="fin-qc-desc">Issue procurement PO</span>
+                    </div>
+                  </button>
+                ` : ''}
+                ${this.hasPermission('create_vendor') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-vendor">
+                    <span class="fin-qc-badge-icon" style="background:rgba(217,119,6,0.15); color:#f59e0b;">🏢</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">New Vendor</span>
+                      <span class="fin-qc-desc">Register supplier/contractor</span>
+                    </div>
+                  </button>
+                ` : ''}
+
+                <div class="fin-qc-divider"></div>
+                <div class="fin-qc-section-title">OPERATING EXPENSES</div>
+                ${this.hasPermission('submit_expense') ? `
+                  <button type="button" class="fin-qc-item" id="qa-btn-expense">
+                    <span class="fin-qc-badge-icon" style="background:rgba(168,85,247,0.15); color:#c084fc;">🧾</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">Record Expense</span>
+                      <span class="fin-qc-desc">Site, travel, fuel claim</span>
+                    </div>
+                  </button>
+                ` : ''}
               </div>
             </div>
 
@@ -693,15 +771,18 @@ class FinanceApp {
         e.stopPropagation();
         const isOpen = createMenu.style.display !== 'none';
         createMenu.style.display = isOpen ? 'none' : 'block';
+        createToggle.classList.toggle('active', !isOpen);
       };
       document.addEventListener('click', (e) => {
         if (!e.target.closest('.fin-sidebar-action-wrap')) {
           createMenu.style.display = 'none';
+          createToggle.classList.remove('active');
         }
       });
       createMenu.querySelectorAll('.fin-qc-item').forEach(item => {
         item.addEventListener('click', () => {
           createMenu.style.display = 'none';
+          createToggle.classList.remove('active');
         });
       });
     }
@@ -1041,7 +1122,7 @@ class FinanceApp {
       </div>
 
       <!-- Grid: Recent Invoices & Recent Purchase Bills -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-bottom:2rem;" class="fin-dash-row-responsive">
+      <div class="fin-dash-row-responsive">
         <!-- Recent Invoices Panel -->
         <div class="fin-panel-card">
           <div class="fin-panel-header">
@@ -1126,7 +1207,7 @@ class FinanceApp {
       </div>
 
       <!-- Grid: Top Items & Outstanding Aging -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-bottom:2rem;" class="fin-dash-row-responsive">
+      <div class="fin-dash-row-responsive">
         <!-- Top Selling Items & Services -->
         <div class="fin-panel-card">
           <div class="fin-panel-header">
@@ -1639,7 +1720,7 @@ class FinanceApp {
     const payments = this.db?.vendor_payments || [];
 
     root.innerHTML = `
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;" class="fin-dash-row-responsive">
+      <div class="fin-dash-row-responsive">
         <!-- Customer Receipts -->
         <div class="fin-panel-card">
           <div class="fin-panel-header">
@@ -1747,7 +1828,7 @@ class FinanceApp {
     const debitNotes = this.db?.debit_notes || [];
 
     root.innerHTML = `
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;" class="fin-dash-row-responsive">
+      <div class="fin-dash-row-responsive">
         <!-- Credit Notes -->
         <div class="fin-panel-card">
           <div class="fin-panel-header">
@@ -2068,7 +2149,7 @@ class FinanceApp {
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;" class="fin-dash-row-responsive">
+        <div class="fin-dash-row-responsive">
           <!-- Profit & Loss Statement -->
           <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:12px; padding:1.5rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--fin-border); padding-bottom:0.75rem; margin-bottom:1rem;">
