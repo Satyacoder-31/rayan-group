@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RAYAN Group</title>
-  <meta name="title" content="RAYAN Group">
+  <title>Rayan Group — Multinational Engineering, Energy & Infrastructure Conglomerate | Rayan Group</title>
+  <meta name="title" content="Rayan Group — Multinational Engineering, Energy & Infrastructure Conglomerate | Rayan Group">
   <meta name="description" content="Rayan Group is a premier multinational engineering, critical energy EPC, civil infrastructure, and properties conglomerate operating across the UAE and South Asia.">
   <meta name="robots" content="index, follow">
 
   <!-- Open Graph / Meta -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="RAYAN Group">
-  <meta property="og:site_name" content="RAYAN Group">
+  <meta property="og:title" content="Rayan Group — Multinational Engineering, Energy & Infrastructure Conglomerate | Rayan Group">
   <meta property="og:description" content="Rayan Group is a premier multinational engineering, critical energy EPC, civil infrastructure, and properties conglomerate operating across the UAE and South Asia.">
   <meta property="og:image" content="/assets/images/hero/hero-1-skyline.jpg">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="/assets/rayan-symbol.svg?v=3">
+  <link rel="icon" type="image/svg+xml" href="/assets/rayan-symbol.svg">
 
   <!-- Zero-FOUT Theme Script & Scroll-To-Top on Refresh -->
   <script>
@@ -43,8 +42,8 @@
 
   <!-- Core Stylesheet -->
   <script type="module" crossorigin src="/assets/live-overrides-Bz1C8oj0.js"></script>
-  <script type="module" crossorigin src="/assets/main-DxIkUgpp.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/main-BvcyTDoY.css">
+  <script type="module" crossorigin src="/assets/main-BEYL_hjn.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/main-B4YGxXT8.css">
 </head>
 <body class="preloader-active page--">
   
@@ -104,7 +103,7 @@
         </div>
         <span class="header-top-divider" aria-hidden="true"></span>
         <a href="/procurement/" class="header-top-link">Suppliers Portal</a>
-        <a href="/billing/" class="header-top-link header-top-link-finance">🔒 Accounts Login</a>
+        <a href="/billing/" class="header-top-link">Billing Desk</a>
         <a href="/news/" class="header-top-link">News &amp; Media</a>
         <span class="header-top-divider" aria-hidden="true"></span>
         <button type="button" class="lang-switch-btn" aria-label="Language selector">
@@ -461,14 +460,32 @@
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <span class="search-key-badge" aria-hidden="true">Ctrl K</span>
         </button>
-        <a href="/billing/" class="btn-finance-portal-trigger" id="header-finance-login-btn" title="Corporate Financial &amp; Accounts Portal Login">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span>ACCOUNTS LOGIN</span>
-        </a>
         <a href="/proposal/" class="btn-enterprise-primary btn-header-cta">
           <span>REQUEST A PROPOSAL</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
+        <!-- Corner Login Button (Clean Outlined Style as Requested) -->
+        <div class="header-login-wrap">
+          <a href="/billing/" class="btn-header-login btn-finance-portal-trigger" id="header-finance-login-btn" title="Corporate Portal Login (Accounts &amp; Administration)">
+            <span>Login</span>
+          </a>
+          <div class="header-login-dropdown" id="headerLoginDropdown">
+            <a href="/billing/" class="login-dropdown-item">
+              <span class="login-item-icon">💼</span>
+              <div class="login-item-text">
+                <span class="login-item-title">Accounts Portal</span>
+                <span class="login-item-subtitle">Billing, Invoices &amp; Ledger</span>
+              </div>
+            </a>
+            <a href="/admin/" class="login-dropdown-item">
+              <span class="login-item-icon">🛡️</span>
+              <div class="login-item-text">
+                <span class="login-item-title">Admin Command</span>
+                <span class="login-item-subtitle">Corporate Executive Desk</span>
+              </div>
+            </a>
+          </div>
+        </div>
         <!-- Mobile Menu Hamburger Button -->
         <button type="button" class="btn-mobile-menu-toggle" aria-label="Toggle mobile navigation menu" aria-expanded="false" aria-controls="mobileNavDrawer">
           <span class="hamburger-bar"></span>
@@ -687,10 +704,6 @@
       </div>
 
       <div class="mobile-drawer-footer">
-        <a href="/billing/" class="btn-finance-portal-trigger mobile-btn-full" style="justify-content: center; margin-bottom: 0.65rem; height: 42px; font-size: 0.8rem; background: rgba(0, 153, 230, 0.15); border: 1px solid #38bdf8; color: #38bdf8; display: flex;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span>ACCOUNTS LOGIN</span>
-        </a>
         <a href="/proposal/" class="btn-enterprise-primary mobile-btn-full" style="justify-content: center;">
           <span>REQUEST A PROPOSAL →</span>
         </a>
@@ -1203,232 +1216,128 @@
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
-        <!-- Project 1: Dubai Police Academy Complex (Running Project) -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.45); display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+        <!-- Project 1: Yateem Optician (Under Construction) -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.3); display: flex; flex-direction: column;">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/dubai-police-academy/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/dubai-police-academy.jpg?v=3" alt="Dubai Police Academy Tactical Facility" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; left: 1rem; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.3rem 0.75rem; border-radius: 4px; letter-spacing: 0.06em; box-shadow: 0 4px 14px rgba(245,158,11,0.4); pointer-events: none;">RUNNING PROJECT • UNDER CONSTRUCTION</span>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #fbbf24; pointer-events: none;">CIVIL &amp; INTERIOR</span>
-          </div>
-          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
-            <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">AL ROWAIYAH, DUBAI</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/dubai-police-academy/" style="color: inherit; text-decoration: none;">Dubai Police Academy Tactical Facility</a>
-            </h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Institutional complex masonry, connecting sky-bridge, entrance pavilion, heavy acoustic gypsum partitions &amp; security facility delivery under Dubai Police GHQ supervision.</p>
-            <div class="project-card-footer">
-              <div class="project-client-row">
-                <span class="project-client-label">Client</span>
-                <span class="project-client-name">Dubai Police GHQ / Top Rock</span>
-              </div>
-              <a href="/projects/dubai-police-academy/" class="project-btn-cta under-construction" style="background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #fbbf24;">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
-            </div>
-          </div>
-        </article>
-
-        <!-- Project 2: Yateem Optician (Under Construction) -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.45); display: flex; flex-direction: column;">
-          <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/yateem-optician-khalidiyah-mall/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/yateem-optician-khalidiyah-mall.jpg" alt="Yateem Optician Khalidiyah Mall" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; left: 1rem; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.3rem 0.75rem; border-radius: 4px; letter-spacing: 0.06em; box-shadow: 0 4px 14px rgba(245,158,11,0.4); pointer-events: none;">UNDER CONSTRUCTION</span>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #fbbf24; pointer-events: none;">RETAIL FIT-OUT</span>
+            <img src="/assets/images/projects/yateem-optician-khalidiyah-mall.jpg" alt="Yateem Optician Khalidiyah Mall" style="width: 100%; height: 100%; object-fit: cover;">
+            
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #f59e0b;">RETAIL FIT-OUT</span>
           </div>
           <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">KHALIDIYAH MALL, ABU DHABI</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/yateem-optician-khalidiyah-mall/" style="color: inherit; text-decoration: none;">Yateem Optician Turnkey Retail Boutique</a>
-            </h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Yateem Optician Turnkey Retail Boutique</h3>
             <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Turnkey commercial retail fit-out, 150mm raised access floor, acoustic fire-rated gypsum wall linings, smoked oak joinery &amp; MEP execution.</p>
-            <div class="project-card-footer">
-              <div class="project-client-row">
-                <span class="project-client-label">Client</span>
-                <span class="project-client-name">M/S Buildara General Contracting</span>
-              </div>
-              <a href="/projects/yateem-optician-khalidiyah-mall/" class="project-btn-cta under-construction" style="background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #fbbf24;">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1rem; margin-top: auto;">
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: M/S Buildara General Contracting</span>
+              <a href="/projects/yateem-optician-khalidiyah-mall/" style="color: #f59e0b; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
             </div>
           </div>
         </article>
 
-        <!-- Project 3: Al Lisaili Villa (Under Construction) -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.45); display: flex; flex-direction: column;">
+        <!-- Project 2: Waldorf Astoria (Completed) -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.3); display: flex; flex-direction: column;">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/al-lisaili-villa/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/al-lisaili-villa.jpg" alt="Al Lisaili Luxury Villa Development" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; left: 1rem; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.3rem 0.75rem; border-radius: 4px; letter-spacing: 0.06em; box-shadow: 0 4px 14px rgba(245,158,11,0.4); pointer-events: none;">UNDER CONSTRUCTION</span>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #fbbf24; pointer-events: none;">RESIDENTIAL</span>
-          </div>
-          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
-            <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">AL LISAILI, DUBAI</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/al-lisaili-villa/" style="color: inherit; text-decoration: none;">Al Lisaili Luxury Villa Development</a>
-            </h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Turnkey private residential villa construction, post-tensioned reinforced concrete, luxury architectural finishes, and desert MEP infrastructure.</p>
-            <div class="project-card-footer">
-              <div class="project-client-row">
-                <span class="project-client-label">Client</span>
-                <span class="project-client-name">Private High-Net-Worth Client</span>
-              </div>
-              <a href="/projects/al-lisaili-villa/" class="project-btn-cta under-construction" style="background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #fbbf24;">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
-            </div>
-          </div>
-        </article>
-
-        <!-- Project 4: Waldorf Astoria Renovation (Completed) -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
-          <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/waldorf-astoria-renovation-rak/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Renovation" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; left: 1rem; background: rgba(16,185,129,0.9); color: #050b14; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 3px; letter-spacing: 0.05em; pointer-events: none;">COMPLETED</span>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #38bdf8; pointer-events: none;">HOSPITALITY</span>
+            <img src="/assets/images/projects/waldorf-astoria-renovation-rak.jpg" alt="Waldorf Astoria Renovation" style="width: 100%; height: 100%; object-fit: cover;">
+            
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #f59e0b;">HOSPITALITY</span>
           </div>
           <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">BROCK CONSTRUCTION PARTNERSHIP</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/waldorf-astoria-renovation-rak/" style="color: inherit; text-decoration: none;">Waldorf Astoria Hotel Luxury Renovation</a>
-            </h3>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Waldorf Astoria Hotel Luxury Renovation</h3>
             <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Full-scope 5-star hospitality refurbishment, presidential suites, acoustic ceiling isolation, and luxury finishes in Ras Al Khaimah.</p>
-            <div class="project-card-footer">
-              <div class="project-client-row">
-                <span class="project-client-label">Client</span>
-                <span class="project-client-name">Waldorf Astoria Hotels &amp; Resorts</span>
-              </div>
-              <a href="/projects/waldorf-astoria-renovation-rak/" class="project-btn-cta">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1rem; margin-top: auto;">
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: Waldorf Astoria Hotels &amp; Resorts</span>
+              <a href="/projects/waldorf-astoria-renovation-rak/" style="color: #f59e0b; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
             </div>
           </div>
         </article>
 
-        
-
-        <!-- Project 4: Palm Jumeirah -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
+        <!-- Project 3: Dubai Police Academy (Under Construction) -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(245,158,11,0.3); display: flex; flex-direction: column;">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/palm-jumeirah-rec-estate/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Palm Jumeirah Luxury Estate" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981; pointer-events: none;">COASTAL RESIDENTIAL</span>
+            <img src="/assets/images/projects/dubai-police-academy.jpg" alt="Dubai Police Academy Tactical Facility" style="width: 100%; height: 100%; object-fit: cover;">
+            
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981;">CIVIL &amp; INTERIOR</span>
           </div>
           <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
+            <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">AL ROWAIYAH, DUBAI</span>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Dubai Police Academy Tactical Facility</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Institutional complex masonry, tactical training infrastructure, heavy acoustic gypsum partitions &amp; security facility delivery.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1rem; margin-top: auto;">
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Client: Dubai Police GHQ</span>
+              <a href="/projects/dubai-police-academy/" style="color: #f59e0b; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
+            </div>
+          </div>
+        </article>
+
+
+        <!-- Project 2 -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="height: 240px; overflow: hidden; position: relative;">
+            <img src="/assets/images/projects/palm-jumeirah-rec-estate.jpg" alt="Palm Jumeirah Luxury Estate" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981;">COASTAL RESIDENTIAL</span>
+          </div>
+          <div style="padding: 2rem;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">PALM JUMEIRAH, DUBAI</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/palm-jumeirah-rec-estate/" style="color: inherit; text-decoration: none;">Palm Jumeirah Ultra-Luxury Waterfront Estate</a>
-            </h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Private waterfront estate civil engineering, structural works, imported Italian marble fit-out, and coastal perimeter retaining.</p>
-            <div class="project-card-footer">
-              <a href="/projects/palm-jumeirah-rec-estate/" class="project-btn-cta">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
-            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Palm Jumeirah Ultra-Luxury Waterfront Estate</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Private waterfront estate civil engineering, structural works, imported Italian marble fit-out, and coastal perimeter retaining.</p>
+            <a href="/projects/palm-jumeirah-rec-estate/" style="color: #10b981; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
           </div>
         </article>
 
-        <!-- Project 5: C2 Towers -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
+        <!-- Project 3 -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/c2-towers-al-bateen/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/c2-towers-al-bateen.jpg?v=2" alt="C2 Towers Al Bateen" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6; pointer-events: none;">HIGH-RISE EPC</span>
+            <img src="/assets/images/projects/c2-towers-al-bateen.jpg" alt="C2 Towers Al Bateen" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6;">HIGH-RISE EPC</span>
           </div>
-          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
+          <div style="padding: 2rem;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">AL BATEEN, ABU DHABI</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/c2-towers-al-bateen/" style="color: inherit; text-decoration: none;">C2 Towers Twin High-Rise Development</a>
-            </h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Twin 22-story luxury waterfront residential development featuring architectural gypsum, post-tensioned slabs, and turnkey fit-out.</p>
-            <div class="project-card-footer">
-              <a href="/projects/c2-towers-al-bateen/" class="project-btn-cta">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
-            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">C2 Towers Twin High-Rise Development</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Twin 22-story luxury waterfront residential development featuring architectural gypsum, post-tensioned slabs, and turnkey fit-out.</p>
+            <a href="/projects/c2-towers-al-bateen/" style="color: #0099e6; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
           </div>
         </article>
 
-        <!-- Project 6: EDGE Group REMAYA -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
+        <!-- Project 4 -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/edge-group-remaya/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/edge-group-remaya.jpg" alt="EDGE Group REMAYA" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #c5a059; pointer-events: none;">DEFENSE &amp; SECURITY</span>
+            <img src="/assets/images/projects/edge-group-remaya.jpg" alt="EDGE Group REMAYA" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #c5a059;">DEFENSE &amp; SECURITY</span>
           </div>
-          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
+          <div style="padding: 2rem;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">EDGE GROUP TACTICAL</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/edge-group-remaya/" style="color: inherit; text-decoration: none;">EDGE Group REMAYA Tactical Complex</a>
-            </h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Specialized defense tactical shooting complex incorporating high-density ballistic partitions and specialized structural engineering.</p>
-            <div class="project-card-footer">
-              <a href="/projects/edge-group-remaya/" class="project-btn-cta">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
-            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">EDGE Group REMAYA Tactical Complex</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Specialized defense tactical shooting complex incorporating high-density ballistic partitions and specialized structural engineering.</p>
+            <a href="/projects/edge-group-remaya/" style="color: #c5a059; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
           </div>
         </article>
 
-        <!-- Project 7: Luxury Island Infinity Pool -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
+        <!-- Project 5 -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/luxury-island-infinity-pool/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Luxury Island Infinity Pool" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6; pointer-events: none;">AQUATIC RESORT</span>
+            <img src="/assets/images/projects/luxury-island-infinity-pool.jpg" alt="Luxury Island Infinity Pool" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #0099e6;">AQUATIC RESORT</span>
           </div>
-          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
+          <div style="padding: 2rem;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">PRIVATE ISLAND, UAE</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/luxury-island-infinity-pool/" style="color: inherit; text-decoration: none;">Luxury Island 50m Oceanfront Cantilevered Pool</a>
-            </h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Cantilevered structural concrete pool engineering extending over coastal waters, horizon overflow waterfalls, and architectural landscaping.</p>
-            <div class="project-card-footer">
-              <a href="/projects/luxury-island-infinity-pool/" class="project-btn-cta">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
-            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Luxury Island 50m Oceanfront Cantilevered Pool</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Cantilevered structural concrete pool engineering extending over coastal waters, horizon overflow waterfalls, and architectural landscaping.</p>
+            <a href="/projects/luxury-island-infinity-pool/" style="color: #0099e6; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
           </div>
         </article>
 
-        <!-- Project 8: Roxy Cinemas -->
-        <article class="project-editorial-card" style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
+        <!-- Project 6 -->
+        <article style="background: #0c1828; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
           <div style="height: 240px; overflow: hidden; position: relative;">
-            <a href="/projects/roxy-cinema-dubai-hills-mall/" style="display: block; width: 100%; height: 100%;">
-              <img src="/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg" alt="Roxy Cinemas Dubai Hills" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            </a>
-            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981; pointer-events: none;">RETAIL ENTERTAINMENT</span>
+            <img src="/assets/images/projects/roxy-cinema-dubai-hills-mall.jpg" alt="Roxy Cinemas Dubai Hills" style="width: 100%; height: 100%; object-fit: cover;">
+            <span style="position: absolute; top: 1rem; right: 1rem; background: rgba(7,17,30,0.85); backdrop-filter: blur(8px); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: #10b981;">RETAIL ENTERTAINMENT</span>
           </div>
-          <div style="padding: 2rem; flex-grow: 1; display: flex; flex-direction: column;">
+          <div style="padding: 2rem;">
             <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">DUBAI HILLS MALL (EMAAR)</span>
-            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">
-              <a href="/projects/roxy-cinema-dubai-hills-mall/" style="color: inherit; text-decoration: none;">Roxy Cinemas VIP Auditoriums - Dubai Hills</a>
-            </h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem; flex-grow: 1;">Acoustic sound isolation engineering, VIP cinema auditorium fit-out, and multi-tier stadium seating in premier regional destination.</p>
-            <div class="project-card-footer">
-              <a href="/projects/roxy-cinema-dubai-hills-mall/" class="project-btn-cta">
-                <span>EXPLORE CASE STUDY</span>
-                <span class="btn-arrow">→</span>
-              </a>
-            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0.35rem 0 0.75rem;">Roxy Cinemas VIP Auditoriums - Dubai Hills</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.55; margin-bottom: 1.25rem;">Acoustic sound isolation engineering, VIP cinema auditorium fit-out, and multi-tier stadium seating in premier regional destination.</p>
+            <a href="/projects/roxy-cinema-dubai-hills-mall/" style="color: #10b981; font-size: 0.825rem; font-weight: 700; text-decoration: none;">EXPLORE CASE STUDY →</a>
           </div>
         </article>
       </div>
@@ -2082,7 +1991,7 @@
 
       <!-- VIEW 2: Interactive Live Chat View -->
       <div class="assistance-view assistance-chat-view view-hidden" id="assistance-chat-view">
-                <div class="chat-room-header">
+        <div class="chat-room-header">
           <button type="button" class="chat-back-btn" id="chat-back-to-menu-btn" title="Back to menu" aria-label="Back to menu">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             <span>Menu</span>
@@ -2112,30 +2021,24 @@
 
         <!-- Chat messages thread -->
         <div class="chat-messages-container" id="chat-messages-container">
-          <div class="chat-time-divider">Automated Advisory Connected</div>
+          <div class="chat-time-divider">Live Advisory Connected</div>
           
           <div class="chat-msg-row msg-desk" id="welcome-msg-initial">
             <div class="chat-msg-meta">
-              <span>🤖 Rayan Automated Advisory</span>
+              <span>🏛️ Rayan Executive Desk</span>
             </div>
             <div class="chat-msg-bubble">
-              Welcome to Rayan Group. Please select an automated question below for immediate answers on our contracting divisions, tender proposals, or accounts.
-              <br><br>
-              If you are not satisfied with the automated answers, click <strong>Connect to Live Assistance Chat</strong> below to chat directly with our team.
+              Welcome to Rayan Group Executive Assistance. Our engineering and project advisory desk is online. How may we assist your project today?
               <span class="chat-msg-time">Just now</span>
             </div>
           </div>
 
-          <!-- Quick Suggestion Prompts / Automated Questions -->
+          <!-- Quick Suggestion Prompts -->
           <div class="chat-suggestions-wrap">
-            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to request an EPC Tender / RFP proposal.">📋 Request Tender Proposal / RFP</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Civil Construction &amp; High-Rise contracting.">🏢 Civil Construction &amp; Fit-Out</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Energy Facilities &amp; Process Pipelines.">⚡ Energy &amp; Process Pipelines</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding vendor invoices, payment status, and accounts.">💳 Vendor Accounts &amp; Invoices</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding vendor registration and approved supplier onboarding.">📦 Procurement &amp; Supplier Onboarding</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="Where are your corporate offices located and how can I contact you?">📍 Dual Corporate HQs &amp; Direct Lines</button>
-            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to connect with the Executive Directors.">🏛️ Executive Leadership &amp; Directors</button>
-            <button type="button" class="chat-suggestion-chip" data-action="live_human" style="border-color: rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.12); color: #34d399; font-weight: 700;"><span>💬 Connect to Live Assistance Chat</span></button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to request an EPC Tender / RFP proposal.">Request Tender Proposal / RFP</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Civil Construction &amp; High-Rise contracting.">Civil &amp; High-Rise EPC</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="Inquiry regarding Energy Facilities &amp; Process Pipelines.">Energy &amp; Process Infrastructure</button>
+            <button type="button" class="chat-suggestion-chip" data-prompt="I would like to connect with the Executive Directors.">Connect with Executive Director</button>
           </div>
 
           <!-- Typing indicator (hidden by default) -->
@@ -2146,26 +2049,14 @@
           </div>
         </div>
 
-        <!-- Locked Composer Bar (Automated Mode Default) -->
-        <div class="chat-composer-locked-bar" id="chat-composer-locked-bar">
-          <div class="chat-locked-status">
-            <span class="chat-locked-badge">🤖 Automated Corporate Advisory</span>
-            <span class="chat-locked-hint">Select a question or connect with our team</span>
-          </div>
-          <button type="button" class="btn-unlock-live-chat" id="btn-unlock-live-chat" aria-label="Connect to Live Assistance Chat">
-            <span class="live-pulse-green"></span>
-            <span>💬 Connect to Live Assistance Chat</span>
-          </button>
-        </div>
-
         <!-- Visitor quick identification bar -->
-        <div class="chat-visitor-profile-bar" style="display: none;">
+        <div class="chat-visitor-profile-bar">
           <span style="font-size: 0.68rem; color: #94a3b8; white-space: nowrap;">Your Name / Co:</span>
           <input type="text" class="chat-visitor-input-sm" id="chat-visitor-name-input" placeholder="e.g. Tariq (Apex Contracting)" maxlength="40">
         </div>
 
-        <!-- Message composer (Hidden until Live Assistance Chat unlocked) -->
-        <div class="chat-composer-wrap" style="display: none;">
+        <!-- Message composer -->
+        <div class="chat-composer-wrap">
           <form class="chat-composer-form" id="chat-composer-form">
             <input type="text" class="chat-input-field" id="chat-input-field" placeholder="Type your message..." autocomplete="off" required>
             <button type="submit" class="chat-send-btn" id="chat-send-btn" aria-label="Send message">

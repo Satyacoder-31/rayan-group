@@ -1777,39 +1777,76 @@ function initGlobalFinanceButton() {
     try { user = JSON.parse(savedUserJson); } catch (e) {}
   }
 
-  // Ensure button exists in header-actions across all pages
+  // Ensure button exists in header-actions across all pages, placed at the last corner
   const headerActionsList = document.querySelectorAll('.header-actions');
   headerActionsList.forEach(actions => {
+    let wrap = actions.querySelector('.header-login-wrap');
     let btn = actions.querySelector('#header-finance-login-btn');
-    if (!btn) {
-      btn = document.createElement('a');
-      btn.id = 'header-finance-login-btn';
-      btn.href = '/billing/';
-      btn.className = 'btn-finance-portal-trigger';
-      const ctaBtn = actions.querySelector('.btn-header-cta');
-      const mobileToggle = actions.querySelector('.btn-mobile-menu-toggle');
-      if (ctaBtn) {
-        actions.insertBefore(btn, ctaBtn);
-      } else if (mobileToggle) {
-        actions.insertBefore(btn, mobileToggle);
+    const mobileToggle = actions.querySelector('.btn-mobile-menu-toggle');
+
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.className = 'header-login-wrap';
+
+      if (btn) {
+        btn.parentNode.removeChild(btn);
       } else {
-        actions.appendChild(btn);
+        btn = document.createElement('a');
+        btn.id = 'header-finance-login-btn';
+        btn.href = '/billing/';
+      }
+      btn.className = 'btn-header-login btn-finance-portal-trigger';
+      wrap.appendChild(btn);
+
+      const dropdown = document.createElement('div');
+      dropdown.className = 'header-login-dropdown';
+      dropdown.id = 'headerLoginDropdown';
+      dropdown.innerHTML = `
+        <a href="/billing/" class="login-dropdown-item">
+          <span class="login-item-icon">💼</span>
+          <div class="login-item-text">
+            <span class="login-item-title">Accounts Portal</span>
+            <span class="login-item-subtitle">Billing, Invoices &amp; Ledger</span>
+          </div>
+        </a>
+        <a href="/admin/" class="login-dropdown-item">
+          <span class="login-item-icon">🛡️</span>
+          <div class="login-item-text">
+            <span class="login-item-title">Admin Command</span>
+            <span class="login-item-subtitle">Corporate Executive Desk</span>
+          </div>
+        </a>
+      `;
+      wrap.appendChild(dropdown);
+
+      // Position at the last corner: right before mobile menu toggle if it exists, or at the end
+      if (mobileToggle) {
+        actions.insertBefore(wrap, mobileToggle);
+      } else {
+        actions.appendChild(wrap);
+      }
+    } else {
+      // Ensure wrap is placed at the corner (right before mobileToggle)
+      if (mobileToggle && wrap.nextElementSibling !== mobileToggle) {
+        actions.insertBefore(wrap, mobileToggle);
+      }
+      if (!btn) {
+        btn = wrap.querySelector('#header-finance-login-btn');
       }
     }
 
-    if (user) {
-      const shortRole = user.role_label ? (user.role_label.length > 12 ? 'ACTIVE' : user.role_label) : 'ACTIVE';
-      btn.innerHTML = `
-        <span class="live-pulse-dot"></span>
-        <span>ACCOUNTS • ${shortRole}</span>
-      `;
-      btn.title = `Signed in as ${user.name} (${user.email}) - Open Financial Management System`;
-    } else {
-      btn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>ACCOUNTS LOGIN</span>
-      `;
-      btn.title = 'Authorized Personnel Financial Portal Login';
+    if (btn) {
+      if (user) {
+        const shortRole = user.role_label ? (user.role_label.length > 12 ? 'ACTIVE' : user.role_label) : 'ACTIVE';
+        btn.innerHTML = `
+          <span class="live-pulse-dot"></span>
+          <span>Login • ${shortRole}</span>
+        `;
+        btn.title = `Signed in as ${user.name} (${user.email}) - Open Financial Management System`;
+      } else {
+        btn.innerHTML = `<span>Login</span>`;
+        btn.title = 'Corporate Portal Login (Accounts & Administration)';
+      }
     }
   });
 
@@ -1832,13 +1869,13 @@ function initGlobalFinanceButton() {
       mobBtn = document.createElement('a');
       mobBtn.className = 'btn-finance-portal-trigger mobile-btn-full mobile-finance-login-btn';
       mobBtn.href = '/billing/';
-      mobBtn.style.cssText = 'justify-content:center; margin-bottom:0.65rem; height:42px; font-size:0.8rem; background:rgba(0,153,230,0.15); border:1px solid #38bdf8; color:#38bdf8; display:flex; align-items:center; gap:0.45rem; border-radius:8px; text-decoration:none; font-weight:700;';
+      mobBtn.style.cssText = 'justify-content:center; margin-bottom:0.65rem; height:42px; font-size:0.85rem; background:rgba(0,153,230,0.15); border:1px solid #38bdf8; color:#38bdf8; display:flex; align-items:center; gap:0.45rem; border-radius:8px; text-decoration:none; font-weight:700;';
       footer.insertBefore(mobBtn, footer.firstChild);
     }
     if (user) {
       mobBtn.innerHTML = `<span class="live-pulse-dot"></span><span>ACCOUNTS PORTAL • ACTIVE</span>`;
     } else {
-      mobBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>ACCOUNTS LOGIN</span>`;
+      mobBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>ACCOUNTS &amp; FINANCE LOGIN</span>`;
     }
   });
 }

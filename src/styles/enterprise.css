@@ -2183,9 +2183,10 @@ html {
   .main-nav-links > li:nth-last-child(2) {
     display: none !important;
   }
+  .btn-header-login,
   .btn-finance-portal-trigger {
-    padding: 0.42rem 0.72rem;
-    font-size: 0.68rem;
+    padding: 0.42rem 0.95rem !important;
+    font-size: 0.84rem !important;
   }
   .btn-header-cta {
     padding: 0.42rem 0.8rem !important;
@@ -2208,6 +2209,7 @@ html {
     border-left: none !important;
     padding-left: 0 !important;
     margin-left: 0 !important;
+    gap: 0.6rem;
   }
   .brand-logo-wrap {
     border-right: none !important;
@@ -2240,9 +2242,13 @@ html {
 
 @media (max-width: 960px) {
   .btn-contact-header,
-  .btn-header-cta,
-  .btn-finance-portal-trigger {
+  .btn-header-cta {
     display: none !important;
+  }
+  .header-login-wrap,
+  .btn-header-login,
+  .btn-finance-portal-trigger {
+    display: inline-flex !important;
   }
 }
 
@@ -2252,30 +2258,55 @@ html {
   }
   .header-main-nav {
     height: 64px;
-    padding: 0 1.25rem;
+    padding: 0 1rem;
   }
   .header-top-bar {
     display: none !important; /* Preserves mobile viewport height */
   }
   .brand-logo-img {
-    height: 38px;
-    max-width: 155px;
+    height: 36px;
+    max-width: 140px;
   }
   .btn-contact-header,
   .btn-header-cta {
     display: none !important;
   }
   .header-actions {
-    gap: 0.5rem;
+    gap: 0.45rem;
   }
   .btn-search-trigger {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     padding: 0 !important;
   }
+  .header-login-wrap {
+    display: inline-flex !important;
+  }
+  .btn-header-login,
+  .btn-finance-portal-trigger {
+    display: inline-flex !important;
+    padding: 0.36rem 0.75rem !important;
+    font-size: 0.82rem !important;
+    height: 34px !important;
+  }
   .btn-mobile-menu-toggle {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-theme-toggle {
+    display: none !important;
+  }
+  .header-actions {
+    gap: 0.35rem;
+  }
+  .btn-header-login,
+  .btn-finance-portal-trigger {
+    padding: 0.32rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    height: 32px !important;
   }
   
   /* Inner Page Heroes */
