@@ -2016,52 +2016,84 @@
   box-shadow: 0 1px 6px rgba(16, 185, 129, 0.4);
 }
 
-/* Editable Combobox for Customer / Client & Vendor Selection */
-.fin-combobox-wrapper {
+/* Custom Autocomplete Recommendations Dropdown (Full width, seamless luxury popup) */
+.fin-autocomplete-wrap {
   position: relative;
-  display: flex;
-  align-items: stretch;
   width: 100%;
 }
 
-.fin-combobox-input {
-  flex: 1;
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  font-weight: 500;
+.fin-autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #0b111e;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 153, 230, 0.15);
+  z-index: 1050;
+  max-height: 280px;
+  overflow-y: auto;
+  display: none;
+  padding: 0.35rem 0;
+  backdrop-filter: blur(12px);
 }
 
-.fin-combobox-picker {
-  width: 44px;
-  min-width: 44px;
-  max-width: 44px;
-  padding: 0;
-  text-align: center;
-  background-color: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-left: none;
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
+.fin-autocomplete-dropdown.open {
+  display: block;
+  animation: finFadeIn 0.15s ease-out;
+}
+
+.fin-autocomplete-header {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: #38bdf8;
+  padding: 0.5rem 0.85rem 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fin-autocomplete-item {
+  padding: 0.65rem 0.85rem;
   cursor: pointer;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  font-size: 0.95rem;
-  color-scheme: dark;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  transition: all 0.2s ease;
+  gap: 0.5rem;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.fin-combobox-picker:hover {
-  background-color: rgba(56, 189, 248, 0.2);
-  border-color: rgba(56, 189, 248, 0.5);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+.fin-autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.fin-autocomplete-item:hover,
+.fin-autocomplete-item.active {
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.fin-autocomplete-item-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.fin-autocomplete-item-meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.fin-autocomplete-item-badge {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Universal high-contrast dark styling for options in all selects */
@@ -2113,25 +2145,116 @@ select option:focus,
 }
 
 /* Line items editor in invoice / bill */
-.fin-line-item-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-  font-size: 0.8rem;
+.fin-table-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 16px rgba(0, 153, 230, 0.08);
+  margin: 0.75rem 0;
+  backdrop-filter: blur(10px);
 }
 
-.fin-line-item-table th {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid var(--fin-border);
-  color: var(--fin-text-muted);
-  font-size: 0.7rem;
+.fin-line-item-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+
+.fin-line-item-table thead th {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.fin-line-item-table tbody tr {
+  transition: all 0.15s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fin-line-item-table tbody tr:hover {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.fin-line-item-table tbody tr.milestone-active {
+  border-left: 3px solid #38bdf8;
+  background: rgba(56, 189, 248, 0.03);
 }
 
 .fin-line-item-table td {
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid var(--fin-border);
+  padding: 0.85rem 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.fin-line-item-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.fin-line-item-table .fin-form-input,
+.fin-line-item-table .fin-form-select {
+  background: rgba(11, 17, 30, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+  transition: all 0.2s ease;
+}
+
+.fin-line-item-table .fin-form-input:focus,
+.fin-line-item-table .fin-form-select:focus {
+  border-color: #38bdf8;
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.22);
+}
+
+/* Row Delete Button */
+.fin-row-del-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.95rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.fin-row-del-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.45);
+}
+
+/* Milestone calculation pill note */
+.row-pct-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(16, 185, 129, 0.08));
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  color: #38bdf8;
+  margin-top: 6px;
+  line-height: 1.35;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Billed Item/s List Modal (Vyapar Clean Accounting Style) */
@@ -2286,31 +2409,87 @@ select option:focus,
   transform: translateY(-1px);
 }
 
+/* Luxury Executive Billing Summary Card */
 .fin-calc-summary-box {
   margin-top: 1.5rem;
   margin-left: auto;
-  max-width: 380px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--fin-border);
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
+  max-width: 460px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(8, 14, 26, 0.98));
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 153, 230, 0.14);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.fin-calc-summary-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #38bdf8, #10b981, #0099e6);
+}
+
+.fin-calc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fin-calc-header-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .fin-calc-row {
   display: flex;
   justify-content: space-between;
-  padding: 0.35rem 0;
-  font-size: 0.82rem;
-  color: var(--fin-text-muted);
+  align-items: center;
+  padding: 0.45rem 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
 }
 
 .fin-calc-row.grand-total {
-  border-top: 1px solid var(--fin-border);
-  margin-top: 0.5rem;
-  padding-top: 0.65rem;
-  font-size: 1.1rem;
+  border-top: 1px solid rgba(56, 189, 248, 0.3);
+  margin-top: 0.75rem;
+  padding-top: 0.85rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  color: var(--fin-text-heading);
+  color: #ffffff;
+}
+
+.fin-calc-row.grand-total span:last-child {
+  background: linear-gradient(135deg, #38bdf8, #0099e6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.fin-calc-compliance-note {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.68rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 /* ==========================================================================

@@ -3459,28 +3459,30 @@ class FinanceApp {
                     <label class="fin-form-label" style="margin-bottom:0;">Customer / Client <span style="color:#ef4444;">*</span></label>
                     <span id="inv-cust-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Editable • Type or Pick ▾</span>
                   </div>
-                  <div class="fin-combobox-wrapper">
+                  <div class="fin-autocomplete-wrap">
                     <input 
                       type="text" 
                       id="inv-cust-input" 
-                      class="fin-form-input fin-combobox-input" 
-                      list="inv-cust-datalist" 
-                      placeholder="Write or select client name..." 
+                      class="fin-form-input" 
+                      placeholder="Click to view registered clients or write custom name..." 
                       required 
                       autocomplete="off"
                     >
-                    <select id="inv-cust-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered clients">
-                      <option value="" selected disabled style="display:none;"></option>
-                      <optgroup label="Registered Clients">
-                        ${customers.map(c => `<option value="${c.id}">${c.name} (${c.code || ''})</option>`).join('')}
-                      </optgroup>
-                    </select>
+                    <div id="inv-cust-dropdown" class="fin-autocomplete-dropdown">
+                      <div class="fin-autocomplete-header">Registered Clients (Click to Auto-fill)</div>
+                      ${customers.map(c => `
+                        <div class="fin-autocomplete-item" data-id="${c.id}" data-name="${c.name}">
+                          <div>
+                            <div class="fin-autocomplete-item-name">${c.name}</div>
+                            <div class="fin-autocomplete-item-meta">${c.code || ''} • ${c.trn ? `TRN: ${c.trn}` : (c.gstin ? `GSTIN: ${c.gstin}` : (c.country || 'UAE'))}</div>
+                          </div>
+                          <span class="fin-autocomplete-item-badge">${c.country || (c.trn ? 'UAE' : 'India')}</span>
+                        </div>
+                      `).join('')}
+                    </div>
                   </div>
-                  <datalist id="inv-cust-datalist">
-                    ${customers.map(c => `<option value="${c.name}">${c.name} (${c.code || ''}) - ${c.country || (c.trn ? 'UAE' : 'India')}</option>`).join('')}
-                  </datalist>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="inv-cust-hint">Type any client name directly, or pick from dropdown</span>
+                    <span id="inv-cust-hint">Click text box to view registered clients, or type custom name</span>
                   </div>
                 </div>
 
@@ -3549,34 +3551,71 @@ class FinanceApp {
                     <label class="fin-form-label" style="margin-bottom:0;">Linked Project / Cost Center</label>
                     <span id="inv-project-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Pick from List or Type Custom ▾</span>
                   </div>
-                  <div class="fin-combobox-wrapper">
+                  <div class="fin-autocomplete-wrap">
                     <input 
                       type="text" 
                       id="inv-project-input" 
-                      class="fin-form-input fin-combobox-input" 
-                      list="inv-project-datalist" 
-                      placeholder="Pick project or write custom project / cost center..." 
+                      class="fin-form-input" 
+                      placeholder="Click to view registered projects / cost centers, or type custom..." 
                       autocomplete="off"
                     >
-                    <select id="inv-project-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered projects">
-                      <option value="" selected disabled style="display:none;"></option>
-                      <optgroup label="Select Linked Project / Cost Center">
-                        <option value="GENERAL">General Corporate Billing</option>
-                        ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code})</option>`).join('')}
-                      </optgroup>
-                    </select>
+                    <div id="inv-project-dropdown" class="fin-autocomplete-dropdown">
+                      <div class="fin-autocomplete-header">Recommended Projects &amp; Cost Centers</div>
+                      <div class="fin-autocomplete-item" data-id="GENERAL" data-name="General Corporate Billing">
+                        <div>
+                          <div class="fin-autocomplete-item-name">⭐ General Corporate Billing</div>
+                          <div class="fin-autocomplete-item-meta">Standard Operating Entity Billing</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">Default</span>
+                      </div>
+                      ${projects.map(p => `
+                        <div class="fin-autocomplete-item" data-id="${p.id}" data-name="${p.name}">
+                          <div>
+                            <div class="fin-autocomplete-item-name">${p.name}</div>
+                            <div class="fin-autocomplete-item-meta">Code: ${p.code} • ${p.client || 'Rayan Project'}</div>
+                          </div>
+                          <span class="fin-autocomplete-item-badge">${p.code}</span>
+                        </div>
+                      `).join('')}
+                      <div class="fin-autocomplete-item" data-id="CC-101" data-name="Cost Center CC-101 Civil Infrastructure">
+                        <div>
+                          <div class="fin-autocomplete-item-name">Cost Center CC-101 Civil Infrastructure</div>
+                          <div class="fin-autocomplete-item-meta">Foundation, Superstructures &amp; Heavy Earthworks</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">CC-101</span>
+                      </div>
+                      <div class="fin-autocomplete-item" data-id="CC-102" data-name="Cost Center CC-102 MEP Engineering &amp; HVAC">
+                        <div>
+                          <div class="fin-autocomplete-item-name">Cost Center CC-102 MEP Engineering &amp; HVAC</div>
+                          <div class="fin-autocomplete-item-meta">Mechanical, Electrical, Plumbing &amp; Climate Control</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">CC-102</span>
+                      </div>
+                      <div class="fin-autocomplete-item" data-id="CC-103" data-name="Cost Center CC-103 Commercial Fitouts &amp; Glazing">
+                        <div>
+                          <div class="fin-autocomplete-item-name">Cost Center CC-103 Commercial Fitouts &amp; Glazing</div>
+                          <div class="fin-autocomplete-item-meta">Architectural Curtain Wall, Ceilings &amp; Luxury Interiors</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">CC-103</span>
+                      </div>
+                      <div class="fin-autocomplete-item" data-id="CC-104" data-name="Cost Center CC-104 Plant, Machinery &amp; Crane Hire">
+                        <div>
+                          <div class="fin-autocomplete-item-name">Cost Center CC-104 Plant, Machinery &amp; Crane Hire</div>
+                          <div class="fin-autocomplete-item-meta">Heavy Machinery, Hydraulic Cranes &amp; Fleet Logistics</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">CC-104</span>
+                      </div>
+                      <div class="fin-autocomplete-item" data-id="CC-105" data-name="Cost Center CC-105 Energy &amp; Offshore Facilities">
+                        <div>
+                          <div class="fin-autocomplete-item-name">Cost Center CC-105 Energy &amp; Offshore Facilities</div>
+                          <div class="fin-autocomplete-item-meta">Refinery Process Structures &amp; Marine Logistics</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">CC-105</span>
+                      </div>
+                    </div>
                   </div>
-                  <datalist id="inv-project-datalist">
-                    <option value="General Corporate Billing">General Corporate Billing</option>
-                    ${projects.map(p => `<option value="${p.name}">${p.name} (${p.code})</option>`).join('')}
-                    <option value="Cost Center CC-101 Civil Infrastructure">Cost Center CC-101 Civil Infrastructure</option>
-                    <option value="Cost Center CC-102 MEP Engineering & HVAC">Cost Center CC-102 MEP Engineering & HVAC</option>
-                    <option value="Cost Center CC-103 Commercial Fitouts & Glazing">Cost Center CC-103 Commercial Fitouts & Glazing</option>
-                    <option value="Cost Center CC-104 Plant, Machinery & Crane Hire">Cost Center CC-104 Plant, Machinery & Crane Hire</option>
-                    <option value="Cost Center CC-105 Energy & Offshore Facilities">Cost Center CC-105 Energy & Offshore Facilities</option>
-                  </datalist>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="inv-project-hint">Type any manual project name / cost center code directly, or pick from dropdown</span>
+                    <span id="inv-project-hint">Click text box to view registered projects / cost centers, or type custom</span>
                   </div>
                 </div>
                 <div class="fin-form-group">
@@ -3586,16 +3625,27 @@ class FinanceApp {
               </div>
 
               <!-- Line Items & Tax Calculation Section -->
-              <div style="display:flex; justify-content:space-between; align-items:center; margin:1.25rem 0 0.5rem; flex-wrap:wrap; gap:0.5rem;">
-                <h4 style="font-family:var(--fin-font-heading); font-size:1.05rem; color:#f8fafc; margin:0;">
-                  Line Items &amp; Tax Calculation
-                </h4>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1.5rem 0 0.75rem; flex-wrap:wrap; gap:0.75rem; padding-bottom:0.6rem; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="display:flex; align-items:center; gap:0.65rem;">
+                  <div style="width:36px; height:36px; border-radius:8px; background:rgba(0,153,230,0.12); border:1px solid rgba(0,153,230,0.25); display:flex; align-items:center; justify-content:center; color:#38bdf8; font-size:1.15rem;">
+                    📑
+                  </div>
+                  <div>
+                    <h4 style="font-family:var(--fin-font-heading); font-size:1.1rem; color:#f8fafc; margin:0; display:flex; align-items:center; gap:0.5rem;">
+                      Line Items &amp; Tax Calculation
+                      <span style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(16,185,129,0.14); color:#10b981; border:1px solid rgba(16,185,129,0.3);">Milestone &amp; VAT 5% Active</span>
+                    </h4>
+                    <div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">
+                      Enter line rate or select progressive milestone (% billing) for progress claims
+                    </div>
+                  </div>
+                </div>
                 <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-                  <button type="button" class="fin-btn-quick" id="inv-apply-50pct-preset-btn" style="background:rgba(16,185,129,0.18); color:#34d399; border:1px solid rgba(16,185,129,0.4); font-size:0.78rem; padding:0.35rem 0.85rem; border-radius:6px; cursor:pointer; font-weight:700;">
-                    ⚡ 50% Milestone (500.00 AED Subtotal)
+                  <button type="button" class="fin-btn-quick" id="inv-apply-50pct-preset-btn" style="background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.4); font-size:0.78rem; padding:0.4rem 0.95rem; border-radius:6px; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; transition:all 0.2s ease;">
+                    <span>⚡ Quick 50% Milestone</span>
                   </button>
-                  <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn" style="background:rgba(37,99,235,0.18); color:#60a5fa; border:1px solid rgba(59,130,246,0.35); font-size:0.78rem; padding:0.35rem 0.85rem; border-radius:6px; cursor:pointer;">
-                    📑 Open Billed Item/s List Popup
+                  <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn" style="background:rgba(37,99,235,0.16); color:#60a5fa; border:1px solid rgba(59,130,246,0.35); font-size:0.78rem; padding:0.4rem 0.95rem; border-radius:6px; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;">
+                    <span>📋 Spreadsheet View</span>
                   </button>
                 </div>
               </div>
@@ -3614,78 +3664,79 @@ class FinanceApp {
                 ${items.map(it => `<option value="${it.name}">Catalog: ${it.name} (${it.hsn_sac_code || ''})</option>`).join('')}
               </datalist>
 
-              <!-- Master Rayan Group UOM Datalist -->
-              <datalist id="inv-uom-datalist">
-                <option value="%">% (Progressive Milestone %)</option>
-                <option value="LSUM">LSUM (Lump Sum / Turnkey Contract)</option>
-                <option value="JOB">JOB (Defined Work Package)</option>
-                <option value="SQM">SQM (Square Meter - Glazing / Fitouts / Marble)</option>
-                <option value="SQFT">SQFT (Square Feet - Commercial Interior / Flooring)</option>
-                <option value="CUM">CUM (Cubic Meter - Ready Mix Concrete / Earthwork)</option>
-                <option value="MT">MT (Metric Ton - Structural Steel / TMT Rebar)</option>
-                <option value="KG">KG (Kilogram - Fasteners / Chemical Admixtures)</option>
-                <option value="BAG">BAG (Bags - Cement / Grout / Plaster)</option>
-                <option value="NOS">NOS (Numbers / Units - MEP Equipment / DB Panels)</option>
-                <option value="PCS">PCS (Pieces - Valves / Outlets / Fixtures)</option>
-                <option value="SET">SET (Sets - Pump Assemblies / Earthing Kits)</option>
-                <option value="MTR">MTR (Linear Meter - Cables / Piping)</option>
-                <option value="RMT">RMT (Running Meter - Skirting / Handrails)</option>
-                <option value="HRS">HRS (Hours - Mobile Crane / Machinery Rental)</option>
-                <option value="DAY">DAY (Days - Heavy Machinery / Daily Shifts)</option>
-                <option value="MTH">MTH (Months - Equipment Hire / Facility Mgmt)</option>
-                <option value="MD">MD (Man-Days - Senior Site Supervision)</option>
-                <option value="ANNUM">ANNUM (Annual Maintenance Contract - AMC)</option>
-              </datalist>
-
-              <div class="fin-table-responsive">
-                <table class="fin-line-item-table" id="inv-items-table">
-                  <thead>
-                    <tr>
-                      <th style="width:28%;">ITEM / SERVICE</th>
-                      <th style="width:11%;">HSN/SAC</th>
-                      <th style="width:10%; text-align:center;">QTY / %</th>
-                      <th style="width:9%; text-align:center;">UOM</th>
-                      <th style="width:14%;" id="inv-rate-col-header">RATE / CONTRACT (AED)</th>
-                      <th style="width:11%;" id="inv-tax-col-header">VAT 5%</th>
-                      <th style="width:14%; text-align:right;" id="inv-total-col-header">TOTAL (AED)</th>
-                      <th style="width:3%;"></th>
-                    </tr>
-                  </thead>
-                  <tbody id="inv-items-tbody">
-                    <!-- Dynamic line rows -->
-                  </tbody>
-                </table>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
-                <button type="button" class="fin-btn-quick" id="inv-add-row-btn" style="color:#38bdf8; border-color:rgba(56,189,248,0.3); font-weight:700;">+ Add Line Item</button>
-                <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn2" style="color:#60a5fa; border-color:rgba(59,130,246,0.35); font-size:0.78rem;">📑 Edit in Spreadsheet Popup</button>
+              <div class="fin-table-card">
+                <div class="fin-table-responsive" style="margin:0;">
+                  <table class="fin-line-item-table" id="inv-items-table">
+                    <thead>
+                      <tr>
+                        <th style="width:34%; text-align:left;">ITEM DESCRIPTION &amp; PROGRESSIVE MILESTONE</th>
+                        <th style="width:10%; text-align:center;">HSN / SAC</th>
+                        <th style="width:11%; text-align:center;">QTY / CLAIM %</th>
+                        <th style="width:11%; text-align:center;">UNIT (UOM)</th>
+                        <th style="width:14%; text-align:right;" id="inv-rate-col-header">CONTRACT / RATE (AED)</th>
+                        <th style="width:9%; text-align:center;" id="inv-tax-col-header">VAT 5%</th>
+                        <th style="width:13%; text-align:right;" id="inv-total-col-header">AMOUNT (AED)</th>
+                        <th style="width:4%; text-align:center;"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="inv-items-tbody">
+                      <!-- Dynamic line rows -->
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <!-- Realtime Calculations -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                <button type="button" class="fin-btn-quick" id="inv-add-row-btn" style="background:linear-gradient(135deg, rgba(56,189,248,0.18), rgba(0,153,230,0.22)); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); font-weight:700; padding:0.5rem 1.25rem; border-radius:7px; display:inline-flex; align-items:center; gap:0.45rem; font-size:0.84rem; cursor:pointer; box-shadow:0 2px 8px rgba(0,153,230,0.15);">
+                  <span style="font-size:1.2rem; line-height:1; font-weight:900;">+</span> Add Line Item
+                </button>
+                <div style="font-size:0.74rem; color:#94a3b8; display:flex; align-items:center; gap:0.35rem;">
+                  <span>💡 Tip: Set UOM to <strong style="color:#38bdf8;">%</strong> for milestone progress billing against total contract value.</span>
+                </div>
+              </div>
+
+              <!-- Realtime Calculations Executive Card -->
               <div class="fin-calc-summary-box">
+                <div class="fin-calc-header">
+                  <span class="fin-calc-header-title">
+                    <span>📊</span>
+                    <span>Billing Summary &amp; Tax Breakdown</span>
+                  </span>
+                  <span id="inv-calc-regime-badge" style="font-size:0.68rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.12); padding:3px 9px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">🇦🇪 UAE VAT (5%)</span>
+                </div>
+                <div class="fin-calc-row" id="inv-calc-base-row" style="display:none;">
+                  <span style="font-weight:600; color:#94a3b8;">Contract Base Value</span>
+                  <span id="inv-calc-base" style="font-weight:600; color:#cbd5e1; font-family:monospace; font-size:0.88rem;">AED 0.00</span>
+                </div>
                 <div class="fin-calc-row">
-                  <span id="inv-calc-taxable-label">Taxable Subtotal</span>
-                  <span id="inv-calc-taxable">AED 0.00</span>
+                  <span id="inv-calc-taxable-label" style="font-weight:600; color:#cbd5e1;">Taxable Subtotal</span>
+                  <span id="inv-calc-taxable" style="font-weight:700; color:#f8fafc; font-family:monospace; font-size:0.92rem;">AED 0.00</span>
                 </div>
                 <div class="fin-calc-row" id="inv-calc-cgst-row" style="display:none;">
-                  <span>CGST</span>
-                  <span id="inv-calc-cgst">₹0.00</span>
+                  <span>Central GST (CGST)</span>
+                  <span id="inv-calc-cgst" style="font-weight:600; color:#cbd5e1; font-family:monospace;">₹0.00</span>
                 </div>
                 <div class="fin-calc-row" id="inv-calc-sgst-row" style="display:none;">
-                  <span>SGST</span>
-                  <span id="inv-calc-sgst">₹0.00</span>
+                  <span>State GST (SGST)</span>
+                  <span id="inv-calc-sgst" style="font-weight:600; color:#cbd5e1; font-family:monospace;">₹0.00</span>
                 </div>
                 <div class="fin-calc-row" id="inv-calc-igst-row" style="display:none;">
-                  <span>IGST</span>
-                  <span id="inv-calc-igst">₹0.00</span>
+                  <span>Integrated GST (IGST)</span>
+                  <span id="inv-calc-igst" style="font-weight:600; color:#cbd5e1; font-family:monospace;">₹0.00</span>
                 </div>
                 <div class="fin-calc-row" id="inv-calc-vat-row">
-                  <span>VAT (5%)</span>
-                  <span id="inv-calc-vat" style="color:#10b981; font-weight:700;">AED 0.00</span>
+                  <span style="display:flex; align-items:center; gap:0.4rem;">
+                    <span>VAT (5%)</span>
+                    <span style="font-size:0.64rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.14); padding:1px 6px; border-radius:4px; border:1px solid rgba(16,185,129,0.3);">Standard Rate</span>
+                  </span>
+                  <span id="inv-calc-vat" style="color:#10b981; font-weight:700; font-family:monospace; font-size:0.92rem;">AED 0.00</span>
                 </div>
                 <div class="fin-calc-row grand-total">
-                  <span>Invoice Total</span>
-                  <span id="inv-calc-grand" style="color:#0099e6;">AED 0.00</span>
+                  <span>Grand Total (AED)</span>
+                  <span id="inv-calc-grand">AED 0.00</span>
+                </div>
+                <div class="fin-calc-compliance-note">
+                  <span id="inv-compliance-text">⚖️ Compliant with UAE FTA VAT Executive Regulations (5% Standard Rate)</span>
                 </div>
               </div>
 
@@ -3729,8 +3780,23 @@ class FinanceApp {
       const rateCol = document.getElementById('inv-rate-col-header');
       const taxCol = document.getElementById('inv-tax-col-header');
       const totCol = document.getElementById('inv-total-col-header');
+      const regBadge = document.getElementById('inv-calc-regime-badge');
 
       if (regimeHidden) regimeHidden.value = regime;
+
+      if (regBadge) {
+        if (isTrn) {
+          regBadge.textContent = '🇦🇪 UAE VAT (5%)';
+          regBadge.style.color = '#10b981';
+          regBadge.style.background = 'rgba(16,185,129,0.12)';
+          regBadge.style.border = '1px solid rgba(16,185,129,0.3)';
+        } else {
+          regBadge.textContent = '🇮🇳 India GST (18%)';
+          regBadge.style.color = '#38bdf8';
+          regBadge.style.background = 'rgba(56,189,248,0.12)';
+          regBadge.style.border = '1px solid rgba(56,189,248,0.3)';
+        }
+      }
 
       if (isTrn) {
         if (btnTrn) btnTrn.classList.add('active', 'trn-pill');
@@ -3752,9 +3818,9 @@ class FinanceApp {
           if (currBadge) currBadge.textContent = 'AED (د.إ)';
         }
 
-        if (rateCol) rateCol.textContent = `RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
         if (taxCol) taxCol.textContent = 'VAT 5%';
-        if (totCol) totCol.textContent = `TOTAL (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
 
         tbody.querySelectorAll('tr').forEach(tr => {
           const gstSel = tr.querySelector('.row-gst');
@@ -3787,9 +3853,9 @@ class FinanceApp {
           if (currBadge) currBadge.textContent = '₹ INR';
         }
 
-        if (rateCol) rateCol.textContent = `RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
         if (taxCol) taxCol.textContent = 'GST %';
-        if (totCol) totCol.textContent = `TOTAL (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
 
         tbody.querySelectorAll('tr').forEach(tr => {
           const gstSel = tr.querySelector('.row-gst');
@@ -3820,8 +3886,8 @@ class FinanceApp {
 
         const rateCol = document.getElementById('inv-rate-col-header');
         const totCol = document.getElementById('inv-total-col-header');
-        if (rateCol) rateCol.textContent = `RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
-        if (totCol) totCol.textContent = `TOTAL (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
 
         recalculateInvoice();
       };
@@ -3842,9 +3908,13 @@ class FinanceApp {
       const isPercentInitial = uom === '%' || uom.includes('PERCENT') || (itemName && itemName.includes('%'));
       const initialPctVal = defaultItem?.progress_pct || defaultItem?.pct || (isPercentInitial ? (defaultQty > 1 && defaultQty <= 100 ? defaultQty : 50) : 50);
 
+      if (isPercentInitial) {
+        tr.classList.add('milestone-active');
+      }
+
       tr.innerHTML = `
-        <td>
-          <select class="fin-form-select row-item-sel" style="margin-bottom:0.35rem; font-size:0.82rem;">
+        <td style="width:34%; vertical-align:top;">
+          <select class="fin-form-select row-item-sel" style="margin-bottom:0.4rem; font-size:0.82rem; font-weight:600;">
             <option value="">Custom Item / Service / Milestone</option>
             <optgroup label="⚡ Progressive Milestone &amp; % Payments">
               <option value="MILESTONE-50" ${itemId === 'item-milestone-50' || itemId === 'MILESTONE-50' || itemName.includes('50%') ? 'selected' : ''}>
@@ -3867,26 +3937,27 @@ class FinanceApp {
               ${items.filter(it => !it.id.startsWith('item-milestone')).map(it => `<option value="${it.id}" ${itemId === it.id || (itemName && it.name === itemName) ? 'selected' : ''}>${it.name}</option>`).join('')}
             </optgroup>
           </select>
-          <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Item or milestone description..." value="${itemName}" style="font-size:0.82rem;">
-          <div class="row-pct-note" style="display:${isPercentInitial ? 'block' : 'none'}; font-size:0.7rem; color:#38bdf8; margin-top:0.25rem; font-weight:600; line-height:1.3;"></div>
+          <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Enter item description or milestone..." value="${itemName}" style="font-size:0.82rem;">
+          <div class="row-pct-note" style="display:${isPercentInitial ? 'flex' : 'none'};"></div>
         </td>
-        <td>
-          <input type="text" class="fin-form-input row-hsn" placeholder="HSN/SAC" value="${hsn}" style="font-size:0.82rem;">
+        <td style="width:10%; vertical-align:top;">
+          <input type="text" class="fin-form-input row-hsn" placeholder="9954" value="${hsn}" style="font-size:0.82rem; font-family:monospace; text-align:center;">
+          <div style="font-size:0.65rem; color:#64748b; margin-top:3px; text-align:center;">HSN/SAC</div>
         </td>
-        <td style="text-align:center;">
-          <input type="number" class="fin-form-input row-qty" value="${defaultQty || 1}" min="0.001" step="any" style="text-align:center; font-size:0.82rem; font-weight:700;">
-          <div class="row-pct-subfield" style="display:${isPercentInitial ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:2px; margin-top:3px; font-size:0.68rem; color:#38bdf8;">
-            <span style="font-size:0.65rem; color:#94a3b8;">Billed:</span>
-            <input type="number" class="fin-form-input row-pct-val" value="${initialPctVal}" placeholder="50" min="0.01" max="100" step="any" style="width:44px; padding:2px 2px; font-size:0.74rem; text-align:center; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid #38bdf8; border-radius:4px;">
-            <span style="font-weight:700;">%</span>
+        <td style="width:11%; vertical-align:top; text-align:center;">
+          <input type="number" class="fin-form-input row-qty" value="${defaultQty || 1}" min="0.001" step="any" style="text-align:center; font-size:0.85rem; font-weight:700;">
+          <div class="row-pct-subfield" style="display:${isPercentInitial ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:2px; margin-top:4px;">
+            <span style="font-size:0.65rem; color:#94a3b8; font-weight:600;">CLAIM:</span>
+            <input type="number" class="fin-form-input row-pct-val" value="${initialPctVal}" placeholder="50" min="0.01" max="100" step="any" style="width:46px; padding:2px 3px; font-size:0.75rem; text-align:center; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid #38bdf8; border-radius:4px;">
+            <span style="font-weight:800; color:#38bdf8; font-size:0.75rem;">%</span>
           </div>
         </td>
-        <td>
-          <select class="fin-form-select row-uom" style="font-size:0.82rem; font-weight:700; text-align:center; padding:0.4rem 0.2rem;">
+        <td style="width:11%; vertical-align:top;">
+          <select class="fin-form-select row-uom" style="font-size:0.82rem; font-weight:700; text-align:center;">
             <optgroup label="⚡ Progressive Milestone">
-              <option value="%" ${uom === '%' ? 'selected' : ''}>% (Progressive %)</option>
+              <option value="%" ${uom === '%' ? 'selected' : ''}>% (Progress %)</option>
             </optgroup>
-            <optgroup label="Standard Units">
+            <optgroup label="Standard Engineering Units">
               <option value="LSUM" ${uom === 'LSUM' ? 'selected' : ''}>LSUM</option>
               <option value="JOB" ${uom === 'JOB' ? 'selected' : ''}>JOB</option>
               <option value="SQM" ${uom === 'SQM' ? 'selected' : ''}>SQM</option>
@@ -3908,12 +3979,12 @@ class FinanceApp {
             </optgroup>
           </select>
         </td>
-        <td>
-          <input type="number" class="fin-form-input row-rate" value="${rate > 0 ? rate : (defaultItem ? 0 : '')}" placeholder="0.00" step="any" style="font-size:0.82rem; font-weight:600;">
-          <div style="font-size:0.65rem; color:#64748b; margin-top:2px; text-align:center;">Rate / Base Value</div>
+        <td style="width:14%; vertical-align:top;">
+          <input type="number" class="fin-form-input row-rate" value="${rate > 0 ? rate : (defaultItem ? 0 : '')}" placeholder="0.00" step="any" style="font-size:0.85rem; font-weight:700; text-align:right; font-family:monospace;">
+          <div style="font-size:0.65rem; color:#64748b; margin-top:3px; text-align:right;">Contract / Rate</div>
         </td>
-        <td>
-          <select class="fin-form-select row-gst" style="font-size:0.82rem; font-weight:600;">
+        <td style="width:9%; vertical-align:top;">
+          <select class="fin-form-select row-gst" style="font-size:0.82rem; font-weight:700; text-align:center;">
             ${isTrn ? `
               <option value="5" ${Number(gstRate) === 5 ? 'selected' : ''}>5%</option>
               <option value="0" ${Number(gstRate) === 0 ? 'selected' : ''}>0%</option>
@@ -3925,12 +3996,13 @@ class FinanceApp {
               <option value="0" ${Number(gstRate) === 0 ? 'selected' : ''}>0%</option>
             `}
           </select>
+          <div style="font-size:0.65rem; color:#64748b; margin-top:3px; text-align:center;">Tax %</div>
         </td>
-        <td style="text-align:right;">
-          <strong class="row-total" style="color:#38bdf8; font-size:0.85rem;">${currSym}0.00</strong>
+        <td style="width:13%; vertical-align:top; text-align:right; padding-top:0.95rem;">
+          <strong class="row-total" style="color:#38bdf8; font-size:0.95rem; font-family:monospace; display:block;">${currSym}0.00</strong>
         </td>
-        <td style="text-align:center;">
-          <button type="button" class="fin-modal-close row-del" style="font-size:1.15rem; color:#ef4444; border:none; background:none; cursor:pointer;" title="Remove row">&times;</button>
+        <td style="width:4%; vertical-align:top; text-align:center; padding-top:0.75rem;">
+          <button type="button" class="fin-row-del-btn row-del" title="Remove row">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -3956,6 +4028,7 @@ class FinanceApp {
           if (pctValInp) pctValInp.value = '50';
           if (pctSubfield) pctSubfield.style.display = 'flex';
           gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+          tr.classList.add('milestone-active');
         } else if (val === 'MILESTONE-20' || val === 'item-milestone-20') {
           descInp.value = '20% MOBILIZATION & ADVANCE PAYMENT AGAINST LPO';
           hsnInp.value = '9954';
@@ -3965,6 +4038,7 @@ class FinanceApp {
           if (pctValInp) pctValInp.value = '20';
           if (pctSubfield) pctSubfield.style.display = 'flex';
           gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+          tr.classList.add('milestone-active');
         } else if (val === 'MILESTONE-30' || val === 'item-milestone-30') {
           descInp.value = '30% RUNNING ACCOUNT (RA) BILL PAYMENT - MEP & STRUCTURAL';
           hsnInp.value = '9954';
@@ -3974,8 +4048,9 @@ class FinanceApp {
           if (pctValInp) pctValInp.value = '30';
           if (pctSubfield) pctSubfield.style.display = 'flex';
           gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+          tr.classList.add('milestone-active');
         } else if (val === 'MILESTONE-10') {
-          descInp.value = '10% PROGRESSIVE PAYMENT';
+          descInp.value = '10% PROGRESSIVE MILESTONE PAYMENT';
           hsnInp.value = '9954';
           if (uomSel) uomSel.value = '%';
           qtyInp.value = '1';
@@ -3983,6 +4058,7 @@ class FinanceApp {
           if (pctValInp) pctValInp.value = '10';
           if (pctSubfield) pctSubfield.style.display = 'flex';
           gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+          tr.classList.add('milestone-active');
         } else if (val === 'MILESTONE-PCT' || val === 'item-milestone-pct') {
           descInp.value = '% PROGRESSIVE WORK CERTIFICATION';
           hsnInp.value = '9954';
@@ -3992,6 +4068,7 @@ class FinanceApp {
           if (pctValInp && (!pctValInp.value || Number(pctValInp.value) === 0)) pctValInp.value = '50';
           if (pctSubfield) pctSubfield.style.display = 'flex';
           gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+          tr.classList.add('milestone-active');
         } else {
           const found = items.find(it => it.id === val);
           if (found) {
@@ -4003,8 +4080,10 @@ class FinanceApp {
             if (found.uom === '%') {
               if (pctSubfield) pctSubfield.style.display = 'flex';
               if (pctValInp && (!pctValInp.value || Number(pctValInp.value) === 0)) pctValInp.value = '50';
+              tr.classList.add('milestone-active');
             } else {
               if (pctSubfield) pctSubfield.style.display = 'none';
+              tr.classList.remove('milestone-active');
             }
           }
         }
@@ -4026,6 +4105,7 @@ class FinanceApp {
           if (found.uom === '%') {
             const pctSub = tr.querySelector('.row-pct-subfield');
             if (pctSub) pctSub.style.display = 'flex';
+            tr.classList.add('milestone-active');
           }
         } else if (val.includes('%') || val.includes('milestone')) {
           const uomSel = tr.querySelector('.row-uom');
@@ -4037,6 +4117,7 @@ class FinanceApp {
           if (match && pctValInp) {
             pctValInp.value = match[1];
           }
+          tr.classList.add('milestone-active');
         }
         recalculateInvoice();
       };
@@ -4047,6 +4128,7 @@ class FinanceApp {
           const isPct = uomSelect.value === '%' || uomSelect.value.includes('PERCENT');
           const pctSub = tr.querySelector('.row-pct-subfield');
           if (pctSub) pctSub.style.display = isPct ? 'flex' : 'none';
+          tr.classList.toggle('milestone-active', isPct);
           recalculateInvoice();
         };
       }
@@ -4080,6 +4162,7 @@ class FinanceApp {
       let hasOnly5Or0Tax = true;
       let hasPercentRow = false;
       let milestonePercentUsed = 50;
+      let totalContractBase = 0;
 
       tbody.querySelectorAll('tr').forEach(tr => {
         const qtyInp = tr.querySelector('.row-qty');
@@ -4097,12 +4180,14 @@ class FinanceApp {
 
         const isPercent = uom === '%' || uom.includes('PERCENT');
         if (pctSubfield) pctSubfield.style.display = isPercent ? 'flex' : 'none';
+        tr.classList.toggle('milestone-active', isPercent);
 
         let rowTaxable = 0;
         let pctUsed = 0;
 
         if (isPercent) {
           hasPercentRow = true;
+          totalContractBase += (qty * rate);
           const explicitPct = Number(pctValInp?.value);
           if (!isNaN(explicitPct) && explicitPct > 0) {
             pctUsed = explicitPct;
@@ -4120,9 +4205,14 @@ class FinanceApp {
           milestonePercentUsed = pctUsed;
 
           if (pctNote) {
-            pctNote.style.display = 'block';
+            pctNote.style.display = 'flex';
             const baseContract = qty * rate;
-            pctNote.innerHTML = `💡 Billed Milestone (<strong>${pctUsed}%</strong>): ${currSym}${baseContract.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &times; ${pctUsed}% = <strong>${currSym}${rowTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> (Taxable Subtotal)`;
+            pctNote.innerHTML = `
+              <div class="row-pct-pill">
+                <span>⚡</span>
+                <span>Billed Milestone (<strong>${pctUsed}%</strong>): ${currSym}${baseContract.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &times; ${pctUsed}% = <strong style="color:#ffffff;">${currSym}${rowTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> (Taxable Subtotal)</span>
+              </div>
+            `;
           }
         } else {
           if (pctNote) pctNote.style.display = 'none';
@@ -4169,6 +4259,18 @@ class FinanceApp {
       const grandTotal = taxableSum + taxSum;
       const fmt = (val) => `${currSym}${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+      // Base Contract summary row (if milestone used)
+      const baseRow = document.getElementById('inv-calc-base-row');
+      const baseEl = document.getElementById('inv-calc-base');
+      if (baseRow && baseEl) {
+        if (hasPercentRow && totalContractBase > 0) {
+          baseRow.style.display = 'flex';
+          baseEl.textContent = fmt(totalContractBase);
+        } else {
+          baseRow.style.display = 'none';
+        }
+      }
+
       document.getElementById('inv-calc-taxable').textContent = fmt(taxableSum);
       document.getElementById('inv-calc-grand').textContent = fmt(grandTotal);
 
@@ -4213,6 +4315,15 @@ class FinanceApp {
             document.getElementById('inv-calc-sgst').textContent = fmt(sgstSum);
           }
           if (igstRow) igstRow.style.display = 'none';
+        }
+      }
+
+      const compText = document.getElementById('inv-compliance-text');
+      if (compText) {
+        if (isTrn || isUaeSupply || (hasOnly5Or0Tax && vatSum > 0)) {
+          compText.textContent = '⚖️ Compliant with UAE FTA VAT Executive Regulations (5% Standard Rate)';
+        } else {
+          compText.textContent = '⚖️ Compliant with India GST Rules & E-Invoice Standard Guidelines';
         }
       }
     };
@@ -4500,29 +4611,49 @@ class FinanceApp {
       recalculateInvoice();
     };
 
-    // Quick select dropdown handler
-    if (custQuickSelect) {
-      custQuickSelect.onchange = () => {
-        const found = customers.find(x => x.id === custQuickSelect.value);
-        if (found) {
-          applyCustomerData(found);
-        }
-        custQuickSelect.value = '';
+    // Customer Recommendations Dropdown when clicked on text box
+    const custDropdown = document.getElementById('inv-cust-dropdown');
+    if (custInput && custDropdown) {
+      const showCustRecommendations = () => {
+        const val = custInput.value.trim().toLowerCase();
+        custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const name = (item.getAttribute('data-name') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || name.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        custDropdown.classList.add('open');
       };
-    }
 
-    // Input typing & autocomplete handler
-    if (custInput) {
+      custInput.onfocus = showCustRecommendations;
+      custInput.onclick = showCustRecommendations;
+
+      custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const custId = item.getAttribute('data-id');
+          const found = customers.find(c => c.id === custId);
+          if (found) {
+            applyCustomerData(found);
+          }
+          custDropdown.classList.remove('open');
+        };
+      });
+
       const handleCustomerInput = () => {
+        showCustRecommendations();
         const val = custInput.value.trim();
         if (!val) {
           custInput.removeAttribute('data-cust-id');
           if (custBadge) {
-            custBadge.textContent = 'Editable • Type or Pick ▾';
+            custBadge.textContent = 'Editable • Click for Options ▾';
             custBadge.style.color = '#38bdf8';
           }
           if (custHint) {
-            custHint.textContent = 'Type any client name directly, or pick from dropdown';
+            custHint.textContent = 'Click text box to pick registered clients, or type custom name';
           }
           return;
         }
@@ -4548,6 +4679,12 @@ class FinanceApp {
 
       custInput.oninput = handleCustomerInput;
       custInput.onchange = handleCustomerInput;
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#inv-cust-input') && !e.target.closest('#inv-cust-dropdown')) {
+          custDropdown.classList.remove('open');
+        }
+      });
     }
 
     // Regime toggle buttons
@@ -4621,33 +4758,60 @@ class FinanceApp {
     if (noDueCheckbox) noDueCheckbox.onchange = updateDueDate;
     updateDueDate();
 
-    // Project / Cost Center selection & manual input handling
+    // Project / Cost Center Recommendations Dropdown when clicked on text box
     const prjInput = document.getElementById('inv-project-input');
-    const prjQuickSelect = document.getElementById('inv-project-quick-select');
+    const prjDropdown = document.getElementById('inv-project-dropdown');
     const prjBadge = document.getElementById('inv-project-badge');
     const prjHint = document.getElementById('inv-project-hint');
 
-    if (prjQuickSelect && prjInput) {
-      prjQuickSelect.onchange = () => {
-        const selVal = prjQuickSelect.value;
-        if (selVal === 'GENERAL') {
-          prjInput.value = 'General Corporate Billing';
-          prjInput.removeAttribute('data-project-id');
-          if (prjBadge) { prjBadge.textContent = '✓ General Billing'; prjBadge.style.color = '#10b981'; }
-          if (prjHint) prjHint.textContent = 'General Corporate Billing selected';
-        } else {
-          const found = projects.find(p => p.id === selVal);
-          if (found) {
-            prjInput.value = found.name;
-            prjInput.setAttribute('data-project-id', found.id);
-            if (prjBadge) { prjBadge.textContent = `✓ ${found.code || 'Registered Project'}`; prjBadge.style.color = '#10b981'; }
-            if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
+    if (prjInput && prjDropdown) {
+      const showPrjRecommendations = () => {
+        const val = prjInput.value.trim().toLowerCase();
+        prjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const name = (item.getAttribute('data-name') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || name.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
           }
-        }
-        prjQuickSelect.value = '';
+        });
+        prjDropdown.classList.add('open');
       };
 
+      prjInput.onfocus = showPrjRecommendations;
+      prjInput.onclick = showPrjRecommendations;
+
+      prjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const prjId = item.getAttribute('data-id');
+          const prjName = item.getAttribute('data-name');
+          if (prjId === 'GENERAL') {
+            prjInput.value = 'General Corporate Billing';
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) { prjBadge.textContent = '✓ General Billing'; prjBadge.style.color = '#10b981'; }
+            if (prjHint) prjHint.textContent = 'General Corporate Billing selected';
+          } else if (prjId.startsWith('CC-')) {
+            prjInput.value = prjName;
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) { prjBadge.textContent = `✓ ${prjId}`; prjBadge.style.color = '#10b981'; }
+            if (prjHint) prjHint.textContent = `${prjName} selected`;
+          } else {
+            const found = projects.find(p => p.id === prjId);
+            if (found) {
+              prjInput.value = found.name;
+              prjInput.setAttribute('data-project-id', found.id);
+              if (prjBadge) { prjBadge.textContent = `✓ ${found.code || 'Registered Project'}`; prjBadge.style.color = '#10b981'; }
+              if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
+            }
+          }
+          prjDropdown.classList.remove('open');
+        };
+      });
+
       prjInput.oninput = () => {
+        showPrjRecommendations();
         const val = prjInput.value.trim();
         const found = projects.find(p => p.name.toLowerCase() === val.toLowerCase() || `${p.name} (${p.code})`.toLowerCase() === val.toLowerCase());
         if (found) {
@@ -4660,10 +4824,16 @@ class FinanceApp {
           if (prjHint) prjHint.textContent = `Custom project / cost center "${val}" will be used for this invoice.`;
         } else {
           prjInput.removeAttribute('data-project-id');
-          if (prjBadge) { prjBadge.textContent = 'Pick from List or Type Custom ▾'; prjBadge.style.color = '#38bdf8'; }
-          if (prjHint) prjHint.textContent = 'Type any manual project name / cost center code directly, or pick from dropdown';
+          if (prjBadge) { prjBadge.textContent = 'Click for Recommendations ▾'; prjBadge.style.color = '#38bdf8'; }
+          if (prjHint) prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
         }
       };
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#inv-project-input') && !e.target.closest('#inv-project-dropdown')) {
+          prjDropdown.classList.remove('open');
+        }
+      });
     }
 
     document.getElementById('inv-add-row-btn').onclick = () => addRow();
@@ -5424,30 +5594,32 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
                     <label class="fin-form-label" style="margin-bottom:0;">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
-                    <span id="bill-vend-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Editable • Type or Pick ▾</span>
+                    <span id="bill-vend-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Click for Recommendations ▾</span>
                   </div>
-                  <div class="fin-combobox-wrapper">
+                  <div class="fin-autocomplete-wrap">
                     <input 
                       type="text" 
                       id="bill-vend-input" 
-                      class="fin-form-input fin-combobox-input" 
-                      list="bill-vend-datalist" 
-                      placeholder="Write or select vendor name..." 
+                      class="fin-form-input" 
+                      placeholder="Click to view registered vendors, or type custom..." 
                       required 
                       autocomplete="off"
                     >
-                    <select id="bill-vend-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered vendors">
-                      <option value="" selected disabled style="display:none;"></option>
-                      <optgroup label="Registered Vendors">
-                        ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code || ''})</option>`).join('')}
-                      </optgroup>
-                    </select>
+                    <div id="bill-vend-dropdown" class="fin-autocomplete-dropdown">
+                      <div class="fin-autocomplete-header">Registered Vendors (Click to Auto-fill)</div>
+                      ${vendors.map(v => `
+                        <div class="fin-autocomplete-item" data-id="${v.id}" data-name="${v.name}">
+                          <div>
+                            <div class="fin-autocomplete-item-name">${v.name}</div>
+                            <div class="fin-autocomplete-item-meta">${v.code || ''} • ${v.trn ? `TRN: ${v.trn}` : (v.gstin ? `GSTIN: ${v.gstin}` : (v.country || 'UAE'))}</div>
+                          </div>
+                          <span class="fin-autocomplete-item-badge">${v.country || (v.trn ? 'UAE' : 'India')}</span>
+                        </div>
+                      `).join('')}
+                    </div>
                   </div>
-                  <datalist id="bill-vend-datalist">
-                    ${vendors.map(v => `<option value="${v.name}">${v.name} (${v.code || ''}) - ${v.country || (v.trn ? 'UAE' : 'India')}</option>`).join('')}
-                  </datalist>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="bill-vend-hint">Type any vendor name directly, or pick from dropdown</span>
+                    <span id="bill-vend-hint">Click text box to view registered vendors, or type custom name</span>
                   </div>
                 </div>
                 <div class="fin-form-group">
@@ -5544,7 +5716,7 @@ class FinanceApp {
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
     const vendInput = document.getElementById('bill-vend-input');
-    const vendQuickSelect = document.getElementById('bill-vend-quick-select');
+    const vendDropdown = document.getElementById('bill-vend-dropdown');
     const vendBadge = document.getElementById('bill-vend-badge');
     const vendHint = document.getElementById('bill-vend-hint');
     const billTaxInp = document.getElementById('bill-tax-no');
@@ -5597,27 +5769,47 @@ class FinanceApp {
       }
     };
 
-    if (vendQuickSelect) {
-      vendQuickSelect.onchange = () => {
-        const found = vendors.find(x => x.id === vendQuickSelect.value);
-        if (found) {
-          applyVendorData(found);
-        }
-        vendQuickSelect.value = '';
+    if (vendInput && vendDropdown) {
+      const showVendRecommendations = () => {
+        const val = vendInput.value.trim().toLowerCase();
+        vendDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const name = (item.getAttribute('data-name') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || name.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        vendDropdown.classList.add('open');
       };
-    }
 
-    if (vendInput) {
+      vendInput.onfocus = showVendRecommendations;
+      vendInput.onclick = showVendRecommendations;
+
+      vendDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const vendId = item.getAttribute('data-id');
+          const found = vendors.find(v => v.id === vendId);
+          if (found) {
+            applyVendorData(found);
+          }
+          vendDropdown.classList.remove('open');
+        };
+      });
+
       const handleVendorInput = () => {
+        showVendRecommendations();
         const val = vendInput.value.trim();
         if (!val) {
           vendInput.removeAttribute('data-vend-id');
           if (vendBadge) {
-            vendBadge.textContent = 'Editable • Type or Pick ▾';
+            vendBadge.textContent = 'Click for Recommendations ▾';
             vendBadge.style.color = '#38bdf8';
           }
           if (vendHint) {
-            vendHint.textContent = 'Type any vendor name directly, or pick from dropdown';
+            vendHint.textContent = 'Click text box to view registered vendors, or type custom name';
           }
           return;
         }
@@ -5643,6 +5835,12 @@ class FinanceApp {
 
       vendInput.oninput = handleVendorInput;
       vendInput.onchange = handleVendorInput;
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#bill-vend-input') && !e.target.closest('#bill-vend-dropdown')) {
+          vendDropdown.classList.remove('open');
+        }
+      });
     }
 
     const updateTotals = () => {
