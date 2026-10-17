@@ -1897,6 +1897,47 @@
   box-shadow: 0 1px 6px rgba(16, 185, 129, 0.4);
 }
 
+/* Editable Combobox for Customer / Client & Vendor Selection */
+.fin-combobox-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.fin-combobox-input {
+  flex: 1;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  font-weight: 500;
+}
+
+.fin-combobox-picker {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  padding: 0;
+  text-align: center;
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: none;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  color: #38bdf8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.fin-combobox-picker:hover {
+  background: rgba(56, 189, 248, 0.2);
+  color: #ffffff;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
 /* Line items editor in invoice / bill */
 .fin-line-item-table {
   width: 100%;

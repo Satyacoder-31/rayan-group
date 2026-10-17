@@ -3429,11 +3429,31 @@ class FinanceApp {
             <form id="create-invoice-form">
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Customer / Client <span style="color:#ef4444;">*</span></label>
-                  <select id="inv-cust-select" class="fin-form-select" required>
-                    <option value="" disabled selected>Select Customer</option>
-                    ${customers.map(c => `<option value="${c.id}" data-country="${c.country || ''}" data-gstin="${c.gstin || ''}" data-trn="${c.trn || ''}" data-pos="${c.place_of_supply || ''}">${c.name} (${c.code})</option>`).join('')}
-                  </select>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Customer / Client <span style="color:#ef4444;">*</span></label>
+                    <span id="inv-cust-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Editable • Type or Pick ▾</span>
+                  </div>
+                  <div class="fin-combobox-wrapper">
+                    <input 
+                      type="text" 
+                      id="inv-cust-input" 
+                      class="fin-form-input fin-combobox-input" 
+                      list="inv-cust-datalist" 
+                      placeholder="Write or select client name..." 
+                      required 
+                      autocomplete="off"
+                    >
+                    <select id="inv-cust-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered clients">
+                      <option value="" selected disabled>▾</option>
+                      ${customers.map(c => `<option value="${c.id}">${c.name} (${c.code || ''})</option>`).join('')}
+                    </select>
+                  </div>
+                  <datalist id="inv-cust-datalist">
+                    ${customers.map(c => `<option value="${c.name}">${c.name} (${c.code || ''}) - ${c.country || (c.trn ? 'UAE' : 'India')}</option>`).join('')}
+                  </datalist>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="inv-cust-hint">Type any client name directly, or pick from dropdown</span>
+                  </div>
                 </div>
 
                 <div class="fin-form-group">
@@ -3819,13 +3839,105 @@ class FinanceApp {
       }
     };
 
+    const custInput = document.getElementById('inv-cust-input');
+    const custQuickSelect = document.getElementById('inv-cust-quick-select');
+    const custBadge = document.getElementById('inv-cust-badge');
+    const custHint = document.getElementById('inv-cust-hint');
+
+    const applyCustomerData = (c) => {
+      if (!c) return;
+      custInput.value = c.name;
+      custInput.setAttribute('data-cust-id', c.id || '');
+
+      const isUae = (c.country && c.country.toUpperCase() === 'UAE') ||
+                    (c.trn && c.trn.length > 5) ||
+                    (c.state_code === '96' || c.state_code === 'AD' || c.state_code === 'DXB') ||
+                    (c.place_of_supply && (c.place_of_supply.includes('UAE') || c.place_of_supply.includes('Dubai') || c.place_of_supply.includes('Abu Dhabi')));
+
+      if (isUae) {
+        setTaxRegime('trn', {
+          suggestedPos: c.place_of_supply || 'Abu Dhabi, UAE'
+        });
+        document.getElementById('inv-cust-gstin').value = c.trn || '105405525400003';
+        document.getElementById('inv-cust-pos').value = c.place_of_supply || 'Abu Dhabi, UAE';
+      } else {
+        setTaxRegime('gst', {
+          suggestedPos: c.place_of_supply || '27-Maharashtra'
+        });
+        document.getElementById('inv-cust-gstin').value = c.gstin || '27AAACL0149K1ZM';
+        document.getElementById('inv-cust-pos').value = c.place_of_supply || '27-Maharashtra';
+      }
+
+      document.getElementById('inv-terms').value = c.payment_terms || 30;
+      if (custBadge) {
+        custBadge.textContent = `✓ ${c.code || 'Registered Client'}`;
+        custBadge.style.color = '#10b981';
+      }
+      if (custHint) {
+        custHint.textContent = `${c.name} • ${isUae ? 'UAE TRN' : 'India GST'} Auto-selected`;
+      }
+      updateDueDate();
+      recalculateInvoice();
+    };
+
+    // Quick select dropdown handler
+    if (custQuickSelect) {
+      custQuickSelect.onchange = () => {
+        const found = customers.find(x => x.id === custQuickSelect.value);
+        if (found) {
+          applyCustomerData(found);
+        }
+        custQuickSelect.value = '';
+      };
+    }
+
+    // Input typing & autocomplete handler
+    if (custInput) {
+      const handleCustomerInput = () => {
+        const val = custInput.value.trim();
+        if (!val) {
+          custInput.removeAttribute('data-cust-id');
+          if (custBadge) {
+            custBadge.textContent = 'Editable • Type or Pick ▾';
+            custBadge.style.color = '#38bdf8';
+          }
+          if (custHint) {
+            custHint.textContent = 'Type any client name directly, or pick from dropdown';
+          }
+          return;
+        }
+
+        const found = customers.find(c => 
+          c.name.toLowerCase() === val.toLowerCase() ||
+          `${c.name} (${c.code || ''})`.toLowerCase() === val.toLowerCase()
+        );
+
+        if (found) {
+          applyCustomerData(found);
+        } else {
+          custInput.removeAttribute('data-cust-id');
+          if (custBadge) {
+            custBadge.textContent = '✎ Custom Client';
+            custBadge.style.color = '#38bdf8';
+          }
+          if (custHint) {
+            custHint.textContent = `Custom client "${val}" will be used for this invoice.`;
+          }
+        }
+      };
+
+      custInput.oninput = handleCustomerInput;
+      custInput.onchange = handleCustomerInput;
+    }
+
     // Regime toggle buttons
     const btnGst = document.getElementById('regime-toggle-gst');
     const btnTrn = document.getElementById('regime-toggle-trn');
 
     if (btnGst) {
       btnGst.onclick = () => {
-        const c = customers.find(x => x.id === custSel.value);
+        const val = (custInput?.value || '').trim();
+        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || x.name.toLowerCase() === val.toLowerCase());
         setTaxRegime('gst', {
           suggestedPos: c?.place_of_supply && !c.place_of_supply.includes('UAE') ? c.place_of_supply : '27-Maharashtra'
         });
@@ -3837,7 +3949,8 @@ class FinanceApp {
 
     if (btnTrn) {
       btnTrn.onclick = () => {
-        const c = customers.find(x => x.id === custSel.value);
+        const val = (custInput?.value || '').trim();
+        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || x.name.toLowerCase() === val.toLowerCase());
         setTaxRegime('trn', {
           suggestedPos: c?.place_of_supply && c.place_of_supply.includes('UAE') ? c.place_of_supply : 'Abu Dhabi, UAE'
         });
@@ -3848,36 +3961,6 @@ class FinanceApp {
         }
       };
     }
-
-    // Auto populate customer details
-    const custSel = document.getElementById('inv-cust-select');
-    custSel.onchange = () => {
-      const c = customers.find(x => x.id === custSel.value);
-      if (c) {
-        const isUae = (c.country && c.country.toUpperCase() === 'UAE') ||
-                      (c.trn && c.trn.length > 5) ||
-                      (c.state_code === '96' || c.state_code === 'AD' || c.state_code === 'DXB') ||
-                      (c.place_of_supply && (c.place_of_supply.includes('UAE') || c.place_of_supply.includes('Dubai') || c.place_of_supply.includes('Abu Dhabi')));
-
-        if (isUae) {
-          setTaxRegime('trn', {
-            suggestedPos: c.place_of_supply || 'Abu Dhabi, UAE'
-          });
-          document.getElementById('inv-cust-gstin').value = c.trn || '105405525400003';
-          document.getElementById('inv-cust-pos').value = c.place_of_supply || 'Abu Dhabi, UAE';
-        } else {
-          setTaxRegime('gst', {
-            suggestedPos: c.place_of_supply || '27-Maharashtra'
-          });
-          document.getElementById('inv-cust-gstin').value = c.gstin || '27AAACL0149K1ZM';
-          document.getElementById('inv-cust-pos').value = c.place_of_supply || '27-Maharashtra';
-        }
-
-        document.getElementById('inv-terms').value = c.payment_terms || 30;
-        updateDueDate();
-        recalculateInvoice();
-      }
-    };
 
     // Update due date
     const updateDueDate = () => {
@@ -3909,17 +3992,17 @@ class FinanceApp {
   }
 
   async saveInvoiceHandler(status = 'issued') {
-    const custSel = document.getElementById('inv-cust-select');
-    const custId = custSel.value;
-    const customer = this.db?.customers?.find(c => c.id === custId);
-    if (!customer) {
-      alert('Please select a valid customer.');
+    const custInput = document.getElementById('inv-cust-input');
+    const clientName = (custInput?.value || '').trim();
+    if (!clientName) {
+      alert('Please write or select a Customer / Client name.');
+      custInput?.focus();
       return;
     }
 
     const prjSel = document.getElementById('inv-project');
-    const prjId = prjSel.value || null;
-    const prjName = prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
+    const prjId = prjSel ? prjSel.value || null : null;
+    const prjName = prjSel?.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
 
     const taxRegime = document.getElementById('inv-tax-regime')?.value || 'gst';
     const taxNumber = (document.getElementById('inv-cust-gstin')?.value || '').trim();
@@ -3927,6 +4010,29 @@ class FinanceApp {
     const currIndicator = document.getElementById('inv-currency-symbol')?.textContent || '';
     const currency = currIndicator.includes('AED') ? 'AED' : 'INR';
     const currencySym = currency === 'AED' ? 'AED ' : '₹';
+
+    // Find customer by ID or Name, or auto-create if custom client
+    let customer = this.db?.customers?.find(c => 
+      c.id === custInput.getAttribute('data-cust-id') ||
+      c.name.toLowerCase() === clientName.toLowerCase()
+    );
+
+    if (!customer) {
+      const newCustId = 'cust-' + Date.now();
+      customer = {
+        id: newCustId,
+        code: 'CUST-' + Math.floor(1000 + Math.random() * 9000),
+        name: clientName,
+        country: isTrn ? 'UAE' : 'India',
+        gstin: !isTrn ? taxNumber : '',
+        trn: isTrn ? taxNumber : '',
+        place_of_supply: document.getElementById('inv-cust-pos')?.value || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
+        payment_terms: Number(document.getElementById('inv-terms')?.value) || 30
+      };
+      if (!this.db.customers) this.db.customers = [];
+      this.db.customers.push(customer);
+      this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
+    }
 
     // Collect line items
     const lineItems = [];
@@ -4396,11 +4502,31 @@ class FinanceApp {
             <form id="create-bill-form">
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
-                  <select id="bill-vend-sel" class="fin-form-select" required>
-                    <option value="" disabled selected>Select Vendor</option>
-                    ${vendors.map(v => `<option value="${v.id}" data-gstin="${v.gstin || ''}" data-trn="${v.trn || ''}">${v.name} (${v.code})</option>`).join('')}
-                  </select>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
+                    <span id="bill-vend-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Editable • Type or Pick ▾</span>
+                  </div>
+                  <div class="fin-combobox-wrapper">
+                    <input 
+                      type="text" 
+                      id="bill-vend-input" 
+                      class="fin-form-input fin-combobox-input" 
+                      list="bill-vend-datalist" 
+                      placeholder="Write or select vendor name..." 
+                      required 
+                      autocomplete="off"
+                    >
+                    <select id="bill-vend-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered vendors">
+                      <option value="" selected disabled>▾</option>
+                      ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code || ''})</option>`).join('')}
+                    </select>
+                  </div>
+                  <datalist id="bill-vend-datalist">
+                    ${vendors.map(v => `<option value="${v.name}">${v.name} (${v.code || ''}) - ${v.country || (v.trn ? 'UAE' : 'India')}</option>`).join('')}
+                  </datalist>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="bill-vend-hint">Type any vendor name directly, or pick from dropdown</span>
+                  </div>
                 </div>
                 <div class="fin-form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
@@ -4495,7 +4621,10 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
-    const vendSel = document.getElementById('bill-vend-sel');
+    const vendInput = document.getElementById('bill-vend-input');
+    const vendQuickSelect = document.getElementById('bill-vend-quick-select');
+    const vendBadge = document.getElementById('bill-vend-badge');
+    const vendHint = document.getElementById('bill-vend-hint');
     const billTaxInp = document.getElementById('bill-tax-no');
     const billTaxTypeText = document.getElementById('bill-tax-type-text');
     const billRegimeHidden = document.getElementById('bill-tax-regime');
@@ -4526,18 +4655,73 @@ class FinanceApp {
     if (billBtnGst) billBtnGst.onclick = () => setBillRegime('gst');
     if (billBtnTrn) billBtnTrn.onclick = () => setBillRegime('trn');
 
-    vendSel.onchange = () => {
-      const v = vendors.find(x => x.id === vendSel.value);
-      if (v) {
-        if (v.trn) {
-          setBillRegime('trn');
-          billTaxInp.value = v.trn;
-        } else {
-          setBillRegime('gst');
-          billTaxInp.value = v.gstin || '';
-        }
+    const applyVendorData = (v) => {
+      if (!v) return;
+      vendInput.value = v.name;
+      vendInput.setAttribute('data-vend-id', v.id || '');
+      if (v.trn) {
+        setBillRegime('trn');
+        billTaxInp.value = v.trn;
+      } else {
+        setBillRegime('gst');
+        billTaxInp.value = v.gstin || '';
+      }
+      if (vendBadge) {
+        vendBadge.textContent = `✓ ${v.code || 'Registered Vendor'}`;
+        vendBadge.style.color = '#10b981';
+      }
+      if (vendHint) {
+        vendHint.textContent = `${v.name} • ${v.trn ? 'UAE TRN' : 'India GST'} Auto-selected`;
       }
     };
+
+    if (vendQuickSelect) {
+      vendQuickSelect.onchange = () => {
+        const found = vendors.find(x => x.id === vendQuickSelect.value);
+        if (found) {
+          applyVendorData(found);
+        }
+        vendQuickSelect.value = '';
+      };
+    }
+
+    if (vendInput) {
+      const handleVendorInput = () => {
+        const val = vendInput.value.trim();
+        if (!val) {
+          vendInput.removeAttribute('data-vend-id');
+          if (vendBadge) {
+            vendBadge.textContent = 'Editable • Type or Pick ▾';
+            vendBadge.style.color = '#38bdf8';
+          }
+          if (vendHint) {
+            vendHint.textContent = 'Type any vendor name directly, or pick from dropdown';
+          }
+          return;
+        }
+
+        const found = vendors.find(v => 
+          v.name.toLowerCase() === val.toLowerCase() ||
+          `${v.name} (${v.code || ''})`.toLowerCase() === val.toLowerCase()
+        );
+
+        if (found) {
+          applyVendorData(found);
+        } else {
+          vendInput.removeAttribute('data-vend-id');
+          if (vendBadge) {
+            vendBadge.textContent = '✎ Custom Vendor';
+            vendBadge.style.color = '#38bdf8';
+          }
+          if (vendHint) {
+            vendHint.textContent = `Custom vendor "${val}" will be recorded on bill.`;
+          }
+        }
+      };
+
+      vendInput.oninput = handleVendorInput;
+      vendInput.onchange = handleVendorInput;
+    }
 
     const updateTotals = () => {
       const taxable = Number(taxableInp.value) || 0;
@@ -4566,20 +4750,44 @@ class FinanceApp {
 
     document.getElementById('create-bill-form').onsubmit = async (e) => {
       e.preventDefault();
-      const vendId = vendSel.value;
-      const vendor = vendors.find(v => v.id === vendId);
+      const vendorName = (vendInput?.value || '').trim();
+      if (!vendorName) {
+        alert('Please write or select a Vendor name.');
+        vendInput?.focus();
+        return;
+      }
+
+      const taxRegime = billRegimeHidden.value;
+      const taxNo = billTaxInp.value.trim();
+
+      let vendor = vendors.find(v => 
+        v.id === vendInput.getAttribute('data-vend-id') ||
+        v.name.toLowerCase() === vendorName.toLowerCase()
+      );
+
+      if (!vendor) {
+        const newVendId = 'vend-' + Date.now();
+        vendor = {
+          id: newVendId,
+          code: 'VEND-' + Math.floor(1000 + Math.random() * 9000),
+          name: vendorName,
+          country: taxRegime === 'trn' ? 'UAE' : 'India',
+          gstin: taxRegime === 'gst' ? taxNo : '',
+          trn: taxRegime === 'trn' ? taxNo : ''
+        };
+        if (!this.db.vendors) this.db.vendors = [];
+        this.db.vendors.push(vendor);
+        this.syncApi('create_vendor', { vendor }).catch(e => console.warn('Vendor auto-persist:', e));
+      }
 
       const prjSel = document.getElementById('bill-project');
-      const prjId = prjSel.value || null;
-      const prjName = prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
+      const prjId = prjSel ? prjSel.value || null : null;
+      const prjName = prjSel?.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
 
       const taxable = Number(taxableInp.value) || 0;
       const rate = Number(gstRateSel.value) || 0;
       const tax = taxable * (rate / 100);
       const grand = taxable + tax;
-
-      const taxRegime = billRegimeHidden.value;
-      const taxNo = billTaxInp.value.trim();
 
       const payload = {
         bill: {
