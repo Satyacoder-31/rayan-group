@@ -3523,20 +3523,45 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Line Items Table -->
-              <h4 style="font-family:var(--fin-font-heading); font-size:1rem; color:#f8fafc; margin:1.25rem 0 0.5rem;">Line Items &amp; Tax Calculation</h4>
+              <!-- Billed Item/s List Section -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1.5rem 0 0.6rem;">
+                <div>
+                  <h4 style="font-family:var(--fin-font-heading); font-size:1.05rem; color:#f8fafc; margin:0; display:flex; align-items:center; gap:0.5rem;">
+                    <span>Billed Item/s List</span>
+                    <span style="font-size:0.68rem; padding:2px 8px; border-radius:12px; background:rgba(37,99,235,0.25); color:#60a5fa; font-weight:700;">Vyapar Grid</span>
+                  </h4>
+                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Write custom milestones (e.g. 20% Advance Payment) or open spreadsheet popup</div>
+                </div>
+                <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn" style="background:rgba(37,99,235,0.22); color:#60a5fa; border:1px solid rgba(59,130,246,0.45); font-weight:700; font-size:0.8rem; padding:0.42rem 1rem; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:0.45rem;">
+                  📑 Open Billed Item/s List Popup
+                </button>
+              </div>
+
+              <!-- Milestone and Catalog Autocomplete Datalist -->
+              <datalist id="inv-item-milestone-suggestions">
+                <option value="20% ADVANCE PAYMENT AGAINST PURCHASE ORDER">
+                <option value="10 PROGRESSIVE PAYMENT">
+                <option value="RUNNING ACCOUNT (RA) BILL - STRUCTURAL WORKS">
+                <option value="SECOND PROGRESSIVE PAYMENT - MEP INSTALLATION">
+                <option value="FINAL COMPLETION &amp; RETENTION RELEASE (5%)">
+                <option value="SUPPLY &amp; FABRICATION OF STRUCTURAL STEEL">
+                <option value="CIVIL WORKS &amp; REINFORCED CONCRETE CASTING">
+                <option value="ALUMINUM &amp; GLAZING FACADE WORKS">
+                ${items.map(it => `<option value="${it.name}">Catalog: ${it.name} (${it.hsn_sac_code || ''})</option>`).join('')}
+              </datalist>
+
               <div class="fin-table-responsive">
                 <table class="fin-line-item-table" id="inv-items-table">
                   <thead>
                     <tr>
-                      <th style="width:30%;">Item / Service</th>
-                      <th style="width:12%;">HSN/SAC</th>
-                      <th style="width:10%;">Qty</th>
-                      <th style="width:10%;">UOM</th>
-                      <th style="width:14%;" id="inv-rate-col-header">Rate (₹)</th>
-                      <th style="width:10%;" id="inv-tax-col-header">GST %</th>
-                      <th style="width:14%;" id="inv-total-col-header">Total (₹)</th>
-                      <th></th>
+                      <th style="width:36px; text-align:center;">#</th>
+                      <th style="min-width:260px;">ITEM NAME</th>
+                      <th style="width:85px; text-align:center;">QUANTITY</th>
+                      <th style="width:130px;" id="inv-rate-col-header">PRICE/UNIT (₹)</th>
+                      <th style="width:115px;" id="inv-tax-col-header">TAX in (%)</th>
+                      <th style="width:105px; text-align:right;" id="inv-tax-amt-col-header">TAX (₹)</th>
+                      <th style="width:125px; text-align:right;" id="inv-total-col-header">AMOUNT (₹)</th>
+                      <th style="width:36px; text-align:center;"></th>
                     </tr>
                   </thead>
                   <tbody id="inv-items-tbody">
@@ -3544,7 +3569,10 @@ class FinanceApp {
                   </tbody>
                 </table>
               </div>
-              <button type="button" class="fin-btn-quick" id="inv-add-row-btn" style="margin-top:0.5rem;">+ Add Line Item</button>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+                <button type="button" class="fin-btn-quick" id="inv-add-row-btn" style="color:#38bdf8; border-color:rgba(56,189,248,0.3); font-weight:700;">+ Add Item Row</button>
+                <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn2" style="color:#60a5fa; border-color:rgba(59,130,246,0.35);">📑 Edit in Spreadsheet Popup</button>
+              </div>
 
               <!-- Realtime Calculations -->
               <div class="fin-calc-summary-box">
@@ -3636,10 +3664,12 @@ class FinanceApp {
 
         const rateCol = document.getElementById('inv-rate-col-header');
         const taxCol = document.getElementById('inv-tax-col-header');
+        const taxAmtCol = document.getElementById('inv-tax-amt-col-header');
         const totCol = document.getElementById('inv-total-col-header');
-        if (rateCol) rateCol.textContent = `Rate (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
-        if (taxCol) taxCol.textContent = 'VAT %';
-        if (totCol) totCol.textContent = `Total (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (rateCol) rateCol.textContent = `PRICE/UNIT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (taxCol) taxCol.textContent = 'TAX in (%)';
+        if (taxAmtCol) taxAmtCol.textContent = `TAX (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
 
         tbody.querySelectorAll('tr').forEach(tr => {
           const gstSel = tr.querySelector('.row-gst');
@@ -3669,10 +3699,12 @@ class FinanceApp {
 
         const rateCol = document.getElementById('inv-rate-col-header');
         const taxCol = document.getElementById('inv-tax-col-header');
+        const taxAmtCol = document.getElementById('inv-tax-amt-col-header');
         const totCol = document.getElementById('inv-total-col-header');
-        if (rateCol) rateCol.textContent = `Rate (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
-        if (taxCol) taxCol.textContent = 'GST %';
-        if (totCol) totCol.textContent = `Total (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (rateCol) rateCol.textContent = `PRICE/UNIT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (taxCol) taxCol.textContent = 'TAX in (%)';
+        if (taxAmtCol) taxAmtCol.textContent = `TAX (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
 
         tbody.querySelectorAll('tr').forEach(tr => {
           const gstSel = tr.querySelector('.row-gst');
@@ -3703,55 +3735,86 @@ class FinanceApp {
     }
 
     // Line items manager
-    const addRow = (defaultItem = null) => {
+    const addRow = (defaultItem = null, defaultQty = 1) => {
       const tr = document.createElement('tr');
       const isTrn = currentRegime === 'trn';
+      const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
+      const idx = tbody.children.length + 1;
+
+      const itemName = defaultItem ? (defaultItem.name || defaultItem.description || '') : '';
+      const hsn = defaultItem ? (defaultItem.hsn_sac_code || '9954') : '9954';
+      const uom = defaultItem ? (defaultItem.uom || 'LSUM') : 'LSUM';
+      const rate = defaultItem ? (defaultItem.sales_price !== undefined ? defaultItem.sales_price : (defaultItem.rate || 0)) : 0;
+      const gstRate = defaultItem && defaultItem.gst_rate !== undefined ? defaultItem.gst_rate : (isTrn ? 5 : 18);
+
       tr.innerHTML = `
+        <td style="text-align:center; color:#64748b; font-size:0.8rem; font-weight:600;" class="form-row-index">${idx}</td>
         <td>
-          <select class="fin-form-select row-item-sel">
-            <option value="">Custom Item / Service</option>
-            ${items.map(it => `<option value="${it.id}" ${defaultItem && defaultItem.id === it.id ? 'selected' : ''}>${it.name}</option>`).join('')}
-          </select>
-          <input type="text" class="fin-form-input row-desc" placeholder="Item description" style="margin-top:0.3rem;" value="${defaultItem ? defaultItem.name : ''}">
+          <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Write item name or milestone description..." value="${itemName}" style="font-weight:600;">
+          <input type="hidden" class="row-hsn" value="${hsn}">
+          <input type="hidden" class="row-uom" value="${uom}">
         </td>
-        <td><input type="text" class="fin-form-input row-hsn" placeholder="HSN/SAC" value="${defaultItem ? defaultItem.hsn_sac_code : '9954'}"></td>
-        <td><input type="number" class="fin-form-input row-qty" value="1" min="0.01" step="any"></td>
-        <td><input type="text" class="fin-form-input row-uom" value="${defaultItem ? defaultItem.uom : 'LSUM'}"></td>
-        <td><input type="number" class="fin-form-input row-rate" value="${defaultItem ? defaultItem.sales_price : 0}" step="any"></td>
+        <td style="text-align:center;">
+          <input type="number" class="fin-form-input row-qty" value="${defaultQty || 1}" min="0.001" step="any" style="text-align:center;">
+        </td>
+        <td>
+          <input type="number" class="fin-form-input row-rate" value="${rate > 0 ? rate : ''}" placeholder="0.00" step="any">
+        </td>
         <td>
           <select class="fin-form-select row-gst">
-            <option value="18" ${!isTrn && (!defaultItem || defaultItem.gst_rate === 18) ? 'selected' : ''}>18% (Standard GST)</option>
-            <option value="5" ${isTrn || (defaultItem && defaultItem.gst_rate === 5) ? 'selected' : ''}>5% (UAE VAT / Concessional)</option>
-            <option value="12" ${defaultItem && defaultItem.gst_rate === 12 ? 'selected' : ''}>12%</option>
-            <option value="28" ${defaultItem && defaultItem.gst_rate === 28 ? 'selected' : ''}>28%</option>
-            <option value="0" ${defaultItem && defaultItem.gst_rate === 0 ? 'selected' : ''}>0% (Zero-rated / LUT)</option>
+            ${isTrn ? `
+              <option value="5" ${gstRate === 5 ? 'selected' : ''}>VAT@5%</option>
+              <option value="0" ${gstRate === 0 ? 'selected' : ''}>None</option>
+            ` : `
+              <option value="18" ${gstRate === 18 ? 'selected' : ''}>GST@18%</option>
+              <option value="12" ${gstRate === 12 ? 'selected' : ''}>GST@12%</option>
+              <option value="28" ${gstRate === 28 ? 'selected' : ''}>GST@28%</option>
+              <option value="5" ${gstRate === 5 ? 'selected' : ''}>GST@5%</option>
+              <option value="0" ${gstRate === 0 ? 'selected' : ''}>None</option>
+            `}
           </select>
         </td>
-        <td><strong class="row-total">₹0.00</strong></td>
-        <td><button type="button" class="fin-modal-close row-del" style="font-size:1.1rem; color:#ef4444;">&times;</button></td>
+        <td style="text-align:right;">
+          <span class="row-tax-val" style="font-weight:600; color:#94a3b8;">${currSym}0.00</span>
+        </td>
+        <td style="text-align:right;">
+          <strong class="row-total" style="color:#38bdf8;">${currSym}0.00</strong>
+        </td>
+        <td style="text-align:center;">
+          <button type="button" class="fin-modal-close row-del" style="font-size:1.15rem; color:#ef4444; border:none; background:none; cursor:pointer;" title="Remove row">&times;</button>
+        </td>
       `;
       tbody.appendChild(tr);
 
-      // Event listeners for row
-      const sel = tr.querySelector('.row-item-sel');
-      sel.onchange = () => {
-        const found = items.find(it => it.id === sel.value);
+      const reindexFormRows = () => {
+        tbody.querySelectorAll('tr').forEach((row, i) => {
+          const numEl = row.querySelector('.form-row-index');
+          if (numEl) numEl.textContent = i + 1;
+        });
+      };
+
+      const descInp = tr.querySelector('.row-desc');
+      descInp.oninput = () => {
+        const val = descInp.value.trim().toLowerCase();
+        const found = items.find(it => it.name.toLowerCase() === val);
         if (found) {
-          tr.querySelector('.row-desc').value = found.name;
-          tr.querySelector('.row-hsn').value = found.hsn_sac_code || '';
-          tr.querySelector('.row-uom').value = found.uom || 'UNITS';
-          tr.querySelector('.row-rate').value = found.sales_price || 0;
-          tr.querySelector('.row-gst').value = currentRegime === 'trn' ? 5 : (found.gst_rate || 18);
-          recalculateInvoice();
+          tr.querySelector('.row-hsn').value = found.hsn_sac_code || '9954';
+          tr.querySelector('.row-uom').value = found.uom || 'LSUM';
+          if (!tr.querySelector('.row-rate').value || Number(tr.querySelector('.row-rate').value) === 0) {
+            tr.querySelector('.row-rate').value = found.sales_price || 0;
+          }
         }
+        recalculateInvoice();
       };
 
       tr.querySelectorAll('.row-qty, .row-rate, .row-gst').forEach(inp => {
         inp.oninput = () => recalculateInvoice();
+        inp.onchange = () => recalculateInvoice();
       });
 
       tr.querySelector('.row-del').onclick = () => {
         tr.remove();
+        reindexFormRows();
         recalculateInvoice();
       };
 
@@ -3779,7 +3842,14 @@ class FinanceApp {
         const rowTax = rowTaxable * (taxRate / 100);
         const rowGrand = rowTaxable + rowTax;
 
-        tr.querySelector('.row-total').textContent = `${currSym}${rowGrand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const taxValEl = tr.querySelector('.row-tax-val');
+        if (taxValEl) {
+          taxValEl.textContent = `${currSym}${rowTax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        const rowTotEl = tr.querySelector('.row-total');
+        if (rowTotEl) {
+          rowTotEl.textContent = `${currSym}${rowGrand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
 
         taxableSum += rowTaxable;
         taxSum += rowTax;
@@ -3837,6 +3907,248 @@ class FinanceApp {
           if (igstRow) igstRow.style.display = 'none';
         }
       }
+    };
+
+    // Billed Item/s List Modal (Vyapar Style)
+    const openBilledItemsModal = () => {
+      const existingItems = [];
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const name = tr.querySelector('.row-desc')?.value.trim() || '';
+        const qty = Number(tr.querySelector('.row-qty')?.value) || 1;
+        const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
+        const taxRate = Number(tr.querySelector('.row-gst')?.value) || (currentRegime === 'trn' ? 5 : 18);
+        const hsn = tr.querySelector('.row-hsn')?.value || '9954';
+        const uom = tr.querySelector('.row-uom')?.value || 'LSUM';
+        if (name || rate > 0) {
+          existingItems.push({ name, qty, rate, taxRate, hsn, uom });
+        }
+      });
+
+      if (!existingItems.length) {
+        existingItems.push(
+          { name: '20% ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' },
+          { name: '10 PROGRESSIVE PAYMENT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' }
+        );
+      }
+
+      while (existingItems.length < 4) {
+        existingItems.push({ name: '', qty: 1, rate: 0, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' });
+      }
+
+      const currLabel = currentCurrency === 'AED' ? 'AED' : '₹';
+      const isTrn = currentRegime === 'trn';
+
+      const billedModalHtml = `
+        <div class="fin-modal-backdrop open" id="modal-billed-items-list" style="z-index:1060; background:rgba(15,23,42,0.75); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center;">
+          <div class="fin-billed-items-modal-dialog">
+            <div class="fin-billed-items-modal-header">
+              <h3 class="fin-billed-items-modal-title">Billed Item/s List</h3>
+              <button type="button" class="fin-modal-close" id="billed-modal-close-btn" style="color:#64748b; font-size:1.5rem; line-height:1; border:none; background:none; cursor:pointer;">&times;</button>
+            </div>
+
+            <div class="fin-modal-body" style="padding:1.25rem 1.5rem; background:#ffffff; max-height:75vh; overflow-y:auto;">
+              <table class="fin-billed-items-table" id="billed-table-modal">
+                <thead>
+                  <tr>
+                    <th style="width:40px; text-align:center;"></th>
+                    <th style="min-width:280px; text-align:left;">ITEM NAME</th>
+                    <th style="width:90px; text-align:center;">QUANTITY</th>
+                    <th style="width:150px; text-align:left;">
+                      PRICE/UNIT (${currLabel})
+                      <div style="font-size:0.68rem; color:#64748b; font-weight:normal; margin-top:2px;">Without Tax ▾</div>
+                    </th>
+                    <th colspan="2" style="text-align:center; padding-bottom:0.25rem;">
+                      TAX
+                    </th>
+                    <th style="width:130px; text-align:right;">AMOUNT (${currLabel})</th>
+                  </tr>
+                  <tr>
+                    <th colspan="4" style="background:#f8fafc; border-top:none; padding:0;"></th>
+                    <th style="width:100px; text-align:center; font-size:0.7rem; color:#64748b; background:#f8fafc; border-top:1px solid #e2e8f0; padding:0.35rem 0.5rem;">in (%)</th>
+                    <th style="width:105px; text-align:right; font-size:0.7rem; color:#64748b; background:#f8fafc; border-top:1px solid #e2e8f0; padding:0.35rem 0.5rem;">in (${currLabel})</th>
+                    <th style="background:#f8fafc; border-top:none; padding:0;"></th>
+                  </tr>
+                </thead>
+                <tbody id="billed-modal-tbody">
+                </tbody>
+              </table>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:0.75rem; border-top:1px solid #e2e8f0;">
+                <button type="button" class="fin-btn-add-item-link" id="billed-modal-add-btn">
+                  <span style="font-size:1.15rem; font-weight:700; line-height:1;">+</span> Add Item
+                </button>
+                <div style="font-size:0.95rem; font-weight:700; color:#0f172a; letter-spacing:0.02em;">
+                  TOTAL: <span id="billed-modal-grand-total">0.00 ${currLabel}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="fin-modal-footer" style="background:#ffffff; border-top:1px solid #e2e8f0; padding:0.85rem 1.5rem; display:flex; justify-content:flex-end; gap:0.75rem;">
+              <button type="button" class="fin-btn-save-blue" id="billed-modal-save-btn">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const existingModal = document.getElementById('modal-billed-items-list');
+      if (existingModal) existingModal.remove();
+      document.body.insertAdjacentHTML('beforeend', billedModalHtml);
+
+      const billedTbody = document.getElementById('billed-modal-tbody');
+
+      const reindexBilledModalRows = () => {
+        billedTbody.querySelectorAll('.billed-modal-tr').forEach((tr, i) => {
+          const numSpan = tr.querySelector('.row-num');
+          if (numSpan) numSpan.textContent = i + 1;
+        });
+      };
+
+      const updateBilledModalCalculations = () => {
+        let grandSum = 0;
+        billedTbody.querySelectorAll('.billed-modal-tr').forEach(tr => {
+          const name = tr.querySelector('.billed-name-input')?.value.trim();
+          const qty = Number(tr.querySelector('.billed-qty-input')?.value) || 0;
+          const rate = Number(tr.querySelector('.billed-price-input')?.value) || 0;
+          const taxRate = Number(tr.querySelector('.billed-tax-select')?.value) || 0;
+
+          const taxable = qty * rate;
+          const taxVal = taxable * (taxRate / 100);
+          const totalVal = taxable + taxVal;
+
+          const taxEl = tr.querySelector('.billed-tax-val');
+          const amtEl = tr.querySelector('.billed-amount-val');
+
+          if (rate > 0 || name) {
+            if (taxEl) taxEl.textContent = (taxVal > 0 ? taxVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0');
+            if (amtEl) amtEl.textContent = totalVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            grandSum += totalVal;
+          } else {
+            if (taxEl) taxEl.textContent = '';
+            if (amtEl) amtEl.textContent = '';
+          }
+        });
+
+        const grandEl = document.getElementById('billed-modal-grand-total');
+        if (grandEl) {
+          grandEl.textContent = `${grandSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currLabel}`;
+        }
+      };
+
+      const renderBilledModalRow = (item, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'billed-modal-tr';
+        tr.setAttribute('data-hsn', item.hsn || '9954');
+        tr.setAttribute('data-uom', item.uom || 'LSUM');
+
+        const taxRate = item.taxRate !== undefined ? item.taxRate : (isTrn ? 5 : 18);
+        const taxable = (item.qty || 1) * (item.rate || 0);
+        const taxVal = taxable * (taxRate / 100);
+        const totalVal = taxable + taxVal;
+
+        tr.innerHTML = `
+          <td class="billed-row-index-cell" style="text-align:center; color:#64748b; font-size:0.82rem; position:relative; width:40px;">
+            <span class="row-num">${idx + 1}</span>
+            <button type="button" class="row-del-btn" title="Delete row" style="display:none; background:none; border:none; color:#ef4444; cursor:pointer; font-size:1rem; padding:0;">🗑️</button>
+          </td>
+          <td>
+            <input type="text" class="billed-cell-input billed-name-input" list="inv-item-milestone-suggestions" placeholder="Enter item name or milestone description" value="${item.name || ''}">
+          </td>
+          <td style="width:90px;">
+            <input type="number" class="billed-cell-input billed-qty-input" value="${item.qty || 1}" min="0.001" step="any" style="text-align:center;">
+          </td>
+          <td style="width:150px;">
+            <input type="number" class="billed-cell-input billed-price-input" value="${item.rate > 0 ? item.rate : ''}" min="0" step="any" placeholder="0">
+          </td>
+          <td style="width:100px;">
+            <select class="billed-cell-select billed-tax-select">
+              ${isTrn ? `
+                <option value="5" ${taxRate === 5 ? 'selected' : ''}>VAT@5%</option>
+                <option value="0" ${taxRate === 0 ? 'selected' : ''}>None</option>
+              ` : `
+                <option value="18" ${taxRate === 18 ? 'selected' : ''}>GST@18%</option>
+                <option value="12" ${taxRate === 12 ? 'selected' : ''}>GST@12%</option>
+                <option value="28" ${taxRate === 28 ? 'selected' : ''}>GST@28%</option>
+                <option value="5" ${taxRate === 5 ? 'selected' : ''}>GST@5%</option>
+                <option value="0" ${taxRate === 0 ? 'selected' : ''}>None</option>
+              `}
+            </select>
+          </td>
+          <td style="width:105px; text-align:right; font-weight:600; color:#475569; padding-right:0.75rem;">
+            <span class="billed-tax-val">${item.rate > 0 ? taxVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : ''}</span>
+          </td>
+          <td style="width:130px; text-align:right; font-weight:700; color:#0f172a; padding-right:0.75rem;">
+            <span class="billed-amount-val">${item.rate > 0 ? totalVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : ''}</span>
+          </td>
+        `;
+
+        billedTbody.appendChild(tr);
+
+        tr.querySelector('.row-del-btn').onclick = () => {
+          tr.remove();
+          reindexBilledModalRows();
+          updateBilledModalCalculations();
+        };
+
+        tr.querySelectorAll('.billed-name-input, .billed-qty-input, .billed-price-input, .billed-tax-select').forEach(el => {
+          el.oninput = () => updateBilledModalCalculations();
+          el.onchange = () => updateBilledModalCalculations();
+        });
+      };
+
+      existingItems.forEach((it, idx) => renderBilledModalRow(it, idx));
+      updateBilledModalCalculations();
+
+      document.getElementById('billed-modal-add-btn').onclick = () => {
+        renderBilledModalRow({ name: '', qty: 1, rate: 0, taxRate: isTrn ? 5 : 18, hsn: '9954', uom: 'LSUM' }, billedTbody.children.length);
+        reindexBilledModalRows();
+        const lastRow = billedTbody.lastElementChild;
+        lastRow?.querySelector('.billed-name-input')?.focus();
+      };
+
+      document.getElementById('billed-modal-save-btn').onclick = () => {
+        const rowsToSave = [];
+        billedTbody.querySelectorAll('.billed-modal-tr').forEach(tr => {
+          const name = tr.querySelector('.billed-name-input')?.value.trim();
+          const qty = Number(tr.querySelector('.billed-qty-input')?.value) || 1;
+          const rate = Number(tr.querySelector('.billed-price-input')?.value) || 0;
+          const taxRate = Number(tr.querySelector('.billed-tax-select')?.value) || 0;
+          const hsn = tr.getAttribute('data-hsn') || '9954';
+          const uom = tr.getAttribute('data-uom') || 'LSUM';
+
+          if (name || rate > 0) {
+            rowsToSave.push({
+              name: name || 'Item / Service',
+              hsn_sac_code: hsn,
+              uom,
+              sales_price: rate,
+              gst_rate: taxRate,
+              qty
+            });
+          }
+        });
+
+        if (!rowsToSave.length) {
+          alert('Please enter at least one item.');
+          return;
+        }
+
+        tbody.innerHTML = '';
+        rowsToSave.forEach(it => {
+          addRow(it, it.qty);
+        });
+
+        recalculateInvoice();
+
+        const modal = document.getElementById('modal-billed-items-list');
+        if (modal) modal.remove();
+      };
+
+      document.getElementById('billed-modal-close-btn').onclick = () => {
+        const modal = document.getElementById('modal-billed-items-list');
+        if (modal) modal.remove();
+      };
     };
 
     const custInput = document.getElementById('inv-cust-input');
@@ -3976,8 +4288,14 @@ class FinanceApp {
 
     document.getElementById('inv-add-row-btn').onclick = () => addRow();
 
-    // Initial default row
-    addRow(items[0] || null);
+    const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
+    const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
+    if (openBilledBtn1) openBilledBtn1.onclick = () => openBilledItemsModal();
+    if (openBilledBtn2) openBilledBtn2.onclick = () => openBilledItemsModal();
+
+    // Initial default rows matching user's photo
+    addRow({ name: '20% ADVANCE PAYMENT AGAINST PURCHASE ORDER', sales_price: 1000, gst_rate: currentRegime === 'trn' ? 5 : 18, hsn_sac_code: '9954', uom: 'LSUM' }, 1);
+    addRow({ name: '10 PROGRESSIVE PAYMENT', sales_price: 1000, gst_rate: currentRegime === 'trn' ? 5 : 18, hsn_sac_code: '9954', uom: 'LSUM' }, 1);
 
     // Form submit: Issue invoice
     document.getElementById('create-invoice-form').onsubmit = async (e) => {
