@@ -1769,3 +1769,84 @@ function initServicesFeatures() {
     });
   }
 }
+
+function initGlobalFinanceButton() {
+  const savedUserJson = localStorage.getItem('rayan_fin_user');
+  let user = null;
+  if (savedUserJson) {
+    try { user = JSON.parse(savedUserJson); } catch (e) {}
+  }
+
+  // Ensure button exists in header-actions across all pages
+  const headerActionsList = document.querySelectorAll('.header-actions');
+  headerActionsList.forEach(actions => {
+    let btn = actions.querySelector('#header-finance-login-btn');
+    if (!btn) {
+      btn = document.createElement('a');
+      btn.id = 'header-finance-login-btn';
+      btn.href = '/billing/';
+      btn.className = 'btn-finance-portal-trigger';
+      const ctaBtn = actions.querySelector('.btn-header-cta');
+      const mobileToggle = actions.querySelector('.btn-mobile-menu-toggle');
+      if (ctaBtn) {
+        actions.insertBefore(btn, ctaBtn);
+      } else if (mobileToggle) {
+        actions.insertBefore(btn, mobileToggle);
+      } else {
+        actions.appendChild(btn);
+      }
+    }
+
+    if (user) {
+      const shortRole = user.role_label ? (user.role_label.length > 12 ? 'ACTIVE' : user.role_label) : 'ACTIVE';
+      btn.innerHTML = `
+        <span class="live-pulse-dot"></span>
+        <span>ACCOUNTS • ${shortRole}</span>
+      `;
+      btn.title = `Signed in as ${user.name} (${user.email}) - Open Financial Management System`;
+    } else {
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>ACCOUNTS LOGIN</span>
+      `;
+      btn.title = 'Authorized Personnel Financial Portal Login';
+    }
+  });
+
+  // Also update top bar link if present
+  document.querySelectorAll('.header-top-link-finance, a[href="/billing/"]').forEach(link => {
+    if (link.classList.contains('header-top-link')) {
+      if (user) {
+        link.innerHTML = `💼 Finance Portal (${user.name.split(' ')[0]})`;
+      } else {
+        link.innerHTML = `🔒 Accounts Login`;
+      }
+    }
+  });
+
+  // Ensure mobile drawer also has the login button
+  const drawerFooters = document.querySelectorAll('.mobile-drawer-footer');
+  drawerFooters.forEach(footer => {
+    let mobBtn = footer.querySelector('.mobile-finance-login-btn');
+    if (!mobBtn) {
+      mobBtn = document.createElement('a');
+      mobBtn.className = 'btn-finance-portal-trigger mobile-btn-full mobile-finance-login-btn';
+      mobBtn.href = '/billing/';
+      mobBtn.style.cssText = 'justify-content:center; margin-bottom:0.65rem; height:42px; font-size:0.8rem; background:rgba(0,153,230,0.15); border:1px solid #38bdf8; color:#38bdf8; display:flex; align-items:center; gap:0.45rem; border-radius:8px; text-decoration:none; font-weight:700;';
+      footer.insertBefore(mobBtn, footer.firstChild);
+    }
+    if (user) {
+      mobBtn.innerHTML = `<span class="live-pulse-dot"></span><span>ACCOUNTS PORTAL • ACTIVE</span>`;
+    } else {
+      mobBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>ACCOUNTS LOGIN</span>`;
+    }
+  });
+}
+
+// Call on initial DOM load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGlobalFinanceButton);
+} else {
+  initGlobalFinanceButton();
+}
+

@@ -109,16 +109,17 @@
    2. AUTHENTICATION LOCK SCREEN & LOGIN DIALOG
    ========================================================================== */
 .fin-auth-container {
-  max-width: 580px;
+  max-width: 520px;
+  width: 100%;
   margin: 0 auto;
   background: var(--fin-bg-card);
   border: 1px solid var(--fin-border);
   border-radius: 16px;
-  padding: 2.75rem 2.5rem;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 153, 230, 0.15);
   backdrop-filter: blur(16px);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .fin-auth-container::before {

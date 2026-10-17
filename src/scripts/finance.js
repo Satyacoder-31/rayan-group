@@ -216,9 +216,9 @@ class FinanceApp {
     if (!portalContainer) return;
 
     portalContainer.innerHTML = `
-      <div style="min-height: 100vh; background: var(--fin-bg-main); display: flex; flex-direction: column;">
+      <div style="min-height: 100vh; background: var(--fin-bg-main); display: flex; flex-direction: column; overflow-y: auto;">
         <!-- Clean Dedicated Auth Header -->
-        <header style="padding: 1rem 1.75rem; border-bottom: 1px solid var(--fin-border); display: flex; align-items: center; justify-content: space-between; background: rgba(11, 17, 30, 0.95); backdrop-filter: blur(12px);">
+        <header style="padding: 1rem 1.75rem; border-bottom: 1px solid var(--fin-border); display: flex; align-items: center; justify-content: space-between; background: rgba(11, 17, 30, 0.95); backdrop-filter: blur(12px); flex-shrink: 0;">
           <div style="display: flex; align-items: center; gap: 0.85rem;">
             <a href="/" style="display: flex; align-items: center; text-decoration: none;">
               <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" class="logo-theme-dark" style="height: 34px; width: auto;">
@@ -232,26 +232,26 @@ class FinanceApp {
           </a>
         </header>
 
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem;">
+        <div style="flex: 1 0 auto; display: flex; align-items: center; justify-content: center; padding: clamp(1rem, 3vw, 2.5rem) 1rem;">
           <div class="fin-auth-container">
-            <div class="fin-auth-header">
-              <span class="fin-auth-badge">
+            <div class="fin-auth-header" style="margin-bottom: 1.5rem;">
+              <span class="fin-auth-badge" style="margin-bottom: 0.5rem;">
                 <span class="live-pulse-dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#0099e6;"></span>
                 AUTHORIZED ACCESS ONLY • GRC &amp; ACCOUNTS DESK
               </span>
-              <h2 class="fin-auth-title">Corporate Financial Portal</h2>
-              <p class="fin-auth-desc">Sign in with your Rayan Group executive or finance credentials to access billing, ledgers, tax invoices, and financial statements.</p>
+              <h2 class="fin-auth-title" style="font-size: clamp(1.3rem, 2.5vw, 1.6rem); margin-bottom: 0.4rem;">Corporate Financial Portal</h2>
+              <p class="fin-auth-desc" style="font-size: 0.82rem; line-height: 1.45; margin: 0 auto; max-width: 440px;">Sign in with your Rayan Group executive or finance credentials to access billing, ledgers, tax invoices, and financial statements.</p>
             </div>
 
             <form id="fin-login-form">
-              <div class="fin-form-group">
-                <label class="fin-form-label" for="fin-login-email">Corporate Email / Username <span style="color:#ef4444;">*</span></label>
-                <input type="email" id="fin-login-email" class="fin-form-input" placeholder="name@rayangroup.com" required autocomplete="username">
+              <div class="fin-form-group" style="margin-bottom: 1rem;">
+                <label class="fin-form-label" for="fin-login-email" style="font-size: 0.8rem; margin-bottom: 0.35rem;">Corporate Email / Username <span style="color:#ef4444;">*</span></label>
+                <input type="email" id="fin-login-email" class="fin-form-input" placeholder="name@rayan-group.com" required autocomplete="username">
               </div>
 
-              <div class="fin-form-group">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                  <label class="fin-form-label" for="fin-login-password" style="margin-bottom:0;">Password <span style="color:#ef4444;">*</span></label>
+              <div class="fin-form-group" style="margin-bottom: 1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                  <label class="fin-form-label" for="fin-login-password" style="margin-bottom:0; font-size: 0.8rem;">Password <span style="color:#ef4444;">*</span></label>
                   <button type="button" id="fin-toggle-pwd" style="background:none; border:none; color:#38bdf8; font-size:0.75rem; cursor:pointer;">Show</button>
                 </div>
                 <input type="password" id="fin-login-password" class="fin-form-input" placeholder="Enter secure password" required autocomplete="current-password">
@@ -267,7 +267,7 @@ class FinanceApp {
 
               <div id="fin-login-error" style="display:none; padding:0.75rem; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4); border-radius:8px; color:#ef4444; font-size:0.82rem; margin-bottom:1rem;"></div>
 
-              <button type="submit" class="btn-enterprise-primary" id="fin-login-submit-btn" style="width:100%; justify-content:center; padding:0.85rem;">
+              <button type="submit" id="fin-login-submit-btn" style="width:100%; justify-content:center; padding:0.95rem 1.5rem; background:linear-gradient(135deg, #0099e6, #0284c7) !important; color:#ffffff !important; border:1px solid #38bdf8 !important; border-radius:10px !important; font-size:0.95rem !important; font-weight:800 !important; letter-spacing:0.04em !important; cursor:pointer !important; display:flex !important; align-items:center !important; gap:0.5rem !important; box-shadow:0 6px 20px rgba(0, 153, 230, 0.45) !important; transition:all 0.2s ease !important;">
                 <span>SIGN IN TO FINANCIAL PORTAL &rarr;</span>
               </button>
             </form>
@@ -482,8 +482,9 @@ class FinanceApp {
               </a>
 
               <!-- Sign Out Button -->
-              <button type="button" class="fin-icon-btn fin-logout-btn" id="fin-logout-btn" title="Sign Out">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <button type="button" class="fin-btn-nav-website" id="fin-logout-btn" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); color:#ef4444;" title="Sign Out of Financial Session">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sign Out</span>
               </button>
             </div>
           </div>
