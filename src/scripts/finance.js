@@ -3130,6 +3130,10 @@ class FinanceApp {
             </p>
           </div>
         </div>
+
+        <div class="rayan-computer-generated-notice" style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.08); color:#94a3b8;">
+          This is a Computer Generated Financial Statement
+        </div>
       </div>
     `;
   }
@@ -4662,6 +4666,8 @@ class FinanceApp {
                   </div>
                 </div>
               </div>
+
+              <div class="rayan-computer-generated-notice" style="border-top:1px solid #e2e8f0; margin-top:1.25rem; padding-top:0.75rem;">This is a Computer Generated Invoice</div>
             </div>
           </div>
         </div>
@@ -4670,6 +4676,152 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
   }
+
+  // 2B. VENDOR PURCHASE BILL DETAIL MODAL
+  openBillDetail(billId) {
+    let bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
+    if (!bill) {
+      bill = (this.db?.purchase_bills || [])[0] || {};
+    }
+    const vendor = (this.db?.vendors || []).find(v => v.id === bill.vendor_id) || {};
+    const lineItems = bill.line_items || [];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-bill-detail">
+        <div class="fin-modal-dialog" style="max-width:850px; background:var(--fin-bg-card, #0f172a);">
+          <div class="fin-modal-header" style="border-bottom:1px solid var(--fin-border, #1e293b); padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span class="fin-badge fin-badge-${bill.status || 'paid'}" style="font-size:0.8rem; text-transform:uppercase;">${bill.status || 'Approved'}</span>
+              <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; color:#f8fafc;">Purchase Bill: ${bill.bill_no || 'BILL-2026-001'}</h3>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Purchase Bill</button>
+              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bill-detail')">&times;</button>
+            </div>
+          </div>
+          <div class="fin-modal-body" style="padding:1.5rem; background:#ffffff; color:#0f172a; border-radius:0 0 12px 12px;">
+            <div class="fin-print-sheet" style="padding:1rem;">
+              <!-- Header -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; border-bottom:2px solid #0f172a; padding-bottom:1rem;">
+                <div>
+                  <h2 style="font-family:'Outfit', sans-serif; font-size:1.6rem; font-weight:800; color:#0f172a; margin:0 0 0.25rem;">RAYAN GROUP</h2>
+                  <div style="font-size:0.8rem; color:#475569; line-height:1.4;">
+                    Rayan Engineering &amp; Contracting LLC-SPC<br>
+                    Abu Dhabi, United Arab Emirates<br>
+                    TRN: 104937380400003 | Tel: +971-25654497
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:1.35rem; font-weight:800; color:#0099e6;">PURCHASE BILL</div>
+                  <div style="font-size:0.85rem; color:#1e293b; font-weight:700;">${bill.bill_no || 'BILL-2026-001'}</div>
+                  <div style="font-size:0.78rem; color:#64748b; margin-top:0.2rem;">Date: <strong>${this.formatDate(bill.bill_date)}</strong></div>
+                  <div style="font-size:0.78rem; color:#64748b;">Due: <strong>${this.formatDate(bill.due_date)}</strong></div>
+                </div>
+              </div>
+
+              <!-- Vendor & Project Info -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; font-size:0.82rem;">
+                <div>
+                  <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:0.25rem;">Vendor Details</div>
+                  <div style="font-weight:700; font-size:0.95rem; color:#0f172a;">${bill.vendor_name || vendor.name || 'Vendor'}</div>
+                  <div style="color:#475569; margin-top:0.25rem;">${vendor.address || 'Industrial Area, Abu Dhabi'}</div>
+                  ${vendor.trn ? `<div style="color:#475569;">TRN: <code>${vendor.trn}</code></div>` : ''}
+                  ${bill.vendor_invoice_no ? `<div style="color:#0284c7; font-weight:600; margin-top:0.25rem;">Supplier Inv #: ${bill.vendor_invoice_no}</div>` : ''}
+                </div>
+                <div>
+                  <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:0.25rem;">Project &amp; PO Allocation</div>
+                  <div style="font-weight:700; color:#0f172a;">${bill.project_name || 'Corporate Civil Operations'}</div>
+                  <div style="color:#475569; margin-top:0.25rem;">PO Ref: <strong>${bill.po_reference || bill.po_no || bill.po_id || 'PO-REC-11008'}</strong></div>
+                  <div style="color:#475569;">Payment Terms: <strong>${bill.payment_terms || 30} Days</strong></div>
+                </div>
+              </div>
+
+              <!-- Line Items -->
+              <table style="width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:0.85rem;">
+                <thead>
+                  <tr style="background:#0f172a; color:#ffffff; text-align:left;">
+                    <th style="padding:0.6rem; border:1px solid #0f172a;">#</th>
+                    <th style="padding:0.6rem; border:1px solid #0f172a;">Description / Material</th>
+                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:center;">Qty</th>
+                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:right;">Rate</th>
+                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:right;">Tax</th>
+                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:right;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${lineItems.length > 0 ? lineItems.map((item, idx) => `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">${idx + 1}</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0;"><strong>${item.name || item.description || 'Supplies'}</strong></td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">${item.qty} ${item.uom || ''}</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">${this.formatCurrency(item.unit_price)}</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">${item.gst_rate || item.vat_rate || 5}%</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right; font-weight:700;">${this.formatCurrency(item.total_amount || (item.taxable_amount + (item.tax_amount || 0)))}</td>
+                    </tr>
+                  `).join('') : `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">1</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0;"><strong>Procurement of Engineering Materials &amp; Structural Items</strong></td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">1 Lot</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">${this.formatCurrency(bill.taxable_subtotal || bill.grand_total * 0.95)}</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">5%</td>
+                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right; font-weight:700;">${this.formatCurrency(bill.grand_total)}</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+
+              <!-- Totals -->
+              <div style="display:flex; justify-content:flex-end; margin-bottom:1.5rem;">
+                <div style="width:300px; font-size:0.85rem;">
+                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
+                    <span>Sub-Total:</span>
+                    <strong>${this.formatCurrency(bill.taxable_subtotal || bill.subtotal || (bill.grand_total - (bill.total_tax || 0)))}</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
+                    <span>VAT / Tax Total:</span>
+                    <span>${this.formatCurrency(bill.total_tax || bill.vat_total || 0)}</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-top:2px solid #0099e6; margin-top:0.4rem; font-size:1.05rem; font-weight:900; color:#0f172a;">
+                    <span>Grand Total:</span>
+                    <span>${this.formatCurrency(bill.grand_total)}</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0; color:#10b981; font-weight:700;">
+                    <span>Amount Paid:</span>
+                    <span>${this.formatCurrency(bill.amount_paid || 0)}</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0; color:${(bill.balance_due || 0) > 0 ? '#ef4444' : '#10b981'}; font-weight:800;">
+                    <span>Balance Payable:</span>
+                    <span>${this.formatCurrency(bill.balance_due || 0)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Signatory Footer -->
+              <div class="fin-print-footer">
+                <div>
+                  <div style="font-size:0.72rem; color:#94a3b8;">Procurement Bill verified against Delivery Notes and Purchase Order.</div>
+                  <div style="font-size:0.72rem; color:#94a3b8;">Authorized under Rayan Group Internal Audit &amp; Finance Control.</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-family:'Outfit', cursive; font-size:1.15rem; color:#0099e6; margin-bottom:0.2rem;">Arshad Alam Shaikh</div>
+                  <div style="border-top:1px solid #94a3b8; padding-top:0.25rem; font-size:0.75rem; font-weight:700; color:#1e293b;">
+                    Authorized Signatory<br>
+                    <span style="font-weight:400; color:#64748b;">Rayan Group Finance Committee</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rayan-computer-generated-notice" style="border-top:1px solid #e2e8f0; margin-top:1.25rem; padding-top:0.75rem;">This is a Computer Generated Purchase Bill</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+  }
+
 
   // 3. RECORD CUSTOMER RECEIPT MODAL
   openRecordReceiptModal(preselectInvoiceId = null) {
@@ -5493,6 +5645,10 @@ class FinanceApp {
                 </tbody>
               </table>
             </div>
+
+            <div class="rayan-computer-generated-notice" style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.08); color:#94a3b8;">
+              This is a Computer Generated Statement of Account
+            </div>
           </div>
         </div>
       </div>
@@ -5584,6 +5740,10 @@ class FinanceApp {
                   `).join('')}
                 </tbody>
               </table>
+            </div>
+
+            <div class="rayan-computer-generated-notice" style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.08); color:#94a3b8;">
+              This is a Computer Generated Statement of Account
             </div>
           </div>
         </div>
@@ -6993,6 +7153,9 @@ class FinanceApp {
                   ${this.getRayanStampImg()}
                 </div>
               </div>
+
+              <!-- Computer Generated Notice -->
+              <div class="rayan-computer-generated-notice">This is a Computer Generated Invoice</div>
             </div>
 
             <!-- Bottom Teal Bar -->
@@ -7162,6 +7325,9 @@ class FinanceApp {
                   ${this.getRayanStampImg()}
                 </div>
               </div>
+
+              <!-- Computer Generated Notice -->
+              <div class="rayan-computer-generated-notice">This is a Computer Generated Receipt Voucher</div>
             </div>
 
             <div class="rayan-doc-footer-bar">
@@ -7350,6 +7516,9 @@ class FinanceApp {
                 <strong>7. Receipt and Acceptance of Goods: 7.1.</strong> Acceptance of delivery shall not constitute completion of the Order until the necessary inspection, installation or testing is carried out and confirmed by RAYAN. Unless otherwise specified, all goods and/or services furnished hereunder will be subject to final inspection and acceptance or rejection by RAYAN within a reasonable time after delivery. RAYAN will upon written notice to the Supplier, hold any rejected goods at the Supplier's risk pending the Supplier's instructions. <strong>7.2.</strong> If the Supplier fails to furnish RAYAN with instructions regarding the disposition of such goods within a reasonable time, RAYAN may return the goods to the Supplier at the Supplier's expense or dispose them of as necessary or resort to Risk Purchase as per 12.2.
               </div>
 
+              <!-- Computer Generated Notice (Page 1) -->
+              <div class="rayan-computer-generated-notice">This is a Computer Generated Purchase Order</div>
+
               <div class="rayan-page-counter">Page 1 of 2</div>
             </div>
           </div>
@@ -7423,6 +7592,9 @@ class FinanceApp {
               <div class="rayan-copy-notice" style="margin-bottom:3px;">
                 Please keep a copy of this PO for your records
               </div>
+
+              <!-- Computer Generated Notice (Page 2) -->
+              <div class="rayan-computer-generated-notice">This is a Computer Generated Purchase Order</div>
 
               <div class="rayan-page-counter">Page 2 of 2</div>
             </div>
