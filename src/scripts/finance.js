@@ -3526,26 +3526,58 @@ class FinanceApp {
                   <input type="date" id="inv-date" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}" required>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Payment Terms (Days)</label>
-                  <input type="number" id="inv-terms" class="fin-form-input" value="30" required>
+                  <label class="fin-form-label" id="inv-terms-label">Payment Terms (Days)</label>
+                  <input type="number" id="inv-terms" class="fin-form-input" value="30">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Due Date</label>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Due Date</label>
+                    <label style="font-size:0.7rem; color:#94a3b8; display:flex; align-items:center; gap:0.35rem; cursor:pointer; user-select:none;">
+                      <input type="checkbox" id="inv-no-due-date" style="cursor:pointer; accent-color:#0099e6;"> No Due Date
+                    </label>
+                  </div>
                   <input type="date" id="inv-due-date" class="fin-form-input" required>
+                  <span id="inv-no-due-date-hint" style="display:none; font-size:0.68rem; color:#38bdf8; margin-top:0.25rem;">Immediate Payment / Due Upon Receipt</span>
                 </div>
               </div>
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Linked Project / Cost Center</label>
-                  <select id="inv-project" class="fin-form-select">
-                    <option value="">General Corporate Billing</option>
-                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code})</option>`).join('')}
-                  </select>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Linked Project / Cost Center</label>
+                    <span id="inv-project-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Pick from List or Type Custom ▾</span>
+                  </div>
+                  <div class="fin-combobox-wrapper">
+                    <input 
+                      type="text" 
+                      id="inv-project-input" 
+                      class="fin-form-input fin-combobox-input" 
+                      list="inv-project-datalist" 
+                      placeholder="Pick project or write custom project / cost center..." 
+                      autocomplete="off"
+                    >
+                    <select id="inv-project-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered projects">
+                      <option value="" selected disabled>▾</option>
+                      <option value="GENERAL">General Corporate Billing</option>
+                      ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code})</option>`).join('')}
+                    </select>
+                  </div>
+                  <datalist id="inv-project-datalist">
+                    <option value="General Corporate Billing">General Corporate Billing</option>
+                    ${projects.map(p => `<option value="${p.name}">${p.name} (${p.code})</option>`).join('')}
+                    <option value="Cost Center CC-101 Civil Infrastructure">Cost Center CC-101 Civil Infrastructure</option>
+                    <option value="Cost Center CC-102 MEP Engineering & HVAC">Cost Center CC-102 MEP Engineering & HVAC</option>
+                    <option value="Cost Center CC-103 Commercial Fitouts & Glazing">Cost Center CC-103 Commercial Fitouts & Glazing</option>
+                    <option value="Cost Center CC-104 Plant, Machinery & Crane Hire">Cost Center CC-104 Plant, Machinery & Crane Hire</option>
+                    <option value="Cost Center CC-105 Energy & Offshore Facilities">Cost Center CC-105 Energy & Offshore Facilities</option>
+                  </datalist>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="inv-project-hint">Type any manual project name / cost center code directly, or pick from dropdown</span>
+                  </div>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">PO / Contract Reference #</label>
-                  <input type="text" id="inv-po-ref" class="fin-form-input" placeholder="e.g. PO-LT-2025-99">
+                  <input type="text" id="inv-po-ref" class="fin-form-input" placeholder="e.g. LPO/BD/2026/12 or PO-LT-2025-99">
                 </div>
               </div>
 
@@ -3563,6 +3595,7 @@ class FinanceApp {
               <datalist id="inv-item-milestone-suggestions">
                 <option value="20% ADVANCE PAYMENT AGAINST PURCHASE ORDER">
                 <option value="10 PROGRESSIVE PAYMENT">
+                <option value="50% PROGRESSIVE PAYMENT - CIVIL &amp; INTERIOR FIT-OUT">
                 <option value="RUNNING ACCOUNT (RA) BILL - STRUCTURAL WORKS">
                 <option value="SECOND PROGRESSIVE PAYMENT - MEP INSTALLATION">
                 <option value="FINAL COMPLETION &amp; RETENTION RELEASE (5%)">
@@ -3572,16 +3605,39 @@ class FinanceApp {
                 ${items.map(it => `<option value="${it.name}">Catalog: ${it.name} (${it.hsn_sac_code || ''})</option>`).join('')}
               </datalist>
 
+              <!-- Master Rayan Group UOM Datalist -->
+              <datalist id="inv-uom-datalist">
+                <option value="%">% (Progressive Milestone %)</option>
+                <option value="LSUM">LSUM (Lump Sum / Turnkey Contract)</option>
+                <option value="JOB">JOB (Defined Work Package)</option>
+                <option value="SQM">SQM (Square Meter - Glazing / Fitouts / Marble)</option>
+                <option value="SQFT">SQFT (Square Feet - Commercial Interior / Flooring)</option>
+                <option value="CUM">CUM (Cubic Meter - Ready Mix Concrete / Earthwork)</option>
+                <option value="MT">MT (Metric Ton - Structural Steel / TMT Rebar)</option>
+                <option value="KG">KG (Kilogram - Fasteners / Chemical Admixtures)</option>
+                <option value="BAG">BAG (Bags - Cement / Grout / Plaster)</option>
+                <option value="NOS">NOS (Numbers / Units - MEP Equipment / DB Panels)</option>
+                <option value="PCS">PCS (Pieces - Valves / Outlets / Fixtures)</option>
+                <option value="SET">SET (Sets - Pump Assemblies / Earthing Kits)</option>
+                <option value="MTR">MTR (Linear Meter - Cables / Piping)</option>
+                <option value="RMT">RMT (Running Meter - Skirting / Handrails)</option>
+                <option value="HRS">HRS (Hours - Mobile Crane / Machinery Rental)</option>
+                <option value="DAY">DAY (Days - Heavy Machinery / Daily Shifts)</option>
+                <option value="MTH">MTH (Months - Equipment Hire / Facility Mgmt)</option>
+                <option value="MD">MD (Man-Days - Senior Site Supervision)</option>
+                <option value="ANNUM">ANNUM (Annual Maintenance Contract - AMC)</option>
+              </datalist>
+
               <div class="fin-table-responsive">
                 <table class="fin-line-item-table" id="inv-items-table">
                   <thead>
                     <tr>
                       <th style="width:28%;">ITEM / SERVICE</th>
                       <th style="width:11%;">HSN/SAC</th>
-                      <th style="width:9%; text-align:center;">QTY</th>
+                      <th style="width:10%; text-align:center;">QTY / %</th>
                       <th style="width:9%; text-align:center;">UOM</th>
-                      <th style="width:14%;" id="inv-rate-col-header">RATE (AED)</th>
-                      <th style="width:12%;" id="inv-tax-col-header">VAT 5%</th>
+                      <th style="width:14%;" id="inv-rate-col-header">RATE / CONTRACT (AED)</th>
+                      <th style="width:11%;" id="inv-tax-col-header">VAT 5%</th>
                       <th style="width:14%; text-align:right;" id="inv-total-col-header">TOTAL (AED)</th>
                       <th style="width:3%;"></th>
                     </tr>
@@ -3771,29 +3827,37 @@ class FinanceApp {
       const itemId = defaultItem ? (defaultItem.id || '') : '';
       const itemName = defaultItem ? (defaultItem.name || defaultItem.description || '') : '';
       const hsn = defaultItem ? (defaultItem.hsn_sac_code || '9954') : '9954';
-      const uom = defaultItem ? (defaultItem.uom || 'LSUM') : 'LSUM';
+      const uom = defaultItem ? (defaultItem.uom || (itemName && itemName.includes('%') ? '%' : 'LSUM')) : (defaultQty > 1 && defaultQty <= 100 ? '%' : 'LSUM');
       const rate = defaultItem ? (defaultItem.sales_price !== undefined ? defaultItem.sales_price : (defaultItem.rate || 0)) : 0;
       const gstRate = defaultItem && defaultItem.gst_rate !== undefined ? defaultItem.gst_rate : (isTrn ? 5 : 18);
+      const isPercentInitial = uom === '%' || uom.includes('PERCENT');
 
       tr.innerHTML = `
         <td>
           <select class="fin-form-select row-item-sel" style="margin-bottom:0.35rem; font-size:0.82rem;">
-            <option value="">Custom Item / Service</option>
+            <option value="">Custom Item / Service / Milestone</option>
             ${items.map(it => `<option value="${it.id}" ${itemId === it.id || (itemName && it.name === itemName) ? 'selected' : ''}>${it.name}</option>`).join('')}
           </select>
-          <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Item description" value="${itemName}" style="font-size:0.82rem;">
+          <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Item or milestone description..." value="${itemName}" style="font-size:0.82rem;">
+          <div class="row-pct-note" style="display:${isPercentInitial ? 'block' : 'none'}; font-size:0.7rem; color:#38bdf8; margin-top:0.25rem; font-weight:600; line-height:1.3;"></div>
         </td>
         <td>
           <input type="text" class="fin-form-input row-hsn" placeholder="HSN/SAC" value="${hsn}" style="font-size:0.82rem;">
         </td>
-        <td>
-          <input type="number" class="fin-form-input row-qty" value="${defaultQty || 1}" min="0.001" step="any" style="text-align:center; font-size:0.82rem;">
+        <td style="text-align:center;">
+          <input type="number" class="fin-form-input row-qty" value="${defaultQty || 1}" min="0.001" step="any" style="text-align:center; font-size:0.82rem; font-weight:700;">
+          <div class="row-pct-subfield" style="display:${isPercentInitial ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:2px; margin-top:3px; font-size:0.68rem; color:#38bdf8;">
+            <span style="font-size:0.65rem; color:#94a3b8;">Billed:</span>
+            <input type="number" class="fin-form-input row-pct-val" value="${isPercentInitial ? (defaultQty > 1 && defaultQty <= 100 ? defaultQty : 50) : 50}" placeholder="50" min="0.01" max="100" step="any" style="width:44px; padding:2px 2px; font-size:0.74rem; text-align:center; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid #38bdf8; border-radius:4px;">
+            <span style="font-weight:700;">%</span>
+          </div>
         </td>
         <td>
-          <input type="text" class="fin-form-input row-uom" value="${uom}" placeholder="UOM" style="text-align:center; font-size:0.82rem;">
+          <input type="text" class="fin-form-input row-uom" list="inv-uom-datalist" value="${uom}" placeholder="UOM" style="text-align:center; font-size:0.82rem; font-weight:700; text-transform:uppercase;">
         </td>
         <td>
-          <input type="number" class="fin-form-input row-rate" value="${rate > 0 ? rate : (defaultItem ? 0 : '')}" placeholder="0.00" step="any" style="font-size:0.82rem;">
+          <input type="number" class="fin-form-input row-rate" value="${rate > 0 ? rate : (defaultItem ? 0 : '')}" placeholder="0.00" step="any" style="font-size:0.82rem; font-weight:600;">
+          <div style="font-size:0.65rem; color:#64748b; margin-top:2px; text-align:center;">Rate / Base Value</div>
         </td>
         <td>
           <select class="fin-form-select row-gst" style="font-size:0.82rem; font-weight:600;">
@@ -3851,7 +3915,7 @@ class FinanceApp {
         recalculateInvoice();
       };
 
-      tr.querySelectorAll('.row-hsn, .row-qty, .row-uom, .row-rate, .row-gst').forEach(inp => {
+      tr.querySelectorAll('.row-hsn, .row-qty, .row-uom, .row-rate, .row-gst, .row-pct-val').forEach(inp => {
         inp.oninput = () => recalculateInvoice();
         inp.onchange = () => recalculateInvoice();
       });
@@ -3880,15 +3944,55 @@ class FinanceApp {
       let hasOnly5Or0Tax = true;
 
       tbody.querySelectorAll('tr').forEach(tr => {
-        const qty = Number(tr.querySelector('.row-qty')?.value) || 0;
-        const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
-        const taxRate = Number(tr.querySelector('.row-gst')?.value) || 0;
+        const qtyInp = tr.querySelector('.row-qty');
+        const rateInp = tr.querySelector('.row-rate');
+        const taxInp = tr.querySelector('.row-gst');
+        const uomInp = tr.querySelector('.row-uom');
+        const pctSubfield = tr.querySelector('.row-pct-subfield');
+        const pctValInp = tr.querySelector('.row-pct-val');
+        const pctNote = tr.querySelector('.row-pct-note');
+
+        const qty = Number(qtyInp?.value) || 0;
+        const rate = Number(rateInp?.value) || 0;
+        const taxRate = Number(taxInp?.value) || 0;
+        const uom = (uomInp?.value || '').trim().toUpperCase();
+
+        const isPercent = uom === '%' || uom.includes('PERCENT');
+        if (pctSubfield) pctSubfield.style.display = isPercent ? 'flex' : 'none';
+
+        let rowTaxable = 0;
+        let pctUsed = 0;
+
+        if (isPercent) {
+          const explicitPct = Number(pctValInp?.value);
+          if (!isNaN(explicitPct) && explicitPct > 0) {
+            pctUsed = explicitPct;
+            rowTaxable = (qty * rate) * (explicitPct / 100);
+          } else if (qty > 0 && qty <= 100) {
+            pctUsed = qty;
+            rowTaxable = rate * (qty / 100);
+          } else if (qty > 0 && qty < 1) {
+            pctUsed = qty * 100;
+            rowTaxable = rate * qty;
+          } else {
+            pctUsed = 100;
+            rowTaxable = qty * rate;
+          }
+
+          if (pctNote) {
+            pctNote.style.display = 'block';
+            const baseContract = qty * rate;
+            pctNote.innerHTML = `💡 Progressive milestone: <strong>${pctUsed}%</strong> of ${currSym}${baseContract.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} = <strong>${currSym}${rowTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>`;
+          }
+        } else {
+          if (pctNote) pctNote.style.display = 'none';
+          rowTaxable = qty * rate;
+        }
 
         if (taxRate !== 5 && taxRate !== 0) {
           hasOnly5Or0Tax = false;
         }
 
-        const rowTaxable = qty * rate;
         const rowTax = rowTaxable * (taxRate / 100);
         const rowGrand = rowTaxable + rowTax;
 
@@ -4332,17 +4436,89 @@ class FinanceApp {
       };
     }
 
-    // Update due date
+    // Update due date with No Due Date toggle support
     const updateDueDate = () => {
+      const noDue = document.getElementById('inv-no-due-date')?.checked;
+      const dueInp = document.getElementById('inv-due-date');
+      const termsInp = document.getElementById('inv-terms');
+      const noDueHint = document.getElementById('inv-no-due-date-hint');
+
+      if (noDue) {
+        if (dueInp) {
+          dueInp.value = '';
+          dueInp.disabled = true;
+          dueInp.required = false;
+          dueInp.style.opacity = '0.45';
+        }
+        if (noDueHint) noDueHint.style.display = 'block';
+        if (termsInp) termsInp.disabled = true;
+        return;
+      }
+
+      if (dueInp) {
+        dueInp.disabled = false;
+        dueInp.required = true;
+        dueInp.style.opacity = '1';
+      }
+      if (noDueHint) noDueHint.style.display = 'none';
+      if (termsInp) termsInp.disabled = false;
+
       const invDate = new Date(document.getElementById('inv-date').value);
-      const terms = Number(document.getElementById('inv-terms').value) || 30;
+      const terms = Number(termsInp?.value) || 30;
       invDate.setDate(invDate.getDate() + terms);
-      document.getElementById('inv-due-date').value = invDate.toISOString().split('T')[0];
+      if (dueInp) dueInp.value = invDate.toISOString().split('T')[0];
     };
 
     document.getElementById('inv-date').onchange = updateDueDate;
     document.getElementById('inv-terms').oninput = updateDueDate;
+    const noDueCheckbox = document.getElementById('inv-no-due-date');
+    if (noDueCheckbox) noDueCheckbox.onchange = updateDueDate;
     updateDueDate();
+
+    // Project / Cost Center selection & manual input handling
+    const prjInput = document.getElementById('inv-project-input');
+    const prjQuickSelect = document.getElementById('inv-project-quick-select');
+    const prjBadge = document.getElementById('inv-project-badge');
+    const prjHint = document.getElementById('inv-project-hint');
+
+    if (prjQuickSelect && prjInput) {
+      prjQuickSelect.onchange = () => {
+        const selVal = prjQuickSelect.value;
+        if (selVal === 'GENERAL') {
+          prjInput.value = 'General Corporate Billing';
+          prjInput.removeAttribute('data-project-id');
+          if (prjBadge) { prjBadge.textContent = '✓ General Billing'; prjBadge.style.color = '#10b981'; }
+          if (prjHint) prjHint.textContent = 'General Corporate Billing selected';
+        } else {
+          const found = projects.find(p => p.id === selVal);
+          if (found) {
+            prjInput.value = found.name;
+            prjInput.setAttribute('data-project-id', found.id);
+            if (prjBadge) { prjBadge.textContent = `✓ ${found.code || 'Registered Project'}`; prjBadge.style.color = '#10b981'; }
+            if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
+          }
+        }
+        prjQuickSelect.value = '';
+      };
+
+      prjInput.oninput = () => {
+        const val = prjInput.value.trim();
+        const found = projects.find(p => p.name.toLowerCase() === val.toLowerCase() || `${p.name} (${p.code})`.toLowerCase() === val.toLowerCase());
+        if (found) {
+          prjInput.setAttribute('data-project-id', found.id);
+          if (prjBadge) { prjBadge.textContent = `✓ ${found.code || 'Registered Project'}`; prjBadge.style.color = '#10b981'; }
+          if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
+        } else if (val) {
+          prjInput.removeAttribute('data-project-id');
+          if (prjBadge) { prjBadge.textContent = '✎ Custom Project / Cost Center'; prjBadge.style.color = '#38bdf8'; }
+          if (prjHint) prjHint.textContent = `Custom project / cost center "${val}" will be used for this invoice.`;
+        } else {
+          prjInput.removeAttribute('data-project-id');
+          if (prjBadge) { prjBadge.textContent = 'Pick from List or Type Custom ▾'; prjBadge.style.color = '#38bdf8'; }
+          if (prjHint) prjHint.textContent = 'Type any manual project name / cost center code directly, or pick from dropdown';
+        }
+      };
+    }
 
     document.getElementById('inv-add-row-btn').onclick = () => addRow();
 
@@ -4377,11 +4553,15 @@ class FinanceApp {
       return;
     }
 
-    const prjSel = document.getElementById('inv-project');
-    const prjId = prjSel ? prjSel.value || null : null;
-    const prjName = prjSel?.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
+    const prjInput = document.getElementById('inv-project-input');
+    const prjName = (prjInput?.value || '').trim() || 'General Corporate Billing';
+    const prjId = prjInput?.getAttribute('data-project-id') || null;
 
-    const taxRegime = document.getElementById('inv-tax-regime')?.value || 'gst';
+    const noDueDate = document.getElementById('inv-no-due-date')?.checked;
+    const dueDateVal = noDueDate ? null : (document.getElementById('inv-due-date')?.value || null);
+    const paymentTermsVal = noDueDate ? 0 : (Number(document.getElementById('inv-terms')?.value) || 0);
+
+    const taxRegime = document.getElementById('inv-tax-regime')?.value || 'trn';
     const taxNumber = (document.getElementById('inv-cust-gstin')?.value || '').trim();
     const isTrn = taxRegime === 'trn';
     const currIndicator = document.getElementById('inv-currency-symbol')?.textContent || '';
@@ -4404,7 +4584,7 @@ class FinanceApp {
         gstin: !isTrn ? taxNumber : '',
         trn: isTrn ? taxNumber : '',
         place_of_supply: document.getElementById('inv-cust-pos')?.value || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
-        payment_terms: Number(document.getElementById('inv-terms')?.value) || 30
+        payment_terms: paymentTermsVal
       };
       if (!this.db.customers) this.db.customers = [];
       this.db.customers.push(customer);
@@ -4426,11 +4606,33 @@ class FinanceApp {
       const desc = tr.querySelector('.row-desc').value.trim();
       const hsn = tr.querySelector('.row-hsn').value.trim();
       const qty = Number(tr.querySelector('.row-qty').value) || 1;
-      const uom = tr.querySelector('.row-uom').value.trim();
+      const uom = (tr.querySelector('.row-uom').value || '').trim().toUpperCase() || 'LSUM';
       const unitPrice = Number(tr.querySelector('.row-rate').value) || 0;
       const taxRate = Number(tr.querySelector('.row-gst').value) || 0;
+      const explicitPct = Number(tr.querySelector('.row-pct-val')?.value);
 
-      const taxable = qty * unitPrice;
+      const isPercent = uom === '%' || uom.includes('PERCENT');
+      let taxable = 0;
+      let pctClaimed = null;
+
+      if (isPercent) {
+        if (!isNaN(explicitPct) && explicitPct > 0) {
+          pctClaimed = explicitPct;
+          taxable = (qty * unitPrice) * (explicitPct / 100);
+        } else if (qty > 0 && qty <= 100) {
+          pctClaimed = qty;
+          taxable = unitPrice * (qty / 100);
+        } else if (qty > 0 && qty < 1) {
+          pctClaimed = qty * 100;
+          taxable = unitPrice * qty;
+        } else {
+          pctClaimed = 100;
+          taxable = qty * unitPrice;
+        }
+      } else {
+        taxable = qty * unitPrice;
+      }
+
       const tax = taxable * (taxRate / 100);
       const total = taxable + tax;
 
@@ -4455,9 +4657,12 @@ class FinanceApp {
         description: desc,
         hsn_sac_code: hsn,
         qty,
+        progress_pct: pctClaimed,
         uom,
         unit: uom,
         unit_price: unitPrice,
+        project_price: isPercent ? unitPrice : (qty * unitPrice),
+        invoice_amount: taxable,
         taxable_amount: taxable,
         gst_rate: taxRate,
         vat_rate: taxRate,
@@ -4466,6 +4671,7 @@ class FinanceApp {
         sgst_amount: sgst,
         igst_amount: igst,
         vat_amount: isTrn ? tax : 0,
+        tax_amount: tax,
         total_amount: total
       });
     });
@@ -4488,8 +4694,9 @@ class FinanceApp {
         project_name: prjName,
         po_reference: document.getElementById('inv-po-ref').value,
         invoice_date: document.getElementById('inv-date').value,
-        due_date: document.getElementById('inv-due-date').value,
-        payment_terms: Number(document.getElementById('inv-terms').value),
+        due_date: dueDateVal,
+        payment_terms: paymentTermsVal,
+        payment_terms_label: noDueDate ? 'Due Upon Receipt / No Due Date' : `${paymentTermsVal} Days from Invoice Date`,
         line_items: lineItems,
         taxable_subtotal: taxableSubtotal,
         cgst_total: cgstTotal,
@@ -4554,7 +4761,7 @@ class FinanceApp {
                   <div class="fin-print-title">TAX INVOICE</div>
                   <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-top:0.35rem;">${inv.invoice_no}</div>
                   <div style="font-size:0.78rem; color:#64748b;">Invoice Date: ${this.formatDate(inv.invoice_date)}</div>
-                  <div style="font-size:0.78rem; color:#64748b;">Due Date: ${this.formatDate(inv.due_date)}</div>
+                  <div style="font-size:0.78rem; color:#64748b;">Due Date: ${inv.due_date ? this.formatDate(inv.due_date) : 'No Due Date (Due Upon Receipt)'}</div>
                   <div style="font-size:0.78rem; color:#0099e6; font-weight:700;">Status: ${inv.status.toUpperCase()}</div>
                 </div>
               </div>
@@ -4572,9 +4779,9 @@ class FinanceApp {
                 </div>
                 <div>
                   <strong style="color:#0099e6; text-transform:uppercase; font-size:0.75rem; display:block; margin-bottom:0.25rem;">PROJECT DETAILS:</strong>
-                  <div style="font-weight:700; color:#0f172a;">${inv.project_name || 'General Construction Works'}</div>
+                  <div style="font-weight:700; color:#0f172a;">${inv.project_name || 'General Corporate Billing'}</div>
                   <div style="color:#475569; font-size:0.82rem;">
-                    Payment Terms: ${inv.payment_terms} Days from Invoice Date<br>
+                    Payment Terms: ${inv.payment_terms_label || (inv.due_date ? `${inv.payment_terms || 30} Days from Invoice Date` : 'Due Upon Receipt / Immediate')}<br>
                     Remittance Mode: RTGS / NEFT Direct Transfer
                   </div>
                 </div>
@@ -4601,12 +4808,13 @@ class FinanceApp {
                       <td>${idx + 1}</td>
                       <td>
                         <strong>${li.name || li.description}</strong>
+                        ${li.uom === '%' && li.progress_pct ? `<br><span style="font-size:0.75rem; color:#0284c7; font-weight:600;">(Progress Milestone: ${li.progress_pct}% of Contract Value)</span>` : ''}
                       </td>
                       <td>${li.hsn_sac_code || '—'}</td>
-                      <td>${li.qty}</td>
+                      <td>${li.qty}${li.uom === '%' && li.progress_pct ? ` (${li.progress_pct}%)` : ''}</td>
                       <td>${li.uom}</td>
-                      <td>${this.formatCurrency(li.unit_price, false)}</td>
-                      <td>${this.formatCurrency(li.taxable_amount, false)}</td>
+                      <td>${this.formatCurrency(li.project_price || li.unit_price, false)}</td>
+                      <td>${this.formatCurrency(li.taxable_amount || li.invoice_amount, false)}</td>
                       <td>${li.gst_rate || li.vat_rate || 5}%</td>
                       <td><strong>${this.formatCurrency(li.total_amount, false)}</strong></td>
                     </tr>
@@ -7074,14 +7282,14 @@ class FinanceApp {
                     <div><strong>PO NO / امر شراء :</strong> ${inv.po_reference || 'LPO/BD/2026/12'}</div>
                     <div><strong>Date / تاريخ :</strong> ${inv.invoice_date ? this.formatDate(inv.invoice_date) : '13-Oct-2026'}</div>
                     <div><strong>Email:</strong> <a href="mailto:${inv.email || 'buildaradevelopers@gmail.com'}" class="rayan-link-blue">${inv.email || 'buildaradevelopers@gmail.com'}</a></div>
-                    <div><strong>Mode/Terms of Payment:</strong> ${inv.payment_terms_label || (inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Progressive Payment')}</div>
+                    <div><strong>Mode/Terms of Payment:</strong> ${inv.payment_terms_label || (inv.due_date ? `${inv.payment_terms} Days Net` : 'Due Upon Receipt / Immediate')}</div>
                   </td>
                 </tr>
               </table>
 
               <!-- Project Bar -->
               <div class="rayan-project-bar">
-                Project: ${inv.project_name || 'Yateem Optician, Khalidiyah Mall, Abu Dhabi'}
+                Project: ${inv.project_name || 'General Corporate Billing'}
               </div>
 
               <!-- Line Items Table -->
