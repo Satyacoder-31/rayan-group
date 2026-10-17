@@ -474,9 +474,9 @@ createRoute('procurement/index.html', {
 });
 
 // ============================================================================
-// 3. BILLING & ACCOUNTS DESK (/billing/index.html)
+// 3. BILLING & ACCOUNTS DESK (Protected - Managed by src/scripts/finance.js)
 // ============================================================================
-createRoute('billing/index.html', {
+if (false) createRoute('billing/index.html', {
   title: 'Billing & Accounts Desk | Vendor & Client Accounts',
   description: 'Corporate billing and accounts inquiry portal for invoice tracking, payment status verification, purchase order queries, and accounts department contact at Rayan Group.',
   activePath: '/billing/',

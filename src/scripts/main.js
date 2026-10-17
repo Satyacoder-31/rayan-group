@@ -1878,6 +1878,19 @@ function initGlobalFinanceButton() {
       mobBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>ACCOUNTS &amp; FINANCE LOGIN</span>`;
     }
   });
+
+  // Ensure direct click/tap navigation works reliably on all touch & mobile devices
+  if (!window.__loginClickBound) {
+    window.__loginClickBound = true;
+    document.addEventListener('click', (e) => {
+      const loginBtn = e.target.closest('#header-finance-login-btn, .btn-header-login');
+      if (loginBtn) {
+        if (!window.location.pathname.includes('/billing/')) {
+          window.location.href = '/billing/';
+        }
+      }
+    });
+  }
 }
 
 // Call on initial DOM load

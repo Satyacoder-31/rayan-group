@@ -270,9 +270,19 @@ class FinanceApp {
               <button type="submit" id="fin-login-submit-btn" style="width:100%; justify-content:center; padding:0.95rem 1.5rem; background:linear-gradient(135deg, #0099e6, #0284c7) !important; color:#ffffff !important; border:1px solid #38bdf8 !important; border-radius:10px !important; font-size:0.95rem !important; font-weight:800 !important; letter-spacing:0.04em !important; cursor:pointer !important; display:flex !important; align-items:center !important; gap:0.5rem !important; box-shadow:0 6px 20px rgba(0, 153, 230, 0.45) !important; transition:all 0.2s ease !important;">
                 <span>SIGN IN TO FINANCIAL PORTAL &rarr;</span>
               </button>
+
+              <!-- Quick Role Sign-in for immediate access -->
+              <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+                <span style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.6rem; font-weight: 600;">Authorized Quick Access (Click to sign in):</span>
+                <div style="display: flex; gap: 0.45rem; justify-content: center; flex-wrap: wrap;">
+                  <button type="button" class="fin-quick-role-btn" data-email="accountant@rayangroup.com" data-pwd="Accounts@Rayan2026" style="background: rgba(0, 153, 230, 0.12); border: 1px solid rgba(0, 153, 230, 0.35); color: #38bdf8; font-size: 0.75rem; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">👩‍💻 Senior Accountant</button>
+                  <button type="button" class="fin-quick-role-btn" data-email="finance.admin@rayangroup.com" data-pwd="Finance@Rayan2026" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; font-size: 0.75rem; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">💼 CFO / Treasury</button>
+                  <button type="button" class="fin-quick-role-btn" data-email="superadmin@rayangroup.com" data-pwd="Rayan@Admin2026" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-size: 0.75rem; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">👨‍💼 Super Admin</button>
+                </div>
+              </div>
             </form>
 
-            <!-- Secure Corporate Notice (No Credentials Visible on UI) -->
+            <!-- Secure Corporate Notice -->
             <div class="fin-login-footer-security">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               <span>256-Bit SSL Encrypted Corporate Session • Authorized Financial Personnel Only</span>
@@ -291,6 +301,17 @@ class FinanceApp {
     const pwdInput = document.getElementById('fin-login-password');
     const toggleBtn = document.getElementById('fin-toggle-pwd');
     const errorBox = document.getElementById('fin-login-error');
+
+    // Quick role autofill and instant sign-in
+    document.querySelectorAll('.fin-quick-role-btn').forEach(btn => {
+      btn.onclick = () => {
+        if (emailInput) emailInput.value = btn.dataset.email;
+        if (pwdInput) pwdInput.value = btn.dataset.pwd;
+        if (form) {
+          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+      };
+    });
 
     // Password visibility toggle
     if (toggleBtn) {
@@ -7688,7 +7709,15 @@ class FinanceApp {
 }
 
 // Global initialization
-window.addEventListener('DOMContentLoaded', () => {
-  window.finApp = new FinanceApp();
-  window.finApp.init();
-});
+function startFinanceApp() {
+  if (!window.finApp) {
+    window.finApp = new FinanceApp();
+    window.finApp.init();
+  }
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', startFinanceApp);
+} else {
+  startFinanceApp();
+}
