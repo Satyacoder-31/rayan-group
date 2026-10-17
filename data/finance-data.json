@@ -356,6 +356,58 @@
   ],
   "items": [
     {
+      "id": "item-milestone-50",
+      "code": "MILESTONE-50",
+      "name": "50% Progressive Milestone Payment (Civil & Interior Works)",
+      "category": "Progressive Milestone Billing",
+      "description": "50% Progressive payment certification for completed civil and interior fit-out works against purchase order.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
+      "id": "item-milestone-20",
+      "code": "MILESTONE-20",
+      "name": "20% Mobilization & Advance Payment Against LPO",
+      "category": "Progressive Milestone Billing",
+      "description": "20% Mobilization Advance certified against approved Purchase Order / Contract.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
+      "id": "item-milestone-30",
+      "code": "MILESTONE-30",
+      "name": "30% Running Account (RA) Bill Payment - MEP & Structural",
+      "category": "Progressive Milestone Billing",
+      "description": "30% Progressive Running Account (RA) milestone payment certification.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
+      "id": "item-milestone-pct",
+      "code": "MILESTONE-PCT",
+      "name": "% Progressive Work Certification (Custom Milestone Claim)",
+      "category": "Progressive Milestone Billing",
+      "description": "Progressive work milestone claim based on certified completion percentage.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
       "id": "item-001",
       "code": "STEEL-TMT-550",
       "name": "Fe-550D TMT High-Yield Reinforcement Steel",

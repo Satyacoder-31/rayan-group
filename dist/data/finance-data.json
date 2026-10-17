@@ -356,6 +356,58 @@
   ],
   "items": [
     {
+      "id": "item-milestone-50",
+      "code": "MILESTONE-50",
+      "name": "50% Progressive Milestone Payment (Civil & Interior Works)",
+      "category": "Progressive Milestone Billing",
+      "description": "50% Progressive payment certification for completed civil and interior fit-out works against purchase order.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
+      "id": "item-milestone-20",
+      "code": "MILESTONE-20",
+      "name": "20% Mobilization & Advance Payment Against LPO",
+      "category": "Progressive Milestone Billing",
+      "description": "20% Mobilization Advance certified against approved Purchase Order / Contract.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
+      "id": "item-milestone-30",
+      "code": "MILESTONE-30",
+      "name": "30% Running Account (RA) Bill Payment - MEP & Structural",
+      "category": "Progressive Milestone Billing",
+      "description": "30% Progressive Running Account (RA) milestone payment certification.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
+      "id": "item-milestone-pct",
+      "code": "MILESTONE-PCT",
+      "name": "% Progressive Work Certification (Custom Milestone Claim)",
+      "category": "Progressive Milestone Billing",
+      "description": "Progressive work milestone claim based on certified completion percentage.",
+      "uom": "%",
+      "sales_price": 1000,
+      "purchase_price": 800,
+      "gst_rate": 5,
+      "hsn_sac_code": "9954",
+      "status": "active"
+    },
+    {
       "id": "item-001",
       "code": "STEEL-TMT-550",
       "name": "Fe-550D TMT High-Yield Reinforcement Steel",
@@ -515,6 +567,59 @@
     }
   ],
   "invoices": [
+    {
+      "id": "inv-rec-rg-44049",
+      "invoice_no": "REC-RG-INV-44049",
+      "company_id": "rayan-corp-uae",
+      "customer_id": "cust-buildara",
+      "customer_name": "M/s. BUILDARA GENERAL CONTRACTING - L.L.C",
+      "customer_address": "ABU DHABI, MADINAT ZAYED",
+      "customer_trn": "105405525400003",
+      "customer_gstin": "105405525400003",
+      "contact_person": "Mr. Sooraj Kumar",
+      "email": "buildaradevelopers@gmail.com",
+      "place_of_supply": "Abu Dhabi, UAE",
+      "project_name": "Yateem Optician, Khalidiyah Mall, Abu Dhabi",
+      "po_reference": "LPO/BD/2026/12",
+      "invoice_date": "2026-10-13",
+      "due_date": "2026-11-12",
+      "payment_terms": 30,
+      "payment_terms_label": "Progressive Payment",
+      "currency": "AED",
+      "line_items": [
+        {
+          "sr": 1,
+          "name": "20% PROGRESSIVE PAYMENT FOR PO NO. LPO/BD/2026/12 Civil & Interior Work at Yateem Optician, Khalidiyah Mall, Abu Dhabi",
+          "description": "20% PROGRESSIVE PAYMENT FOR PO NO. LPO/BD/2026/12 Civil & Interior Work at Yateem Optician, Khalidiyah Mall, Abu Dhabi",
+          "unit": "%",
+          "uom": "%",
+          "qty": 20,
+          "unit_price": 57000,
+          "project_price": 57000,
+          "invoice_amount": 11400,
+          "taxable_amount": 11400,
+          "gst_rate": 5,
+          "vat_rate": 5,
+          "tax_amount": 570,
+          "vat_amount": 570,
+          "total_amount": 11400
+        }
+      ],
+      "taxable_subtotal": 11400,
+      "adjustment": 0,
+      "subtotal": 11400,
+      "vat_rate": 5,
+      "total_tax": 570,
+      "vat_total": 570,
+      "grand_total": 11970,
+      "amount_paid": 0,
+      "balance_due": 11970,
+      "status": "issued",
+      "notes": "20% Progressive Payment certification as per agreed contract terms.",
+      "amount_in_words": "Eleven Thousand Nine Hundred Seventy Only.",
+      "created_by": "Arshad Alam Shaikh",
+      "created_at": "2026-10-13T09:00:00Z"
+    },
     {
       "id": "inv-mvardue0",
       "invoice_no": "INV-2026-007",
@@ -1069,6 +1174,38 @@
   ],
   "customer_receipts": [
     {
+      "id": "rec-rv-44025",
+      "receipt_no": "REC-RV-44025",
+      "ref_invoice_no": "REC-RG-INV-44043",
+      "company_id": "rayan-corp-uae",
+      "customer_name": "M/S TOP ROCK INTERIORS LLC.",
+      "contact_person": "Mr. Shahil",
+      "email": "procurementofficer@toprockinteriors.com",
+      "receipt_date": "2026-09-17",
+      "receipt_time": "1:40 PM",
+      "payment_mode": "Online",
+      "payment_type": "Online",
+      "cheque_no": "000018989",
+      "reference_no": "000018989",
+      "bank_name": "First Abu Dhabi Bank (FAB)",
+      "amount_received": 155837,
+      "currency": "AED",
+      "amount_in_words": "One hundred fifty-five thousand eight hundred thirty-seven UAE dirhams",
+      "allocated_amount": 155837,
+      "allocations": [
+        {
+          "invoice_id": "inv-rec-rg-44043",
+          "invoice_no": "REC-RG-INV-44043",
+          "amount_allocated": 155837
+        }
+      ],
+      "received_by": "RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C",
+      "receiver_sign": "Arshad Alam Shaikh",
+      "notes": "Official client collection acknowledgement.",
+      "recorded_by": "Arshad Alam Shaikh",
+      "recorded_at": "2026-09-17T13:40:00Z"
+    },
+    {
       "id": "rec-mvare1wg",
       "receipt_no": "REC-2026-004",
       "receipt_date": "2026-03-16",
@@ -1326,6 +1463,56 @@
     }
   ],
   "purchase_orders": [
+    {
+      "id": "po-rec-11008",
+      "po_no": "PO-REC-11008",
+      "company_id": "rayan-corp-uae",
+      "date": "2026-06-23",
+      "payment_terms": "PDC30",
+      "currency": "AED",
+      "po_type": "Supply/Application",
+      "iref": "2026-KGN-SUB",
+      "supplier_name": "ARIBA GM INTERIOR DÉCOR LLC",
+      "supplier_address": "Abu Dhabi, P.O. Box -",
+      "supplier_attn": "Mr. Mohammad Gulam",
+      "supplier_trn": "104755857000003",
+      "supplier_mobile": "+971559314189",
+      "supplier_email": "aribadecoration@gmail.com",
+      "ship_to_name": "RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C",
+      "ship_to_address": "Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800",
+      "ship_to_attn": "Mr. Arshad Alam Shaikh",
+      "ship_to_trn": "104937380400003",
+      "ship_to_phone": "+971 25 654497",
+      "ship_to_email": "info@rayan-group.com",
+      "ship_to_mobile": "+971 589827866",
+      "responsible_person": "Mohammad Suhel",
+      "project_name": "Project At Al Foah Mall Screeding Work",
+      "line_items": [
+        {
+          "sr": 1,
+          "name": "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
+          "description": "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
+          "unit": "Sqm",
+          "uom": "Sqm",
+          "qty": 160,
+          "unit_price": 60,
+          "invoice_amount": 9600,
+          "vat_rate": 5,
+          "vat_amount": 480,
+          "total_amount": 9600
+        }
+      ],
+      "misc_charges": 0,
+      "subtotal": 9600,
+      "subtotal_ex_vat": 9600,
+      "vat_total": 480,
+      "total_value": 10080,
+      "grand_total": 10080,
+      "billed_value": 0,
+      "status": "approved",
+      "amount_in_words": "AED Ten Thousand Eighty Only.",
+      "approved_by": "Arshad Alam Shaikh"
+    },
     {
       "id": "po-001",
       "po_no": "PO-2026-001",
@@ -1613,5 +1800,175 @@
     ],
     "company_signatory_name": "Arshad Alam Shaikh",
     "company_signatory_title": "Authorized Signatory - Rayan Group"
-  }
+  },
+  "bank_accounts": [
+    {
+      "id": "bank-sbi-corp",
+      "account_name": "State Bank of India — Corporate Current A/c",
+      "bank_name": "State Bank of India",
+      "account_number": "409210084920",
+      "ifsc_code": "SBIN0001234",
+      "branch": "Commercial Branch, Fort, Mumbai",
+      "currency": "INR",
+      "balance": 48205000,
+      "signatory": "Arshad Alam Shaikh (Managing Director)",
+      "status": "Active"
+    },
+    {
+      "id": "bank-fab-uae",
+      "account_name": "First Abu Dhabi Bank (FAB) — Corporate Treasury",
+      "bank_name": "First Abu Dhabi Bank PJSC",
+      "account_number": "104889218001",
+      "iban": "AE07033104889218001",
+      "swift": "FABUAEAA",
+      "branch": "Al Maryah Island Financial Center, Abu Dhabi",
+      "currency": "AED",
+      "balance": 1450000,
+      "signatory": "Arshad Alam Shaikh (Managing Director)",
+      "status": "Active"
+    },
+    {
+      "id": "bank-enbd-escrow",
+      "account_name": "Emirates NBD — EPC Escrow Account",
+      "bank_name": "Emirates NBD Bank",
+      "account_number": "032991004112",
+      "iban": "AE210260001032991004112",
+      "swift": "EBILAEAD",
+      "branch": "Baniyas Road, Deira, Dubai",
+      "currency": "AED",
+      "balance": 750000,
+      "signatory": "Board Resolution / Escrow Agent",
+      "status": "Active"
+    }
+  ],
+  "cash_in_hand": [
+    {
+      "id": "cash-mumbai-hq",
+      "register_name": "Mumbai Corporate HQ — Main Cash Vault",
+      "location": "Mumbai, India",
+      "custodian": "Senior Accounts Executive",
+      "currency": "INR",
+      "balance": 125000,
+      "last_replenished": "2026-10-10"
+    },
+    {
+      "id": "cash-dubai-reg",
+      "register_name": "Dubai Regional Office — Petty Cash Register",
+      "location": "Dubai, UAE",
+      "custodian": "Site Administrative Manager",
+      "currency": "AED",
+      "balance": 35000,
+      "last_replenished": "2026-10-12"
+    },
+    {
+      "id": "cash-ad-solar",
+      "register_name": "Abu Dhabi Solar Farm EPC — Field Petty Cash",
+      "location": "Al Dhafra / Sweihan, UAE",
+      "custodian": "Resident EPC Project Manager",
+      "currency": "AED",
+      "balance": 45000,
+      "last_replenished": "2026-10-14"
+    }
+  ],
+  "cheques": [
+    {
+      "id": "chq-in-01",
+      "type": "inward",
+      "cheque_no": "894102",
+      "bank_name": "First Abu Dhabi Bank",
+      "party_name": "Emaar Properties PJSC",
+      "amount": 350000,
+      "currency": "AED",
+      "date": "2026-10-14",
+      "status": "Cleared",
+      "notes": "Advance for Downtown Dubai Substation Phase 2"
+    },
+    {
+      "id": "chq-in-02",
+      "type": "inward",
+      "cheque_no": "440192",
+      "bank_name": "HDFC Bank Ltd",
+      "party_name": "Larsen & Toubro Ltd (ECC Division)",
+      "amount": 1850000,
+      "currency": "INR",
+      "date": "2026-10-15",
+      "status": "Deposited",
+      "notes": "Milestone RA Bill payment for Mumbai Metro Line"
+    },
+    {
+      "id": "chq-in-03",
+      "type": "inward",
+      "cheque_no": "109284",
+      "bank_name": "State Bank of India",
+      "party_name": "National Highways Authority of India (NHAI)",
+      "amount": 2400000,
+      "currency": "INR",
+      "date": "2026-10-16",
+      "status": "In Hand",
+      "notes": "Delhi-Mumbai Expressway Substation Package"
+    },
+    {
+      "id": "chq-out-01",
+      "type": "outward",
+      "cheque_no": "001924",
+      "bank_name": "State Bank of India",
+      "party_name": "JSW Steel Ltd (Structural Steel Div)",
+      "amount": 980000,
+      "currency": "INR",
+      "date": "2026-10-12",
+      "status": "Presented",
+      "notes": "Payment for Heavy Transmission Towers Steel Supply"
+    },
+    {
+      "id": "chq-out-02",
+      "type": "outward",
+      "cheque_no": "001925",
+      "bank_name": "First Abu Dhabi Bank",
+      "party_name": "Siemens Middle East FZ-LLC",
+      "amount": 120000,
+      "currency": "AED",
+      "date": "2026-10-14",
+      "status": "Cleared",
+      "notes": "400kV GIS Switchgear Spares & Relay Protection"
+    }
+  ],
+  "loan_accounts": [
+    {
+      "id": "loan-sbi-wc",
+      "facility_name": "SBI Working Capital Consortium Credit Facility",
+      "lender": "State Bank of India (Lead Banker)",
+      "sanctioned_limit": 250000000,
+      "outstanding_balance": 64000000,
+      "available_limit": 186000000,
+      "currency": "INR",
+      "interest_rate": "8.45% p.a. (MCLR + Spread)",
+      "tenure": "Renewed Annually (Next Review: March 2027)",
+      "security": "Hypothecation of Current Assets & Corporate Guarantee"
+    },
+    {
+      "id": "loan-equip-hypo",
+      "facility_name": "Heavy Machinery & Equipment Hypothecation Loan",
+      "lender": "Tata Capital Financial Services",
+      "sanctioned_limit": 45000000,
+      "outstanding_balance": 12000000,
+      "available_limit": 0,
+      "currency": "INR",
+      "interest_rate": "9.20% p.a. Fixed",
+      "monthly_emi": 385000,
+      "tenure": "36 Months (Maturity: Dec 2027)",
+      "security": "Komatsu Excavators & Zoomlion 100T Mobile Cranes"
+    },
+    {
+      "id": "loan-fab-lc-bg",
+      "facility_name": "FAB Bank Guarantee & Letter of Credit Facility",
+      "lender": "First Abu Dhabi Bank PJSC",
+      "sanctioned_limit": 15000000,
+      "outstanding_balance": 4200000,
+      "available_limit": 10800000,
+      "currency": "AED",
+      "facility_type": "Non-Fund Based (Performance & Financial Guarantees)",
+      "commission_rate": "1.25% p.a.",
+      "security": "100% Cash Margin on Escrow & Corporate Pledge"
+    }
+  ]
 }

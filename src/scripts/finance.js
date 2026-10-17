@@ -3582,13 +3582,18 @@ class FinanceApp {
               </div>
 
               <!-- Line Items & Tax Calculation Section -->
-              <div style="display:flex; justify-content:space-between; align-items:center; margin:1.25rem 0 0.5rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1.25rem 0 0.5rem; flex-wrap:wrap; gap:0.5rem;">
                 <h4 style="font-family:var(--fin-font-heading); font-size:1.05rem; color:#f8fafc; margin:0;">
                   Line Items &amp; Tax Calculation
                 </h4>
-                <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn" style="background:rgba(37,99,235,0.18); color:#60a5fa; border:1px solid rgba(59,130,246,0.35); font-size:0.78rem; padding:0.35rem 0.85rem; border-radius:6px; cursor:pointer;">
-                  📑 Open Billed Item/s List Popup
-                </button>
+                <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                  <button type="button" class="fin-btn-quick" id="inv-apply-50pct-preset-btn" style="background:rgba(16,185,129,0.18); color:#34d399; border:1px solid rgba(16,185,129,0.4); font-size:0.78rem; padding:0.35rem 0.85rem; border-radius:6px; cursor:pointer; font-weight:700;">
+                    ⚡ 50% Milestone (500.00 AED Subtotal)
+                  </button>
+                  <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn" style="background:rgba(37,99,235,0.18); color:#60a5fa; border:1px solid rgba(59,130,246,0.35); font-size:0.78rem; padding:0.35rem 0.85rem; border-radius:6px; cursor:pointer;">
+                    📑 Open Billed Item/s List Popup
+                  </button>
+                </div>
               </div>
 
               <!-- Milestone and Catalog Autocomplete Datalist -->
@@ -3824,19 +3829,39 @@ class FinanceApp {
       const isTrn = currentRegime === 'trn';
       const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
 
-      const itemId = defaultItem ? (defaultItem.id || '') : '';
+      const itemId = defaultItem ? (defaultItem.id || defaultItem.code || '') : '';
       const itemName = defaultItem ? (defaultItem.name || defaultItem.description || '') : '';
       const hsn = defaultItem ? (defaultItem.hsn_sac_code || '9954') : '9954';
       const uom = defaultItem ? (defaultItem.uom || (itemName && itemName.includes('%') ? '%' : 'LSUM')) : (defaultQty > 1 && defaultQty <= 100 ? '%' : 'LSUM');
       const rate = defaultItem ? (defaultItem.sales_price !== undefined ? defaultItem.sales_price : (defaultItem.rate || 0)) : 0;
       const gstRate = defaultItem && defaultItem.gst_rate !== undefined ? defaultItem.gst_rate : (isTrn ? 5 : 18);
-      const isPercentInitial = uom === '%' || uom.includes('PERCENT');
+      const isPercentInitial = uom === '%' || uom.includes('PERCENT') || (itemName && itemName.includes('%'));
+      const initialPctVal = defaultItem?.progress_pct || defaultItem?.pct || (isPercentInitial ? (defaultQty > 1 && defaultQty <= 100 ? defaultQty : 50) : 50);
 
       tr.innerHTML = `
         <td>
           <select class="fin-form-select row-item-sel" style="margin-bottom:0.35rem; font-size:0.82rem;">
             <option value="">Custom Item / Service / Milestone</option>
-            ${items.map(it => `<option value="${it.id}" ${itemId === it.id || (itemName && it.name === itemName) ? 'selected' : ''}>${it.name}</option>`).join('')}
+            <optgroup label="⚡ Progressive Milestone &amp; % Payments">
+              <option value="MILESTONE-50" ${itemId === 'item-milestone-50' || itemId === 'MILESTONE-50' || itemName.includes('50%') ? 'selected' : ''}>
+                ⭐ Billed Milestone (50%): 500.00 AED (Taxable Subtotal)
+              </option>
+              <option value="MILESTONE-20" ${itemId === 'item-milestone-20' || itemId === 'MILESTONE-20' || itemName.includes('20%') ? 'selected' : ''}>
+                20% Mobilization &amp; Advance Payment Against LPO
+              </option>
+              <option value="MILESTONE-30" ${itemId === 'item-milestone-30' || itemId === 'MILESTONE-30' || itemName.includes('30%') ? 'selected' : ''}>
+                30% Running Account (RA) Bill Payment - MEP &amp; Structural
+              </option>
+              <option value="MILESTONE-10" ${itemId === 'MILESTONE-10' || itemName.includes('10%') ? 'selected' : ''}>
+                10% Progressive Milestone Payment
+              </option>
+              <option value="MILESTONE-PCT" ${itemId === 'item-milestone-pct' || itemId === 'MILESTONE-PCT' ? 'selected' : ''}>
+                % Custom Progressive Milestone Claim
+              </option>
+            </optgroup>
+            <optgroup label="📦 Construction &amp; Engineering Catalog">
+              ${items.filter(it => !it.id.startsWith('item-milestone')).map(it => `<option value="${it.id}" ${itemId === it.id || (itemName && it.name === itemName) ? 'selected' : ''}>${it.name}</option>`).join('')}
+            </optgroup>
           </select>
           <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Item or milestone description..." value="${itemName}" style="font-size:0.82rem;">
           <div class="row-pct-note" style="display:${isPercentInitial ? 'block' : 'none'}; font-size:0.7rem; color:#38bdf8; margin-top:0.25rem; font-weight:600; line-height:1.3;"></div>
@@ -3848,12 +3873,36 @@ class FinanceApp {
           <input type="number" class="fin-form-input row-qty" value="${defaultQty || 1}" min="0.001" step="any" style="text-align:center; font-size:0.82rem; font-weight:700;">
           <div class="row-pct-subfield" style="display:${isPercentInitial ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:2px; margin-top:3px; font-size:0.68rem; color:#38bdf8;">
             <span style="font-size:0.65rem; color:#94a3b8;">Billed:</span>
-            <input type="number" class="fin-form-input row-pct-val" value="${isPercentInitial ? (defaultQty > 1 && defaultQty <= 100 ? defaultQty : 50) : 50}" placeholder="50" min="0.01" max="100" step="any" style="width:44px; padding:2px 2px; font-size:0.74rem; text-align:center; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid #38bdf8; border-radius:4px;">
+            <input type="number" class="fin-form-input row-pct-val" value="${initialPctVal}" placeholder="50" min="0.01" max="100" step="any" style="width:44px; padding:2px 2px; font-size:0.74rem; text-align:center; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid #38bdf8; border-radius:4px;">
             <span style="font-weight:700;">%</span>
           </div>
         </td>
         <td>
-          <input type="text" class="fin-form-input row-uom" list="inv-uom-datalist" value="${uom}" placeholder="UOM" style="text-align:center; font-size:0.82rem; font-weight:700; text-transform:uppercase;">
+          <select class="fin-form-select row-uom" style="font-size:0.82rem; font-weight:700; text-align:center; padding:0.4rem 0.2rem;">
+            <optgroup label="⚡ Progressive Milestone">
+              <option value="%" ${uom === '%' ? 'selected' : ''}>% (Progressive %)</option>
+            </optgroup>
+            <optgroup label="Standard Units">
+              <option value="LSUM" ${uom === 'LSUM' ? 'selected' : ''}>LSUM</option>
+              <option value="JOB" ${uom === 'JOB' ? 'selected' : ''}>JOB</option>
+              <option value="SQM" ${uom === 'SQM' ? 'selected' : ''}>SQM</option>
+              <option value="SQFT" ${uom === 'SQFT' ? 'selected' : ''}>SQFT</option>
+              <option value="CUM" ${uom === 'CUM' ? 'selected' : ''}>CUM</option>
+              <option value="MT" ${uom === 'MT' ? 'selected' : ''}>MT</option>
+              <option value="KG" ${uom === 'KG' ? 'selected' : ''}>KG</option>
+              <option value="BAG" ${uom === 'BAG' ? 'selected' : ''}>BAG</option>
+              <option value="NOS" ${uom === 'NOS' ? 'selected' : ''}>NOS</option>
+              <option value="PCS" ${uom === 'PCS' ? 'selected' : ''}>PCS</option>
+              <option value="SET" ${uom === 'SET' ? 'selected' : ''}>SET</option>
+              <option value="MTR" ${uom === 'MTR' ? 'selected' : ''}>MTR</option>
+              <option value="RMT" ${uom === 'RMT' ? 'selected' : ''}>RMT</option>
+              <option value="HRS" ${uom === 'HRS' ? 'selected' : ''}>HRS</option>
+              <option value="DAY" ${uom === 'DAY' ? 'selected' : ''}>DAY</option>
+              <option value="MTH" ${uom === 'MTH' ? 'selected' : ''}>MTH</option>
+              <option value="MD" ${uom === 'MD' ? 'selected' : ''}>MD</option>
+              <option value="ANNUM" ${uom === 'ANNUM' ? 'selected' : ''}>ANNUM</option>
+            </optgroup>
+          </select>
         </td>
         <td>
           <input type="number" class="fin-form-input row-rate" value="${rate > 0 ? rate : (defaultItem ? 0 : '')}" placeholder="0.00" step="any" style="font-size:0.82rem; font-weight:600;">
@@ -3884,17 +3933,75 @@ class FinanceApp {
 
       const sel = tr.querySelector('.row-item-sel');
       sel.onchange = () => {
-        const found = items.find(it => it.id === sel.value);
-        if (found) {
-          tr.querySelector('.row-desc').value = found.name;
-          tr.querySelector('.row-hsn').value = found.hsn_sac_code || '9954';
-          tr.querySelector('.row-uom').value = found.uom || 'LSUM';
-          tr.querySelector('.row-rate').value = found.sales_price || 0;
-          const gstSelect = tr.querySelector('.row-gst');
-          if (currentRegime === 'trn') {
-            gstSelect.value = '5';
-          } else {
-            gstSelect.value = String(found.gst_rate || 18);
+        const val = sel.value;
+        const uomSel = tr.querySelector('.row-uom');
+        const pctSubfield = tr.querySelector('.row-pct-subfield');
+        const pctValInp = tr.querySelector('.row-pct-val');
+        const descInp = tr.querySelector('.row-desc');
+        const hsnInp = tr.querySelector('.row-hsn');
+        const rateInp = tr.querySelector('.row-rate');
+        const qtyInp = tr.querySelector('.row-qty');
+        const gstSelect = tr.querySelector('.row-gst');
+
+        if (val === 'MILESTONE-50' || val === 'item-milestone-50') {
+          descInp.value = '50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT';
+          hsnInp.value = '9954';
+          if (uomSel) uomSel.value = '%';
+          qtyInp.value = '1';
+          rateInp.value = '1000';
+          if (pctValInp) pctValInp.value = '50';
+          if (pctSubfield) pctSubfield.style.display = 'flex';
+          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+        } else if (val === 'MILESTONE-20' || val === 'item-milestone-20') {
+          descInp.value = '20% MOBILIZATION & ADVANCE PAYMENT AGAINST LPO';
+          hsnInp.value = '9954';
+          if (uomSel) uomSel.value = '%';
+          qtyInp.value = '1';
+          rateInp.value = '1000';
+          if (pctValInp) pctValInp.value = '20';
+          if (pctSubfield) pctSubfield.style.display = 'flex';
+          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+        } else if (val === 'MILESTONE-30' || val === 'item-milestone-30') {
+          descInp.value = '30% RUNNING ACCOUNT (RA) BILL PAYMENT - MEP & STRUCTURAL';
+          hsnInp.value = '9954';
+          if (uomSel) uomSel.value = '%';
+          qtyInp.value = '1';
+          rateInp.value = '1000';
+          if (pctValInp) pctValInp.value = '30';
+          if (pctSubfield) pctSubfield.style.display = 'flex';
+          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+        } else if (val === 'MILESTONE-10') {
+          descInp.value = '10% PROGRESSIVE PAYMENT';
+          hsnInp.value = '9954';
+          if (uomSel) uomSel.value = '%';
+          qtyInp.value = '1';
+          rateInp.value = '1000';
+          if (pctValInp) pctValInp.value = '10';
+          if (pctSubfield) pctSubfield.style.display = 'flex';
+          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+        } else if (val === 'MILESTONE-PCT' || val === 'item-milestone-pct') {
+          descInp.value = '% PROGRESSIVE WORK CERTIFICATION';
+          hsnInp.value = '9954';
+          if (uomSel) uomSel.value = '%';
+          qtyInp.value = '1';
+          if (!rateInp.value || Number(rateInp.value) === 0) rateInp.value = '1000';
+          if (pctValInp && (!pctValInp.value || Number(pctValInp.value) === 0)) pctValInp.value = '50';
+          if (pctSubfield) pctSubfield.style.display = 'flex';
+          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
+        } else {
+          const found = items.find(it => it.id === val);
+          if (found) {
+            descInp.value = found.name;
+            hsnInp.value = found.hsn_sac_code || '9954';
+            if (uomSel) uomSel.value = found.uom || 'LSUM';
+            rateInp.value = found.sales_price || 0;
+            gstSelect.value = currentRegime === 'trn' ? '5' : String(found.gst_rate || 18);
+            if (found.uom === '%') {
+              if (pctSubfield) pctSubfield.style.display = 'flex';
+              if (pctValInp && (!pctValInp.value || Number(pctValInp.value) === 0)) pctValInp.value = '50';
+            } else {
+              if (pctSubfield) pctSubfield.style.display = 'none';
+            }
           }
         }
         recalculateInvoice();
@@ -3907,13 +4014,38 @@ class FinanceApp {
         if (found) {
           sel.value = found.id;
           tr.querySelector('.row-hsn').value = found.hsn_sac_code || '9954';
-          tr.querySelector('.row-uom').value = found.uom || 'LSUM';
+          const uomSel = tr.querySelector('.row-uom');
+          if (uomSel) uomSel.value = found.uom || 'LSUM';
           if (!tr.querySelector('.row-rate').value || Number(tr.querySelector('.row-rate').value) === 0) {
             tr.querySelector('.row-rate').value = found.sales_price || 0;
+          }
+          if (found.uom === '%') {
+            const pctSub = tr.querySelector('.row-pct-subfield');
+            if (pctSub) pctSub.style.display = 'flex';
+          }
+        } else if (val.includes('%') || val.includes('milestone')) {
+          const uomSel = tr.querySelector('.row-uom');
+          if (uomSel) uomSel.value = '%';
+          const pctSub = tr.querySelector('.row-pct-subfield');
+          if (pctSub) pctSub.style.display = 'flex';
+          const pctValInp = tr.querySelector('.row-pct-val');
+          const match = val.match(/(\d+)%/);
+          if (match && pctValInp) {
+            pctValInp.value = match[1];
           }
         }
         recalculateInvoice();
       };
+
+      const uomSelect = tr.querySelector('.row-uom');
+      if (uomSelect) {
+        uomSelect.onchange = () => {
+          const isPct = uomSelect.value === '%' || uomSelect.value.includes('PERCENT');
+          const pctSub = tr.querySelector('.row-pct-subfield');
+          if (pctSub) pctSub.style.display = isPct ? 'flex' : 'none';
+          recalculateInvoice();
+        };
+      }
 
       tr.querySelectorAll('.row-hsn, .row-qty, .row-uom, .row-rate, .row-gst, .row-pct-val').forEach(inp => {
         inp.oninput = () => recalculateInvoice();
@@ -3942,6 +4074,8 @@ class FinanceApp {
       let igstSum = 0;
       let vatSum = 0;
       let hasOnly5Or0Tax = true;
+      let hasPercentRow = false;
+      let milestonePercentUsed = 50;
 
       tbody.querySelectorAll('tr').forEach(tr => {
         const qtyInp = tr.querySelector('.row-qty');
@@ -3964,6 +4098,7 @@ class FinanceApp {
         let pctUsed = 0;
 
         if (isPercent) {
+          hasPercentRow = true;
           const explicitPct = Number(pctValInp?.value);
           if (!isNaN(explicitPct) && explicitPct > 0) {
             pctUsed = explicitPct;
@@ -3978,11 +4113,12 @@ class FinanceApp {
             pctUsed = 100;
             rowTaxable = qty * rate;
           }
+          milestonePercentUsed = pctUsed;
 
           if (pctNote) {
             pctNote.style.display = 'block';
             const baseContract = qty * rate;
-            pctNote.innerHTML = `💡 Progressive milestone: <strong>${pctUsed}%</strong> of ${currSym}${baseContract.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} = <strong>${currSym}${rowTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>`;
+            pctNote.innerHTML = `💡 Billed Milestone (<strong>${pctUsed}%</strong>): ${currSym}${baseContract.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &times; ${pctUsed}% = <strong>${currSym}${rowTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> (Taxable Subtotal)`;
           }
         } else {
           if (pctNote) pctNote.style.display = 'none';
@@ -4038,8 +4174,15 @@ class FinanceApp {
       const vatRow = document.getElementById('inv-calc-vat-row');
       const taxableLabel = document.getElementById('inv-calc-taxable-label');
 
+      if (taxableLabel) {
+        if (hasPercentRow) {
+          taxableLabel.innerHTML = `Billed Milestone (${milestonePercentUsed}%): <span style="font-size:0.75rem; color:#94a3b8; font-weight:normal;">(Taxable Subtotal)</span>`;
+        } else {
+          taxableLabel.textContent = 'Taxable Subtotal';
+        }
+      }
+
       if (isTrn || isUaeSupply || (hasOnly5Or0Tax && vatSum > 0)) {
-        if (taxableLabel) taxableLabel.textContent = 'Taxable Subtotal';
         if (cgstRow) cgstRow.style.display = 'none';
         if (sgstRow) sgstRow.style.display = 'none';
         if (igstRow) igstRow.style.display = 'none';
@@ -4048,7 +4191,6 @@ class FinanceApp {
           document.getElementById('inv-calc-vat').textContent = fmt(taxSum);
         }
       } else {
-        if (taxableLabel) taxableLabel.textContent = 'Taxable Subtotal';
         if (vatRow) vatRow.style.display = 'none';
         if (isInterState) {
           if (cgstRow) cgstRow.style.display = 'none';
@@ -4088,8 +4230,8 @@ class FinanceApp {
 
       if (!existingItems.length) {
         existingItems.push(
-          { name: '20% ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' },
-          { name: '10 PROGRESSIVE PAYMENT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' }
+          { name: '50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: '%' },
+          { name: '20% ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: '%' }
         );
       }
 
@@ -4525,12 +4667,30 @@ class FinanceApp {
     const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
     const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
     if (openBilledBtn1) openBilledBtn1.onclick = () => openBilledItemsModal();
-    if (openBilledBtn2) openBilledBtn2.onclick = () => openBilledItemsModal();
-
-    // Initial default rows matching user's photo (Fe-550D TMT High-Yield Reinforcement Steel & Custom item)
-    addRow(items[0] || null, 1);
-    addRow(null, 1);
+    // Initial default row matching user's exact specification:
+    // 50% Progressive Milestone Claim (Civil & Interior Works)
+    // Qty: 1, Rate: 1000 AED, UOM: %, Milestone: 50% -> Billed Milestone (50%): 500.00 AED (Taxable Subtotal)
+    const milestone50Item = items.find(it => it.id === 'item-milestone-50' || it.code === 'MILESTONE-50') || {
+      id: 'item-milestone-50',
+      code: 'MILESTONE-50',
+      name: '50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT',
+      hsn_sac_code: '9954',
+      uom: '%',
+      sales_price: 1000,
+      gst_rate: 5,
+      progress_pct: 50
+    };
+    addRow(milestone50Item, 1);
     setTaxRegime('trn', { preserveRates: true });
+
+    const preset50Btn = document.getElementById('inv-apply-50pct-preset-btn');
+    if (preset50Btn) {
+      preset50Btn.onclick = () => {
+        tbody.innerHTML = '';
+        addRow(milestone50Item, 1);
+        setTaxRegime('trn', { preserveRates: true });
+      };
+    }
 
     // Form submit: Issue invoice
     document.getElementById('create-invoice-form').onsubmit = async (e) => {
@@ -4842,7 +5002,7 @@ class FinanceApp {
 
                 <div style="min-width:280px; font-size:0.85rem;">
                   <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                    <span>Taxable Subtotal:</span>
+                    <span>${(inv.line_items || []).some(li => li.uom === '%' || (li.progress_pct && li.progress_pct > 0)) ? `Billed Milestone (${(inv.line_items.find(li => li.progress_pct)?.progress_pct || 50)}%): <small style="color:#64748b;">(Taxable Subtotal)</small>` : 'Taxable Subtotal:'}</span>
                     <strong>${this.formatCurrency(inv.taxable_subtotal)}</strong>
                   </div>
                   ${(inv.vat_total > 0 || inv.tax_regime === 'trn') ? `
