@@ -3470,8 +3470,10 @@ class FinanceApp {
                       autocomplete="off"
                     >
                     <select id="inv-cust-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered clients">
-                      <option value="" selected disabled>▾</option>
-                      ${customers.map(c => `<option value="${c.id}">${c.name} (${c.code || ''})</option>`).join('')}
+                      <option value="" selected disabled style="display:none;"></option>
+                      <optgroup label="Registered Clients">
+                        ${customers.map(c => `<option value="${c.id}">${c.name} (${c.code || ''})</option>`).join('')}
+                      </optgroup>
                     </select>
                   </div>
                   <datalist id="inv-cust-datalist">
@@ -3557,9 +3559,11 @@ class FinanceApp {
                       autocomplete="off"
                     >
                     <select id="inv-project-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered projects">
-                      <option value="" selected disabled>▾</option>
-                      <option value="GENERAL">General Corporate Billing</option>
-                      ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code})</option>`).join('')}
+                      <option value="" selected disabled style="display:none;"></option>
+                      <optgroup label="Select Linked Project / Cost Center">
+                        <option value="GENERAL">General Corporate Billing</option>
+                        ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code})</option>`).join('')}
+                      </optgroup>
                     </select>
                   </div>
                   <datalist id="inv-project-datalist">
@@ -5433,8 +5437,10 @@ class FinanceApp {
                       autocomplete="off"
                     >
                     <select id="bill-vend-quick-select" class="fin-form-select fin-combobox-picker" title="Choose from registered vendors">
-                      <option value="" selected disabled>▾</option>
-                      ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code || ''})</option>`).join('')}
+                      <option value="" selected disabled style="display:none;"></option>
+                      <optgroup label="Registered Vendors">
+                        ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code || ''})</option>`).join('')}
+                      </optgroup>
                     </select>
                   </div>
                   <datalist id="bill-vend-datalist">
