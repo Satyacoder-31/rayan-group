@@ -1723,13 +1723,13 @@ class FinanceApp {
         <td>${this.formatDate(inv.invoice_date)}</td>
         <td>
           <strong>${inv.customer_name}</strong>
-          ${inv.customer_gstin ? `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${inv.customer_gstin}</div>` : ''}
+          ${inv.customer_trn ? `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${inv.customer_gstin}</div>` : '')}
         </td>
         <td><span style="font-size:0.75rem;">${inv.place_of_supply || '—'}</span></td>
-        <td>${this.formatCurrency(inv.taxable_subtotal)}</td>
+        <td>${inv.currency_symbol || ''}${Number(inv.taxable_subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
         <td>
-          <span style="font-size:0.75rem; color:#38bdf8;">${this.formatCurrency(inv.total_tax)}</span>
-          ${inv.igst_total > 0 ? `<div style="font-size:0.65rem; color:#94a3b8;">IGST 18%</div>` : `<div style="font-size:0.65rem; color:#94a3b8;">CGST 9% + SGST 9%</div>`}
+          <span style="font-size:0.75rem; color:#38bdf8;">${inv.currency_symbol || ''}${Number(inv.total_tax).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          ${inv.tax_regime === 'trn' || inv.vat_total > 0 ? `<div style="font-size:0.65rem; color:#10b981; font-weight:700;">UAE VAT 5%</div>` : (inv.igst_total > 0 ? `<div style="font-size:0.65rem; color:#94a3b8;">IGST 18%</div>` : `<div style="font-size:0.65rem; color:#94a3b8;">CGST 9% + SGST 9%</div>`)}
         </td>
         <td><strong>${this.formatCurrency(inv.grand_total)}</strong></td>
         <td><span style="color:#10b981;">${this.formatCurrency(inv.amount_paid || 0)}</span></td>
@@ -1854,7 +1854,7 @@ class FinanceApp {
                 <th>Company / Client Name</th>
                 <th>Contact Person</th>
                 <th>Email &amp; Phone</th>
-                <th>GSTIN</th>
+                <th>Tax ID (GSTIN / TRN)</th>
                 <th>Place of Supply</th>
                 <th>Total Invoiced</th>
                 <th>Outstanding Dues</th>
@@ -1876,7 +1876,10 @@ class FinanceApp {
                       <div>${c.email}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${c.phone}</span>
                     </td>
-                    <td><code>${c.gstin || '—'}</code></td>
+                    <td>
+                      ${c.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${c.trn}</code></div>` : ''}
+                      ${c.gstin && !c.gstin.startsWith('EXEMPT') ? `<div><code>GST: ${c.gstin}</code></div>` : (!c.trn ? `<code>${c.gstin || '—'}</code>` : '')}
+                    </td>
                     <td>${c.place_of_supply || '—'}</td>
                     <td>${this.formatCurrency(totalInvoiced)}</td>
                     <td><strong style="color:${outstanding > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
@@ -1925,7 +1928,7 @@ class FinanceApp {
                 <th>Supplier / Subcontractor</th>
                 <th>Category</th>
                 <th>Contact</th>
-                <th>GSTIN / PAN</th>
+                <th>Tax ID (TRN / GSTIN / PAN)</th>
                 <th>Bank Account (Wire)</th>
                 <th>Outstanding Payables</th>
                 <th>Payment Terms</th>
@@ -1946,8 +1949,9 @@ class FinanceApp {
                       <span style="font-size:0.68rem; color:#94a3b8;">${v.email}</span>
                     </td>
                     <td>
-                      <div><code>${v.gstin || '—'}</code></div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">PAN: ${v.pan || '—'}</span>
+                      ${v.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${v.trn}</code></div>` : ''}
+                      ${v.gstin ? `<div><code>GST: ${v.gstin}</code></div>` : ''}
+                      ${v.pan ? `<span style="font-size:0.68rem; color:#94a3b8;">PAN: ${v.pan}</span>` : (!v.trn && !v.gstin ? '—' : '')}
                     </td>
                     <td>
                       <span style="font-size:0.75rem;">${v.bank_name || 'Corporate Bank'}</span><br>
@@ -3428,18 +3432,45 @@ class FinanceApp {
                   <label class="fin-form-label">Customer / Client <span style="color:#ef4444;">*</span></label>
                   <select id="inv-cust-select" class="fin-form-select" required>
                     <option value="" disabled selected>Select Customer</option>
-                    ${customers.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join('')}
+                    ${customers.map(c => `<option value="${c.id}" data-country="${c.country || ''}" data-gstin="${c.gstin || ''}" data-trn="${c.trn || ''}" data-pos="${c.place_of_supply || ''}">${c.name} (${c.code})</option>`).join('')}
                   </select>
                 </div>
 
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Customer GSTIN</label>
-                  <input type="text" id="inv-cust-gstin" class="fin-form-input" readonly placeholder="Auto-populated">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" id="inv-tax-header-label" style="margin-bottom:0;">
+                      <span id="inv-tax-type-text">CUSTOMER GSTIN</span> <span style="color:#ef4444;">*</span>
+                    </label>
+                    <div class="fin-tax-regime-pills">
+                      <button type="button" id="regime-toggle-gst" class="fin-tax-pill active" title="India GST Regime (15-character GSTIN)">
+                        🇮🇳 GST
+                      </button>
+                      <button type="button" id="regime-toggle-trn" class="fin-tax-pill" title="UAE VAT Regime (15-digit TRN Number)">
+                        🇦🇪 TRN
+                      </button>
+                    </div>
+                  </div>
+                  <input type="text" id="inv-cust-gstin" class="fin-form-input" required placeholder="e.g. 27AAACL0149K1ZM (India GST)" maxlength="25" style="font-family:monospace; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="inv-tax-helper-text">India Goods &amp; Services Tax ID</span>
+                    <span id="inv-currency-indicator" style="color:#0099e6; font-weight:700; cursor:pointer;" title="Click to toggle currency (INR ₹ / AED د.إ)">Currency: <span id="inv-currency-symbol">₹ INR</span> ⇄</span>
+                  </div>
+                  <input type="hidden" id="inv-tax-regime" value="gst">
                 </div>
 
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Place of Supply <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="inv-cust-pos" class="fin-form-input" required placeholder="e.g. 27-Maharashtra">
+                  <label class="fin-form-label" id="inv-pos-label">Place of Supply <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="inv-cust-pos" class="fin-form-input" required placeholder="e.g. 27-Maharashtra" list="pos-suggestions">
+                  <datalist id="pos-suggestions">
+                    <option value="27-Maharashtra">27-Maharashtra</option>
+                    <option value="06-Haryana">06-Haryana</option>
+                    <option value="07-Delhi">07-Delhi</option>
+                    <option value="29-Karnataka">29-Karnataka</option>
+                    <option value="24-Gujarat">24-Gujarat</option>
+                    <option value="Abu Dhabi, UAE">Abu Dhabi, UAE</option>
+                    <option value="Dubai, UAE">Dubai, UAE</option>
+                    <option value="Sharjah, UAE">Sharjah, UAE</option>
+                  </datalist>
                 </div>
               </div>
 
@@ -3482,9 +3513,9 @@ class FinanceApp {
                       <th style="width:12%;">HSN/SAC</th>
                       <th style="width:10%;">Qty</th>
                       <th style="width:10%;">UOM</th>
-                      <th style="width:14%;">Rate (₹)</th>
-                      <th style="width:10%;">GST %</th>
-                      <th style="width:14%;">Total (₹)</th>
+                      <th style="width:14%;" id="inv-rate-col-header">Rate (₹)</th>
+                      <th style="width:10%;" id="inv-tax-col-header">GST %</th>
+                      <th style="width:14%;" id="inv-total-col-header">Total (₹)</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -3498,7 +3529,7 @@ class FinanceApp {
               <!-- Realtime Calculations -->
               <div class="fin-calc-summary-box">
                 <div class="fin-calc-row">
-                  <span>Taxable Subtotal</span>
+                  <span id="inv-calc-taxable-label">Taxable Subtotal</span>
                   <span id="inv-calc-taxable">₹0.00</span>
                 </div>
                 <div class="fin-calc-row" id="inv-calc-cgst-row">
@@ -3512,6 +3543,10 @@ class FinanceApp {
                 <div class="fin-calc-row" id="inv-calc-igst-row" style="display:none;">
                   <span>IGST</span>
                   <span id="inv-calc-igst">₹0.00</span>
+                </div>
+                <div class="fin-calc-row" id="inv-calc-vat-row" style="display:none;">
+                  <span>UAE VAT (5%)</span>
+                  <span id="inv-calc-vat" style="color:#10b981; font-weight:700;">AED 0.00</span>
                 </div>
                 <div class="fin-calc-row grand-total">
                   <span>Invoice Total</span>
@@ -3537,10 +3572,120 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
-    // Line items manager
+    // Dual Tax Regime & Currency state
+    let currentRegime = 'gst'; // 'gst' | 'trn'
+    let currentCurrency = 'INR'; // 'INR' | 'AED'
+
     const tbody = document.getElementById('inv-items-tbody');
+
+    const setTaxRegime = (regime, options = {}) => {
+      currentRegime = regime;
+      const isTrn = regime === 'trn';
+
+      const btnGst = document.getElementById('regime-toggle-gst');
+      const btnTrn = document.getElementById('regime-toggle-trn');
+      const taxInp = document.getElementById('inv-cust-gstin');
+      const taxLabelText = document.getElementById('inv-tax-type-text');
+      const taxHelper = document.getElementById('inv-tax-helper-text');
+      const posInp = document.getElementById('inv-cust-pos');
+      const posLabel = document.getElementById('inv-pos-label');
+      const regimeHidden = document.getElementById('inv-tax-regime');
+      const currBadge = document.getElementById('inv-currency-symbol');
+
+      if (regimeHidden) regimeHidden.value = regime;
+
+      if (isTrn) {
+        if (btnTrn) btnTrn.classList.add('active', 'trn-pill');
+        if (btnGst) btnGst.classList.remove('active');
+        if (taxLabelText) taxLabelText.textContent = 'CUSTOMER TRN';
+        if (taxInp) {
+          taxInp.placeholder = 'e.g. 100492817200003 (15-digit UAE TRN)';
+          taxInp.title = '15-digit UAE Tax Registration Number (TRN)';
+        }
+        if (taxHelper) taxHelper.textContent = 'UAE VAT Registration # (15 Digits)';
+        if (posLabel) posLabel.innerHTML = 'Place of Supply / Emirate <span style="color:#ef4444;">*</span>';
+
+        if (!options.keepPos && posInp && (!posInp.value || posInp.value.includes('Maharashtra') || posInp.value.includes('27'))) {
+          posInp.value = options.suggestedPos || 'Abu Dhabi, UAE';
+        }
+
+        if (!options.keepCurrency) {
+          currentCurrency = 'AED';
+          if (currBadge) currBadge.textContent = 'AED (د.إ)';
+        }
+
+        const rateCol = document.getElementById('inv-rate-col-header');
+        const taxCol = document.getElementById('inv-tax-col-header');
+        const totCol = document.getElementById('inv-total-col-header');
+        if (rateCol) rateCol.textContent = `Rate (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (taxCol) taxCol.textContent = 'VAT %';
+        if (totCol) totCol.textContent = `Total (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+
+        tbody.querySelectorAll('tr').forEach(tr => {
+          const gstSel = tr.querySelector('.row-gst');
+          if (gstSel && (gstSel.value === '18' || !options.preserveRates)) {
+            gstSel.value = '5';
+          }
+        });
+      } else {
+        if (btnGst) btnGst.classList.add('active');
+        if (btnTrn) btnTrn.classList.remove('active', 'trn-pill');
+        if (taxLabelText) taxLabelText.textContent = 'CUSTOMER GSTIN';
+        if (taxInp) {
+          taxInp.placeholder = 'e.g. 27AAACL0149K1ZM (15 chars)';
+          taxInp.title = '15-character Indian Goods & Services Tax Identification Number';
+        }
+        if (taxHelper) taxHelper.textContent = 'India GSTIN (15 Alphanumeric)';
+        if (posLabel) posLabel.innerHTML = 'Place of Supply State <span style="color:#ef4444;">*</span>';
+
+        if (!options.keepPos && posInp && (!posInp.value || posInp.value.includes('UAE') || posInp.value.includes('Dubai') || posInp.value.includes('Abu Dhabi'))) {
+          posInp.value = options.suggestedPos || '27-Maharashtra';
+        }
+
+        if (!options.keepCurrency) {
+          currentCurrency = 'INR';
+          if (currBadge) currBadge.textContent = '₹ INR';
+        }
+
+        const rateCol = document.getElementById('inv-rate-col-header');
+        const taxCol = document.getElementById('inv-tax-col-header');
+        const totCol = document.getElementById('inv-total-col-header');
+        if (rateCol) rateCol.textContent = `Rate (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (taxCol) taxCol.textContent = 'GST %';
+        if (totCol) totCol.textContent = `Total (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+
+        tbody.querySelectorAll('tr').forEach(tr => {
+          const gstSel = tr.querySelector('.row-gst');
+          if (gstSel && (gstSel.value === '5' || !options.preserveRates)) {
+            gstSel.value = '18';
+          }
+        });
+      }
+
+      recalculateInvoice();
+    };
+
+    // Currency toggle click handler
+    const currToggle = document.getElementById('inv-currency-indicator');
+    if (currToggle) {
+      currToggle.onclick = () => {
+        currentCurrency = currentCurrency === 'INR' ? 'AED' : 'INR';
+        const currBadge = document.getElementById('inv-currency-symbol');
+        if (currBadge) currBadge.textContent = currentCurrency === 'AED' ? 'AED (د.إ)' : '₹ INR';
+
+        const rateCol = document.getElementById('inv-rate-col-header');
+        const totCol = document.getElementById('inv-total-col-header');
+        if (rateCol) rateCol.textContent = `Rate (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        if (totCol) totCol.textContent = `Total (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+
+        recalculateInvoice();
+      };
+    }
+
+    // Line items manager
     const addRow = (defaultItem = null) => {
       const tr = document.createElement('tr');
+      const isTrn = currentRegime === 'trn';
       tr.innerHTML = `
         <td>
           <select class="fin-form-select row-item-sel">
@@ -3555,11 +3700,11 @@ class FinanceApp {
         <td><input type="number" class="fin-form-input row-rate" value="${defaultItem ? defaultItem.sales_price : 0}" step="any"></td>
         <td>
           <select class="fin-form-select row-gst">
-            <option value="18" ${!defaultItem || defaultItem.gst_rate === 18 ? 'selected' : ''}>18%</option>
+            <option value="18" ${!isTrn && (!defaultItem || defaultItem.gst_rate === 18) ? 'selected' : ''}>18% (Standard GST)</option>
+            <option value="5" ${isTrn || (defaultItem && defaultItem.gst_rate === 5) ? 'selected' : ''}>5% (UAE VAT / Concessional)</option>
             <option value="12" ${defaultItem && defaultItem.gst_rate === 12 ? 'selected' : ''}>12%</option>
-            <option value="5" ${defaultItem && defaultItem.gst_rate === 5 ? 'selected' : ''}>5%</option>
             <option value="28" ${defaultItem && defaultItem.gst_rate === 28 ? 'selected' : ''}>28%</option>
-            <option value="0" ${defaultItem && defaultItem.gst_rate === 0 ? 'selected' : ''}>0% (Export/LUT)</option>
+            <option value="0" ${defaultItem && defaultItem.gst_rate === 0 ? 'selected' : ''}>0% (Zero-rated / LUT)</option>
           </select>
         </td>
         <td><strong class="row-total">₹0.00</strong></td>
@@ -3576,7 +3721,7 @@ class FinanceApp {
           tr.querySelector('.row-hsn').value = found.hsn_sac_code || '';
           tr.querySelector('.row-uom').value = found.uom || 'UNITS';
           tr.querySelector('.row-rate').value = found.sales_price || 0;
-          tr.querySelector('.row-gst').value = found.gst_rate || 18;
+          tr.querySelector('.row-gst').value = currentRegime === 'trn' ? 5 : (found.gst_rate || 18);
           recalculateInvoice();
         }
       };
@@ -3594,7 +3739,9 @@ class FinanceApp {
     };
 
     const recalculateInvoice = () => {
-      const pos = (document.getElementById('inv-cust-pos').value || '').toLowerCase();
+      const isTrn = currentRegime === 'trn';
+      const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
+      const pos = (document.getElementById('inv-cust-pos')?.value || '').toLowerCase();
       const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
 
       let taxableSum = 0;
@@ -3606,51 +3753,126 @@ class FinanceApp {
       tbody.querySelectorAll('tr').forEach(tr => {
         const qty = Number(tr.querySelector('.row-qty').value) || 0;
         const rate = Number(tr.querySelector('.row-rate').value) || 0;
-        const gstRate = Number(tr.querySelector('.row-gst').value) || 0;
+        const taxRate = Number(tr.querySelector('.row-gst').value) || 0;
 
         const rowTaxable = qty * rate;
-        const rowTax = rowTaxable * (gstRate / 100);
+        const rowTax = rowTaxable * (taxRate / 100);
         const rowGrand = rowTaxable + rowTax;
 
-        tr.querySelector('.row-total').textContent = `₹${rowGrand.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+        tr.querySelector('.row-total').textContent = `${currSym}${rowGrand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         taxableSum += rowTaxable;
         taxSum += rowTax;
 
-        if (isInterState) {
-          igstSum += rowTax;
-        } else {
-          cgstSum += rowTax / 2;
-          sgstSum += rowTax / 2;
+        if (!isTrn) {
+          if (isInterState) {
+            igstSum += rowTax;
+          } else {
+            cgstSum += rowTax / 2;
+            sgstSum += rowTax / 2;
+          }
         }
       });
 
       const grandTotal = taxableSum + taxSum;
+      const fmt = (val) => `${currSym}${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-      document.getElementById('inv-calc-taxable').textContent = `₹${taxableSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-      document.getElementById('inv-calc-grand').textContent = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+      document.getElementById('inv-calc-taxable').textContent = fmt(taxableSum);
+      document.getElementById('inv-calc-grand').textContent = fmt(grandTotal);
 
-      if (isInterState) {
-        document.getElementById('inv-calc-cgst-row').style.display = 'none';
-        document.getElementById('inv-calc-sgst-row').style.display = 'none';
-        document.getElementById('inv-calc-igst-row').style.display = 'flex';
-        document.getElementById('inv-calc-igst').textContent = `₹${igstSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+      const cgstRow = document.getElementById('inv-calc-cgst-row');
+      const sgstRow = document.getElementById('inv-calc-sgst-row');
+      const igstRow = document.getElementById('inv-calc-igst-row');
+      const vatRow = document.getElementById('inv-calc-vat-row');
+      const taxableLabel = document.getElementById('inv-calc-taxable-label');
+
+      if (isTrn) {
+        if (taxableLabel) taxableLabel.textContent = 'Taxable Subtotal (Ex-VAT)';
+        if (cgstRow) cgstRow.style.display = 'none';
+        if (sgstRow) sgstRow.style.display = 'none';
+        if (igstRow) igstRow.style.display = 'none';
+        if (vatRow) {
+          vatRow.style.display = 'flex';
+          document.getElementById('inv-calc-vat').textContent = fmt(taxSum);
+        }
       } else {
-        document.getElementById('inv-calc-cgst-row').style.display = 'flex';
-        document.getElementById('inv-calc-sgst-row').style.display = 'flex';
-        document.getElementById('inv-calc-igst-row').style.display = 'none';
-        document.getElementById('inv-calc-cgst').textContent = `₹${cgstSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-        document.getElementById('inv-calc-sgst').textContent = `₹${sgstSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+        if (taxableLabel) taxableLabel.textContent = 'Taxable Subtotal';
+        if (vatRow) vatRow.style.display = 'none';
+        if (isInterState) {
+          if (cgstRow) cgstRow.style.display = 'none';
+          if (sgstRow) sgstRow.style.display = 'none';
+          if (igstRow) {
+            igstRow.style.display = 'flex';
+            document.getElementById('inv-calc-igst').textContent = fmt(igstSum);
+          }
+        } else {
+          if (cgstRow) {
+            cgstRow.style.display = 'flex';
+            document.getElementById('inv-calc-cgst').textContent = fmt(cgstSum);
+          }
+          if (sgstRow) {
+            sgstRow.style.display = 'flex';
+            document.getElementById('inv-calc-sgst').textContent = fmt(sgstSum);
+          }
+          if (igstRow) igstRow.style.display = 'none';
+        }
       }
     };
+
+    // Regime toggle buttons
+    const btnGst = document.getElementById('regime-toggle-gst');
+    const btnTrn = document.getElementById('regime-toggle-trn');
+
+    if (btnGst) {
+      btnGst.onclick = () => {
+        const c = customers.find(x => x.id === custSel.value);
+        setTaxRegime('gst', {
+          suggestedPos: c?.place_of_supply && !c.place_of_supply.includes('UAE') ? c.place_of_supply : '27-Maharashtra'
+        });
+        if (c && c.gstin && !c.gstin.startsWith('EXEMPT')) {
+          document.getElementById('inv-cust-gstin').value = c.gstin;
+        }
+      };
+    }
+
+    if (btnTrn) {
+      btnTrn.onclick = () => {
+        const c = customers.find(x => x.id === custSel.value);
+        setTaxRegime('trn', {
+          suggestedPos: c?.place_of_supply && c.place_of_supply.includes('UAE') ? c.place_of_supply : 'Abu Dhabi, UAE'
+        });
+        if (c && c.trn) {
+          document.getElementById('inv-cust-gstin').value = c.trn;
+        } else if (!document.getElementById('inv-cust-gstin').value || document.getElementById('inv-cust-gstin').value.includes('27')) {
+          document.getElementById('inv-cust-gstin').value = '105405525400003';
+        }
+      };
+    }
 
     // Auto populate customer details
     const custSel = document.getElementById('inv-cust-select');
     custSel.onchange = () => {
       const c = customers.find(x => x.id === custSel.value);
       if (c) {
-        document.getElementById('inv-cust-gstin').value = c.gstin || 'EXEMPT';
-        document.getElementById('inv-cust-pos').value = c.place_of_supply || '27-Maharashtra';
+        const isUae = (c.country && c.country.toUpperCase() === 'UAE') ||
+                      (c.trn && c.trn.length > 5) ||
+                      (c.state_code === '96' || c.state_code === 'AD' || c.state_code === 'DXB') ||
+                      (c.place_of_supply && (c.place_of_supply.includes('UAE') || c.place_of_supply.includes('Dubai') || c.place_of_supply.includes('Abu Dhabi')));
+
+        if (isUae) {
+          setTaxRegime('trn', {
+            suggestedPos: c.place_of_supply || 'Abu Dhabi, UAE'
+          });
+          document.getElementById('inv-cust-gstin').value = c.trn || '105405525400003';
+          document.getElementById('inv-cust-pos').value = c.place_of_supply || 'Abu Dhabi, UAE';
+        } else {
+          setTaxRegime('gst', {
+            suggestedPos: c.place_of_supply || '27-Maharashtra'
+          });
+          document.getElementById('inv-cust-gstin').value = c.gstin || '27AAACL0149K1ZM';
+          document.getElementById('inv-cust-pos').value = c.place_of_supply || '27-Maharashtra';
+        }
+
         document.getElementById('inv-terms').value = c.payment_terms || 30;
         updateDueDate();
         recalculateInvoice();
@@ -3699,6 +3921,13 @@ class FinanceApp {
     const prjId = prjSel.value || null;
     const prjName = prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
 
+    const taxRegime = document.getElementById('inv-tax-regime')?.value || 'gst';
+    const taxNumber = (document.getElementById('inv-cust-gstin')?.value || '').trim();
+    const isTrn = taxRegime === 'trn';
+    const currIndicator = document.getElementById('inv-currency-symbol')?.textContent || '';
+    const currency = currIndicator.includes('AED') ? 'AED' : 'INR';
+    const currencySym = currency === 'AED' ? 'AED ' : '₹';
+
     // Collect line items
     const lineItems = [];
     let taxableSubtotal = 0;
@@ -3716,18 +3945,20 @@ class FinanceApp {
       const qty = Number(tr.querySelector('.row-qty').value) || 1;
       const uom = tr.querySelector('.row-uom').value.trim();
       const unitPrice = Number(tr.querySelector('.row-rate').value) || 0;
-      const gstRate = Number(tr.querySelector('.row-gst').value) || 0;
+      const taxRate = Number(tr.querySelector('.row-gst').value) || 0;
 
       const taxable = qty * unitPrice;
-      const tax = taxable * (gstRate / 100);
+      const tax = taxable * (taxRate / 100);
       const total = taxable + tax;
 
       let cgst = 0, sgst = 0, igst = 0;
-      if (isInterState) {
-        igst = tax;
-      } else {
-        cgst = tax / 2;
-        sgst = tax / 2;
+      if (!isTrn) {
+        if (isInterState) {
+          igst = tax;
+        } else {
+          cgst = tax / 2;
+          sgst = tax / 2;
+        }
       }
 
       taxableSubtotal += taxable;
@@ -3737,16 +3968,21 @@ class FinanceApp {
       igstTotal += igst;
 
       lineItems.push({
+        name: desc,
         description: desc,
         hsn_sac_code: hsn,
         qty,
         uom,
+        unit: uom,
         unit_price: unitPrice,
         taxable_amount: taxable,
-        gst_rate: gstRate,
+        gst_rate: taxRate,
+        vat_rate: taxRate,
+        tax_rate: taxRate,
         cgst_amount: cgst,
         sgst_amount: sgst,
         igst_amount: igst,
+        vat_amount: isTrn ? tax : 0,
         total_amount: total
       });
     });
@@ -3757,7 +3993,13 @@ class FinanceApp {
       invoice: {
         customer_id: customer.id,
         customer_name: customer.name,
-        customer_gstin: customer.gstin,
+        customer_gstin: isTrn ? (customer.gstin || '') : taxNumber,
+        customer_trn: isTrn ? taxNumber : (customer.trn || ''),
+        tax_regime: taxRegime,
+        tax_type: isTrn ? 'TRN' : 'GSTIN',
+        tax_number: taxNumber,
+        currency,
+        currency_symbol: currencySym,
         place_of_supply: document.getElementById('inv-cust-pos').value,
         project_id: prjId,
         project_name: prjName,
@@ -3770,8 +4012,11 @@ class FinanceApp {
         cgst_total: cgstTotal,
         sgst_total: sgstTotal,
         igst_total: igstTotal,
+        vat_total: isTrn ? totalTax : 0,
         total_tax: totalTax,
         grand_total: grandTotal,
+        amount_paid: 0,
+        balance_due: grandTotal,
         status,
         notes: document.getElementById('inv-notes').value
       }
@@ -3779,7 +4024,7 @@ class FinanceApp {
 
     const res = await this.syncApi('create_invoice', payload);
     if (res && res.success) {
-      alert(`Invoice ${res.invoice.invoice_no} (${status.toUpperCase()}) saved successfully.`);
+      alert(`Invoice ${res.invoice?.invoice_no || 'Saved'} (${status.toUpperCase()}) saved successfully.`);
       this.closeModal('modal-invoice');
       this.switchTab('invoices');
     }
@@ -4154,19 +4399,25 @@ class FinanceApp {
                   <label class="fin-form-label">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
                   <select id="bill-vend-sel" class="fin-form-select" required>
                     <option value="" disabled selected>Select Vendor</option>
-                    ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code})</option>`).join('')}
+                    ${vendors.map(v => `<option value="${v.id}" data-gstin="${v.gstin || ''}" data-trn="${v.trn || ''}">${v.name} (${v.code})</option>`).join('')}
                   </select>
+                </div>
+                <div class="fin-form-group">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" id="bill-tax-header-label" style="margin-bottom:0;">
+                      <span id="bill-tax-type-text">VENDOR GSTIN</span>
+                    </label>
+                    <div class="fin-tax-regime-pills">
+                      <button type="button" id="bill-regime-gst" class="fin-tax-pill active">🇮🇳 GST</button>
+                      <button type="button" id="bill-regime-trn" class="fin-tax-pill">🇦🇪 TRN</button>
+                    </div>
+                  </div>
+                  <input type="text" id="bill-tax-no" class="fin-form-input" placeholder="e.g. 27AAACT2727Q1ZT" style="font-family:monospace; font-weight:600; text-transform:uppercase;">
+                  <input type="hidden" id="bill-tax-regime" value="gst">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Supplier Invoice # <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="bill-inv-no" class="fin-form-input" required placeholder="e.g. TS-INV-99210">
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Linked Purchase Order</label>
-                  <select id="bill-po-sel" class="fin-form-select">
-                    <option value="">No PO Linked</option>
-                    ${pos.map(po => `<option value="${po.id}">${po.po_no} - ${po.vendor_name}</option>`).join('')}
-                  </select>
                 </div>
               </div>
 
@@ -4185,12 +4436,19 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-grid-2">
+              <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Linked Project / Cost Center</label>
                   <select id="bill-project" class="fin-form-select">
                     <option value="">General Overhead</option>
                     ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Linked Purchase Order</label>
+                  <select id="bill-po-sel" class="fin-form-select">
+                    <option value="">No PO Linked</option>
+                    ${pos.map(po => `<option value="${po.id}">${po.po_no} - ${po.vendor_name}</option>`).join('')}
                   </select>
                 </div>
                 <div class="fin-form-group">
@@ -4205,11 +4463,11 @@ class FinanceApp {
                   <input type="number" id="bill-taxable" class="fin-form-input" min="1" step="any" required placeholder="0.00">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">GST Rate %</label>
+                  <label class="fin-form-label" id="bill-tax-rate-label">Tax Rate %</label>
                   <select id="bill-gst-rate" class="fin-form-select">
                     <option value="18" selected>18% GST (Standard)</option>
+                    <option value="5">5% UAE VAT (Standard)</option>
                     <option value="12">12% GST</option>
-                    <option value="5">5% GST</option>
                     <option value="28">28% GST</option>
                     <option value="0">0% (Exempt)</option>
                   </select>
@@ -4237,9 +4495,49 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const vendSel = document.getElementById('bill-vend-sel');
+    const billTaxInp = document.getElementById('bill-tax-no');
+    const billTaxTypeText = document.getElementById('bill-tax-type-text');
+    const billRegimeHidden = document.getElementById('bill-tax-regime');
+    const billBtnGst = document.getElementById('bill-regime-gst');
+    const billBtnTrn = document.getElementById('bill-regime-trn');
     const taxableInp = document.getElementById('bill-taxable');
     const gstRateSel = document.getElementById('bill-gst-rate');
     const grandInp = document.getElementById('bill-grand');
+
+    const setBillRegime = (regime) => {
+      billRegimeHidden.value = regime;
+      if (regime === 'trn') {
+        billBtnTrn.classList.add('active', 'trn-pill');
+        billBtnGst.classList.remove('active');
+        billTaxTypeText.textContent = 'VENDOR TRN';
+        billTaxInp.placeholder = 'e.g. 100234567800003 (15 digits)';
+        gstRateSel.value = '5';
+      } else {
+        billBtnGst.classList.add('active');
+        billBtnTrn.classList.remove('active', 'trn-pill');
+        billTaxTypeText.textContent = 'VENDOR GSTIN';
+        billTaxInp.placeholder = 'e.g. 27AAACT2727Q1ZT';
+        gstRateSel.value = '18';
+      }
+      updateTotals();
+    };
+
+    if (billBtnGst) billBtnGst.onclick = () => setBillRegime('gst');
+    if (billBtnTrn) billBtnTrn.onclick = () => setBillRegime('trn');
+
+    vendSel.onchange = () => {
+      const v = vendors.find(x => x.id === vendSel.value);
+      if (v) {
+        if (v.trn) {
+          setBillRegime('trn');
+          billTaxInp.value = v.trn;
+        } else {
+          setBillRegime('gst');
+          billTaxInp.value = v.gstin || '';
+        }
+      }
+    };
 
     const updateTotals = () => {
       const taxable = Number(taxableInp.value) || 0;
@@ -4268,7 +4566,7 @@ class FinanceApp {
 
     document.getElementById('create-bill-form').onsubmit = async (e) => {
       e.preventDefault();
-      const vendId = document.getElementById('bill-vend-sel').value;
+      const vendId = vendSel.value;
       const vendor = vendors.find(v => v.id === vendId);
 
       const prjSel = document.getElementById('bill-project');
@@ -4280,10 +4578,16 @@ class FinanceApp {
       const tax = taxable * (rate / 100);
       const grand = taxable + tax;
 
+      const taxRegime = billRegimeHidden.value;
+      const taxNo = billTaxInp.value.trim();
+
       const payload = {
         bill: {
           vendor_id: vendor.id,
           vendor_name: vendor.name,
+          vendor_tax_regime: taxRegime,
+          vendor_gstin: taxRegime === 'gst' ? taxNo : (vendor.gstin || ''),
+          vendor_trn: taxRegime === 'trn' ? taxNo : (vendor.trn || ''),
           vendor_invoice_no: document.getElementById('bill-inv-no').value,
           po_id: document.getElementById('bill-po-sel').value || null,
           project_id: prjId,
@@ -4302,6 +4606,7 @@ class FinanceApp {
               unit_price: taxable,
               taxable_amount: taxable,
               gst_rate: rate,
+              vat_rate: rate,
               tax_amount: tax,
               total_amount: grand
             }
@@ -4312,7 +4617,7 @@ class FinanceApp {
 
       const res = await this.syncApi('create_bill', payload);
       if (res && res.success) {
-        alert(`Purchase Bill ${res.bill.bill_no} recorded successfully.`);
+        alert(`Purchase Bill ${res.bill?.bill_no || 'Recorded'} recorded successfully.`);
         this.closeModal('modal-bill');
         this.switchTab('bills');
       }
@@ -4539,7 +4844,7 @@ class FinanceApp {
               <div>
                 <strong>Billing Address:</strong><br>
                 <span style="color:#cbd5e1;">${cust.billing_address || '—'}</span><br>
-                <strong>GSTIN:</strong> <code>${cust.gstin || 'EXEMPT'}</code> • <strong>Place of Supply:</strong> ${cust.place_of_supply}
+                ${cust.trn ? `<strong>TRN:</strong> <code>${cust.trn}</code> • ` : ''}<strong>GSTIN:</strong> <code>${cust.gstin || 'EXEMPT'}</code> • <strong>Place of Supply:</strong> ${cust.place_of_supply}
               </div>
               <div>
                 <strong>Primary Contact:</strong> ${cust.contact_person || '—'}<br>
@@ -4657,7 +4962,7 @@ class FinanceApp {
               <div>
                 <strong>Registered Address:</strong><br>
                 <span style="color:#cbd5e1;">${vend.address || '—'}</span><br>
-                <strong>GSTIN:</strong> <code>${vend.gstin || '—'}</code> • <strong>PAN:</strong> <code>${vend.pan || '—'}</code>
+                ${vend.trn ? `<strong>TRN:</strong> <code>${vend.trn}</code> • ` : ''}<strong>GSTIN:</strong> <code>${vend.gstin || '—'}</code> • <strong>PAN / License:</strong> <code>${vend.pan || '—'}</code>
               </div>
               <div>
                 <strong>Bank Account (Restricted View):</strong><br>
@@ -4733,14 +5038,32 @@ class FinanceApp {
                 </div>
               </div>
 
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Country / Jurisdiction</label>
+                  <select id="new-cust-country" class="fin-form-select">
+                    <option value="India" selected>🇮🇳 India</option>
+                    <option value="UAE">🇦🇪 United Arab Emirates (UAE)</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">GSTIN (India)</label>
+                  <input type="text" id="new-cust-gstin" class="fin-form-input" placeholder="27AAACS1234F1Z9">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">TRN (UAE VAT)</label>
+                  <input type="text" id="new-cust-trn" class="fin-form-input" placeholder="100492817200003">
+                </div>
+              </div>
+
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Phone Number</label>
-                  <input type="tel" id="new-cust-phone" class="fin-form-input" placeholder="+91 22 6000 0000">
+                  <input type="tel" id="new-cust-phone" class="fin-form-input" placeholder="+91 22 6000 0000 / +971 4 000 0000">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">GSTIN / Tax ID</label>
-                  <input type="text" id="new-cust-gstin" class="fin-form-input" placeholder="27AAACS1234F1Z9">
+                  <label class="fin-form-label">Place of Supply / State / Emirate</label>
+                  <input type="text" id="new-cust-pos" class="fin-form-input" value="27-Maharashtra" placeholder="e.g. 27-Maharashtra or Abu Dhabi, UAE">
                 </div>
               </div>
 
@@ -4749,15 +5072,9 @@ class FinanceApp {
                 <textarea id="new-cust-address" class="fin-form-textarea" rows="2" placeholder="Registered office address..."></textarea>
               </div>
 
-              <div class="fin-form-grid-2">
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Place of Supply State</label>
-                  <input type="text" id="new-cust-pos" class="fin-form-input" value="27-Maharashtra">
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Credit Limit (₹)</label>
-                  <input type="number" id="new-cust-credit" class="fin-form-input" value="50000000">
-                </div>
+              <div class="fin-form-group">
+                <label class="fin-form-label">Credit Limit (₹ / AED)</label>
+                <input type="number" id="new-cust-credit" class="fin-form-input" value="50000000">
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -4772,6 +5089,18 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const countrySel = document.getElementById('new-cust-country');
+    const posInp = document.getElementById('new-cust-pos');
+    if (countrySel && posInp) {
+      countrySel.onchange = () => {
+        if (countrySel.value === 'UAE') {
+          if (posInp.value === '27-Maharashtra') posInp.value = 'Abu Dhabi, UAE';
+        } else {
+          if (posInp.value === 'Abu Dhabi, UAE') posInp.value = '27-Maharashtra';
+        }
+      };
+    }
+
     document.getElementById('add-cust-form').onsubmit = async (e) => {
       e.preventDefault();
       const payload = {
@@ -4780,7 +5109,9 @@ class FinanceApp {
           contact_person: document.getElementById('new-cust-contact').value.trim(),
           email: document.getElementById('new-cust-email').value.trim(),
           phone: document.getElementById('new-cust-phone').value.trim(),
+          country: document.getElementById('new-cust-country').value,
           gstin: document.getElementById('new-cust-gstin').value.trim().toUpperCase(),
+          trn: document.getElementById('new-cust-trn').value.trim(),
           billing_address: document.getElementById('new-cust-address').value.trim(),
           place_of_supply: document.getElementById('new-cust-pos').value.trim(),
           credit_limit: Number(document.getElementById('new-cust-credit').value) || 10000000
@@ -4789,7 +5120,7 @@ class FinanceApp {
 
       const res = await this.syncApi('create_customer', payload);
       if (res && res.success) {
-        alert(`Customer ${res.customer.name} created successfully.`);
+        alert(`Customer ${res.customer?.name || 'created'} saved successfully.`);
         this.closeModal('modal-add-cust');
         this.switchTab('customers');
       }
@@ -4837,33 +5168,45 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Phone Number</label>
-                  <input type="tel" id="new-vend-phone" class="fin-form-input" placeholder="+91 22 6600 0000">
-                </div>
-              </div>
-
-              <div class="fin-form-grid-2">
-                <div class="fin-form-group">
-                  <label class="fin-form-label">GSTIN</label>
-                  <input type="text" id="new-vend-gstin" class="fin-form-input" placeholder="27AAACJ1234F1Z8">
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">PAN</label>
-                  <input type="text" id="new-vend-pan" class="fin-form-input" placeholder="AAACJ1234F">
+                  <input type="tel" id="new-vend-phone" class="fin-form-input" placeholder="+91 22 6600 0000 / +971 2 565 0000">
                 </div>
               </div>
 
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
+                  <label class="fin-form-label">Country / Jurisdiction</label>
+                  <select id="new-vend-country" class="fin-form-select">
+                    <option value="India" selected>🇮🇳 India</option>
+                    <option value="UAE">🇦🇪 United Arab Emirates (UAE)</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">GSTIN (India)</label>
+                  <input type="text" id="new-vend-gstin" class="fin-form-input" placeholder="27AAACJ1234F1Z8">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">TRN (UAE VAT)</label>
+                  <input type="text" id="new-vend-trn" class="fin-form-input" placeholder="100234567800003">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">PAN (India) / Commercial License # (UAE)</label>
+                <input type="text" id="new-vend-pan" class="fin-form-input" placeholder="AAACJ1234F or CN-1049281">
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
                   <label class="fin-form-label">Bank Name</label>
-                  <input type="text" id="new-vend-bank" class="fin-form-input" placeholder="State Bank of India">
+                  <input type="text" id="new-vend-bank" class="fin-form-input" placeholder="State Bank of India / FAB">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Account No</label>
-                  <input type="text" id="new-vend-ac" class="fin-form-input" placeholder="39485729103">
+                  <label class="fin-form-label">Account No / IBAN</label>
+                  <input type="text" id="new-vend-ac" class="fin-form-input" placeholder="39485729103 / AE07033...">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">IFSC Code</label>
-                  <input type="text" id="new-vend-ifsc" class="fin-form-input" placeholder="SBIN0000300">
+                  <label class="fin-form-label">IFSC / SWIFT Code</label>
+                  <input type="text" id="new-vend-ifsc" class="fin-form-input" placeholder="SBIN0000300 / FABAAEAD">
                 </div>
               </div>
 
@@ -4888,7 +5231,9 @@ class FinanceApp {
           contact_person: document.getElementById('new-vend-contact').value.trim(),
           email: document.getElementById('new-vend-email').value.trim(),
           phone: document.getElementById('new-vend-phone').value.trim(),
+          country: document.getElementById('new-vend-country').value,
           gstin: document.getElementById('new-vend-gstin').value.trim().toUpperCase(),
+          trn: document.getElementById('new-vend-trn').value.trim(),
           pan: document.getElementById('new-vend-pan').value.trim().toUpperCase(),
           bank_name: document.getElementById('new-vend-bank').value.trim(),
           account_no: document.getElementById('new-vend-ac').value.trim(),
@@ -4898,7 +5243,7 @@ class FinanceApp {
 
       const res = await this.syncApi('create_vendor', payload);
       if (res && res.success) {
-        alert(`Vendor ${res.vendor.name} added successfully.`);
+        alert(`Vendor ${res.vendor?.name || 'added'} added successfully.`);
         this.closeModal('modal-add-vend');
         this.switchTab('vendors');
       }
@@ -5958,7 +6303,7 @@ class FinanceApp {
                     <strong>Clint:</strong><br>
                     <strong>${inv.customer_name || 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C'}</strong><br>
                     ${inv.customer_address || 'ABU DHABI, MADINAT ZAYED'}<br>
-                    <strong>TRN</strong> &nbsp; ${inv.customer_trn || inv.customer_gstin || '105405525400003'}<br>
+                    <strong>${inv.customer_trn ? 'TRN' : 'GSTIN'}</strong> &nbsp; ${inv.customer_trn || inv.customer_gstin || '105405525400003'}<br>
                     <strong>Atten.</strong> &nbsp; ${inv.contact_person || 'Mr.Sooraj Kumar'}
                   </td>
                   <td style="width:50%; line-height:1.4;">
