@@ -2720,7 +2720,7 @@ select option:focus,
 .doc-header-modern {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1.5rem;
   padding-bottom: 12px;
   border-bottom: 1px solid #e2e8f0;
@@ -3283,20 +3283,21 @@ select option:focus,
   flex: 0 0 auto;
   align-items: flex-end;
   text-align: right;
+  align-self: flex-start;
 }
 
 .doc-header-center {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: flex-start;
   text-align: center;
   flex: 0 1 auto;
   min-width: 180px;
+  min-height: 120px;
   padding: 0 10px;
-  align-self: flex-start;
-  margin-top: 2px;
-  margin-bottom: 0;
+  align-self: stretch;
+  box-sizing: border-box;
 }
 
 .doc-header-center .doc-title-en {
@@ -3319,13 +3320,14 @@ select option:focus,
 .doc-header-center .doc-number-pill {
   background: transparent !important;
   color: #000000 !important;
-  font-size: 13px !important;
+  font-size: 13.5px !important;
   font-weight: 900 !important;
   padding: 0 !important;
   border-radius: 0 !important;
   font-family: monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   letter-spacing: 0.05em !important;
-  margin-top: 6px !important;
+  margin: 0 !important;
+  margin-bottom: 2px !important;
   box-shadow: none !important;
   border: none !important;
   display: block !important;
