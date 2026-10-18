@@ -2680,21 +2680,22 @@ select option:focus,
   -webkit-overflow-scrolling: touch;
 }
 
-/* Simulated A4 Paper Sheet */
+/* Simulated A4 Paper Sheet - Modern Luxury Presentation */
 .fin-document-paper {
   width: 210mm;
   min-height: 297mm;
   background: #ffffff;
-  color: #000000;
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  font-family: Arial, Tahoma, Helvetica, sans-serif;
+  color: #0f172a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   box-sizing: border-box;
   position: relative;
   margin: 0 auto 2.5rem auto;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 12mm 15mm 10mm 15mm;
+  padding: 12mm 16mm 10mm 16mm;
+  border-radius: 4px;
 }
 
 .fin-doc-inner-padding {
@@ -2706,254 +2707,502 @@ select option:focus,
   z-index: 1;
 }
 
-/* Official Rayan Engineering Header & Footer Green Bars */
-.rayan-doc-teal-bar {
-  background: #00a699;
-  color: #ffffff;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  padding: 4px 10px;
-  text-transform: uppercase;
-  font-family: Arial, sans-serif;
-  margin-bottom: 10px;
+/* Elegant Top Gradient Accent Ribbon */
+.doc-top-accent-bar {
+  height: 5px;
+  background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 35%, #00a699 70%, #10b981 100%);
   width: 100%;
-  box-sizing: border-box;
+  border-radius: 3px;
+  margin-bottom: 12px;
 }
 
-.rayan-doc-footer-bar {
-  background: #00a699;
-  color: #ffffff;
-  font-size: 9.5px;
-  font-weight: 600;
-  text-align: center;
-  padding: 4px 8px;
-  letter-spacing: 0.2px;
-  font-family: Arial, sans-serif;
-  margin-top: auto;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Brand Row: Logo, Title & Metadata */
-.rayan-doc-brand-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.rayan-doc-logo-area {
-  display: flex;
-  align-items: center;
-}
-
-.rayan-doc-logo-img {
-  height: 38px;
-  width: auto;
-  object-fit: contain;
-}
-
-.rayan-doc-logo-po-img {
-  height: 44px;
-  width: auto;
-  object-fit: contain;
-}
-
-.rayan-doc-center-title {
-  text-align: center;
-}
-
-.rayan-title-ar {
-  font-size: 18px;
-  font-weight: 800;
-  color: #000000;
-  line-height: 1.2;
-  direction: rtl;
-  font-family: Arial, Tahoma, sans-serif;
-}
-
-.rayan-title-en {
-  font-size: 15px;
-  font-weight: 800;
-  color: #000000;
-  letter-spacing: 0.8px;
-  font-family: Arial, sans-serif;
-}
-
-.rayan-doc-right-meta {
-  text-align: right;
-  font-size: 10px;
-  color: #000000;
-  line-height: 1.35;
-}
-
-/* Blue font for all emails and websites */
-.fin-document-paper a,
-.rayan-link-blue {
-  color: #0000ee !important;
-  text-decoration: underline !important;
-}
-
-.fin-document-paper a:hover,
-.rayan-link-blue:hover {
-  color: #1a0dab !important;
-}
-
-/* Box Tables & Grid */
-.rayan-border-box {
-  border: 1.5px solid #000000;
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 9.5px;
-  color: #000000;
-  margin-bottom: 5px;
-}
-
-.rayan-border-box td,
-.rayan-border-box th {
-  border: 1px solid #000000;
-  padding: 3px 6px;
-  vertical-align: top;
-}
-
-.rayan-project-bar {
-  border: 1.5px solid #000000;
-  padding: 4px 8px;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 5px;
-  background: #ffffff;
-}
-
-/* Primary Items Data Table */
-.rayan-data-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1.5px solid #000000;
-  font-size: 9.5px;
-  color: #000000;
-  margin-bottom: 5px;
-}
-
-.rayan-data-table th {
-  border: 1px solid #000000;
-  background: #ffffff;
-  padding: 3px 4px;
-  text-align: center;
-  font-weight: 700;
-  vertical-align: middle;
-}
-
-.rayan-data-table td {
-  border: 1px solid #000000;
-  padding: 4px 6px;
-  vertical-align: top;
-}
-
-/* Totals Summary Row */
-.rayan-totals-container {
+/* Modern Header Layout */
+.doc-header-modern {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 5px;
+  gap: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 12px;
 }
 
-.rayan-words-amount {
-  font-size: 10px;
-  font-weight: 700;
-  color: #000000;
-  padding: 4px 0;
+.doc-brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   max-width: 58%;
 }
 
-.rayan-totals-table {
-  width: 40%;
-  border-collapse: collapse;
-  border: 1.5px solid #000000;
-  font-size: 9.5px;
+.doc-brand-logo {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  align-self: flex-start;
+  margin-bottom: 2px;
 }
 
-.rayan-totals-table td {
-  border: 1px solid #000000;
-  padding: 3px 6px;
+.doc-company-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.3;
 }
 
-.rayan-totals-table td.amount-col {
+.doc-company-subtitle {
+  font-size: 8px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.doc-company-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.doc-badge-pill {
+  font-size: 7.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.doc-badge-pill.primary {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.doc-badge-pill.success {
+  background: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+/* Document Identifier Card */
+.doc-id-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   text-align: right;
+  gap: 3px;
+}
+
+.doc-title-en {
+  font-size: 17px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.doc-title-ar {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0284c7;
+  direction: rtl;
+  font-family: Arial, Tahoma, sans-serif;
+  margin-top: 1px;
+}
+
+.doc-number-pill {
+  background: #0f172a;
+  color: #38bdf8;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-family: monospace;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+}
+
+.doc-status-badge {
+  font-size: 7.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  margin-top: 2px;
+}
+
+.doc-status-badge.status-received {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.doc-status-badge.status-issued {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+/* Modern PO Terms & Conditions */
+.po-terms-card-modern {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 6px 9px;
+  font-size: 7.2px;
+  color: #475569;
+  line-height: 1.38;
+  margin-bottom: 7px;
+}
+
+.po-terms-heading-modern {
+  font-size: 7.8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0f172a;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 3px;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.po-terms-grid-modern {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 7.1px;
+  color: #475569;
+  line-height: 1.36;
+  margin-bottom: 8px;
+}
+
+.po-terms-col {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 6px 8px;
+}
+
+
+/* Two-Card Information Grid */
+.doc-grid-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.doc-info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 9px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.doc-info-card-header {
+  font-size: 7.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 3px;
+}
+
+.doc-info-entity-name {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.doc-info-line {
+  font-size: 8px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.doc-info-line strong {
+  color: #1e293b;
+}
+
+.doc-key-value-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.doc-key-value-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8px;
+  padding: 1px 0;
+}
+
+.doc-key-value-row .doc-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.doc-key-value-row .doc-val {
+  color: #0f172a;
   font-weight: 700;
 }
 
-/* Notes & General Terms */
-.rayan-terms-container {
-  border: 1.5px solid #000000;
-  padding: 3px 5px;
-  font-size: 7.2px;
-  line-height: 1.22;
-  color: #000000;
-  margin-bottom: 5px;
+/* Linked Project Ribbon */
+.doc-project-ribbon {
+  background: linear-gradient(90deg, rgba(2, 132, 199, 0.06), rgba(0, 166, 153, 0.06));
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-left: 4px solid #0284c7;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 8.5px;
+  color: #0f172a;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.rayan-terms-heading {
+/* Modern Line Items Table */
+.doc-table-modern {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.doc-table-modern thead th {
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 7.2px;
   font-weight: 800;
   text-transform: uppercase;
-  margin-bottom: 2px;
-  font-size: 7.6px;
+  letter-spacing: 0.05em;
+  padding: 7px 7px;
+  border: none;
+  vertical-align: middle;
 }
 
-/* Signatures & Blue Official Stamp */
-.rayan-signatures-row {
+.doc-table-modern tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.15s ease;
+}
+
+.doc-table-modern tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.doc-table-modern td {
+  padding: 7px 7px;
+  vertical-align: middle;
+  color: #1e293b;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.doc-table-modern tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.doc-item-title {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 8.5px;
+}
+
+.doc-item-desc {
+  font-size: 7.2px;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+/* Financials Summary & Amount in Words */
+.doc-financials-container {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.doc-left-financials {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.doc-words-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 7px 9px;
+}
+
+.doc-words-label {
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.doc-words-text {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #059669;
+  line-height: 1.35;
+}
+
+.doc-banking-box {
+  background: rgba(2, 132, 199, 0.03);
+  border: 1px dashed rgba(2, 132, 199, 0.25);
+  border-radius: 7px;
+  padding: 7px 9px;
+  font-size: 7.5px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.doc-banking-box strong {
+  color: #0f172a;
+}
+
+.doc-totals-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.doc-totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  font-size: 8px;
+  color: #64748b;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.doc-totals-row strong,
+.doc-totals-row .doc-num {
+  font-weight: 700;
+  color: #0f172a;
+  font-family: inherit;
+}
+
+.doc-totals-row.grand-total {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  padding: 8px 10px;
+  border-bottom: none;
+}
+
+.doc-totals-row.grand-total span:first-child {
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.doc-totals-row.grand-total span:last-child {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #38bdf8;
+  letter-spacing: -0.01em;
+}
+
+/* Signatures & Stamp Block */
+.doc-signatures-modern {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-top: 8px;
-  margin-bottom: 6px;
+  padding: 8px 0 4px 0;
+  margin-top: auto;
+  border-top: 1px solid #e2e8f0;
   position: relative;
   z-index: 2;
 }
 
-.rayan-company-contact-meta {
-  font-size: 9px;
-  color: #000000;
-  line-height: 1.35;
+.doc-sign-team-meta {
+  font-size: 8px;
+  color: #64748b;
+  line-height: 1.45;
 }
 
-.rayan-company-contact-meta strong {
-  font-size: 9.5px;
+.doc-sign-team-meta strong {
+  color: #0f172a;
+  font-size: 8.5px;
 }
 
-.rayan-stamp-sign-wrap {
+.doc-sign-card {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 200px;
+  padding: 0 8px;
 }
 
-.rayan-auth-sign-label {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #000000;
-  margin-bottom: 3px;
+.doc-auth-label {
+  font-size: 7.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 2px;
 }
 
-.rayan-sign-name {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #000000;
-  border-top: 1px solid #000000;
+.doc-sign-name {
+  font-size: 9px;
+  font-weight: 800;
+  color: #0f172a;
+  border-top: 1.5px solid #0f172a;
   padding-top: 2px;
-  width: 170px;
+  width: 160px;
   text-align: center;
 }
 
+/* Preserving Stamp & Signature Exact Dimensions */
 .rayan-real-stamp {
   position: absolute;
-  top: -28px;
-  right: -12px;
-  width: 120px;
-  height: 116px;
+  top: -24px;
+  right: -6px;
+  width: 110px;
+  height: 106px;
   object-fit: contain;
   opacity: 0.95;
   transform: rotate(-5deg);
@@ -2962,13 +3211,55 @@ select option:focus,
 }
 
 .rayan-real-signature {
-  height: 44px;
+  height: 40px;
   width: auto;
-  max-width: 140px;
+  max-width: 130px;
   object-fit: contain;
-  margin-bottom: -8px;
+  margin-bottom: -6px;
   position: relative;
   z-index: 2;
+}
+
+/* Preserving Computer Generated Notice */
+.rayan-computer-generated-notice {
+  text-align: center;
+  font-size: 8.5px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 5px 0 2px 0;
+  margin: 5px auto 2px auto;
+  letter-spacing: 0.25px;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+/* Bottom Footer Ribbon */
+.doc-footer-modern {
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 7.5px;
+  font-weight: 600;
+  text-align: center;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-top: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-footer-modern a {
+  color: #38bdf8 !important;
+  text-decoration: none !important;
+}
+
+.doc-footer-modern a:hover {
+  text-decoration: underline !important;
 }
 
 .rayan-doc-watermark {
@@ -2976,38 +3267,25 @@ select option:focus,
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0.15;
+  opacity: 0.08;
   pointer-events: none;
   z-index: 0;
-  width: 135px;
+  width: 160px;
 }
 
 .rayan-copy-notice {
-  font-size: 8.5px;
-  color: #000000;
-  margin-bottom: 3px;
-}
-
-/* Computer Generated Notice (Centered at bottom of all documents) */
-.rayan-computer-generated-notice {
-  text-align: center;
-  font-size: 11px;
-  font-weight: 500;
-  color: #1e293b;
-  padding: 6px 0 2px;
-  margin: 8px auto 4px;
-  letter-spacing: 0.25px;
-  font-family: inherit;
-  width: 100%;
+  font-size: 7.5px;
+  color: #64748b;
+  margin-bottom: 2px;
 }
 
 /* Print Page Counter */
 .rayan-page-counter {
   text-align: center;
-  font-size: 8.5px;
-  color: #475569;
+  font-size: 8px;
+  color: #64748b;
   margin-top: 3px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 /* Native Print Styles */

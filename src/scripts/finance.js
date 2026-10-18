@@ -5056,189 +5056,7 @@ class FinanceApp {
 
   // 2. INVOICE DETAIL & PDF GENERATION PREVIEW
   openInvoiceDetail(invoiceId) {
-    const inv = this.db?.invoices?.find(i => i.id === invoiceId);
-    if (!inv) return;
-
-    const modalHtml = `
-      <div class="fin-modal-backdrop open" id="modal-inv-detail">
-        <div class="fin-modal-dialog" style="max-width:920px;">
-          <div class="fin-modal-header no-print">
-            <h3 class="fin-modal-title">Tax Invoice ${inv.invoice_no}</h3>
-            <div style="display:flex; gap:0.5rem; align-items:center;">
-              <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print / Download PDF</button>
-              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-inv-detail')">&times;</button>
-            </div>
-          </div>
-          <div class="fin-modal-body" style="background:#f8fafc; padding:2rem;">
-            <!-- Printable Invoice Document Template -->
-            <div class="fin-printable-invoice">
-              <div class="fin-print-header">
-                <div>
-                  <img src="/assets/logos/rayan-group.png" alt="Rayan Group" class="fin-print-logo">
-                  ${inv.tax_regime === 'trn' || inv.currency === 'AED' ? `
-                    <div style="font-size:0.85rem; font-weight:700; color:#0f172a;">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</div>
-                    <div style="font-size:0.75rem; color:#64748b; line-height:1.4;">
-                      Mussafah Industrial Area M-36, P.O. Box 92144, Abu Dhabi, United Arab Emirates<br>
-                      <strong>TRN (VAT):</strong> 100234567800003 • <strong>Emirate:</strong> Abu Dhabi, UAE<br>
-                      Corporate Email: finance@rayan-group.com
-                    </div>
-                  ` : `
-                    <div style="font-size:0.85rem; font-weight:700; color:#0f172a;">ASHAZ ENGINEERING PRIVATE LIMITED</div>
-                    <div style="font-size:0.75rem; color:#64748b; line-height:1.4;">
-                      Rayan Tech Park, Off Western Express Highway, Andheri East, Mumbai 400069<br>
-                      <strong>GSTIN:</strong> 27AAACA9921M1Z5 • <strong>PAN:</strong> AAACA9921M<br>
-                      Corporate Email: accounts.india@rayan-group.com
-                    </div>
-                  `}
-                </div>
-                <div style="text-align:right;">
-                  <div class="fin-print-title">TAX INVOICE</div>
-                  <div style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-top:0.35rem;">${inv.invoice_no}</div>
-                  <div style="font-size:0.78rem; color:#64748b;">Invoice Date: ${this.formatDate(inv.invoice_date)}</div>
-                  <div style="font-size:0.78rem; color:#64748b;">Due Date: ${inv.due_date ? this.formatDate(inv.due_date) : 'No Due Date (Due Upon Receipt)'}</div>
-                  <div style="font-size:0.78rem; color:#0099e6; font-weight:700;">Status: ${inv.status.toUpperCase()}</div>
-                </div>
-              </div>
-
-              <!-- Customer & Place of Supply Grid -->
-              <div class="fin-print-meta-grid">
-                <div>
-                  <strong style="color:#0099e6; text-transform:uppercase; font-size:0.75rem; display:block; margin-bottom:0.25rem;">BILLED TO (BUYER):</strong>
-                  <div style="font-weight:800; font-size:0.95rem; color:#0f172a;">${inv.customer_name}</div>
-                  <div style="color:#475569; font-size:0.82rem;">
-                    <strong>${inv.tax_regime === 'trn' ? 'TRN' : 'GSTIN'}:</strong> ${inv.customer_trn || inv.customer_gstin || 'EXEMPT'}<br>
-                    <strong>Place of Supply:</strong> ${inv.place_of_supply}<br>
-                    ${inv.po_reference ? `<strong>PO Reference:</strong> ${inv.po_reference}` : ''}
-                  </div>
-                </div>
-                <div>
-                  <strong style="color:#0099e6; text-transform:uppercase; font-size:0.75rem; display:block; margin-bottom:0.25rem;">PROJECT DETAILS:</strong>
-                  <div style="font-weight:700; color:#0f172a;">${inv.project_name || 'General Corporate Billing'}</div>
-                  <div style="color:#475569; font-size:0.82rem;">
-                    Payment Terms: ${inv.payment_terms_label || (inv.due_date ? `${inv.payment_terms || 30} Days from Invoice Date` : 'Due Upon Receipt / Immediate')}<br>
-                    Remittance Mode: RTGS / NEFT Direct Transfer
-                  </div>
-                </div>
-              </div>
-
-              <!-- Line Items Table -->
-              <table class="fin-print-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Item Description</th>
-                    <th>HSN/SAC</th>
-                    <th>Qty</th>
-                    <th>UOM</th>
-                    <th>Unit Rate (${inv.currency === 'AED' ? 'AED' : '₹'})</th>
-                    <th>Taxable (${inv.currency === 'AED' ? 'AED' : '₹'})</th>
-                    <th>${inv.tax_regime === 'trn' || inv.currency === 'AED' || (inv.vat_total && inv.vat_total > 0) ? 'VAT %' : 'GST %'}</th>
-                    <th>Total (${inv.currency === 'AED' ? 'AED' : '₹'})</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(inv.line_items || []).map((li, idx) => `
-                    <tr>
-                      <td>${idx + 1}</td>
-                      <td>
-                        <strong>${li.name || li.description}</strong>
-                        ${li.uom === '%' && li.progress_pct ? `<br><span style="font-size:0.75rem; color:#0284c7; font-weight:600;">(Progress Milestone: ${li.progress_pct}% of Contract Value)</span>` : ''}
-                      </td>
-                      <td>${li.hsn_sac_code || '—'}</td>
-                      <td>${li.qty}${li.uom === '%' && li.progress_pct ? ` (${li.progress_pct}%)` : ''}</td>
-                      <td>${li.uom}</td>
-                      <td>${this.formatCurrency(li.project_price || li.unit_price, false)}</td>
-                      <td>${this.formatCurrency(li.taxable_amount || li.invoice_amount, false)}</td>
-                      <td>${li.gst_rate || li.vat_rate || 5}%</td>
-                      <td><strong>${this.formatCurrency(li.total_amount, false)}</strong></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-
-              <!-- Totals and Tax Breakup -->
-              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div style="max-width:420px; font-size:0.78rem; color:#64748b; line-height:1.5;">
-                  ${inv.tax_regime === 'trn' || inv.currency === 'AED' ? `
-                    <strong>Bank Account Details for Wire Remittance:</strong><br>
-                    Beneficiary: Rayan Engineering &amp; Contracting L.L.C - S.P.C<br>
-                    Bank: First Abu Dhabi Bank (FAB Corporate Banking)<br>
-                    IBAN: AE49033000001049281749201 • SWIFT: FABAAEAD<br>
-                    Branch: Mussafah Commercial Branch, Abu Dhabi
-                  ` : `
-                    <strong>Bank Account Details for Wire Remittance:</strong><br>
-                    Beneficiary: Ashaz Engineering Private Limited<br>
-                    Bank: State Bank of India (Corporate Banking)<br>
-                    Account No: 392019485721 • IFSC: SBIN0001824<br>
-                    Branch: Andheri East Corporate Hub, Mumbai
-                  `}
-                </div>
-
-                <div style="min-width:280px; font-size:0.85rem;">
-                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                    <span>${(inv.line_items || []).some(li => li.uom === '%' || (li.progress_pct && li.progress_pct > 0)) ? `Billed Milestone (${(inv.line_items.find(li => li.progress_pct)?.progress_pct || 50)}%): <small style="color:#64748b;">(Taxable Subtotal)</small>` : 'Taxable Subtotal:'}</span>
-                    <strong>${this.formatCurrency(inv.taxable_subtotal)}</strong>
-                  </div>
-                  ${(inv.vat_total > 0 || inv.tax_regime === 'trn') ? `
-                    <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                      <span>VAT (5%):</span>
-                      <span style="font-weight:700; color:#10b981;">${this.formatCurrency(inv.vat_total || inv.total_tax)}</span>
-                    </div>
-                  ` : ''}
-                  ${inv.cgst_total > 0 ? `
-                    <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                      <span>CGST (9%):</span>
-                      <span>${this.formatCurrency(inv.cgst_total)}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                      <span>SGST (9%):</span>
-                      <span>${this.formatCurrency(inv.sgst_total)}</span>
-                    </div>
-                  ` : ''}
-                  ${inv.igst_total > 0 ? `
-                    <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                      <span>IGST (18%):</span>
-                      <span>${this.formatCurrency(inv.igst_total)}</span>
-                    </div>
-                  ` : ''}
-                  <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-top:2px solid #0099e6; margin-top:0.4rem; font-size:1.1rem; font-weight:900; color:#0f172a;">
-                    <span>Grand Total:</span>
-                    <span>${this.formatCurrency(inv.grand_total)}</span>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0; color:#10b981; font-weight:700;">
-                    <span>Amount Paid:</span>
-                    <span>${this.formatCurrency(inv.amount_paid || 0)}</span>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0; color:#ef4444; font-weight:800;">
-                    <span>Balance Due:</span>
-                    <span>${this.formatCurrency(inv.balance_due)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Signatory Footer -->
-              <div class="fin-print-footer">
-                <div>
-                  <div style="font-size:0.72rem; color:#94a3b8;">This is a computer-generated tax invoice verified under Rayan GRC Finance.</div>
-                  <div style="font-size:0.72rem; color:#94a3b8;">Digitally signed &amp; audited on ${this.formatDate(inv.created_at || inv.invoice_date)}.</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-family:'Outfit', cursive; font-size:1.15rem; color:#0099e6; margin-bottom:0.2rem;">Arshad Alam Shaikh</div>
-                  <div style="border-top:1px solid #94a3b8; padding-top:0.25rem; font-size:0.75rem; font-weight:700; color:#1e293b;">
-                    Authorized Signatory<br>
-                    <span style="font-weight:400; color:#64748b;">Rayan Group Finance Committee</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rayan-computer-generated-notice" style="border-top:1px solid #e2e8f0; margin-top:1.25rem; padding-top:0.75rem;">This is a Computer Generated Invoice</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.openInvoicePrintModal(invoiceId);
   }
 
   // 2B. VENDOR PURCHASE BILL DETAIL MODAL
@@ -7597,77 +7415,104 @@ class FinanceApp {
 
         <div class="fin-doc-viewport">
           <div class="fin-document-paper">
-            <div class="rayan-doc-teal-bar">RAYAN ENGINEERING</div>
+            <div class="doc-top-accent-bar"></div>
 
             <div class="fin-doc-inner-padding">
               ${this.getRayanWatermark()}
 
-              <!-- Brand Header Row -->
-              <div class="rayan-doc-brand-row">
-                ${this.getRayanLogoImg(false)}
-                <div class="rayan-doc-center-title">
-                  <div class="rayan-title-ar">فاتورة ضريبية</div>
-                  <div class="rayan-title-en">TAX INVOICE</div>
+              <!-- Modern Brand Header -->
+              <div class="doc-header-modern">
+                <div class="doc-brand-block">
+                  ${this.getRayanLogoImg(false)}
+                  <div class="doc-company-title">RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C</div>
+                  <div class="doc-company-subtitle">
+                    Civil Contracting, Electromechanical &amp; Specialized Interior Fit-Outs<br>
+                    Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800
+                  </div>
+                  <div class="doc-company-badges">
+                    <span class="doc-badge-pill primary"><strong>TRN:</strong> ${inv.company_trn || '104937380400003'}</span>
+                    <span class="doc-badge-pill"><strong>Licence:</strong> CN-2894710</span>
+                    <span class="doc-badge-pill success">🇦🇪 UAE FTA Registered</span>
+                  </div>
                 </div>
-                ${this.getRayanBarcode(inv.company_trn || '104937380400003')}
+
+                <div class="doc-id-card">
+                  <div class="doc-title-en">TAX INVOICE</div>
+                  <div class="doc-title-ar">فاتورة ضريبية</div>
+                  <div class="doc-number-pill"># ${inv.invoice_no || 'REC-RG-INV-44049'}</div>
+                  <div class="doc-status-badge">✓ Official Tax Invoice</div>
+                  <div style="margin-top:4px;">
+                    ${this.getRayanBarcode(inv.company_trn || '104937380400003')}
+                  </div>
+                </div>
               </div>
 
-              <!-- Sub Header Box: PO NO -->
-              <div style="border:1.5px solid #000; font-size:10.5px; font-weight:700; text-align:center; padding:3px; margin-bottom:5px;">
-                PO NO / امر شراء : ${inv.po_reference || 'LPO/BD/2026/12'}
+              <!-- Two-Card Customer & Invoice Specifications Grid -->
+              <div class="doc-grid-cards">
+                <div class="doc-info-card">
+                  <div class="doc-info-card-header">
+                    <span>Billed To (Client / Buyer)</span>
+                    <span style="direction:rtl;">العميل المفوتر له</span>
+                  </div>
+                  <div class="doc-info-entity-name">${inv.customer_name || 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C'}</div>
+                  <div class="doc-info-line">${inv.customer_address || 'ABU DHABI, MADINAT ZAYED, UAE'}</div>
+                  <div style="margin-top:2px; display:flex; flex-wrap:wrap; gap:4px;">
+                    <span class="doc-badge-pill primary"><strong>${inv.customer_trn ? 'TRN' : 'GSTIN'}:</strong> ${inv.customer_trn || inv.customer_gstin || '105405525400003'}</span>
+                  </div>
+                  <div class="doc-info-line" style="margin-top:3px;">
+                    <strong>Attn:</strong> ${inv.contact_person || 'Mr. Sooraj Kumar'}<br>
+                    <strong>Email:</strong> <a href="mailto:${inv.email || 'buildaradevelopers@gmail.com'}" class="rayan-link-blue">${inv.email || 'buildaradevelopers@gmail.com'}</a>
+                  </div>
+                </div>
+
+                <div class="doc-info-card">
+                  <div class="doc-info-card-header">
+                    <span>Document Specifications</span>
+                    <span style="direction:rtl;">بيانات المستند</span>
+                  </div>
+                  <div class="doc-key-value-list">
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Invoice Date / تاريخ:</span>
+                      <span class="doc-val">${inv.invoice_date ? this.formatDate(inv.invoice_date) : '13-Oct-2026'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Due Date / الاستحقاق:</span>
+                      <span class="doc-val">${inv.due_date ? this.formatDate(inv.due_date) : 'Immediate / Due Upon Receipt'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">PO / LPO Reference:</span>
+                      <span class="doc-val" style="font-weight:800; color:#0284c7;">${inv.po_reference || 'LPO/BD/2026/12'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Payment Terms:</span>
+                      <span class="doc-val">${inv.payment_terms_label || (inv.due_date ? `${inv.payment_terms || 30} Days Net` : 'Due Upon Receipt')}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Place of Supply / Emirate:</span>
+                      <span class="doc-val">${inv.place_of_supply || 'Abu Dhabi, UAE'}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <!-- From & Invoice Meta -->
-              <table class="rayan-border-box">
-                <tr>
-                  <td style="width:50%; line-height:1.4;">
-                    <strong>From:</strong><br>
-                    <strong>RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C</strong><br>
-                    MUSSAFAH M-36, ABU DHABI , UAE P.O BOX 91800
-                  </td>
-                  <td style="width:50%; line-height:1.4;">
-                    <div><strong>Invoice Date / تاريخ الفاتورة :</strong> ${inv.invoice_date ? this.formatDate(inv.invoice_date) : '13-Oct-2026'}</div>
-                    <div><strong>Invoice No / رقم الفاتورة :</strong> ${inv.invoice_no || 'REC-RG-INV-44049'}</div>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Client Details -->
-              <table class="rayan-border-box">
-                <tr>
-                  <td style="width:50%; line-height:1.4;">
-                    <strong>Clint:</strong><br>
-                    <strong>${inv.customer_name || 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C'}</strong><br>
-                    ${inv.customer_address || 'ABU DHABI, MADINAT ZAYED'}<br>
-                    <strong>${inv.customer_trn ? 'TRN' : 'GSTIN'}</strong> &nbsp; ${inv.customer_trn || inv.customer_gstin || '105405525400003'}<br>
-                    <strong>Atten.</strong> &nbsp; ${inv.contact_person || 'Mr.Sooraj Kumar'}
-                  </td>
-                  <td style="width:50%; line-height:1.4;">
-                    <div><strong>PO NO / امر شراء :</strong> ${inv.po_reference || 'LPO/BD/2026/12'}</div>
-                    <div><strong>Date / تاريخ :</strong> ${inv.invoice_date ? this.formatDate(inv.invoice_date) : '13-Oct-2026'}</div>
-                    <div><strong>Email:</strong> <a href="mailto:${inv.email || 'buildaradevelopers@gmail.com'}" class="rayan-link-blue">${inv.email || 'buildaradevelopers@gmail.com'}</a></div>
-                    <div><strong>Mode/Terms of Payment:</strong> ${inv.payment_terms_label || (inv.due_date ? `${inv.payment_terms} Days Net` : 'Due Upon Receipt / Immediate')}</div>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Project Bar -->
-              <div class="rayan-project-bar">
-                Project: ${inv.project_name || 'General Corporate Billing'}
+              <!-- Project Highlight Ribbon -->
+              <div class="doc-project-ribbon">
+                <span>🏗️ <strong>LINKED PROJECT:</strong> ${inv.project_name || 'General Corporate Billing'}</span>
+                <span style="font-size:7.5px; color:#0284c7; background:rgba(2,132,199,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">CONTRACT ACCREDITED</span>
               </div>
 
-              <!-- Line Items Table -->
-              <table class="rayan-data-table">
+              <!-- Modern Line Items Table -->
+              <table class="doc-table-modern">
                 <thead>
                   <tr>
-                    <th style="width:5%;">Sr. No.<br>رقم</th>
-                    <th style="width:40%;">Description<br>وصف</th>
-                    <th style="width:7%;">Unit<br>وحدة</th>
-                    <th style="width:7%;">Qty<br>الكمية</th>
-                    <th style="width:12%;">Project Price<br>سعر المشروع</th>
-                    <th style="width:13%;">Invoice Amount<br>مبلغ الفاتورة</th>
-                    <th style="width:8%;">Vat 5%<br>ضريبة</th>
-                    <th style="width:14%;">Total Amount<br>المبلغ الإجمالي</th>
+                    <th style="width:4%; text-align:center;">#</th>
+                    <th style="width:38%;">ITEM DESCRIPTION &amp; SCOPE OF WORK</th>
+                    <th style="width:8%; text-align:center;">UOM</th>
+                    <th style="width:7%; text-align:center;">QTY</th>
+                    <th style="width:14%; text-align:right;">PROJECT PRICE</th>
+                    <th style="width:14%; text-align:right;">TAXABLE AMT</th>
+                    <th style="width:8%; text-align:center;">VAT 5%</th>
+                    <th style="width:15%; text-align:right;">TOTAL (AED)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -7685,76 +7530,94 @@ class FinanceApp {
                     }
                   ]).map((item, idx) => `
                     <tr>
-                      <td style="text-align:center;">${item.sr || (idx + 1)}</td>
+                      <td style="text-align:center; font-weight:700; color:#64748b;">${item.sr || (idx + 1)}</td>
                       <td>
-                        <strong>${item.name || item.description}</strong>
-                        ${item.description && item.description !== item.name ? `<br><span style="font-size:8px; color:#333;">${item.description}</span>` : ''}
+                        <div class="doc-item-title">${item.name || item.description}</div>
+                        ${item.description && item.description !== item.name ? `<div class="doc-item-desc">${item.description}</div>` : ''}
+                        ${item.uom === '%' || item.unit === '%' ? `<span style="display:inline-block; margin-top:2px; font-size:7px; font-weight:700; color:#0284c7; background:rgba(2,132,199,0.08); padding:1px 5px; border-radius:3px;">⚡ Billed Milestone: ${item.progress_pct || item.qty}%</span>` : ''}
                       </td>
-                      <td style="text-align:center;">${item.unit || item.uom || '%'}</td>
-                      <td style="text-align:center;">${item.qty || 1}</td>
-                      <td style="text-align:right;">${Number(item.project_price || item.unit_price || 57000).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right;">${Number(item.invoice_amount || item.taxable_amount || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right;">${Number(item.vat_amount || item.tax_amount || 570).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right;">AED ${Number(item.total_amount || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:center; font-weight:700;">${item.unit || item.uom || '%'}</td>
+                      <td style="text-align:center; font-weight:800;">${item.qty || 1}</td>
+                      <td style="text-align:right; font-variant-numeric:tabular-nums;">${Number(item.project_price || item.unit_price || 57000).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">${Number(item.invoice_amount || item.taxable_amount || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:center; font-weight:700; color:#059669; font-variant-numeric:tabular-nums;">${Number(item.vat_amount || item.tax_amount || 570).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:right; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums;">AED ${Number(item.total_amount || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
 
-              <!-- Totals Section -->
-              <div class="rayan-totals-container">
-                <div class="rayan-words-amount">
-                  <div><strong>Payable Amount :</strong> ${inv.amount_in_words || this.numberToEnglishWords(inv.grand_total || 11970)}</div>
+              <!-- Totals & Payment Instructions Container -->
+              <div class="doc-financials-container">
+                <div class="doc-left-financials">
+                  <div class="doc-words-box">
+                    <div class="doc-words-label">Payable Amount in Words / المبلغ المستحق بالحروف:</div>
+                    <div class="doc-words-text">💵 ${inv.amount_in_words || this.numberToEnglishWords(inv.grand_total || 11970)}</div>
+                  </div>
+
+                  <div class="doc-banking-box">
+                    <strong>Official Bank Remittance Instructions:</strong><br>
+                    Beneficiary: <strong>RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C</strong><br>
+                    Bank: <strong>First Abu Dhabi Bank (FAB) Corporate Banking</strong> • Abu Dhabi, UAE<br>
+                    <strong>IBAN:</strong> AE49033000001049281749201 • <strong>SWIFT:</strong> FABAAEAD
+                  </div>
+
+                  <div class="rayan-copy-notice">
+                    Please keep a copy of this official tax invoice for your accounting and VAT audit records.
+                  </div>
                 </div>
-                <table class="rayan-totals-table">
-                  <tr>
-                    <td><strong>Adjustment</strong></td>
-                    <td class="amount-col">${Number(inv.adjustment || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Sub-Total</strong></td>
-                    <td class="amount-col">${Number(inv.taxable_subtotal || inv.subtotal || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Vat 5%</strong></td>
-                    <td class="amount-col">${Number(inv.vat_total || inv.total_tax || 570).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr style="background:#f8fafc; font-weight:800;">
-                    <td><strong>Grand Total</strong></td>
-                    <td class="amount-col">${Number(inv.grand_total || 11970).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                </table>
+
+                <div class="doc-totals-card">
+                  <div class="doc-totals-row">
+                    <span>Taxable Subtotal (المجموع الخاضع):</span>
+                    <span class="doc-num">${Number(inv.taxable_subtotal || inv.subtotal || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                  </div>
+                  <div class="doc-totals-row">
+                    <span>VAT 5% (ضريبة القيمة المضافة):</span>
+                    <span class="doc-num" style="color:#059669;">+ ${Number(inv.vat_total || inv.total_tax || 570).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                  </div>
+                  ${inv.adjustment ? `
+                    <div class="doc-totals-row">
+                      <span>Adjustment / Retentions:</span>
+                      <span class="doc-num">${Number(inv.adjustment).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                    </div>
+                  ` : ''}
+                  <div class="doc-totals-row grand-total">
+                    <span>Grand Total (الإجمالي)</span>
+                    <span>AED ${Number(inv.grand_total || 11970).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="rayan-copy-notice">
-                Please keep a copy of this invoice for your records
-              </div>
-
-              <!-- Footer Signatures -->
-              <div class="rayan-signatures-row">
-                <div class="rayan-company-contact-meta">
-                  <strong>Best wishes</strong><br>
-                  <strong>RAYAN Group Team</strong><br>
-                  Hotline : 025654497<br>
+              <!-- Signatures & Official Stamp Block -->
+              <div class="doc-signatures-modern">
+                <div class="doc-sign-team-meta">
+                  <strong>Best Wishes</strong><br>
+                  <strong>RAYAN Group Corporate Finance</strong><br>
+                  Hotline : 025654497 • Abu Dhabi, UAE<br>
                   <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
                   <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
                 </div>
 
-                <div class="rayan-stamp-sign-wrap">
+                <div class="doc-sign-card">
+                  <div class="doc-auth-label">Authorised Signatory / المفوض بالتوقيع</div>
                   ${this.getRayanSignatureImg('default')}
-                  <div class="rayan-sign-name">Arshad Alam Shaikh</div>
-                  <div class="rayan-auth-sign-label">Authorised Signatory</div>
+                  <div class="doc-sign-name">Arshad Alam Shaikh</div>
                   ${this.getRayanStampImg()}
                 </div>
               </div>
 
-              <!-- Computer Generated Notice -->
-              <div class="rayan-computer-generated-notice">This is a Computer Generated Invoice</div>
+              <!-- Computer Generated Notice (Preserved as requested) -->
+              <div class="rayan-computer-generated-notice">
+                <span>🔒</span>
+                <span>This is a Computer Generated Tax Invoice</span>
+              </div>
             </div>
 
-            <!-- Bottom Teal Bar -->
-            <div class="rayan-doc-footer-bar">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | <a href="mailto:info@rayan-group.com" style="color:#ffffff !important; text-decoration:none;">info@rayan-group.com</a> | <a href="http://www.rayan-group.com" style="color:#ffffff !important; text-decoration:none;">www.rayan-group.com</a>
+            <!-- Modern Footer Ribbon -->
+            <div class="doc-footer-modern">
+              <span>Tel: +971-25654497 | Mussafah M-36, Abu Dhabi, United Arab Emirates</span>
+              <span><a href="mailto:info@rayan-group.com">info@rayan-group.com</a> | <a href="http://www.rayan-group.com">www.rayan-group.com</a></span>
             </div>
           </div>
         </div>
@@ -7797,135 +7660,181 @@ class FinanceApp {
 
         <div class="fin-doc-viewport">
           <div class="fin-document-paper">
-            <div class="rayan-doc-teal-bar">RAYAN ENGINEERING</div>
+            <div class="doc-top-accent-bar"></div>
 
             <div class="fin-doc-inner-padding">
               ${this.getRayanWatermark()}
 
-              <!-- Brand Header -->
-              <div class="rayan-doc-brand-row">
-                ${this.getRayanLogoImg(false)}
-                <div class="rayan-doc-center-title">
-                  <div class="rayan-title-ar">سند قبض</div>
-                  <div class="rayan-title-en">Receipt Voucher</div>
+              <!-- Modern Brand Header -->
+              <div class="doc-header-modern">
+                <div class="doc-brand-block">
+                  ${this.getRayanLogoImg(false)}
+                  <div class="doc-brand-text">
+                    <div class="doc-company-title">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</div>
+                    <div class="doc-company-sub">Engineering Consultancy • General Contracting • Interior Fit-Out</div>
+                    <div class="doc-company-badges">
+                      <span class="doc-badge-pill">TRN: 100234567800003</span>
+                      <span class="doc-badge-pill">Lic: CN-2849102</span>
+                      <span class="doc-badge-pill">Abu Dhabi, UAE</span>
+                    </div>
+                  </div>
                 </div>
-                <div style="width:140px; text-align:right; font-size:12px; font-weight:700; color:#000;">
-                  Receipt
+
+                <div class="doc-id-card">
+                  <div class="doc-title-ar">سند قبض رسمي</div>
+                  <div class="doc-title-en">RECEIPT VOUCHER</div>
+                  <div class="doc-number-pill">${rec.receipt_no || 'REC-RV-44025'}</div>
+                  <div class="doc-status-badge status-received">✓ PAYMENT RECEIVED</div>
                 </div>
               </div>
 
-              <div style="border-top:1.5px solid #000; margin:4px 0 8px 0;"></div>
+              <!-- Dual Party & Specification Grid -->
+              <div class="doc-grid-cards">
+                <div class="doc-info-card">
+                  <div class="doc-info-card-header">
+                    <span>RECEIVED FROM (استلمنا من السيد/السادة)</span>
+                    <span>CLIENT / ENTITY</span>
+                  </div>
+                  <div class="doc-info-entity-name">${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}</div>
+                  <div class="doc-info-line">
+                    <strong>Contact Person:</strong> ${rec.contact_person || 'Mr. Shahil'}<br>
+                    <strong>Email Address:</strong> <a href="mailto:${rec.email || 'procurementofficer@toprockinteriors.com'}" class="rayan-link-blue">${rec.email || 'procurementofficer@toprockinteriors.com'}</a><br>
+                    <strong>Received By:</strong> ${rec.received_by || 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C'}
+                  </div>
+                </div>
 
-              <!-- Meta Table -->
-              <table class="rayan-border-box" style="margin-bottom:8px;">
-                <tr>
-                  <td style="width:25%; font-weight:700;">Date :</td>
-                  <td style="width:45%;">${rec.receipt_date || '17/Sep/2026'} &nbsp; ${rec.receipt_time || '1:40 PM'}</td>
-                  <td style="width:30%; text-align:right; font-weight:700; direction:rtl;">التاريخ:</td>
-                </tr>
-                <tr>
-                  <td style="font-weight:700;">Reference number :</td>
-                  <td style="color:#ef4444; font-weight:700;">${rec.receipt_no || 'REC-RV-44025'}</td>
-                  <td style="text-align:right; font-weight:700; direction:rtl;">الرقم المرجعي</td>
-                </tr>
-                <tr>
-                  <td style="font-weight:700;">Ref. Invoice Number :</td>
-                  <td style="font-weight:600;">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</td>
-                  <td style="text-align:right; font-weight:700; direction:rtl;">رقم الفاتورة المرجعية</td>
-                </tr>
-                <tr>
-                  <td style="font-weight:700;">Recevied by:</td>
-                  <td style="font-weight:700;">${rec.received_by || 'RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C'}</td>
-                  <td style="text-align:right; font-weight:700; direction:rtl;">تم الاستلام بواسطة</td>
-                </tr>
-              </table>
-
-              <!-- Billing Info -->
-              <div style="font-size:10.5px; font-weight:800; border-bottom:1.5px solid #000; padding-bottom:2px; margin-bottom:5px;">Billing Information</div>
-              <table class="rayan-border-box" style="margin-bottom:10px;">
-                <tr>
-                  <td style="width:30%; font-weight:700;">Received from Mr./M/s:</td>
-                  <td style="width:45%; font-weight:700;">${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}</td>
-                  <td style="width:25%; text-align:right; font-weight:700; direction:rtl;">استلمنا من السيد/السادة</td>
-                </tr>
-                <tr>
-                  <td style="font-weight:700;">Contact Person:</td>
-                  <td>${rec.contact_person || 'Mr. Shahil'}</td>
-                  <td style="text-align:right; font-weight:700; direction:rtl;">اتصال شخص</td>
-                </tr>
-                <tr>
-                  <td style="font-weight:700;">Email :</td>
-                  <td><a href="mailto:${rec.email || 'procurementofficer@toprockinteriors.com'}" class="rayan-link-blue">${rec.email || 'procurementofficer@toprockinteriors.com'}</a></td>
-                  <td style="text-align:right; font-weight:700; direction:rtl;">بريد إلكتروني</td>
-                </tr>
-              </table>
-
-              <!-- Payment Details Table -->
-              <div style="font-size:10.5px; font-weight:800; border-bottom:1.5px solid #000; padding-bottom:2px; margin-bottom:5px; display:flex; justify-content:space-between;">
-                <span>Payment Details</span>
-                <span>Total Amount</span>
+                <div class="doc-info-card">
+                  <div class="doc-info-card-header">
+                    <span>VOUCHER SPECIFICATION (بيانات السند)</span>
+                    <span>SETTLEMENT REF</span>
+                  </div>
+                  <div class="doc-key-value-list">
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Receipt Date &amp; Time:</span>
+                      <span class="doc-val">${rec.receipt_date || '17/Sep/2026'} &nbsp; ${rec.receipt_time || '1:40 PM'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Reference Number:</span>
+                      <span class="doc-val" style="color:#0284c7;">${rec.receipt_no || 'REC-RV-44025'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Ref. Tax Invoice:</span>
+                      <span class="doc-val">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Payment Channel:</span>
+                      <span class="doc-val">${rec.payment_type || rec.payment_mode || 'Online Bank Transfer'}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <table class="rayan-border-box" style="margin-bottom:10px;">
+
+              <!-- Settlement Link Ribbon -->
+              <div class="doc-project-ribbon">
+                <span>🔗 <strong>SETTLED AGAINST INVOICE:</strong> ${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</span>
+                <span style="font-size:7.5px; color:#059669; background:rgba(16,185,129,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">VERIFIED CLEARED FUNDS</span>
+              </div>
+
+              <!-- Modern Payment Breakdown Table -->
+              <table class="doc-table-modern">
                 <thead>
-                  <tr style="background:#f8fafc;">
-                    <th style="width:30%;">نقداً/شيك رقم/متصل<br>Cash/Cheque/Online</th>
-                    <th style="width:15%;">يكتب/Type</th>
-                    <th style="width:20%;">البنك/Bank</th>
-                    <th style="width:15%;">التاريخ/Date</th>
-                    <th style="width:20%; text-align:right;">Total Amount</th>
+                  <tr>
+                    <th style="width:4%; text-align:center;">#</th>
+                    <th style="width:30%;">PAYMENT MODE / طريقة الدفع</th>
+                    <th style="width:24%;">CHEQUE / REF NO / رقم الشيك</th>
+                    <th style="width:24%;">DRAWEE BANK / البنك</th>
+                    <th style="width:18%; text-align:right;">AMOUNT RECEIVED</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td style="text-align:center; font-weight:700;">${rec.cheque_no || rec.reference_no || '000018989'}</td>
-                    <td style="text-align:center;">${rec.payment_type || rec.payment_mode || 'Online'}</td>
-                    <td style="text-align:center;">${rec.bank_name || 'First Abu Dhabi Bank'}</td>
-                    <td style="text-align:center;">${rec.receipt_date || '17/09/2026'}</td>
-                    <td style="text-align:right; font-weight:800; font-size:10.5px;">AED ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align:center; font-weight:700; color:#64748b;">1</td>
+                    <td>
+                      <div class="doc-item-title">${rec.payment_type || rec.payment_mode || 'Online Bank Transfer'}</div>
+                      <div class="doc-item-desc">Corporate Wire Remittance / Central Clearing</div>
+                    </td>
+                    <td>
+                      <div class="doc-item-title">${rec.cheque_no || rec.reference_no || '000018989'}</div>
+                      <div class="doc-item-desc">Value Date: ${rec.receipt_date || '17/09/2026'}</div>
+                    </td>
+                    <td>
+                      <div class="doc-item-title">${rec.bank_name || 'First Abu Dhabi Bank (FAB)'}</div>
+                      <div class="doc-item-desc">UAE Central Bank Clearance</div>
+                    </td>
+                    <td style="text-align:right; font-weight:800; color:#059669; font-size:11px; font-variant-numeric:tabular-nums;">
+                      AED ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
                   </tr>
                 </tbody>
               </table>
 
-              <!-- Amount In Words -->
-              <table class="rayan-border-box" style="margin-bottom:10px;">
-                <tr>
-                  <td style="width:25%; font-weight:700;">The Sum Of Dhs:</td>
-                  <td style="width:50%; font-weight:700;">${rec.amount_in_words || this.numberToEnglishWords(rec.amount_received || 155837)}</td>
-                  <td style="width:25%; text-align:right; font-weight:700; direction:rtl;">مبلغ وقدره درهم</td>
-                </tr>
-              </table>
+              <!-- Financials & Amount in Words -->
+              <div class="doc-financials-container">
+                <div class="doc-left-financials">
+                  <div class="doc-words-box">
+                    <div class="doc-words-label">The Sum Of (المبلغ وقدره بالحروف):</div>
+                    <div class="doc-words-text">💵 ${rec.amount_in_words || (this.numberToEnglishWords(rec.amount_received || 155837) + ' UAE Dirhams Only')}</div>
+                  </div>
 
-              <div class="rayan-copy-notice" style="margin-bottom:14px;">
-                Please keep a copy of this receipt for your records
+                  <div class="doc-banking-box">
+                    <strong>Official Treasury Acknowledgement:</strong><br>
+                    Received with thanks the sum stated above against the referenced tax invoice settlement. Please retain this official receipt voucher for corporate audit &amp; VAT reconciliation.
+                  </div>
+
+                  <div class="rayan-copy-notice">
+                    Please keep a copy of this official receipt voucher for your records.
+                  </div>
+                </div>
+
+                <div class="doc-totals-card">
+                  <div class="doc-totals-row">
+                    <span>Payment Channel:</span>
+                    <span class="doc-num">${rec.payment_type || rec.payment_mode || 'Online Transfer'}</span>
+                  </div>
+                  <div class="doc-totals-row">
+                    <span>Instrument Date:</span>
+                    <span class="doc-num">${rec.receipt_date || '17/Sep/2026'}</span>
+                  </div>
+                  <div class="doc-totals-row">
+                    <span>Settlement Status:</span>
+                    <span class="doc-num" style="color:#059669;">Cleared &amp; Acknowledged</span>
+                  </div>
+                  <div class="doc-totals-row grand-total">
+                    <span>Net Received (الصافي)</span>
+                    <span style="color:#34d399;">AED ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
 
-              <!-- Footer & Signatures -->
-              <div class="rayan-signatures-row" style="margin-top:auto; padding-bottom:8px;">
-                <div class="rayan-company-contact-meta">
-                  <strong>Best wishes</strong><br>
-                  <strong>RAYAN Group Team</strong><br>
-                  Hotline : 025654497<br>
+              <!-- Signatures & Stamp Block -->
+              <div class="doc-signatures-modern">
+                <div class="doc-sign-team-meta">
+                  <strong>Best Wishes</strong><br>
+                  <strong>RAYAN Group Corporate Treasury</strong><br>
+                  Hotline : 025654497 • Abu Dhabi, UAE<br>
                   <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
                   <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
                 </div>
 
-                <div class="rayan-stamp-sign-wrap">
+                <div class="doc-sign-card">
+                  <div class="doc-auth-label">Receiver's Sign / توقيع المستلم</div>
                   ${this.getRayanSignatureImg('receipt')}
-                  <div style="display:flex; justify-content:space-between; width:220px; font-size:9.5px; font-weight:700; border-top:1px solid #000; padding-top:2px;">
-                    <span>Receiver 's Sign</span>
-                    <span>${rec.receiver_sign || 'Arshad Alam Shaikh'}</span>
-                    <span style="direction:rtl;">توقيع المستلم</span>
-                  </div>
+                  <div class="doc-sign-name">${rec.receiver_sign || 'Arshad Alam Shaikh'}</div>
                   ${this.getRayanStampImg()}
                 </div>
               </div>
 
-              <!-- Computer Generated Notice -->
-              <div class="rayan-computer-generated-notice">This is a Computer Generated Receipt Voucher</div>
+              <!-- Computer Generated Notice (Preserved as requested) -->
+              <div class="rayan-computer-generated-notice">
+                <span>🔒</span>
+                <span>This is a Computer Generated Receipt Voucher</span>
+              </div>
             </div>
 
-            <div class="rayan-doc-footer-bar">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | <a href="mailto:info@rayan-group.com" style="color:#ffffff !important; text-decoration:none;">info@rayan-group.com</a> | <a href="http://www.rayan-group.com" style="color:#ffffff !important; text-decoration:none;">www.rayan-group.com</a>
+            <!-- Modern Footer Ribbon -->
+            <div class="doc-footer-modern">
+              <span>Tel: +971-25654497 | Mussafah M-36, Abu Dhabi, United Arab Emirates</span>
+              <span><a href="mailto:info@rayan-group.com">info@rayan-group.com</a> | <a href="http://www.rayan-group.com">www.rayan-group.com</a></span>
             </div>
           </div>
         </div>
@@ -7969,74 +7878,99 @@ class FinanceApp {
         <div class="fin-doc-viewport">
           <!-- PAGE 1 OF PURCHASE ORDER -->
           <div class="fin-document-paper">
-            <div class="rayan-doc-teal-bar">RAYAN ENGINEERING</div>
+            <div class="doc-top-accent-bar"></div>
 
             <div class="fin-doc-inner-padding">
-              <!-- Brand Header Row -->
-              <div class="rayan-doc-brand-row">
-                ${this.getRayanLogoImg(true)}
-                <div class="rayan-doc-center-title" style="display:flex; align-items:center; justify-content:center; gap:8px;">
-                  <img src="/assets/docs/rayan-po-badge.png" alt="Certificate Badge" style="height:36px; width:auto; object-fit:contain;">
-                  <div>
-                    <div class="rayan-title-ar">امر شراء</div>
-                    <div class="rayan-title-en">PURCHASE ORDER</div>
+              ${this.getRayanWatermark()}
+
+              <!-- Modern Executive Brand Header -->
+              <div class="doc-header-modern">
+                <div class="doc-brand-block">
+                  ${this.getRayanLogoImg(true)}
+                  <div class="doc-brand-text">
+                    <div class="doc-company-title">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</div>
+                    <div class="doc-company-sub">General Contracting • Industrial Construction • MEP Fit-Out</div>
+                    <div class="doc-company-badges">
+                      <span class="doc-badge-pill">TRN: 104937380400003</span>
+                      <span class="doc-badge-pill">Lic: CN-2849102</span>
+                      <span class="doc-badge-pill">Abu Dhabi, UAE</span>
+                    </div>
                   </div>
                 </div>
-                <div class="rayan-doc-right-meta">
-                  <div><strong>PO Number :</strong> ${po.po_no || 'PO-REC-11008'}</div>
-                  <div><strong>Date :</strong> ${po.date ? this.formatDate(po.date) : '23/Jun/2026'}</div>
-                  <div><strong>Payment Terms :</strong> ${po.payment_terms || 'PDC30'}</div>
-                  <div><strong>Crency :</strong> ${po.currency || 'AED'}</div>
-                  <div><strong>PO Type :</strong> ${po.po_type || 'Supply/Application'}</div>
-                  <div><strong>iRef:</strong> ${po.iref || '2026-KGN-SUB'}</div>
+
+                <div class="doc-id-card">
+                  <div class="doc-title-ar">أمر شراء رسمي</div>
+                  <div class="doc-title-en">PURCHASE ORDER</div>
+                  <div class="doc-number-pill">${po.po_no || 'PO-REC-11008'}</div>
+                  <div class="doc-status-badge status-issued">● OFFICIAL PROCUREMENT</div>
                 </div>
               </div>
 
-              <!-- Supplier Details Box & Ship To Box -->
-              <table class="rayan-border-box">
-                <tr>
-                  <td style="width:50%; line-height:1.42;">
-                    <strong style="text-decoration:underline;">Supplier Details:</strong><br>
-                    <strong>${po.supplier_name || po.vendor_name || 'ARIBA GM INTERIOR DÉCOR LLC'}</strong><br>
+              <!-- Supplier & Ship-To Details Grid -->
+              <div class="doc-grid-cards">
+                <div class="doc-info-card">
+                  <div class="doc-info-card-header">
+                    <span>SUPPLIER / VENDOR (بيانات المورد)</span>
+                    <span>PROCUREMENT VENDOR</span>
+                  </div>
+                  <div class="doc-info-entity-name">${po.supplier_name || po.vendor_name || 'ARIBA GM INTERIOR DÉCOR LLC'}</div>
+                  <div class="doc-info-line">
                     ${po.supplier_address || 'Abu Dhabi, P.O. Box -'}<br>
-                    Quote Ref.: ${po.quote_ref || '-'}<br>
-                    <strong>Attn :</strong> ${po.supplier_attn || 'Mr. Mohammad Gulam'}<br>
-                    <strong>TRN# :</strong> ${po.supplier_trn || '104755857000003'}<br>
-                    <strong>Mobile :</strong> ${po.supplier_mobile || '+971559314189'}<br>
-                    <strong>Email :</strong> <a href="mailto:${po.supplier_email || 'aribadecoration@gmail.com'}" class="rayan-link-blue">${po.supplier_email || 'aribadecoration@gmail.com'}</a>
-                  </td>
-                  <td style="width:50%; line-height:1.42;">
-                    <strong style="text-decoration:underline;">Ship To:</strong><br>
-                    <strong>${po.ship_to_name || 'RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C'}</strong><br>
-                    ${po.ship_to_address || 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800'}<br>
-                    PO Ref.: ${po.po_no || 'PO-REC-11008'}<br>
-                    Responsible Person : ${po.responsible_person || 'Mohammad Suhel'}<br>
-                    <strong>Attn :</strong> ${po.ship_to_attn || 'Mr. Arshad Alam Shaikh'}<br>
-                    <strong>TRN# :</strong> ${po.ship_to_trn || '104937380400003'}<br>
-                    <strong>Phone :</strong> ${po.ship_to_phone || '+971 25 654497'}<br>
-                    <strong>Email :</strong> <a href="mailto:${po.ship_to_email || 'info@rayan-group.com'}" class="rayan-link-blue">${po.ship_to_email || 'info@rayan-group.com'}</a><br>
-                    <strong>Mobile :</strong> ${po.ship_to_mobile || '+971 589827866'}
-                  </td>
-                </tr>
-              </table>
+                    <strong>Attn:</strong> ${po.supplier_attn || 'Mr. Mohammad Gulam'} &nbsp;•&nbsp; <strong>TRN#:</strong> ${po.supplier_trn || '104755857000003'}<br>
+                    <strong>Mobile:</strong> ${po.supplier_mobile || '+971559314189'}<br>
+                    <strong>Email:</strong> <a href="mailto:${po.supplier_email || 'aribadecoration@gmail.com'}" class="rayan-link-blue">${po.supplier_email || 'aribadecoration@gmail.com'}</a>
+                    ${po.quote_ref && po.quote_ref !== '-' ? `<br><strong>Quote Ref:</strong> ${po.quote_ref}` : ''}
+                  </div>
+                </div>
 
-              <!-- Project Bar -->
-              <div class="rayan-project-bar">
-                Project At ${po.project_name || 'Al Foah Mall Screeding Work'}
+                <div class="doc-info-card">
+                  <div class="doc-info-card-header">
+                    <span>SHIP TO &amp; SPECIFICATIONS (جهة الاستلام والطلب)</span>
+                    <span>PO METRICS</span>
+                  </div>
+                  <div class="doc-key-value-list">
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">PO Date:</span>
+                      <span class="doc-val">${po.date ? this.formatDate(po.date) : '23/Jun/2026'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Payment Terms:</span>
+                      <span class="doc-val" style="color:#0284c7;">${po.payment_terms || 'PDC30'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Currency / PO Type:</span>
+                      <span class="doc-val">${po.currency || 'AED'} • ${po.po_type || 'Supply/Application'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Internal Ref (iRef):</span>
+                      <span class="doc-val">${po.iref || '2026-KGN-SUB'}</span>
+                    </div>
+                    <div class="doc-key-value-row">
+                      <span class="doc-label">Responsible Person:</span>
+                      <span class="doc-val">${po.responsible_person || 'Mohammad Suhel'} (${po.ship_to_phone || '+971 25 654497'})</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <!-- Line Items Table -->
-              <table class="rayan-data-table">
+              <!-- Project Ribbon -->
+              <div class="doc-project-ribbon">
+                <span>🏗️ <strong>PROJECT SITE:</strong> ${po.project_name || 'Al Foah Mall Screeding Work'}</span>
+                <span style="font-size:7.5px; color:#0284c7; background:rgba(2,132,199,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">OFFICIAL PROCUREMENT CONTRACT</span>
+              </div>
+
+              <!-- Modern Line Items Table -->
+              <table class="doc-table-modern">
                 <thead>
                   <tr>
-                    <th style="width:5%;">Sr. No.<br>رقم</th>
-                    <th style="width:40%;">Description<br>وصف</th>
-                    <th style="width:7%;">Unit<br>وحدة</th>
-                    <th style="width:7%;">Qty<br>الكمية</th>
-                    <th style="width:12%;">Unit Price<br>سعر الوحدة</th>
-                    <th style="width:13%;">Invoice Amount<br>مبلغ الفاتورة</th>
-                    <th style="width:8%;">Vat 5%<br>ضريبة</th>
-                    <th style="width:14%;">Total Amount<br>المبلغ الإجمالي</th>
+                    <th style="width:4%; text-align:center;">#</th>
+                    <th style="width:38%;">DESCRIPTION &amp; TECHNICAL SCOPE</th>
+                    <th style="width:8%; text-align:center;">UNIT</th>
+                    <th style="width:7%; text-align:center;">QTY</th>
+                    <th style="width:13%; text-align:right;">UNIT PRICE</th>
+                    <th style="width:14%; text-align:right;">INVOICE AMT</th>
+                    <th style="width:8%; text-align:center;">VAT 5%</th>
+                    <th style="width:14%; text-align:right;">TOTAL (AED)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -8054,64 +7988,81 @@ class FinanceApp {
                     }
                   ]).map((item, idx) => `
                     <tr>
-                      <td style="text-align:center;">${item.sr || (idx + 1)}</td>
-                      <td><strong>${item.name || item.description}</strong></td>
-                      <td style="text-align:center;">${item.unit || item.uom || 'Sqm'}</td>
-                      <td style="text-align:center;">${item.qty || 160}</td>
-                      <td style="text-align:right;">${Number(item.unit_price || 60).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right;">${Number(item.invoice_amount || item.taxable_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right;">${Number(item.vat_amount || item.tax_amount || 480).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right;">AED ${Number(item.total_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:center; font-weight:700; color:#64748b;">${item.sr || (idx + 1)}</td>
+                      <td>
+                        <div class="doc-item-title">${item.name || item.description}</div>
+                        ${item.description && item.description !== item.name ? `<div class="doc-item-desc">${item.description}</div>` : ''}
+                      </td>
+                      <td style="text-align:center; font-weight:700;">${item.unit || item.uom || 'Sqm'}</td>
+                      <td style="text-align:center; font-weight:800;">${item.qty || 160}</td>
+                      <td style="text-align:right; font-variant-numeric:tabular-nums;">${Number(item.unit_price || 60).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">${Number(item.invoice_amount || item.taxable_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:center; font-weight:700; color:#059669; font-variant-numeric:tabular-nums;">${Number(item.vat_amount || item.tax_amount || 480).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:right; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums;">AED ${Number(item.total_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
 
-              <!-- Totals Box -->
-              <div class="rayan-totals-container">
-                <div class="rayan-words-amount">
-                  <div style="color:#059669; font-size:10.5px; font-weight:800;">${po.amount_in_words || ('AED ' + this.numberToEnglishWords(po.total_value || po.grand_total || 10080))}</div>
+              <!-- Financials & Breakdown -->
+              <div class="doc-financials-container">
+                <div class="doc-left-financials">
+                  <div class="doc-words-box">
+                    <div class="doc-words-label">Total Amount in Words / المبلغ الإجمالي بالأحرف:</div>
+                    <div class="doc-words-text">💵 ${po.amount_in_words || ('AED ' + this.numberToEnglishWords(po.total_value || po.grand_total || 10080))}</div>
+                  </div>
+
+                  <div class="po-terms-card-modern">
+                    <div class="po-terms-heading-modern">
+                      <span>Notes to Supplier / ملاحظات للمورد</span>
+                      <span>Site Protocol</span>
+                    </div>
+                    1. <strong>Location / Site:</strong> Al Foah Mall - Alain • Working hours: 8:00 AM to 6:00 PM (lunch break included).<br>
+                    2. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, and equipment.<br>
+                    3. All HSE documents and operator/flagman competency certifications must be approved before commencement.
+                  </div>
                 </div>
-                <table class="rayan-totals-table">
-                  <tr>
-                    <td>Misc.Charges Subtotal:(إ.د)</td>
-                    <td class="amount-col">${Number(po.misc_charges || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr>
-                    <td>Total amount EX-VAT(إ.د)</td>
-                    <td class="amount-col">${Number(po.subtotal_ex_vat || po.subtotal || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr>
-                    <td>VAT Amount:(إ.د)</td>
-                    <td class="amount-col">${Number(po.vat_total || po.tax_total || 480).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr style="background:#f8fafc; font-weight:800; font-size:10px;">
-                    <td>Total amount Incl. VAT(إ.د)</td>
-                    <td class="amount-col">${Number(po.total_value || po.grand_total || 10080).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                </table>
+
+                <div class="doc-totals-card">
+                  <div class="doc-totals-row">
+                    <span>Misc. Charges Subtotal:</span>
+                    <span class="doc-num">${Number(po.misc_charges || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                  </div>
+                  <div class="doc-totals-row">
+                    <span>Total Amount EX-VAT (المجموع):</span>
+                    <span class="doc-num">${Number(po.subtotal_ex_vat || po.subtotal || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                  </div>
+                  <div class="doc-totals-row">
+                    <span>VAT 5% (ضريبة القيمة المضافة):</span>
+                    <span class="doc-num" style="color:#059669;">+ ${Number(po.vat_total || po.tax_total || 480).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                  </div>
+                  <div class="doc-totals-row grand-total">
+                    <span>Total Incl. VAT (الإجمالي)</span>
+                    <span style="color:#38bdf8;">AED ${Number(po.total_value || po.grand_total || 10080).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
 
-              <!-- Notes to Supplier -->
-              <div class="rayan-terms-container" style="margin-bottom:5px;">
-                <div class="rayan-terms-heading">Notes to Supplier:</div>
-                1. Location / Site - Al Foah Mall - Alain i. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools &amp; Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.
-              </div>
-
-              <!-- General Terms (Page 1) -->
-              <div class="rayan-terms-container">
-                <div class="rayan-terms-heading">GENERAL TERMS AND CONDITIONS FOR SUPPLIES</div>
-                <strong>1. The Order 1.1.</strong> The order entered into between RAYAN Engineering and Contracting LLC-SPC, and the Supplier is for sale, delivery and installation of the whole of the goods described in the PO and in any specifications referred to there in and covers all protection packaging and marking. <strong>1.2.</strong> These general conditions shall form part of the order. These shall terms and conditions shall not be varied and no conditions contained in quotations, letters, invoices or other communications issued by the Supplier shall annul or vary them or any instructions contained in the PO, unless expressly agreed by both parties in writing.<br>
-                <strong>2. PRICES: 2.1.</strong> The agreed prices in this Purchase Order (.P.O) are final and not subject to escalation under any circumstances.<br>
-                <strong>3. Identification of Material 3.1.</strong> All packages are to be marked on the outside with our PO number. <strong>3.2.</strong> All packages are to be accompanied by a Delivery Note quoting our order and item numbers together with quantities and descriptions of goods supplied against each item.<br>
-                <strong>4. Packing and Protection:</strong> Materials are to be protected against damage. This protection to be applied individually in order to prevent deterioration of articles after their removal from packing or crates.<br>
-                <strong>5. Delivery of Goods/Services: 5.1.</strong> All materials are to be delivered as per the agreed INCOTERMS and the address given on the PO. Goods must be off loaded at the destination and released to the Receiver. <strong>5.2.</strong> Partial delivery or early delivery is not acceptable unless otherwise stated in the PO or authorized in writing by the Purchaser. <strong>5.3.</strong> Delivery date as stated in the PO.<br>
-                <strong>6. Guarantee:</strong> The Supplier shall submit within 10 days of receipt of the PO, a performance bond equivalent to 10% of the total value of the PO in a form accepted to RAYAN, unless agreed in writing otherwise.<br>
-                <strong>7. Receipt and Acceptance of Goods: 7.1.</strong> Acceptance of delivery shall not constitute completion of the Order until the necessary inspection, installation or testing is carried out and confirmed by RAYAN. Unless otherwise specified, all goods and/or services furnished hereunder will be subject to final inspection and acceptance or rejection by RAYAN within a reasonable time after delivery. RAYAN will upon written notice to the Supplier, hold any rejected goods at the Supplier's risk pending the Supplier's instructions. <strong>7.2.</strong> If the Supplier fails to furnish RAYAN with instructions regarding the disposition of such goods within a reasonable time, RAYAN may return the goods to the Supplier at the Supplier's expense or dispose them of as necessary or resort to Risk Purchase as per 12.2.
+              <!-- General Terms & Conditions (Page 1) -->
+              <div class="po-terms-card-modern" style="margin-top:2px;">
+                <div class="po-terms-heading-modern">
+                  <span>GENERAL TERMS AND CONDITIONS FOR SUPPLIES (الشروط العامة)</span>
+                  <span>Articles 1 – 7</span>
+                </div>
+                <strong>1. The Order:</strong> Entered into with RAYAN Engineering and Contracting LLC-SPC for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing.<br>
+                <strong>2. Prices:</strong> Final and not subject to escalation under any circumstances.<br>
+                <strong>3. Identification of Material:</strong> All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities &amp; descriptions.<br>
+                <strong>4. Packing &amp; Protection:</strong> Materials must be protected individually against damage, transit shock, and environmental degradation.<br>
+                <strong>5. Delivery of Goods/Services:</strong> As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization. Delivery date as stated in PO.<br>
+                <strong>6. Performance Guarantee:</strong> Supplier shall submit within 10 days of receipt of PO a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise.<br>
+                <strong>7. Receipt &amp; Acceptance:</strong> Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense.
               </div>
 
               <!-- Computer Generated Notice (Page 1) -->
-              <div class="rayan-computer-generated-notice">This is a Computer Generated Purchase Order</div>
+              <div class="rayan-computer-generated-notice">
+                <span>🔒</span>
+                <span>This is a Computer Generated Purchase Order</span>
+              </div>
 
               <div class="rayan-page-counter">Page 1 of 2</div>
             </div>
@@ -8119,83 +8070,83 @@ class FinanceApp {
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
           <div class="fin-document-paper fin-doc-page-2">
-            <div class="rayan-doc-teal-bar">RAYAN ENGINEERING</div>
+            <div class="doc-top-accent-bar"></div>
 
             <div class="fin-doc-inner-padding">
-              <div class="rayan-terms-container" style="font-size:7.5px; line-height:1.26; margin-bottom:10px;">
-                <strong>8. Rejection of Goods / Services:</strong> RAYAN reserves the right to withhold payment for any goods supplied or services rendered that does not comply with the specifications quoted in the order together with applying the delay penalty as specified in Article 12 herein.<br>
-                <strong>9. Cancellation of Order:</strong> RAYAN Engineering and Contracting LLC-SPC. reserves the right to cancel this Order in the case of non-delivery as stipulated by the PO date or later date that is mutually accepted.<br>
-                <strong>10. Invoices:</strong> Invoices are to be submitted immediately upon delivery of materials/completion of the services.<br>
-                <strong>10.1.</strong> "In accordance with Article 67 of Decree-Law, the supplier has to submit the original tax invoice with all supporting documents within 14 days from the date of supply. To ensure compliance with regulations for input tax recovery, it is preferred to receive the original tax invoice from supplier within 7 days and in no case later than 14 days from the date of the tax invoice"<br>
-                <strong>10.2.</strong> Supplier invoice shall be accepted only if the following conditions are met:<br>
-                10.2.1. The tax invoice is dated not older than 14 calendar days (in par with Decree-LAW)<br>
-                10.2.2. The tax invoice is an original and includes all required details such as:<br>
-                10.2.2.1. Correct company name and TRN<br>
-                10.2.2.2. PO/Contract reference<br>
-                10.2.2.3. With supplier signature and stamp (except for electronic invoices)<br>
-                10.2.2.4. Electronic invoices that need to be treated as original shall contain text "This is an electronically-approved invoice, hence does not require signature and/or stamp. Electronic invoices to be accepted only if digital certificate has been provided to RAYAN"<br>
-                10.2.2.5. Description, quantity and amount of supply matching with supporting documents<br>
-                10.2.2.6. Correct VAT amount<br>
-                <strong>10.3.</strong> The tax invoice has complete supporting documentations including copy of PO and Delivery Note/Service Acceptance Certificate etc.<br>
-                <strong>11. Penalty:</strong> Should the Supplier fails to deliver all or part of the required material on the agreed date, a penalty of 1% of the value of the delayed items will be imposed for the first week or part thereof of delay, and shall to be increased for 2% for each following week or part thereof, to a maximum of 10%.<br>
-                <strong>12. Risk Purchase:</strong> If the Supplier fails to supply the goods/items/services after exhaustion of 10% penalty as provided in the P.O, the RAYAN reserves the following right:<br>
-                12.1. To cancel such undelivered item/items/service and draw the Bank Guarantee; (or)<br>
-                12.2. Resort to risk purchase of such goods/items/service from other sources, any excess value in price shall be charged to the Supplier plus an administrative charge at the rate of 5% of the value of the item/s and/or service that has been purchased. Plus, whatever penalty is due for the delayed period.<br>
-                <strong>13. Warranty: 13.1.</strong> Supplier expressly warrants that all goods provided pursuant to the Purchase Order will be merchantable, fit and sufficient for the purpose ordered and will be free from defects in design, materials and workmanship for a period as stated in the PO above from the date of final acceptance. <strong>13.2.</strong> All the Supplier's warranties shall, as applicable, run to RAYAN, its associated companies, its and their successors, assigns and customers. <strong>13.3.</strong> All charges associated with the warranty claim will be borne by the Supplier including repair/replacement, Insurance and transportation charges.<br>
-                <strong>14. Termination of Orders: 14.1.</strong> Buyer may terminate the PO/agreement for convenience and without giving any reason, at any time by serving a written notice to the Supplier 30 (thirty) days prior to the effective date of termination. <strong>14.2.</strong> Such termination shall be without any liability whatsoever of the Buyer towards the Supplier. <strong>14.3.</strong> The only right of the Supplier in such termination is the payment by the Buyer to the Supplier the value of any of the PO/Agreement items already delivered and accepted by the Buyer if any.<br>
-                <strong>15. Force Majeure: 15.1.</strong> The following should be considered as cases of force majeure and relieve the parties of their obligations under the P.O as long as the circumstances last: Fire, mobilization, requisition, war, embargoes, currency restriction, insurrection and acts of God. <strong>15.2.</strong> Party claiming force majeure shall immediately upon occurrence, notify the other party of such event by fax or registered mail stating the estimated consequences. Onus to prove the occurrence of such events lies on the party claiming its invocation. <strong>15.3.</strong> If the force majeure situation lasts more than three months, the Buyer may terminate the P.O without affecting his rights adversely under this Purchase Order. <strong>15.4.</strong> Any extension in the delivery period due to causes of force majeure shall be by mutual agreement between the parties.<br>
-                <strong>16. Tax:</strong> Unless exempted by the Buyer, All Taxes and duties related to this. P.O shall be borne by the Seller.<br>
-                <strong>17. Banking Charges:</strong> All Banking charges related to this. P.O will be borne by the Seller.<br>
-                <strong>18. Indemnity: 18.1.</strong> The Supplier shall indemnify, defend and hold the Buyer, its officers, directors, employees or agents harmless from all claims, costs, liabilities, damages, injury, death and expenses (including reasonable legal fees and other professional fees) suffered or incurred by the Buyer, its employees, directors, officers, agents or by any Buyer's customer or third party arising from any willful misconduct, gross negligent, wrongful act or omission by the Supplier or its employees, agents or representatives in the performance of the PO and/or any breach by the Supplier of this PO. <strong>18.2.</strong> The provisions of the Indemnity clause shall survive termination or expiration of the PO, however arising.<br>
-                <strong>19. Jurisdiction and Governing Law:</strong> This PO is governed by and construed in accordance with the laws of the Emirate of Abu Dhabi and the federal laws of the United Arab Emirates as applied in the Emirate of Abu Dhabi. All disputes between the parties, if not amicably settled, shall be referred to Abu Dhabi competent courts. <strong>19.1.</strong> Supplier hereby acknowledges and undertake to fully comply with all applicable governmental and related authorities' regulations in relation to Anti-Bribery, Anti-Corruption and other Illegal practice.<br>
-                <strong>20. Payment Term:</strong> 50% advance payment upon confirmation of the order, and the remaining 50% shall be paid upon approval and certification of the completed work by the client.
+              <!-- Mini Header for Page 2 -->
+              <div class="doc-header-modern" style="padding-bottom:6px; margin-bottom:8px;">
+                <div class="doc-brand-block">
+                  ${this.getRayanLogoImg(true)}
+                  <div class="doc-brand-text">
+                    <div class="doc-company-title">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</div>
+                    <div class="doc-company-sub">Official Procurement Terms &amp; Conditions Specification • Page 2 of 2</div>
+                  </div>
+                </div>
+                <div class="doc-id-card">
+                  <div class="doc-title-en">PURCHASE ORDER</div>
+                  <div class="doc-number-pill">${po.po_no || 'PO-REC-11008'}</div>
+                </div>
               </div>
 
-              <!-- Invoice Requirements -->
-              <div style="font-size:8.2px; line-height:1.35; margin-bottom:12px;">
-                <strong>Invoice Requirements:</strong><br>
-                1. Time Sheets approved by the RAYAN representative at the site.<br>
-                2. Delivery Note approved by the RAYAN representative at the site.<br>
-                3. All Original Tax invoices should be stamped and submitted to RAYAN Group HO.
+              <!-- Structured Modern Terms Grid (Clauses 8 to 20 + Invoicing) -->
+              <div class="po-terms-grid-modern">
+                <div class="po-terms-col">
+                  <strong>8. Rejection of Goods/Services:</strong> RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties.<br><br>
+                  <strong>9. Cancellation of Order:</strong> Right reserved to cancel for non-delivery by stipulated date without liability.<br><br>
+                  <strong>10. Invoicing Regulations:</strong> Tax invoices must be submitted within 14 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details.<br><br>
+                  <strong>11. Delay Penalties:</strong> 1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%.<br><br>
+                  <strong>12. Risk Purchase:</strong> Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier.<br><br>
+                  <strong>13. Warranty:</strong> Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges.
+                </div>
+
+                <div class="po-terms-col">
+                  <strong>14. Termination:</strong> Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items.<br><br>
+                  <strong>15. Force Majeure:</strong> Relieves obligations during duration of qualifying events with prompt written notification.<br><br>
+                  <strong>16. Taxes &amp; Banking:</strong> All taxes, duties, and banking charges borne by Seller unless expressly exempted.<br><br>
+                  <strong>17. Indemnity:</strong> Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches.<br><br>
+                  <strong>18. Governing Law:</strong> Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts.<br><br>
+                  <strong>19. Payment Term:</strong> 50% advance upon order confirmation; remaining 50% upon client inspection and certification.<br><br>
+                  <strong>20. Invoice Requirements:</strong> Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO.
+                </div>
               </div>
 
-              <!-- Signatories & Stamps -->
-              <div class="rayan-signatures-row" style="margin-top:auto; padding-bottom:6px;">
-                <div class="rayan-company-contact-meta">
+              <!-- Signatories & Stamps Modern Block -->
+              <div class="doc-signatures-modern" style="padding-top:10px; margin-top:auto;">
+                <div class="doc-sign-team-meta">
                   <strong>Best Wishes</strong><br>
-                  <strong>RAYAN Group Team</strong><br>
-                  Hotline : 025654497<br>
+                  <strong>RAYAN Group Procurement Committee</strong><br>
+                  Hotline : 025654497 • Abu Dhabi, UAE<br>
                   <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
                   <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
                 </div>
 
-                <div class="rayan-stamp-sign-wrap">
-                  <div class="rayan-auth-sign-label">Authorised Signatory</div>
+                <div class="doc-sign-card">
+                  <div class="doc-auth-label">Authorised Signatory (Purchaser)</div>
                   ${this.getRayanSignatureImg('default')}
-                  <div class="rayan-sign-name">Arshad Alam Shaikh</div>
+                  <div class="doc-sign-name">Arshad Alam Shaikh</div>
                   ${this.getRayanStampImg()}
                 </div>
 
-                <div style="text-align:center; min-width:170px;">
-                  <div class="rayan-auth-sign-label">Authorised Signatory</div>
+                <div class="doc-sign-card">
+                  <div class="doc-auth-label">Authorised Signatory (Supplier)</div>
                   <div style="height:38px;"></div>
-                  <div class="rayan-sign-name">${po.supplier_attn || 'Mr. Mohammad Gulam'}</div>
+                  <div class="doc-sign-name">${po.supplier_attn || 'Mr. Mohammad Gulam'}</div>
                 </div>
               </div>
 
-              <div class="rayan-copy-notice" style="margin-bottom:3px;">
-                Please keep a copy of this PO for your records
+              <!-- Preserved Computer Generated Notice (Page 2) -->
+              <div class="rayan-computer-generated-notice">
+                <span>🔒</span>
+                <span>This is a Computer Generated Purchase Order</span>
               </div>
-
-              <!-- Computer Generated Notice (Page 2) -->
-              <div class="rayan-computer-generated-notice">This is a Computer Generated Purchase Order</div>
 
               <div class="rayan-page-counter">Page 2 of 2</div>
             </div>
 
-            <!-- Bottom Teal Bar -->
-            <div class="rayan-doc-footer-bar">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | <a href="mailto:info@rayan-group.com" style="color:#ffffff !important; text-decoration:none;">info@rayan-group.com</a> | <a href="http://www.rayan-group.com" style="color:#ffffff !important; text-decoration:none;">www.rayan-group.com</a>
+            <!-- Modern Footer Ribbon -->
+            <div class="doc-footer-modern">
+              <span>Tel: +971-25654497 | Mussafah M-36, Abu Dhabi, United Arab Emirates</span>
+              <span><a href="mailto:info@rayan-group.com">info@rayan-group.com</a> | <a href="http://www.rayan-group.com">www.rayan-group.com</a></span>
             </div>
           </div>
         </div>
