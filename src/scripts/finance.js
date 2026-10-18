@@ -7835,10 +7835,13 @@ class FinanceApp {
                   </div>
                 </div>
 
-                <div class="doc-id-card">
+                <div class="doc-header-center">
                   <div class="doc-title-en">TAX INVOICE</div>
                   <div class="doc-title-ar">فاتورة ضريبية</div>
                   <div class="doc-number-pill"># ${inv.invoice_no || 'REC-RG-INV-44049'}</div>
+                </div>
+
+                <div class="doc-id-card">
                   ${(inv.status === 'paid' || (inv.amount_paid > 0 && inv.balance_due <= 0.01)) ? `
                     <div class="doc-status-badge status-received" style="background:#059669; color:#fff; font-weight:800;">✓ SETTLED &amp; PAID IN FULL</div>
                   ` : (inv.status === 'partially_paid' || inv.amount_paid > 0 ? `
@@ -7900,7 +7903,7 @@ class FinanceApp {
 
               <!-- Project Highlight Ribbon -->
               <div class="doc-project-ribbon">
-                <span>🏗️ <strong>LINKED PROJECT:</strong> ${inv.project_name || 'General Corporate Billing'}</span>
+                <span>🏗️ <strong style="font-size:8.5px; color:#0f172a;">${inv.project_name || 'General Corporate Billing'}</strong></span>
                 <span style="font-size:7.5px; color:#0284c7; background:rgba(2,132,199,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">CONTRACT ACCREDITED</span>
               </div>
 
@@ -8054,10 +8057,13 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Modern Footer Ribbon -->
-            <div class="doc-footer-modern">
-              <span>Tel: +971-25654497 | Mussafah M-36, Abu Dhabi, United Arab Emirates</span>
-              <span><a href="mailto:info@rayan-group.com">info@rayan-group.com</a> | <a href="http://www.rayan-group.com">www.rayan-group.com</a></span>
+            <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
+            <div class="doc-minimal-footer">
+              <div class="doc-minimal-footer-line"></div>
+              <div class="doc-minimal-footer-content">
+                <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Tax Invoice for ${inv.customer_name || 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C'}</span>
+                <span class="doc-minimal-footer-right">Page 1</span>
+              </div>
             </div>
           </div>
         </div>
@@ -8135,10 +8141,13 @@ class FinanceApp {
                   </div>
                 </div>
 
-                <div class="doc-id-card">
-                  <div class="doc-title-ar">سند قبض رسمي</div>
+                <div class="doc-header-center">
                   <div class="doc-title-en">RECEIPT VOUCHER</div>
+                  <div class="doc-title-ar">سند قبض رسمي</div>
                   <div class="doc-number-pill">${rec.receipt_no || 'REC-RV-44025'}</div>
+                </div>
+
+                <div class="doc-id-card">
                   <div class="doc-status-badge status-received">✓ PAYMENT RECEIVED</div>
                   ${this.getRayanDynamicVerificationCode(rec, 'receipt')}
                 </div>
@@ -8187,7 +8196,7 @@ class FinanceApp {
 
               <!-- Settlement Link Ribbon -->
               <div class="doc-project-ribbon">
-                <span>🔗 <strong>SETTLED AGAINST INVOICE:</strong> ${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</span>
+                <span>🔗 <strong style="font-size:8.5px; color:#0f172a;">${rec.project_name || rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</strong></span>
                 <span style="font-size:7.5px; color:#059669; background:rgba(16,185,129,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">VERIFIED CLEARED FUNDS</span>
               </div>
 
@@ -8287,10 +8296,13 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Modern Footer Ribbon -->
-            <div class="doc-footer-modern">
-              <span>Tel: +971-25654497 | Mussafah M-36, Abu Dhabi, United Arab Emirates</span>
-              <span><a href="mailto:info@rayan-group.com">info@rayan-group.com</a> | <a href="http://www.rayan-group.com">www.rayan-group.com</a></span>
+            <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
+            <div class="doc-minimal-footer">
+              <div class="doc-minimal-footer-line"></div>
+              <div class="doc-minimal-footer-content">
+                <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Receipt Voucher for ${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}</span>
+                <span class="doc-minimal-footer-right">Page 1</span>
+              </div>
             </div>
           </div>
         </div>
@@ -8369,10 +8381,13 @@ class FinanceApp {
                   </div>
                 </div>
 
-                <div class="doc-id-card">
-                  <div class="doc-title-ar">أمر شراء رسمي</div>
+                <div class="doc-header-center">
                   <div class="doc-title-en">PURCHASE ORDER</div>
+                  <div class="doc-title-ar">أمر شراء رسمي</div>
                   <div class="doc-number-pill">${po.po_no || 'PO-REC-11008'}</div>
+                </div>
+
+                <div class="doc-id-card">
                   <div class="doc-status-badge status-issued">● OFFICIAL PROCUREMENT</div>
                   ${this.getRayanDynamicVerificationCode(po, 'po')}
                 </div>
@@ -8427,7 +8442,7 @@ class FinanceApp {
 
               <!-- Project Ribbon -->
               <div class="doc-project-ribbon">
-                <span>🏗️ <strong>PROJECT SITE:</strong> ${po.project_name || 'Al Foah Mall Screeding Work'}</span>
+                <span>🏗️ <strong style="font-size:8.5px; color:#0f172a;">${po.project_name || 'Al Foah Mall Screeding Work'}</strong></span>
                 <span style="font-size:7.5px; color:#0284c7; background:rgba(2,132,199,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">OFFICIAL PROCUREMENT CONTRACT</span>
               </div>
 
@@ -8536,7 +8551,14 @@ class FinanceApp {
                 <span>This is a Computer Generated Purchase Order</span>
               </div>
 
-              <div class="rayan-page-counter">Page 1 of 2</div>
+              <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
+              <div class="doc-minimal-footer">
+                <div class="doc-minimal-footer-line"></div>
+                <div class="doc-minimal-footer-content">
+                  <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Purchase Order for ${po.supplier_name || 'Al Rayan Building Materials'}</span>
+                  <span class="doc-minimal-footer-right">Page 1 of 2</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -8612,13 +8634,14 @@ class FinanceApp {
                 <span>This is a Computer Generated Purchase Order</span>
               </div>
 
-              <div class="rayan-page-counter">Page 2 of 2</div>
-            </div>
-
-            <!-- Modern Footer Ribbon -->
-            <div class="doc-footer-modern">
-              <span>Tel: +971-25654497 | Mussafah M-36, Abu Dhabi, United Arab Emirates</span>
-              <span><a href="mailto:info@rayan-group.com">info@rayan-group.com</a> | <a href="http://www.rayan-group.com">www.rayan-group.com</a></span>
+              <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
+              <div class="doc-minimal-footer">
+                <div class="doc-minimal-footer-line"></div>
+                <div class="doc-minimal-footer-content">
+                  <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Purchase Order Terms &amp; Conditions</span>
+                  <span class="doc-minimal-footer-right">Page 2 of 2</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

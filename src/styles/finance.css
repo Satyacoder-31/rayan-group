@@ -3236,6 +3236,124 @@ select option:focus,
   gap: 5px;
 }
 
+/* Minimal Clean Document Footer (matching user quotation/invoice style) */
+.doc-minimal-footer {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 12px;
+  box-sizing: border-box;
+}
+
+.doc-minimal-footer-line {
+  height: 1px;
+  background: #cbd5e1;
+  width: 100%;
+  margin-bottom: 7px;
+}
+
+.doc-minimal-footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+  color: #64748b;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 0 2px;
+  font-family: var(--fin-font-body, 'Outfit', sans-serif);
+}
+
+.doc-minimal-footer-left {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.doc-minimal-footer-right {
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Document Header Center Section */
+.doc-header-modern .doc-brand-block {
+  flex: 1 1 42%;
+  max-width: 46%;
+}
+
+.doc-header-modern .doc-id-card {
+  flex: 0 0 auto;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.doc-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 0 1 auto;
+  min-width: 170px;
+  padding: 0 10px;
+}
+
+.doc-header-center .doc-title-en {
+  font-size: 16px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.doc-header-center .doc-title-ar {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0284c7;
+  direction: rtl;
+  font-family: Arial, Tahoma, sans-serif;
+  margin-top: 2px;
+}
+
+.doc-header-center .doc-number-pill {
+  background: #0f172a;
+  color: #38bdf8;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: 5px;
+  font-family: monospace;
+  letter-spacing: 0.05em;
+  margin-top: 5px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  display: inline-block;
+}
+
+/* Document Logo Area Sizing - compact and elegant */
+.rayan-doc-logo-area {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.rayan-doc-logo-img {
+  height: 34px !important;
+  max-height: 36px !important;
+  width: auto !important;
+  max-width: 155px !important;
+  object-fit: contain;
+  display: block;
+}
+
+.rayan-doc-logo-po-img {
+  height: 34px !important;
+  max-height: 36px !important;
+  width: auto !important;
+  max-width: 155px !important;
+  object-fit: contain;
+  display: block;
+}
+
 /* Bottom Footer Ribbon */
 .doc-footer-modern {
   background: #0f172a;
