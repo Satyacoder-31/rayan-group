@@ -217,13 +217,44 @@ class FinanceApp {
     }
 
     // Local state fallback
+    if (action === 'create_invoice' && payload.invoice) {
+      if (!this.db.invoices) this.db.invoices = [];
+      const idx = this.db.invoices.findIndex(i => i.id === payload.invoice.id || i.invoice_no === payload.invoice.invoice_no);
+      if (idx >= 0) {
+        this.db.invoices[idx] = payload.invoice;
+      } else {
+        this.db.invoices.unshift(payload.invoice);
+      }
+    }
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    return { success: true, localOnly: true, data: this.db };
+    return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
   }
 
   // --------------------------------------------------------------------------
-  // FORMATTING UTILITIES
+  // FORMATTING UTILITIES & AUTO-SEQUENCING
   // --------------------------------------------------------------------------
+  getNextInvoiceNumber() {
+    const invoices = this.db?.invoices || [];
+    let maxSeq = 44049;
+
+    invoices.forEach(inv => {
+      const invNo = inv.invoice_no || '';
+      const recMatch = invNo.match(/REC-RG-INV-(\d+)/i);
+      if (recMatch) {
+        const num = parseInt(recMatch[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      } else {
+        const anyNumMatch = invNo.match(/(\d{4,})$/);
+        if (anyNumMatch) {
+          const num = parseInt(anyNumMatch[1], 10);
+          if (!isNaN(num) && num > maxSeq) maxSeq = num;
+        }
+      }
+    });
+
+    return `REC-RG-INV-${maxSeq + 1}`;
+  }
+
   formatCurrency(amount, withSymbol = true) {
     const num = Number(amount) || 0;
     const rate = this.currencyRates[this.activeCurrency] || 1;
@@ -3505,6 +3536,7 @@ class FinanceApp {
     const customers = this.db?.customers || [];
     const items = this.db?.items || [];
     const projects = this.db?.projects || [];
+    const nextInvoiceNo = this.getNextInvoiceNumber();
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-invoice">
@@ -3515,6 +3547,28 @@ class FinanceApp {
           </div>
           <div class="fin-modal-body">
             <form id="create-invoice-form">
+              <!-- Auto-Sequenced Invoice Number Banner -->
+              <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(56,189,248,0.25); border-radius:10px; padding:0.85rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div style="display:flex; align-items:center; gap:0.85rem;">
+                  <div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg, rgba(56,189,248,0.2), rgba(0,166,153,0.25)); display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:1px solid rgba(56,189,248,0.35);">
+                    ⚡
+                  </div>
+                  <div>
+                    <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; font-weight:700;">
+                      Official Invoice Sequence Number
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:2px;">
+                      <span id="inv-auto-seq-badge" style="font-family:monospace; font-size:1.15rem; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 10px; border-radius:6px; border:1px solid rgba(56,189,248,0.35);">${nextInvoiceNo}</span>
+                      <span style="font-size:0.7rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.25);">✓ Auto-Generated Sequence</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                  <label for="inv-custom-seq-no" style="font-size:0.74rem; color:#cbd5e1; font-weight:600;">Invoice # Ref:</label>
+                  <input type="text" id="inv-custom-seq-no" class="fin-form-input" value="${nextInvoiceNo}" style="width:190px; padding:0.4rem 0.75rem; font-size:0.85rem; font-family:monospace; font-weight:700; color:#38bdf8; background:rgba(15,23,42,0.9); border-color:rgba(56,189,248,0.4);" title="Auto-sequenced invoice number. You can also customize if needed.">
+                </div>
+              </div>
+
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
@@ -3526,6 +3580,7 @@ class FinanceApp {
                       type="text" 
                       id="inv-cust-input" 
                       class="fin-form-input" 
+                      value="M/s. BUILDARA GENERAL CONTRACTING - L.L.C"
                       placeholder="Click to view registered clients or write custom name..." 
                       required 
                       autocomplete="off"
@@ -3562,7 +3617,7 @@ class FinanceApp {
                       </button>
                     </div>
                   </div>
-                  <input type="text" id="inv-cust-gstin" class="fin-form-input" required placeholder="e.g. 100492817200003 (15-digit UAE TRN)" maxlength="25" style="font-family:monospace; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">
+                  <input type="text" id="inv-cust-gstin" class="fin-form-input" required value="105405525400003" placeholder="e.g. 100492817200003 (15-digit UAE TRN)" maxlength="25" style="font-family:monospace; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
                     <span id="inv-tax-helper-text">UAE VAT Registration # (15 Digits)</span>
                     <span id="inv-currency-indicator" style="color:#0099e6; font-weight:700; cursor:pointer;" title="Click to toggle currency (AED د.إ / INR ₹)">Currency: <span id="inv-currency-symbol">AED (د.إ)</span> ⇄</span>
@@ -3583,6 +3638,25 @@ class FinanceApp {
                     <option value="29-Karnataka">29-Karnataka</option>
                     <option value="24-Gujarat">24-Gujarat</option>
                   </datalist>
+                </div>
+              </div>
+
+              <!-- Customer Address & Contact Details Row -->
+              <div class="fin-form-grid-3" style="margin-top:0.75rem; margin-bottom:0.25rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client Billing Address</label>
+                  <input type="text" id="inv-cust-address" class="fin-form-input" placeholder="e.g. ABU DHABI, MADINAT ZAYED, UAE" value="ABU DHABI, MADINAT ZAYED, UAE">
+                  <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">Printed directly on Tax Invoice receipt</div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Attention / Contact Person</label>
+                  <input type="text" id="inv-cust-contact" class="fin-form-input" placeholder="e.g. Mr. Sooraj Kumar" value="Mr. Sooraj Kumar">
+                  <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">Recipient / Representative</div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client Email / Contact</label>
+                  <input type="text" id="inv-cust-email" class="fin-form-input" placeholder="e.g. buildaradevelopers@gmail.com" value="buildaradevelopers@gmail.com">
+                  <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">For formal invoice documentation</div>
                 </div>
               </div>
 
@@ -4662,6 +4736,22 @@ class FinanceApp {
       }
 
       document.getElementById('inv-terms').value = c.payment_terms || 30;
+
+      const addrInp = document.getElementById('inv-cust-address');
+      if (addrInp) {
+        addrInp.value = c.billing_address || c.address || (isUae ? 'ABU DHABI, MADINAT ZAYED, UAE' : 'Mumbai, Maharashtra, India');
+      }
+
+      const contactInp = document.getElementById('inv-cust-contact');
+      if (contactInp) {
+        contactInp.value = c.contact_person || (c.name.includes('BUILDARA') ? 'Mr. Sooraj Kumar' : 'Authorized Representative');
+      }
+
+      const emailInp = document.getElementById('inv-cust-email');
+      if (emailInp) {
+        emailInp.value = c.email || (c.name.includes('BUILDARA') ? 'buildaradevelopers@gmail.com' : 'accounts@client-billing.com');
+      }
+
       if (custBadge) {
         custBadge.textContent = `✓ ${c.code || 'Registered Client'}`;
         custBadge.style.color = '#10b981';
@@ -4949,6 +5039,10 @@ class FinanceApp {
       return;
     }
 
+    const nextGeneratedSeq = this.getNextInvoiceNumber();
+    const invoiceNo = (document.getElementById('inv-custom-seq-no')?.value || '').trim() || nextGeneratedSeq;
+    const invoiceId = 'inv-' + invoiceNo.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+
     const prjInput = document.getElementById('inv-project-input');
     const prjName = (prjInput?.value || '').trim() || 'General Corporate Billing';
     const prjId = prjInput?.getAttribute('data-project-id') || null;
@@ -4964,6 +5058,13 @@ class FinanceApp {
     const currency = currIndicator.includes('AED') ? 'AED' : 'INR';
     const currencySym = currency === 'AED' ? 'AED ' : '₹';
 
+    const custAddress = (document.getElementById('inv-cust-address')?.value || '').trim() || 'ABU DHABI, MADINAT ZAYED, UAE';
+    const contactPerson = (document.getElementById('inv-cust-contact')?.value || '').trim();
+    const custEmail = (document.getElementById('inv-cust-email')?.value || '').trim();
+    const poRef = (document.getElementById('inv-po-ref')?.value || '').trim();
+    const invDate = document.getElementById('inv-date')?.value || new Date().toISOString().split('T')[0];
+    const notesVal = (document.getElementById('inv-notes')?.value || '').trim();
+
     // Find customer by ID or Name, or auto-create if custom client
     let customer = this.db?.customers?.find(c => 
       c.id === custInput.getAttribute('data-cust-id') ||
@@ -4976,6 +5077,9 @@ class FinanceApp {
         id: newCustId,
         code: 'CUST-' + Math.floor(1000 + Math.random() * 9000),
         name: clientName,
+        billing_address: custAddress,
+        contact_person: contactPerson,
+        email: custEmail,
         country: isTrn ? 'UAE' : 'India',
         gstin: !isTrn ? taxNumber : '',
         trn: isTrn ? taxNumber : '',
@@ -4985,6 +5089,10 @@ class FinanceApp {
       if (!this.db.customers) this.db.customers = [];
       this.db.customers.push(customer);
       this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
+    } else {
+      if (custAddress) customer.billing_address = custAddress;
+      if (contactPerson) customer.contact_person = contactPerson;
+      if (custEmail) customer.email = custEmail;
     }
 
     // Collect line items
@@ -4998,9 +5106,10 @@ class FinanceApp {
     const pos = (document.getElementById('inv-cust-pos').value || '').toLowerCase();
     const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
 
-    document.querySelectorAll('#inv-items-tbody tr').forEach(tr => {
-      const desc = tr.querySelector('.row-desc').value.trim();
-      const hsn = tr.querySelector('.row-hsn').value.trim();
+    const rows = document.querySelectorAll('#inv-items-tbody tr');
+    rows.forEach((tr, idx) => {
+      const desc = tr.querySelector('.row-desc').value.trim() || 'Civil & Architectural Works';
+      const hsn = tr.querySelector('.row-hsn').value.trim() || '9954';
       const qty = Number(tr.querySelector('.row-qty').value) || 1;
       const uom = (tr.querySelector('.row-uom').value || '').trim().toUpperCase() || 'LSUM';
       const unitPrice = Number(tr.querySelector('.row-rate').value) || 0;
@@ -5049,6 +5158,7 @@ class FinanceApp {
       igstTotal += igst;
 
       lineItems.push({
+        sr: idx + 1,
         name: desc,
         description: desc,
         hsn_sac_code: hsn,
@@ -5074,46 +5184,66 @@ class FinanceApp {
 
     const grandTotal = taxableSubtotal + totalTax;
 
-    const payload = {
-      invoice: {
-        customer_id: customer.id,
-        customer_name: customer.name,
-        customer_gstin: isTrn ? (customer.gstin || '') : taxNumber,
-        customer_trn: isTrn ? taxNumber : (customer.trn || ''),
-        tax_regime: taxRegime,
-        tax_type: isTrn ? 'TRN' : 'GSTIN',
-        tax_number: taxNumber,
-        currency,
-        currency_symbol: currencySym,
-        place_of_supply: document.getElementById('inv-cust-pos').value,
-        project_id: prjId,
-        project_name: prjName,
-        po_reference: document.getElementById('inv-po-ref').value,
-        invoice_date: document.getElementById('inv-date').value,
-        due_date: dueDateVal,
-        payment_terms: paymentTermsVal,
-        payment_terms_label: noDueDate ? 'Due Upon Receipt / No Due Date' : `${paymentTermsVal} Days from Invoice Date`,
-        line_items: lineItems,
-        taxable_subtotal: taxableSubtotal,
-        cgst_total: cgstTotal,
-        sgst_total: sgstTotal,
-        igst_total: igstTotal,
-        vat_total: isTrn ? totalTax : 0,
-        total_tax: totalTax,
-        grand_total: grandTotal,
-        amount_paid: 0,
-        balance_due: grandTotal,
-        status,
-        notes: document.getElementById('inv-notes').value
-      }
+    const newInvoice = {
+      id: invoiceId,
+      invoice_no: invoiceNo,
+      company_id: this.activeCompanyId || 'rayan-corp-uae',
+      customer_id: customer.id,
+      customer_name: customer.name,
+      customer_address: custAddress,
+      contact_person: contactPerson,
+      email: custEmail,
+      customer_gstin: isTrn ? (customer.gstin || '') : taxNumber,
+      customer_trn: isTrn ? taxNumber : (customer.trn || ''),
+      tax_regime: taxRegime,
+      tax_type: isTrn ? 'TRN' : 'GSTIN',
+      tax_number: taxNumber,
+      currency,
+      currency_symbol: currencySym,
+      place_of_supply: document.getElementById('inv-cust-pos')?.value || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
+      project_id: prjId,
+      project_name: prjName,
+      po_reference: poRef,
+      invoice_date: invDate,
+      due_date: dueDateVal,
+      payment_terms: paymentTermsVal,
+      payment_terms_label: noDueDate ? 'Due Upon Receipt / No Due Date' : `${paymentTermsVal} Days Net`,
+      line_items: lineItems,
+      taxable_subtotal: taxableSubtotal,
+      cgst_total: cgstTotal,
+      sgst_total: sgstTotal,
+      igst_total: igstTotal,
+      vat_total: isTrn ? totalTax : 0,
+      total_tax: totalTax,
+      grand_total: grandTotal,
+      amount_paid: 0,
+      balance_due: grandTotal,
+      status,
+      notes: notesVal,
+      amount_in_words: this.numberToEnglishWords(grandTotal) + ` ${currency} Only.`,
+      created_by: this.currentUser?.name || 'Arshad Alam Shaikh',
+      created_at: new Date().toISOString()
     };
 
-    const res = await this.syncApi('create_invoice', payload);
-    if (res && res.success) {
-      alert(`Invoice ${res.invoice?.invoice_no || 'Saved'} (${status.toUpperCase()}) saved successfully.`);
-      this.closeModal('modal-invoice');
-      this.switchTab('invoices');
+    // Store immediately into local DB state
+    if (!this.db.invoices) this.db.invoices = [];
+    const existingIdx = this.db.invoices.findIndex(i => i.id === newInvoice.id || i.invoice_no === newInvoice.invoice_no);
+    if (existingIdx >= 0) {
+      this.db.invoices[existingIdx] = newInvoice;
+    } else {
+      this.db.invoices.unshift(newInvoice);
     }
+    localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+
+    // Sync to API
+    await this.syncApi('create_invoice', { invoice: newInvoice });
+
+    // Close creation modal and re-render underlying tables
+    this.closeModal('modal-invoice');
+    this.switchTab('invoices');
+
+    // Immediately open the newly generated tax invoice receipt!
+    this.openInvoicePrintModal(newInvoice.id);
   }
 
   // 2. INVOICE DETAIL & PDF GENERATION PREVIEW
@@ -7515,9 +7645,13 @@ class FinanceApp {
 
   // 1. TAX INVOICE PRINT MODAL
   openInvoicePrintModal(invoiceId, isVerifiedScan = false) {
-    let inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    const list = this.db?.invoices || [];
+    let inv = null;
+    if (invoiceId) {
+      inv = list.find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    }
     if (!inv) {
-      inv = (this.db?.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44049') || (this.db?.invoices || [])[0] || {};
+      inv = list[0] || list.find(i => i.invoice_no === 'REC-RG-INV-44049') || {};
     }
 
     const modalHtml = `
@@ -7599,13 +7733,13 @@ class FinanceApp {
                     <span style="direction:rtl;">العميل المفوتر له</span>
                   </div>
                   <div class="doc-info-entity-name">${inv.customer_name || 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C'}</div>
-                  <div class="doc-info-line">${inv.customer_address || 'ABU DHABI, MADINAT ZAYED, UAE'}</div>
+                  <div class="doc-info-line">${inv.customer_address || (inv.customer_name?.includes('BUILDARA') ? 'ABU DHABI, MADINAT ZAYED, UAE' : 'Abu Dhabi, United Arab Emirates')}</div>
                   <div style="margin-top:2px; display:flex; flex-wrap:wrap; gap:4px;">
-                    <span class="doc-badge-pill primary"><strong>${inv.customer_trn ? 'TRN' : 'GSTIN'}:</strong> ${inv.customer_trn || inv.customer_gstin || '105405525400003'}</span>
+                    <span class="doc-badge-pill primary"><strong>${inv.customer_trn ? 'TRN' : (inv.tax_type || 'TRN')}:</strong> ${inv.customer_trn || inv.customer_gstin || inv.tax_number || '105405525400003'}</span>
                   </div>
                   <div class="doc-info-line" style="margin-top:3px;">
-                    <strong>Attn:</strong> ${inv.contact_person || 'Mr. Sooraj Kumar'}<br>
-                    <strong>Email:</strong> <a href="mailto:${inv.email || 'buildaradevelopers@gmail.com'}" class="rayan-link-blue">${inv.email || 'buildaradevelopers@gmail.com'}</a>
+                    ${inv.contact_person ? `<strong>Attn:</strong> ${inv.contact_person}<br>` : (inv.customer_name?.includes('BUILDARA') ? '<strong>Attn:</strong> Mr. Sooraj Kumar<br>' : '')}
+                    ${inv.email ? `<strong>Email:</strong> <a href="mailto:${inv.email}" class="rayan-link-blue">${inv.email}</a>` : (inv.customer_name?.includes('BUILDARA') ? '<strong>Email:</strong> <a href="mailto:buildaradevelopers@gmail.com" class="rayan-link-blue">buildaradevelopers@gmail.com</a>' : '')}
                   </div>
                 </div>
 
@@ -7621,15 +7755,15 @@ class FinanceApp {
                     </div>
                     <div class="doc-key-value-row">
                       <span class="doc-label">Due Date / الاستحقاق:</span>
-                      <span class="doc-val">${inv.due_date ? this.formatDate(inv.due_date) : 'Immediate / Due Upon Receipt'}</span>
+                      <span class="doc-val">${inv.due_date ? this.formatDate(inv.due_date) : (inv.payment_terms === 0 || !inv.payment_terms ? 'Immediate / Due Upon Receipt' : '—')}</span>
                     </div>
                     <div class="doc-key-value-row">
                       <span class="doc-label">PO / LPO Reference:</span>
-                      <span class="doc-val" style="font-weight:800; color:#0284c7;">${inv.po_reference || 'LPO/BD/2026/12'}</span>
+                      <span class="doc-val" style="font-weight:800; color:#0284c7;">${inv.po_reference || (inv.customer_name?.includes('BUILDARA') ? 'LPO/BD/2026/12' : '—')}</span>
                     </div>
                     <div class="doc-key-value-row">
                       <span class="doc-label">Payment Terms:</span>
-                      <span class="doc-val">${inv.payment_terms_label || (inv.due_date ? `${inv.payment_terms || 30} Days Net` : 'Due Upon Receipt')}</span>
+                      <span class="doc-val">${inv.payment_terms_label || (inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due Upon Receipt')}</span>
                     </div>
                     <div class="doc-key-value-row">
                       <span class="doc-label">Place of Supply / Emirate:</span>
@@ -7656,38 +7790,53 @@ class FinanceApp {
                     <th style="width:14%; text-align:right;">PROJECT PRICE</th>
                     <th style="width:14%; text-align:right;">TAXABLE AMT</th>
                     <th style="width:8%; text-align:center;">VAT 5%</th>
-                    <th style="width:15%; text-align:right;">TOTAL (AED)</th>
+                    <th style="width:15%; text-align:right;">TOTAL (${inv.currency || 'AED'})</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${(inv.line_items && inv.line_items.length ? inv.line_items : [
                     {
                       sr: 1,
-                      name: "20% PROGRESSIVE PAYMENT FOR PO NO. LPO/BD/2026/12",
-                      description: "Civil & Interior Work at Yateem Optician, Khalidiyah Mall, Abu Dhabi",
+                      name: "50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT",
+                      description: "Civil & Interior Work at Khalidiyah Mall, Abu Dhabi",
                       unit: "%",
-                      qty: 20,
-                      project_price: 57000,
-                      invoice_amount: 11400,
-                      vat_amount: 570,
-                      total_amount: 11400
+                      qty: 1,
+                      project_price: 1000,
+                      invoice_amount: 500,
+                      vat_amount: 25,
+                      total_amount: 525
                     }
-                  ]).map((item, idx) => `
+                  ]).map((item, idx) => {
+                    const isPct = item.uom === '%' || item.unit === '%';
+                    const qty = item.qty !== undefined && item.qty !== null ? item.qty : 1;
+                    const uom = item.unit || item.uom || (isPct ? '%' : 'LSUM');
+                    const projectPrice = Number(item.project_price !== undefined ? item.project_price : (item.unit_price || 0));
+                    const taxableAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (item.taxable_amount !== undefined ? item.taxable_amount : (qty * (item.unit_price || 0))));
+                    const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.gst_rate !== undefined ? item.gst_rate : (item.tax_rate !== undefined ? item.tax_rate : 5)));
+                    const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (item.tax_amount !== undefined ? item.tax_amount : (taxableAmt * (vatRate / 100))));
+                    const totalAmt = Number(item.total_amount !== undefined ? item.total_amount : (taxableAmt + vatAmt));
+                    const curr = inv.currency || 'AED';
+
+                    return `
                     <tr>
                       <td style="text-align:center; font-weight:700; color:#64748b;">${item.sr || (idx + 1)}</td>
                       <td>
-                        <div class="doc-item-title">${item.name || item.description}</div>
+                        <div class="doc-item-title">${item.name || item.description || 'Engineering Scope of Work'}</div>
                         ${item.description && item.description !== item.name ? `<div class="doc-item-desc">${item.description}</div>` : ''}
-                        ${item.uom === '%' || item.unit === '%' ? `<span style="display:inline-block; margin-top:2px; font-size:7px; font-weight:700; color:#0284c7; background:rgba(2,132,199,0.08); padding:1px 5px; border-radius:3px;">⚡ Billed Milestone: ${item.progress_pct || item.qty}%</span>` : ''}
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap;">
+                          ${item.hsn_sac_code ? `<span style="font-size:7px; color:#64748b; font-family:monospace;">HSN/SAC: ${item.hsn_sac_code}</span>` : ''}
+                          ${isPct && (item.progress_pct || item.qty) ? `<span style="font-size:7px; font-weight:700; color:#0284c7; background:rgba(2,132,199,0.08); padding:1px 5px; border-radius:3px;">⚡ Billed Milestone: ${item.progress_pct || item.qty}%</span>` : ''}
+                        </div>
                       </td>
-                      <td style="text-align:center; font-weight:700;">${item.unit || item.uom || '%'}</td>
-                      <td style="text-align:center; font-weight:800;">${item.qty || 1}</td>
-                      <td style="text-align:right; font-variant-numeric:tabular-nums;">${Number(item.project_price || item.unit_price || 57000).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">${Number(item.invoice_amount || item.taxable_amount || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:center; font-weight:700; color:#059669; font-variant-numeric:tabular-nums;">${Number(item.vat_amount || item.tax_amount || 570).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums;">AED ${Number(item.total_amount || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="text-align:center; font-weight:700;">${uom}</td>
+                      <td style="text-align:center; font-weight:800;">${qty}</td>
+                      <td style="text-align:right; font-variant-numeric:tabular-nums;">${projectPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">${taxableAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td style="text-align:center; font-weight:700; color:#059669; font-variant-numeric:tabular-nums;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td style="text-align:right; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
-                  `).join('')}
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
 
@@ -7696,15 +7845,27 @@ class FinanceApp {
                 <div class="doc-left-financials">
                   <div class="doc-words-box">
                     <div class="doc-words-label">Payable Amount in Words / المبلغ المستحق بالحروف:</div>
-                    <div class="doc-words-text">💵 ${inv.amount_in_words || this.numberToEnglishWords(inv.grand_total || 11970)}</div>
+                    <div class="doc-words-text">💵 ${inv.amount_in_words || (this.numberToEnglishWords(inv.grand_total) + ` ${inv.currency || 'AED'} Only.`)}</div>
                   </div>
 
                   <div class="doc-banking-box">
                     <strong>Official Bank Remittance Instructions:</strong><br>
-                    Beneficiary: <strong>RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C</strong><br>
-                    Bank: <strong>First Abu Dhabi Bank (FAB) Corporate Banking</strong> • Abu Dhabi, UAE<br>
-                    <strong>IBAN:</strong> AE49033000001049281749201 • <strong>SWIFT:</strong> FABAAEAD
+                    ${inv.tax_regime === 'gst' || inv.currency === 'INR' ? `
+                      Beneficiary: <strong>Ashaz Engineering Private Limited (Rayan Group India)</strong><br>
+                      Bank: <strong>State Bank of India (Corporate Banking)</strong> • Andheri East, Mumbai<br>
+                      <strong>Account:</strong> 392019485721 • <strong>IFSC:</strong> SBIN0001824
+                    ` : `
+                      Beneficiary: <strong>RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C</strong><br>
+                      Bank: <strong>First Abu Dhabi Bank (FAB) Corporate Banking</strong> • Abu Dhabi, UAE<br>
+                      <strong>IBAN:</strong> AE49033000001049281749201 • <strong>SWIFT:</strong> FABAAEAD
+                    `}
                   </div>
+
+                  ${inv.notes ? `
+                    <div style="margin-top:6px; font-size:7.5px; color:#334155; background:#f8fafc; padding:5px 8px; border-left:2.5px solid #00a699; border-radius:3px;">
+                      <strong>Special Payment Notes / Instructions:</strong> ${inv.notes}
+                    </div>
+                  ` : ''}
 
                   <div class="rayan-copy-notice">
                     Please keep a copy of this official tax invoice for your accounting and VAT audit records.
@@ -7714,21 +7875,21 @@ class FinanceApp {
                 <div class="doc-totals-card">
                   <div class="doc-totals-row">
                     <span>Taxable Subtotal (المجموع الخاضع):</span>
-                    <span class="doc-num">${Number(inv.taxable_subtotal || inv.subtotal || 11400).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                    <span class="doc-num">${Number(inv.taxable_subtotal !== undefined ? inv.taxable_subtotal : (inv.subtotal || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
                   </div>
                   <div class="doc-totals-row">
-                    <span>VAT 5% (ضريبة القيمة المضافة):</span>
-                    <span class="doc-num" style="color:#059669;">+ ${Number(inv.vat_total || inv.total_tax || 570).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                    <span>${inv.tax_type === 'GSTIN' ? 'GST Total (ضريبة السلع والخدمات)' : 'VAT 5% (ضريبة القيمة المضافة)'}:</span>
+                    <span class="doc-num" style="color:#059669;">+ ${Number(inv.vat_total !== undefined ? inv.vat_total : (inv.total_tax !== undefined ? inv.total_tax : 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
                   </div>
                   ${inv.adjustment ? `
                     <div class="doc-totals-row">
                       <span>Adjustment / Retentions:</span>
-                      <span class="doc-num">${Number(inv.adjustment).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
+                      <span class="doc-num">${Number(inv.adjustment).toLocaleString('en-US', { minimumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
                     </div>
                   ` : ''}
                   <div class="doc-totals-row grand-total">
                     <span>Grand Total (الإجمالي)</span>
-                    <span>AED ${Number(inv.grand_total || 11970).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    <span>${inv.currency || 'AED'} ${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>

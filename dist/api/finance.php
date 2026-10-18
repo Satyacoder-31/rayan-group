@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'create_invoice':
             $inv = $body['invoice'] ?? [];
             if (!empty($inv)) {
-                $db['invoices'][] = $inv;
+                array_unshift($db['invoices'], $inv);
                 $addAuditLog('create', 'invoice', $inv['invoice_no'] ?? '', 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
             }
             break;
@@ -214,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     echo json_encode([
         'success' => true,
+        'invoice' => $inv ?? null,
         'data' => $db
     ]);
     exit;
