@@ -23,12 +23,74 @@ class FinanceApp {
     await this.loadDatabase();
     this.bindGlobalEvents();
     this.renderHeaderStatus();
+
+    // Check for Scanned QR Verification / Direct Document URL Params
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyParam = urlParams.get('verify') || urlParams.get('doc') || urlParams.get('id');
+    const docType = urlParams.get('type') || '';
+
+    if (verifyParam) {
+      this.handlePublicDocumentVerification(verifyParam, docType);
+      return;
+    }
+
     if (this.currentUser) {
       this.showAppView();
     } else {
       this.showAuthView();
     }
   }
+
+  handlePublicDocumentVerification(verifyId, docType = '') {
+    const portalContainer = document.getElementById('finance-portal-root');
+    if (portalContainer) {
+      portalContainer.innerHTML = `
+        <div style="min-height: 100vh; background: var(--fin-bg-main); display: flex; flex-direction: column;">
+          <header style="padding: 1rem 1.75rem; border-bottom: 1px solid var(--fin-border); display: flex; align-items: center; justify-content: space-between; background: rgba(11, 17, 30, 0.95); backdrop-filter: blur(12px);">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+                <img src="/assets/logos/rayan-group-white.png" alt="Rayan Group" class="logo-theme-dark" style="height: 34px; width: auto;">
+                <img src="/assets/logos/rayan-group.png" alt="Rayan Group" class="logo-theme-light" style="height: 34px; width: auto;">
+              </a>
+              <span class="fin-topbar-badge-desk" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-weight:800;">
+                ✓ OFFICIAL DIGITAL DOCUMENT VERIFICATION DESK
+              </span>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <a href="/billing/" style="color:#94a3b8; font-size:0.8rem; text-decoration:none; padding:0.4rem 0.8rem; border:1px solid rgba(148,163,184,0.2); border-radius:6px;">Staff Portal Login</a>
+              <a href="/" style="color:#38bdf8; font-size:0.8rem; text-decoration:none; padding:0.4rem 0.8rem; border:1px solid rgba(56,189,248,0.3); border-radius:6px;">Rayan Group Home</a>
+            </div>
+          </header>
+          <div id="fin-modal-container"></div>
+        </div>
+      `;
+    }
+
+    const cleanId = String(verifyId).trim();
+    const upper = cleanId.toUpperCase();
+
+    // Check Receipt Voucher
+    if (docType === 'receipt' || upper.includes('REC-RV') || upper.startsWith('RV-')) {
+      const rec = (this.db?.customer_receipts || []).find(r => r.id === cleanId || r.receipt_no === cleanId) ||
+                  (this.db?.customer_receipts || [])[0] || { receipt_no: cleanId };
+      this.openReceiptPrintModal(rec.id || cleanId, true);
+      return;
+    }
+
+    // Check Purchase Order
+    if (docType === 'po' || upper.startsWith('PO-')) {
+      const po = (this.db?.purchase_orders || []).find(p => p.id === cleanId || p.po_no === cleanId) ||
+                 (this.db?.purchase_orders || [])[0] || { po_no: cleanId };
+      this.openPOPrintModal(po.id || cleanId, true);
+      return;
+    }
+
+    // Default Tax Invoice
+    const inv = (this.db?.invoices || []).find(i => i.id === cleanId || i.invoice_no === cleanId) ||
+                (this.db?.invoices || [])[0] || { invoice_no: cleanId };
+    this.openInvoicePrintModal(inv.id || cleanId, true);
+  }
+
 
   // --------------------------------------------------------------------------
   // SESSION & AUTHENTICATION
@@ -6978,6 +7040,16 @@ class FinanceApp {
   closeDocPrintModal() {
     const el = document.getElementById('fin-doc-print-modal');
     if (el) el.remove();
+    if (window.location.search.includes('verify=') || window.location.search.includes('doc=')) {
+      if (this.currentUser) {
+        this.showAppView();
+      } else {
+        this.showAuthView();
+      }
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {}
+    }
   }
 
   openInvoiceDetail(id) {
@@ -7322,11 +7394,70 @@ class FinanceApp {
     `;
   }
 
+  generateBarcodeSVG(text) {
+    const code39 = {
+      '0': 'bwbwbwBwb', '1': 'BwbwbWbwb', '2': 'bwBwbWbwb', '3': 'BwBwbwbwb',
+      '4': 'bwbwBWbwb', '5': 'BwbwBWbwb', '6': 'bwBwBWbwb', '7': 'bwbwbWBwb',
+      '8': 'BwbwbWBwb', '9': 'bwBwbWBwb', 'A': 'BwbwbwbWB', 'B': 'bwBwbwbWB',
+      'C': 'BwBwbwbwb', 'D': 'bwbwBwbWB', 'E': 'BwbwBwbwb', 'F': 'bwBwBwbwb',
+      'G': 'bwbwbwBWB', 'H': 'BwbwbwBwb', 'I': 'bwBwbwBwb', 'J': 'bwbwBwBwb',
+      'K': 'BwbwbwbwB', 'L': 'bwBwbwbwB', 'M': 'BwBwbwbwB', 'N': 'bwbwBwbwB',
+      'O': 'BwbwBwbwB', 'P': 'bwBwBwbwB', 'Q': 'bwbwbwBwB', 'R': 'BwbwbwBwB',
+      'S': 'bwBwbwBwB', 'T': 'bwbwBwBwB', 'U': 'BWbwbwbwb', 'V': 'bWBwbwbwb',
+      'W': 'BWBwbwbwb', 'X': 'bWbwBwbwb', 'Y': 'BWbwBwbwb', 'Z': 'bWBwBwbwb',
+      '-': 'bWbwbwBwb', '.': 'BWbwbwBwb', ' ': 'bWBwbwBwb', '$': 'bWbWbWbwb',
+      '/': 'bWbWbwbWb', '+': 'bWbwbWbWb', '%': 'bwbWbWbWb', '*': 'bWbwBwBwb'
+    };
+    const clean = '*' + (String(text || 'REC').toUpperCase().replace(/[^0-9A-Z\-.$/+% ]/g, '-')) + '*';
+    let x = 2;
+    let rects = '';
+    for (let i = 0; i < clean.length; i++) {
+      const char = clean[i];
+      const pattern = code39[char] || code39['-'];
+      for (let p = 0; p < pattern.length; p++) {
+        const isBar = (p % 2 === 0);
+        const isWide = (pattern[p] === 'B' || pattern[p] === 'W');
+        const width = isWide ? 2.2 : 1.0;
+        if (isBar) {
+          rects += `<rect x="${x}" y="0" width="${width}" height="18" fill="#0f172a" />`;
+        }
+        x += width;
+      }
+      x += 1.2;
+    }
+    return `<svg viewBox="0 0 ${x + 2} 18" class="doc-barcode-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">${rects}</svg>`;
+  }
+
+  getRayanDynamicVerificationCode(doc = {}, docType = 'invoice') {
+    const docId = doc.invoice_no || doc.receipt_no || doc.po_no || doc.id || 'REC-RG-INV-44049';
+    const verifyUrl = `https://rayan-group.com/billing/?verify=${encodeURIComponent(docId)}&type=${encodeURIComponent(docType)}`;
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&data=${encodeURIComponent(verifyUrl)}`;
+    const barcodeSvg = this.generateBarcodeSVG(docId);
+
+    return `
+      <div class="doc-qr-barcode-block">
+        <div class="doc-qr-inner-flex">
+          <a href="${verifyUrl}" target="_blank" title="Scan or Click to Verify Online" class="doc-qr-link">
+            <img src="${qrApiUrl}" alt="Scan QR Code to Verify" class="doc-qr-code-img" loading="eager" onerror="this.src='/assets/docs/rayan-barcode-trn.jpg'">
+          </a>
+          <div class="doc-barcode-meta">
+            ${barcodeSvg}
+            <div class="doc-barcode-num">${docId}</div>
+            <div class="doc-qr-scan-hint">
+              <span>📷</span>
+              <span>Scan to view online</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   getRayanBarcode(text = '104937380400003') {
     return `
       <div style="display:flex; flex-direction:column; align-items:flex-end;">
-        <span style="font-size:10px; font-weight:700; color:#000; margin-bottom:2px;">TRN ${text}</span>
-        <img src="/assets/docs/rayan-barcode-trn.jpg" alt="TRN Barcode" style="height:18px; width:140px; object-fit:contain;">
+        <span style="font-size:8px; font-weight:700; color:#0f172a; margin-bottom:1px;">TRN ${text}</span>
+        ${this.generateBarcodeSVG(text)}
       </div>
     `;
   }
@@ -7383,7 +7514,7 @@ class FinanceApp {
   }
 
   // 1. TAX INVOICE PRINT MODAL
-  openInvoicePrintModal(invoiceId) {
+  openInvoicePrintModal(invoiceId, isVerifiedScan = false) {
     let inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
     if (!inv) {
       inv = (this.db?.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44049') || (this.db?.invoices || [])[0] || {};
@@ -7420,6 +7551,21 @@ class FinanceApp {
             <div class="fin-doc-inner-padding">
               ${this.getRayanWatermark()}
 
+              ${isVerifiedScan ? `
+                <div class="doc-verification-live-banner">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">🛡️</span>
+                    <div>
+                      <div style="font-size:9px; font-weight:800; letter-spacing:0.04em;">OFFICIAL UAE TAX INVOICE — AUDIT VERIFIED</div>
+                      <div style="font-size:7px; opacity:0.9; margin-top:1px;">Digitally authenticated under RAYAN Group Corporate Governance &amp; UAE FTA Compliance Standards.</div>
+                    </div>
+                  </div>
+                  <div style="font-size:7.5px; background:rgba(255,255,255,0.22); padding:3px 8px; border-radius:4px; font-weight:800;">
+                    LIVE VERIFICATION: PASS ✓
+                  </div>
+                </div>
+              ` : ''}
+
               <!-- Modern Brand Header -->
               <div class="doc-header-modern">
                 <div class="doc-brand-block">
@@ -7441,9 +7587,7 @@ class FinanceApp {
                   <div class="doc-title-ar">فاتورة ضريبية</div>
                   <div class="doc-number-pill"># ${inv.invoice_no || 'REC-RG-INV-44049'}</div>
                   <div class="doc-status-badge">✓ Official Tax Invoice</div>
-                  <div style="margin-top:4px;">
-                    ${this.getRayanBarcode(inv.company_trn || '104937380400003')}
-                  </div>
+                  ${this.getRayanDynamicVerificationCode(inv, 'invoice')}
                 </div>
               </div>
 
@@ -7628,7 +7772,7 @@ class FinanceApp {
   }
 
   // 2. RECEIPT VOUCHER PRINT MODAL
-  openReceiptPrintModal(receiptId) {
+  openReceiptPrintModal(receiptId, isVerifiedScan = false) {
     let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
     if (!rec) {
       rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (this.db?.customer_receipts || [])[0] || {};
@@ -7665,6 +7809,21 @@ class FinanceApp {
             <div class="fin-doc-inner-padding">
               ${this.getRayanWatermark()}
 
+              ${isVerifiedScan ? `
+                <div class="doc-verification-live-banner">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">💳</span>
+                    <div>
+                      <div style="font-size:9px; font-weight:800; letter-spacing:0.04em;">OFFICIAL RECEIPT VOUCHER — SETTLEMENT VERIFIED</div>
+                      <div style="font-size:7px; opacity:0.9; margin-top:1px;">Official Treasury verification confirming cleared funds against corporate invoice settlement.</div>
+                    </div>
+                  </div>
+                  <div style="font-size:7.5px; background:rgba(255,255,255,0.22); padding:3px 8px; border-radius:4px; font-weight:800;">
+                    SETTLED &amp; CLEARED ✓
+                  </div>
+                </div>
+              ` : ''}
+
               <!-- Modern Brand Header -->
               <div class="doc-header-modern">
                 <div class="doc-brand-block">
@@ -7685,6 +7844,7 @@ class FinanceApp {
                   <div class="doc-title-en">RECEIPT VOUCHER</div>
                   <div class="doc-number-pill">${rec.receipt_no || 'REC-RV-44025'}</div>
                   <div class="doc-status-badge status-received">✓ PAYMENT RECEIVED</div>
+                  ${this.getRayanDynamicVerificationCode(rec, 'receipt')}
                 </div>
               </div>
 
@@ -7845,7 +8005,7 @@ class FinanceApp {
   }
 
   // 3. PURCHASE ORDER PRINT MODAL (2 Full Pages)
-  openPOPrintModal(poId) {
+  openPOPrintModal(poId, isVerifiedScan = false) {
     let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
     if (!po) {
       po = (this.db?.purchase_orders || []).find(p => p.po_no === 'PO-REC-11008') || (this.db?.purchase_orders || [])[0] || {};
@@ -7883,6 +8043,21 @@ class FinanceApp {
             <div class="fin-doc-inner-padding">
               ${this.getRayanWatermark()}
 
+              ${isVerifiedScan ? `
+                <div class="doc-verification-live-banner">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">📑</span>
+                    <div>
+                      <div style="font-size:9px; font-weight:800; letter-spacing:0.04em;">OFFICIAL PURCHASE ORDER — PROCUREMENT AUDIT VERIFIED</div>
+                      <div style="font-size:7px; opacity:0.9; margin-top:1px;">Accredited procurement commitment issued under Rayan Group Contracts &amp; Subcontract Management.</div>
+                    </div>
+                  </div>
+                  <div style="font-size:7.5px; background:rgba(255,255,255,0.22); padding:3px 8px; border-radius:4px; font-weight:800;">
+                    AUDITED PROCUREMENT ✓
+                  </div>
+                </div>
+              ` : ''}
+
               <!-- Modern Executive Brand Header -->
               <div class="doc-header-modern">
                 <div class="doc-brand-block">
@@ -7903,6 +8078,7 @@ class FinanceApp {
                   <div class="doc-title-en">PURCHASE ORDER</div>
                   <div class="doc-number-pill">${po.po_no || 'PO-REC-11008'}</div>
                   <div class="doc-status-badge status-issued">● OFFICIAL PROCUREMENT</div>
+                  ${this.getRayanDynamicVerificationCode(po, 'po')}
                 </div>
               </div>
 

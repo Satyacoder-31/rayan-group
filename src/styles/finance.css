@@ -3262,6 +3262,99 @@ select option:focus,
   text-decoration: underline !important;
 }
 
+/* Dynamic QR & Barcode Block */
+.doc-qr-barcode-block {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin-top: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.doc-qr-inner-flex {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.doc-qr-link {
+  display: block;
+  text-decoration: none;
+  line-height: 0;
+  transition: transform 0.15s ease;
+}
+
+.doc-qr-link:hover {
+  transform: scale(1.04);
+}
+
+.doc-qr-code-img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.doc-barcode-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.doc-barcode-svg {
+  width: 105px;
+  height: 18px;
+  display: block;
+}
+
+.doc-barcode-num {
+  font-size: 7px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.04em;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.doc-qr-scan-hint {
+  font-size: 6.5px;
+  font-weight: 700;
+  color: #0284c7;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(2, 132, 199, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 1px;
+}
+
+/* Live Verified Scan Banner */
+.doc-verification-live-banner {
+  background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+  color: #ffffff;
+  padding: 7px 12px;
+  border-radius: 6px;
+  margin-bottom: 9px;
+  font-size: 8px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(6, 95, 70, 0.25);
+  animation: fadeInDown 0.3s ease;
+}
+
+
 .rayan-doc-watermark {
   position: absolute;
   top: 50%;
