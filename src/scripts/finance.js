@@ -160,18 +160,68 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // DATA LAYER & API SYNC
   // --------------------------------------------------------------------------
-  async loadDatabase() {
-    if (!this.db) {
-      this.db = JSON.parse(JSON.stringify(defaultSeedData));
+  mergeWithSeedData(sourceData) {
+    const merged = JSON.parse(JSON.stringify(defaultSeedData));
+    if (!sourceData || typeof sourceData !== 'object') {
+      return merged;
     }
+
+    const collections = [
+      'companies', 'users', 'customers', 'vendors', 'items', 'projects',
+      'invoices', 'purchase_bills', 'customer_receipts', 'vendor_payments',
+      'credit_notes', 'debit_notes', 'expenses', 'purchase_orders',
+      'audit_logs', 'notifications', 'documents'
+    ];
+
+    for (const key of collections) {
+      const seedArr = merged[key] || [];
+      const incomingArr = Array.isArray(sourceData[key]) ? sourceData[key] : [];
+
+      if (!incomingArr.length) {
+        merged[key] = seedArr;
+        continue;
+      }
+
+      // Map existing seed items by unique identifier
+      const map = new Map();
+      seedArr.forEach(item => {
+        if (item) {
+          const id = item.id || item.code || item.invoice_no || item.receipt_no;
+          if (id) map.set(id, item);
+        }
+      });
+
+      // Overlay or add incoming items
+      incomingArr.forEach(item => {
+        if (item) {
+          const id = item.id || item.code || item.invoice_no || item.receipt_no;
+          if (id) map.set(id, item);
+        }
+      });
+
+      merged[key] = Array.from(map.values());
+    }
+
+    if (sourceData.settings && typeof sourceData.settings === 'object') {
+      merged.settings = { ...merged.settings, ...sourceData.settings };
+    }
+
+    return merged;
+  }
+
+  async loadDatabase() {
+    // Baseline with full seed data
+    this.db = this.mergeWithSeedData(this.db);
 
     try {
       const res = await fetch('/api/finance?action=get_state');
       if (res.ok) {
         const json = await res.json();
-        if (json.data) {
-          this.db = json.data;
-          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        if (json.data && typeof json.data === 'object') {
+          this.db = this.mergeWithSeedData(json.data);
+          try {
+            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+          } catch (e) {}
           return;
         }
       }
@@ -183,7 +233,8 @@ class FinanceApp {
     const cached = localStorage.getItem('rayan_fin_db_cache');
     if (cached) {
       try {
-        this.db = JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        this.db = this.mergeWithSeedData(parsed);
         return;
       } catch (err) {}
     }
@@ -206,9 +257,11 @@ class FinanceApp {
       });
       if (res.ok) {
         const json = await res.json();
-        if (json.data) {
-          this.db = json.data;
-          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        if (json.data && typeof json.data === 'object') {
+          this.db = this.mergeWithSeedData(json.data);
+          try {
+            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+          } catch (e) {}
           return json;
         }
       }
@@ -1864,7 +1917,7 @@ class FinanceApp {
       const q = searchInput.value.toLowerCase().trim();
       const st = statusSelect.value;
       const filtered = invoices.filter(inv => {
-        const matchQ = inv.invoice_no.toLowerCase().includes(q) || inv.customer_name.toLowerCase().includes(q);
+        const matchQ = (inv.invoice_no || '').toLowerCase().includes(q) || (inv.customer_name || '').toLowerCase().includes(q);
         const matchSt = st === 'all' || inv.status === st;
         return matchQ && matchSt;
       });
@@ -1882,19 +1935,19 @@ class FinanceApp {
 
     return invoices.map(inv => `
       <tr>
-        <td><strong>${inv.invoice_no}</strong></td>
+        <td><strong>${inv.invoice_no || '—'}</strong></td>
         <td>${this.formatDate(inv.invoice_date)}</td>
         <td>
-          <strong>${inv.customer_name}</strong>
+          <strong>${inv.customer_name || 'Valued Client'}</strong>
           ${inv.customer_trn ? `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${inv.customer_gstin}</div>` : '')}
         </td>
         <td><span style="font-size:0.75rem;">${inv.place_of_supply || '—'}</span></td>
-        <td>${inv.currency_symbol || ''}${Number(inv.taxable_subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+        <td>${inv.currency_symbol || ''}${Number(inv.taxable_subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
         <td>
-          <span style="font-size:0.75rem; color:#38bdf8;">${inv.currency_symbol || ''}${Number(inv.total_tax).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          <span style="font-size:0.75rem; color:#38bdf8;">${inv.currency_symbol || ''}${Number(inv.total_tax || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           ${inv.tax_regime === 'trn' || inv.vat_total > 0 ? `<div style="font-size:0.65rem; color:#10b981; font-weight:700;">UAE VAT 5%</div>` : (inv.igst_total > 0 ? `<div style="font-size:0.65rem; color:#94a3b8;">IGST 18%</div>` : `<div style="font-size:0.65rem; color:#94a3b8;">CGST 9% + SGST 9%</div>`)}
         </td>
-        <td><strong>${this.formatCurrency(inv.grand_total)}</strong></td>
+        <td><strong>${this.formatCurrency(inv.grand_total || 0)}</strong></td>
         <td><span style="color:#10b981;">${this.formatCurrency(inv.amount_paid || 0)}</span></td>
         <td><strong style="color:${inv.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(inv.balance_due)}</strong></td>
         <td><span class="fin-badge fin-badge-${inv.status}">${inv.status.replace('_', ' ')}</span></td>
@@ -7717,7 +7770,7 @@ class FinanceApp {
       inv = list.find(i => i.id === invoiceId || i.invoice_no === invoiceId);
     }
     if (!inv) {
-      inv = list[0] || list.find(i => i.invoice_no === 'REC-RG-INV-44049') || {};
+      inv = list.find(i => i.invoice_no === 'REC-RG-INV-44049') || (defaultSeedData.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44049') || list[0] || (defaultSeedData.invoices || [])[0] || {};
     }
 
     const modalHtml = `
@@ -8018,7 +8071,7 @@ class FinanceApp {
   openReceiptPrintModal(receiptId, isVerifiedScan = false) {
     let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
     if (!rec) {
-      rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (this.db?.customer_receipts || [])[0] || {};
+      rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (defaultSeedData.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (this.db?.customer_receipts || [])[0] || (defaultSeedData.customer_receipts || [])[0] || {};
     }
 
     const modalHtml = `

@@ -176,7 +176,10 @@ if (!$rootDir || !is_writable($rootDir)) {
     }
 
     // Ensure data/ directory (finance-data.json) is refreshed at root
-    if (is_dir($siteDir . '/data')) {
+    if (is_dir($sourceDir . '/data')) {
+        copyFolder($sourceDir . '/data', $rootDir . '/data');
+        $copiedSummary['data_sync'] = 'Root data updated from dist/data';
+    } elseif (is_dir($siteDir . '/data')) {
         copyFolder($siteDir . '/data', $rootDir . '/data');
         $copiedSummary['data_sync'] = 'Root data updated from site/data';
     } elseif (is_dir($siteDir . '/public/data')) {

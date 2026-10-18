@@ -16,11 +16,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Locate finance-data.json
 $candidates = [
-    __DIR__ . '/../../data/finance-data.json',
     __DIR__ . '/../data/finance-data.json',
+    __DIR__ . '/../../data/finance-data.json',
     __DIR__ . '/data/finance-data.json',
-    dirname(__DIR__, 2) . '/data/finance-data.json'
+    dirname(__DIR__, 2) . '/data/finance-data.json',
+    dirname(__DIR__, 2) . '/site/data/finance-data.json',
+    dirname(__DIR__, 2) . '/site/public/data/finance-data.json',
+    dirname(__DIR__, 2) . '/site/dist/data/finance-data.json'
 ];
+
+if (isset($_SERVER['DOCUMENT_ROOT'])) {
+    $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/data/finance-data.json';
+    $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/site/data/finance-data.json';
+    $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/site/public/data/finance-data.json';
+    $candidates[] = $_SERVER['DOCUMENT_ROOT'] . '/site/dist/data/finance-data.json';
+}
+
+function getMasterSeed($candidates) {
+    foreach ($candidates as $c) {
+        if (file_exists($c)) {
+            $raw = @file_get_contents($c);
+            if ($raw) {
+                $data = json_decode($raw, true);
+                if (!empty($data['companies']) && is_array($data['companies']) && count($data['companies']) > 0) {
+                    return $data;
+                }
+            }
+        }
+    }
+    return null;
+}
 
 $dataFile = null;
 foreach ($candidates as $c) {
@@ -51,7 +76,18 @@ function loadFinanceDb($dataFile) {
     return null;
 }
 
-function saveFinanceDb($dataFile, $data) {
+function saveFinanceDb($dataFile, $data, $candidates = []) {
+    // Prevent corrupting or wiping master collections
+    if (empty($data['companies']) || count($data['companies']) === 0) {
+        $seed = getMasterSeed($candidates);
+        if ($seed) {
+            foreach ($seed as $k => $val) {
+                if (empty($data[$k]) && !empty($val)) {
+                    $data[$k] = $val;
+                }
+            }
+        }
+    }
     $dir = dirname($dataFile);
     if (!is_dir($dir)) {
         @mkdir($dir, 0755, true);
@@ -60,15 +96,46 @@ function saveFinanceDb($dataFile, $data) {
 }
 
 $db = loadFinanceDb($dataFile);
+$masterSeed = getMasterSeed($candidates);
 
-// If file not readable yet, try reading from other candidate paths
-if (!$db) {
-    foreach ($candidates as $c) {
-        $temp = loadFinanceDb($c);
-        if ($temp) {
-            $db = $temp;
-            $dataFile = $c;
-            break;
+// Auto-repair: if $db is null or corrupted (missing companies/customers), repair using masterSeed
+if (!$db || empty($db['companies']) || count($db['companies']) === 0) {
+    if ($masterSeed) {
+        if (!empty($db['invoices']) && is_array($db['invoices'])) {
+            foreach ($db['invoices'] as $existingInv) {
+                $found = false;
+                foreach ($masterSeed['invoices'] as &$sInv) {
+                    if (($sInv['id'] ?? '') === ($existingInv['id'] ?? '') || ($sInv['invoice_no'] ?? '') === ($existingInv['invoice_no'] ?? '')) {
+                        $sInv = $existingInv;
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($sInv);
+                if (!$found) {
+                    array_unshift($masterSeed['invoices'], $existingInv);
+                }
+            }
+        }
+        if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
+            foreach ($db['customer_receipts'] as $existingRcp) {
+                $found = false;
+                foreach ($masterSeed['customer_receipts'] as &$sRcp) {
+                    if (($sRcp['id'] ?? '') === ($existingRcp['id'] ?? '') || ($sRcp['receipt_no'] ?? '') === ($existingRcp['receipt_no'] ?? '')) {
+                        $sRcp = $existingRcp;
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($sRcp);
+                if (!$found) {
+                    array_unshift($masterSeed['customer_receipts'], $existingRcp);
+                }
+            }
+        }
+        $db = $masterSeed;
+        if ($dataFile) {
+            saveFinanceDb($dataFile, $db, $candidates);
         }
     }
 }
@@ -102,8 +169,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 // POST Handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!$db) {
-        $db = ['users' => [], 'invoices' => [], 'bills' => [], 'receipts' => [], 'payments' => [], 'customers' => [], 'vendors' => [], 'items' => [], 'audit_logs' => []];
+    if (!$db || empty($db['companies'])) {
+        $db = $masterSeed ?: ['users' => [], 'invoices' => [], 'bills' => [], 'receipts' => [], 'payments' => [], 'customers' => [], 'vendors' => [], 'items' => [], 'audit_logs' => []];
     }
 
     // Helper for audit logging
@@ -257,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
     }
 
-    saveFinanceDb($dataFile, $db);
+    saveFinanceDb($dataFile, $db, $candidates);
 
     echo json_encode([
         'success' => true,
