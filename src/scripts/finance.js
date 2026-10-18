@@ -2299,10 +2299,10 @@ class FinanceApp {
                       <div>${r.payment_mode}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}</span>
                     </td>
-                    <td><strong style="color:#10b981;">${this.formatCurrency(r.amount_received)}</strong></td>
+                    <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
                     <td>
                       ${(r.allocations || []).map(a => `
-                        <span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${a.invoice_no}: ${this.formatCurrency(a.amount_allocated)}</span>
+                        <span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${a.invoice_no}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
@@ -2519,10 +2519,10 @@ class FinanceApp {
                       <div>${r.payment_mode}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no} • ${r.bank_name || 'State Bank of India'}</span>
                     </td>
-                    <td><strong style="color:#10b981;">${this.formatCurrency(r.amount_received)}</strong></td>
+                    <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
                     <td>
                       ${(r.allocations || []).map(a => `
-                        <span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${a.invoice_no}: ${this.formatCurrency(a.amount_allocated)}</span>
+                        <span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${a.invoice_no}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
@@ -5502,69 +5502,263 @@ class FinanceApp {
   openRecordReceiptModal(preselectInvoiceId = null) {
     const customers = this.db?.customers || [];
     const invoices = this.db?.invoices || [];
+    const receiptNo = this.getNextReceiptNumber();
+
+    let defaultCurrency = 'AED';
+    let targetInv = null;
+    if (preselectInvoiceId) {
+      targetInv = invoices.find(i => i.id === preselectInvoiceId || i.invoice_no === preselectInvoiceId);
+      if (targetInv && targetInv.currency) {
+        defaultCurrency = targetInv.currency;
+      }
+    } else if (this.activeCompanyId === 'ashaz-eng-in') {
+      defaultCurrency = 'INR';
+    }
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-receipt">
-        <div class="fin-modal-dialog" style="max-width:680px;">
-          <div class="fin-modal-header">
+        <div class="fin-modal-dialog" style="max-width:760px; max-height:92vh; overflow-y:auto;">
+          <div class="fin-modal-header" style="position:sticky; top:0; z-index:10; background:#0f172a; border-bottom:1px solid rgba(255,255,255,0.1);">
             <div>
-              <h3 class="fin-modal-title">💳 Record Customer Payment Receipt</h3>
-              <div style="font-size:0.75rem; color:#00e5d2; font-weight:700; margin-top:2px;">Auto Voucher Sequence: ${this.getNextReceiptNumber()}</div>
+              <h3 class="fin-modal-title" style="display:flex; align-items:center; gap:8px;">
+                <span>💳</span>
+                <span>Record Customer Payment Receipt &amp; Voucher</span>
+              </h3>
+              <div style="font-size:0.75rem; color:#00e5d2; font-weight:700; margin-top:2px;">
+                Auto Voucher Sequence: <strong style="color:#38bdf8;">${receiptNo}</strong>
+              </div>
             </div>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-receipt')">&times;</button>
           </div>
-          <div class="fin-modal-body">
+
+          <div class="fin-modal-body" style="padding:1.25rem;">
             <form id="record-receipt-form">
-              <div class="fin-form-group">
-                <label class="fin-form-label">Customer / Client <span style="color:#ef4444;">*</span></label>
-                <select id="rec-cust-sel" class="fin-form-select" required>
-                  <option value="" disabled selected>Select Customer</option>
-                  ${customers.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join('')}
-                </select>
+              <!-- Top Row: Customer Selection & Currency Option (AED / INR) -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Customer / Client <span style="color:#ef4444;">*</span></label>
+                  <select id="rec-cust-sel" class="fin-form-select" required>
+                    <option value="" disabled ${!targetInv ? 'selected' : ''}>Select Customer / Client</option>
+                    ${customers.map(c => `<option value="${c.id}" ${targetInv && targetInv.customer_id === c.id ? 'selected' : ''}>${c.name} (${c.code || 'ID:' + c.id})</option>`).join('')}
+                  </select>
+                </div>
+
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Currency <span style="color:#ef4444;">*</span></label>
+                  <select id="rec-currency" class="fin-form-select" required onchange="window.finApp.handleReceiptCurrencyChange(this.value)">
+                    <option value="AED" ${defaultCurrency === 'AED' ? 'selected' : ''}>AED — United Arab Emirates Dirham (د.إ)</option>
+                    <option value="INR" ${defaultCurrency === 'INR' ? 'selected' : ''}>INR — Indian Rupee (₹)</option>
+                  </select>
+                </div>
               </div>
 
-              <div class="fin-form-grid-2">
+              <!-- Second Row: Receipt Date, Time, and Amount Received -->
+              <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Receipt Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="rec-date" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}" required>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Payment Mode <span style="color:#ef4444;">*</span></label>
-                  <select id="rec-mode" class="fin-form-select" required>
-                    <option value="NEFT/RTGS" selected>NEFT / RTGS Wire</option>
-                    <option value="Bank Wire">International Bank Wire</option>
-                    <option value="Cheque">Corporate Account Payee Cheque</option>
-                    <option value="UPI">UPI Direct</option>
-                    <option value="Cash">Cash</option>
-                  </select>
+                  <label class="fin-form-label">Receipt Time</label>
+                  <input type="text" id="rec-time" class="fin-form-input" value="${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">
+                    <span id="rec-amount-label">Amount Received (${defaultCurrency})</span> <span style="color:#ef4444;">*</span>
+                  </label>
+                  <div style="position:relative;">
+                    <span id="rec-currency-badge" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:0.75rem; font-weight:800; color:#38bdf8;">${defaultCurrency}</span>
+                    <input type="number" id="rec-amount" class="fin-form-input" min="0.01" step="any" required placeholder="0.00" style="padding-left:48px; font-size:1.05rem; font-weight:800; color:#10b981;">
+                  </div>
                 </div>
               </div>
 
-              <div class="fin-form-grid-2">
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Amount Received (₹) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="rec-amount" class="fin-form-input" min="1" step="any" required placeholder="0.00">
+              <!-- 3 Payment Modes Selection: Cheque, Online, Cash -->
+              <div style="margin-top:0.75rem; margin-bottom:0.5rem;">
+                <label class="fin-form-label" style="margin-bottom:0.4rem;">Select Payment Mode <span style="color:#ef4444;">*</span></label>
+                <div class="fin-payment-mode-tabs">
+                  <button type="button" class="fin-payment-mode-btn active" id="btn-mode-online" onclick="window.finApp.switchReceiptMode('Online')">
+                    <span>🌐</span>
+                    <span>Online Transfer / Wire</span>
+                  </button>
+                  <button type="button" class="fin-payment-mode-btn" id="btn-mode-cheque" onclick="window.finApp.switchReceiptMode('Cheque')">
+                    <span>📝</span>
+                    <span>Cheque / PDC</span>
+                  </button>
+                  <button type="button" class="fin-payment-mode-btn" id="btn-mode-cash" onclick="window.finApp.switchReceiptMode('Cash')">
+                    <span>💵</span>
+                    <span>Cash Payment</span>
+                  </button>
                 </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Bank Reference / UTR # <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="rec-ref" class="fin-form-input" required placeholder="e.g. SBIN260314981">
+                <input type="hidden" id="rec-mode" value="Online">
+              </div>
+
+              <!-- MODE 1: ONLINE TRANSFER REQUIRED DETAILS -->
+              <div id="rec-mode-online-fields" class="fin-mode-details-card">
+                <div class="fin-mode-details-title">
+                  <span>🌐</span>
+                  <span>Required Details for Online Transfer (التحويل البنكي الإلكتروني)</span>
+                </div>
+                <div class="fin-form-grid-2">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Bank Reference / UTR / Transaction No. <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="rec-ref" class="fin-form-input" required placeholder="e.g. SBIN260314981 or FAB-WIRE-44910">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Remitting / Drawee Bank Name <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="rec-online-bank" class="fin-form-input" list="rec-banks-list" placeholder="e.g. First Abu Dhabi Bank (FAB) or State Bank of India" required value="First Abu Dhabi Bank (FAB)">
+                  </div>
+                </div>
+                <div class="fin-form-grid-2" style="margin-top:0.5rem;">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Transfer Channel / Platform</label>
+                    <select id="rec-online-channel" class="fin-form-select">
+                      <option value="Online Bank Transfer" selected>Online Bank Transfer / Corporate Wire</option>
+                      <option value="Central Bank Direct Clearing">Central Bank Direct Clearing</option>
+                      <option value="RTGS / NEFT Wire Remittance">RTGS / NEFT Wire Remittance</option>
+                      <option value="SWIFT International Wire">SWIFT International Wire</option>
+                      <option value="Instant Direct Remittance">Instant Direct Remittance (Aani / UPI)</option>
+                    </select>
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Value / Clearance Date</label>
+                    <input type="date" id="rec-online-date" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}">
+                  </div>
+                </div>
+              </div>
+
+              <!-- MODE 2: CHEQUE REQUIRED DETAILS -->
+              <div id="rec-mode-cheque-fields" class="fin-mode-details-card" style="display:none;">
+                <div class="fin-mode-details-title" style="color:#38bdf8;">
+                  <span>📝</span>
+                  <span>Required Details for Cheque Settlement (بيانات الشيك البنكي)</span>
+                </div>
+                <div class="fin-form-grid-3">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Cheque Number <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="rec-cheque-no" class="fin-form-input" placeholder="e.g. 000018989">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Cheque / Instrument Date <span style="color:#ef4444;">*</span></label>
+                    <input type="date" id="rec-cheque-date" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Cheque Clearance Status</label>
+                    <select id="rec-cheque-status" class="fin-form-select">
+                      <option value="Cleared & Verified" selected>Cleared &amp; Funds Verified</option>
+                      <option value="Deposited - Under Clearance">Deposited - Under Clearance</option>
+                      <option value="Post-Dated Cheque (PDC)">Post-Dated Cheque (PDC)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="fin-form-grid-2" style="margin-top:0.5rem;">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Drawee Bank Name (البنك المسحوب عليه) <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="rec-cheque-bank" class="fin-form-input" list="rec-banks-list" placeholder="e.g. Emirates NBD, FAB, ADCB, HDFC">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Bank Branch / Emirate / City</label>
+                    <input type="text" id="rec-cheque-branch" class="fin-form-input" placeholder="e.g. Mussafah M-36, Abu Dhabi">
+                  </div>
+                </div>
+              </div>
+
+              <!-- MODE 3: CASH REQUIRED DETAILS -->
+              <div id="rec-mode-cash-fields" class="fin-mode-details-card" style="display:none;">
+                <div class="fin-mode-details-title" style="color:#10b981;">
+                  <span>💵</span>
+                  <span>Required Details for Cash Receipt (سند استلام نقدي)</span>
+                </div>
+                <div class="fin-form-grid-2">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Cash Receipt / Slip # <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="rec-cash-slip" class="fin-form-input" value="CSH-${Date.now().toString().slice(-6)}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Receiving Cash Desk / Location <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="rec-cash-location" class="fin-form-input" value="Corporate Treasury - Mussafah M-36, Abu Dhabi" placeholder="Location where cash was received">
+                  </div>
+                </div>
+                <div class="fin-form-grid-2" style="margin-top:0.5rem;">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Handed Over By (Bearer / Client Rep)</label>
+                    <input type="text" id="rec-cash-bearer" class="fin-form-input" placeholder="Name of person handing over cash">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Cashier / Staff Member Handled By</label>
+                    <input type="text" id="rec-cashier" class="fin-form-input" value="${this.currentUser?.name || 'Accounts Staff'}">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Datalist of Recommended Banks -->
+              <datalist id="rec-banks-list">
+                <option value="First Abu Dhabi Bank (FAB)">
+                <option value="Abu Dhabi Commercial Bank (ADCB)">
+                <option value="Emirates NBD Bank">
+                <option value="Dubai Islamic Bank (DIB)">
+                <option value="Mashreq Bank">
+                <option value="Commercial Bank of Dubai (CBD)">
+                <option value="Abu Dhabi Islamic Bank (ADIB)">
+                <option value="State Bank of India (Corporate)">
+                <option value="HDFC Bank Ltd">
+                <option value="ICICI Bank Ltd">
+                <option value="Standard Chartered Bank">
+                <option value="HSBC Middle East">
+              </datalist>
+
+              <!-- Additional Receipt Voucher Audit & Party Specifications -->
+              <div style="background:rgba(0,0,0,0.18); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.85rem; margin-bottom:1rem;">
+                <div style="font-size:0.75rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.5rem;">
+                  🏛️ Official Voucher Metadata (بيانات سند القبض الرسمي)
+                </div>
+                <div class="fin-form-grid-3">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Contact Person</label>
+                    <input type="text" id="rec-contact-person" class="fin-form-input" placeholder="Customer contact person" value="${targetInv?.contact_person || ''}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Contact Email</label>
+                    <input type="email" id="rec-email" class="fin-form-input" placeholder="Notification email" value="${targetInv?.email || ''}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Authorised Signatory</label>
+                    <input type="text" id="rec-receiver-sign" class="fin-form-input" value="Arshad Alam Shaikh">
+                  </div>
+                </div>
+                <div class="fin-form-grid-2" style="margin-top:0.4rem;">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Received By (Entity)</label>
+                    <input type="text" id="rec-received-by" class="fin-form-input" value="${this.activeCompanyId === 'ashaz-eng-in' ? 'Ashaz Engineering Private Limited' : 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C'}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Linked Project Name</label>
+                    <input type="text" id="rec-project-name" class="fin-form-input" placeholder="e.g. Yateem Optician, Khalidiyah Mall" value="${targetInv?.project_name || ''}">
+                  </div>
                 </div>
               </div>
 
               <!-- Unpaid Invoices Allocation Checklist -->
-              <h4 style="font-family:var(--fin-font-heading); font-size:0.95rem; color:#f8fafc; margin:1rem 0 0.5rem;">Allocate Against Outstanding Invoices</h4>
-              <div id="rec-invoices-list" style="max-height:180px; overflow-y:auto; border:1px solid var(--fin-border); border-radius:8px; padding:0.75rem; background:rgba(0,0,0,0.2);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem;">
+                <h4 style="font-family:var(--fin-font-heading); font-size:0.95rem; color:#f8fafc; margin:0;">
+                  Allocate Against Outstanding Invoices
+                </h4>
+                <span id="rec-alloc-summary" style="font-size:0.75rem; color:#00e5d2; font-weight:700;"></span>
+              </div>
+              <div id="rec-invoices-list" style="max-height:180px; overflow-y:auto; border:1px solid var(--fin-border); border-radius:8px; padding:0.75rem; background:rgba(0,0,0,0.25);">
                 <div style="font-size:0.78rem; color:#94a3b8;">Select a customer above to view unpaid invoices.</div>
               </div>
 
-              <div class="fin-form-group" style="margin-top:1.25rem;">
-                <label class="fin-form-label">Notes &amp; Remittance Details</label>
-                <input type="text" id="rec-notes" class="fin-form-input" placeholder="Part payment for project milestone">
+              <div class="fin-form-group" style="margin-top:1rem;">
+                <label class="fin-form-label">Payment Notes &amp; Remittance Narration</label>
+                <input type="text" id="rec-notes" class="fin-form-input" placeholder="e.g. Full settlement against milestone certification">
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-receipt')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Record &amp; Post Receipt &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">
+                  💾 Record &amp; Generate Official Voucher &rarr;
+                </button>
               </div>
             </form>
           </div>
@@ -5577,13 +5771,23 @@ class FinanceApp {
     const custSel = document.getElementById('rec-cust-sel');
     const invList = document.getElementById('rec-invoices-list');
     const amountInp = document.getElementById('rec-amount');
+    const currSel = document.getElementById('rec-currency');
 
     const updateCustomerInvoices = () => {
       const cId = custSel.value;
-      const unpaid = invoices.filter(i => i.customer_id === cId && i.balance_due > 0 && i.status !== 'void');
+      const curr = currSel.value || 'AED';
+      const unpaid = invoices.filter(i => (i.customer_id === cId || i.customer_name === cId) && i.balance_due > 0 && i.status !== 'void');
+
+      const cust = customers.find(c => c.id === cId || c.name === cId);
+      if (cust) {
+        const cp = document.getElementById('rec-contact-person');
+        const em = document.getElementById('rec-email');
+        if (cp && !cp.value) cp.value = cust.contact_person || '';
+        if (em && !em.value) em.value = cust.email || '';
+      }
 
       if (!unpaid.length) {
-        invList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No outstanding invoices found for this client. Receipt can be logged as advance.</div>`;
+        invList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No outstanding invoices found for this client. Receipt can be logged as advance deposit.</div>`;
         return;
       }
 
@@ -5592,10 +5796,10 @@ class FinanceApp {
           <div>
             <strong style="color:#f8fafc; font-size:0.8rem;">${inv.invoice_no}</strong>
             <span style="font-size:0.72rem; color:#94a3b8;"> (${this.formatDate(inv.invoice_date)})</span>
-            <div style="font-size:0.7rem; color:#38bdf8;">Balance: ${this.formatCurrency(inv.balance_due)}</div>
+            <div style="font-size:0.7rem; color:#38bdf8;">Balance Due: ${curr} ${Number(inv.balance_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
           </div>
           <div style="display:flex; align-items:center; gap:0.5rem;">
-            <input type="number" class="fin-form-input rec-alloc-input" data-inv-id="${inv.id}" data-inv-no="${inv.invoice_no}" data-max="${inv.balance_due}" placeholder="Allocated amount" style="width:140px; padding:0.3rem 0.5rem; font-size:0.75rem;" step="any">
+            <input type="number" class="fin-form-input rec-alloc-input" data-inv-id="${inv.id}" data-inv-no="${inv.invoice_no}" data-max="${inv.balance_due}" placeholder="Allocated (${curr})" style="width:145px; padding:0.3rem 0.5rem; font-size:0.75rem;" step="any">
           </div>
         </div>
       `).join('');
@@ -5612,6 +5816,8 @@ class FinanceApp {
       }
     };
 
+    this.updateCustomerReceiptInvoices = updateCustomerInvoices;
+
     custSel.onchange = updateCustomerInvoices;
 
     amountInp.oninput = () => {
@@ -5625,10 +5831,12 @@ class FinanceApp {
     };
 
     if (preselectInvoiceId) {
-      const inv = invoices.find(i => i.id === preselectInvoiceId);
+      const inv = invoices.find(i => i.id === preselectInvoiceId || i.invoice_no === preselectInvoiceId);
       if (inv) {
         custSel.value = inv.customer_id;
         amountInp.value = inv.balance_due;
+        const projInp = document.getElementById('rec-project-name');
+        if (projInp && inv.project_name) projInp.value = inv.project_name;
         updateCustomerInvoices();
       }
     }
@@ -5662,6 +5870,42 @@ class FinanceApp {
       }
 
       const cust = customers.find(c => c.id === custSel.value);
+      const mode = document.getElementById('rec-mode').value;
+      const currency = document.getElementById('rec-currency').value || 'AED';
+
+      let refNo = '';
+      let bankName = '';
+      let chequeNo = '';
+      let chequeDate = '';
+      let bankBranch = '';
+      let chequeStatus = 'Cleared & Verified';
+      let cashLocation = '';
+      let cashBearer = '';
+      let cashier = '';
+      let paymentType = mode;
+
+      if (mode === 'Cheque') {
+        chequeNo = document.getElementById('rec-cheque-no').value.trim();
+        chequeDate = document.getElementById('rec-cheque-date').value;
+        bankName = document.getElementById('rec-cheque-bank').value.trim() || 'First Abu Dhabi Bank (FAB)';
+        bankBranch = document.getElementById('rec-cheque-branch').value.trim();
+        chequeStatus = document.getElementById('rec-cheque-status').value;
+        refNo = chequeNo;
+        paymentType = 'Corporate Account Payee Cheque';
+      } else if (mode === 'Online') {
+        refNo = document.getElementById('rec-ref').value.trim();
+        bankName = document.getElementById('rec-online-bank').value.trim() || 'First Abu Dhabi Bank (FAB)';
+        chequeDate = document.getElementById('rec-online-date').value;
+        paymentType = document.getElementById('rec-online-channel').value;
+      } else if (mode === 'Cash') {
+        refNo = document.getElementById('rec-cash-slip').value.trim();
+        cashLocation = document.getElementById('rec-cash-location').value.trim();
+        cashBearer = document.getElementById('rec-cash-bearer').value.trim();
+        cashier = document.getElementById('rec-cashier').value.trim();
+        bankName = cashLocation;
+        paymentType = 'Official Cash Tender';
+      }
+
       const receiptNo = this.getNextReceiptNumber();
       const payload = {
         receipt: {
@@ -5669,19 +5913,32 @@ class FinanceApp {
           receipt_no: receiptNo,
           customer_id: cust?.id || custSel.value,
           customer_name: cust?.name || '',
-          contact_person: cust?.contact_person || '',
-          email: cust?.email || '',
-          company_id: this.activeCompanyId || 'ashaz-eng-in',
+          contact_person: document.getElementById('rec-contact-person').value.trim() || cust?.contact_person || '',
+          email: document.getElementById('rec-email').value.trim() || cust?.email || '',
+          company_id: this.activeCompanyId || (currency === 'INR' ? 'ashaz-eng-in' : 'rayan-corp-uae'),
           receipt_date: document.getElementById('rec-date').value,
-          receipt_time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          payment_mode: document.getElementById('rec-mode').value,
-          payment_type: document.getElementById('rec-mode').value,
-          reference_no: document.getElementById('rec-ref').value,
+          receipt_time: document.getElementById('rec-time').value || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          currency: currency,
+          payment_mode: mode,
+          payment_type: paymentType,
+          reference_no: refNo,
+          cheque_no: chequeNo,
+          cheque_date: chequeDate || document.getElementById('rec-date').value,
+          bank_name: bankName,
+          bank_branch: bankBranch,
+          cheque_status: chequeStatus,
+          cash_location: cashLocation,
+          cash_bearer: cashBearer,
+          cashier: cashier,
           amount_received: amountReceived,
           allocated_amount: totalAllocated,
           allocations,
           ref_invoice_no: allocations[0]?.invoice_no || '',
-          notes: document.getElementById('rec-notes').value,
+          project_name: document.getElementById('rec-project-name').value.trim() || (allocations[0] ? (invoices.find(i => i.invoice_no === allocations[0].invoice_no)?.project_name || '') : ''),
+          received_by: document.getElementById('rec-received-by').value.trim() || 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
+          receiver_sign: document.getElementById('rec-receiver-sign').value.trim() || 'Arshad Alam Shaikh',
+          notes: document.getElementById('rec-notes').value.trim(),
+          amount_in_words: this.numberToEnglishWords(amountReceived) + (currency === 'INR' ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'),
           recorded_by: this.currentUser?.name || 'Accounts Staff',
           recorded_at: new Date().toISOString()
         }
@@ -5691,13 +5948,57 @@ class FinanceApp {
       if (res && res.success) {
         const rcpObj = res.receipt || payload.receipt;
         this.closeModal('modal-receipt');
-        if (confirm(`Payment Receipt ${rcpObj.receipt_no} recorded successfully.\n\nInvoice balances have been updated automatically.\nWould you like to view & print the official Receipt Voucher now?`)) {
+        if (confirm(`Payment Receipt ${rcpObj.receipt_no} recorded successfully.\n\nInvoice balances updated automatically.\nWould you like to view & print the official Receipt Voucher now?`)) {
           this.openReceiptPrintModal(rcpObj.id);
         } else {
           this.switchTab('payments');
         }
       }
     };
+  }
+
+  switchReceiptMode(mode) {
+    const modeInput = document.getElementById('rec-mode');
+    if (modeInput) modeInput.value = mode;
+
+    ['online', 'cheque', 'cash'].forEach(m => {
+      const btn = document.getElementById(`btn-mode-${m}`);
+      if (btn) btn.classList.toggle('active', m.toLowerCase() === mode.toLowerCase());
+    });
+
+    const onlineBox = document.getElementById('rec-mode-online-fields');
+    const chequeBox = document.getElementById('rec-mode-cheque-fields');
+    const cashBox = document.getElementById('rec-mode-cash-fields');
+
+    if (onlineBox) onlineBox.style.display = (mode === 'Online') ? 'block' : 'none';
+    if (chequeBox) chequeBox.style.display = (mode === 'Cheque') ? 'block' : 'none';
+    if (cashBox) cashBox.style.display = (mode === 'Cash') ? 'block' : 'none';
+
+    const recRef = document.getElementById('rec-ref');
+    const recOnlineBank = document.getElementById('rec-online-bank');
+    const recChequeNo = document.getElementById('rec-cheque-no');
+    const recChequeDate = document.getElementById('rec-cheque-date');
+    const recChequeBank = document.getElementById('rec-cheque-bank');
+    const recCashSlip = document.getElementById('rec-cash-slip');
+    const recCashLocation = document.getElementById('rec-cash-location');
+
+    if (recRef) recRef.required = (mode === 'Online');
+    if (recOnlineBank) recOnlineBank.required = (mode === 'Online');
+    if (recChequeNo) recChequeNo.required = (mode === 'Cheque');
+    if (recChequeDate) recChequeDate.required = (mode === 'Cheque');
+    if (recChequeBank) recChequeBank.required = (mode === 'Cheque');
+    if (recCashSlip) recCashSlip.required = (mode === 'Cash');
+    if (recCashLocation) recCashLocation.required = (mode === 'Cash');
+  }
+
+  handleReceiptCurrencyChange(curr) {
+    const amountLabel = document.getElementById('rec-amount-label');
+    const badge = document.getElementById('rec-currency-badge');
+    if (amountLabel) amountLabel.textContent = `Amount Received (${curr})`;
+    if (badge) badge.textContent = curr;
+    if (typeof this.updateCustomerReceiptInvoices === 'function') {
+      this.updateCustomerReceiptInvoices();
+    }
   }
 
   openQuickPayInvoice(invoiceId) {
@@ -8079,6 +8380,9 @@ class FinanceApp {
       rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (defaultSeedData.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (this.db?.customer_receipts || [])[0] || (defaultSeedData.customer_receipts || [])[0] || {};
     }
 
+    const curr = rec.currency || 'AED';
+    const isIndia = curr === 'INR' || rec.company_id === 'ashaz-eng-in';
+
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
         <div class="fin-doc-toolbar">
@@ -8130,12 +8434,12 @@ class FinanceApp {
                 <div class="doc-brand-block">
                   ${this.getRayanLogoImg(false)}
                   <div class="doc-brand-text">
-                    <div class="doc-company-title">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</div>
-                    <div class="doc-company-sub">Engineering Consultancy • General Contracting • Interior Fit-Out</div>
+                    <div class="doc-company-title">${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C'}</div>
+                    <div class="doc-company-sub">${isIndia ? 'Engineering Consultancy • Civil &amp; Industrial Fit-Out' : 'Engineering Consultancy • General Contracting • Interior Fit-Out'}</div>
                     <div class="doc-company-badges">
-                      <span class="doc-badge-pill">TRN: 100234567800003</span>
-                      <span class="doc-badge-pill">Lic: CN-2849102</span>
-                      <span class="doc-badge-pill">Abu Dhabi, UAE</span>
+                      <span class="doc-badge-pill">${isIndia ? 'GSTIN: 27AABCA1234F1Z5' : 'TRN: 100234567800003'}</span>
+                      <span class="doc-badge-pill">${isIndia ? 'CIN: U45200MH2020PTC342819' : 'Lic: CN-2849102'}</span>
+                      <span class="doc-badge-pill">${isIndia ? 'Mumbai, India' : 'Abu Dhabi, UAE'}</span>
                     </div>
                   </div>
                 </div>
@@ -8160,9 +8464,9 @@ class FinanceApp {
                   </div>
                   <div class="doc-info-entity-name">${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}</div>
                   <div class="doc-info-line">
-                    <strong>Contact Person:</strong> ${rec.contact_person || 'Mr. Shahil'}<br>
-                    <strong>Email Address:</strong> <a href="mailto:${rec.email || 'procurementofficer@toprockinteriors.com'}" class="rayan-link-blue">${rec.email || 'procurementofficer@toprockinteriors.com'}</a><br>
-                    <strong>Received By:</strong> ${rec.received_by || 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C'}
+                    <strong>Contact Person:</strong> ${rec.contact_person || (isIndia ? 'Mr. Rajesh Sharma' : 'Mr. Shahil')}<br>
+                    <strong>Email Address:</strong> <a href="mailto:${rec.email || (isIndia ? 'accounts@ashaz-eng.com' : 'procurementofficer@toprockinteriors.com')}" class="rayan-link-blue">${rec.email || (isIndia ? 'accounts@ashaz-eng.com' : 'procurementofficer@toprockinteriors.com')}</a><br>
+                    <strong>Received By:</strong> ${rec.received_by || (isIndia ? 'Ashaz Engineering Private Limited' : 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C')}
                   </div>
                 </div>
 
@@ -8185,8 +8489,8 @@ class FinanceApp {
                       <span class="doc-val">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</span>
                     </div>
                     <div class="doc-key-value-row">
-                      <span class="doc-label">Payment Channel:</span>
-                      <span class="doc-val">${rec.payment_type || rec.payment_mode || 'Online Bank Transfer'}</span>
+                      <span class="doc-label">Payment Mode:</span>
+                      <span class="doc-val">${rec.payment_mode || 'Online'}</span>
                     </div>
                   </div>
                 </div>
@@ -8194,7 +8498,7 @@ class FinanceApp {
 
               <!-- Settlement Link Ribbon -->
               <div class="doc-project-ribbon">
-                <span>🔗 <strong style="font-size:8.5px; color:#0f172a;">${rec.project_name || rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</strong></span>
+                <span>🏗️ <strong style="font-size:8.5px; color:#0f172a;">${rec.project_name || rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Project Settlement')}</strong></span>
                 <span style="font-size:7.5px; color:#059669; background:rgba(16,185,129,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">VERIFIED CLEARED FUNDS</span>
               </div>
 
@@ -8205,27 +8509,27 @@ class FinanceApp {
                     <th style="width:4%; text-align:center;">#</th>
                     <th style="width:30%;">PAYMENT MODE / طريقة الدفع</th>
                     <th style="width:24%;">CHEQUE / REF NO / رقم الشيك</th>
-                    <th style="width:24%;">DRAWEE BANK / البنك</th>
-                    <th style="width:18%; text-align:right;">AMOUNT RECEIVED</th>
+                    <th style="width:24%;">DRAWEE BANK / LOCATION</th>
+                    <th style="width:18%; text-align:right;">AMOUNT RECEIVED (${curr})</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td style="text-align:center; font-weight:700; color:#64748b;">1</td>
                     <td>
-                      <div class="doc-item-title">${rec.payment_type || rec.payment_mode || 'Online Bank Transfer'}</div>
-                      <div class="doc-item-desc">Corporate Wire Remittance / Central Clearing</div>
+                      <div class="doc-item-title">${rec.payment_type || (rec.payment_mode === 'Cheque' ? 'Account Payee Cheque' : rec.payment_mode === 'Cash' ? 'Official Cash Tender' : 'Online Bank Transfer')}</div>
+                      <div class="doc-item-desc">${rec.payment_mode === 'Cheque' ? (rec.cheque_status || 'Cleared & Verified') : (rec.payment_mode === 'Cash' ? (rec.cash_bearer ? `Bearer: ${rec.cash_bearer}` : 'Cash Received at Desk') : (isIndia ? 'NEFT/RTGS/IMPS Wire Remittance' : 'UAE Central Bank Clearance'))}</div>
                     </td>
                     <td>
-                      <div class="doc-item-title">${rec.cheque_no || rec.reference_no || '000018989'}</div>
-                      <div class="doc-item-desc">Value Date: ${rec.receipt_date || '17/09/2026'}</div>
+                      <div class="doc-item-title">${rec.cheque_no || rec.reference_no || 'REC-REF-001'}</div>
+                      <div class="doc-item-desc">${rec.payment_mode === 'Cheque' ? 'Cheque Date: ' : 'Value Date: '} ${rec.cheque_date || rec.receipt_date || '17/09/2026'}</div>
                     </td>
                     <td>
-                      <div class="doc-item-title">${rec.bank_name || 'First Abu Dhabi Bank (FAB)'}</div>
-                      <div class="doc-item-desc">UAE Central Bank Clearance</div>
+                      <div class="doc-item-title">${rec.bank_name || (rec.payment_mode === 'Cash' ? (rec.cash_location || 'Corporate Treasury Desk') : (isIndia ? 'State Bank of India' : 'First Abu Dhabi Bank (FAB)'))}</div>
+                      <div class="doc-item-desc">${rec.bank_branch ? `Branch: ${rec.bank_branch}` : (rec.payment_mode === 'Cash' ? (rec.cashier ? `Cashier: ${rec.cashier}` : 'Cash Desk') : (isIndia ? 'Mumbai Corporate Branch' : 'Abu Dhabi UAE Branch'))}</div>
                     </td>
                     <td style="text-align:right; font-weight:800; color:#059669; font-size:11px; font-variant-numeric:tabular-nums;">
-                      AED ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      ${curr} ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                 </tbody>
@@ -8236,7 +8540,7 @@ class FinanceApp {
                 <div class="doc-left-financials">
                   <div class="doc-words-box">
                     <div class="doc-words-label">The Sum Of (المبلغ وقدره بالحروف):</div>
-                    <div class="doc-words-text">💵 ${rec.amount_in_words || (this.numberToEnglishWords(rec.amount_received || 155837) + ' UAE Dirhams Only')}</div>
+                    <div class="doc-words-text">💵 ${rec.amount_in_words || (this.numberToEnglishWords(rec.amount_received || 155837) + (curr === 'INR' ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'))}</div>
                   </div>
 
                   <div class="doc-banking-box">
@@ -8251,20 +8555,20 @@ class FinanceApp {
 
                 <div class="doc-totals-card">
                   <div class="doc-totals-row">
-                    <span>Payment Channel:</span>
-                    <span class="doc-num">${rec.payment_type || rec.payment_mode || 'Online Transfer'}</span>
+                    <span>Payment Mode:</span>
+                    <span class="doc-num">${rec.payment_mode || 'Online'}</span>
                   </div>
                   <div class="doc-totals-row">
                     <span>Instrument Date:</span>
-                    <span class="doc-num">${rec.receipt_date || '17/Sep/2026'}</span>
+                    <span class="doc-num">${rec.cheque_date || rec.receipt_date || '17/Sep/2026'}</span>
                   </div>
                   <div class="doc-totals-row">
                     <span>Settlement Status:</span>
-                    <span class="doc-num" style="color:#059669;">Cleared &amp; Acknowledged</span>
+                    <span class="doc-num" style="color:#059669;">${rec.cheque_status || 'Cleared &amp; Acknowledged'}</span>
                   </div>
                   <div class="doc-totals-row grand-total">
                     <span>Net Received (الصافي)</span>
-                    <span style="color:#34d399;">AED ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    <span style="color:#34d399;">${curr} ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
@@ -8273,10 +8577,10 @@ class FinanceApp {
               <div class="doc-signatures-modern">
                 <div class="doc-sign-team-meta">
                   <strong>Best Wishes</strong><br>
-                  <strong>RAYAN Group Corporate Treasury</strong><br>
-                  Hotline : 025654497 • Abu Dhabi, UAE<br>
-                  <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
-                  <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
+                  <strong>${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Corporate Treasury'}</strong><br>
+                  ${isIndia ? 'Hotline: +91 22 2839 0100 • Mumbai, India' : 'Hotline: 025654497 • Abu Dhabi, UAE'}<br>
+                  <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" class="rayan-link-blue">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
+                  <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" class="rayan-link-blue">http://rayan-group.com</a>
                 </div>
 
                 <div class="doc-sign-card">
