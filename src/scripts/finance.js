@@ -226,6 +226,32 @@ class FinanceApp {
         this.db.invoices.unshift(payload.invoice);
       }
     }
+
+    if (action === 'record_receipt' && payload.receipt) {
+      if (!this.db.customer_receipts) this.db.customer_receipts = [];
+      const newRcp = payload.receipt;
+      this.db.customer_receipts.unshift(newRcp);
+
+      // Update allocated invoices in local db
+      if (Array.isArray(newRcp.allocations) && this.db.invoices) {
+        newRcp.allocations.forEach(alloc => {
+          const inv = this.db.invoices.find(i => i.id === alloc.invoice_id || i.invoice_no === alloc.invoice_no);
+          if (inv) {
+            const allocAmt = Number(alloc.amount_allocated) || 0;
+            inv.amount_paid = (Number(inv.amount_paid) || 0) + allocAmt;
+            inv.balance_due = Math.max(0, (Number(inv.grand_total) || 0) - inv.amount_paid);
+            if (inv.balance_due <= 0.01) {
+              inv.status = 'paid';
+            } else {
+              inv.status = 'partially_paid';
+            }
+          }
+        });
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, receipt: newRcp };
+    }
+
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
   }
@@ -253,6 +279,28 @@ class FinanceApp {
     });
 
     return `REC-RG-INV-${maxSeq + 1}`;
+  }
+
+  getNextReceiptNumber() {
+    const receipts = this.db?.customer_receipts || [];
+    let maxSeq = 44025;
+
+    receipts.forEach(rcp => {
+      const rcpNo = rcp.receipt_no || '';
+      const recMatch = rcpNo.match(/REC-RV-(\d+)/i);
+      if (recMatch) {
+        const num = parseInt(recMatch[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      } else {
+        const anyNumMatch = rcpNo.match(/(\d{4,})$/);
+        if (anyNumMatch) {
+          const num = parseInt(anyNumMatch[1], 10);
+          if (!isNaN(num) && num > maxSeq) maxSeq = num;
+        }
+      }
+    });
+
+    return `REC-RV-${maxSeq + 1}`;
   }
 
   formatCurrency(amount, withSymbol = true) {
@@ -5406,7 +5454,10 @@ class FinanceApp {
       <div class="fin-modal-backdrop open" id="modal-receipt">
         <div class="fin-modal-dialog" style="max-width:680px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">💳 Record Customer Payment Receipt</h3>
+            <div>
+              <h3 class="fin-modal-title">💳 Record Customer Payment Receipt</h3>
+              <div style="font-size:0.75rem; color:#00e5d2; font-weight:700; margin-top:2px;">Auto Voucher Sequence: ${this.getNextReceiptNumber()}</div>
+            </div>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-receipt')">&times;</button>
           </div>
           <div class="fin-modal-body">
@@ -5558,25 +5609,40 @@ class FinanceApp {
       }
 
       const cust = customers.find(c => c.id === custSel.value);
+      const receiptNo = this.getNextReceiptNumber();
       const payload = {
         receipt: {
-          customer_id: cust.id,
-          customer_name: cust.name,
+          id: `rec-${Date.now().toString(36)}`,
+          receipt_no: receiptNo,
+          customer_id: cust?.id || custSel.value,
+          customer_name: cust?.name || '',
+          contact_person: cust?.contact_person || '',
+          email: cust?.email || '',
+          company_id: this.activeCompanyId || 'ashaz-eng-in',
           receipt_date: document.getElementById('rec-date').value,
+          receipt_time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           payment_mode: document.getElementById('rec-mode').value,
+          payment_type: document.getElementById('rec-mode').value,
           reference_no: document.getElementById('rec-ref').value,
           amount_received: amountReceived,
           allocated_amount: totalAllocated,
           allocations,
-          notes: document.getElementById('rec-notes').value
+          ref_invoice_no: allocations[0]?.invoice_no || '',
+          notes: document.getElementById('rec-notes').value,
+          recorded_by: this.currentUser?.name || 'Accounts Staff',
+          recorded_at: new Date().toISOString()
         }
       };
 
       const res = await this.syncApi('record_receipt', payload);
       if (res && res.success) {
-        alert(`Payment Receipt ${res.receipt.receipt_no} recorded successfully. Invoices updated.`);
+        const rcpObj = res.receipt || payload.receipt;
         this.closeModal('modal-receipt');
-        this.switchTab('payments');
+        if (confirm(`Payment Receipt ${rcpObj.receipt_no} recorded successfully.\n\nInvoice balances have been updated automatically.\nWould you like to view & print the official Receipt Voucher now?`)) {
+          this.openReceiptPrintModal(rcpObj.id);
+        } else {
+          this.switchTab('payments');
+        }
       }
     };
   }
@@ -7720,7 +7786,13 @@ class FinanceApp {
                   <div class="doc-title-en">TAX INVOICE</div>
                   <div class="doc-title-ar">فاتورة ضريبية</div>
                   <div class="doc-number-pill"># ${inv.invoice_no || 'REC-RG-INV-44049'}</div>
-                  <div class="doc-status-badge">✓ Official Tax Invoice</div>
+                  ${(inv.status === 'paid' || (inv.amount_paid > 0 && inv.balance_due <= 0.01)) ? `
+                    <div class="doc-status-badge status-received" style="background:#059669; color:#fff; font-weight:800;">✓ SETTLED &amp; PAID IN FULL</div>
+                  ` : (inv.status === 'partially_paid' || inv.amount_paid > 0 ? `
+                    <div class="doc-status-badge" style="background:#d97706; color:#fff; font-weight:800;">PARTIALLY PAID (${inv.currency || 'AED'} ${Number(inv.balance_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} DUE)</div>
+                  ` : `
+                    <div class="doc-status-badge">✓ Official Tax Invoice</div>
+                  `)}
                   ${this.getRayanDynamicVerificationCode(inv, 'invoice')}
                 </div>
               </div>
@@ -7891,6 +7963,16 @@ class FinanceApp {
                     <span>Grand Total (الإجمالي)</span>
                     <span>${inv.currency || 'AED'} ${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
+                  ${(inv.amount_paid && Number(inv.amount_paid) > 0) ? `
+                    <div class="doc-totals-row" style="color:#059669; font-weight:700; margin-top:4px;">
+                      <span>Amount Received / Paid (المبلغ المدفوع):</span>
+                      <span class="doc-num">- ${Number(inv.amount_paid).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
+                    </div>
+                    <div class="doc-totals-row" style="font-weight:800; border-top:1.5px solid #0f172a; margin-top:4px; padding-top:4px; color:${Number(inv.balance_due) > 0.01 ? '#b91c1c' : '#059669'};">
+                      <span>Balance Due (الرصيد المتبقي):</span>
+                      <span class="doc-num">${Number(inv.balance_due) <= 0.01 ? 'PAID IN FULL ✓' : `${Number(inv.balance_due).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}`}</span>
+                    </div>
+                  ` : ''}
                 </div>
               </div>
 

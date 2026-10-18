@@ -135,7 +135,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'create_bill':
             $bill = $body['bill'] ?? [];
             if (!empty($bill)) {
-                $db['bills'][] = $bill;
+                if (!isset($db['purchase_bills'])) $db['purchase_bills'] = [];
+                array_unshift($db['purchase_bills'], $bill);
                 $addAuditLog('create', 'bill', $bill['bill_no'] ?? '', 'Created purchase bill for ' . ($bill['vendor_name'] ?? ''));
             }
             break;
@@ -143,38 +144,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'record_receipt':
             $rcp = $body['receipt'] ?? [];
             if (!empty($rcp)) {
-                $db['receipts'][] = $rcp;
-                // update invoice
-                foreach ($db['invoices'] as &$inv) {
-                    if ($inv['id'] === ($rcp['invoice_id'] ?? '')) {
-                        $inv['amount_paid'] = ($inv['amount_paid'] ?? 0) + ($rcp['amount'] ?? 0);
-                        $inv['balance_due'] = max(0, ($inv['grand_total'] ?? 0) - $inv['amount_paid']);
-                        if ($inv['balance_due'] <= 0) {
-                            $inv['status'] = 'paid';
+                if (!isset($db['customer_receipts'])) $db['customer_receipts'] = [];
+                array_unshift($db['customer_receipts'], $rcp);
+
+                // Update allocated invoices
+                if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
+                    foreach ($rcp['allocations'] as $alloc) {
+                        foreach ($db['invoices'] as &$inv) {
+                            if ($inv['id'] === ($alloc['invoice_id'] ?? '') || $inv['invoice_no'] === ($alloc['invoice_no'] ?? '')) {
+                                $allocAmt = floatval($alloc['amount_allocated'] ?? 0);
+                                $inv['amount_paid'] = floatval($inv['amount_paid'] ?? 0) + $allocAmt;
+                                $inv['balance_due'] = max(0, floatval($inv['grand_total'] ?? 0) - $inv['amount_paid']);
+                                if ($inv['balance_due'] <= 0.01) {
+                                    $inv['status'] = 'paid';
+                                } else {
+                                    $inv['status'] = 'partially_paid';
+                                }
+                            }
+                        }
+                        unset($inv);
+                    }
+                } elseif (!empty($rcp['invoice_id'])) {
+                    foreach ($db['invoices'] as &$inv) {
+                        if ($inv['id'] === $rcp['invoice_id']) {
+                            $allocAmt = floatval($rcp['amount_received'] ?? $rcp['amount'] ?? 0);
+                            $inv['amount_paid'] = floatval($inv['amount_paid'] ?? 0) + $allocAmt;
+                            $inv['balance_due'] = max(0, floatval($inv['grand_total'] ?? 0) - $inv['amount_paid']);
+                            if ($inv['balance_due'] <= 0.01) {
+                                $inv['status'] = 'paid';
+                            } else {
+                                $inv['status'] = 'partially_paid';
+                            }
                         }
                     }
+                    unset($inv);
                 }
-                unset($inv);
-                $addAuditLog('create', 'receipt', $rcp['receipt_no'] ?? '', 'Recorded customer receipt of ' . ($rcp['amount'] ?? 0));
+                $addAuditLog('create', 'receipt', $rcp['receipt_no'] ?? '', 'Recorded customer receipt of ' . ($rcp['amount_received'] ?? $rcp['amount'] ?? 0));
             }
             break;
 
         case 'record_payment':
             $pay = $body['payment'] ?? [];
             if (!empty($pay)) {
-                $db['payments'][] = $pay;
-                // update bill
-                foreach ($db['bills'] as &$b) {
-                    if ($b['id'] === ($pay['bill_id'] ?? '')) {
-                        $b['amount_paid'] = ($b['amount_paid'] ?? 0) + ($pay['amount'] ?? 0);
-                        $b['balance_due'] = max(0, ($b['grand_total'] ?? 0) - $b['amount_paid']);
-                        if ($b['balance_due'] <= 0) {
-                            $b['status'] = 'paid';
+                if (!isset($db['vendor_payments'])) $db['vendor_payments'] = [];
+                array_unshift($db['vendor_payments'], $pay);
+
+                // Update allocated purchase bills
+                if (!empty($pay['allocations']) && is_array($pay['allocations']) && isset($db['purchase_bills'])) {
+                    foreach ($pay['allocations'] as $alloc) {
+                        foreach ($db['purchase_bills'] as &$b) {
+                            if ($b['id'] === ($alloc['bill_id'] ?? '') || $b['bill_no'] === ($alloc['bill_no'] ?? '')) {
+                                $allocAmt = floatval($alloc['amount_allocated'] ?? 0);
+                                $b['amount_paid'] = floatval($b['amount_paid'] ?? 0) + $allocAmt;
+                                $b['balance_due'] = max(0, floatval($b['grand_total'] ?? 0) - $b['amount_paid']);
+                                if ($b['balance_due'] <= 0.01) {
+                                    $b['status'] = 'paid';
+                                } else {
+                                    $b['status'] = 'partially_paid';
+                                }
+                            }
+                        }
+                        unset($b);
+                    }
+                } elseif (!empty($pay['bill_id']) && isset($db['purchase_bills'])) {
+                    foreach ($db['purchase_bills'] as &$b) {
+                        if ($b['id'] === $pay['bill_id']) {
+                            $allocAmt = floatval($pay['amount_paid'] ?? $pay['amount'] ?? 0);
+                            $b['amount_paid'] = floatval($b['amount_paid'] ?? 0) + $allocAmt;
+                            $b['balance_due'] = max(0, floatval($b['grand_total'] ?? 0) - $b['amount_paid']);
+                            if ($b['balance_due'] <= 0.01) {
+                                $b['status'] = 'paid';
+                            } else {
+                                $b['status'] = 'partially_paid';
+                            }
                         }
                     }
+                    unset($b);
                 }
-                unset($b);
-                $addAuditLog('create', 'payment', $pay['payment_no'] ?? '', 'Disbursed vendor payment of ' . ($pay['amount'] ?? 0));
+                $addAuditLog('create', 'payment', $pay['voucher_no'] ?? $pay['payment_no'] ?? '', 'Disbursed vendor payment of ' . ($pay['amount_paid'] ?? $pay['amount'] ?? 0));
             }
             break;
 
