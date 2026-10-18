@@ -7837,8 +7837,7 @@ class FinanceApp {
 
                 <div class="doc-header-center">
                   <div class="doc-title-en">TAX INVOICE</div>
-                  <div class="doc-title-ar">فاتورة ضريبية</div>
-                  <div class="doc-number-pill"># ${inv.invoice_no || 'REC-RG-INV-44049'}</div>
+                  <div class="doc-number-plain"># ${inv.invoice_no || 'REC-RG-INV-44049'}</div>
                 </div>
 
                 <div class="doc-id-card">
@@ -8143,8 +8142,7 @@ class FinanceApp {
 
                 <div class="doc-header-center">
                   <div class="doc-title-en">RECEIPT VOUCHER</div>
-                  <div class="doc-title-ar">سند قبض رسمي</div>
-                  <div class="doc-number-pill">${rec.receipt_no || 'REC-RV-44025'}</div>
+                  <div class="doc-number-plain">${rec.receipt_no || 'REC-RV-44025'}</div>
                 </div>
 
                 <div class="doc-id-card">
@@ -8383,8 +8381,7 @@ class FinanceApp {
 
                 <div class="doc-header-center">
                   <div class="doc-title-en">PURCHASE ORDER</div>
-                  <div class="doc-title-ar">أمر شراء رسمي</div>
-                  <div class="doc-number-pill">${po.po_no || 'PO-REC-11008'}</div>
+                  <div class="doc-number-plain">${po.po_no || 'PO-REC-11008'}</div>
                 </div>
 
                 <div class="doc-id-card">
