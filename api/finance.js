@@ -176,18 +176,18 @@ export default async function handler(req, res) {
 
       const amountReceived = Number(receiptData.amount_received);
       const newReceipt = {
-        id: `rec-${Date.now().toString(36)}`,
+        ...receiptData,
+        id: receiptData.id || `rec-${Date.now().toString(36)}`,
         receipt_no: receiptData.receipt_no || `REC-2026-${String(db.customer_receipts.length + 1).padStart(3, '0')}`,
         receipt_date: receiptData.receipt_date || new Date().toISOString().split('T')[0],
         customer_id: receiptData.customer_id,
         customer_name: receiptData.customer_name,
-        company_id: receiptData.company_id || 'ashaz-eng-in',
-        payment_mode: receiptData.payment_mode || 'NEFT/RTGS',
+        company_id: receiptData.company_id || (receiptData.currency === 'INR' ? 'ashaz-eng-in' : 'rayan-corp-uae'),
+        payment_mode: receiptData.payment_mode || 'Online',
         reference_no: receiptData.reference_no || 'WIRE-TXN-' + Math.floor(100000 + Math.random() * 900000),
         amount_received: amountReceived,
         allocated_amount: Number(receiptData.allocated_amount) || amountReceived,
         allocations: receiptData.allocations || [],
-        bank_account: receiptData.bank_account || 'State Bank of India (Corporate 392019485721)',
         notes: receiptData.notes || '',
         recorded_by: body.user_name || 'Accounts Staff',
         recorded_at: new Date().toISOString()
@@ -324,25 +324,33 @@ export default async function handler(req, res) {
         return;
       }
       const newCust = {
-        id: `cust-${Date.now().toString(36)}`,
+        id: cust.id || `cust-${Date.now().toString(36)}`,
         code: cust.code || 'CUST-' + Math.floor(100 + Math.random() * 900),
-        company_id: cust.company_id || 'ashaz-eng-in',
+        company_id: cust.company_id || 'rayan-corp-uae',
         name: cust.name,
         contact_person: cust.contact_person || '',
         email: cust.email || '',
         phone: cust.phone || '',
+        country: cust.country || 'UAE',
         billing_address: cust.billing_address || '',
         shipping_address: cust.shipping_address || '',
         gstin: cust.gstin || '',
-        state: cust.state || 'Maharashtra',
-        state_code: cust.state_code || '27',
-        place_of_supply: cust.place_of_supply || '27-Maharashtra',
+        trn: cust.trn || '',
+        state: cust.state || '',
+        state_code: cust.state_code || '',
+        place_of_supply: cust.place_of_supply || '',
         payment_terms: Number(cust.payment_terms) || 30,
         credit_limit: Number(cust.credit_limit) || 10000000,
         opening_balance: Number(cust.opening_balance) || 0,
         status: 'active'
       };
-      db.customers.push(newCust);
+      if (!Array.isArray(db.customers)) db.customers = [];
+      const exIdx = db.customers.findIndex(c => c.id === newCust.id || (c.name && c.name.toLowerCase() === newCust.name.toLowerCase()));
+      if (exIdx >= 0) {
+        db.customers[exIdx] = { ...db.customers[exIdx], ...newCust };
+      } else {
+        db.customers.unshift(newCust);
+      }
       addAuditLog(body.user_name, body.user_role, body.user_email, 'CREATE_CUSTOMER', 'Customer', newCust.id, `Created customer record for ${newCust.name}.`);
       writeDb(db);
       res.status(200).json({ success: true, customer: newCust, data: db });

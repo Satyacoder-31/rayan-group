@@ -101,35 +101,28 @@ $masterSeed = getMasterSeed($candidates);
 // Auto-repair: if $db is null or corrupted (missing companies/customers), repair using masterSeed
 if (!$db || empty($db['companies']) || count($db['companies']) === 0) {
     if ($masterSeed) {
-        if (!empty($db['invoices']) && is_array($db['invoices'])) {
-            foreach ($db['invoices'] as $existingInv) {
-                $found = false;
-                foreach ($masterSeed['invoices'] as &$sInv) {
-                    if (($sInv['id'] ?? '') === ($existingInv['id'] ?? '') || ($sInv['invoice_no'] ?? '') === ($existingInv['invoice_no'] ?? '')) {
-                        $sInv = $existingInv;
-                        $found = true;
-                        break;
+        $collectionsToPreserve = ['invoices', 'customer_receipts', 'customers', 'vendors', 'items', 'purchase_bills', 'vendor_payments', 'expenses', 'purchase_orders', 'audit_logs'];
+        foreach ($collectionsToPreserve as $col) {
+            if (!empty($db[$col]) && is_array($db[$col])) {
+                if (!isset($masterSeed[$col]) || !is_array($masterSeed[$col])) {
+                    $masterSeed[$col] = [];
+                }
+                foreach ($db[$col] as $existingItem) {
+                    $k = $existingItem['id'] ?? $existingItem['receipt_no'] ?? $existingItem['invoice_no'] ?? $existingItem['bill_no'] ?? $existingItem['voucher_no'] ?? $existingItem['code'] ?? $existingItem['name'] ?? null;
+                    if (!$k) continue;
+                    $found = false;
+                    foreach ($masterSeed[$col] as &$sItem) {
+                        $sk = $sItem['id'] ?? $sItem['receipt_no'] ?? $sItem['invoice_no'] ?? $sItem['bill_no'] ?? $sItem['voucher_no'] ?? $sItem['code'] ?? $sItem['name'] ?? null;
+                        if ($sk === $k) {
+                            $sItem = $existingItem;
+                            $found = true;
+                            break;
+                        }
                     }
-                }
-                unset($sInv);
-                if (!$found) {
-                    array_unshift($masterSeed['invoices'], $existingInv);
-                }
-            }
-        }
-        if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
-            foreach ($db['customer_receipts'] as $existingRcp) {
-                $found = false;
-                foreach ($masterSeed['customer_receipts'] as &$sRcp) {
-                    if (($sRcp['id'] ?? '') === ($existingRcp['id'] ?? '') || ($sRcp['receipt_no'] ?? '') === ($existingRcp['receipt_no'] ?? '')) {
-                        $sRcp = $existingRcp;
-                        $found = true;
-                        break;
+                    unset($sItem);
+                    if (!$found) {
+                        array_unshift($masterSeed[$col], $existingItem);
                     }
-                }
-                unset($sRcp);
-                if (!$found) {
-                    array_unshift($masterSeed['customer_receipts'], $existingRcp);
                 }
             }
         }
@@ -294,24 +287,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'create_customer':
             $cust = $body['customer'] ?? [];
-            if (!empty($cust)) {
-                $db['customers'][] = $cust;
+            if (!empty($cust) && !empty($cust['name'])) {
+                if (empty($cust['id'])) {
+                    $cust['id'] = 'cust-' . round(microtime(true) * 1000);
+                }
+                if (empty($cust['code'])) {
+                    $words = preg_split('/\s+/', preg_replace('/[^a-zA-Z0-9\s]/', '', $cust['name']));
+                    $abbr = '';
+                    foreach ($words as $w) {
+                        if (!empty($w)) $abbr .= strtoupper($w[0]);
+                    }
+                    $cust['code'] = 'CUST-' . (substr($abbr, 0, 5) ?: rand(100, 999));
+                }
+                if (empty($cust['company_id'])) {
+                    $cust['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                }
+                if (empty($cust['status'])) {
+                    $cust['status'] = 'active';
+                }
+                if (!isset($db['customers']) || !is_array($db['customers'])) {
+                    $db['customers'] = [];
+                }
+                $found = false;
+                foreach ($db['customers'] as &$exC) {
+                    if (($exC['id'] ?? '') === $cust['id'] || strtolower($exC['name'] ?? '') === strtolower($cust['name'])) {
+                        $exC = array_merge($exC, $cust);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($exC);
+                if (!$found) {
+                    array_unshift($db['customers'], $cust);
+                }
                 $addAuditLog('create', 'customer', $cust['name'] ?? '', 'Added client ' . ($cust['name'] ?? ''));
             }
             break;
 
         case 'create_vendor':
             $vnd = $body['vendor'] ?? [];
-            if (!empty($vnd)) {
-                $db['vendors'][] = $vnd;
+            if (!empty($vnd) && !empty($vnd['name'])) {
+                if (empty($vnd['id'])) {
+                    $vnd['id'] = 'vend-' . round(microtime(true) * 1000);
+                }
+                if (empty($vnd['code'])) {
+                    $vnd['code'] = 'VEND-' . rand(100, 999);
+                }
+                if (empty($vnd['status'])) {
+                    $vnd['status'] = 'active';
+                }
+                if (!isset($db['vendors']) || !is_array($db['vendors'])) {
+                    $db['vendors'] = [];
+                }
+                $found = false;
+                foreach ($db['vendors'] as &$exV) {
+                    if (($exV['id'] ?? '') === $vnd['id'] || strtolower($exV['name'] ?? '') === strtolower($vnd['name'])) {
+                        $exV = array_merge($exV, $vnd);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($exV);
+                if (!$found) {
+                    array_unshift($db['vendors'], $vnd);
+                }
                 $addAuditLog('create', 'vendor', $vnd['name'] ?? '', 'Added supplier/subcontractor ' . ($vnd['name'] ?? ''));
             }
             break;
 
         case 'create_item':
             $itm = $body['item'] ?? [];
-            if (!empty($itm)) {
-                $db['items'][] = $itm;
+            if (!empty($itm) && !empty($itm['name'])) {
+                if (empty($itm['id'])) {
+                    $itm['id'] = 'itm-' . round(microtime(true) * 1000);
+                }
+                if (empty($itm['code'])) {
+                    $itm['code'] = 'ITM-' . rand(100, 999);
+                }
+                if (empty($itm['status'])) {
+                    $itm['status'] = 'active';
+                }
+                if (!isset($db['items']) || !is_array($db['items'])) {
+                    $db['items'] = [];
+                }
+                $found = false;
+                foreach ($db['items'] as &$exI) {
+                    if (($exI['id'] ?? '') === $itm['id'] || strtolower($exI['name'] ?? '') === strtolower($itm['name'])) {
+                        $exI = array_merge($exI, $itm);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($exI);
+                if (!$found) {
+                    array_unshift($db['items'], $itm);
+                }
                 $addAuditLog('create', 'item', $itm['name'] ?? '', 'Added catalog item ' . ($itm['name'] ?? ''));
             }
             break;
@@ -328,6 +398,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     echo json_encode([
         'success' => true,
+        'customer' => $cust ?? null,
+        'receipt' => $rcp ?? null,
+        'payment' => $pay ?? null,
+        'vendor' => $vnd ?? null,
+        'item' => $itm ?? null,
         'invoice' => $inv ?? null,
         'data' => $db
     ]);

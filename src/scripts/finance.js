@@ -173,6 +173,11 @@ class FinanceApp {
       'audit_logs', 'notifications', 'documents'
     ];
 
+    const getUniqueKey = (item) => {
+      if (!item || typeof item !== 'object') return null;
+      return item.id || item.receipt_no || item.invoice_no || item.bill_no || item.voucher_no || item.payment_no || item.po_no || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
+    };
+
     for (const key of collections) {
       const seedArr = merged[key] || [];
       const incomingArr = Array.isArray(sourceData[key]) ? sourceData[key] : [];
@@ -182,20 +187,23 @@ class FinanceApp {
         continue;
       }
 
-      // Map existing seed items by unique identifier
+      // Add incoming user items first so newest submissions stay at top
       const map = new Map();
-      seedArr.forEach(item => {
+      incomingArr.forEach(item => {
         if (item) {
-          const id = item.id || item.code || item.invoice_no || item.receipt_no;
-          if (id) map.set(id, item);
+          const uniqueKey = getUniqueKey(item) || `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+          if (!item.id) item.id = uniqueKey;
+          map.set(uniqueKey, item);
         }
       });
 
-      // Overlay or add incoming items
-      incomingArr.forEach(item => {
+      // Overlay / append missing seed items without duplicating
+      seedArr.forEach(item => {
         if (item) {
-          const id = item.id || item.code || item.invoice_no || item.receipt_no;
-          if (id) map.set(id, item);
+          const uniqueKey = getUniqueKey(item);
+          if (uniqueKey && !map.has(uniqueKey)) {
+            map.set(uniqueKey, item);
+          }
         }
       });
 
@@ -269,7 +277,64 @@ class FinanceApp {
       console.warn('API sync offline fallback:', e);
     }
 
-    // Local state fallback
+    // Local state fallback & immediate UI reflection
+    if (action === 'create_customer' && payload.customer) {
+      if (!this.db.customers) this.db.customers = [];
+      const newCust = {
+        id: payload.customer.id || `cust-${Date.now().toString(36)}`,
+        code: payload.customer.code || `CUST-${Math.floor(100 + Math.random() * 900)}`,
+        company_id: payload.customer.company_id || this.activeCompanyId || 'rayan-corp-uae',
+        status: 'active',
+        credit_limit: 10000000,
+        opening_balance: 0,
+        ...payload.customer
+      };
+      const idx = this.db.customers.findIndex(c => c.id === newCust.id || (c.name && c.name.toLowerCase() === newCust.name.toLowerCase()));
+      if (idx >= 0) {
+        this.db.customers[idx] = { ...this.db.customers[idx], ...newCust };
+      } else {
+        this.db.customers.unshift(newCust);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, customer: newCust };
+    }
+
+    if (action === 'create_vendor' && payload.vendor) {
+      if (!this.db.vendors) this.db.vendors = [];
+      const newVend = {
+        id: payload.vendor.id || `vend-${Date.now().toString(36)}`,
+        code: payload.vendor.code || `VEND-${Math.floor(100 + Math.random() * 900)}`,
+        status: 'active',
+        ...payload.vendor
+      };
+      const idx = this.db.vendors.findIndex(v => v.id === newVend.id || (v.name && v.name.toLowerCase() === newVend.name.toLowerCase()));
+      if (idx >= 0) {
+        this.db.vendors[idx] = { ...this.db.vendors[idx], ...newVend };
+      } else {
+        this.db.vendors.unshift(newVend);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, vendor: newVend };
+    }
+
+    if (action === 'create_item' && payload.item) {
+      if (!this.db.items) this.db.items = [];
+      const newItem = {
+        id: payload.item.id || `itm-${Date.now().toString(36)}`,
+        code: payload.item.code || `ITM-${Math.floor(100 + Math.random() * 900)}`,
+        status: 'active',
+        ...payload.item
+      };
+      const idx = this.db.items.findIndex(it => it.id === newItem.id || (it.name && it.name.toLowerCase() === newItem.name.toLowerCase()));
+      if (idx >= 0) {
+        this.db.items[idx] = { ...this.db.items[idx], ...newItem };
+      } else {
+        this.db.items.unshift(newItem);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, item: newItem };
+    }
+
     if (action === 'create_invoice' && payload.invoice) {
       if (!this.db.invoices) this.db.invoices = [];
       const idx = this.db.invoices.findIndex(i => i.id === payload.invoice.id || i.invoice_no === payload.invoice.invoice_no);
@@ -278,12 +343,19 @@ class FinanceApp {
       } else {
         this.db.invoices.unshift(payload.invoice);
       }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
     }
 
     if (action === 'record_receipt' && payload.receipt) {
       if (!this.db.customer_receipts) this.db.customer_receipts = [];
       const newRcp = payload.receipt;
-      this.db.customer_receipts.unshift(newRcp);
+      const idx = this.db.customer_receipts.findIndex(r => r.id === newRcp.id || r.receipt_no === newRcp.receipt_no);
+      if (idx >= 0) {
+        this.db.customer_receipts[idx] = newRcp;
+      } else {
+        this.db.customer_receipts.unshift(newRcp);
+      }
 
       // Update allocated invoices in local db
       if (Array.isArray(newRcp.allocations) && this.db.invoices) {
@@ -2080,17 +2152,17 @@ class FinanceApp {
             </thead>
             <tbody>
               ${customers.map(c => {
-                const custInvoices = invoices.filter(i => i.customer_id === c.id && i.status !== 'void');
+                const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
                 const totalInvoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
                 const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
                 return `
                   <tr>
-                    <td><strong>${c.code}</strong></td>
+                    <td><strong>${c.code || c.id || 'CUST'}</strong></td>
                     <td><strong>${c.name}</strong></td>
                     <td>${c.contact_person || '—'}</td>
                     <td>
-                      <div>${c.email}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${c.phone}</span>
+                      <div>${c.email || '—'}</div>
+                      <span style="font-size:0.68rem; color:#94a3b8;">${c.phone || '—'}</span>
                     </td>
                     <td>
                       ${c.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${c.trn}</code></div>` : ''}
@@ -2099,7 +2171,7 @@ class FinanceApp {
                     <td>${c.place_of_supply || '—'}</td>
                     <td>${this.formatCurrency(totalInvoiced)}</td>
                     <td><strong style="color:${outstanding > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
-                    <td>${this.formatCurrency(c.credit_limit)}</td>
+                    <td>${this.formatCurrency(c.credit_limit || 10000000)}</td>
                     <td>
                       <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCustomerProfile('${c.id}')">360° Profile &amp; SOA</button>
                     </td>
@@ -2253,8 +2325,15 @@ class FinanceApp {
   // 7. PAYMENTS & RECEIPTS MODULE
   // --------------------------------------------------------------------------
   renderPaymentsTab(root) {
-    const receipts = this.db?.customer_receipts || [];
+    const rawReceipts = this.db?.customer_receipts || [];
+    const receipts = [...rawReceipts].sort((a, b) => {
+      const dateA = new Date(a.receipt_date || 0).getTime();
+      const dateB = new Date(b.receipt_date || 0).getTime();
+      if (dateB !== dateA) return dateB - dateA;
+      return (b.id || '').localeCompare(a.id || '');
+    });
     const payments = this.db?.vendor_payments || [];
+    const latestReceiptId = receipts[0]?.id || 'rec-rv-44026';
 
     root.innerHTML = `
       <div class="fin-dash-row-responsive">
@@ -2266,8 +2345,8 @@ class FinanceApp {
               <p style="font-size:0.75rem; color:#94a3b8;">Inward client collections &amp; invoice allocations</p>
             </div>
             <div style="display:flex; gap:0.5rem; align-items:center;">
-              <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
-                💳 Sample Receipt Voucher
+              <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('${latestReceiptId}')">
+                💳 Official Receipt Voucher
               </button>
               ${this.hasPermission('record_receipt') ? `
                 <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordReceiptModal()">
@@ -2454,9 +2533,16 @@ class FinanceApp {
   // PAYMENT-IN & PAYMENT-OUT DEDICATED MODULES
   // --------------------------------------------------------------------------
   renderPaymentInTab(root) {
-    const receipts = this.db?.customer_receipts || [];
+    const rawReceipts = this.db?.customer_receipts || [];
+    const receipts = [...rawReceipts].sort((a, b) => {
+      const dateA = new Date(a.receipt_date || 0).getTime();
+      const dateB = new Date(b.receipt_date || 0).getTime();
+      if (dateB !== dateA) return dateB - dateA;
+      return (b.id || '').localeCompare(a.id || '');
+    });
     const totalReceived = receipts.reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
     const fabReceipts = receipts.filter(r => (r.bank_name || '').toLowerCase().includes('abu dhabi') || (r.currency === 'AED')).reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
+    const latestReceiptId = receipts[0]?.id || 'rec-rv-44026';
 
     root.innerHTML = `
       <div class="fin-dash-row-responsive">
@@ -2467,7 +2553,7 @@ class FinanceApp {
               <p style="font-size:0.75rem; color:#94a3b8;">Inward client collections, wire transfers, and invoice receipts</p>
             </div>
             <div style="display:flex; gap:0.5rem; align-items:center;">
-              <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
+              <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('${latestReceiptId}')">
                 💳 Official Receipt Voucher
               </button>
               ${this.hasPermission('record_receipt') ? `
@@ -2491,7 +2577,7 @@ class FinanceApp {
             </div>
             <div class="fin-metric-card">
               <span class="fin-metric-label">GCC Remittances (AED)</span>
-              <div class="fin-metric-value" style="color:#38bdf8;">AED ${(fabReceipts * 0.044).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div class="fin-metric-value" style="color:#38bdf8;">AED ${fabReceipts.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
               <span class="fin-metric-sub">FAB &amp; Dubai Escrow deposits</span>
             </div>
           </div>
@@ -5776,9 +5862,10 @@ class FinanceApp {
     const updateCustomerInvoices = () => {
       const cId = custSel.value;
       const curr = currSel.value || 'AED';
-      const unpaid = invoices.filter(i => (i.customer_id === cId || i.customer_name === cId) && i.balance_due > 0 && i.status !== 'void');
+      const cust = customers.find(c => c.id === cId || c.code === cId || (c.name && c.name.toLowerCase() === (cId || '').toLowerCase()));
+      const custName = cust?.name || '';
+      const unpaid = invoices.filter(i => (i.customer_id === cId || (custName && i.customer_name === custName) || i.customer_name === cId) && i.balance_due > 0 && i.status !== 'void');
 
-      const cust = customers.find(c => c.id === cId || c.name === cId);
       if (cust) {
         const cp = document.getElementById('rec-contact-person');
         const em = document.getElementById('rec-email');
@@ -5833,7 +5920,12 @@ class FinanceApp {
     if (preselectInvoiceId) {
       const inv = invoices.find(i => i.id === preselectInvoiceId || i.invoice_no === preselectInvoiceId);
       if (inv) {
-        custSel.value = inv.customer_id;
+        if (inv.customer_id && customers.some(c => c.id === inv.customer_id)) {
+          custSel.value = inv.customer_id;
+        } else if (inv.customer_name) {
+          const matchedCust = customers.find(c => c.name === inv.customer_name);
+          if (matchedCust) custSel.value = matchedCust.id;
+        }
         amountInp.value = inv.balance_due;
         const projInp = document.getElementById('rec-project-name');
         if (projInp && inv.project_name) projInp.value = inv.project_name;
@@ -5869,7 +5961,7 @@ class FinanceApp {
         return;
       }
 
-      const cust = customers.find(c => c.id === custSel.value);
+      const cust = customers.find(c => c.id === custSel.value || c.code === custSel.value || (c.name && c.name.toLowerCase() === (custSel.value || '').toLowerCase()));
       const mode = document.getElementById('rec-mode').value;
       const currency = document.getElementById('rec-currency').value || 'AED';
 
@@ -5948,10 +6040,9 @@ class FinanceApp {
       if (res && res.success) {
         const rcpObj = res.receipt || payload.receipt;
         this.closeModal('modal-receipt');
+        this.switchTab('payment_in');
         if (confirm(`Payment Receipt ${rcpObj.receipt_no} recorded successfully.\n\nInvoice balances updated automatically.\nWould you like to view & print the official Receipt Voucher now?`)) {
           this.openReceiptPrintModal(rcpObj.id);
-        } else {
-          this.switchTab('payments');
         }
       }
     };
@@ -6560,11 +6651,11 @@ class FinanceApp {
 
   // 6. CUSTOMER 360 PROFILE & STATEMENT OF ACCOUNT (SOA)
   openCustomerProfile(custId) {
-    const cust = this.db?.customers?.find(c => c.id === custId);
+    const cust = this.db?.customers?.find(c => c.id === custId || c.code === custId || (c.name && c.name.toLowerCase() === (custId || '').toLowerCase()));
     if (!cust) return;
 
-    const invoices = (this.db?.invoices || []).filter(i => i.customer_id === cust.id && i.status !== 'void');
-    const receipts = (this.db?.customer_receipts || []).filter(r => r.customer_id === cust.id);
+    const invoices = (this.db?.invoices || []).filter(i => (i.customer_id === cust.id || (cust.name && i.customer_name === cust.name)) && i.status !== 'void');
+    const receipts = (this.db?.customer_receipts || []).filter(r => (r.customer_id === cust.id || (cust.name && r.customer_name === cust.name)));
 
     const totalInvoiced = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
     const totalReceived = invoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
@@ -6869,9 +6960,18 @@ class FinanceApp {
 
     document.getElementById('add-cust-form').onsubmit = async (e) => {
       e.preventDefault();
+      const custName = document.getElementById('new-cust-name').value.trim();
+      const codePart = custName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'CUST';
+      const custId = `cust-${Date.now().toString(36)}`;
+      const custCode = `CUST-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
+
       const payload = {
         customer: {
-          name: document.getElementById('new-cust-name').value.trim(),
+          id: custId,
+          code: custCode,
+          name: custName,
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          status: 'Active',
           contact_person: document.getElementById('new-cust-contact').value.trim(),
           email: document.getElementById('new-cust-email').value.trim(),
           phone: document.getElementById('new-cust-phone').value.trim(),
@@ -6880,13 +6980,14 @@ class FinanceApp {
           trn: document.getElementById('new-cust-trn').value.trim(),
           billing_address: document.getElementById('new-cust-address').value.trim(),
           place_of_supply: document.getElementById('new-cust-pos').value.trim(),
-          credit_limit: Number(document.getElementById('new-cust-credit').value) || 10000000
+          credit_limit: Number(document.getElementById('new-cust-credit').value) || 10000000,
+          payment_terms: 30
         }
       };
 
       const res = await this.syncApi('create_customer', payload);
       if (res && res.success) {
-        alert(`Customer ${res.customer?.name || 'created'} saved successfully.`);
+        alert(`Customer ${res.customer?.name || payload.customer.name} saved successfully.`);
         this.closeModal('modal-add-cust');
         this.switchTab('customers');
       }
@@ -6990,9 +7091,18 @@ class FinanceApp {
 
     document.getElementById('add-vend-form').onsubmit = async (e) => {
       e.preventDefault();
+      const vendName = document.getElementById('new-vend-name').value.trim();
+      const codePart = vendName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'VEND';
+      const vendId = `vend-${Date.now().toString(36)}`;
+      const vendCode = `VEND-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
+
       const payload = {
         vendor: {
-          name: document.getElementById('new-vend-name').value.trim(),
+          id: vendId,
+          code: vendCode,
+          name: vendName,
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          status: 'Active',
           category: document.getElementById('new-vend-cat').value,
           contact_person: document.getElementById('new-vend-contact').value.trim(),
           email: document.getElementById('new-vend-email').value.trim(),
@@ -7009,7 +7119,7 @@ class FinanceApp {
 
       const res = await this.syncApi('create_vendor', payload);
       if (res && res.success) {
-        alert(`Vendor ${res.vendor?.name || 'added'} added successfully.`);
+        alert(`Vendor ${res.vendor?.name || payload.vendor.name} added successfully.`);
         this.closeModal('modal-add-vend');
         this.switchTab('vendors');
       }
@@ -7097,21 +7207,28 @@ class FinanceApp {
 
     document.getElementById('add-item-form').onsubmit = async (e) => {
       e.preventDefault();
+      const itemName = document.getElementById('new-item-name').value.trim();
+      const itemId = `itm-${Date.now().toString(36)}`;
+      const itemCode = `ITM-${Math.floor(1000 + Math.random() * 9000)}`;
+
       const payload = {
         item: {
-          name: document.getElementById('new-item-name').value.trim(),
+          id: itemId,
+          code: itemCode,
+          name: itemName,
           category: document.getElementById('new-item-cat').value,
           hsn_sac_code: document.getElementById('new-item-hsn').value.trim(),
           uom: document.getElementById('new-item-uom').value,
           sales_price: Number(document.getElementById('new-item-sales').value),
           purchase_price: Number(document.getElementById('new-item-cost').value),
-          gst_rate: Number(document.getElementById('new-item-gst').value)
+          gst_rate: Number(document.getElementById('new-item-gst').value),
+          status: 'Active'
         }
       };
 
       const res = await this.syncApi('create_item', payload);
       if (res && res.success) {
-        alert(`Catalog item ${res.item.name} added successfully.`);
+        alert(`Catalog item ${res.item?.name || payload.item.name} added successfully.`);
         this.closeModal('modal-add-item');
         this.switchTab('items');
       }
@@ -8377,7 +8494,7 @@ class FinanceApp {
   openReceiptPrintModal(receiptId, isVerifiedScan = false) {
     let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
     if (!rec) {
-      rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (defaultSeedData.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (this.db?.customer_receipts || [])[0] || (defaultSeedData.customer_receipts || [])[0] || {};
+      rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44026') || (this.db?.customer_receipts || [])[0] || (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (defaultSeedData.customer_receipts || [])[0] || {};
     }
 
     const curr = rec.currency || 'AED';

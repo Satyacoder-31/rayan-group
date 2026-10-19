@@ -666,9 +666,9 @@
       "vat_total": 50,
       "total_tax": 50,
       "grand_total": 1050,
-      "amount_paid": 0,
-      "balance_due": 1050,
-      "status": "issued",
+      "amount_paid": 500,
+      "balance_due": 550,
+      "status": "partially_paid",
       "notes": "",
       "amount_in_words": "One Thousand Fifty Only. AED Only.",
       "created_by": "Arshad Alam Shaikh",
@@ -1281,6 +1281,46 @@
   ],
   "customer_receipts": [
     {
+      "id": "rec-mvdvmilf",
+      "receipt_no": "REC-RV-44026",
+      "customer_id": "cust-1792320284603",
+      "customer_name": "M/s. KRISHNA GENERAL CONTRACTING - L.L.C",
+      "contact_person": "Satyajeet Kere",
+      "email": "satyjeet004@gmail.com",
+      "company_id": "ashaz-eng-in",
+      "receipt_date": "2026-10-18",
+      "receipt_time": "07:13 PM",
+      "currency": "AED",
+      "payment_mode": "Cheque",
+      "payment_type": "Corporate Account Payee Cheque",
+      "reference_no": "453453465456",
+      "cheque_no": "453453465456",
+      "cheque_date": "2026-10-18",
+      "bank_name": "First Abu Dhabi Bank (FAB)",
+      "bank_branch": "silvassa",
+      "cheque_status": "Cleared & Verified",
+      "cash_location": "",
+      "cash_bearer": "",
+      "cashier": "",
+      "amount_received": 500,
+      "allocated_amount": 500,
+      "allocations": [
+        {
+          "invoice_id": "inv-rec-rg-inv-44052",
+          "invoice_no": "REC-RG-INV-44052",
+          "amount_allocated": 500
+        }
+      ],
+      "ref_invoice_no": "REC-RG-INV-44052",
+      "project_name": "General Corporate Billing",
+      "received_by": "Ashaz Engineering Private Limited",
+      "receiver_sign": "Arshad Alam Shaikh",
+      "notes": "",
+      "amount_in_words": "Five Hundred Only. UAE Dirhams Only.",
+      "recorded_by": "Arshad Alam Shaikh",
+      "recorded_at": "2026-10-18T13:44:01.444Z"
+    },
+    {
       "id": "rec-rv-44025",
       "receipt_no": "REC-RV-44025",
       "ref_invoice_no": "REC-RG-INV-44043",
@@ -1715,6 +1755,18 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": "aud-1a14f414ad7",
+      "timestamp": "2026-10-18T13:44:01+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "receipt",
+      "entity_id": "REC-RV-44026",
+      "details": "Recorded customer receipt of 500",
+      "ip_address": "2409:40c1:10fd:2141:35be:fe80:6bec:d540"
+    },
     {
       "id": "aud-mvare1wh",
       "timestamp": "2026-10-16T09:22:09.569Z",

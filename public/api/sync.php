@@ -175,16 +175,48 @@ if (!$rootDir || !is_writable($rootDir)) {
         $copiedSummary['api_sync'] = 'Root API updated from dist/api';
     }
 
-    // Ensure data/ directory (finance-data.json) is refreshed at root
-    if (is_dir($sourceDir . '/data')) {
-        copyFolder($sourceDir . '/data', $rootDir . '/data');
-        $copiedSummary['data_sync'] = 'Root data updated from dist/data';
-    } elseif (is_dir($siteDir . '/data')) {
-        copyFolder($siteDir . '/data', $rootDir . '/data');
-        $copiedSummary['data_sync'] = 'Root data updated from site/data';
-    } elseif (is_dir($siteDir . '/public/data')) {
-        copyFolder($siteDir . '/public/data', $rootDir . '/data');
-        $copiedSummary['data_sync'] = 'Root data updated from site/public/data';
+    // Ensure data/ directory (finance-data.json) is safely merged & preserved at root
+    if (file_exists($rootDir . '/data/finance-data.json')) {
+        $liveRaw = @file_get_contents($rootDir . '/data/finance-data.json');
+        $liveData = $liveRaw ? json_decode($liveRaw, true) : null;
+        $srcFile = file_exists($sourceDir . '/data/finance-data.json') ? ($sourceDir . '/data/finance-data.json') : ($siteDir . '/data/finance-data.json');
+        if (file_exists($srcFile)) {
+            $srcRaw = @file_get_contents($srcFile);
+            $srcData = $srcRaw ? json_decode($srcRaw, true) : null;
+            if ($liveData && $srcData && is_array($liveData) && is_array($srcData)) {
+                // Merge all collections: live user entries must take priority!
+                foreach ($srcData as $col => $srcItems) {
+                    if (is_array($srcItems) && isset($liveData[$col]) && is_array($liveData[$col])) {
+                        $liveKeys = [];
+                        foreach ($liveData[$col] as $item) {
+                            $k = $item['id'] ?? $item['receipt_no'] ?? $item['invoice_no'] ?? $item['bill_no'] ?? $item['voucher_no'] ?? $item['code'] ?? $item['name'] ?? null;
+                            if ($k) $liveKeys[$k] = true;
+                        }
+                        foreach ($srcItems as $sItem) {
+                            $k = $sItem['id'] ?? $sItem['receipt_no'] ?? $sItem['invoice_no'] ?? $sItem['bill_no'] ?? $sItem['voucher_no'] ?? $sItem['code'] ?? $sItem['name'] ?? null;
+                            if ($k && !isset($liveKeys[$k])) {
+                                $liveData[$col][] = $sItem;
+                            }
+                        }
+                    } elseif (!isset($liveData[$col])) {
+                        $liveData[$col] = $srcItems;
+                    }
+                }
+                @file_put_contents($rootDir . '/data/finance-data.json', json_encode($liveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+                $copiedSummary['data_sync'] = 'Preserved and merged live user finance-data.json';
+            }
+        }
+    } else {
+        if (is_dir($sourceDir . '/data')) {
+            copyFolder($sourceDir . '/data', $rootDir . '/data');
+            $copiedSummary['data_sync'] = 'Root data updated from dist/data';
+        } elseif (is_dir($siteDir . '/data')) {
+            copyFolder($siteDir . '/data', $rootDir . '/data');
+            $copiedSummary['data_sync'] = 'Root data updated from site/data';
+        } elseif (is_dir($siteDir . '/public/data')) {
+            copyFolder($siteDir . '/public/data', $rootDir . '/data');
+            $copiedSummary['data_sync'] = 'Root data updated from site/public/data';
+        }
     }
 
     // Ensure .htaccess with rewrite rules is up to date
