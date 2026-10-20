@@ -10,11 +10,11 @@ class FinanceApp {
   constructor() {
     this.db = JSON.parse(JSON.stringify(defaultSeedData));
     this.currentUser = null;
-    this.activeCompanyId = 'ashaz-eng-in';
+    this.activeCompanyId = 'rayan-corp-uae';
     this.activePeriod = 'fy-2025-26';
-    this.activeCurrency = 'INR';
+    this.activeCurrency = 'AED';
     this.activeTab = 'dashboard';
-    this.currencyRates = { INR: 1, AED: 0.044, USD: 0.012 };
+    this.currencyRates = { INR: 1, AED: 1, USD: 1 };
     this.currencySymbols = { INR: '₹', AED: 'AED ', USD: '$' };
   }
 
@@ -179,8 +179,20 @@ class FinanceApp {
     };
 
     for (const key of collections) {
+      if (key === 'companies') {
+        merged.companies = defaultSeedData.companies;
+        continue;
+      }
       const seedArr = merged[key] || [];
-      const incomingArr = Array.isArray(sourceData[key]) ? sourceData[key] : [];
+      const incomingRaw = Array.isArray(sourceData[key]) ? sourceData[key] : [];
+      const incomingArr = incomingRaw.filter(item => {
+        if (!item) return false;
+        const no = item.invoice_no || item.receipt_no || item.code || item.id || '';
+        if (typeof no === 'string' && (no.startsWith('INV-2026-') || no.startsWith('REC-2026-') || ['CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK'].includes(no))) {
+          return false;
+        }
+        return true;
+      });
 
       if (!incomingArr.length) {
         merged[key] = seedArr;
@@ -390,7 +402,7 @@ class FinanceApp {
   // FORMATTING UTILITIES & AUTO-SEQUENCING
   // --------------------------------------------------------------------------
   getNextInvoiceNumber() {
-    const invoices = this.db?.invoices || [];
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     let maxSeq = 44049;
 
     invoices.forEach(inv => {
@@ -412,7 +424,7 @@ class FinanceApp {
   }
 
   getNextReceiptNumber() {
-    const receipts = this.db?.customer_receipts || [];
+    const receipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     let maxSeq = 44025;
 
     receipts.forEach(rcp => {
@@ -435,22 +447,21 @@ class FinanceApp {
 
   formatCurrency(amount, withSymbol = true) {
     const num = Number(amount) || 0;
-    const rate = this.currencyRates[this.activeCurrency] || 1;
-    const converted = num * rate;
-    const symbol = withSymbol ? (this.currencySymbols[this.activeCurrency] || '₹') : '';
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const symbol = withSymbol ? (isIndia ? '₹' : 'AED ') : '';
 
-    if (this.activeCurrency === 'INR') {
+    if (isIndia) {
       const formatted = new Intl.NumberFormat('en-IN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      }).format(converted);
+      }).format(num);
       return symbol ? `${symbol}${formatted}` : formatted;
     }
 
     const formatted = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }).format(converted);
+    }).format(num);
     return symbol ? `${symbol}${formatted}` : formatted;
   }
 
@@ -738,8 +749,8 @@ class FinanceApp {
               <!-- Currency Switcher -->
               <div class="fin-select-wrapper fin-currency-wrapper">
                 <select id="fin-currency-select" class="fin-select-modern" title="Display Currency">
-                  <option value="INR" ${this.activeCurrency === 'INR' ? 'selected' : ''}>₹ INR</option>
                   <option value="AED" ${this.activeCurrency === 'AED' ? 'selected' : ''}>د.إ AED</option>
+                  <option value="INR" ${this.activeCurrency === 'INR' ? 'selected' : ''}>₹ INR</option>
                   <option value="USD" ${this.activeCurrency === 'USD' ? 'selected' : ''}>$ USD</option>
                 </select>
                 <svg class="fin-select-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
@@ -1251,6 +1262,13 @@ class FinanceApp {
     if (entitySel) {
       entitySel.onchange = () => {
         this.activeCompanyId = entitySel.value;
+        if (this.activeCompanyId === 'ashaz-eng-in') {
+          this.activeCurrency = 'INR';
+        } else {
+          this.activeCurrency = 'AED';
+        }
+        const currSel = document.getElementById('fin-currency-select');
+        if (currSel) currSel.value = this.activeCurrency;
         this.renderActiveTab();
       };
     }
@@ -1268,7 +1286,12 @@ class FinanceApp {
     const currSel = document.getElementById('fin-currency-select');
     if (currSel) {
       currSel.onchange = () => {
-        this.activeCurrency = currSel.value;
+        if (this.activeCompanyId !== 'ashaz-eng-in') {
+          this.activeCurrency = 'AED';
+          currSel.value = 'AED';
+        } else {
+          this.activeCurrency = currSel.value;
+        }
         this.renderActiveTab();
       };
     }
@@ -1567,11 +1590,11 @@ class FinanceApp {
   // 1. DASHBOARD VIEW (8 Summary Cards & Zolvit Widgets)
   // --------------------------------------------------------------------------
   renderDashboardTab(root) {
-    const invoices = this.db?.invoices || [];
-    const bills = this.db?.purchase_bills || [];
-    const expenses = this.db?.expenses || [];
-    const receipts = this.db?.customer_receipts || [];
-    const vendorPayments = this.db?.vendor_payments || [];
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const receipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const vendorPayments = (this.db?.vendor_payments || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     // Authoritative Calculations
     const totalSales = invoices.filter(i => i.status !== 'void').reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
@@ -1580,11 +1603,12 @@ class FinanceApp {
     const totalPayables = bills.filter(b => b.status !== 'void' && b.status !== 'paid').reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
     const totalExpenses = expenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
 
-    // Cash and Bank derived from opening balance + total customer receipts - vendor payments - cash expenses
-    const openingBank = 8500000;
+    // Cash and Bank derived from opening balance + total customer receipts - vendor payments
+    const isRayanEng = this.activeCompanyId === 'rayan-corp-uae';
+    const openingBank = isRayanEng ? 2500000 : 0;
     const totalReceipts = receipts.reduce((s, r) => s + (Number(r.amount_received) || 0), 0);
     const totalDisbursed = vendorPayments.reduce((s, p) => s + (Number(p.amount_paid) || 0), 0);
-    const cashBankBalance = openingBank + totalReceipts - totalDisbursed - 250000;
+    const cashBankBalance = isRayanEng ? (openingBank + totalReceipts - totalDisbursed) : (totalReceipts - totalDisbursed);
 
     // Net Profit: Authoritative derived from Sales (Taxable Subtotal) minus Purchases (Taxable Subtotal) minus Overhead Expenses
     const taxableSales = invoices.filter(i => i.status !== 'void').reduce((s, i) => s + (Number(i.taxable_subtotal) || 0), 0);
@@ -1922,7 +1946,7 @@ class FinanceApp {
   // 2. SALES & INVOICES MODULE
   // --------------------------------------------------------------------------
   renderInvoicesTab(root) {
-    const rawInvoices = this.db?.invoices || [];
+    const rawInvoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const invoices = [...rawInvoices].sort((a, b) => {
       const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
       const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
@@ -2051,7 +2075,7 @@ class FinanceApp {
   // 3. PURCHASES & BILLS MODULE
   // --------------------------------------------------------------------------
   renderBillsTab(root) {
-    const bills = this.db?.purchase_bills || [];
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -2126,8 +2150,8 @@ class FinanceApp {
   // 4. CUSTOMERS MODULE
   // --------------------------------------------------------------------------
   renderCustomersTab(root) {
-    const customers = this.db?.customers || [];
-    const invoices = this.db?.invoices || [];
+    const customers = (this.db?.customers || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -2544,7 +2568,7 @@ class FinanceApp {
   // PAYMENT-IN & PAYMENT-OUT DEDICATED MODULES
   // --------------------------------------------------------------------------
   renderPaymentInTab(root) {
-    const rawReceipts = this.db?.customer_receipts || [];
+    const rawReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const receipts = [...rawReceipts].sort((a, b) => {
       const dateA = new Date(a.receipt_date || 0).getTime();
       const dateB = new Date(b.receipt_date || 0).getTime();
@@ -2636,7 +2660,7 @@ class FinanceApp {
   }
 
   renderPaymentOutTab(root) {
-    const payments = this.db?.vendor_payments || [];
+    const payments = (this.db?.vendor_payments || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const totalPaid = payments.reduce((acc, p) => acc + (Number(p.amount_paid) || 0), 0);
 
     root.innerHTML = `
@@ -2714,7 +2738,7 @@ class FinanceApp {
   // SALES CREDIT NOTES & PURCHASE DEBIT NOTES MODULES
   // --------------------------------------------------------------------------
   renderCreditNotesTab(root) {
-    const creditNotes = this.db?.credit_notes || [];
+    const creditNotes = (this.db?.credit_notes || []).filter(n => (n.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -2757,7 +2781,7 @@ class FinanceApp {
   }
 
   renderDebitNotesTab(root) {
-    const debitNotes = this.db?.debit_notes || [];
+    const debitNotes = (this.db?.debit_notes || []).filter(n => (n.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -3141,7 +3165,7 @@ class FinanceApp {
   // 9. EXPENSES & CLAIMS MODULE
   // --------------------------------------------------------------------------
   renderExpensesTab(root) {
-    const expenses = this.db?.expenses || [];
+    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -3205,7 +3229,7 @@ class FinanceApp {
   // 10. PURCHASE ORDERS MODULE
   // --------------------------------------------------------------------------
   renderPOTab(root) {
-    const pos = this.db?.purchase_orders || [];
+    const pos = (this.db?.purchase_orders || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -3270,10 +3294,10 @@ class FinanceApp {
   // 11. PROJECT FINANCIALS MODULE
   // --------------------------------------------------------------------------
   renderProjectsTab(root) {
-    const projects = this.db?.projects || [];
-    const invoices = this.db?.invoices || [];
-    const bills = this.db?.purchase_bills || [];
-    const expenses = this.db?.expenses || [];
+    const projects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     root.innerHTML = `
       <div class="fin-panel-card">

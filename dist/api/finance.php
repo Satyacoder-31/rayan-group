@@ -601,6 +601,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'sync_full':
             if (!empty($body['full_db']) && is_array($body['full_db'])) {
                 $db = $body['full_db'];
+                if ($pdo) {
+                    try {
+                        $pdo->exec("DELETE FROM finance_invoices WHERE invoice_no LIKE 'INV-2026-%'");
+                        $pdo->exec("DELETE FROM finance_receipts WHERE receipt_no LIKE 'REC-2026-%'");
+                        $pdo->exec("DELETE FROM finance_customers WHERE code IN ('CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK')");
+                    } catch (Exception $e) {
+                        error_log("Mock cleanup error: " . $e->getMessage());
+                    }
+                }
                 $addAuditLog('sync', 'database', 'all', 'Client synchronized full state');
             }
             break;
