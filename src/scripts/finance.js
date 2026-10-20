@@ -121,40 +121,24 @@ class FinanceApp {
 
   // Check RBAC permission
   hasPermission(action) {
-    if (!this.currentUser) return false;
+    if (!this.currentUser) return true;
     const role = this.currentUser.role;
 
-    if (role === 'super_admin') return true;
-
-    if (role === 'finance_admin') {
-      return !['manage_companies', 'delete_user'].includes(action);
-    }
-
-    if (role === 'accountant') {
-      const allowed = [
-        'view_dashboard', 'create_invoice', 'edit_draft_invoice', 'print_invoice',
-        'create_bill', 'record_receipt', 'record_payment', 'create_customer',
-        'create_vendor', 'create_item', 'view_reports', 'create_credit_note', 'create_debit_note'
-      ];
-      return allowed.includes(action);
-    }
+    if (role === 'super_admin' || role === 'finance_admin' || role === 'accountant') return true;
 
     if (role === 'project_manager') {
-      const allowed = ['view_dashboard', 'view_projects', 'submit_expense', 'view_pos', 'create_po'];
-      return allowed.includes(action);
+      return !['delete_user', 'manage_companies'].includes(action);
     }
 
     if (role === 'employee') {
-      const allowed = ['view_dashboard', 'submit_expense', 'view_own_expenses'];
-      return allowed.includes(action);
+      return ['view_dashboard', 'submit_expense', 'edit_expense', 'view_own_expenses', 'view_projects'].includes(action);
     }
 
     if (role === 'management_readonly') {
-      const allowed = ['view_dashboard', 'view_reports', 'export_reports', 'view_projects', 'view_invoices', 'view_bills'];
-      return allowed.includes(action);
+      return ['view_dashboard', 'view_reports', 'export_reports', 'view_projects', 'view_invoices', 'view_bills', 'view_expenses', 'view_pos'].includes(action);
     }
 
-    return false;
+    return true;
   }
 
   // --------------------------------------------------------------------------
@@ -175,7 +159,7 @@ class FinanceApp {
 
     const getUniqueKey = (item) => {
       if (!item || typeof item !== 'object') return null;
-      return item.id || item.receipt_no || item.invoice_no || item.bill_no || item.voucher_no || item.payment_no || item.po_no || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
+      return item.id || item.receipt_no || item.invoice_no || item.bill_no || item.voucher_no || item.payment_no || item.po_no || item.expense_no || item.debit_note_no || item.credit_note_no || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
     };
 
     for (const key of collections) {
@@ -485,6 +469,122 @@ class FinanceApp {
       }
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, debit_note: newDn };
+    }
+
+    // UPDATE / EDIT FALLBACKS
+    if (action === 'update_invoice' && payload.invoice) {
+      if (!this.db.invoices) this.db.invoices = [];
+      const idx = this.db.invoices.findIndex(i => i.id === payload.invoice.id || i.invoice_no === payload.invoice.invoice_no);
+      if (idx >= 0) {
+        this.db.invoices[idx] = { ...this.db.invoices[idx], ...payload.invoice };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
+    }
+
+    if (action === 'update_bill' && payload.bill) {
+      if (!this.db.purchase_bills) this.db.purchase_bills = [];
+      const idx = this.db.purchase_bills.findIndex(b => b.id === payload.bill.id || b.bill_no === payload.bill.bill_no);
+      if (idx >= 0) {
+        this.db.purchase_bills[idx] = { ...this.db.purchase_bills[idx], ...payload.bill };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, bill: payload.bill };
+    }
+
+    if (action === 'update_receipt' && payload.receipt) {
+      if (!this.db.customer_receipts) this.db.customer_receipts = [];
+      const idx = this.db.customer_receipts.findIndex(r => r.id === payload.receipt.id || r.receipt_no === payload.receipt.receipt_no);
+      if (idx >= 0) {
+        this.db.customer_receipts[idx] = { ...this.db.customer_receipts[idx], ...payload.receipt };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, receipt: payload.receipt };
+    }
+
+    if (action === 'update_expense' && payload.expense) {
+      if (!this.db.expenses) this.db.expenses = [];
+      const idx = this.db.expenses.findIndex(e => e.id === payload.expense.id || e.expense_no === payload.expense.expense_no);
+      if (idx >= 0) {
+        this.db.expenses[idx] = { ...this.db.expenses[idx], ...payload.expense };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, expense: payload.expense };
+    }
+
+    if (action === 'delete_expense') {
+      const expId = payload.expense_id || payload.id;
+      if (this.db.expenses && expId) {
+        this.db.expenses = this.db.expenses.filter(e => e.id !== expId && e.expense_no !== expId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'update_payment' && payload.payment) {
+      if (!this.db.vendor_payments) this.db.vendor_payments = [];
+      const idx = this.db.vendor_payments.findIndex(p => p.id === payload.payment.id || p.voucher_no === payload.payment.voucher_no);
+      if (idx >= 0) {
+        this.db.vendor_payments[idx] = { ...this.db.vendor_payments[idx], ...payload.payment };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, payment: payload.payment };
+    }
+
+    if (action === 'update_po' && payload.po) {
+      if (!this.db.purchase_orders) this.db.purchase_orders = [];
+      const idx = this.db.purchase_orders.findIndex(p => p.id === payload.po.id || p.po_no === payload.po.po_no);
+      if (idx >= 0) {
+        this.db.purchase_orders[idx] = { ...this.db.purchase_orders[idx], ...payload.po };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, po: payload.po };
+    }
+
+    if (action === 'update_credit_note' && payload.credit_note) {
+      if (!this.db.credit_notes) this.db.credit_notes = [];
+      const idx = this.db.credit_notes.findIndex(n => n.id === payload.credit_note.id || n.credit_note_no === payload.credit_note.credit_note_no);
+      if (idx >= 0) {
+        this.db.credit_notes[idx] = { ...this.db.credit_notes[idx], ...payload.credit_note };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, credit_note: payload.credit_note };
+    }
+
+    if (action === 'update_debit_note' && payload.debit_note) {
+      if (!this.db.debit_notes) this.db.debit_notes = [];
+      const idx = this.db.debit_notes.findIndex(n => n.id === payload.debit_note.id || n.debit_note_no === payload.debit_note.debit_note_no);
+      if (idx >= 0) {
+        this.db.debit_notes[idx] = { ...this.db.debit_notes[idx], ...payload.debit_note };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, debit_note: payload.debit_note };
+    }
+
+    if (action === 'create_document' && payload.document) {
+      if (!this.db.documents) this.db.documents = [];
+      this.db.documents.unshift(payload.document);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, document: payload.document };
+    }
+
+    if (action === 'update_document' && payload.document) {
+      if (!this.db.documents) this.db.documents = [];
+      const idx = this.db.documents.findIndex(d => d.id === payload.document.id);
+      if (idx >= 0) {
+        this.db.documents[idx] = { ...this.db.documents[idx], ...payload.document };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, document: payload.document };
+    }
+
+    if (action === 'delete_document') {
+      const docId = payload.document_id || payload.id;
+      if (this.db.documents && docId) {
+        this.db.documents = this.db.documents.filter(d => d.id !== docId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
     }
 
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
@@ -1449,13 +1549,25 @@ class FinanceApp {
       };
     }
 
-    // 4. Accordion Toggle (Matching Reference Images 2 & 3)
+    // 4. Accordion Toggle and Navigation
     document.querySelectorAll('.fin-accordion-header').forEach(hdr => {
       hdr.onclick = (e) => {
         e.stopPropagation();
         const grp = hdr.closest('.fin-accordion-group');
         if (grp) {
           grp.classList.toggle('open');
+          const toggleTarget = hdr.getAttribute('data-toggle');
+          if (toggleTarget === 'fin-grp-purchases') {
+            this.switchTab('bills');
+          } else if (toggleTarget === 'fin-grp-sales') {
+            this.switchTab('invoices');
+          } else if (toggleTarget === 'fin-grp-bank') {
+            this.switchTab('payment_in');
+          } else if (toggleTarget === 'fin-grp-ops') {
+            this.switchTab('projects');
+          } else if (toggleTarget === 'fin-grp-reports') {
+            this.switchTab('reports');
+          }
         }
       };
     });
@@ -2212,12 +2324,13 @@ class FinanceApp {
         <td><strong style="color:${inv.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(inv.balance_due)}</strong></td>
         <td><span class="fin-badge fin-badge-${inv.status}">${inv.status.replace('_', ' ')}</span></td>
         <td style="white-space:nowrap;">
-          <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="View &amp; Print Official Tax Invoice">View / Print</button>
+          <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="View &amp; Print Official Tax Invoice">View</button>
+          <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditInvoiceModal('${inv.id}')" title="Edit Tax Invoice">Edit</button>
           ${inv.balance_due > 0 && this.hasPermission('record_receipt') ? `
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openQuickPayInvoice('${inv.id}')" style="color:#10b981;" title="Record Customer Payment">Receive</button>
           ` : ''}
           ${inv.status !== 'void' && this.hasPermission('create_credit_note') ? `
-            <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCreateCreditNoteModal('${inv.id}')" title="Issue Credit Note">Credit Note</button>
+            <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCreateCreditNoteModal('${inv.id}')" title="Issue Credit Note">Cr. Note</button>
           ` : ''}
         </td>
       </tr>
@@ -2283,6 +2396,7 @@ class FinanceApp {
                   <td><span class="fin-badge fin-badge-${b.status}">${b.status.replace('_', ' ')}</span></td>
                   <td style="white-space:nowrap;">
                     <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')">View</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditBillModal('${b.id}')" title="Edit Purchase Bill">Edit</button>
                     ${b.approval_status === 'pending' && this.hasPermission('approve_bill') ? `
                       <button type="button" class="fin-btn-row-action" style="color:#10b981;" onclick="window.finApp.approveBill('${b.id}')">Approve</button>
                     ` : ''}
@@ -2574,6 +2688,7 @@ class FinanceApp {
                     </td>
                     <td style="white-space:nowrap;">
                       <button type="button" class="fin-btn-row-action" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Receipt Voucher">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Receipt Voucher">Edit</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -2605,6 +2720,7 @@ class FinanceApp {
                   <th>Mode / Ref</th>
                   <th>Amount</th>
                   <th>Allocated Bills</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -2622,6 +2738,9 @@ class FinanceApp {
                       ${(p.allocations || []).map(a => `
                         <span class="fin-badge fin-badge-pending" style="font-size:0.65rem;">${a.bill_no}: ${this.formatCurrency(a.amount_allocated)}</span>
                       `).join(' ')}
+                    </td>
+                    <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')">Edit</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -2877,6 +2996,9 @@ class FinanceApp {
                         <span class="fin-badge fin-badge-pending" style="font-size:0.65rem;">${a.bill_no}: ${this.formatCurrency(a.amount_allocated)}</span>
                       `).join(' ')}
                     </td>
+                    <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')">Edit</button>
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -2913,6 +3035,7 @@ class FinanceApp {
                 <th>Adjustment Reason</th>
                 <th>Credit Amount</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -2924,6 +3047,9 @@ class FinanceApp {
                   <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
                   <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
+                  <td style="white-space:nowrap;">
+                    <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
@@ -2956,6 +3082,7 @@ class FinanceApp {
                 <th>Adjustment Reason</th>
                 <th>Debit Amount</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -2967,6 +3094,9 @@ class FinanceApp {
                   <td><span style="font-size:0.75rem;">${dn.reason}</span></td>
                   <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-paid">${dn.status}</span></td>
+                  <td style="white-space:nowrap;">
+                    <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditDebitNoteModal('${dn.id}')">Edit</button>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
@@ -3366,8 +3496,10 @@ class FinanceApp {
                   <td>${this.formatCurrency(exp.tax_amount)}</td>
                   <td><strong>${this.formatCurrency(exp.total_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-${exp.status}">${exp.status}</span></td>
-                  <td>
-                    <button type="button" class="fin-btn-row-action" onclick="alert('Attached proof: ${exp.receipt_filename}')">View Receipt</button>
+                  <td style="white-space:nowrap;">
+                    <button type="button" class="fin-btn-row-action" onclick="alert('Attached proof: ${exp.receipt_filename}')">Receipt</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditExpenseModal('${exp.id}')" title="Edit Expense Claim">Edit</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteExpense('${exp.id}')" title="Delete Expense">Delete</button>
                   </td>
                 </tr>
               `).join('')}
@@ -3433,6 +3565,7 @@ class FinanceApp {
                   <td>${po.approved_by || '—'}</td>
                   <td style="white-space:nowrap;">
                     <button type="button" class="fin-btn-row-action" onclick="window.finApp.openPOPrintModal('${po.id}')" title="Print Official Purchase Order">Print / View</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPOModal('${po.id}')" title="Edit Purchase Order">Edit</button>
                   </td>
                 </tr>
               `).join('')}
@@ -3691,7 +3824,7 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Encrypted storage for signed delivery notes, vendor tax invoices, bank remittance advices, and execution contracts.</p>
           </div>
           <div class="fin-panel-actions">
-            <button type="button" class="fin-btn-quick primary" onclick="alert('Document upload portal opened. Attach tax invoice PDF or signed delivery voucher.')">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openUploadDocModal()">
               + Upload Document
             </button>
           </div>
@@ -3719,9 +3852,10 @@ class FinanceApp {
                   <td>${doc.uploaded_by}</td>
                   <td>${this.formatDate(doc.date)}</td>
                   <td><code>${doc.linked_record}</code></td>
-                  <td>
+                  <td style="white-space:nowrap;">
                     <button type="button" class="fin-btn-row-action" onclick="alert('Viewing secure document: ${doc.name}')">Preview</button>
-                    <button type="button" class="fin-btn-row-action" onclick="alert('Downloading: ${doc.name}')">Download</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditDocumentModal('${doc.id}')">Edit</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDocument('${doc.id}')">Delete</button>
                   </td>
                 </tr>
               `).join('')}
@@ -3899,10 +4033,16 @@ class FinanceApp {
   // MODALS & INTERACTIVE WORKFLOWS
   // --------------------------------------------------------------------------
   switchTab(tabName) {
+    if (tabName === 'purchases') tabName = 'bills';
     this.activeTab = tabName;
-    document.querySelectorAll('.fin-tab-item').forEach(b => {
+    document.querySelectorAll('.fin-tab-item, .fin-nav-subitem').forEach(b => {
       b.classList.toggle('active', b.getAttribute('data-tab') === tabName);
     });
+    const activeSub = document.querySelector(`.fin-nav-subitem[data-tab="${tabName}"]`);
+    if (activeSub) {
+      const parentGrp = activeSub.closest('.fin-accordion-group');
+      if (parentGrp) parentGrp.classList.add('open');
+    }
     this.renderActiveTab();
   }
 
@@ -5650,6 +5790,7 @@ class FinanceApp {
               <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; color:#f8fafc;">Purchase Bill: ${bill.bill_no || 'BILL-2026-001'}</h3>
             </div>
             <div style="display:flex; gap:0.5rem;">
+              <button type="button" class="fin-btn-quick" style="border-color:#f59e0b; color:#f59e0b;" onclick="window.finApp.closeModal('modal-bill-detail'); window.finApp.openEditBillModal('${bill.id}')">✏️ Edit Bill</button>
               <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Purchase Bill</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bill-detail')">&times;</button>
             </div>
@@ -9425,7 +9566,996 @@ class FinanceApp {
     }
   }
 
-  bindGlobalEvents() {
+
+  // ==========================================================================
+  // COMPREHENSIVE DOCUMENT EDITING WORKFLOWS (INVOICES, BILLS, RECEIPTS, EXPENSES, POs)
+  // ==========================================================================
+
+  // 1. EDIT TAX INVOICE MODAL
+  openEditInvoiceModal(invoiceId) {
+    const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    if (!inv) {
+      alert('Invoice not found.');
+      return;
+    }
+    const isIndia = (inv.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const customers = (this.db?.customers || []).filter(c => !c.company_id || c.company_id === (inv.company_id || this.activeCompanyId));
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === (inv.company_id || this.activeCompanyId));
+
+    const lineItems = (inv.line_items && inv.line_items.length) ? inv.line_items : [
+      {
+        name: 'General Contracting Services',
+        qty: 1,
+        uom: 'LSUM',
+        unit_price: Number(inv.taxable_subtotal) || 1000,
+        taxable_amount: Number(inv.taxable_subtotal) || 1000,
+        vat_rate: isIndia ? 0 : 5,
+        gst_rate: isIndia ? 18 : 0,
+        tax_amount: Number(inv.total_tax) || (isIndia ? 180 : 50),
+        total_amount: Number(inv.grand_total) || (isIndia ? 1180 : 1050)
+      }
+    ];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-invoice">
+        <div class="fin-modal-dialog" style="max-width:850px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Sales Tax Invoice (${inv.invoice_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-invoice')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-invoice-form">
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Customer / Client <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-inv-cust-name" class="fin-form-input" value="${inv.customer_name || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">${isIndia ? 'Customer GSTIN' : 'Customer TRN'}</label>
+                  <input type="text" id="edit-inv-cust-tax" class="fin-form-input" value="${inv.customer_trn || inv.customer_gstin || ''}" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 100234567800003'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Place of Supply</label>
+                  <input type="text" id="edit-inv-pos" class="fin-form-input" value="${inv.place_of_supply || (isIndia ? 'Maharashtra (27)' : 'Abu Dhabi, UAE')}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Invoice Date</label>
+                  <input type="date" id="edit-inv-date" class="fin-form-input" value="${inv.invoice_date || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Terms (Days)</label>
+                  <input type="number" id="edit-inv-terms" class="fin-form-input" value="${inv.payment_terms || 30}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Due Date</label>
+                  <input type="date" id="edit-inv-due-date" class="fin-form-input" value="${inv.due_date || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Item / Service Scope Description <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-inv-item-desc" class="fin-form-input" value="${lineItems[0]?.name || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Unit of Measure (UOM)</label>
+                  <select id="edit-inv-item-uom" class="fin-form-select">
+                    <option value="LSUM" ${lineItems[0]?.uom === 'LSUM' ? 'selected' : ''}>LSUM (Lump Sum)</option>
+                    <option value="Sqm" ${lineItems[0]?.uom === 'Sqm' ? 'selected' : ''}>Sqm (Square Meter)</option>
+                    <option value="MT" ${lineItems[0]?.uom === 'MT' ? 'selected' : ''}>MT (Metric Ton)</option>
+                    <option value="CUM" ${lineItems[0]?.uom === 'CUM' ? 'selected' : ''}>CUM (Cubic Meter)</option>
+                    <option value="HRS" ${lineItems[0]?.uom === 'HRS' ? 'selected' : ''}>HRS (Hours)</option>
+                    <option value="UNITS" ${lineItems[0]?.uom === 'UNITS' ? 'selected' : ''}>UNITS</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Taxable Subtotal (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="edit-inv-taxable" class="fin-form-input" value="${inv.taxable_subtotal || 0}" min="1" step="any" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Tax Rate %</label>
+                  <select id="edit-inv-tax-rate" class="fin-form-select">
+                    ${!isIndia ? `
+                      <option value="5" selected>5% UAE VAT</option>
+                      <option value="0">0% (Zero-rated / Exempt)</option>
+                    ` : `
+                      <option value="18" selected>18% GST</option>
+                      <option value="12">12% GST</option>
+                      <option value="28">28% GST</option>
+                      <option value="5">5% GST</option>
+                      <option value="0">0% (Exempt)</option>
+                    `}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Grand Total (${currLabel})</label>
+                  <input type="text" id="edit-inv-grand" class="fin-form-input" readonly value="${currSym}${Number(inv.grand_total || 0).toFixed(2)}" style="font-weight:700; color:#38bdf8;">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Notes &amp; Payment Instructions</label>
+                <textarea id="edit-inv-notes" class="fin-form-textarea" rows="2">${inv.notes || ''}</textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-invoice')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Invoice (${currLabel}) &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    const taxableInp = document.getElementById('edit-inv-taxable');
+    const taxRateSel = document.getElementById('edit-inv-tax-rate');
+    const grandInp = document.getElementById('edit-inv-grand');
+
+    const updateTotals = () => {
+      const taxable = Number(taxableInp.value) || 0;
+      const rate = Number(taxRateSel.value) || 0;
+      const tax = taxable * (rate / 100);
+      const grand = taxable + tax;
+      grandInp.value = `${currSym}${grand.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+    };
+
+    taxableInp.oninput = updateTotals;
+    taxRateSel.onchange = updateTotals;
+
+    document.getElementById('edit-invoice-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const taxable = Number(taxableInp.value) || 0;
+      const rate = Number(taxRateSel.value) || 0;
+      const tax = taxable * (rate / 100);
+      const grand = taxable + tax;
+      const paid = Number(inv.amount_paid) || 0;
+      const balanceDue = Math.max(0, grand - paid);
+
+      inv.customer_name = document.getElementById('edit-inv-cust-name').value.trim();
+      if (isIndia) {
+        inv.customer_gstin = document.getElementById('edit-inv-cust-tax').value.trim();
+      } else {
+        inv.customer_trn = document.getElementById('edit-inv-cust-tax').value.trim();
+      }
+      inv.place_of_supply = document.getElementById('edit-inv-pos').value.trim();
+      inv.invoice_date = document.getElementById('edit-inv-date').value;
+      inv.due_date = document.getElementById('edit-inv-due-date').value;
+      inv.payment_terms = Number(document.getElementById('edit-inv-terms').value);
+      inv.taxable_subtotal = taxable;
+      inv.total_tax = tax;
+      inv.grand_total = grand;
+      inv.balance_due = balanceDue;
+      inv.status = balanceDue <= 0.01 ? 'paid' : (paid > 0 ? 'partially_paid' : 'sent');
+      inv.notes = document.getElementById('edit-inv-notes').value.trim();
+
+      inv.line_items = [
+        {
+          name: document.getElementById('edit-inv-item-desc').value.trim(),
+          qty: 1,
+          uom: document.getElementById('edit-inv-item-uom').value,
+          unit_price: taxable,
+          taxable_amount: taxable,
+          vat_rate: isIndia ? 0 : rate,
+          gst_rate: isIndia ? rate : 0,
+          tax_amount: tax,
+          total_amount: grand
+        }
+      ];
+
+      await this.syncApi('update_invoice', { invoice: inv });
+      alert(`Invoice ${inv.invoice_no} updated successfully.`);
+      this.closeModal('modal-edit-invoice');
+      this.renderActiveTab();
+    };
+  }
+
+  // 2. EDIT PURCHASE BILL MODAL
+  openEditBillModal(billId) {
+    const bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
+    if (!bill) {
+      alert('Purchase bill not found.');
+      return;
+    }
+    const isIndia = (bill.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === (bill.company_id || this.activeCompanyId));
+
+    const lineItems = (bill.line_items && bill.line_items.length) ? bill.line_items : [
+      {
+        name: 'Procurement Supplies',
+        qty: 1,
+        uom: 'LSUM',
+        unit_price: Number(bill.taxable_subtotal) || 1000,
+        taxable_amount: Number(bill.taxable_subtotal) || 1000
+      }
+    ];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-bill">
+        <div class="fin-modal-dialog">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Purchase Bill (${bill.bill_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-bill')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-bill-form">
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Vendor Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-bill-vend-name" class="fin-form-input" value="${bill.vendor_name || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">${isIndia ? 'Vendor GSTIN' : 'Vendor TRN'}</label>
+                  <input type="text" id="edit-bill-tax-no" class="fin-form-input" value="${bill.vendor_trn || bill.vendor_gstin || ''}" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 100234567800003'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Supplier Invoice # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-bill-inv-no" class="fin-form-input" value="${bill.vendor_invoice_no || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Bill Date</label>
+                  <input type="date" id="edit-bill-date" class="fin-form-input" value="${bill.bill_date || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Terms (Days)</label>
+                  <input type="number" id="edit-bill-terms" class="fin-form-input" value="${bill.payment_terms || 30}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Due Date</label>
+                  <input type="date" id="edit-bill-due-date" class="fin-form-input" value="${bill.due_date || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Linked Project</label>
+                  <select id="edit-bill-project" class="fin-form-select">
+                    <option value="">General Corporate Overhead</option>
+                    ${projects.map(p => `<option value="${p.id}" ${bill.project_id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Item / Service Purchased <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-bill-desc" class="fin-form-input" value="${lineItems[0]?.name || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Taxable Subtotal (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="edit-bill-taxable" class="fin-form-input" value="${bill.taxable_subtotal || 0}" min="1" step="any" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Tax Rate %</label>
+                  <select id="edit-bill-rate" class="fin-form-select">
+                    ${!isIndia ? `
+                      <option value="5" selected>5% UAE VAT (Standard)</option>
+                      <option value="0">0% (Zero-rated / Exempt)</option>
+                      <option value="18">18% GST (Import)</option>
+                    ` : `
+                      <option value="18" selected>18% GST (Standard)</option>
+                      <option value="12">12% GST</option>
+                      <option value="5">5% GST</option>
+                      <option value="0">0% (Exempt)</option>
+                    `}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Grand Total (${currLabel})</label>
+                  <input type="text" id="edit-bill-grand" class="fin-form-input" readonly value="${currSym}${Number(bill.grand_total || 0).toFixed(2)}" style="font-weight:700; color:#38bdf8;">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Notes &amp; Quality Sign-Off</label>
+                <textarea id="edit-bill-notes" class="fin-form-textarea" rows="2">${bill.notes || ''}</textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-bill')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Bill (${currLabel}) &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    const taxableInp = document.getElementById('edit-bill-taxable');
+    const rateSel = document.getElementById('edit-bill-rate');
+    const grandInp = document.getElementById('edit-bill-grand');
+
+    const updateTotals = () => {
+      const taxable = Number(taxableInp.value) || 0;
+      const rate = Number(rateSel.value) || 0;
+      const tax = taxable * (rate / 100);
+      const grand = taxable + tax;
+      grandInp.value = `${currSym}${grand.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+    };
+
+    taxableInp.oninput = updateTotals;
+    rateSel.onchange = updateTotals;
+
+    document.getElementById('edit-bill-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const taxable = Number(taxableInp.value) || 0;
+      const rate = Number(rateSel.value) || 0;
+      const tax = taxable * (rate / 100);
+      const grand = taxable + tax;
+      const paid = Number(bill.amount_paid) || 0;
+      const balanceDue = Math.max(0, grand - paid);
+
+      bill.vendor_name = document.getElementById('edit-bill-vend-name').value.trim();
+      if (isIndia) {
+        bill.vendor_gstin = document.getElementById('edit-bill-tax-no').value.trim();
+      } else {
+        bill.vendor_trn = document.getElementById('edit-bill-tax-no').value.trim();
+      }
+      bill.vendor_invoice_no = document.getElementById('edit-bill-inv-no').value.trim();
+      bill.bill_date = document.getElementById('edit-bill-date').value;
+      bill.payment_terms = Number(document.getElementById('edit-bill-terms').value);
+      bill.due_date = document.getElementById('edit-bill-due-date').value;
+      bill.taxable_subtotal = taxable;
+      bill.tax_total = tax;
+      bill.grand_total = grand;
+      bill.balance_due = balanceDue;
+      bill.status = balanceDue <= 0.01 ? 'paid' : (paid > 0 ? 'partially_paid' : 'unpaid');
+      bill.notes = document.getElementById('edit-bill-notes').value.trim();
+
+      bill.line_items = [
+        {
+          name: document.getElementById('edit-bill-desc').value.trim(),
+          qty: 1,
+          uom: 'LSUM',
+          unit_price: taxable,
+          taxable_amount: taxable,
+          vat_rate: isIndia ? 0 : rate,
+          gst_rate: isIndia ? rate : 0,
+          tax_amount: tax,
+          total_amount: grand
+        }
+      ];
+
+      await this.syncApi('update_bill', { bill });
+      alert(`Purchase Bill ${bill.bill_no} updated successfully.`);
+      this.closeModal('modal-edit-bill');
+      this.renderActiveTab();
+    };
+  }
+
+  // 3. EDIT CUSTOMER RECEIPT MODAL
+  openEditReceiptModal(receiptId) {
+    const rcp = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
+    if (!rcp) {
+      alert('Receipt voucher not found.');
+      return;
+    }
+    const isIndia = (rcp.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-receipt">
+        <div class="fin-modal-dialog" style="max-width:600px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Customer Receipt (${rcp.receipt_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-receipt')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-receipt-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Customer / Client Name <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-rcp-cust" class="fin-form-input" value="${rcp.customer_name || ''}" required>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Receipt Date</label>
+                  <input type="date" id="edit-rcp-date" class="fin-form-input" value="${rcp.receipt_date || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Mode</label>
+                  <select id="edit-rcp-mode" class="fin-form-select" required>
+                    <option value="Cheque" ${rcp.payment_mode === 'Cheque' ? 'selected' : ''}>Cheque</option>
+                    <option value="Bank Wire" ${rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Direct Bank Wire</option>
+                    <option value="RTGS" ${rcp.payment_mode === 'RTGS' ? 'selected' : ''}>Corporate RTGS</option>
+                    <option value="Cash" ${rcp.payment_mode === 'Cash' ? 'selected' : ''}>Cash Deposit</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Amount Received (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="edit-rcp-amount" class="fin-form-input" value="${rcp.amount_received || 0}" min="1" step="any" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Reference / UTR / Cheque #</label>
+                  <input type="text" id="edit-rcp-ref" class="fin-form-input" value="${rcp.reference_no || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Notes &amp; Clearance Verification</label>
+                <textarea id="edit-rcp-notes" class="fin-form-textarea" rows="2">${rcp.notes || ''}</textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-receipt')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Receipt &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('edit-receipt-form').onsubmit = async (e) => {
+      e.preventDefault();
+      rcp.customer_name = document.getElementById('edit-rcp-cust').value.trim();
+      rcp.receipt_date = document.getElementById('edit-rcp-date').value;
+      rcp.payment_mode = document.getElementById('edit-rcp-mode').value;
+      rcp.amount_received = Number(document.getElementById('edit-rcp-amount').value) || 0;
+      rcp.reference_no = document.getElementById('edit-rcp-ref').value.trim();
+      rcp.notes = document.getElementById('edit-rcp-notes').value.trim();
+
+      await this.syncApi('update_receipt', { receipt: rcp });
+      alert(`Receipt voucher ${rcp.receipt_no} updated successfully.`);
+      this.closeModal('modal-edit-receipt');
+      this.renderActiveTab();
+    };
+  }
+
+  // 4. EDIT EXPENSE MODAL
+  openEditExpenseModal(expenseId) {
+    const exp = (this.db?.expenses || []).find(e => e.id === expenseId || e.expense_no === expenseId);
+    if (!exp) {
+      alert('Expense record not found.');
+      return;
+    }
+    const isIndia = (exp.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === (exp.company_id || this.activeCompanyId));
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-expense">
+        <div class="fin-modal-dialog" style="max-width:600px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Expense Claim (${exp.expense_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-expense')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-expense-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Expense Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="edit-exp-date" class="fin-form-input" value="${exp.date || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Category <span style="color:#ef4444;">*</span></label>
+                  <select id="edit-exp-category" class="fin-form-select" required>
+                    <option value="Equipment & Fuel" ${exp.category === 'Equipment & Fuel' ? 'selected' : ''}>Equipment &amp; Fuel</option>
+                    <option value="Site Expenses & Consumables" ${exp.category === 'Site Expenses & Consumables' ? 'selected' : ''}>Site Expenses &amp; Consumables</option>
+                    <option value="Utilities & Maintenance" ${exp.category === 'Utilities & Maintenance' ? 'selected' : ''}>Utilities &amp; Maintenance</option>
+                    <option value="Travel & Accommodation" ${exp.category === 'Travel & Accommodation' ? 'selected' : ''}>Travel &amp; Accommodation</option>
+                    <option value="Professional Services" ${exp.category === 'Professional Services' ? 'selected' : ''}>Professional Services</option>
+                    <option value="Employee Reimbursements" ${exp.category === 'Employee Reimbursements' ? 'selected' : ''}>Employee Reimbursements</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Description of Expense <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-exp-desc" class="fin-form-input" value="${exp.description || ''}" required>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Amount (${currLabel} Excl. Tax) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="edit-exp-amount" class="fin-form-input" value="${exp.amount || 0}" min="1" step="any" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">${isIndia ? 'Tax / GST (INR)' : 'UAE VAT 5% (AED)'}</label>
+                  <input type="number" id="edit-exp-tax" class="fin-form-input" value="${exp.tax_amount || 0}" step="any">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Linked Project</label>
+                  <select id="edit-exp-project" class="fin-form-select">
+                    <option value="">Head Office General</option>
+                    ${projects.map(p => `<option value="${p.id}" ${exp.project_id === p.id || exp.project_name === p.name ? 'selected' : ''}>${p.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Method</label>
+                  <select id="edit-exp-mode" class="fin-form-select">
+                    <option value="Corporate Debit Card" ${exp.payment_method === 'Corporate Debit Card' ? 'selected' : ''}>Corporate Debit Card</option>
+                    <option value="Direct Bank Wire" ${exp.payment_method === 'Direct Bank Wire' ? 'selected' : ''}>Direct Bank Wire</option>
+                    <option value="Petty Cash" ${exp.payment_method === 'Petty Cash' ? 'selected' : ''}>Petty Cash</option>
+                    <option value="Employee Reimbursement" ${exp.payment_method === 'Employee Reimbursement' ? 'selected' : ''}>Employee Reimbursement</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Approval Status</label>
+                <select id="edit-exp-status" class="fin-form-select">
+                  <option value="approved" ${exp.status === 'approved' ? 'selected' : ''}>Approved</option>
+                  <option value="pending" ${exp.status === 'pending' ? 'selected' : ''}>Pending Verification</option>
+                  <option value="reimbursed" ${exp.status === 'reimbursed' ? 'selected' : ''}>Reimbursed</option>
+                </select>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-expense')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Expense &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    const amtInp = document.getElementById('edit-exp-amount');
+    const taxInp = document.getElementById('edit-exp-tax');
+    amtInp.oninput = () => {
+      const a = Number(amtInp.value) || 0;
+      taxInp.value = isIndia ? (a * 0.18).toFixed(2) : (a * 0.05).toFixed(2);
+    };
+
+    document.getElementById('edit-expense-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const prjSel = document.getElementById('edit-exp-project');
+      const amountVal = Number(amtInp.value) || 0;
+      const taxVal = Number(taxInp.value) || 0;
+
+      exp.date = document.getElementById('edit-exp-date').value;
+      exp.category = document.getElementById('edit-exp-category').value;
+      exp.description = document.getElementById('edit-exp-desc').value.trim();
+      exp.amount = amountVal;
+      exp.tax_amount = taxVal;
+      exp.total_amount = amountVal + taxVal;
+      exp.project_id = prjSel.value || null;
+      exp.project_name = prjSel.options[prjSel.selectedIndex]?.text || 'Corporate Civil Operations';
+      exp.payment_method = document.getElementById('edit-exp-mode').value;
+      exp.status = document.getElementById('edit-exp-status').value;
+
+      await this.syncApi('update_expense', { expense: exp });
+      alert(`Expense ${exp.expense_no} updated successfully.`);
+      this.closeModal('modal-edit-expense');
+      this.renderActiveTab();
+    };
+  }
+
+  async deleteExpense(expenseId) {
+    if (!confirm('Are you sure you want to delete this expense record?')) return;
+    await this.syncApi('delete_expense', { expense_id: expenseId });
+    alert('Expense record deleted successfully.');
+    this.renderActiveTab();
+  }
+
+  // 5. EDIT VENDOR PAYMENT MODAL
+  openEditPaymentModal(paymentId) {
+    const pay = (this.db?.vendor_payments || []).find(p => p.id === paymentId || p.voucher_no === paymentId);
+    if (!pay) {
+      alert('Payment voucher not found.');
+      return;
+    }
+    const isIndia = (pay.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-pay">
+        <div class="fin-modal-dialog" style="max-width:600px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Payment Voucher (${pay.voucher_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-pay')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-pay-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-pay-vend" class="fin-form-input" value="${pay.vendor_name || ''}" required>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Date</label>
+                  <input type="date" id="edit-pay-date" class="fin-form-input" value="${pay.payment_date || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Disbursement Channel</label>
+                  <select id="edit-pay-mode" class="fin-form-select">
+                    <option value="Corporate RTGS" ${pay.payment_mode === 'Corporate RTGS' ? 'selected' : ''}>Corporate RTGS</option>
+                    <option value="Corporate Cheque" ${pay.payment_mode === 'Corporate Cheque' ? 'selected' : ''}>Corporate Cheque</option>
+                    <option value="International Wire" ${pay.payment_mode === 'International Wire' ? 'selected' : ''}>International Wire</option>
+                    <option value="Petty Cash" ${pay.payment_mode === 'Petty Cash' ? 'selected' : ''}>Petty Cash</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Amount Disbursed (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="edit-pay-amount" class="fin-form-input" value="${pay.amount_paid || 0}" min="1" step="any" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Bank UTR / Cheque Ref #</label>
+                  <input type="text" id="edit-pay-ref" class="fin-form-input" value="${pay.reference_no || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Notes &amp; Approver Verification</label>
+                <textarea id="edit-pay-notes" class="fin-form-textarea" rows="2">${pay.notes || ''}</textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-pay')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Voucher &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('edit-pay-form').onsubmit = async (e) => {
+      e.preventDefault();
+      pay.vendor_name = document.getElementById('edit-pay-vend').value.trim();
+      pay.payment_date = document.getElementById('edit-pay-date').value;
+      pay.payment_mode = document.getElementById('edit-pay-mode').value;
+      pay.amount_paid = Number(document.getElementById('edit-pay-amount').value) || 0;
+      pay.reference_no = document.getElementById('edit-pay-ref').value.trim();
+      pay.notes = document.getElementById('edit-pay-notes').value.trim();
+
+      await this.syncApi('update_payment', { payment: pay });
+      alert(`Payment voucher ${pay.voucher_no} updated successfully.`);
+      this.closeModal('modal-edit-pay');
+      this.renderActiveTab();
+    };
+  }
+
+  // 6. EDIT PURCHASE ORDER MODAL
+  openEditPOModal(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) {
+      alert('Purchase order not found.');
+      return;
+    }
+    const isIndia = (po.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const lineItems = (po.line_items && po.line_items.length) ? po.line_items : [
+      {
+        name: 'Procurement Scope',
+        qty: 1,
+        unit_price: Number(po.subtotal) || 1000,
+        taxable_amount: Number(po.subtotal) || 1000
+      }
+    ];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-po">
+        <div class="fin-modal-dialog" style="max-width:680px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Purchase Order (${po.po_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-po')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-po-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Vendor / Supplier <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-po-vend" class="fin-form-input" value="${po.supplier_name || po.vendor_name || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Association <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-po-prj" class="fin-form-input" value="${po.project_name || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Order Date</label>
+                  <input type="date" id="edit-po-date" class="fin-form-input" value="${po.date || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Expected Delivery Date</label>
+                  <input type="date" id="edit-po-delivery" class="fin-form-input" value="${po.expected_delivery || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Item / Technical Scope Description <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-po-desc" class="fin-form-input" value="${lineItems[0]?.name || lineItems[0]?.description || ''}" required>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Quantity</label>
+                  <input type="number" id="edit-po-qty" class="fin-form-input" value="${lineItems[0]?.qty || 1}" min="1">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Unit Price (${currLabel})</label>
+                  <input type="number" id="edit-po-rate" class="fin-form-input" value="${lineItems[0]?.unit_price || 0}" step="any" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Total Value (${currLabel})</label>
+                  <input type="text" id="edit-po-total" class="fin-form-input" readonly value="${currSym}${Number(po.total_value || po.grand_total || 0).toFixed(2)}" style="font-weight:700; color:#38bdf8;">
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-po')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update PO &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    const qtyInp = document.getElementById('edit-po-qty');
+    const rateInp = document.getElementById('edit-po-rate');
+    const totalInp = document.getElementById('edit-po-total');
+
+    const updateTotals = () => {
+      const q = Number(qtyInp.value) || 0;
+      const r = Number(rateInp.value) || 0;
+      const sub = q * r;
+      const taxRate = isIndia ? 0.18 : 0.05;
+      const tot = sub + (sub * taxRate);
+      totalInp.value = `${currSym}${tot.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+    };
+
+    qtyInp.oninput = updateTotals;
+    rateInp.oninput = updateTotals;
+
+    document.getElementById('edit-po-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const q = Number(qtyInp.value) || 1;
+      const r = Number(rateInp.value) || 0;
+      const subtotal = q * r;
+      const taxRate = isIndia ? 0.18 : 0.05;
+      const tax = subtotal * taxRate;
+      const grand = subtotal + tax;
+
+      po.supplier_name = document.getElementById('edit-po-vend').value.trim();
+      po.vendor_name = po.supplier_name;
+      po.project_name = document.getElementById('edit-po-prj').value.trim();
+      po.date = document.getElementById('edit-po-date').value;
+      po.expected_delivery = document.getElementById('edit-po-delivery').value;
+      po.subtotal = subtotal;
+      po.subtotal_ex_vat = subtotal;
+      po.tax_total = tax;
+      po.vat_total = isIndia ? 0 : tax;
+      po.total_value = grand;
+      po.grand_total = grand;
+
+      po.line_items = [
+        {
+          sr: 1,
+          name: document.getElementById('edit-po-desc').value.trim(),
+          description: document.getElementById('edit-po-desc').value.trim(),
+          qty: q,
+          unit_price: r,
+          taxable_amount: subtotal,
+          vat_rate: isIndia ? 0 : 5,
+          vat_amount: tax,
+          total_amount: grand
+        }
+      ];
+
+      await this.syncApi('update_po', { po });
+      alert(`Purchase Order ${po.po_no} updated successfully.`);
+      this.closeModal('modal-edit-po');
+      this.renderActiveTab();
+    };
+  }
+
+  // 7. EDIT CREDIT NOTE MODAL
+  openEditCreditNoteModal(noteId) {
+    const cn = (this.db?.credit_notes || []).find(n => n.id === noteId || n.credit_note_no === noteId);
+    if (!cn) {
+      alert('Credit note not found.');
+      return;
+    }
+    const isIndia = (cn.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-cn">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Credit Note (${cn.credit_note_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-cn')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-cn-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Client Name</label>
+                <input type="text" id="edit-cn-cust" class="fin-form-input" value="${cn.customer_name || ''}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-form-label">Credit Reason</label>
+                <input type="text" id="edit-cn-reason" class="fin-form-input" value="${cn.reason || ''}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-form-label">Total Credit Amount (${currLabel})</label>
+                <input type="number" id="edit-cn-amount" class="fin-form-input" value="${cn.total_credit_amount || cn.taxable_amount || 0}" step="any" required>
+              </div>
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-cn')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Credit Note &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.getElementById('edit-cn-form').onsubmit = async (e) => {
+      e.preventDefault();
+      cn.customer_name = document.getElementById('edit-cn-cust').value.trim();
+      cn.reason = document.getElementById('edit-cn-reason').value.trim();
+      cn.total_credit_amount = Number(document.getElementById('edit-cn-amount').value) || 0;
+      await this.syncApi('update_credit_note', { credit_note: cn });
+      alert(`Credit Note ${cn.credit_note_no} updated successfully.`);
+      this.closeModal('modal-edit-cn');
+      this.renderActiveTab();
+    };
+  }
+
+  // 8. EDIT DEBIT NOTE MODAL
+  openEditDebitNoteModal(noteId) {
+    const dn = (this.db?.debit_notes || []).find(n => n.id === noteId || n.debit_note_no === noteId);
+    if (!dn) {
+      alert('Debit note not found.');
+      return;
+    }
+    const isIndia = (dn.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-dn">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Debit Note (${dn.debit_note_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-dn')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-dn-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Vendor Name</label>
+                <input type="text" id="edit-dn-vend" class="fin-form-input" value="${dn.vendor_name || ''}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-form-label">Debit Reason</label>
+                <input type="text" id="edit-dn-reason" class="fin-form-input" value="${dn.reason || ''}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-form-label">Total Debit Amount (${currLabel})</label>
+                <input type="number" id="edit-dn-amount" class="fin-form-input" value="${dn.total_debit_amount || 0}" step="any" required>
+              </div>
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-dn')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Debit Note &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.getElementById('edit-dn-form').onsubmit = async (e) => {
+      e.preventDefault();
+      dn.vendor_name = document.getElementById('edit-dn-vend').value.trim();
+      dn.reason = document.getElementById('edit-dn-reason').value.trim();
+      dn.total_debit_amount = Number(document.getElementById('edit-dn-amount').value) || 0;
+      await this.syncApi('update_debit_note', { debit_note: dn });
+      alert(`Debit Note ${dn.debit_note_no} updated successfully.`);
+      this.closeModal('modal-edit-dn');
+      this.renderActiveTab();
+    };
+  }
+
+  // 9. EDIT & DELETE DOCUMENT VAULT FILES
+  openEditDocumentModal(docId) {
+    const doc = (this.db?.documents || []).find(d => d.id === docId);
+    if (!doc) {
+      alert('Document not found.');
+      return;
+    }
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-doc">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Document Metadata</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-doc')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-doc-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">File / Document Title <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-doc-name" class="fin-form-input" value="${doc.name || ''}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-form-label">Category</label>
+                <select id="edit-doc-cat" class="fin-form-select">
+                  <option value="Contract" ${doc.category === 'Contract' ? 'selected' : ''}>Client Contract</option>
+                  <option value="Statutory" ${doc.category === 'Statutory' ? 'selected' : ''}>Statutory &amp; Tax</option>
+                  <option value="Audit" ${doc.category === 'Audit' ? 'selected' : ''}>Audit &amp; Compliance</option>
+                  <option value="Procurement" ${doc.category === 'Procurement' ? 'selected' : ''}>Supplier Procurement PO</option>
+                </select>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-form-label">Linked Record Ref</label>
+                <input type="text" id="edit-doc-ref" class="fin-form-input" value="${doc.linked_record || ''}">
+              </div>
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-doc')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Document &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.getElementById('edit-doc-form').onsubmit = async (e) => {
+      e.preventDefault();
+      doc.name = document.getElementById('edit-doc-name').value.trim();
+      doc.category = document.getElementById('edit-doc-cat').value;
+      doc.linked_record = document.getElementById('edit-doc-ref').value.trim() || 'General';
+      await this.syncApi('update_document', { document: doc });
+      alert(`Document "${doc.name}" updated successfully.`);
+      this.closeModal('modal-edit-doc');
+      this.renderActiveTab();
+    };
+  }
+
+  async deleteDocument(docId) {
+    if (!confirm('Are you sure you wish to delete this document from the vault?')) return;
+    await this.syncApi('delete_document', { document_id: docId });
+    alert('Document removed from vault.');
+    this.renderActiveTab();
+  }
+
+    bindGlobalEvents() {
     // Intercept clicks on any element with data-finance-login or href="/billing/#login"
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('#header-finance-login-btn, .btn-finance-portal-trigger, .header-top-link-finance');

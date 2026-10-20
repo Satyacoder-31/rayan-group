@@ -405,6 +405,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     switch ($action) {
         case 'create_invoice':
+        case 'update_invoice':
             $inv = $body['invoice'] ?? [];
             if (!empty($inv)) {
                 if (!isset($db['invoices']) || !is_array($db['invoices'])) {
@@ -420,10 +421,161 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if ($foundIdx >= 0) {
                     $db['invoices'][$foundIdx] = array_merge($db['invoices'][$foundIdx], $inv);
+                    $addAuditLog('update', 'invoice', $inv['invoice_no'] ?? '', 'Updated tax invoice for ' . ($inv['customer_name'] ?? ''));
                 } else {
                     array_unshift($db['invoices'], $inv);
+                    $addAuditLog('create', 'invoice', $inv['invoice_no'] ?? '', 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
                 }
-                $addAuditLog('create', 'invoice', $inv['invoice_no'] ?? '', 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
+            }
+            break;
+
+        case 'update_bill':
+            $bill = $body['bill'] ?? [];
+            if (!empty($bill) && isset($db['purchase_bills'])) {
+                $targetId = $bill['id'] ?? $bill['bill_no'] ?? '';
+                foreach ($db['purchase_bills'] as &$existingB) {
+                    if (($existingB['id'] ?? '') === $targetId || ($existingB['bill_no'] ?? '') === $targetId) {
+                        $existingB = array_merge($existingB, $bill);
+                        break;
+                    }
+                }
+                unset($existingB);
+                $addAuditLog('update', 'bill', $bill['bill_no'] ?? '', 'Updated purchase bill ' . ($bill['bill_no'] ?? ''));
+            }
+            break;
+
+        case 'update_expense':
+            $exp = $body['expense'] ?? [];
+            if (!empty($exp) && isset($db['expenses'])) {
+                $targetId = $exp['id'] ?? $exp['expense_no'] ?? '';
+                foreach ($db['expenses'] as &$existingE) {
+                    if (($existingE['id'] ?? '') === $targetId || ($existingE['expense_no'] ?? '') === $targetId) {
+                        $existingE = array_merge($existingE, $exp);
+                        break;
+                    }
+                }
+                unset($existingE);
+                $addAuditLog('update', 'expense', $exp['expense_no'] ?? '', 'Updated expense claim ' . ($exp['expense_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_expense':
+            $expId = $body['expense_id'] ?? $body['id'] ?? '';
+            if (!empty($expId) && isset($db['expenses'])) {
+                $db['expenses'] = array_values(array_filter($db['expenses'], function($item) use ($expId) {
+                    return ($item['id'] ?? '') !== $expId && ($item['expense_no'] ?? '') !== $expId;
+                }));
+                $addAuditLog('delete', 'expense', $expId, 'Deleted expense ' . $expId);
+            }
+            break;
+
+        case 'update_receipt':
+            $rcp = $body['receipt'] ?? [];
+            if (!empty($rcp) && isset($db['customer_receipts'])) {
+                $targetId = $rcp['id'] ?? $rcp['receipt_no'] ?? '';
+                foreach ($db['customer_receipts'] as &$existingR) {
+                    if (($existingR['id'] ?? '') === $targetId || ($existingR['receipt_no'] ?? '') === $targetId) {
+                        $existingR = array_merge($existingR, $rcp);
+                        break;
+                    }
+                }
+                unset($existingR);
+                $addAuditLog('update', 'receipt', $rcp['receipt_no'] ?? '', 'Updated customer receipt ' . ($rcp['receipt_no'] ?? ''));
+            }
+            break;
+
+        case 'update_payment':
+            $pay = $body['payment'] ?? [];
+            if (!empty($pay) && isset($db['vendor_payments'])) {
+                $targetId = $pay['id'] ?? $pay['voucher_no'] ?? '';
+                foreach ($db['vendor_payments'] as &$existingP) {
+                    if (($existingP['id'] ?? '') === $targetId || ($existingP['voucher_no'] ?? '') === $targetId) {
+                        $existingP = array_merge($existingP, $pay);
+                        break;
+                    }
+                }
+                unset($existingP);
+                $addAuditLog('update', 'payment', $pay['voucher_no'] ?? '', 'Updated vendor payment voucher ' . ($pay['voucher_no'] ?? ''));
+            }
+            break;
+
+        case 'update_po':
+            $po = $body['po'] ?? [];
+            if (!empty($po) && isset($db['purchase_orders'])) {
+                $targetId = $po['id'] ?? $po['po_no'] ?? '';
+                foreach ($db['purchase_orders'] as &$existingPO) {
+                    if (($existingPO['id'] ?? '') === $targetId || ($existingPO['po_no'] ?? '') === $targetId) {
+                        $existingPO = array_merge($existingPO, $po);
+                        break;
+                    }
+                }
+                unset($existingPO);
+                $addAuditLog('update', 'po', $po['po_no'] ?? '', 'Updated purchase order ' . ($po['po_no'] ?? ''));
+            }
+            break;
+
+        case 'update_credit_note':
+            $cn = $body['credit_note'] ?? [];
+            if (!empty($cn) && isset($db['credit_notes'])) {
+                $targetId = $cn['id'] ?? $cn['credit_note_no'] ?? '';
+                foreach ($db['credit_notes'] as &$existingCN) {
+                    if (($existingCN['id'] ?? '') === $targetId || ($existingCN['credit_note_no'] ?? '') === $targetId) {
+                        $existingCN = array_merge($existingCN, $cn);
+                        break;
+                    }
+                }
+                unset($existingCN);
+                $addAuditLog('update', 'credit_note', $cn['credit_note_no'] ?? '', 'Updated credit note ' . ($cn['credit_note_no'] ?? ''));
+            }
+            break;
+
+        case 'update_debit_note':
+            $dn = $body['debit_note'] ?? [];
+            if (!empty($dn) && isset($db['debit_notes'])) {
+                $targetId = $dn['id'] ?? $dn['debit_note_no'] ?? '';
+                foreach ($db['debit_notes'] as &$existingDN) {
+                    if (($existingDN['id'] ?? '') === $targetId || ($existingDN['debit_note_no'] ?? '') === $targetId) {
+                        $existingDN = array_merge($existingDN, $dn);
+                        break;
+                    }
+                }
+                unset($existingDN);
+                $addAuditLog('update', 'debit_note', $dn['debit_note_no'] ?? '', 'Updated debit note ' . ($dn['debit_note_no'] ?? ''));
+            }
+            break;
+
+        case 'create_document':
+            $doc = $body['document'] ?? [];
+            if (!empty($doc)) {
+                if (empty($doc['id'])) $doc['id'] = 'doc-' . round(microtime(true) * 1000);
+                if (!isset($db['documents']) || !is_array($db['documents'])) $db['documents'] = [];
+                array_unshift($db['documents'], $doc);
+                $addAuditLog('create', 'document', $doc['name'] ?? '', 'Uploaded document ' . ($doc['name'] ?? ''));
+            }
+            break;
+
+        case 'update_document':
+            $doc = $body['document'] ?? [];
+            if (!empty($doc) && isset($db['documents'])) {
+                $targetId = $doc['id'] ?? '';
+                foreach ($db['documents'] as &$existingD) {
+                    if (($existingD['id'] ?? '') === $targetId) {
+                        $existingD = array_merge($existingD, $doc);
+                        break;
+                    }
+                }
+                unset($existingD);
+                $addAuditLog('update', 'document', $doc['name'] ?? '', 'Updated document ' . ($doc['name'] ?? ''));
+            }
+            break;
+
+        case 'delete_document':
+            $docId = $body['document_id'] ?? $body['id'] ?? '';
+            if (!empty($docId) && isset($db['documents'])) {
+                $db['documents'] = array_values(array_filter($db['documents'], function($item) use ($docId) {
+                    return ($item['id'] ?? '') !== $docId;
+                }));
+                $addAuditLog('delete', 'document', $docId, 'Deleted document ' . $docId);
             }
             break;
 
