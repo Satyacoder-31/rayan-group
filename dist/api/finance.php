@@ -3,6 +3,7 @@
  * Rayan Group — Enterprise Accounts & Billing Management API
  * Direct Hostinger MySQL Database Persistence + JSON File Fallback
  * Database: u575992126_rayan_app
+ * Last Updated: 2026-10-20 15:10 UTC+5:30
  * Endpoint: /api/finance.php
  */
 
