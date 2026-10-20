@@ -430,11 +430,150 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'create_bill':
             $bill = $body['bill'] ?? [];
             if (!empty($bill)) {
+                if (empty($bill['id'])) {
+                    $bill['id'] = 'bill-' . round(microtime(true) * 1000);
+                }
+                if (empty($bill['company_id'])) {
+                    $bill['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                }
+                if (empty($bill['currency'])) {
+                    $bill['currency'] = ($bill['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                }
+                if (empty($bill['bill_no'])) {
+                    $prefix = ($bill['company_id'] === 'ashaz-eng-in') ? 'BILL-ASH' : 'BILL-RG-2026';
+                    $bill['bill_no'] = $prefix . '-' . rand(100, 999);
+                }
+                if (empty($bill['approval_status'])) {
+                    $bill['approval_status'] = 'approved';
+                }
+                if (empty($bill['status'])) {
+                    $bill['status'] = 'unpaid';
+                }
+                if (!isset($bill['amount_paid'])) {
+                    $bill['amount_paid'] = 0;
+                }
+                if (!isset($bill['balance_due'])) {
+                    $bill['balance_due'] = floatval($bill['grand_total'] ?? 0);
+                }
                 if (!isset($db['purchase_bills']) || !is_array($db['purchase_bills'])) {
                     $db['purchase_bills'] = [];
                 }
                 array_unshift($db['purchase_bills'], $bill);
                 $addAuditLog('create', 'bill', $bill['bill_no'] ?? '', 'Created purchase bill for ' . ($bill['vendor_name'] ?? ''));
+            }
+            break;
+
+        case 'create_expense':
+            $exp = $body['expense'] ?? [];
+            if (!empty($exp)) {
+                if (empty($exp['id'])) {
+                    $exp['id'] = 'exp-' . round(microtime(true) * 1000);
+                }
+                if (empty($exp['company_id'])) {
+                    $exp['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                }
+                if (empty($exp['currency'])) {
+                    $exp['currency'] = ($exp['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                }
+                if (empty($exp['expense_no'])) {
+                    $prefix = ($exp['company_id'] === 'ashaz-eng-in') ? 'EXP-ASH' : 'EXP-RG-2026';
+                    $exp['expense_no'] = $prefix . '-' . rand(100, 999);
+                }
+                if (empty($exp['status'])) {
+                    $exp['status'] = 'approved';
+                }
+                if (!isset($exp['total_amount'])) {
+                    $exp['total_amount'] = floatval($exp['amount'] ?? 0) + floatval($exp['tax_amount'] ?? 0);
+                }
+                if (empty($exp['submitted_by'])) {
+                    $exp['submitted_by'] = $body['user_name'] ?? 'Authorized Personnel';
+                }
+                if (!isset($db['expenses']) || !is_array($db['expenses'])) {
+                    $db['expenses'] = [];
+                }
+                array_unshift($db['expenses'], $exp);
+                $addAuditLog('create', 'expense', $exp['expense_no'] ?? '', 'Recorded operational expense of ' . ($exp['total_amount'] ?? 0));
+            }
+            break;
+
+        case 'create_po':
+            $po = $body['po'] ?? [];
+            if (!empty($po)) {
+                if (empty($po['id'])) {
+                    $po['id'] = 'po-' . round(microtime(true) * 1000);
+                }
+                if (empty($po['company_id'])) {
+                    $po['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                }
+                if (empty($po['currency'])) {
+                    $po['currency'] = ($po['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                }
+                if (empty($po['po_no'])) {
+                    $prefix = ($po['company_id'] === 'ashaz-eng-in') ? 'PO-ASH' : 'PO-REC';
+                    $po['po_no'] = $prefix . '-' . rand(10000, 99999);
+                }
+                if (empty($po['status'])) {
+                    $po['status'] = 'approved';
+                }
+                if (!isset($db['purchase_orders']) || !is_array($db['purchase_orders'])) {
+                    $db['purchase_orders'] = [];
+                }
+                array_unshift($db['purchase_orders'], $po);
+                $addAuditLog('create', 'po', $po['po_no'] ?? '', 'Issued purchase order ' . ($po['po_no'] ?? ''));
+            }
+            break;
+
+        case 'create_credit_note':
+            $cn = $body['credit_note'] ?? [];
+            if (!empty($cn)) {
+                if (empty($cn['id'])) $cn['id'] = 'cn-' . round(microtime(true) * 1000);
+                if (empty($cn['company_id'])) $cn['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($cn['currency'])) $cn['currency'] = ($cn['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (empty($cn['credit_note_no'])) {
+                    $prefix = ($cn['company_id'] === 'ashaz-eng-in') ? 'CN-ASH' : 'CN-RG-2026';
+                    $cn['credit_note_no'] = $prefix . '-' . rand(100, 999);
+                }
+                if (empty($cn['status'])) $cn['status'] = 'applied';
+                if (!isset($db['credit_notes']) || !is_array($db['credit_notes'])) $db['credit_notes'] = [];
+                array_unshift($db['credit_notes'], $cn);
+                if (!empty($cn['invoice_id']) && isset($db['invoices'])) {
+                    $adjAmt = floatval($cn['taxable_amount'] ?? 0) + floatval($cn['tax_amount'] ?? 0);
+                    foreach ($db['invoices'] as &$invRef) {
+                        if (($invRef['id'] ?? '') === $cn['invoice_id'] || ($invRef['invoice_no'] ?? '') === ($cn['invoice_no'] ?? '')) {
+                            $invRef['balance_due'] = max(0, floatval($invRef['balance_due'] ?? 0) - $adjAmt);
+                        }
+                    }
+                    unset($invRef);
+                }
+                $addAuditLog('create', 'credit_note', $cn['credit_note_no'] ?? '', 'Issued credit note for ' . ($cn['customer_name'] ?? ''));
+            }
+            break;
+
+        case 'create_debit_note':
+            $dn = $body['debit_note'] ?? [];
+            if (!empty($dn)) {
+                if (empty($dn['id'])) $dn['id'] = 'dn-' . round(microtime(true) * 1000);
+                if (empty($dn['company_id'])) $dn['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($dn['currency'])) $dn['currency'] = ($dn['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (empty($dn['debit_note_no'])) {
+                    $prefix = ($dn['company_id'] === 'ashaz-eng-in') ? 'DN-ASH' : 'DN-RG-2026';
+                    $dn['debit_note_no'] = $prefix . '-' . rand(100, 999);
+                }
+                if (empty($dn['status'])) $dn['status'] = 'applied';
+                if (!isset($db['debit_notes']) || !is_array($db['debit_notes'])) $db['debit_notes'] = [];
+                array_unshift($db['debit_notes'], $dn);
+                if (!empty($dn['bill_id']) || !empty($dn['bill_no'])) {
+                    $adjAmt = floatval($dn['total_debit_amount'] ?? 0);
+                    if (isset($db['purchase_bills'])) {
+                        foreach ($db['purchase_bills'] as &$bRef) {
+                            if (($bRef['id'] ?? '') === ($dn['bill_id'] ?? '') || ($bRef['bill_no'] ?? '') === ($dn['bill_no'] ?? '')) {
+                                $bRef['balance_due'] = max(0, floatval($bRef['balance_due'] ?? 0) - $adjAmt);
+                            }
+                        }
+                        unset($bRef);
+                    }
+                }
+                $addAuditLog('create', 'debit_note', $dn['debit_note_no'] ?? '', 'Issued debit note for ' . ($dn['vendor_name'] ?? ''));
             }
             break;
 
@@ -471,6 +610,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'record_payment':
             $pay = $body['payment'] ?? [];
             if (!empty($pay)) {
+                if (empty($pay['id'])) {
+                    $pay['id'] = 'pay-' . round(microtime(true) * 1000);
+                }
+                if (empty($pay['company_id'])) {
+                    $pay['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                }
+                if (empty($pay['currency'])) {
+                    $pay['currency'] = ($pay['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                }
+                if (empty($pay['voucher_no'])) {
+                    $prefix = ($pay['company_id'] === 'ashaz-eng-in') ? 'PV-ASH' : 'PV-RG-2026';
+                    $pay['voucher_no'] = $prefix . '-' . rand(100, 999);
+                }
                 if (!isset($db['vendor_payments']) || !is_array($db['vendor_payments'])) {
                     $db['vendor_payments'] = [];
                 }
@@ -544,6 +696,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if (empty($vnd['code'])) {
                     $vnd['code'] = 'VEND-' . rand(100, 999);
+                }
+                if (empty($vnd['company_id'])) {
+                    $vnd['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
                 }
                 if (empty($vnd['status'])) {
                     $vnd['status'] = 'active';
@@ -627,6 +782,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'vendor' => $vnd ?? null,
         'item' => $itm ?? null,
         'invoice' => $inv ?? null,
+        'bill' => $bill ?? null,
+        'expense' => $exp ?? null,
+        'po' => $po ?? null,
+        'credit_note' => $cn ?? null,
+        'debit_note' => $dn ?? null,
         'data' => $db
     ]);
     exit;

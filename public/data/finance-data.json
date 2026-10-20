@@ -318,6 +318,82 @@
   ],
   "vendors": [
     {
+      "id": "vend-ariba-uae",
+      "code": "VEND-ARIBA",
+      "company_id": "rayan-corp-uae",
+      "name": "ARIBA GM INTERIOR DÉCOR LLC",
+      "contact_person": "Mr. Mohammad Gulam",
+      "email": "aribadecoration@gmail.com",
+      "phone": "+971 55 9314189",
+      "address": "Industrial Area, Abu Dhabi, United Arab Emirates",
+      "country": "UAE",
+      "trn": "104755857000003",
+      "category": "Interior Fit-Out & Screeding",
+      "bank_name": "Abu Dhabi Commercial Bank (ADCB)",
+      "account_no": "10982347101",
+      "iban": "AE44003000010982347101",
+      "payment_terms": 30,
+      "opening_balance": 0,
+      "status": "active"
+    },
+    {
+      "id": "vend-danube-uae",
+      "code": "VEND-DANUBE",
+      "company_id": "rayan-corp-uae",
+      "name": "Danube Building Materials FZCO",
+      "contact_person": "Mr. Rizwan Sajan",
+      "email": "corporate.sales@aldanube.com",
+      "phone": "+971 4 8129000",
+      "address": "Jebel Ali Free Zone / Mussafah M-12, Abu Dhabi, UAE",
+      "country": "UAE",
+      "trn": "100234567800003",
+      "category": "Building Materials, Timber & Gypsum",
+      "bank_name": "Emirates NBD",
+      "account_no": "01239847102",
+      "iban": "AE21026000001239847102",
+      "payment_terms": 30,
+      "opening_balance": 0,
+      "status": "active"
+    },
+    {
+      "id": "vend-emsteel-uae",
+      "code": "VEND-EMSTEEL",
+      "company_id": "rayan-corp-uae",
+      "name": "Emirates Steel Arkan PJSC",
+      "contact_person": "Eng. Saeed Al Ghafri",
+      "email": "sales@emiratessteelarkan.com",
+      "phone": "+971 2 5501111",
+      "address": "Industrial City of Abu Dhabi (ICAD I), Musaffah, Abu Dhabi, UAE",
+      "country": "UAE",
+      "trn": "100345678900003",
+      "category": "Structural Steel & Deformed Rebar",
+      "bank_name": "First Abu Dhabi Bank (FAB)",
+      "account_no": "04981726354",
+      "iban": "AE19003000004981726354",
+      "payment_terms": 30,
+      "opening_balance": 0,
+      "status": "active"
+    },
+    {
+      "id": "vend-alfuttaim-uae",
+      "code": "VEND-ALFUTTAIM",
+      "company_id": "rayan-corp-uae",
+      "name": "Al Futtaim Engineering & Technologies LLC",
+      "contact_person": "Eng. Murali S.",
+      "email": "afet.enquiry@alfuttaim.com",
+      "phone": "+971 2 4474333",
+      "address": "Al Danah, Abu Dhabi, United Arab Emirates",
+      "country": "UAE",
+      "trn": "100456789000003",
+      "category": "MEP, HVAC & Scaffolding Systems",
+      "bank_name": "Mashreq Bank",
+      "account_no": "09182374615",
+      "iban": "AE78033000009182374615",
+      "payment_terms": 45,
+      "opening_balance": 0,
+      "status": "active"
+    },
+    {
       "id": "vend-001",
       "code": "VEND-TATA",
       "company_id": "ashaz-eng-in",
@@ -974,7 +1050,122 @@
       "currency_symbol": "AED "
     }
   ],
-  "purchase_bills": [],
+  "purchase_bills": [
+    {
+      "id": "bill-rg-001",
+      "bill_no": "BILL-RG-2026-001",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-ariba-uae",
+      "vendor_name": "ARIBA GM INTERIOR DÉCOR LLC",
+      "vendor_tax_regime": "trn",
+      "vendor_trn": "104755857000003",
+      "vendor_invoice_no": "AGM-INV-2026-08",
+      "po_id": "po-rec-11008",
+      "po_no": "PO-REC-11008",
+      "project_name": "Project At Al Foah Mall Screeding Work",
+      "bill_date": "2026-06-25",
+      "due_date": "2026-07-25",
+      "payment_terms": 30,
+      "taxable_subtotal": 9600,
+      "tax_total": 480,
+      "grand_total": 10080,
+      "amount_paid": 10080,
+      "balance_due": 0,
+      "approval_status": "approved",
+      "status": "paid",
+      "line_items": [
+        {
+          "name": "Supply and Application of Screeding 8-10 Cm Thickness with (Polythene Sheet below screed)",
+          "qty": 160,
+          "uom": "Sqm",
+          "unit_price": 60,
+          "taxable_amount": 9600,
+          "vat_rate": 5,
+          "tax_amount": 480,
+          "total_amount": 10080
+        }
+      ],
+      "notes": "Al Foah Mall Screeding Work Phase 1 verified and signed off by QC."
+    },
+    {
+      "id": "bill-rg-002",
+      "bill_no": "BILL-RG-2026-002",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-danube-uae",
+      "vendor_name": "Danube Building Materials FZCO",
+      "vendor_tax_regime": "trn",
+      "vendor_trn": "100234567800003",
+      "vendor_invoice_no": "DBM-AD-88421",
+      "po_id": null,
+      "po_no": null,
+      "project_name": "Corporate Civil Operations",
+      "bill_date": "2026-07-10",
+      "due_date": "2026-08-10",
+      "payment_terms": 30,
+      "taxable_subtotal": 24000,
+      "tax_total": 1200,
+      "grand_total": 25200,
+      "amount_paid": 15200,
+      "balance_due": 10000,
+      "approval_status": "approved",
+      "status": "partially_paid",
+      "line_items": [
+        {
+          "name": "Commercial Moisture Resistant Gypsum Boards & Galvanized Framing Studs",
+          "qty": 1,
+          "uom": "LSUM",
+          "unit_price": 24000,
+          "taxable_amount": 24000,
+          "vat_rate": 5,
+          "tax_amount": 1200,
+          "total_amount": 25200
+        }
+      ],
+      "notes": "Commercial fit-out boards and studs received at Mussafah storage."
+    },
+    {
+      "id": "bill-rg-003",
+      "bill_no": "BILL-RG-2026-003",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-emsteel-uae",
+      "vendor_name": "Emirates Steel Arkan PJSC",
+      "vendor_tax_regime": "trn",
+      "vendor_trn": "100345678900003",
+      "vendor_invoice_no": "ESA-M-2026-441",
+      "po_id": null,
+      "po_no": null,
+      "project_name": "Corporate Civil Operations",
+      "bill_date": "2026-07-22",
+      "due_date": "2026-08-22",
+      "payment_terms": 30,
+      "taxable_subtotal": 48500,
+      "tax_total": 2425,
+      "grand_total": 50925,
+      "amount_paid": 0,
+      "balance_due": 50925,
+      "approval_status": "approved",
+      "status": "unpaid",
+      "line_items": [
+        {
+          "name": "High-Tensile ASTM A615 Grade 60 Rebar Bundles (16mm & 25mm)",
+          "qty": 1,
+          "uom": "LSUM",
+          "unit_price": 48500,
+          "taxable_amount": 48500,
+          "vat_rate": 5,
+          "tax_amount": 2425,
+          "total_amount": 50925
+        }
+      ],
+      "notes": "Structural rebar bundles delivered with mill test certificates."
+    }
+  ],
   "customer_receipts": [
     {
       "id": "rec-rv-44027",
@@ -1123,10 +1314,122 @@
       "recorded_at": "2026-09-17T13:40:00Z"
     }
   ],
-  "vendor_payments": [],
+  "vendor_payments": [
+    {
+      "id": "pay-rg-001",
+      "voucher_no": "PV-RG-2026-001",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-ariba-uae",
+      "vendor_name": "ARIBA GM INTERIOR DÉCOR LLC",
+      "payment_date": "2026-07-15",
+      "payment_mode": "Corporate RTGS",
+      "reference_no": "ADCB-FT-994821",
+      "amount_paid": 10080,
+      "allocations": [
+        {
+          "bill_id": "bill-rg-001",
+          "bill_no": "BILL-RG-2026-001",
+          "amount_allocated": 10080
+        }
+      ],
+      "notes": "Full settlement for Screeding Work at Al Foah Mall."
+    },
+    {
+      "id": "pay-rg-002",
+      "voucher_no": "PV-RG-2026-002",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-danube-uae",
+      "vendor_name": "Danube Building Materials FZCO",
+      "payment_date": "2026-07-28",
+      "payment_mode": "Corporate Cheque",
+      "reference_no": "CHQ-662910",
+      "amount_paid": 15200,
+      "allocations": [
+        {
+          "bill_id": "bill-rg-002",
+          "bill_no": "BILL-RG-2026-002",
+          "amount_allocated": 15200
+        }
+      ],
+      "notes": "Part payment release as per milestones approved by Project Manager."
+    }
+  ],
   "credit_notes": [],
-  "debit_notes": [],
-  "expenses": [],
+  "debit_notes": [
+    {
+      "id": "dn-rg-001",
+      "debit_note_no": "DN-RG-2026-001",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "date": "2026-07-16",
+      "bill_no": "BILL-RG-2026-002",
+      "vendor_name": "Danube Building Materials FZCO",
+      "reason": "Damaged edge profiles and transit water-contact boards returned at site inspection",
+      "total_debit_amount": 800,
+      "status": "applied"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp-rg-001",
+      "expense_no": "EXP-RG-2026-001",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "date": "2026-06-28",
+      "category": "Equipment & Fuel",
+      "description": "Diesel fuel supply for mobile hydraulic crane & on-site diesel generators",
+      "project_name": "Corporate Civil Operations",
+      "submitted_by": "Tariq Mansoor (Site Supervisor)",
+      "payment_method": "Corporate Debit Card",
+      "amount": 3450,
+      "tax_amount": 172.5,
+      "total_amount": 3622.5,
+      "status": "approved",
+      "receipt_filename": "fuel-receipt-june26.pdf"
+    },
+    {
+      "id": "exp-rg-002",
+      "expense_no": "EXP-RG-2026-002",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "date": "2026-07-05",
+      "category": "Site Expenses & Consumables",
+      "description": "Site safety PPE equipment: EN397 helmets, high-visibility vests & fall-arrest harnesses",
+      "project_name": "Project At Al Foah Mall Screeding Work",
+      "submitted_by": "Mohammad Suhel (Procurement)",
+      "payment_method": "Petty Cash",
+      "amount": 1850,
+      "tax_amount": 92.5,
+      "total_amount": 1942.5,
+      "status": "approved",
+      "receipt_filename": "ppe-safety-supplies.pdf"
+    },
+    {
+      "id": "exp-rg-003",
+      "expense_no": "EXP-RG-2026-003",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "date": "2026-07-18",
+      "category": "Utilities & Maintenance",
+      "description": "ADDC temporary power connection & electrical safety inspection fees",
+      "project_name": "Corporate Civil Operations",
+      "submitted_by": "Finance Department",
+      "payment_method": "Direct Bank Wire",
+      "amount": 4200,
+      "tax_amount": 210,
+      "total_amount": 4410,
+      "status": "approved",
+      "receipt_filename": "addc-temporary-power.pdf"
+    }
+  ],
   "purchase_orders": [
     {
       "id": "po-rec-11008",

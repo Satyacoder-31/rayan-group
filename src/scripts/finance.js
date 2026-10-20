@@ -394,6 +394,99 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, receipt: newRcp };
     }
 
+    if (action === 'create_bill' && payload.bill) {
+      if (!this.db.purchase_bills) this.db.purchase_bills = [];
+      const newBill = payload.bill;
+      const idx = this.db.purchase_bills.findIndex(b => b.id === newBill.id || b.bill_no === newBill.bill_no);
+      if (idx >= 0) {
+        this.db.purchase_bills[idx] = newBill;
+      } else {
+        this.db.purchase_bills.unshift(newBill);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, bill: newBill };
+    }
+
+    if (action === 'create_expense' && payload.expense) {
+      if (!this.db.expenses) this.db.expenses = [];
+      const newExp = payload.expense;
+      const idx = this.db.expenses.findIndex(e => e.id === newExp.id || e.expense_no === newExp.expense_no);
+      if (idx >= 0) {
+        this.db.expenses[idx] = newExp;
+      } else {
+        this.db.expenses.unshift(newExp);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, expense: newExp };
+    }
+
+    if (action === 'record_payment' && payload.payment) {
+      if (!this.db.vendor_payments) this.db.vendor_payments = [];
+      const newPay = payload.payment;
+      const idx = this.db.vendor_payments.findIndex(p => p.id === newPay.id || p.voucher_no === newPay.voucher_no);
+      if (idx >= 0) {
+        this.db.vendor_payments[idx] = newPay;
+      } else {
+        this.db.vendor_payments.unshift(newPay);
+      }
+      if (Array.isArray(newPay.allocations) && this.db.purchase_bills) {
+        newPay.allocations.forEach(alloc => {
+          const bill = this.db.purchase_bills.find(b => b.id === alloc.bill_id || b.bill_no === alloc.bill_no);
+          if (bill) {
+            const allocAmt = Number(alloc.amount_allocated) || 0;
+            bill.amount_paid = (Number(bill.amount_paid) || 0) + allocAmt;
+            bill.balance_due = Math.max(0, (Number(bill.grand_total) || 0) - bill.amount_paid);
+            bill.status = bill.balance_due <= 0.01 ? 'paid' : 'partially_paid';
+          }
+        });
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, payment: newPay };
+    }
+
+    if (action === 'create_po' && payload.po) {
+      if (!this.db.purchase_orders) this.db.purchase_orders = [];
+      const newPo = payload.po;
+      const idx = this.db.purchase_orders.findIndex(p => p.id === newPo.id || p.po_no === newPo.po_no);
+      if (idx >= 0) {
+        this.db.purchase_orders[idx] = newPo;
+      } else {
+        this.db.purchase_orders.unshift(newPo);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, po: newPo };
+    }
+
+    if (action === 'create_credit_note' && payload.credit_note) {
+      if (!this.db.credit_notes) this.db.credit_notes = [];
+      const newCn = payload.credit_note;
+      this.db.credit_notes.unshift(newCn);
+      if (newCn.invoice_id && this.db.invoices) {
+        const inv = this.db.invoices.find(i => i.id === newCn.invoice_id || i.invoice_no === newCn.invoice_no);
+        if (inv) {
+          const adj = (Number(newCn.taxable_amount) || 0) + (Number(newCn.tax_amount) || 0);
+          inv.balance_due = Math.max(0, (Number(inv.balance_due) || 0) - adj);
+        }
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, credit_note: newCn };
+    }
+
+    if (action === 'create_debit_note' && payload.debit_note) {
+      if (!this.db.debit_notes) this.db.debit_notes = [];
+      const newDn = payload.debit_note;
+      this.db.debit_notes.unshift(newDn);
+      if (newDn.bill_id && this.db.purchase_bills) {
+        const bill = this.db.purchase_bills.find(b => b.id === newDn.bill_id || b.bill_no === newDn.bill_no);
+        if (bill) {
+          const adj = Number(newDn.total_debit_amount) || 0;
+          bill.balance_due = Math.max(0, (Number(bill.balance_due) || 0) - adj);
+        }
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, debit_note: newDn };
+    }
+
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
   }
@@ -443,6 +536,66 @@ class FinanceApp {
     });
 
     return `REC-RV-${maxSeq + 1}`;
+  }
+
+  getNextBillNumber() {
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let maxSeq = 0;
+    bills.forEach(b => {
+      const bNo = b.bill_no || '';
+      const m = bNo.match(/BILL-.*-(\d+)/i) || bNo.match(/(\d{3,})$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    });
+    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'BILL-ASH' : 'BILL-RG-2026';
+    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+  }
+
+  getNextExpenseNumber() {
+    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let maxSeq = 0;
+    expenses.forEach(e => {
+      const eNo = e.expense_no || '';
+      const m = eNo.match(/EXP-.*-(\d+)/i) || eNo.match(/(\d{3,})$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    });
+    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'EXP-ASH' : 'EXP-RG-2026';
+    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+  }
+
+  getNextPaymentVoucherNumber() {
+    const payments = (this.db?.vendor_payments || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let maxSeq = 0;
+    payments.forEach(p => {
+      const pNo = p.voucher_no || '';
+      const m = pNo.match(/PV-.*-(\d+)/i) || pNo.match(/(\d{3,})$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    });
+    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'PV-ASH' : 'PV-RG-2026';
+    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+  }
+
+  getNextPONumber() {
+    const pos = (this.db?.purchase_orders || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let maxSeq = 11008;
+    pos.forEach(p => {
+      const pNo = p.po_no || '';
+      const m = pNo.match(/PO-REC-(\d+)/i) || pNo.match(/(\d{4,})$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    });
+    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'PO-ASH' : 'PO-REC';
+    return `${prefix}-${maxSeq + 1}`;
   }
 
   formatCurrency(amount, withSymbol = true) {
@@ -2360,14 +2513,14 @@ class FinanceApp {
   // 7. PAYMENTS & RECEIPTS MODULE
   // --------------------------------------------------------------------------
   renderPaymentsTab(root) {
-    const rawReceipts = this.db?.customer_receipts || [];
+    const rawReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const receipts = [...rawReceipts].sort((a, b) => {
       const dateA = new Date(a.receipt_date || 0).getTime();
       const dateB = new Date(b.receipt_date || 0).getTime();
       if (dateB !== dateA) return dateB - dateA;
       return (b.id || '').localeCompare(a.id || '');
     });
-    const payments = this.db?.vendor_payments || [];
+    const payments = (this.db?.vendor_payments || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const latestReceiptId = receipts[0]?.id || 'rec-rv-44026';
 
     root.innerHTML = `
@@ -6139,15 +6292,19 @@ class FinanceApp {
 
   // 4. CREATE PURCHASE BILL MODAL
   openCreateBillModal() {
-    const vendors = this.db?.vendors || [];
-    const projects = this.db?.projects || [];
-    const pos = this.db?.purchase_orders || [];
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const defaultRegime = isIndia ? 'gst' : 'trn';
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === this.activeCompanyId);
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
+    const pos = (this.db?.purchase_orders || []).filter(po => (po.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-bill">
         <div class="fin-modal-dialog">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">📥 Record Vendor Purchase Bill</h3>
+            <h3 class="fin-modal-title">📥 Record Vendor Purchase Bill (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bill')">&times;</button>
           </div>
           <div class="fin-modal-body">
@@ -6168,38 +6325,38 @@ class FinanceApp {
                       autocomplete="off"
                     >
                     <div id="bill-vend-dropdown" class="fin-autocomplete-dropdown">
-                      <div class="fin-autocomplete-header">Registered Vendors (Click to Auto-fill)</div>
+                      <div class="fin-autocomplete-header">Registered Vendors (${currLabel})</div>
                       ${vendors.map(v => `
                         <div class="fin-autocomplete-item" data-id="${v.id}" data-name="${v.name}">
                           <div>
                             <div class="fin-autocomplete-item-name">${v.name}</div>
-                            <div class="fin-autocomplete-item-meta">${v.code || ''} • ${v.trn ? `TRN: ${v.trn}` : (v.gstin ? `GSTIN: ${v.gstin}` : (v.country || 'UAE'))}</div>
+                            <div class="fin-autocomplete-item-meta">${v.code || ''} • ${v.trn ? `TRN: ${v.trn}` : (v.gstin ? `GSTIN: ${v.gstin}` : (v.country || (isIndia ? 'India' : 'UAE')))}</div>
                           </div>
-                          <span class="fin-autocomplete-item-badge">${v.country || (v.trn ? 'UAE' : 'India')}</span>
+                          <span class="fin-autocomplete-item-badge">${v.country || (v.trn ? 'UAE' : (isIndia ? 'India' : 'UAE'))}</span>
                         </div>
                       `).join('')}
                     </div>
                   </div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="bill-vend-hint">Click text box to view registered vendors, or type custom name</span>
+                    <span id="bill-vend-hint">Click text box to view registered suppliers, or type custom name</span>
                   </div>
                 </div>
                 <div class="fin-form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
                     <label class="fin-form-label" id="bill-tax-header-label" style="margin-bottom:0;">
-                      <span id="bill-tax-type-text">VENDOR GSTIN</span>
+                      <span id="bill-tax-type-text">${isIndia ? 'VENDOR GSTIN' : 'VENDOR TRN'}</span>
                     </label>
                     <div class="fin-tax-regime-pills">
-                      <button type="button" id="bill-regime-gst" class="fin-tax-pill active">🇮🇳 GST</button>
-                      <button type="button" id="bill-regime-trn" class="fin-tax-pill">🇦🇪 TRN</button>
+                      <button type="button" id="bill-regime-trn" class="fin-tax-pill ${!isIndia ? 'active trn-pill' : ''}">🇦🇪 TRN</button>
+                      <button type="button" id="bill-regime-gst" class="fin-tax-pill ${isIndia ? 'active' : ''}">🇮🇳 GST</button>
                     </div>
                   </div>
-                  <input type="text" id="bill-tax-no" class="fin-form-input" placeholder="e.g. 27AAACT2727Q1ZT" style="font-family:monospace; font-weight:600; text-transform:uppercase;">
-                  <input type="hidden" id="bill-tax-regime" value="gst">
+                  <input type="text" id="bill-tax-no" class="fin-form-input" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 100234567800003 (15 digits)'}" style="font-family:monospace; font-weight:600; text-transform:uppercase;">
+                  <input type="hidden" id="bill-tax-regime" value="${defaultRegime}">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Supplier Invoice # <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="bill-inv-no" class="fin-form-input" required placeholder="e.g. TS-INV-99210">
+                  <input type="text" id="bill-inv-no" class="fin-form-input" required placeholder="${isIndia ? 'e.g. TS-INV-99210' : 'e.g. AGM-INV-2026-08'}">
                 </div>
               </div>
 
@@ -6222,52 +6379,58 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Linked Project / Cost Center</label>
                   <select id="bill-project" class="fin-form-select">
-                    <option value="">General Overhead</option>
-                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code})</option>`).join('')}
+                    <option value="">General Corporate Overhead</option>
+                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code || ''})</option>`).join('')}
                   </select>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Linked Purchase Order</label>
                   <select id="bill-po-sel" class="fin-form-select">
                     <option value="">No PO Linked</option>
-                    ${pos.map(po => `<option value="${po.id}">${po.po_no} - ${po.vendor_name}</option>`).join('')}
+                    ${pos.map(po => `<option value="${po.id}">${po.po_no} - ${po.vendor_name || po.supplier_name}</option>`).join('')}
                   </select>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Item / Service Purchased</label>
-                  <input type="text" id="bill-item-desc" class="fin-form-input" placeholder="e.g. High-Yield TMT Steel Consignment" required>
+                  <input type="text" id="bill-item-desc" class="fin-form-input" placeholder="${isIndia ? 'e.g. Structural steel consignment' : 'e.g. Screeding application & supplies'}" required>
                 </div>
               </div>
 
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Taxable Subtotal (₹) <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Taxable Subtotal (${currLabel}) <span style="color:#ef4444;">*</span></label>
                   <input type="number" id="bill-taxable" class="fin-form-input" min="1" step="any" required placeholder="0.00">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label" id="bill-tax-rate-label">Tax Rate %</label>
                   <select id="bill-gst-rate" class="fin-form-select">
-                    <option value="18" selected>18% GST (Standard)</option>
-                    <option value="5">5% UAE VAT (Standard)</option>
-                    <option value="12">12% GST</option>
-                    <option value="28">28% GST</option>
-                    <option value="0">0% (Exempt)</option>
+                    ${!isIndia ? `
+                      <option value="5" selected>5% UAE VAT (Standard)</option>
+                      <option value="0">0% (Zero-rated / Exempt)</option>
+                      <option value="18">18% GST (Import)</option>
+                    ` : `
+                      <option value="18" selected>18% GST (Standard)</option>
+                      <option value="12">12% GST</option>
+                      <option value="28">28% GST</option>
+                      <option value="5">5% GST</option>
+                      <option value="0">0% (Exempt)</option>
+                    `}
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Grand Total (₹)</label>
-                  <input type="text" id="bill-grand" class="fin-form-input" readonly placeholder="₹0.00" style="font-weight:700; color:#38bdf8;">
+                  <label class="fin-form-label">Grand Total (${currLabel})</label>
+                  <input type="text" id="bill-grand" class="fin-form-input" readonly placeholder="${currSym}0.00" style="font-weight:700; color:#38bdf8;">
                 </div>
               </div>
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Notes &amp; Quality Test Sign-Off</label>
-                <textarea id="bill-notes" class="fin-form-textarea" rows="2" placeholder="Cube test reports attached and verified by QC Engineer."></textarea>
+                <textarea id="bill-notes" class="fin-form-textarea" rows="2" placeholder="Delivery notes and QA inspection verified by Site Engineer."></textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-bill')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Record &amp; Post Bill &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">Record &amp; Post Bill (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -6318,9 +6481,9 @@ class FinanceApp {
       if (v.trn) {
         setBillRegime('trn');
         billTaxInp.value = v.trn;
-      } else {
+      } else if (v.gstin) {
         setBillRegime('gst');
-        billTaxInp.value = v.gstin || '';
+        billTaxInp.value = v.gstin;
       }
       if (vendBadge) {
         vendBadge.textContent = `✓ ${v.code || 'Registered Vendor'}`;
@@ -6371,7 +6534,7 @@ class FinanceApp {
             vendBadge.style.color = '#38bdf8';
           }
           if (vendHint) {
-            vendHint.textContent = 'Click text box to view registered vendors, or type custom name';
+            vendHint.textContent = 'Click text box to view registered suppliers, or type custom name';
           }
           return;
         }
@@ -6410,7 +6573,7 @@ class FinanceApp {
       const rate = Number(gstRateSel.value) || 0;
       const tax = taxable * (rate / 100);
       const grand = taxable + tax;
-      grandInp.value = `₹${grand.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+      grandInp.value = `${currSym}${grand.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
     };
 
     taxableInp.oninput = updateTotals;
@@ -6452,6 +6615,7 @@ class FinanceApp {
         vendor = {
           id: newVendId,
           code: 'VEND-' + Math.floor(1000 + Math.random() * 9000),
+          company_id: this.activeCompanyId,
           name: vendorName,
           country: taxRegime === 'trn' ? 'UAE' : 'India',
           gstin: taxRegime === 'gst' ? taxNo : '',
@@ -6471,8 +6635,14 @@ class FinanceApp {
       const tax = taxable * (rate / 100);
       const grand = taxable + tax;
 
+      const billNo = this.getNextBillNumber();
       const payload = {
         bill: {
+          id: 'bill-' + Date.now(),
+          bill_no: billNo,
+          company_id: this.activeCompanyId,
+          currency: isIndia ? 'INR' : 'AED',
+          currency_symbol: currSym,
           vendor_id: vendor.id,
           vendor_name: vendor.name,
           vendor_tax_regime: taxRegime,
@@ -6488,6 +6658,10 @@ class FinanceApp {
           taxable_subtotal: taxable,
           tax_total: tax,
           grand_total: grand,
+          amount_paid: 0,
+          balance_due: grand,
+          approval_status: 'approved',
+          status: 'unpaid',
           line_items: [
             {
               name: document.getElementById('bill-item-desc').value,
@@ -6495,8 +6669,8 @@ class FinanceApp {
               uom: 'LSUM',
               unit_price: taxable,
               taxable_amount: taxable,
-              gst_rate: rate,
-              vat_rate: rate,
+              gst_rate: isIndia ? rate : 0,
+              vat_rate: isIndia ? 0 : rate,
               tax_amount: tax,
               total_amount: grand
             }
@@ -6507,7 +6681,7 @@ class FinanceApp {
 
       const res = await this.syncApi('create_bill', payload);
       if (res && res.success) {
-        alert(`Purchase Bill ${res.bill?.bill_no || 'Recorded'} recorded successfully.`);
+        alert(`Purchase Bill ${res.bill?.bill_no || billNo} recorded successfully in ${currLabel}.`);
         this.closeModal('modal-bill');
         this.switchTab('bills');
       }
@@ -6516,14 +6690,17 @@ class FinanceApp {
 
   // 5. RECORD VENDOR PAYMENT
   openRecordPaymentModal(preselectBillId = null) {
-    const vendors = this.db?.vendors || [];
-    const bills = this.db?.purchase_bills || [];
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === this.activeCompanyId);
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-payment">
         <div class="fin-modal-dialog" style="max-width:680px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">💸 Record Vendor Payment Voucher</h3>
+            <h3 class="fin-modal-title">💸 Record Vendor Payment Voucher (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-payment')">&times;</button>
           </div>
           <div class="fin-modal-body">
@@ -6531,8 +6708,8 @@ class FinanceApp {
               <div class="fin-form-group">
                 <label class="fin-form-label">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
                 <select id="pay-vend-sel" class="fin-form-select" required>
-                  <option value="" disabled selected>Select Vendor</option>
-                  ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code})</option>`).join('')}
+                  <option value="" disabled selected>Select Vendor (${currLabel})</option>
+                  ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code || ''})</option>`).join('')}
                 </select>
               </div>
 
@@ -6544,26 +6721,27 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Disbursement Mode</label>
                   <select id="pay-mode" class="fin-form-select" required>
-                    <option value="NEFT/RTGS" selected>Corporate RTGS</option>
-                    <option value="Bank Wire">International Wire</option>
+                    <option value="Corporate RTGS" selected>${isIndia ? 'Corporate RTGS' : 'ADCB / FAB Bank Wire'}</option>
                     <option value="Corporate Cheque">Corporate Cheque</option>
+                    <option value="International Wire">International Wire</option>
+                    <option value="Petty Cash">Petty Cash</option>
                   </select>
                 </div>
               </div>
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Amount Disbursed (₹) <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Amount Disbursed (${currLabel}) <span style="color:#ef4444;">*</span></label>
                   <input type="number" id="pay-amount" class="fin-form-input" min="1" step="any" required placeholder="0.00">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment UTR / CMS Ref #</label>
-                  <input type="text" id="pay-ref" class="fin-form-input" required placeholder="e.g. CMS-RTGS-991203">
+                  <input type="text" id="pay-ref" class="fin-form-input" required placeholder="${isIndia ? 'e.g. CMS-RTGS-991203' : 'e.g. ADCB-FT-994821'}">
                 </div>
               </div>
 
               <!-- Unpaid Bills Checklist -->
-              <h4 style="font-family:var(--fin-font-heading); font-size:0.95rem; color:#f8fafc; margin:1rem 0 0.5rem;">Allocate Against Approved Bills</h4>
+              <h4 style="font-family:var(--fin-font-heading); font-size:0.95rem; color:#f8fafc; margin:1rem 0 0.5rem;">Allocate Against Approved Bills (${currLabel})</h4>
               <div id="pay-bills-list" style="max-height:180px; overflow-y:auto; border:1px solid var(--fin-border); border-radius:8px; padding:0.75rem; background:rgba(0,0,0,0.2);">
                 <div style="font-size:0.78rem; color:#94a3b8;">Select a vendor above to allocate payment against bills.</div>
               </div>
@@ -6575,7 +6753,7 @@ class FinanceApp {
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-payment')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Disburse &amp; Release Voucher &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">Disburse &amp; Release Voucher (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -6594,7 +6772,7 @@ class FinanceApp {
       const unpaid = bills.filter(b => b.vendor_id === vId && b.balance_due > 0 && b.status !== 'void');
 
       if (!unpaid.length) {
-        billsList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No unpaid approved bills found for this vendor.</div>`;
+        billsList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No unpaid approved bills found for this vendor in ${currLabel}.</div>`;
         return;
       }
 
@@ -6664,10 +6842,16 @@ class FinanceApp {
       });
 
       const vend = vendors.find(v => v.id === vendSel.value);
+      const voucherNo = this.getNextPaymentVoucherNumber();
       const payload = {
         payment: {
-          vendor_id: vend.id,
-          vendor_name: vend.name,
+          id: 'pay-' + Date.now(),
+          voucher_no: voucherNo,
+          company_id: this.activeCompanyId,
+          currency: isIndia ? 'INR' : 'AED',
+          currency_symbol: currSym,
+          vendor_id: vend ? vend.id : null,
+          vendor_name: vend ? vend.name : '',
           payment_date: document.getElementById('pay-date').value,
           payment_mode: document.getElementById('pay-mode').value,
           reference_no: document.getElementById('pay-ref').value,
@@ -6679,7 +6863,7 @@ class FinanceApp {
 
       const res = await this.syncApi('record_payment', payload);
       if (res && res.success) {
-        alert(`Payment voucher ${res.payment.voucher_no} disbursed to ${vend.name}.`);
+        alert(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`);
         this.closeModal('modal-payment');
         this.switchTab('payments');
       }
@@ -7169,18 +7353,21 @@ class FinanceApp {
 
   // 10. ADD ITEM / SERVICE MODAL
   openCreateItemModal() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-add-item">
         <div class="fin-modal-dialog" style="max-width:600px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">📦 Add New Catalog Item or Service</h3>
+            <h3 class="fin-modal-title">📦 Add New Catalog Item or Service (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-add-item')">&times;</button>
           </div>
           <div class="fin-modal-body">
             <form id="add-item-form">
               <div class="fin-form-group">
                 <label class="fin-form-label">Item / Service Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="new-item-name" class="fin-form-input" required placeholder="e.g. Ready Mix Concrete M50 Grade">
+                <input type="text" id="new-item-name" class="fin-form-input" required placeholder="${isIndia ? 'e.g. Ready Mix Concrete M50 Grade' : 'e.g. Screeding Application 8-10cm'}">
               </div>
 
               <div class="fin-form-grid-2">
@@ -7195,7 +7382,7 @@ class FinanceApp {
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">HSN / SAC Code <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">${isIndia ? 'HSN / SAC Code' : 'Customs / Tariff Code'} <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="new-item-hsn" class="fin-form-input" required placeholder="e.g. 3824 or 9954">
                 </div>
               </div>
@@ -7204,39 +7391,44 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Unit of Measure (UOM)</label>
                   <select id="new-item-uom" class="fin-form-select">
+                    <option value="Sqm">Sqm (Square Meter)</option>
                     <option value="MT">MT (Metric Ton)</option>
                     <option value="CUM">CUM (Cubic Meter)</option>
-                    <option value="SQM">SQM (Square Meter)</option>
                     <option value="LSUM">LSUM (Lump Sum)</option>
                     <option value="HRS">HRS (Hours)</option>
                     <option value="UNITS">UNITS</option>
-                    <option value="ANNUM">ANNUM</option>
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Default Sales Rate (₹)</label>
-                  <input type="number" id="new-item-sales" class="fin-form-input" required placeholder="0.00">
+                  <label class="fin-form-label">Default Sales Rate (${currLabel})</label>
+                  <input type="number" id="new-item-sales" class="fin-form-input" required placeholder="0.00" step="any">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Default Cost Rate (₹)</label>
-                  <input type="number" id="new-item-cost" class="fin-form-input" required placeholder="0.00">
+                  <label class="fin-form-label">Default Cost Rate (${currLabel})</label>
+                  <input type="number" id="new-item-cost" class="fin-form-input" required placeholder="0.00" step="any">
                 </div>
               </div>
 
               <div class="fin-form-group">
-                <label class="fin-form-label">Applicable GST Rate</label>
+                <label class="fin-form-label">Applicable ${isIndia ? 'GST' : 'VAT'} Rate</label>
                 <select id="new-item-gst" class="fin-form-select">
-                  <option value="18" selected>18% (Standard)</option>
-                  <option value="12">12%</option>
-                  <option value="5">5%</option>
-                  <option value="28">28%</option>
-                  <option value="0">0% (Exempt)</option>
+                  ${!isIndia ? `
+                    <option value="5" selected>5% UAE VAT (Standard)</option>
+                    <option value="0">0% (Exempt)</option>
+                    <option value="18">18% (Import)</option>
+                  ` : `
+                    <option value="18" selected>18% GST (Standard)</option>
+                    <option value="12">12%</option>
+                    <option value="5">5%</option>
+                    <option value="28">28%</option>
+                    <option value="0">0% (Exempt)</option>
+                  `}
                 </select>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-add-item')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Save Item to Catalog &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">Save Item to Catalog (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -7257,19 +7449,22 @@ class FinanceApp {
           id: itemId,
           code: itemCode,
           name: itemName,
+          company_id: this.activeCompanyId,
+          currency: isIndia ? 'INR' : 'AED',
           category: document.getElementById('new-item-cat').value,
-          hsn_sac_code: document.getElementById('new-item-hsn').value.trim(),
+          hsn_code: document.getElementById('new-item-hsn').value.trim(),
           uom: document.getElementById('new-item-uom').value,
-          sales_price: Number(document.getElementById('new-item-sales').value),
-          purchase_price: Number(document.getElementById('new-item-cost').value),
-          gst_rate: Number(document.getElementById('new-item-gst').value),
-          status: 'Active'
+          selling_price: Number(document.getElementById('new-item-sales').value) || 0,
+          purchase_price: Number(document.getElementById('new-item-cost').value) || 0,
+          gst_rate: Number(document.getElementById('new-item-gst').value) || 0,
+          vat_rate: !isIndia ? (Number(document.getElementById('new-item-gst').value) || 5) : 0,
+          status: 'active'
         }
       };
 
       const res = await this.syncApi('create_item', payload);
       if (res && res.success) {
-        alert(`Catalog item ${res.item?.name || payload.item.name} added successfully.`);
+        alert(`Item "${itemName}" added to catalog in ${currLabel}.`);
         this.closeModal('modal-add-item');
         this.switchTab('items');
       }
@@ -7278,13 +7473,16 @@ class FinanceApp {
 
   // 11. RECORD EXPENSE CLAIM MODAL
   openCreateExpenseModal() {
-    const projects = this.db?.projects || [];
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-expense">
         <div class="fin-modal-dialog" style="max-width:600px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">🧾 Record Business Expense / Claim</h3>
+            <h3 class="fin-modal-title">🧾 Record Business Expense / Claim (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-expense')">&times;</button>
           </div>
           <div class="fin-modal-body">
@@ -7298,9 +7496,9 @@ class FinanceApp {
                   <label class="fin-form-label">Category <span style="color:#ef4444;">*</span></label>
                   <select id="exp-category" class="fin-form-select" required>
                     <option value="Site Expenses & Consumables">Site Expenses &amp; Consumables</option>
-                    <option value="Travel & Accommodation">Travel &amp; Accommodation</option>
                     <option value="Equipment & Fuel">Equipment &amp; Fuel</option>
                     <option value="Utilities & Maintenance">Utilities &amp; Maintenance</option>
+                    <option value="Travel & Accommodation">Travel &amp; Accommodation</option>
                     <option value="Professional Services">Professional &amp; Legal Services</option>
                     <option value="Employee Reimbursements">Employee Reimbursements</option>
                   </select>
@@ -7309,16 +7507,16 @@ class FinanceApp {
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Description of Expense <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="exp-desc" class="fin-form-input" required placeholder="e.g. Safety PPE equipment for NH-48 bridge erection">
+                <input type="text" id="exp-desc" class="fin-form-input" required placeholder="${isIndia ? 'e.g. Safety PPE equipment for NH-48 bridge erection' : 'e.g. Diesel fuel supply for crane & site generators at Mussafah'}">
               </div>
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Amount (₹ Excl. Tax) <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Amount (${currLabel} Excl. Tax) <span style="color:#ef4444;">*</span></label>
                   <input type="number" id="exp-amount" class="fin-form-input" min="1" step="any" required placeholder="0.00">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Tax / GST Amount (₹)</label>
+                  <label class="fin-form-label">${isIndia ? 'Tax / GST Amount (INR)' : 'UAE VAT 5% (AED)'}</label>
                   <input type="number" id="exp-tax" class="fin-form-input" value="0" step="any">
                 </div>
               </div>
@@ -7334,10 +7532,10 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment Method</label>
                   <select id="exp-pay-mode" class="fin-form-select">
-                    <option value="Employee Reimbursement">Employee Reimbursement</option>
                     <option value="Corporate Debit Card">Corporate Debit Card</option>
                     <option value="Direct Bank Wire">Direct Bank Wire</option>
                     <option value="Petty Cash">Petty Cash</option>
+                    <option value="Employee Reimbursement">Employee Reimbursement</option>
                   </select>
                 </div>
               </div>
@@ -7349,7 +7547,7 @@ class FinanceApp {
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-expense')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Submit Expense Claim &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">Submit Expense Claim (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -7359,29 +7557,51 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const amtInp = document.getElementById('exp-amount');
+    const taxInp = document.getElementById('exp-tax');
+    amtInp.oninput = () => {
+      const a = Number(amtInp.value) || 0;
+      if (!isIndia) {
+        taxInp.value = (a * 0.05).toFixed(2);
+      } else {
+        taxInp.value = (a * 0.18).toFixed(2);
+      }
+    };
+
     document.getElementById('create-expense-form').onsubmit = async (e) => {
       e.preventDefault();
       const prjSel = document.getElementById('exp-project');
       const fileInp = document.getElementById('exp-file');
       const filename = fileInp.files.length ? fileInp.files[0].name : 'expense-receipt.pdf';
+      const expenseNo = this.getNextExpenseNumber();
+      const amountVal = Number(document.getElementById('exp-amount').value);
+      const taxVal = Number(document.getElementById('exp-tax').value) || 0;
 
       const payload = {
         expense: {
+          id: 'exp-' + Date.now(),
+          expense_no: expenseNo,
+          company_id: this.activeCompanyId,
+          currency: isIndia ? 'INR' : 'AED',
+          currency_symbol: currSym,
           date: document.getElementById('exp-date').value,
           category: document.getElementById('exp-category').value,
           description: document.getElementById('exp-desc').value.trim(),
-          amount: Number(document.getElementById('exp-amount').value),
-          tax_amount: Number(document.getElementById('exp-tax').value) || 0,
+          amount: amountVal,
+          tax_amount: taxVal,
+          total_amount: amountVal + taxVal,
           project_id: prjSel.value || null,
           project_name: prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '',
           payment_method: document.getElementById('exp-pay-mode').value,
+          submitted_by: this.currentUser?.name || 'Finance Staff',
+          status: 'approved',
           receipt_filename: filename
         }
       };
 
       const res = await this.syncApi('create_expense', payload);
       if (res && res.success) {
-        alert(`Expense ${res.expense.expense_no} submitted successfully.`);
+        alert(`Expense ${res.expense?.expense_no || expenseNo} recorded successfully in ${currLabel}.`);
         this.closeModal('modal-expense');
         this.switchTab('expenses');
       }
@@ -7390,15 +7610,18 @@ class FinanceApp {
 
   // 12. CREATE PURCHASE ORDER MODAL
   openCreatePOModal() {
-    const vendors = this.db?.vendors || [];
-    const projects = this.db?.projects || [];
-    const items = this.db?.items || [];
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === this.activeCompanyId);
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
+    const items = (this.db?.items || []).filter(it => !it.company_id || it.company_id === this.activeCompanyId);
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-po">
         <div class="fin-modal-dialog" style="max-width:680px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">📑 Create Purchase Order (PO)</h3>
+            <h3 class="fin-modal-title">📑 Create Purchase Order (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-po')">&times;</button>
           </div>
           <div class="fin-modal-body">
@@ -7407,7 +7630,7 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Vendor <span style="color:#ef4444;">*</span></label>
                   <select id="po-vend" class="fin-form-select" required>
-                    <option value="" disabled selected>Select Vendor</option>
+                    <option value="" disabled selected>Select Vendor (${currLabel})</option>
                     ${vendors.map(v => `<option value="${v.id}">${v.name}</option>`).join('')}
                   </select>
                 </div>
@@ -7435,7 +7658,7 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Item / Material</label>
                   <select id="po-item-sel" class="fin-form-select">
-                    ${items.map(it => `<option value="${it.id}" data-price="${it.purchase_price}">${it.name}</option>`).join('')}
+                    ${items.length ? items.map(it => `<option value="${it.id}" data-price="${it.purchase_price || 0}">${it.name}</option>`).join('') : '<option value="">Custom Procurement Item</option>'}
                   </select>
                 </div>
                 <div class="fin-form-group">
@@ -7443,14 +7666,14 @@ class FinanceApp {
                   <input type="number" id="po-qty" class="fin-form-input" value="10" min="1">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Unit Price (₹)</label>
-                  <input type="number" id="po-rate" class="fin-form-input" value="${items[0]?.purchase_price || 61200}">
+                  <label class="fin-form-label">Unit Price (${currLabel})</label>
+                  <input type="number" id="po-rate" class="fin-form-input" value="${items[0]?.purchase_price || (isIndia ? 61200 : 60)}" step="any">
                 </div>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-po')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Issue Approved Purchase Order &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">Issue Approved Purchase Order (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -7476,29 +7699,44 @@ class FinanceApp {
       const qty = Number(document.getElementById('po-qty').value) || 1;
       const rate = Number(rateInp.value) || 0;
       const subtotal = qty * rate;
-      const tax = subtotal * 0.18;
+      const taxRate = isIndia ? 0.18 : 0.05;
+      const tax = subtotal * taxRate;
       const total = subtotal + tax;
+      const poNo = this.getNextPONumber();
 
       const payload = {
         po: {
-          vendor_id: vend.id,
-          vendor_name: vend.name,
+          id: 'po-' + Date.now(),
+          po_no: poNo,
+          company_id: this.activeCompanyId,
+          currency: isIndia ? 'INR' : 'AED',
+          currency_symbol: currSym,
+          vendor_id: vend ? vend.id : null,
+          vendor_name: vend ? vend.name : '',
+          supplier_name: vend ? vend.name : '',
+          supplier_trn: vend ? (vend.trn || '') : '',
           project_id: prjSel.value,
           project_name: prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '',
           date: document.getElementById('po-date').value,
           expected_delivery: document.getElementById('po-delivery').value,
           subtotal,
+          subtotal_ex_vat: subtotal,
           tax_total: tax,
+          vat_total: isIndia ? 0 : tax,
           total_value: total,
+          grand_total: total,
+          status: 'approved',
+          approved_by: this.currentUser?.name || 'Executive Sign-off',
           line_items: [
             {
               item_id: it ? it.id : null,
-              name: it ? it.name : 'Procurement Item',
+              name: it ? it.name : 'Procurement Material / Application',
               qty,
-              uom: it ? it.uom : 'UNITS',
+              uom: it ? (it.uom || 'UNITS') : 'UNITS',
               unit_price: rate,
               taxable_amount: subtotal,
-              gst_rate: 18,
+              gst_rate: isIndia ? 18 : 0,
+              vat_rate: isIndia ? 0 : 5,
               tax_amount: tax,
               total_amount: total
             }
@@ -7508,7 +7746,7 @@ class FinanceApp {
 
       const res = await this.syncApi('create_po', payload);
       if (res && res.success) {
-        alert(`Purchase Order ${res.po.po_no} issued to ${vend.name}.`);
+        alert(`Purchase Order ${res.po?.po_no || poNo} issued to ${vend?.name || 'Vendor'} in ${currLabel}.`);
         this.closeModal('modal-po');
         this.switchTab('pos');
       }
@@ -7519,12 +7757,15 @@ class FinanceApp {
   openCreateCreditNoteModal(invoiceId) {
     const inv = this.db?.invoices?.find(i => i.id === invoiceId);
     if (!inv) return;
+    const isIndia = (inv.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-cn">
         <div class="fin-modal-dialog" style="max-width:600px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">🔄 Issue Sales Credit Note against ${inv.invoice_no}</h3>
+            <h3 class="fin-modal-title">🔄 Issue Sales Credit Note against ${inv.invoice_no} (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cn')">&times;</button>
           </div>
           <div class="fin-modal-body">
@@ -7541,18 +7782,18 @@ class FinanceApp {
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Taxable Adjustment Value (₹) <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Taxable Adjustment Value (${currLabel}) <span style="color:#ef4444;">*</span></label>
                   <input type="number" id="cn-taxable" class="fin-form-input" max="${inv.balance_due}" step="any" required placeholder="0.00">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Tax Adjustment (₹)</label>
+                  <label class="fin-form-label">Tax Adjustment (${currLabel})</label>
                   <input type="number" id="cn-tax" class="fin-form-input" step="any" placeholder="0.00">
                 </div>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-cn')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Issue Credit Note &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">Issue Credit Note (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -7565,23 +7806,30 @@ class FinanceApp {
     document.getElementById('create-cn-form').onsubmit = async (e) => {
       e.preventDefault();
       const taxable = Number(document.getElementById('cn-taxable').value) || 0;
-      const tax = Number(document.getElementById('cn-tax').value) || (taxable * 0.18);
+      const taxRate = isIndia ? 0.18 : 0.05;
+      const tax = Number(document.getElementById('cn-tax').value) || (taxable * taxRate);
 
       const payload = {
         credit_note: {
+          id: 'cn-' + Date.now(),
+          company_id: inv.company_id || this.activeCompanyId,
+          currency: isIndia ? 'INR' : 'AED',
+          currency_symbol: currSym,
           invoice_id: inv.id,
           invoice_no: inv.invoice_no,
           customer_id: inv.customer_id,
           customer_name: inv.customer_name,
           reason: document.getElementById('cn-reason').value.trim(),
           taxable_amount: taxable,
-          tax_amount: tax
+          tax_amount: tax,
+          total_credit_amount: taxable + tax,
+          status: 'applied'
         }
       };
 
       const res = await this.syncApi('create_credit_note', payload);
       if (res && res.success) {
-        alert(`Credit note ${res.credit_note.credit_note_no} posted. Invoice balance reduced.`);
+        alert(`Credit note ${res.credit_note?.credit_note_no || 'posted'} posted in ${currLabel}. Invoice balance reduced.`);
         this.closeModal('modal-cn');
         this.switchTab('notes');
       }
@@ -7957,21 +8205,29 @@ class FinanceApp {
 
   // 20. PROMPT TO ISSUE CREDIT/DEBIT NOTE
   openCreateNotePrompt(type = 'credit_note') {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currLabel = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+
     if (type === 'credit_note') {
-      const invoices = (this.db?.invoices || []).filter(i => i.status !== 'void');
+      const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
       if (invoices.length === 0) {
-        alert('No active invoices found to issue a credit note against.');
+        alert(`No active invoices found for ${currLabel} to issue a credit note against.`);
         return;
       }
       const inv = invoices[0];
       this.openCreateCreditNoteModal(inv.id);
     } else {
-      const bills = (this.db?.purchase_bills || []).filter(b => b.status !== 'void');
+      const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId && b.status !== 'void');
+      if (bills.length === 0) {
+        alert(`No active purchase bills found for ${currLabel} to issue a debit note against.`);
+        return;
+      }
       const modalHtml = `
         <div class="fin-modal-backdrop open" id="modal-dn">
           <div class="fin-modal-dialog" style="max-width:600px;">
             <div class="fin-modal-header">
-              <h3 class="fin-modal-title">🔄 Issue Purchase Debit Note</h3>
+              <h3 class="fin-modal-title">🔄 Issue Purchase Debit Note (${currLabel})</h3>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-dn')">&times;</button>
             </div>
             <div class="fin-modal-body">
@@ -7979,23 +8235,23 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Select Purchase Bill Ref <span style="color:#ef4444;">*</span></label>
                   <select id="dn-bill-select" class="fin-form-select" required>
-                    ${bills.map(b => `<option value="${b.id}" data-vendor="${b.vendor_name}" data-billno="${b.bill_no}">${b.bill_no} — ${b.vendor_name} (₹${Number(b.grand_total).toLocaleString()})</option>`).join('')}
+                    ${bills.map(b => `<option value="${b.id}" data-vendor="${b.vendor_name}" data-billno="${b.bill_no}">${b.bill_no} — ${b.vendor_name} (${this.formatCurrency(b.grand_total)})</option>`).join('')}
                   </select>
                 </div>
 
                 <div class="fin-form-group">
                   <label class="fin-form-label">Debit Reason <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="dn-reason" class="fin-form-input" required placeholder="e.g. Damage in transit / Rate differential on steel coils">
+                  <input type="text" id="dn-reason" class="fin-form-input" required placeholder="e.g. Damage in transit / Rate differential on supplies">
                 </div>
 
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Debit Adjustment Amount (₹) <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Debit Adjustment Amount (${currLabel}) <span style="color:#ef4444;">*</span></label>
                   <input type="number" id="dn-amount" class="fin-form-input" required step="any" placeholder="0.00">
                 </div>
 
                 <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                   <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-dn')">Cancel</button>
-                  <button type="submit" class="fin-btn-quick primary">Issue Debit Note &rarr;</button>
+                  <button type="submit" class="fin-btn-quick primary">Issue Debit Note (${currLabel}) &rarr;</button>
                 </div>
               </form>
             </div>
@@ -8003,22 +8259,25 @@ class FinanceApp {
         </div>
       `;
       document.getElementById('fin-modal-container').innerHTML = modalHtml;
-      document.getElementById('create-dn-form').onsubmit = (e) => {
+      document.getElementById('create-dn-form').onsubmit = async (e) => {
         e.preventDefault();
         const sel = document.getElementById('dn-bill-select');
         const opt = sel.options[sel.selectedIndex];
         const newDn = {
           id: 'dn-' + Date.now(),
-          debit_note_no: 'DN-2026-00' + ((this.db?.debit_notes?.length || 0) + 1),
+          debit_note_no: (isIndia ? 'DN-ASH-' : 'DN-RG-2026-') + String((this.db?.debit_notes?.length || 0) + 1).padStart(3, '0'),
+          company_id: this.activeCompanyId,
+          currency: isIndia ? 'INR' : 'AED',
+          currency_symbol: currSym,
+          bill_id: sel.value,
           bill_no: opt.getAttribute('data-billno'),
           vendor_name: opt.getAttribute('data-vendor'),
           reason: document.getElementById('dn-reason').value.trim(),
           total_debit_amount: Number(document.getElementById('dn-amount').value) || 0,
           status: 'applied'
         };
-        this.db.debit_notes = this.db.debit_notes || [];
-        this.db.debit_notes.unshift(newDn);
-        alert(`Debit note ${newDn.debit_note_no} created and applied against bill ${newDn.bill_no}.`);
+        await this.syncApi('create_debit_note', { debit_note: newDn });
+        alert(`Debit note ${newDn.debit_note_no} created and applied against bill ${newDn.bill_no} in ${currLabel}.`);
         this.closeModal('modal-dn');
         this.activeTab = 'debit_notes';
         this.renderActiveTab();
