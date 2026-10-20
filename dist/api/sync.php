@@ -149,7 +149,7 @@ if (!$rootDir || !is_writable($rootDir)) {
     // Determine all items to copy dynamically from $sourceDir
     $items = scandir($sourceDir);
     $copiedSummary = [];
-    $ignored = ['.', '..', '.git', '.github', '.vercel', 'node_modules', 'site'];
+    $ignored = ['.', '..', '.git', '.github', '.vercel', 'node_modules', 'site', 'data'];
 
     foreach ($items as $item) {
         if (in_array($item, $ignored)) continue;

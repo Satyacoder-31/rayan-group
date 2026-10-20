@@ -218,33 +218,35 @@ class FinanceApp {
   }
 
   async loadDatabase() {
-    // Baseline with full seed data
-    this.db = this.mergeWithSeedData(this.db);
-
-    try {
-      const res = await fetch('/api/finance?action=get_state');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && typeof json.data === 'object') {
-          this.db = this.mergeWithSeedData(json.data);
-          try {
-            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-          } catch (e) {}
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn('Server API not reachable; checking local cache or seed', e);
-    }
-
-    // Fallback to cache or bundled seed
+    // 1. Initial quick load from local cache if present
     const cached = localStorage.getItem('rayan_fin_db_cache');
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
         this.db = this.mergeWithSeedData(parsed);
-        return;
       } catch (err) {}
+    } else {
+      this.db = this.mergeWithSeedData(this.db);
+    }
+
+    // 2. Fetch authoritative state directly from Hostinger MySQL Database API
+    const endpoints = ['/api/finance.php?action=get_state', '/api/finance?action=get_state'];
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && typeof json.data === 'object' && json.data.companies && json.data.companies.length > 0) {
+            this.db = this.mergeWithSeedData(json.data);
+            try {
+              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+            } catch (e) {}
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn(`Attempt to load from ${ep} failed:`, e);
+      }
     }
   }
 
@@ -257,24 +259,27 @@ class FinanceApp {
       user_email: this.currentUser?.email
     };
 
-    try {
-      const res = await fetch('/api/finance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && typeof json.data === 'object') {
-          this.db = this.mergeWithSeedData(json.data);
-          try {
-            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-          } catch (e) {}
-          return json;
+    const endpoints = ['/api/finance.php', '/api/finance'];
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && typeof json.data === 'object') {
+            this.db = this.mergeWithSeedData(json.data);
+            try {
+              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+            } catch (e) {}
+            return json;
+          }
         }
+      } catch (e) {
+        console.warn(`Sync attempt to ${ep} offline fallback:`, e);
       }
-    } catch (e) {
-      console.warn('API sync offline fallback:', e);
     }
 
     // Local state fallback & immediate UI reflection
@@ -1917,7 +1922,13 @@ class FinanceApp {
   // 2. SALES & INVOICES MODULE
   // --------------------------------------------------------------------------
   renderInvoicesTab(root) {
-    const invoices = this.db?.invoices || [];
+    const rawInvoices = this.db?.invoices || [];
+    const invoices = [...rawInvoices].sort((a, b) => {
+      const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
+      const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
+      if (dateB !== dateA) return dateB - dateA;
+      return (b.invoice_no || '').localeCompare(a.invoice_no || '');
+    });
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -5423,7 +5434,13 @@ class FinanceApp {
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
 
     // Sync to API
-    await this.syncApi('create_invoice', { invoice: newInvoice });
+    const res = await this.syncApi('create_invoice', { invoice: newInvoice });
+    if (res && res.data && typeof res.data === 'object') {
+      this.db = this.mergeWithSeedData(res.data);
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) {}
+    }
 
     // Close creation modal and re-render underlying tables
     this.closeModal('modal-invoice');
