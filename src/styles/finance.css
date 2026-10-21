@@ -2683,6 +2683,7 @@ select option:focus,
 /* Simulated A4 Paper Sheet - Modern Luxury Presentation */
 .fin-document-paper {
   width: 210mm;
+  max-width: 100%;
   min-height: 297mm;
   background: #ffffff;
   color: #0f172a;
@@ -3200,7 +3201,7 @@ select option:focus,
 .rayan-real-stamp {
   position: absolute;
   top: -24px;
-  right: -6px;
+  right: 4px;
   width: 110px;
   height: 106px;
   object-fit: contain;
@@ -3659,7 +3660,9 @@ select option:focus,
     padding: 0 !important;
     margin: 0 !important;
     overflow: visible !important;
+    overflow-x: visible !important;
     width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
   }
 
@@ -3669,20 +3672,40 @@ select option:focus,
     box-shadow: none !important;
     border: none !important;
     margin: 0 auto !important;
-    padding: 0 !important;
+    padding: 2mm 4mm !important;
     width: 100% !important;
     max-width: 100% !important;
+    box-sizing: border-box !important;
     min-height: auto !important;
     height: auto !important;
     background: #ffffff !important;
     color: #0f172a !important;
     overflow: visible !important;
+    overflow-x: visible !important;
     page-break-after: auto !important;
     break-after: auto !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .fin-document-paper * {
+    box-sizing: border-box !important;
+  }
+
+  .fin-document-paper table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    box-sizing: border-box !important;
+  }
+
+  .fin-document-paper th,
+  .fin-document-paper td {
+    word-break: break-word !important;
+    box-sizing: border-box !important;
   }
 
   /* 6. Purchase Bill & Statement Modals Reset (Purchase Bills, Customer SOA, Vendor SOA) */
@@ -3696,8 +3719,10 @@ select option:focus,
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
     overflow: visible !important;
+    overflow-x: visible !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     opacity: 1 !important;
@@ -3711,6 +3736,7 @@ select option:focus,
     display: block !important;
     max-width: 100% !important;
     width: 100% !important;
+    box-sizing: border-box !important;
     max-height: none !important;
     height: auto !important;
     border: none !important;
@@ -3739,15 +3765,31 @@ select option:focus,
 
   .fin-print-sheet {
     display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    padding: 2mm 4mm !important;
+    margin: 0 auto !important;
     background: #ffffff !important;
     color: #0f172a !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     height: auto !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .fin-print-sheet table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    box-sizing: border-box !important;
+  }
+
+  .fin-print-sheet th,
+  .fin-print-sheet td {
+    box-sizing: border-box !important;
+    word-break: break-word !important;
   }
 
   /* 7. Direct Tab Printing (When printing Statements or P&L with no modal open) */
@@ -3797,10 +3839,10 @@ select option:focus,
     print-color-adjust: exact !important;
   }
 
-  /* 10. Standard A4 Page Setup */
+  /* 10. Standard A4 Page Setup with side-bleed protection */
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm;
+    margin: 8mm 8mm 8mm 8mm;
   }
 }
 

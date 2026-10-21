@@ -69,6 +69,22 @@ class FinanceApp {
     const cleanId = String(verifyId).trim();
     const upper = cleanId.toUpperCase();
 
+    // Check Vendor Payment Voucher
+    if (docType === 'voucher' || docType === 'payment' || upper.startsWith('PV-') || upper.startsWith('VOUCH-') || upper.startsWith('PAY-')) {
+      const pay = (this.db?.vendor_payments || []).find(p => p.id === cleanId || p.voucher_no === cleanId) ||
+                  (this.db?.vendor_payments || [])[0] || { voucher_no: cleanId };
+      this.openPaymentPrintModal(pay.id || cleanId, true);
+      return;
+    }
+
+    // Check Expense Claim Voucher
+    if (docType === 'expense' || upper.startsWith('EXP-')) {
+      const exp = (this.db?.expenses || []).find(e => e.id === cleanId || e.expense_no === cleanId) ||
+                  (this.db?.expenses || [])[0] || { expense_no: cleanId };
+      this.openExpensePrintModal(exp.id || cleanId, true);
+      return;
+    }
+
     // Check Receipt Voucher
     if (docType === 'receipt' || upper.includes('REC-RV') || upper.startsWith('RV-')) {
       const rec = (this.db?.customer_receipts || []).find(r => r.id === cleanId || r.receipt_no === cleanId) ||
@@ -80,7 +96,7 @@ class FinanceApp {
     // Check Purchase Order
     if (docType === 'po' || upper.startsWith('PO-')) {
       const po = (this.db?.purchase_orders || []).find(p => p.id === cleanId || p.po_no === cleanId) ||
-                 (this.db?.purchase_orders || [])[0] || { po_no: cleanId };
+                  (this.db?.purchase_orders || [])[0] || { po_no: cleanId };
       this.openPOPrintModal(po.id || cleanId, true);
       return;
     }
@@ -2064,6 +2080,12 @@ class FinanceApp {
                   <div class="fin-nav-subitem" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
                     <span class="fin-subitem-text">Receipt Voucher (Sample)</span>
                   </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openPaymentPrintModal('pay-rg-003')">
+                    <span class="fin-subitem-text">Payment Voucher (Sample)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openExpensePrintModal('exp-rg-001')">
+                    <span class="fin-subitem-text">Expense Claim Receipt</span>
+                  </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-rec-11008')">
                     <span class="fin-subitem-text">Purchase Order (2p)</span>
                   </div>
@@ -3455,6 +3477,7 @@ class FinanceApp {
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print Official Payment Voucher">Receipt</button>
                       <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')">Edit</button>
                     </td>
                   </tr>
@@ -3712,6 +3735,7 @@ class FinanceApp {
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print Official Payment Voucher">Receipt</button>
                       <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')">Edit</button>
                     </td>
                   </tr>
@@ -8830,9 +8854,10 @@ class FinanceApp {
 
       const res = await this.syncApi('record_payment', payload);
       if (res && res.success) {
-        alert(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`);
         this.closeModal('modal-payment');
-        this.switchTab('payments');
+        this.renderActiveTab();
+        this.showNotification(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`, 'success');
+        this.openPaymentPrintModal(res.payment?.id || payload.payment.id);
       }
     };
   }
@@ -11576,6 +11601,8 @@ class FinanceApp {
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openInvoicePrintModal('${inv.id || ''}')">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
             </div>
           </div>
@@ -11590,7 +11617,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto;">
             <!-- Top Elegant Accent Line -->
             <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
 
@@ -11638,7 +11665,7 @@ class FinanceApp {
             </div>
 
             <!-- Bill To Section -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:2rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
               <div>
                 <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Bill To (Client)</div>
                 <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
@@ -11836,6 +11863,8 @@ class FinanceApp {
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openReceiptPrintModal('${rec.id || ''}')">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
             </div>
           </div>
@@ -11850,7 +11879,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto;">
             <!-- Top Elegant Accent Line -->
             <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
 
@@ -11897,7 +11926,7 @@ class FinanceApp {
             </div>
 
             <!-- Bill To (Received From) & Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:2rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
               <div>
                 <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Received From (Bill To)</div>
                 <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
@@ -12045,6 +12074,8 @@ class FinanceApp {
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPOPrintModal('${po.id || ''}')">Purchase Order</button>
             </div>
           </div>
@@ -13430,6 +13461,7 @@ class FinanceApp {
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openExpensePrintModal('${exp.id || ''}')">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
             </div>
@@ -13448,7 +13480,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto;">
             <!-- Top Elegant Accent Line -->
             <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
 
@@ -13496,7 +13528,7 @@ class FinanceApp {
             </div>
 
             <!-- Claimant & Cost Center / Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:2rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
               <div>
                 <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Claimant (Submitted By)</div>
                 <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
@@ -13695,6 +13727,328 @@ class FinanceApp {
     await this.syncApi('delete_expense', { expense_id: expenseId });
     alert('Expense record deleted successfully.');
     this.renderActiveTab();
+  }
+
+  // 11. OFFICIAL VENDOR PAYMENT VOUCHER PRINT MODAL (Website View & PDF Ready)
+  openPaymentPrintModal(paymentId, isVerifiedScan = false) {
+    let pay = (this.db?.vendor_payments || []).find(p => p.id === paymentId || p.voucher_no === paymentId);
+    if (!pay) {
+      pay = (this.db?.vendor_payments || []).find(p => p.voucher_no === 'PV-RG-2026-003') ||
+            (this.db?.vendor_payments || [])[0] ||
+            (defaultSeedData.vendor_payments || [])[0] || {};
+    }
+
+    const comp = (this.db?.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) || this.db?.companies?.[0];
+    const isIndia = (pay.company_id || this.activeCompanyId) === 'ashaz-eng-in' || pay.currency === 'INR';
+    const curr = pay.currency || (isIndia ? 'INR' : 'AED');
+    const currSym = pay.currency_symbol || (isIndia ? '₹' : 'AED ');
+    const amountVal = Number(pay.amount_paid || 0);
+    const formattedAmount = amountVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedDate = pay.payment_date ? this.formatDate(pay.payment_date) : '18 Oct 2026';
+    const amountInWords = pay.amount_in_words || (this.numberToEnglishWords(amountVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+
+    // Vendor details lookup
+    const vendorObj = (this.db?.vendors || []).find(v => v.id === pay.vendor_id || v.name === pay.vendor_name || (pay.vendor_name && v.name && v.name.toLowerCase().includes(pay.vendor_name.toLowerCase())));
+
+    // Allocated Bills
+    const allocations = Array.isArray(pay.allocations) ? pay.allocations : [];
+    const hasAllocations = allocations.length > 0;
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>💳</span>
+              <span>Rayan Engineering Official Payment Voucher (سند صرف)</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPaymentPrintModal('${pay.id || ''}')">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadPaymentVoucherDocument('${pay.id || ''}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto;">
+            <!-- Top Elegant Accent Line -->
+            <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
+
+            <!-- Header Section (Left: Logo & Company, Right: Payment Title & Meta) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.25rem; flex-wrap:wrap;">
+              <div style="max-width:55%; min-width:280px;">
+                <div style="margin-bottom:0.65rem;">
+                  ${this.getRayanLogoImg(false)}
+                </div>
+                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                  ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
+                </div>
+                <div style="font-size:0.8rem; color:#475569; line-height:1.45; margin-top:0.35rem;">
+                  ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
+                </div>
+              </div>
+
+              <div style="text-align:right; min-width:240px; margin-left:auto;">
+                <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
+                  PAYMENT VOUCHER
+                </div>
+                <div style="font-size:0.88rem; color:#64748b; font-weight:700; margin-top:2px;">
+                  سند صرف
+                </div>
+                <div style="font-size:0.95rem; font-weight:700; color:#0284c7; margin-top:6px;">
+                  # ${pay.voucher_no || 'PV-RG-2026-001'}
+                </div>
+
+                <!-- Highlight Box: Amount Disbursed -->
+                <div style="margin-top:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:6px 14px; display:inline-block; text-align:right;">
+                  <div style="font-size:0.68rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Disbursed</div>
+                  <div style="font-size:1.35rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
+                    ${curr} ${formattedAmount}
+                  </div>
+                </div>
+
+                <!-- Meta Details -->
+                <div style="font-size:0.8rem; color:#475569; line-height:1.5; margin-top:8px;">
+                  <div>Payment Date : <strong>${formattedDate}</strong></div>
+                  <div>Disbursement Mode : <strong>${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</strong></div>
+                  ${pay.reference_no ? `<div>Payment UTR / CMS Ref # : <strong>${pay.reference_no}</strong></div>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Payee (Vendor / Subcontractor) & Settlement Details -->
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
+              <div>
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Disbursed To (Vendor / Subcontractor)</div>
+                <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
+                  ${pay.vendor_name || 'Vendor / Subcontractor'}
+                </div>
+                ${vendorObj?.trn ? `<div style="font-size:0.8rem; color:#0284c7; font-weight:700;">TRN: ${vendorObj.trn}</div>` : (vendorObj?.gstin ? `<div style="font-size:0.8rem; color:#0284c7; font-weight:700;">GSTIN: ${vendorObj.gstin}</div>` : '')}
+                ${vendorObj?.code ? `<div style="font-size:0.8rem; color:#64748b; font-weight:600;">Vendor Code: ${vendorObj.code}</div>` : ''}
+                ${vendorObj?.contact_person ? `<div style="font-size:0.82rem; color:#475569;">Attn: <strong>${vendorObj.contact_person}</strong></div>` : ''}
+                ${vendorObj?.email ? `<div style="font-size:0.82rem; color:#475569;">Email: <a href="mailto:${vendorObj.email}" style="color:#0284c7; text-decoration:none;">${vendorObj.email}</a></div>` : ''}
+                ${vendorObj?.address ? `<div style="font-size:0.82rem; color:#475569;">${vendorObj.address}</div>` : ''}
+              </div>
+
+              <div style="font-size:0.82rem; color:#475569; line-height:1.5;">
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Disbursement &amp; Approval Details</div>
+                <div><strong>Disbursement Mode:</strong> ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</div>
+                <div><strong>Payment UTR / CMS Ref #:</strong> <span style="color:#0284c7; font-weight:700;">${pay.reference_no || 'Direct Transfer'}</span></div>
+                <div><strong>Notes &amp; Approver Sign-off:</strong> ${pay.notes || 'Approved by CFO for immediate release'}</div>
+                <div><strong>Status:</strong> <span style="display:inline-block; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#15803d; font-weight:700; font-size:0.75rem;">RELEASED &amp; RECONCILED ✓</span></div>
+              </div>
+            </div>
+
+            <!-- Allocate Against Approved Bills Section (Directly satisfies user prompt & screenshot) -->
+            <div style="margin-bottom:1.25rem; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; box-sizing:border-box;">
+              <div style="background:#f1f5f9; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0;">
+                <span style="font-size:0.78rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">
+                  📋 Allocate Against Approved Bills (${curr})
+                </span>
+                <span style="font-size:0.72rem; color:#64748b; font-weight:600;">
+                  ${hasAllocations ? `${allocations.length} Bill(s) Linked` : 'Direct Vendor Settlement / Advance'}
+                </span>
+              </div>
+
+              ${hasAllocations ? `
+                <table style="width:100%; border-collapse:collapse; font-size:0.82rem; box-sizing:border-box;">
+                  <thead>
+                    <tr style="background:#f8fafc; color:#475569; text-align:left; border-bottom:1px solid #e2e8f0;">
+                      <th style="padding:8px 12px; width:5%; text-align:center;">#</th>
+                      <th style="padding:8px 12px; width:45%;">Approved Purchase Bill Ref</th>
+                      <th style="padding:8px 12px; width:25%;">Project / Scope</th>
+                      <th style="padding:8px 12px; width:25%; text-align:right;">Allocated Amount (${curr})</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${allocations.map((a, idx) => `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:8px 12px; text-align:center; color:#64748b;">${idx + 1}</td>
+                        <td style="padding:8px 12px;">
+                          <strong style="color:#0f172a;">${a.bill_no || 'Approved Bill'}</strong>
+                          ${a.vendor_invoice_no ? `<span style="font-size:0.75rem; color:#64748b;"> (Inv: ${a.vendor_invoice_no})</span>` : ''}
+                        </td>
+                        <td style="padding:8px 12px; color:#475569;">${a.project_name || 'Civil / Architectural Procurement'}</td>
+                        <td style="padding:8px 12px; text-align:right; font-weight:700; color:#0f172a; font-variant-numeric:tabular-nums;">
+                          ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              ` : `
+                <div style="padding:12px 16px; background:#f0fdf4; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#16a34a; font-size:1.1rem; font-weight:bold;">✓</span>
+                    <div>
+                      <div style="font-size:0.84rem; font-weight:700; color:#15803d;">
+                        Direct Vendor Settlement / Advance Disbursement on Account
+                      </div>
+                      <div style="font-size:0.75rem; color:#166534; margin-top:2px;">
+                        No unpaid approved bills found for this vendor in ${curr}. Disbursed directly against vendor account and signed off for release.
+                      </div>
+                    </div>
+                  </div>
+                  <div style="text-align:right; font-size:0.85rem; font-weight:800; color:#15803d; font-variant-numeric:tabular-nums; white-space:nowrap;">
+                    ${curr} ${formattedAmount}
+                  </div>
+                </div>
+              `}
+            </div>
+
+            <!-- Simple Clean Particulars Table -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem; font-size:0.85rem; box-sizing:border-box;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff; text-align:left;">
+                  <th style="padding:10px 12px; width:5%; text-align:center;">#</th>
+                  <th style="padding:10px 12px; width:45%;">Disbursement Particulars &amp; Purpose</th>
+                  <th style="padding:10px 12px; width:25%;">Payment Channel &amp; Reference</th>
+                  <th style="padding:10px 12px; width:25%; text-align:right;">Amount Disbursed (${curr})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:12px; text-align:center; color:#64748b; font-weight:600;">1</td>
+                  <td style="padding:12px;">
+                    <div style="font-weight:700; color:#0f172a; font-size:0.9rem;">
+                      Disbursement to ${pay.vendor_name || 'Vendor / Subcontractor'}
+                    </div>
+                    <div style="font-size:0.78rem; color:#64748b; margin-top:3px;">
+                      ${hasAllocations ? `Settlement against ${allocations.length} approved purchase bill(s)` : 'Direct Vendor Settlement / Advance on Account (No prior bill linked)'} • Notes: ${pay.notes || 'Approved by CFO for immediate release'}
+                    </div>
+                  </td>
+                  <td style="padding:12px; font-size:0.82rem; color:#334155;">
+                    <div><strong>${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</strong></div>
+                    <div style="color:#64748b; font-size:0.75rem;">
+                      ${pay.reference_no ? `Ref #: ${pay.reference_no}` : ''}
+                    </div>
+                  </td>
+                  <td style="padding:12px; text-align:right; font-weight:800; font-size:0.95rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                    ${formattedAmount}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Financials Summary & Amount in Words -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.25rem;">
+              <!-- Left: Total in Words & Notes -->
+              <div style="flex:1;">
+                <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Amount Disbursed In Words:</div>
+                <div style="font-size:0.88rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.4;">
+                  ${amountInWords}
+                </div>
+
+                <div style="margin-top:1.25rem;">
+                  <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Disbursement Authorization &amp; Compliance:</div>
+                  <div style="font-size:0.82rem; color:#475569;">
+                    ${pay.notes ? `Sign-Off: <strong>${pay.notes}</strong><br>` : ''}
+                    This official vendor payment voucher has been authorized by Group Finance &amp; Corporate Treasury in full compliance with Rayan Group Financial Governance.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Subtotal & Total Box -->
+              <div style="width:260px; border-top:1px solid #e2e8f0; padding-top:6px;">
+                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+                  <span>Sub Total</span>
+                  <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:1.1rem; font-weight:800; color:#0f172a; border-top:2px solid #0f172a; margin-top:4px;">
+                  <span>Total Disbursed</span>
+                  <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedAmount}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Signatures & Official Stamp Block -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:1.5rem; border-top:1px solid #e2e8f0; margin-top:1.5rem;">
+              <!-- Left: Team Contact -->
+              <div style="font-size:0.82rem; color:#475569; line-height:1.55;">
+                <div style="margin-bottom:2px;">Disbursed &amp; Released by,</div>
+                <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Corporate Treasury'}</strong><br>
+                Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
+                <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
+                <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" style="color:#0284c7; text-decoration:none;">www.rayan-group.com</a>
+              </div>
+
+              <!-- Right: Real Signature + Official Stamp -->
+              <div style="position:relative; width:220px; text-align:center; padding-top:10px;">
+                <div style="position:relative; z-index:2; min-height:42px;">
+                  ${this.getRayanSignatureImg('receipt')}
+                </div>
+                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:4px;">
+                  Arshad Alam Shaikh
+                </div>
+                <div style="font-size:0.75rem; color:#64748b; font-weight:600;">
+                  Authorised Signatory - Rayan Group
+                </div>
+                <!-- Real Circular Purple/Blue Official Stamp -->
+                <div style="position:absolute; right:4px; top:-25px; z-index:5; pointer-events:none;">
+                  ${this.getRayanStampImg()}
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Teal Banner -->
+            <div style="margin-top:2rem; background:#00a699; color:#ffffff; padding:7px 12px; border-radius:4px; font-size:0.78rem; text-align:center; font-weight:700; letter-spacing:0.02em;">
+              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+            </div>
+            <div style="text-align:center; font-size:8px; color:#94a3b8; margin-top:5px;">
+              This is a Computer Generated Official Vendor Payment Voucher
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  downloadPaymentVoucherDocument(paymentId) {
+    let pay = (this.db?.vendor_payments || []).find(p => p.id === paymentId || p.voucher_no === paymentId);
+    if (!pay) return;
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Voucher - ${pay.voucher_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${pay.voucher_no}_Payment_Voucher.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${pay.voucher_no} Payment Voucher.`, 'success');
+    }
   }
 
   // 5. EDIT VENDOR PAYMENT MODAL

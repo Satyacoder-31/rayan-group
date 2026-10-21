@@ -363,6 +363,25 @@
       "status": "active"
     },
     {
+      "id": "vend-8334",
+      "code": "VEND-8334",
+      "company_id": "rayan-corp-uae",
+      "name": "PINK CITY CERAMIC AND SANITARY TRADING LLC SPC",
+      "contact_person": "Mr. Ramesh Kumar",
+      "email": "pinkcityceramic@gmail.com",
+      "phone": "+971 2 554 9910",
+      "address": "Industrial Area 11, Sharjah / Abu Dhabi, UAE",
+      "country": "UAE",
+      "trn": "100394857200003",
+      "category": "Ceramics, Sanitary & Architectural Tiles",
+      "bank_name": "Abu Dhabi Commercial Bank (ADCB)",
+      "account_no": "104920194812",
+      "iban": "AE550030000104920194812",
+      "payment_terms": 30,
+      "opening_balance": 0,
+      "status": "active"
+    },
+    {
       "id": "vend-danube-uae",
       "code": "VEND-DANUBE",
       "company_id": "rayan-corp-uae",
@@ -1358,6 +1377,22 @@
     }
   ],
   "vendor_payments": [
+    {
+      "id": "pay-rg-003",
+      "voucher_no": "PV-RG-2026-003",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-8334",
+      "vendor_name": "PINK CITY CERAMIC AND SANITARY TRADING LLC SPC",
+      "payment_date": "2026-10-18",
+      "payment_mode": "ADCB / FAB Bank Wire",
+      "reference_no": "049299826291AG8Q",
+      "amount_paid": 1140.30,
+      "allocations": [],
+      "notes": "Approved by CFO for immediate release",
+      "approved_by": "Zameer Ahmed Khan (CFO)"
+    },
     {
       "id": "pay-rg-001",
       "voucher_no": "PV-RG-2026-001",
