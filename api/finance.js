@@ -210,6 +210,18 @@ export default async function handler(req, res) {
         });
       }
 
+      if (receiptData.bank_name) {
+        if (!db.saved_banks) db.saved_banks = [];
+        if (!db.saved_banks.includes(receiptData.bank_name)) {
+          db.saved_banks.unshift(receiptData.bank_name);
+        }
+        const cust = (db.customers || []).find(c => c.id === receiptData.customer_id || c.name === receiptData.customer_name);
+        if (cust) {
+          cust.preferred_bank = receiptData.bank_name;
+          cust.bank_name = receiptData.bank_name;
+        }
+      }
+
       db.customer_receipts.unshift(newReceipt);
 
       addAuditLog(body.user_name, body.user_role, body.user_email, 'RECORD_RECEIPT', 'Payment Receipt', newReceipt.id, `Recorded customer payment receipt ${newReceipt.receipt_no} of ₹${amountReceived.toLocaleString('en-IN')} from ${newReceipt.customer_name}.`);

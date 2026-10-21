@@ -2678,7 +2678,8 @@ class FinanceApp {
                     <td>${this.formatDate(r.receipt_date)}</td>
                     <td><strong>${r.customer_name}</strong></td>
                     <td>
-                      <div>${r.payment_mode}</div>
+                      <div style="font-weight:600;">${r.payment_mode}</div>
+                      ${r.bank_name ? `<div style="font-size:0.7rem; color:#38bdf8; font-weight:600;">🏦 ${r.bank_name}</div>` : ''}
                       <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}</span>
                     </td>
                     <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
@@ -5921,6 +5922,56 @@ class FinanceApp {
   }
 
 
+  // Helper: Get comprehensive list of known, regional and saved banks
+  getKnownBanksList() {
+    const defaultList = [
+      'National Bank of Abu Dhabi (NBAD)',
+      'First Abu Dhabi Bank (FAB)',
+      'Abu Dhabi Commercial Bank (ADCB)',
+      'Emirates NBD Bank',
+      'Dubai Islamic Bank (DIB)',
+      'Mashreq Bank',
+      'Abu Dhabi Islamic Bank (ADIB)',
+      'Commercial Bank of Dubai (CBD)',
+      'RAKBANK (National Bank of Ras Al Khaimah)',
+      'Sharjah Islamic Bank',
+      'Ajman Bank',
+      'Bank of Sharjah',
+      'Standard Chartered Bank',
+      'HSBC Middle East',
+      'Citibank UAE',
+      'State Bank of India (Corporate)',
+      'HDFC Bank Ltd',
+      'ICICI Bank Ltd',
+      'Bank of Baroda'
+    ];
+    const fromDb = this.db?.saved_banks || [];
+    const fromReceipts = (this.db?.customer_receipts || []).map(r => r.bank_name).filter(Boolean);
+    const fromAccounts = (this.db?.bank_accounts || []).map(b => b.bank_name).filter(Boolean);
+    const fromCustomers = (this.db?.customers || []).map(c => c.preferred_bank || c.bank_name).filter(Boolean);
+    const fromVendors = (this.db?.vendors || []).map(v => v.bank_name).filter(Boolean);
+
+    const all = [...new Set([...fromDb, ...fromReceipts, ...fromCustomers, ...defaultList, ...fromAccounts, ...fromVendors])];
+    return all.filter(b => typeof b === 'string' && b.trim().length > 1);
+  }
+
+  selectReceiptBank(bankName) {
+    const ob = document.getElementById('rec-online-bank');
+    const cb = document.getElementById('rec-cheque-bank');
+    if (ob) ob.value = bankName;
+    if (cb) cb.value = bankName;
+
+    document.querySelectorAll('.fin-chip-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-bank') === bankName);
+    });
+
+    const bankHint = document.getElementById('rec-bank-auto-hint');
+    if (bankHint) {
+      bankHint.style.display = 'block';
+      bankHint.innerHTML = `✅ Selected bank: <strong style="color:#00e5d2;">${bankName}</strong> (saved for future entries)`;
+    }
+  }
+
   // 3. RECORD CUSTOMER RECEIPT MODAL
   openRecordReceiptModal(preselectInvoiceId = null) {
     const customers = this.db?.customers || [];
@@ -5936,6 +5987,25 @@ class FinanceApp {
       }
     } else if (this.activeCompanyId === 'ashaz-eng-in') {
       defaultCurrency = 'INR';
+    }
+
+    const knownBanks = this.getKnownBanksList();
+    const quickBanks = [
+      'National Bank of Abu Dhabi (NBAD)',
+      'First Abu Dhabi Bank (FAB)',
+      'Abu Dhabi Commercial Bank (ADCB)',
+      'Emirates NBD Bank',
+      'Dubai Islamic Bank (DIB)',
+      'Mashreq Bank'
+    ];
+
+    let initialBank = 'National Bank of Abu Dhabi (NBAD)';
+    if (targetInv) {
+      const c = customers.find(cust => cust.id === targetInv.customer_id);
+      const prevR = (this.db?.customer_receipts || []).find(r => (r.customer_id === targetInv.customer_id || (targetInv.customer_name && r.customer_name === targetInv.customer_name)) && r.bank_name);
+      initialBank = c?.preferred_bank || c?.bank_name || prevR?.bank_name || localStorage.getItem('fin_last_used_bank') || 'National Bank of Abu Dhabi (NBAD)';
+    } else {
+      initialBank = localStorage.getItem('fin_last_used_bank') || 'National Bank of Abu Dhabi (NBAD)';
     }
 
     const modalHtml = `
@@ -6029,7 +6099,12 @@ class FinanceApp {
                   </div>
                   <div class="fin-form-group">
                     <label class="fin-form-label">Remitting / Drawee Bank Name <span style="color:#ef4444;">*</span></label>
-                    <input type="text" id="rec-online-bank" class="fin-form-input" list="rec-banks-list" placeholder="e.g. First Abu Dhabi Bank (FAB) or State Bank of India" required value="First Abu Dhabi Bank (FAB)">
+                    <input type="text" id="rec-online-bank" class="fin-form-input" list="rec-banks-list" placeholder="e.g. National Bank of Abu Dhabi (NBAD) or FAB" required value="${initialBank}">
+                    <div class="fin-bank-chips">
+                      <span class="fin-chip-label">⚡ Fast Pick:</span>
+                      ${quickBanks.map(b => `<button type="button" class="fin-chip-btn ${b === initialBank ? 'active' : ''}" data-bank="${b}" onclick="window.finApp.selectReceiptBank('${b.replace(/'/g, "\\'")}')">${b}</button>`).join('')}
+                    </div>
+                    <div id="rec-bank-auto-hint" class="fin-bank-auto-hint"></div>
                   </div>
                 </div>
                 <div class="fin-form-grid-2" style="margin-top:0.5rem;">
@@ -6077,7 +6152,11 @@ class FinanceApp {
                 <div class="fin-form-grid-2" style="margin-top:0.5rem;">
                   <div class="fin-form-group">
                     <label class="fin-form-label">Drawee Bank Name (البنك المسحوب عليه) <span style="color:#ef4444;">*</span></label>
-                    <input type="text" id="rec-cheque-bank" class="fin-form-input" list="rec-banks-list" placeholder="e.g. Emirates NBD, FAB, ADCB, HDFC">
+                    <input type="text" id="rec-cheque-bank" class="fin-form-input" list="rec-banks-list" placeholder="e.g. National Bank of Abu Dhabi (NBAD), FAB, ADCB" value="${initialBank}">
+                    <div class="fin-bank-chips">
+                      <span class="fin-chip-label">⚡ Fast Pick:</span>
+                      ${quickBanks.map(b => `<button type="button" class="fin-chip-btn ${b === initialBank ? 'active' : ''}" data-bank="${b}" onclick="window.finApp.selectReceiptBank('${b.replace(/'/g, "\\'")}')">${b}</button>`).join('')}
+                    </div>
                   </div>
                   <div class="fin-form-group">
                     <label class="fin-form-label">Bank Branch / Emirate / City</label>
@@ -6114,20 +6193,9 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Datalist of Recommended Banks -->
+              <!-- Datalist of Recommended & Saved Banks -->
               <datalist id="rec-banks-list">
-                <option value="First Abu Dhabi Bank (FAB)">
-                <option value="Abu Dhabi Commercial Bank (ADCB)">
-                <option value="Emirates NBD Bank">
-                <option value="Dubai Islamic Bank (DIB)">
-                <option value="Mashreq Bank">
-                <option value="Commercial Bank of Dubai (CBD)">
-                <option value="Abu Dhabi Islamic Bank (ADIB)">
-                <option value="State Bank of India (Corporate)">
-                <option value="HDFC Bank Ltd">
-                <option value="ICICI Bank Ltd">
-                <option value="Standard Chartered Bank">
-                <option value="HSBC Middle East">
+                ${knownBanks.map(b => `<option value="${b}">`).join('')}
               </datalist>
 
               <!-- Additional Receipt Voucher Audit & Party Specifications -->
@@ -6206,8 +6274,28 @@ class FinanceApp {
       if (cust) {
         const cp = document.getElementById('rec-contact-person');
         const em = document.getElementById('rec-email');
-        if (cp && !cp.value) cp.value = cust.contact_person || '';
-        if (em && !em.value) em.value = cust.email || '';
+        if (cp && (!cp.value || cp.value === 'Mr. HLN')) cp.value = cust.contact_person || '';
+        if (em && (!em.value || em.value === 'accounts@hln-tech.ae')) em.value = cust.email || '';
+
+        // Auto-detect and suggest previously saved bank for this customer
+        const prevRec = (this.db?.customer_receipts || []).find(r => (r.customer_id === cust.id || (cust.name && r.customer_name === cust.name)) && r.bank_name);
+        const savedBank = cust.preferred_bank || cust.bank_name || prevRec?.bank_name;
+        if (savedBank) {
+          const ob = document.getElementById('rec-online-bank');
+          const cb = document.getElementById('rec-cheque-bank');
+          if (ob) ob.value = savedBank;
+          if (cb) cb.value = savedBank;
+
+          document.querySelectorAll('.fin-chip-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-bank') === savedBank);
+          });
+
+          const bankHint = document.getElementById('rec-bank-auto-hint');
+          if (bankHint) {
+            bankHint.style.display = 'block';
+            bankHint.innerHTML = `💡 Auto-selected saved bank for <strong>${cust.name}</strong>: <span style="color:#38bdf8; font-weight:700;">${savedBank}</span>`;
+          }
+        }
       }
 
       if (!unpaid.length) {
@@ -6316,14 +6404,14 @@ class FinanceApp {
       if (mode === 'Cheque') {
         chequeNo = document.getElementById('rec-cheque-no').value.trim();
         chequeDate = document.getElementById('rec-cheque-date').value;
-        bankName = document.getElementById('rec-cheque-bank').value.trim() || 'First Abu Dhabi Bank (FAB)';
+        bankName = document.getElementById('rec-cheque-bank').value.trim() || 'National Bank of Abu Dhabi (NBAD)';
         bankBranch = document.getElementById('rec-cheque-branch').value.trim();
         chequeStatus = document.getElementById('rec-cheque-status').value;
         refNo = chequeNo;
         paymentType = 'Corporate Account Payee Cheque';
       } else if (mode === 'Online') {
         refNo = document.getElementById('rec-ref').value.trim();
-        bankName = document.getElementById('rec-online-bank').value.trim() || 'First Abu Dhabi Bank (FAB)';
+        bankName = document.getElementById('rec-online-bank').value.trim() || 'National Bank of Abu Dhabi (NBAD)';
         chequeDate = document.getElementById('rec-online-date').value;
         paymentType = document.getElementById('rec-online-channel').value;
       } else if (mode === 'Cash') {
@@ -6333,6 +6421,20 @@ class FinanceApp {
         cashier = document.getElementById('rec-cashier').value.trim();
         bankName = cashLocation;
         paymentType = 'Official Cash Tender';
+      }
+
+      if (bankName && mode !== 'Cash') {
+        try {
+          localStorage.setItem('fin_last_used_bank', bankName);
+        } catch (err) {}
+        if (!this.db.saved_banks) this.db.saved_banks = [];
+        if (!this.db.saved_banks.includes(bankName)) {
+          this.db.saved_banks.unshift(bankName);
+        }
+        if (cust) {
+          cust.preferred_bank = bankName;
+          cust.bank_name = bankName;
+        }
       }
 
       const receiptNo = this.getNextReceiptNumber();
@@ -6370,7 +6472,8 @@ class FinanceApp {
           amount_in_words: this.numberToEnglishWords(amountReceived) + (currency === 'INR' ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'),
           recorded_by: this.currentUser?.name || 'Accounts Staff',
           recorded_at: new Date().toISOString()
-        }
+        },
+        saved_banks: this.db.saved_banks
       };
 
       const res = await this.syncApi('record_receipt', payload);
@@ -9960,9 +10063,19 @@ class FinanceApp {
               </div>
 
               <div class="fin-form-group">
+                <label class="fin-form-label">Remitting / Drawee Bank Name</label>
+                <input type="text" id="edit-rcp-bank" class="fin-form-input" list="rec-banks-list" value="${rcp.bank_name || ''}" placeholder="e.g. National Bank of Abu Dhabi (NBAD)">
+              </div>
+
+              <div class="fin-form-group">
                 <label class="fin-form-label">Notes &amp; Clearance Verification</label>
                 <textarea id="edit-rcp-notes" class="fin-form-textarea" rows="2">${rcp.notes || ''}</textarea>
               </div>
+
+              <!-- Datalist of Known & Saved Banks -->
+              <datalist id="rec-banks-list">
+                ${this.getKnownBanksList().map(b => `<option value="${b}">`).join('')}
+              </datalist>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-receipt')">Cancel</button>
@@ -9983,9 +10096,16 @@ class FinanceApp {
       rcp.payment_mode = document.getElementById('edit-rcp-mode').value;
       rcp.amount_received = Number(document.getElementById('edit-rcp-amount').value) || 0;
       rcp.reference_no = document.getElementById('edit-rcp-ref').value.trim();
+      const editBank = document.getElementById('edit-rcp-bank').value.trim();
+      if (editBank) {
+        rcp.bank_name = editBank;
+        try { localStorage.setItem('fin_last_used_bank', editBank); } catch (err) {}
+        if (!this.db.saved_banks) this.db.saved_banks = [];
+        if (!this.db.saved_banks.includes(editBank)) this.db.saved_banks.unshift(editBank);
+      }
       rcp.notes = document.getElementById('edit-rcp-notes').value.trim();
 
-      await this.syncApi('update_receipt', { receipt: rcp });
+      await this.syncApi('update_receipt', { receipt: rcp, saved_banks: this.db.saved_banks });
       alert(`Receipt voucher ${rcp.receipt_no} updated successfully.`);
       this.closeModal('modal-edit-receipt');
       this.renderActiveTab();

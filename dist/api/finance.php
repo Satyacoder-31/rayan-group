@@ -737,6 +737,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 array_unshift($db['customer_receipts'], $rcp);
 
+                // Auto-save bank in saved_banks and link to customer
+                if (!empty($rcp['bank_name'])) {
+                    if (!isset($db['saved_banks']) || !is_array($db['saved_banks'])) {
+                        $db['saved_banks'] = [];
+                    }
+                    if (!in_array($rcp['bank_name'], $db['saved_banks'])) {
+                        array_unshift($db['saved_banks'], $rcp['bank_name']);
+                    }
+                    if (!empty($rcp['customer_id']) && !empty($db['customers'])) {
+                        foreach ($db['customers'] as &$cRef) {
+                            if (($cRef['id'] ?? '') === $rcp['customer_id'] || ($cRef['name'] ?? '') === ($rcp['customer_name'] ?? '')) {
+                                $cRef['preferred_bank'] = $rcp['bank_name'];
+                                $cRef['bank_name'] = $rcp['bank_name'];
+                            }
+                        }
+                        unset($cRef);
+                    }
+                }
+                if (!empty($body['saved_banks']) && is_array($body['saved_banks'])) {
+                    if (!isset($db['saved_banks']) || !is_array($db['saved_banks'])) {
+                        $db['saved_banks'] = [];
+                    }
+                    $db['saved_banks'] = array_values(array_unique(array_merge($body['saved_banks'], $db['saved_banks'])));
+                }
+
                 // Update allocated invoices
                 if (!empty($rcp['allocations']) && is_array($rcp['allocations']) && isset($db['invoices'])) {
                     foreach ($rcp['allocations'] as $alloc) {
