@@ -84,6 +84,49 @@ if ($pdo) {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 INDEX idx_rcp_no (receipt_no)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_purchase_bills (
+                id VARCHAR(64) PRIMARY KEY,
+                bill_no VARCHAR(64) NOT NULL UNIQUE,
+                vendor_invoice_no VARCHAR(64),
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                vendor_id VARCHAR(64),
+                vendor_name VARCHAR(255),
+                project_id VARCHAR(64),
+                project_name VARCHAR(255),
+                po_id VARCHAR(64),
+                bill_date DATE,
+                due_date DATE,
+                grand_total DECIMAL(15,2) DEFAULT 0,
+                amount_paid DECIMAL(15,2) DEFAULT 0,
+                balance_due DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                status VARCHAR(32) DEFAULT 'approved',
+                approval_status VARCHAR(32) DEFAULT 'approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_bill_no (bill_no),
+                INDEX idx_vend_id (vendor_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_vendor_payments (
+                id VARCHAR(64) PRIMARY KEY,
+                voucher_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                vendor_id VARCHAR(64),
+                vendor_name VARCHAR(255),
+                payment_date DATE,
+                payment_mode VARCHAR(64),
+                reference_no VARCHAR(128),
+                amount_paid DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_vouch_no (voucher_no),
+                INDEX idx_vend_pay_id (vendor_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
     } catch (Exception $e) {
         error_log("Finance tables initialization error: " . $e->getMessage());
@@ -233,6 +276,44 @@ function syncFromRelationalTables($pdo, &$data) {
                 }
             }
         }
+
+        // Ensure all purchase bills from table exist in state
+        $billRows = $pdo->query("SELECT data_json FROM finance_purchase_bills ORDER BY bill_date DESC")->fetchAll(PDO::FETCH_ASSOC);
+        if ($billRows && count($billRows) > 0) {
+            if (!isset($data['purchase_bills']) || !is_array($data['purchase_bills'])) $data['purchase_bills'] = [];
+            $existingBills = [];
+            foreach ($data['purchase_bills'] as $idx => $b) {
+                $k = $b['id'] ?? $b['bill_no'] ?? null;
+                if ($k) $existingBills[$k] = true;
+            }
+            foreach ($billRows as $r) {
+                $bObj = json_decode($r['data_json'], true);
+                if (!$bObj) continue;
+                $k = $bObj['id'] ?? $bObj['bill_no'] ?? null;
+                if ($k && !isset($existingBills[$k])) {
+                    array_unshift($data['purchase_bills'], $bObj);
+                }
+            }
+        }
+
+        // Ensure all vendor payments from table exist in state
+        $vPayRows = $pdo->query("SELECT data_json FROM finance_vendor_payments ORDER BY payment_date DESC")->fetchAll(PDO::FETCH_ASSOC);
+        if ($vPayRows && count($vPayRows) > 0) {
+            if (!isset($data['vendor_payments']) || !is_array($data['vendor_payments'])) $data['vendor_payments'] = [];
+            $existingVPays = [];
+            foreach ($data['vendor_payments'] as $idx => $vp) {
+                $k = $vp['id'] ?? $vp['voucher_no'] ?? null;
+                if ($k) $existingVPays[$k] = true;
+            }
+            foreach ($vPayRows as $r) {
+                $vpObj = json_decode($r['data_json'], true);
+                if (!$vpObj) continue;
+                $k = $vpObj['id'] ?? $vpObj['voucher_no'] ?? null;
+                if ($k && !isset($existingVPays[$k])) {
+                    array_unshift($data['vendor_payments'], $vpObj);
+                }
+            }
+        }
     } catch (Exception $e) {
         error_log("syncFromRelationalTables error: " . $e->getMessage());
     }
@@ -339,6 +420,53 @@ function syncToRelationalTables($pdo, &$data) {
                     ':payment_mode' => $r['payment_mode'] ?? 'Cheque',
                     ':reference_no' => $r['reference_no'] ?? '',
                     ':data_json' => json_encode($r, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_id, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bill_no, :vendor_invoice_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_id, :bill_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :approval_status, :data_json, NOW())");
+            foreach ($data['purchase_bills'] as $b) {
+                if (empty($b['bill_no'])) continue;
+                $stmt->execute([
+                    ':id' => $b['id'] ?? ('bill-' . $b['bill_no']),
+                    ':bill_no' => $b['bill_no'],
+                    ':vendor_invoice_no' => $b['vendor_invoice_no'] ?? '',
+                    ':company_id' => $b['company_id'] ?? 'rayan-corp-uae',
+                    ':vendor_id' => $b['vendor_id'] ?? '',
+                    ':vendor_name' => $b['vendor_name'] ?? '',
+                    ':project_id' => $b['project_id'] ?? '',
+                    ':project_name' => $b['project_name'] ?? '',
+                    ':po_id' => $b['po_id'] ?? '',
+                    ':bill_date' => $b['bill_date'] ?? date('Y-m-d'),
+                    ':due_date' => !empty($b['due_date']) ? $b['due_date'] : null,
+                    ':grand_total' => floatval($b['grand_total'] ?? 0),
+                    ':amount_paid' => floatval($b['amount_paid'] ?? 0),
+                    ':balance_due' => floatval($b['balance_due'] ?? 0),
+                    ':currency' => $b['currency'] ?? 'AED',
+                    ':status' => $b['status'] ?? 'approved',
+                    ':approval_status' => $b['approval_status'] ?? 'approved',
+                    ':data_json' => json_encode($b, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :voucher_no, :company_id, :vendor_id, :vendor_name, :payment_date, :payment_mode, :reference_no, :amount_paid, :currency, :data_json, NOW())");
+            foreach ($data['vendor_payments'] as $vp) {
+                if (empty($vp['voucher_no'])) continue;
+                $stmt->execute([
+                    ':id' => $vp['id'] ?? ('pay-' . $vp['voucher_no']),
+                    ':voucher_no' => $vp['voucher_no'],
+                    ':company_id' => $vp['company_id'] ?? 'rayan-corp-uae',
+                    ':vendor_id' => $vp['vendor_id'] ?? '',
+                    ':vendor_name' => $vp['vendor_name'] ?? '',
+                    ':payment_date' => $vp['payment_date'] ?? date('Y-m-d'),
+                    ':payment_mode' => $vp['payment_mode'] ?? 'Online',
+                    ':reference_no' => $vp['reference_no'] ?? '',
+                    ':amount_paid' => floatval($vp['amount_paid'] ?? 0),
+                    ':currency' => $vp['currency'] ?? 'AED',
+                    ':data_json' => json_encode($vp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
         }
