@@ -127,6 +127,330 @@ if ($pdo) {
                 INDEX idx_vouch_no (voucher_no),
                 INDEX idx_vend_pay_id (vendor_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_vendors (
+                id VARCHAR(64) PRIMARY KEY,
+                code VARCHAR(64),
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                name VARCHAR(255) NOT NULL,
+                country VARCHAR(64) DEFAULT 'UAE',
+                trn VARCHAR(64),
+                gstin VARCHAR(64),
+                status VARCHAR(32) DEFAULT 'active',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_vend_name (name)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_items (
+                id VARCHAR(64) PRIMARY KEY,
+                code VARCHAR(64),
+                name VARCHAR(255) NOT NULL,
+                category VARCHAR(128),
+                description TEXT,
+                uom VARCHAR(32) DEFAULT 'NOS',
+                sales_price DECIMAL(15,2) DEFAULT 0,
+                purchase_price DECIMAL(15,2) DEFAULT 0,
+                gst_rate DECIMAL(6,2) DEFAULT 0,
+                hsn_sac_code VARCHAR(64),
+                status VARCHAR(32) DEFAULT 'active',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_item_code (code),
+                INDEX idx_item_name (name)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_projects (
+                id VARCHAR(64) PRIMARY KEY,
+                code VARCHAR(64),
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                name VARCHAR(255) NOT NULL,
+                client VARCHAR(255),
+                contract_value DECIMAL(15,2) DEFAULT 0,
+                approved_budget DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                status VARCHAR(32) DEFAULT 'In Progress',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_proj_code (code),
+                INDEX idx_proj_name (name)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_expenses (
+                id VARCHAR(64) PRIMARY KEY,
+                expense_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                expense_date DATE,
+                category VARCHAR(128),
+                description TEXT,
+                amount DECIMAL(15,2) DEFAULT 0,
+                tax_amount DECIMAL(15,2) DEFAULT 0,
+                total_amount DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                project_id VARCHAR(64),
+                project_name VARCHAR(255),
+                payment_method VARCHAR(64),
+                submitted_by VARCHAR(255),
+                status VARCHAR(32) DEFAULT 'approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_exp_no (expense_no),
+                INDEX idx_exp_cat (category)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_purchase_orders (
+                id VARCHAR(64) PRIMARY KEY,
+                po_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                po_date DATE,
+                supplier_name VARCHAR(255),
+                supplier_trn VARCHAR(64),
+                project_name VARCHAR(255),
+                grand_total DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                status VARCHAR(32) DEFAULT 'approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_po_no (po_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_credit_notes (
+                id VARCHAR(64) PRIMARY KEY,
+                credit_note_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                invoice_id VARCHAR(64),
+                invoice_no VARCHAR(64),
+                customer_id VARCHAR(64),
+                customer_name VARCHAR(255),
+                total_credit_amount DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                reason TEXT,
+                status VARCHAR(32) DEFAULT 'issued',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_cn_no (credit_note_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_debit_notes (
+                id VARCHAR(64) PRIMARY KEY,
+                debit_note_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                bill_no VARCHAR(64),
+                vendor_name VARCHAR(255),
+                note_date DATE,
+                total_debit_amount DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                reason TEXT,
+                status VARCHAR(32) DEFAULT 'issued',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_dn_no (debit_note_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_bank_accounts (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                account_name VARCHAR(255),
+                bank_name VARCHAR(255),
+                account_number VARCHAR(64),
+                iban VARCHAR(64),
+                swift VARCHAR(32),
+                branch VARCHAR(128),
+                currency VARCHAR(16) DEFAULT 'AED',
+                balance DECIMAL(15,2) DEFAULT 0,
+                signatory VARCHAR(255),
+                status VARCHAR(32) DEFAULT 'active',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_bank_acc (account_number)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_cash_in_hand (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                register_name VARCHAR(255),
+                location VARCHAR(255),
+                custodian VARCHAR(255),
+                currency VARCHAR(16) DEFAULT 'AED',
+                balance DECIMAL(15,2) DEFAULT 0,
+                last_replenished DATE,
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_cheques (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                type VARCHAR(32),
+                cheque_no VARCHAR(64),
+                bank_name VARCHAR(255),
+                party_name VARCHAR(255),
+                amount DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                cheque_date DATE,
+                status VARCHAR(32) DEFAULT 'pending',
+                notes TEXT,
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_chq_no (cheque_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_bank_transfers (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                reference_no VARCHAR(64),
+                transfer_date DATE,
+                counterparty VARCHAR(255),
+                source_account_id VARCHAR(64),
+                source_bank VARCHAR(255),
+                type VARCHAR(32),
+                amount DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                purpose TEXT,
+                status VARCHAR(32) DEFAULT 'completed',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_xfer_ref (reference_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_cash_vouchers (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                voucher_no VARCHAR(64) NOT NULL UNIQUE,
+                voucher_date DATE,
+                register_name VARCHAR(255),
+                custodian VARCHAR(255),
+                payee VARCHAR(255),
+                purpose TEXT,
+                category VARCHAR(128),
+                amount DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                type VARCHAR(32),
+                status VARCHAR(32) DEFAULT 'approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_cv_no (voucher_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_loan_accounts (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                facility_name VARCHAR(255),
+                lender VARCHAR(255),
+                sanctioned_limit DECIMAL(15,2) DEFAULT 0,
+                outstanding_balance DECIMAL(15,2) DEFAULT 0,
+                available_limit DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                facility_type VARCHAR(64),
+                tenure VARCHAR(64),
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_loan_transactions (
+                id VARCHAR(64) PRIMARY KEY,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                facility_id VARCHAR(64),
+                facility_name VARCHAR(255),
+                type VARCHAR(32),
+                amount DECIMAL(15,2) DEFAULT 0,
+                currency VARCHAR(16) DEFAULT 'AED',
+                transaction_date DATE,
+                reference_no VARCHAR(64),
+                notes TEXT,
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_companies (
+                id VARCHAR(64) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                short_name VARCHAR(64),
+                country VARCHAR(64),
+                currency VARCHAR(16) DEFAULT 'AED',
+                currency_symbol VARCHAR(16) DEFAULT 'AED',
+                trn_vat VARCHAR(64),
+                email VARCHAR(255),
+                phone VARCHAR(64),
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_comp_name (name)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_users (
+                id VARCHAR(64) PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                role VARCHAR(64) DEFAULT 'finance',
+                designation VARCHAR(128),
+                department VARCHAR(128),
+                phone VARCHAR(64),
+                status VARCHAR(32) DEFAULT 'active',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_user_email (email)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_audit_logs (
+                id VARCHAR(64) PRIMARY KEY,
+                timestamp VARCHAR(64),
+                actor_name VARCHAR(255),
+                actor_role VARCHAR(64),
+                actor_email VARCHAR(255),
+                action VARCHAR(64),
+                entity VARCHAR(64),
+                entity_id VARCHAR(64),
+                details TEXT,
+                ip_address VARCHAR(64),
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_documents (
+                id VARCHAR(64) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                category VARCHAR(128),
+                size VARCHAR(64),
+                uploaded_by VARCHAR(255),
+                doc_date DATE,
+                linked_record VARCHAR(255),
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_notifications (
+                id VARCHAR(64) PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                message TEXT,
+                type VARCHAR(32),
+                timestamp VARCHAR(64),
+                is_read TINYINT(1) DEFAULT 0,
+                link VARCHAR(255),
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_settings (
+                setting_key VARCHAR(64) PRIMARY KEY,
+                setting_val LONGTEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
     } catch (Exception $e) {
         error_log("Finance tables initialization error: " . $e->getMessage());
@@ -222,99 +546,63 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
 function syncFromRelationalTables($pdo, &$data) {
     if (!$pdo) return;
     try {
-        // Ensure all invoices from table exist in state
-        $invRows = $pdo->query("SELECT data_json FROM finance_invoices ORDER BY invoice_date DESC")->fetchAll(PDO::FETCH_ASSOC);
-        if ($invRows && count($invRows) > 0) {
-            if (!isset($data['invoices']) || !is_array($data['invoices'])) $data['invoices'] = [];
-            $existingKeys = [];
-            foreach ($data['invoices'] as $idx => $inv) {
-                $k = $inv['id'] ?? $inv['invoice_no'] ?? null;
-                if ($k) $existingKeys[$k] = $idx;
-            }
-            foreach ($invRows as $r) {
-                $invObj = json_decode($r['data_json'], true);
-                if (!$invObj) continue;
-                $k = $invObj['id'] ?? $invObj['invoice_no'] ?? null;
-                if ($k && !isset($existingKeys[$k])) {
-                    array_unshift($data['invoices'], $invObj);
-                }
-            }
-        }
+        $syncMapping = [
+            ['table' => 'finance_invoices', 'key' => 'invoices', 'id_fields' => ['id', 'invoice_no'], 'order' => 'invoice_date DESC'],
+            ['table' => 'finance_customers', 'key' => 'customers', 'id_fields' => ['id', 'code', 'name'], 'order' => 'name ASC'],
+            ['table' => 'finance_receipts', 'key' => 'customer_receipts', 'id_fields' => ['id', 'receipt_no'], 'order' => 'receipt_date DESC'],
+            ['table' => 'finance_purchase_bills', 'key' => 'purchase_bills', 'id_fields' => ['id', 'bill_no'], 'order' => 'bill_date DESC'],
+            ['table' => 'finance_vendor_payments', 'key' => 'vendor_payments', 'id_fields' => ['id', 'voucher_no'], 'order' => 'payment_date DESC'],
+            ['table' => 'finance_vendors', 'key' => 'vendors', 'id_fields' => ['id', 'code', 'name'], 'order' => 'name ASC'],
+            ['table' => 'finance_items', 'key' => 'items', 'id_fields' => ['id', 'code', 'name'], 'order' => 'name ASC'],
+            ['table' => 'finance_projects', 'key' => 'projects', 'id_fields' => ['id', 'code', 'name'], 'order' => 'name ASC'],
+            ['table' => 'finance_expenses', 'key' => 'expenses', 'id_fields' => ['id', 'expense_no'], 'order' => 'expense_date DESC'],
+            ['table' => 'finance_purchase_orders', 'key' => 'purchase_orders', 'id_fields' => ['id', 'po_no'], 'order' => 'po_date DESC'],
+            ['table' => 'finance_credit_notes', 'key' => 'credit_notes', 'id_fields' => ['id', 'credit_note_no'], 'order' => 'id DESC'],
+            ['table' => 'finance_debit_notes', 'key' => 'debit_notes', 'id_fields' => ['id', 'debit_note_no'], 'order' => 'id DESC'],
+            ['table' => 'finance_bank_accounts', 'key' => 'bank_accounts', 'id_fields' => ['id', 'account_number', 'account_name'], 'order' => 'account_name ASC'],
+            ['table' => 'finance_cash_in_hand', 'key' => 'cash_in_hand', 'id_fields' => ['id', 'register_name'], 'order' => 'register_name ASC'],
+            ['table' => 'finance_cheques', 'key' => 'cheques', 'id_fields' => ['id', 'cheque_no'], 'order' => 'cheque_date DESC'],
+            ['table' => 'finance_bank_transfers', 'key' => 'bank_transfers', 'id_fields' => ['id', 'reference_no'], 'order' => 'transfer_date DESC'],
+            ['table' => 'finance_cash_vouchers', 'key' => 'cash_vouchers', 'id_fields' => ['id', 'voucher_no'], 'order' => 'voucher_date DESC'],
+            ['table' => 'finance_loan_accounts', 'key' => 'loan_accounts', 'id_fields' => ['id', 'facility_name'], 'order' => 'facility_name ASC'],
+            ['table' => 'finance_loan_transactions', 'key' => 'loan_transactions', 'id_fields' => ['id', 'reference_no'], 'order' => 'transaction_date DESC'],
+        ];
 
-        // Ensure all customers from table exist in state
-        $custRows = $pdo->query("SELECT data_json FROM finance_customers ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
-        if ($custRows && count($custRows) > 0) {
-            if (!isset($data['customers']) || !is_array($data['customers'])) $data['customers'] = [];
-            $existingCust = [];
-            foreach ($data['customers'] as $idx => $c) {
-                $k = $c['id'] ?? $c['code'] ?? strtolower($c['name'] ?? '');
-                if ($k) $existingCust[$k] = true;
-            }
-            foreach ($custRows as $r) {
-                $cObj = json_decode($r['data_json'], true);
-                if (!$cObj) continue;
-                $k = $cObj['id'] ?? $cObj['code'] ?? strtolower($cObj['name'] ?? '');
-                if ($k && !isset($existingCust[$k])) {
-                    array_unshift($data['customers'], $cObj);
+        foreach ($syncMapping as $m) {
+            try {
+                $rows = $pdo->query("SELECT data_json FROM {$m['table']} ORDER BY {$m['order']}")->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows && count($rows) > 0) {
+                    $k = $m['key'];
+                    if (!isset($data[$k]) || !is_array($data[$k])) $data[$k] = [];
+                    $existing = [];
+                    foreach ($data[$k] as $item) {
+                        foreach ($m['id_fields'] as $f) {
+                            if (!empty($item[$f])) {
+                                $existing[strtolower($item[$f])] = true;
+                            }
+                        }
+                    }
+                    foreach ($rows as $r) {
+                        $obj = json_decode($r['data_json'], true);
+                        if (!$obj) continue;
+                        $found = false;
+                        foreach ($m['id_fields'] as $f) {
+                            if (!empty($obj[$f]) && isset($existing[strtolower($obj[$f])])) {
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if (!$found) {
+                            array_unshift($data[$k], $obj);
+                            foreach ($m['id_fields'] as $f) {
+                                if (!empty($obj[$f])) {
+                                    $existing[strtolower($obj[$f])] = true;
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-        }
-
-        // Ensure all receipts from table exist in state
-        $rcpRows = $pdo->query("SELECT data_json FROM finance_receipts ORDER BY receipt_date DESC")->fetchAll(PDO::FETCH_ASSOC);
-        if ($rcpRows && count($rcpRows) > 0) {
-            if (!isset($data['customer_receipts']) || !is_array($data['customer_receipts'])) $data['customer_receipts'] = [];
-            $existingRcp = [];
-            foreach ($data['customer_receipts'] as $idx => $r) {
-                $k = $r['id'] ?? $r['receipt_no'] ?? null;
-                if ($k) $existingRcp[$k] = true;
-            }
-            foreach ($rcpRows as $r) {
-                $rObj = json_decode($r['data_json'], true);
-                if (!$rObj) continue;
-                $k = $rObj['id'] ?? $rObj['receipt_no'] ?? null;
-                if ($k && !isset($existingRcp[$k])) {
-                    array_unshift($data['customer_receipts'], $rObj);
-                }
-            }
-        }
-
-        // Ensure all purchase bills from table exist in state
-        $billRows = $pdo->query("SELECT data_json FROM finance_purchase_bills ORDER BY bill_date DESC")->fetchAll(PDO::FETCH_ASSOC);
-        if ($billRows && count($billRows) > 0) {
-            if (!isset($data['purchase_bills']) || !is_array($data['purchase_bills'])) $data['purchase_bills'] = [];
-            $existingBills = [];
-            foreach ($data['purchase_bills'] as $idx => $b) {
-                $k = $b['id'] ?? $b['bill_no'] ?? null;
-                if ($k) $existingBills[$k] = true;
-            }
-            foreach ($billRows as $r) {
-                $bObj = json_decode($r['data_json'], true);
-                if (!$bObj) continue;
-                $k = $bObj['id'] ?? $bObj['bill_no'] ?? null;
-                if ($k && !isset($existingBills[$k])) {
-                    array_unshift($data['purchase_bills'], $bObj);
-                }
-            }
-        }
-
-        // Ensure all vendor payments from table exist in state
-        $vPayRows = $pdo->query("SELECT data_json FROM finance_vendor_payments ORDER BY payment_date DESC")->fetchAll(PDO::FETCH_ASSOC);
-        if ($vPayRows && count($vPayRows) > 0) {
-            if (!isset($data['vendor_payments']) || !is_array($data['vendor_payments'])) $data['vendor_payments'] = [];
-            $existingVPays = [];
-            foreach ($data['vendor_payments'] as $idx => $vp) {
-                $k = $vp['id'] ?? $vp['voucher_no'] ?? null;
-                if ($k) $existingVPays[$k] = true;
-            }
-            foreach ($vPayRows as $r) {
-                $vpObj = json_decode($r['data_json'], true);
-                if (!$vpObj) continue;
-                $k = $vpObj['id'] ?? $vpObj['voucher_no'] ?? null;
-                if ($k && !isset($existingVPays[$k])) {
-                    array_unshift($data['vendor_payments'], $vpObj);
-                }
-            }
+            } catch (Exception $e) {}
         }
     } catch (Exception $e) {
         error_log("syncFromRelationalTables error: " . $e->getMessage());
@@ -342,7 +630,7 @@ function saveFinanceDb($pdo, $dataFile, &$data, $candidates = []) {
             $stmt = $pdo->prepare("REPLACE INTO finance_state (id, state_json, updated_at) VALUES (1, :json, NOW())");
             $stmt->execute([':json' => $json]);
 
-            // Sync relational tables
+            // Sync all relational tables
             syncToRelationalTables($pdo, $data);
         } catch (Exception $e) {
             error_log("Finance MySQL save error: " . $e->getMessage());
@@ -364,9 +652,10 @@ function saveFinanceDb($pdo, $dataFile, &$data, $candidates = []) {
 function syncToRelationalTables($pdo, &$data) {
     if (!$pdo) return;
     try {
+        // 1. Invoices
         if (!empty($data['invoices']) && is_array($data['invoices'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, customer_gstin, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (:id, :invoice_no, :company_id, :customer_id, :customer_name, :customer_trn, :customer_gstin, :invoice_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :data_json, NOW())");
-            foreach (array_slice($data['invoices'], 0, 50) as $inv) {
+            foreach ($data['invoices'] as $inv) {
                 if (empty($inv['invoice_no'])) continue;
                 $stmt->execute([
                     ':id' => $inv['id'] ?? ('inv-' . $inv['invoice_no']),
@@ -388,6 +677,7 @@ function syncToRelationalTables($pdo, &$data) {
             }
         }
 
+        // 2. Customers
         if (!empty($data['customers']) && is_array($data['customers'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_customers (id, code, name, contact_person, email, phone, trn, gstin, credit_limit, data_json, updated_at) VALUES (:id, :code, :name, :contact_person, :email, :phone, :trn, :gstin, :credit_limit, :data_json, NOW())");
             foreach ($data['customers'] as $c) {
@@ -407,6 +697,7 @@ function syncToRelationalTables($pdo, &$data) {
             }
         }
 
+        // 3. Customer Receipts
         if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (:id, :receipt_no, :customer_id, :customer_name, :receipt_date, :amount_received, :currency, :payment_mode, :reference_no, :data_json, NOW())");
             foreach ($data['customer_receipts'] as $r) {
@@ -426,6 +717,7 @@ function syncToRelationalTables($pdo, &$data) {
             }
         }
 
+        // 4. Purchase Bills
         if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_id, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bill_no, :vendor_invoice_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_id, :bill_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :approval_status, :data_json, NOW())");
             foreach ($data['purchase_bills'] as $b) {
@@ -453,6 +745,7 @@ function syncToRelationalTables($pdo, &$data) {
             }
         }
 
+        // 5. Vendor Payments
         if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :voucher_no, :company_id, :vendor_id, :vendor_name, :payment_date, :payment_mode, :reference_no, :amount_paid, :currency, :data_json, NOW())");
             foreach ($data['vendor_payments'] as $vp) {
@@ -469,6 +762,415 @@ function syncToRelationalTables($pdo, &$data) {
                     ':amount_paid' => floatval($vp['amount_paid'] ?? 0),
                     ':currency' => $vp['currency'] ?? 'AED',
                     ':data_json' => json_encode($vp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 6. Vendors
+        if (!empty($data['vendors']) && is_array($data['vendors'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_vendors (id, code, company_id, name, country, trn, gstin, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :country, :trn, :gstin, :status, :data_json, NOW())");
+            foreach ($data['vendors'] as $v) {
+                if (empty($v['name'])) continue;
+                $stmt->execute([
+                    ':id' => $v['id'] ?? ('vend-' . rand(1000, 9999)),
+                    ':code' => $v['code'] ?? '',
+                    ':company_id' => $v['company_id'] ?? 'rayan-corp-uae',
+                    ':name' => $v['name'],
+                    ':country' => $v['country'] ?? 'UAE',
+                    ':trn' => $v['trn'] ?? '',
+                    ':gstin' => $v['gstin'] ?? '',
+                    ':status' => $v['status'] ?? 'active',
+                    ':data_json' => json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 7. Items
+        if (!empty($data['items']) && is_array($data['items'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_items (id, code, name, category, description, uom, sales_price, purchase_price, gst_rate, hsn_sac_code, status, data_json, updated_at) VALUES (:id, :code, :name, :category, :description, :uom, :sales_price, :purchase_price, :gst_rate, :hsn_sac_code, :status, :data_json, NOW())");
+            foreach ($data['items'] as $item) {
+                if (empty($item['name'])) continue;
+                $stmt->execute([
+                    ':id' => $item['id'] ?? ('item-' . rand(1000, 9999)),
+                    ':code' => $item['code'] ?? '',
+                    ':name' => $item['name'],
+                    ':category' => $item['category'] ?? '',
+                    ':description' => $item['description'] ?? '',
+                    ':uom' => $item['uom'] ?? 'NOS',
+                    ':sales_price' => floatval($item['sales_price'] ?? 0),
+                    ':purchase_price' => floatval($item['purchase_price'] ?? 0),
+                    ':gst_rate' => floatval($item['gst_rate'] ?? 0),
+                    ':hsn_sac_code' => $item['hsn_sac_code'] ?? '',
+                    ':status' => $item['status'] ?? 'active',
+                    ':data_json' => json_encode($item, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 8. Projects
+        if (!empty($data['projects']) && is_array($data['projects'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_projects (id, code, company_id, name, client, contract_value, approved_budget, currency, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :client, :contract_value, :approved_budget, :currency, :status, :data_json, NOW())");
+            foreach ($data['projects'] as $prj) {
+                if (empty($prj['name'])) continue;
+                $stmt->execute([
+                    ':id' => $prj['id'] ?? ('prj-' . rand(1000, 9999)),
+                    ':code' => $prj['code'] ?? '',
+                    ':company_id' => $prj['company_id'] ?? 'rayan-corp-uae',
+                    ':name' => $prj['name'],
+                    ':client' => $prj['client'] ?? '',
+                    ':contract_value' => floatval($prj['contract_value'] ?? 0),
+                    ':approved_budget' => floatval($prj['approved_budget'] ?? 0),
+                    ':currency' => $prj['currency'] ?? 'AED',
+                    ':status' => $prj['status'] ?? 'In Progress',
+                    ':data_json' => json_encode($prj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 9. Expenses
+        if (!empty($data['expenses']) && is_array($data['expenses'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_expenses (id, expense_no, company_id, expense_date, category, description, amount, tax_amount, total_amount, currency, project_id, project_name, payment_method, submitted_by, status, data_json, updated_at) VALUES (:id, :expense_no, :company_id, :expense_date, :category, :description, :amount, :tax_amount, :total_amount, :currency, :project_id, :project_name, :payment_method, :submitted_by, :status, :data_json, NOW())");
+            foreach ($data['expenses'] as $exp) {
+                if (empty($exp['expense_no'])) continue;
+                $stmt->execute([
+                    ':id' => $exp['id'] ?? ('exp-' . $exp['expense_no']),
+                    ':expense_no' => $exp['expense_no'],
+                    ':company_id' => $exp['company_id'] ?? 'rayan-corp-uae',
+                    ':expense_date' => !empty($exp['date']) ? $exp['date'] : date('Y-m-d'),
+                    ':category' => $exp['category'] ?? '',
+                    ':description' => $exp['description'] ?? '',
+                    ':amount' => floatval($exp['amount'] ?? 0),
+                    ':tax_amount' => floatval($exp['tax_amount'] ?? 0),
+                    ':total_amount' => floatval($exp['total_amount'] ?? $exp['amount'] ?? 0),
+                    ':currency' => $exp['currency'] ?? 'AED',
+                    ':project_id' => $exp['project_id'] ?? '',
+                    ':project_name' => $exp['project_name'] ?? '',
+                    ':payment_method' => $exp['payment_method'] ?? '',
+                    ':submitted_by' => $exp['submitted_by'] ?? '',
+                    ':status' => $exp['status'] ?? 'approved',
+                    ':data_json' => json_encode($exp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 10. Purchase Orders
+        if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_purchase_orders (id, po_no, company_id, po_date, supplier_name, supplier_trn, project_name, grand_total, currency, status, data_json, updated_at) VALUES (:id, :po_no, :company_id, :po_date, :supplier_name, :supplier_trn, :project_name, :grand_total, :currency, :status, :data_json, NOW())");
+            foreach ($data['purchase_orders'] as $po) {
+                if (empty($po['po_no'])) continue;
+                $stmt->execute([
+                    ':id' => $po['id'] ?? ('po-' . $po['po_no']),
+                    ':po_no' => $po['po_no'],
+                    ':company_id' => $po['company_id'] ?? 'rayan-corp-uae',
+                    ':po_date' => !empty($po['date']) ? $po['date'] : date('Y-m-d'),
+                    ':supplier_name' => $po['supplier_name'] ?? '',
+                    ':supplier_trn' => $po['supplier_trn'] ?? '',
+                    ':project_name' => $po['project_name'] ?? '',
+                    ':grand_total' => floatval($po['grand_total'] ?? $po['total_value'] ?? 0),
+                    ':currency' => $po['currency'] ?? 'AED',
+                    ':status' => $po['status'] ?? 'approved',
+                    ':data_json' => json_encode($po, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 11. Credit Notes
+        if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, company_id, invoice_id, invoice_no, customer_id, customer_name, total_credit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :credit_note_no, :company_id, :invoice_id, :invoice_no, :customer_id, :customer_name, :total_credit_amount, :currency, :reason, :status, :data_json, NOW())");
+            foreach ($data['credit_notes'] as $cn) {
+                $no = $cn['credit_note_no'] ?? $cn['id'] ?? '';
+                if (empty($no)) continue;
+                $stmt->execute([
+                    ':id' => $cn['id'] ?? ('cn-' . $no),
+                    ':credit_note_no' => $no,
+                    ':company_id' => $cn['company_id'] ?? 'rayan-corp-uae',
+                    ':invoice_id' => $cn['invoice_id'] ?? '',
+                    ':invoice_no' => $cn['invoice_no'] ?? '',
+                    ':customer_id' => $cn['customer_id'] ?? '',
+                    ':customer_name' => $cn['customer_name'] ?? '',
+                    ':total_credit_amount' => floatval($cn['total_credit_amount'] ?? 0),
+                    ':currency' => $cn['currency'] ?? 'AED',
+                    ':reason' => $cn['reason'] ?? '',
+                    ':status' => $cn['status'] ?? 'issued',
+                    ':data_json' => json_encode($cn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 12. Debit Notes
+        if (!empty($data['debit_notes']) && is_array($data['debit_notes'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_debit_notes (id, debit_note_no, company_id, bill_no, vendor_name, note_date, total_debit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :debit_note_no, :company_id, :bill_no, :vendor_name, :note_date, :total_debit_amount, :currency, :reason, :status, :data_json, NOW())");
+            foreach ($data['debit_notes'] as $dn) {
+                $no = $dn['debit_note_no'] ?? $dn['id'] ?? '';
+                if (empty($no)) continue;
+                $stmt->execute([
+                    ':id' => $dn['id'] ?? ('dn-' . $no),
+                    ':debit_note_no' => $no,
+                    ':company_id' => $dn['company_id'] ?? 'rayan-corp-uae',
+                    ':bill_no' => $dn['bill_no'] ?? '',
+                    ':vendor_name' => $dn['vendor_name'] ?? '',
+                    ':note_date' => !empty($dn['date']) ? $dn['date'] : date('Y-m-d'),
+                    ':total_debit_amount' => floatval($dn['total_debit_amount'] ?? 0),
+                    ':currency' => $dn['currency'] ?? 'AED',
+                    ':reason' => $dn['reason'] ?? '',
+                    ':status' => $dn['status'] ?? 'issued',
+                    ':data_json' => json_encode($dn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 13. Bank Accounts
+        if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_bank_accounts (id, company_id, account_name, bank_name, account_number, iban, swift, branch, currency, balance, signatory, status, data_json, updated_at) VALUES (:id, :company_id, :account_name, :bank_name, :account_number, :iban, :swift, :branch, :currency, :balance, :signatory, :status, :data_json, NOW())");
+            foreach ($data['bank_accounts'] as $ba) {
+                if (empty($ba['account_name'])) continue;
+                $stmt->execute([
+                    ':id' => $ba['id'] ?? ('ba-' . rand(1000, 9999)),
+                    ':company_id' => $ba['company_id'] ?? 'rayan-corp-uae',
+                    ':account_name' => $ba['account_name'],
+                    ':bank_name' => $ba['bank_name'] ?? '',
+                    ':account_number' => $ba['account_number'] ?? '',
+                    ':iban' => $ba['iban'] ?? '',
+                    ':swift' => $ba['swift'] ?? '',
+                    ':branch' => $ba['branch'] ?? '',
+                    ':currency' => $ba['currency'] ?? 'AED',
+                    ':balance' => floatval($ba['balance'] ?? 0),
+                    ':signatory' => $ba['signatory'] ?? '',
+                    ':status' => $ba['status'] ?? 'active',
+                    ':data_json' => json_encode($ba, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 14. Cash in Hand
+        if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_cash_in_hand (id, company_id, register_name, location, custodian, currency, balance, last_replenished, data_json, updated_at) VALUES (:id, :company_id, :register_name, :location, :custodian, :currency, :balance, :last_replenished, :data_json, NOW())");
+            foreach ($data['cash_in_hand'] as $cih) {
+                if (empty($cih['register_name'])) continue;
+                $stmt->execute([
+                    ':id' => $cih['id'] ?? ('cih-' . rand(1000, 9999)),
+                    ':company_id' => $cih['company_id'] ?? 'rayan-corp-uae',
+                    ':register_name' => $cih['register_name'],
+                    ':location' => $cih['location'] ?? '',
+                    ':custodian' => $cih['custodian'] ?? '',
+                    ':currency' => $cih['currency'] ?? 'AED',
+                    ':balance' => floatval($cih['balance'] ?? 0),
+                    ':last_replenished' => !empty($cih['last_replenished']) ? $cih['last_replenished'] : null,
+                    ':data_json' => json_encode($cih, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 15. Cheques
+        if (!empty($data['cheques']) && is_array($data['cheques'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_cheques (id, company_id, type, cheque_no, bank_name, party_name, amount, currency, cheque_date, status, notes, data_json, updated_at) VALUES (:id, :company_id, :type, :cheque_no, :bank_name, :party_name, :amount, :currency, :cheque_date, :status, :notes, :data_json, NOW())");
+            foreach ($data['cheques'] as $chq) {
+                if (empty($chq['cheque_no'])) continue;
+                $stmt->execute([
+                    ':id' => $chq['id'] ?? ('chq-' . rand(1000, 9999)),
+                    ':company_id' => $chq['company_id'] ?? 'rayan-corp-uae',
+                    ':type' => $chq['type'] ?? '',
+                    ':cheque_no' => $chq['cheque_no'],
+                    ':bank_name' => $chq['bank_name'] ?? '',
+                    ':party_name' => $chq['party_name'] ?? '',
+                    ':amount' => floatval($chq['amount'] ?? 0),
+                    ':currency' => $chq['currency'] ?? 'AED',
+                    ':cheque_date' => !empty($chq['date']) ? $chq['date'] : null,
+                    ':status' => $chq['status'] ?? 'pending',
+                    ':notes' => $chq['notes'] ?? '',
+                    ':data_json' => json_encode($chq, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 16. Bank Transfers
+        if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+            foreach ($data['bank_transfers'] as $bt) {
+                if (empty($bt['reference_no'])) continue;
+                $stmt->execute([
+                    ':id' => $bt['id'] ?? ('bt-' . rand(1000, 9999)),
+                    ':company_id' => $bt['company_id'] ?? 'rayan-corp-uae',
+                    ':reference_no' => $bt['reference_no'],
+                    ':transfer_date' => !empty($bt['date']) ? $bt['date'] : date('Y-m-d'),
+                    ':counterparty' => $bt['counterparty'] ?? '',
+                    ':source_account_id' => $bt['source_account_id'] ?? '',
+                    ':source_bank' => $bt['source_bank'] ?? '',
+                    ':type' => $bt['type'] ?? '',
+                    ':amount' => floatval($bt['amount'] ?? 0),
+                    ':currency' => $bt['currency'] ?? 'AED',
+                    ':purpose' => $bt['purpose'] ?? '',
+                    ':status' => $bt['status'] ?? 'completed',
+                    ':data_json' => json_encode($bt, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 17. Cash Vouchers
+        if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+            foreach ($data['cash_vouchers'] as $cv) {
+                if (empty($cv['voucher_no'])) continue;
+                $stmt->execute([
+                    ':id' => $cv['id'] ?? ('cv-' . rand(1000, 9999)),
+                    ':company_id' => $cv['company_id'] ?? 'rayan-corp-uae',
+                    ':voucher_no' => $cv['voucher_no'],
+                    ':voucher_date' => !empty($cv['date']) ? $cv['date'] : date('Y-m-d'),
+                    ':register_name' => $cv['register_name'] ?? '',
+                    ':custodian' => $cv['custodian'] ?? '',
+                    ':payee' => $cv['payee'] ?? '',
+                    ':purpose' => $cv['purpose'] ?? '',
+                    ':category' => $cv['category'] ?? '',
+                    ':amount' => floatval($cv['amount'] ?? 0),
+                    ':currency' => $cv['currency'] ?? 'AED',
+                    ':type' => $cv['type'] ?? '',
+                    ':status' => $cv['status'] ?? 'approved',
+                    ':data_json' => json_encode($cv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 18. Loan Accounts
+        if (!empty($data['loan_accounts']) && is_array($data['loan_accounts'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_loan_accounts (id, company_id, facility_name, lender, sanctioned_limit, outstanding_balance, available_limit, currency, facility_type, tenure, data_json, updated_at) VALUES (:id, :company_id, :facility_name, :lender, :sanctioned_limit, :outstanding_balance, :available_limit, :currency, :facility_type, :tenure, :data_json, NOW())");
+            foreach ($data['loan_accounts'] as $la) {
+                if (empty($la['facility_name'])) continue;
+                $stmt->execute([
+                    ':id' => $la['id'] ?? ('la-' . rand(1000, 9999)),
+                    ':company_id' => $la['company_id'] ?? 'rayan-corp-uae',
+                    ':facility_name' => $la['facility_name'],
+                    ':lender' => $la['lender'] ?? '',
+                    ':sanctioned_limit' => floatval($la['sanctioned_limit'] ?? 0),
+                    ':outstanding_balance' => floatval($la['outstanding_balance'] ?? 0),
+                    ':available_limit' => floatval($la['available_limit'] ?? 0),
+                    ':currency' => $la['currency'] ?? 'AED',
+                    ':facility_type' => $la['facility_type'] ?? '',
+                    ':tenure' => $la['tenure'] ?? '',
+                    ':data_json' => json_encode($la, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 19. Loan Transactions
+        if (!empty($data['loan_transactions']) && is_array($data['loan_transactions'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_loan_transactions (id, company_id, facility_id, facility_name, type, amount, currency, transaction_date, reference_no, notes, data_json, updated_at) VALUES (:id, :company_id, :facility_id, :facility_name, :type, :amount, :currency, :transaction_date, :reference_no, :notes, :data_json, NOW())");
+            foreach ($data['loan_transactions'] as $lt) {
+                $stmt->execute([
+                    ':id' => $lt['id'] ?? ('lt-' . rand(1000, 9999)),
+                    ':company_id' => $lt['company_id'] ?? 'rayan-corp-uae',
+                    ':facility_id' => $lt['facility_id'] ?? '',
+                    ':facility_name' => $lt['facility_name'] ?? '',
+                    ':type' => $lt['type'] ?? '',
+                    ':amount' => floatval($lt['amount'] ?? 0),
+                    ':currency' => $lt['currency'] ?? 'AED',
+                    ':transaction_date' => !empty($lt['date']) ? $lt['date'] : date('Y-m-d'),
+                    ':reference_no' => $lt['reference_no'] ?? '',
+                    ':notes' => $lt['notes'] ?? '',
+                    ':data_json' => json_encode($lt, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 20. Companies
+        if (!empty($data['companies']) && is_array($data['companies'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_companies (id, name, short_name, country, currency, currency_symbol, trn_vat, email, phone, data_json, updated_at) VALUES (:id, :name, :short_name, :country, :currency, :currency_symbol, :trn_vat, :email, :phone, :data_json, NOW())");
+            foreach ($data['companies'] as $comp) {
+                if (empty($comp['name'])) continue;
+                $stmt->execute([
+                    ':id' => $comp['id'] ?? ('comp-' . rand(1000, 9999)),
+                    ':name' => $comp['name'],
+                    ':short_name' => $comp['short_name'] ?? '',
+                    ':country' => $comp['country'] ?? 'UAE',
+                    ':currency' => $comp['currency'] ?? 'AED',
+                    ':currency_symbol' => $comp['currency_symbol'] ?? 'AED',
+                    ':trn_vat' => $comp['trn_vat'] ?? '',
+                    ':email' => $comp['email'] ?? '',
+                    ':phone' => $comp['phone'] ?? '',
+                    ':data_json' => json_encode($comp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 21. Users
+        if (!empty($data['users']) && is_array($data['users'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_users (id, email, name, role, designation, department, phone, status, data_json, updated_at) VALUES (:id, :email, :name, :role, :designation, :department, :phone, :status, :data_json, NOW())");
+            foreach ($data['users'] as $u) {
+                if (empty($u['email'])) continue;
+                $stmt->execute([
+                    ':id' => $u['id'] ?? ('usr-' . rand(1000, 9999)),
+                    ':email' => $u['email'],
+                    ':name' => $u['name'] ?? '',
+                    ':role' => $u['role'] ?? 'finance',
+                    ':designation' => $u['designation'] ?? '',
+                    ':department' => $u['department'] ?? '',
+                    ':phone' => $u['phone'] ?? '',
+                    ':status' => $u['status'] ?? 'active',
+                    ':data_json' => json_encode($u, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 22. Audit Logs
+        if (!empty($data['audit_logs']) && is_array($data['audit_logs'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_audit_logs (id, timestamp, actor_name, actor_role, actor_email, action, entity, entity_id, details, ip_address, data_json) VALUES (:id, :timestamp, :actor_name, :actor_role, :actor_email, :action, :entity, :entity_id, :details, :ip_address, :data_json)");
+            foreach (array_slice($data['audit_logs'], 0, 100) as $al) {
+                $stmt->execute([
+                    ':id' => $al['id'] ?? ('aud-' . rand(100000, 999999)),
+                    ':timestamp' => $al['timestamp'] ?? date('c'),
+                    ':actor_name' => $al['actor_name'] ?? 'System',
+                    ':actor_role' => $al['actor_role'] ?? 'admin',
+                    ':actor_email' => $al['actor_email'] ?? '',
+                    ':action' => $al['action'] ?? '',
+                    ':entity' => $al['entity'] ?? '',
+                    ':entity_id' => $al['entity_id'] ?? '',
+                    ':details' => $al['details'] ?? '',
+                    ':ip_address' => $al['ip_address'] ?? '127.0.0.1',
+                    ':data_json' => json_encode($al, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 23. Documents
+        if (!empty($data['documents']) && is_array($data['documents'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_documents (id, name, category, size, uploaded_by, doc_date, linked_record, data_json) VALUES (:id, :name, :category, :size, :uploaded_by, :doc_date, :linked_record, :data_json)");
+            foreach ($data['documents'] as $doc) {
+                $stmt->execute([
+                    ':id' => $doc['id'] ?? ('doc-' . rand(1000, 9999)),
+                    ':name' => $doc['name'] ?? 'Document',
+                    ':category' => $doc['category'] ?? '',
+                    ':size' => $doc['size'] ?? '',
+                    ':uploaded_by' => $doc['uploaded_by'] ?? '',
+                    ':doc_date' => !empty($doc['date']) ? $doc['date'] : date('Y-m-d'),
+                    ':linked_record' => $doc['linked_record'] ?? '',
+                    ':data_json' => json_encode($doc, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 24. Notifications
+        if (!empty($data['notifications']) && is_array($data['notifications'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_notifications (id, title, message, type, timestamp, is_read, link, data_json) VALUES (:id, :title, :message, :type, :timestamp, :is_read, :link, :data_json)");
+            foreach ($data['notifications'] as $notif) {
+                $stmt->execute([
+                    ':id' => $notif['id'] ?? ('notif-' . rand(1000, 9999)),
+                    ':title' => $notif['title'] ?? 'Notification',
+                    ':message' => $notif['message'] ?? '',
+                    ':type' => $notif['type'] ?? 'info',
+                    ':timestamp' => $notif['timestamp'] ?? date('c'),
+                    ':is_read' => !empty($notif['read']) ? 1 : 0,
+                    ':link' => $notif['link'] ?? '',
+                    ':data_json' => json_encode($notif, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+        }
+
+        // 25. Settings
+        if (!empty($data['settings']) && is_array($data['settings'])) {
+            $stmt = $pdo->prepare("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES (:key, :val, NOW())");
+            foreach ($data['settings'] as $k => $v) {
+                $stmt->execute([
+                    ':key' => $k,
+                    ':val' => is_scalar($v) ? (string)$v : json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
         }
@@ -627,12 +1329,194 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
 
+        case 'delete_invoice':
+            $invId = $body['invoice_id'] ?? $body['id'] ?? '';
+            if (!empty($invId) && isset($db['invoices'])) {
+                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($invId) {
+                    return ($item['id'] ?? '') !== $invId && ($item['invoice_no'] ?? '') !== $invId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_invoices WHERE id = ? OR invoice_no = ?");
+                        $stmt->execute([$invId, $invId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'invoice', $invId, 'Deleted invoice ' . $invId);
+            }
+            break;
+
+        case 'delete_bill':
+            $billId = $body['bill_id'] ?? $body['id'] ?? '';
+            if (!empty($billId) && isset($db['purchase_bills'])) {
+                $db['purchase_bills'] = array_values(array_filter($db['purchase_bills'], function($item) use ($billId) {
+                    return ($item['id'] ?? '') !== $billId && ($item['bill_no'] ?? '') !== $billId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_purchase_bills WHERE id = ? OR bill_no = ?");
+                        $stmt->execute([$billId, $billId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'bill', $billId, 'Deleted bill ' . $billId);
+            }
+            break;
+
+        case 'delete_receipt':
+            $rcpId = $body['receipt_id'] ?? $body['id'] ?? '';
+            if (!empty($rcpId) && isset($db['customer_receipts'])) {
+                $db['customer_receipts'] = array_values(array_filter($db['customer_receipts'], function($item) use ($rcpId) {
+                    return ($item['id'] ?? '') !== $rcpId && ($item['receipt_no'] ?? '') !== $rcpId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_receipts WHERE id = ? OR receipt_no = ?");
+                        $stmt->execute([$rcpId, $rcpId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'receipt', $rcpId, 'Deleted customer receipt ' . $rcpId);
+            }
+            break;
+
+        case 'delete_payment':
+            $payId = $body['payment_id'] ?? $body['id'] ?? '';
+            if (!empty($payId) && isset($db['vendor_payments'])) {
+                $db['vendor_payments'] = array_values(array_filter($db['vendor_payments'], function($item) use ($payId) {
+                    return ($item['id'] ?? '') !== $payId && ($item['voucher_no'] ?? '') !== $payId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_vendor_payments WHERE id = ? OR voucher_no = ?");
+                        $stmt->execute([$payId, $payId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'payment', $payId, 'Deleted vendor payment ' . $payId);
+            }
+            break;
+
+        case 'delete_customer':
+            $custId = $body['customer_id'] ?? $body['id'] ?? '';
+            if (!empty($custId) && isset($db['customers'])) {
+                $db['customers'] = array_values(array_filter($db['customers'], function($item) use ($custId) {
+                    return ($item['id'] ?? '') !== $custId && ($item['code'] ?? '') !== $custId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_customers WHERE id = ? OR code = ?");
+                        $stmt->execute([$custId, $custId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'customer', $custId, 'Deleted customer ' . $custId);
+            }
+            break;
+
+        case 'delete_vendor':
+            $vndId = $body['vendor_id'] ?? $body['id'] ?? '';
+            if (!empty($vndId) && isset($db['vendors'])) {
+                $db['vendors'] = array_values(array_filter($db['vendors'], function($item) use ($vndId) {
+                    return ($item['id'] ?? '') !== $vndId && ($item['code'] ?? '') !== $vndId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_vendors WHERE id = ? OR code = ?");
+                        $stmt->execute([$vndId, $vndId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'vendor', $vndId, 'Deleted vendor ' . $vndId);
+            }
+            break;
+
+        case 'delete_item':
+            $itemId = $body['item_id'] ?? $body['id'] ?? '';
+            if (!empty($itemId) && isset($db['items'])) {
+                $db['items'] = array_values(array_filter($db['items'], function($item) use ($itemId) {
+                    return ($item['id'] ?? '') !== $itemId && ($item['code'] ?? '') !== $itemId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_items WHERE id = ? OR code = ?");
+                        $stmt->execute([$itemId, $itemId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'item', $itemId, 'Deleted item ' . $itemId);
+            }
+            break;
+
+        case 'delete_project':
+            $prjId = $body['project_id'] ?? $body['id'] ?? '';
+            if (!empty($prjId) && isset($db['projects'])) {
+                $db['projects'] = array_values(array_filter($db['projects'], function($item) use ($prjId) {
+                    return ($item['id'] ?? '') !== $prjId && ($item['code'] ?? '') !== $prjId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_projects WHERE id = ? OR code = ?");
+                        $stmt->execute([$prjId, $prjId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'project', $prjId, 'Deleted project ' . $prjId);
+            }
+            break;
+
+        case 'delete_po':
+            $poId = $body['po_id'] ?? $body['id'] ?? '';
+            if (!empty($poId) && isset($db['purchase_orders'])) {
+                $db['purchase_orders'] = array_values(array_filter($db['purchase_orders'], function($item) use ($poId) {
+                    return ($item['id'] ?? '') !== $poId && ($item['po_no'] ?? '') !== $poId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_purchase_orders WHERE id = ? OR po_no = ?");
+                        $stmt->execute([$poId, $poId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'po', $poId, 'Deleted purchase order ' . $poId);
+            }
+            break;
+
+        case 'delete_credit_note':
+            $cnId = $body['credit_note_id'] ?? $body['id'] ?? '';
+            if (!empty($cnId) && isset($db['credit_notes'])) {
+                $db['credit_notes'] = array_values(array_filter($db['credit_notes'], function($item) use ($cnId) {
+                    return ($item['id'] ?? '') !== $cnId && ($item['credit_note_no'] ?? '') !== $cnId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_credit_notes WHERE id = ? OR credit_note_no = ?");
+                        $stmt->execute([$cnId, $cnId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'credit_note', $cnId, 'Deleted credit note ' . $cnId);
+            }
+            break;
+
+        case 'delete_debit_note':
+            $dnId = $body['debit_note_id'] ?? $body['id'] ?? '';
+            if (!empty($dnId) && isset($db['debit_notes'])) {
+                $db['debit_notes'] = array_values(array_filter($db['debit_notes'], function($item) use ($dnId) {
+                    return ($item['id'] ?? '') !== $dnId && ($item['debit_note_no'] ?? '') !== $dnId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_debit_notes WHERE id = ? OR debit_note_no = ?");
+                        $stmt->execute([$dnId, $dnId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'debit_note', $dnId, 'Deleted debit note ' . $dnId);
+            }
+            break;
+
         case 'delete_expense':
             $expId = $body['expense_id'] ?? $body['id'] ?? '';
             if (!empty($expId) && isset($db['expenses'])) {
                 $db['expenses'] = array_values(array_filter($db['expenses'], function($item) use ($expId) {
                     return ($item['id'] ?? '') !== $expId && ($item['expense_no'] ?? '') !== $expId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_expenses WHERE id = ? OR expense_no = ?");
+                        $stmt->execute([$expId, $expId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'expense', $expId, 'Deleted expense ' . $expId);
             }
             break;
@@ -743,6 +1627,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db['documents'] = array_values(array_filter($db['documents'], function($item) use ($docId) {
                     return ($item['id'] ?? '') !== $docId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_documents WHERE id = ?");
+                        $stmt->execute([$docId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'document', $docId, 'Deleted document ' . $docId);
             }
             break;
@@ -1132,6 +2022,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db['bank_accounts'] = array_values(array_filter($db['bank_accounts'], function($b) use ($targetId) {
                     return ($b['id'] ?? '') !== $targetId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_bank_accounts WHERE id = ?");
+                        $stmt->execute([$targetId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'bank_account', $targetId, 'Removed bank account ' . $targetId);
             }
             break;
@@ -1173,6 +2069,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($t) use ($targetId) {
                     return ($t['id'] ?? '') !== $targetId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_bank_transfers WHERE id = ?");
+                        $stmt->execute([$targetId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'bank_transfer', $targetId, 'Deleted wire transfer ' . $targetId);
             }
             break;
@@ -1210,6 +2112,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db['cash_in_hand'] = array_values(array_filter($db['cash_in_hand'], function($r) use ($targetId) {
                     return ($r['id'] ?? '') !== $targetId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_cash_in_hand WHERE id = ?");
+                        $stmt->execute([$targetId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'cash_register', $targetId, 'Deleted cash register ' . $targetId);
             }
             break;
@@ -1252,8 +2160,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetId = $body['id'] ?? '';
             if (!empty($targetId) && !empty($db['cash_vouchers'])) {
                 $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($v) use ($targetId) {
-                    return ($v['id'] ?? '') !== $targetId;
+                    return ($v['id'] ?? '') !== $targetId && ($v['voucher_no'] ?? '') !== $targetId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_cash_vouchers WHERE id = ? OR voucher_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'cash_voucher', $targetId, 'Deleted cash voucher ' . $targetId);
             }
             break;
@@ -1307,8 +2221,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetId = $body['id'] ?? '';
             if (!empty($targetId) && !empty($db['cheques'])) {
                 $db['cheques'] = array_values(array_filter($db['cheques'], function($c) use ($targetId) {
-                    return ($c['id'] ?? '') !== $targetId;
+                    return ($c['id'] ?? '') !== $targetId && ($c['cheque_no'] ?? '') !== $targetId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_cheques WHERE id = ? OR cheque_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'cheque', $targetId, 'Deleted cheque ' . $targetId);
             }
             break;
@@ -1352,6 +2272,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db['loan_accounts'] = array_values(array_filter($db['loan_accounts'], function($l) use ($targetId) {
                     return ($l['id'] ?? '') !== $targetId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_loan_accounts WHERE id = ?");
+                        $stmt->execute([$targetId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'loan_account', $targetId, 'Deleted loan facility ' . $targetId);
             }
             break;
@@ -1392,6 +2318,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db['loan_transactions'] = array_values(array_filter($db['loan_transactions'], function($t) use ($targetId) {
                     return ($t['id'] ?? '') !== $targetId;
                 }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_loan_transactions WHERE id = ?");
+                        $stmt->execute([$targetId]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('delete', 'loan_transaction', $targetId, 'Deleted loan transaction ' . $targetId);
             }
             break;
