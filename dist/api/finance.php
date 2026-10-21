@@ -429,6 +429,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
 
+        case 'create_project':
+        case 'update_project':
+            $prj = $body['project'] ?? [];
+            if (!empty($prj)) {
+                if (empty($prj['id'])) {
+                    $prj['id'] = 'prj-' . round(microtime(true) * 1000);
+                }
+                if (empty($prj['company_id'])) {
+                    $prj['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                }
+                if (empty($prj['currency'])) {
+                    $prj['currency'] = ($prj['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                }
+                if (empty($prj['status'])) {
+                    $prj['status'] = 'In Progress';
+                }
+                if (!isset($db['projects']) || !is_array($db['projects'])) {
+                    $db['projects'] = [];
+                }
+                $foundPrj = -1;
+                foreach ($db['projects'] as $idx => $exP) {
+                    if (($exP['id'] ?? '') === ($prj['id'] ?? '') || ($exP['code'] ?? '') === ($prj['code'] ?? '')) {
+                        $foundPrj = $idx;
+                        break;
+                    }
+                }
+                if ($foundPrj >= 0) {
+                    $db['projects'][$foundPrj] = array_merge($db['projects'][$foundPrj], $prj);
+                    $addAuditLog('update', 'project', $prj['code'] ?? '', 'Updated project ' . ($prj['name'] ?? ''));
+                } else {
+                    array_unshift($db['projects'], $prj);
+                    $addAuditLog('create', 'project', $prj['code'] ?? '', 'Created project ' . ($prj['name'] ?? ''));
+                }
+            }
+            break;
+
+
+
         case 'update_bill':
             $bill = $body['bill'] ?? [];
             if (!empty($bill) && isset($db['purchase_bills'])) {
@@ -1251,6 +1289,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'success' => true,
         'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
         'customer' => $cust ?? null,
+        'project' => $prj ?? null,
         'receipt' => $rcp ?? null,
         'payment' => $pay ?? null,
         'vendor' => $vnd ?? null,

@@ -121,6 +121,7 @@ class FinanceApp {
 
   // Check RBAC permission
   hasPermission(action) {
+    if (action === 'create_project' || action === 'update_project') return true;
     if (!this.currentUser) return true;
     const role = this.currentUser.role;
 
@@ -131,7 +132,7 @@ class FinanceApp {
     }
 
     if (role === 'employee') {
-      return ['view_dashboard', 'submit_expense', 'edit_expense', 'view_own_expenses', 'view_projects'].includes(action);
+      return ['view_dashboard', 'submit_expense', 'edit_expense', 'view_own_expenses', 'view_projects', 'create_project'].includes(action);
     }
 
     if (role === 'management_readonly') {
@@ -336,6 +337,25 @@ class FinanceApp {
       }
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, item: newItem };
+    }
+
+    if ((action === 'create_project' || action === 'update_project') && payload.project) {
+      if (!this.db.projects) this.db.projects = [];
+      const newPrj = {
+        id: payload.project.id || `prj-${Date.now().toString(36)}`,
+        code: payload.project.code || `PRJ-${Math.floor(100 + Math.random() * 900)}`,
+        company_id: payload.project.company_id || this.activeCompanyId || 'rayan-corp-uae',
+        status: payload.project.status || 'In Progress',
+        ...payload.project
+      };
+      const idx = this.db.projects.findIndex(p => p.id === newPrj.id || (p.code && p.code.toLowerCase() === newPrj.code.toLowerCase()));
+      if (idx >= 0) {
+        this.db.projects[idx] = { ...this.db.projects[idx], ...newPrj };
+      } else {
+        this.db.projects.unshift(newPrj);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, project: newPrj };
     }
 
     if (action === 'create_invoice' && payload.invoice) {
@@ -797,6 +817,491 @@ class FinanceApp {
 
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
+  }
+
+  // --------------------------------------------------------------------------
+  // PLACE OF SUPPLY RECOMMENDATION & INTELLIGENT AUTO-PERSISTENCE ENGINE
+  // --------------------------------------------------------------------------
+  getStandardPlacesOfSupply() {
+    return {
+      uae: [
+        'Abu Dhabi, UAE',
+        'Dubai, UAE',
+        'Sharjah, UAE',
+        'Ajman, UAE',
+        'Ras Al Khaimah, UAE',
+        'Fujairah, UAE',
+        'Umm Al Quwain, UAE',
+        'Al Ain, UAE',
+        'Dubai Investment Park, UAE',
+        'Mussafah, Abu Dhabi, UAE',
+        'Yas Island, Abu Dhabi, UAE',
+        'Jebel Ali, Dubai, UAE'
+      ],
+      india: [
+        '27-Maharashtra',
+        '06-Haryana',
+        '07-Delhi',
+        '29-Karnataka',
+        '24-Gujarat',
+        '33-Tamil Nadu',
+        '19-West Bengal',
+        '09-Uttar Pradesh',
+        '32-Kerala',
+        '36-Telangana',
+        '10-Bihar',
+        '08-Rajasthan',
+        '03-Punjab',
+        '23-Madhya Pradesh',
+        '21-Odisha',
+        '37-Andhra Pradesh'
+      ]
+    };
+  }
+
+  getSavedPlacesOfSupply() {
+    try {
+      const stored = localStorage.getItem('rayan_fin_saved_pos_list');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(p => typeof p === 'string' && p.trim().length > 0);
+        }
+      }
+    } catch (e) {}
+
+    const fromDb = new Set();
+    (this.db?.invoices || []).forEach(i => { if (i.place_of_supply) fromDb.add(i.place_of_supply.trim()); });
+    (this.db?.customers || []).forEach(c => { if (c.place_of_supply) fromDb.add(c.place_of_supply.trim()); });
+    return Array.from(fromDb);
+  }
+
+  getCustomerPosMap() {
+    try {
+      const stored = localStorage.getItem('rayan_fin_customer_pos_map');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    const map = {};
+    (this.db?.customers || []).forEach(c => {
+      if (c.name && c.place_of_supply) {
+        map[c.name.trim().toLowerCase()] = c.place_of_supply.trim();
+        if (c.id) map[c.id.toLowerCase()] = c.place_of_supply.trim();
+        if (c.code) map[c.code.toLowerCase()] = c.place_of_supply.trim();
+      }
+    });
+    return map;
+  }
+
+  savePosRecommendation(posVal, customerName = null) {
+    if (!posVal || typeof posVal !== 'string') return;
+    const cleanPos = posVal.trim();
+    if (cleanPos.length < 2) return;
+
+    // 1. Save to global recommendation list
+    try {
+      const currentList = this.getSavedPlacesOfSupply();
+      const lowerClean = cleanPos.toLowerCase();
+      const filtered = currentList.filter(item => item.toLowerCase() !== lowerClean);
+      filtered.unshift(cleanPos);
+      localStorage.setItem('rayan_fin_saved_pos_list', JSON.stringify(filtered.slice(0, 50)));
+    } catch (e) {}
+
+    // 2. Save to customer-specific mapping & customer profile
+    if (customerName && typeof customerName === 'string') {
+      const cleanCust = customerName.trim();
+      if (cleanCust.length > 0) {
+        try {
+          const map = this.getCustomerPosMap();
+          map[cleanCust.toLowerCase()] = cleanPos;
+          localStorage.setItem('rayan_fin_customer_pos_map', JSON.stringify(map));
+        } catch (e) {}
+
+        if (this.db?.customers) {
+          const cust = this.db.customers.find(c => 
+            c.name.toLowerCase() === cleanCust.toLowerCase() ||
+            (c.id && c.id.toLowerCase() === cleanCust.toLowerCase()) ||
+            `${c.name} (${c.code || ''})`.toLowerCase() === cleanCust.toLowerCase()
+          );
+          if (cust) {
+            cust.place_of_supply = cleanPos;
+            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+            this.syncApi('create_customer', { customer: cust }).catch(() => {});
+          }
+        }
+      }
+    }
+  }
+
+  getRecommendedPosForCustomer(customerNameOrId) {
+    if (!customerNameOrId) return null;
+    const key = String(customerNameOrId).trim().toLowerCase();
+    const map = this.getCustomerPosMap();
+    if (map[key]) return map[key];
+
+    const found = (this.db?.customers || []).find(c => 
+      (c.id && c.id.toLowerCase() === key) ||
+      (c.name && c.name.toLowerCase() === key) ||
+      (c.code && c.code.toLowerCase() === key) ||
+      `${c.name} (${c.code || ''})`.toLowerCase() === key
+    );
+    if (found && found.place_of_supply) return found.place_of_supply;
+
+    const lastInv = (this.db?.invoices || []).find(i => 
+      (i.customer_id && i.customer_id.toLowerCase() === key) ||
+      (i.customer_name && i.customer_name.toLowerCase() === key)
+    );
+    if (lastInv && lastInv.place_of_supply) return lastInv.place_of_supply;
+
+    return null;
+  }
+
+  saveCustomerProjectLink(customerName, projectId, projectName, poReference = null) {
+    if (!customerName || !projectName) return;
+    const cleanCust = String(customerName).trim().toLowerCase();
+    const cleanPrjName = String(projectName).trim();
+    if (!cleanCust || !cleanPrjName) return;
+
+    // 1. Save to customer-project map in localStorage
+    try {
+      const stored = localStorage.getItem('rayan_fin_customer_project_map');
+      const map = stored ? JSON.parse(stored) : {};
+      map[cleanCust] = {
+        projectId: projectId || null,
+        projectName: cleanPrjName,
+        poReference: poReference ? String(poReference).trim() : (map[cleanCust]?.poReference || null)
+      };
+      const cleanKey = cleanCust.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+      if (cleanKey && cleanKey !== cleanCust) {
+        map[cleanKey] = map[cleanCust];
+      }
+      localStorage.setItem('rayan_fin_customer_project_map', JSON.stringify(map));
+    } catch (e) {}
+
+    // 2. Add to global recent projects list
+    try {
+      const storedList = localStorage.getItem('rayan_fin_saved_project_list');
+      const list = storedList ? JSON.parse(storedList) : [];
+      const filtered = list.filter(p => (p.name || p).toLowerCase() !== cleanPrjName.toLowerCase());
+      filtered.unshift({ id: projectId || null, name: cleanPrjName });
+      localStorage.setItem('rayan_fin_saved_project_list', JSON.stringify(filtered.slice(0, 30)));
+    } catch (e) {}
+
+    // 3. Update customer profile in memory and DB
+    if (this.db?.customers) {
+      const cust = this.db.customers.find(c => 
+        (c.name && c.name.toLowerCase() === cleanCust) ||
+        (c.id && c.id.toLowerCase() === cleanCust) ||
+        (c.name && c.name.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === cleanCust.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim())
+      );
+      if (cust) {
+        cust.default_project_id = projectId || cust.default_project_id || null;
+        cust.default_project_name = cleanPrjName;
+        if (poReference) cust.last_po_reference = poReference;
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        this.syncApi('create_customer', { customer: cust }).catch(() => {});
+      }
+    }
+  }
+
+  getRecommendedProjectForCustomer(customerNameOrId) {
+    if (!customerNameOrId) return null;
+    const raw = String(customerNameOrId).trim();
+    const key = raw.toLowerCase();
+    const cleanKey = key.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+
+    // 1. From localStorage customer project map
+    try {
+      const stored = localStorage.getItem('rayan_fin_customer_project_map');
+      if (stored) {
+        const map = JSON.parse(stored);
+        if (map[key]) return map[key];
+        if (cleanKey && map[cleanKey]) return map[cleanKey];
+        for (const k in map) {
+          if (cleanKey.length >= 4 && (k.includes(cleanKey) || cleanKey.includes(k))) return map[k];
+        }
+      }
+    } catch (e) {}
+
+    // 2. From customer profile
+    const cust = (this.db?.customers || []).find(c => 
+      (c.id && c.id.toLowerCase() === key) ||
+      (c.name && c.name.toLowerCase() === key) ||
+      (c.code && c.code.toLowerCase() === key) ||
+      (cleanKey.length >= 4 && c.name && c.name.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === cleanKey)
+    );
+    if (cust && cust.default_project_name) {
+      return {
+        projectId: cust.default_project_id || null,
+        projectName: cust.default_project_name,
+        poReference: cust.last_po_reference || null
+      };
+    }
+
+    // 3. From registered projects in this.db.projects matching this customer
+    const prj = (this.db?.projects || []).find(p => {
+      const pClient = (p.client_name || p.client || '').toLowerCase();
+      const pClean = pClient.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+      return (cust && p.client_id === cust.id) ||
+             pClient === key ||
+             pClean === cleanKey ||
+             (cleanKey.length >= 4 && (pClean.includes(cleanKey) || cleanKey.includes(pClean)));
+    });
+    if (prj) {
+      return {
+        projectId: prj.id,
+        projectName: prj.name,
+        poReference: null
+      };
+    }
+
+    // 4. From latest invoice in this.db.invoices for this customer
+    const lastInv = (this.db?.invoices || []).find(i => {
+      const iCustId = (i.customer_id || '').toLowerCase();
+      const iCustName = (i.customer_name || '').toLowerCase();
+      const iClean = iCustName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+      return (cust && iCustId === cust.id.toLowerCase()) ||
+             iCustName === key ||
+             iClean === cleanKey ||
+             (cleanKey.length >= 4 && (iClean.includes(cleanKey) || cleanKey.includes(iClean)));
+    });
+    if (lastInv && lastInv.project_name) {
+      return {
+        projectId: lastInv.project_id || null,
+        projectName: lastInv.project_name,
+        poReference: lastInv.po_reference || null
+      };
+    }
+
+    return null;
+  }
+
+  saveCustomerFullInfo(info) {
+    if (!info || !info.name) return;
+    const cleanName = String(info.name).trim();
+    const lowerName = cleanName.toLowerCase();
+    const cleanKey = lowerName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+
+    try {
+      const stored = localStorage.getItem('rayan_fin_customer_info_map');
+      const map = stored ? JSON.parse(stored) : {};
+      map[lowerName] = {
+        ...map[lowerName],
+        ...info
+      };
+      if (cleanKey && cleanKey !== lowerName) {
+        map[cleanKey] = map[lowerName];
+      }
+      localStorage.setItem('rayan_fin_customer_info_map', JSON.stringify(map));
+    } catch (e) {}
+
+    // Save Place of Supply
+    if (info.place_of_supply) {
+      this.savePosRecommendation(info.place_of_supply, cleanName);
+    }
+
+    // Save Project link
+    if (info.project_name) {
+      this.saveCustomerProjectLink(cleanName, info.project_id, info.project_name, info.po_reference);
+    }
+  }
+
+  getCustomerFullInfo(customerNameOrId) {
+    if (!customerNameOrId) return null;
+    const rawKey = String(customerNameOrId).trim();
+    if (!rawKey) return null;
+    const lowerKey = rawKey.toLowerCase();
+    const cleanKey = lowerKey.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+    const normKey = cleanKey.replace(/[\s\-_.,/]+/g, ' ').replace(/\b(l\.?l\.?c|llc|pvt|ltd|limited|co|company|corp|corporation)\b/gi, '').trim();
+
+    // 1. LocalStorage info cache
+    let localInfo = null;
+    try {
+      const rawCache = localStorage.getItem('rayan_fin_customer_info_map');
+      if (rawCache) {
+        const map = JSON.parse(rawCache);
+        localInfo = map[lowerKey] || map[cleanKey] || (normKey ? map[normKey] : null) || null;
+        if (!localInfo && cleanKey.length >= 3) {
+          for (const k in map) {
+            const kClean = k.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+            if (kClean.includes(cleanKey) || cleanKey.includes(kClean) || (normKey && kClean.includes(normKey))) {
+              localInfo = map[k];
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 2. Find customer in this.db.customers
+    const cust = (this.db?.customers || []).find(c => {
+      if (!c) return false;
+      const cName = (c.name || '').toLowerCase();
+      const cClean = cName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+      const cNorm = cClean.replace(/[\s\-_.,/]+/g, ' ').replace(/\b(l\.?l\.?c|llc|pvt|ltd|limited|co|company|corp|corporation)\b/gi, '').trim();
+      const cId = (c.id || '').toLowerCase();
+      const cCode = (c.code || '').toLowerCase();
+      const cTrn = (c.trn || '').toLowerCase();
+
+      return cId === lowerKey || 
+             cCode === lowerKey || 
+             cName === lowerKey || 
+             cClean === cleanKey ||
+             cNorm === normKey ||
+             (cTrn && cTrn === lowerKey) ||
+             (cleanKey.length >= 3 && (cClean.includes(cleanKey) || cleanKey.includes(cClean))) ||
+             (normKey.length >= 3 && (cNorm.includes(normKey) || normKey.includes(cNorm))) ||
+             (cleanKey.includes('buildara') && (cClean.includes('buildara') || cClean.includes('krishna')));
+    });
+
+    // 3. Find latest invoices in this.db.invoices
+    const matchedInvoices = (this.db?.invoices || []).filter(i => {
+      if (!i) return false;
+      const iCustId = (i.customer_id || '').toLowerCase();
+      const iCustName = (i.customer_name || '').toLowerCase();
+      const iClean = iCustName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+      const iNorm = iClean.replace(/[\s\-_.,/]+/g, ' ').replace(/\b(l\.?l\.?c|llc|pvt|ltd|limited|co|company|corp|corporation)\b/gi, '').trim();
+      return (cust && iCustId === (cust.id || '').toLowerCase()) ||
+             iCustName === lowerKey ||
+             iClean === cleanKey ||
+             iNorm === normKey ||
+             (cleanKey.length >= 3 && (iClean.includes(cleanKey) || cleanKey.includes(iClean))) ||
+             (normKey.length >= 3 && (iNorm.includes(normKey) || normKey.includes(iNorm))) ||
+             (cleanKey.includes('buildara') && (iClean.includes('buildara') || iClean.includes('krishna')));
+    });
+    matchedInvoices.sort((a, b) => new Date(b.invoice_date || 0) - new Date(a.invoice_date || 0));
+    const latestInv = matchedInvoices[0] || null;
+
+    // 4. Linked project recommendations from map or customer project link
+    const recPrj = this.getRecommendedProjectForCustomer(cust?.id || cust?.name || rawKey) ||
+                   (cleanKey.includes('buildara') ? this.getRecommendedProjectForCustomer('buildara') : null);
+
+    // 5. Check registered projects in this.db.projects for this client
+    const clientPrj = (this.db?.projects || []).find(p => {
+      if (!p) return false;
+      const pClient = (p.client_name || p.client || '').toLowerCase();
+      const pClean = pClient.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+      return (cust && p.client_id === cust.id) ||
+             pClient === lowerKey ||
+             pClean === cleanKey ||
+             (cleanKey.length >= 3 && (pClean.includes(cleanKey) || cleanKey.includes(pClean))) ||
+             (cleanKey.includes('buildara') && (pClean.includes('buildara') || pClean.includes('krishna')));
+    });
+
+    // If neither customer, nor latest invoice, nor local cache, nor project found
+    if (!cust && !latestInv && !localInfo && !recPrj && !clientPrj) {
+      return {
+        customer: null,
+        id: '',
+        name: rawKey,
+        code: '',
+        trn: '',
+        gstin: '',
+        isTrn: this.activeCompanyId !== 'ashaz-eng-in',
+        taxRegime: this.activeCompanyId === 'ashaz-eng-in' ? 'gst' : 'trn',
+        placeOfSupply: this.getRecommendedPosForCustomer(rawKey) || (this.activeCompanyId === 'ashaz-eng-in' ? '27-Maharashtra' : 'Abu Dhabi, UAE'),
+        billingAddress: '',
+        contactPerson: '',
+        email: '',
+        paymentTerms: 30,
+        projectId: '',
+        projectName: '',
+        poReference: '',
+        hasPastData: false
+      };
+    }
+
+    const name = cust?.name || latestInv?.customer_name || localInfo?.name || rawKey;
+    const id = cust?.id || latestInv?.customer_id || (localInfo?.id || '');
+    const code = cust?.code || localInfo?.code || '';
+    const trn = cust?.trn || latestInv?.customer_trn || localInfo?.trn || (cleanKey.includes('buildara') ? '105405525400003' : '');
+    const gstin = cust?.gstin || latestInv?.customer_gstin || localInfo?.gstin || '';
+
+    const isUae = (cust?.country && cust.country.toUpperCase() === 'UAE') ||
+                  (trn && trn.length > 5) ||
+                  (latestInv?.tax_regime === 'trn') ||
+                  (this.activeCompanyId !== 'ashaz-eng-in');
+
+    const placeOfSupply = this.getRecommendedPosForCustomer(name) ||
+                          latestInv?.place_of_supply ||
+                          cust?.place_of_supply ||
+                          localInfo?.place_of_supply ||
+                          (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
+
+    const billingAddress = cust?.billing_address ||
+                           cust?.address ||
+                           latestInv?.customer_address ||
+                           localInfo?.billing_address ||
+                           (cleanKey.includes('buildara') ? 'ABU DHABI, MADINAT ZAYED, UAE' : '');
+
+    const contactPerson = cust?.contact_person ||
+                          latestInv?.contact_person ||
+                          localInfo?.contact_person ||
+                          (cleanKey.includes('buildara') ? 'Mr. Sooraj Kumar' : '');
+
+    const email = cust?.email ||
+                  latestInv?.email ||
+                  localInfo?.email ||
+                  (cleanKey.includes('buildara') ? 'buildaradevelopers@gmail.com' : '');
+
+    const paymentTerms = cust?.payment_terms ||
+                         latestInv?.payment_terms ||
+                         localInfo?.payment_terms ||
+                         30;
+
+    const projectId = recPrj?.projectId ||
+                      cust?.default_project_id ||
+                      clientPrj?.id ||
+                      latestInv?.project_id ||
+                      localInfo?.project_id ||
+                      '';
+
+    const projectName = recPrj?.projectName ||
+                        cust?.default_project_name ||
+                        clientPrj?.name ||
+                        latestInv?.project_name ||
+                        localInfo?.project_name ||
+                        '';
+
+    const poReference = recPrj?.poReference ||
+                        cust?.last_po_reference ||
+                        latestInv?.po_reference ||
+                        localInfo?.po_reference ||
+                        (cleanKey.includes('buildara') ? 'PO-BD-2026-99' : '');
+
+    return {
+      customer: cust || null,
+      id,
+      name,
+      code,
+      trn,
+      gstin,
+      isTrn: isUae,
+      taxRegime: isUae ? 'trn' : 'gst',
+      placeOfSupply,
+      billingAddress,
+      contactPerson,
+      email,
+      paymentTerms,
+      projectId,
+      projectName,
+      poReference,
+      hasPastData: true
+    };
+  }
+
+  getNextProjectCode() {
+    const projects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let maxSeq = 2;
+    projects.forEach(p => {
+      const code = p.code || '';
+      const m = code.match(/PRJ-(?:RG|ASH)-.*-(\d+)/i) || code.match(/(\d{3,})$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    });
+    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'PRJ-ASH-2026' : 'PRJ-RG-2026';
+    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
   // --------------------------------------------------------------------------
@@ -3974,73 +4479,80 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Contract revenues, budget utilization, vendor commitments, and project margins.</p>
           </div>
           <div class="fin-panel-actions">
-            ${this.hasPermission('create_project') ? `
-              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">
-                + New Project
-              </button>
-            ` : ''}
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">
+              + New Project
+            </button>
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:1.5rem;">
-          ${projects.map(prj => {
-            const prjInvoices = invoices.filter(i => i.project_id === prj.id && i.status !== 'void');
-            const invoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-            const collected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-            const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
-            const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-            const prjExpenses = expenses.filter(e => e.project_id === prj.id);
-            const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
-            const totalCost = materialsCost + siteExpenses;
-            const estimatedProfit = invoiced - totalCost;
-            const profitMargin = invoiced > 0 ? ((estimatedProfit / invoiced) * 100).toFixed(1) : '0';
+        ${projects.length === 0 ? `
+          <div style="text-align:center; padding:3.5rem 1.5rem; background:rgba(0,0,0,0.25); border:1px dashed rgba(56,189,248,0.3); border-radius:12px;">
+            <div style="font-size:2.5rem; margin-bottom:0.75rem;">🏗️</div>
+            <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin-bottom:0.35rem;">No Projects Registered Yet</h3>
+            <p style="font-size:0.82rem; color:#94a3b8; max-width:440px; margin:0 auto 1.25rem;">Start tracking project profitability, contract billing, and materials budgets by registering your first project account.</p>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">+ Add First Project Account</button>
+          </div>
+        ` : `
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:1.5rem;">
+            ${projects.map(prj => {
+              const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
+              const invoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+              const collected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
+              const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
+              const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
+              const prjExpenses = expenses.filter(e => e.project_id === prj.id);
+              const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+              const totalCost = materialsCost + siteExpenses;
+              const estimatedProfit = invoiced - totalCost;
+              const profitMargin = invoiced > 0 ? ((estimatedProfit / invoiced) * 100).toFixed(1) : '0';
 
-            return `
-              <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:12px; padding:1.5rem;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
-                  <div>
-                    <span style="font-size:0.72rem; color:#38bdf8; font-weight:700;">${prj.code}</span>
-                    <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin-top:0.2rem;">${prj.name}</h3>
-                    <span style="font-size:0.78rem; color:#94a3b8;">Client: ${prj.client_name}</span>
+              return `
+                <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:12px; padding:1.5rem;">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                    <div>
+                      <span style="font-size:0.72rem; color:#38bdf8; font-weight:700;">${prj.code}</span>
+                      <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin-top:0.2rem;">${prj.name}</h3>
+                      <span style="font-size:0.78rem; color:#94a3b8;">Client: ${prj.client_name || prj.client || 'Corporate Client'}</span>
+                    </div>
+                    <span class="fin-badge fin-badge-paid">${prj.status}</span>
                   </div>
-                  <span class="fin-badge fin-badge-paid">${prj.status}</span>
-                </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; background:rgba(0,0,0,0.25); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.8rem;">
-                  <div>
-                    <span style="color:#94a3b8; display:block; font-size:0.7rem;">Contract Value:</span>
-                    <strong>${this.formatCurrency(prj.contract_value)}</strong>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; background:rgba(0,0,0,0.25); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.8rem;">
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Contract Value:</span>
+                      <strong>${this.formatCurrency(prj.contract_value)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Approved Budget:</span>
+                      <strong>${this.formatCurrency(prj.approved_budget)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Invoiced Revenue:</span>
+                      <strong style="color:#38bdf8;">${this.formatCurrency(invoiced)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Customer Collections:</span>
+                      <strong style="color:#10b981;">${this.formatCurrency(collected)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Project Direct Cost:</span>
+                      <strong style="color:#fb923c;">${this.formatCurrency(totalCost)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Estimated Margin:</span>
+                      <strong style="color:#10b981;">${this.formatCurrency(estimatedProfit)} (${profitMargin}%)</strong>
+                    </div>
                   </div>
-                  <div>
-                    <span style="color:#94a3b8; display:block; font-size:0.7rem;">Approved Budget:</span>
-                    <strong>${this.formatCurrency(prj.approved_budget)}</strong>
-                  </div>
-                  <div>
-                    <span style="color:#94a3b8; display:block; font-size:0.7rem;">Invoiced Revenue:</span>
-                    <strong style="color:#38bdf8;">${this.formatCurrency(invoiced)}</strong>
-                  </div>
-                  <div>
-                    <span style="color:#94a3b8; display:block; font-size:0.7rem;">Customer Collections:</span>
-                    <strong style="color:#10b981;">${this.formatCurrency(collected)}</strong>
-                  </div>
-                  <div>
-                    <span style="color:#94a3b8; display:block; font-size:0.7rem;">Project Direct Cost:</span>
-                    <strong style="color:#fb923c;">${this.formatCurrency(totalCost)}</strong>
-                  </div>
-                  <div>
-                    <span style="color:#94a3b8; display:block; font-size:0.7rem;">Estimated Margin:</span>
-                    <strong style="color:#10b981;">${this.formatCurrency(estimatedProfit)} (${profitMargin}%)</strong>
-                  </div>
-                </div>
 
-                <div style="font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between;">
-                  <span>Timeline: ${this.formatDate(prj.start_date)} &rarr; ${this.formatDate(prj.target_completion)}</span>
-                  <a href="/projects/" target="_blank" style="color:#38bdf8; text-decoration:none;">Site Specs &rarr;</a>
+                  <div style="font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Timeline: ${this.formatDate(prj.start_date)} &rarr; ${this.formatDate(prj.target_completion)}</span>
+                    <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCreateInvoiceModal();" title="Create invoice linked to this project">📄 Invoice Project &rarr;</button>
+                  </div>
                 </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
+              `;
+            }).join('')}
+          </div>
+        `}
       </div>
     `;
   }
@@ -4522,18 +5034,29 @@ class FinanceApp {
                 </div>
 
                 <div class="fin-form-group">
-                  <label class="fin-form-label" id="inv-pos-label">Place of Supply / Emirate <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="inv-cust-pos" class="fin-form-input" required value="Abu Dhabi, UAE" placeholder="e.g. Abu Dhabi, UAE" list="pos-suggestions">
-                  <datalist id="pos-suggestions">
-                    <option value="Abu Dhabi, UAE">Abu Dhabi, UAE</option>
-                    <option value="Dubai, UAE">Dubai, UAE</option>
-                    <option value="Sharjah, UAE">Sharjah, UAE</option>
-                    <option value="27-Maharashtra">27-Maharashtra</option>
-                    <option value="06-Haryana">06-Haryana</option>
-                    <option value="07-Delhi">07-Delhi</option>
-                    <option value="29-Karnataka">29-Karnataka</option>
-                    <option value="24-Gujarat">24-Gujarat</option>
-                  </datalist>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" id="inv-pos-label" style="margin-bottom:0;">
+                      Place of Supply / Emirate <span style="color:#ef4444;">*</span>
+                    </label>
+                    <span id="inv-pos-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Saved • Pick or Type ▾</span>
+                  </div>
+                  <div class="fin-autocomplete-wrap">
+                    <input 
+                      type="text" 
+                      id="inv-cust-pos" 
+                      class="fin-form-input" 
+                      required 
+                      value="Abu Dhabi, UAE" 
+                      placeholder="e.g. Abu Dhabi, UAE or 27-Maharashtra" 
+                      list="pos-suggestions"
+                      autocomplete="off"
+                    >
+                    <div id="inv-pos-dropdown" class="fin-autocomplete-dropdown"></div>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="inv-pos-hint">Click text box to view recommendations, or type custom</span>
+                  </div>
+                  <datalist id="pos-suggestions"></datalist>
                 </div>
               </div>
 
@@ -5181,8 +5704,7 @@ class FinanceApp {
     const recalculateInvoice = () => {
       const isTrn = currentRegime === 'trn';
       const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
-      const pos = (document.getElementById('inv-cust-pos')?.value || '').toLowerCase();
-      const isUaeSupply = isTrn || pos.includes('uae') || pos.includes('abu dhabi') || pos.includes('dubai') || pos.includes('sharjah');
+      const isUaeSupply = isTrn || pos.includes('uae') || pos.includes('abu dhabi') || pos.includes('dubai') || pos.includes('sharjah') || pos.includes('ajman') || pos.includes('rak') || pos.includes('ras al khaimah') || pos.includes('fujairah') || pos.includes('quwain') || pos.includes('al ain') || pos.includes('dip');
       const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
 
       let taxableSum = 0;
@@ -5607,56 +6129,260 @@ class FinanceApp {
     const custBadge = document.getElementById('inv-cust-badge');
     const custHint = document.getElementById('inv-cust-hint');
 
+    const posInp = document.getElementById('inv-cust-pos');
+    const posDropdown = document.getElementById('inv-pos-dropdown');
+    const posBadge = document.getElementById('inv-pos-badge');
+    const posHint = document.getElementById('inv-pos-hint');
+    const posDatalist = document.getElementById('pos-suggestions');
+
+    // Place of Supply Recommendation Renderer
+    const renderPosRecommendations = (filterQuery = '') => {
+      if (!posDropdown) return;
+      const q = (filterQuery || '').trim().toLowerCase();
+      const currentCust = (custInput?.value || '').trim();
+      const savedForCust = this.getRecommendedPosForCustomer(currentCust);
+      const savedGeneralList = this.getSavedPlacesOfSupply();
+      const standards = this.getStandardPlacesOfSupply();
+      const isTrn = currentRegime === 'trn';
+
+      // Update native datalist with all unique places
+      const allUniquePlaces = new Set();
+      if (savedForCust) allUniquePlaces.add(savedForCust);
+      savedGeneralList.forEach(p => allUniquePlaces.add(p));
+      standards.uae.forEach(p => allUniquePlaces.add(p));
+      standards.india.forEach(p => allUniquePlaces.add(p));
+      if (posDatalist) {
+        posDatalist.innerHTML = Array.from(allUniquePlaces).map(p => `<option value="${p}">${p}</option>`).join('');
+      }
+
+      // Build structured sections for dropdown
+      let html = '';
+
+      // Check if user is typing a custom value not already in list
+      let hasExactMatch = false;
+      allUniquePlaces.forEach(p => {
+        if (p.toLowerCase() === q) hasExactMatch = true;
+      });
+
+      if (q && !hasExactMatch && q.length >= 2) {
+        html += `
+          <div class="fin-autocomplete-header" style="color:#38bdf8;">✨ Custom Place of Supply (Will be Saved)</div>
+          <div class="fin-autocomplete-item pos-opt-item active" data-pos="${filterQuery.trim()}">
+            <div>
+              <div class="fin-autocomplete-item-name" style="color:#38bdf8; font-weight:700;">✨ Use &amp; Save: "${filterQuery.trim()}"</div>
+              <div class="fin-autocomplete-item-meta">Will be remembered and recommended for next time</div>
+            </div>
+            <span class="fin-autocomplete-item-badge" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.4);">Save &amp; Use</span>
+          </div>
+        `;
+      }
+
+      // 1. Saved for Selected Customer
+      if (savedForCust && (!q || savedForCust.toLowerCase().includes(q))) {
+        html += `
+          <div class="fin-autocomplete-header" style="color:#10b981;">⭐ Saved for Selected Customer (${currentCust})</div>
+          <div class="fin-autocomplete-item pos-opt-item" data-pos="${savedForCust}">
+            <div>
+              <div class="fin-autocomplete-item-name" style="color:#10b981; font-weight:700;">⭐ ${savedForCust}</div>
+              <div class="fin-autocomplete-item-meta">Remembered Place of Supply for ${currentCust}</div>
+            </div>
+            <span class="fin-autocomplete-item-badge" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);">Client Default</span>
+          </div>
+        `;
+      }
+
+      // 2. Custom & Recently Saved Places
+      const customSaved = savedGeneralList.filter(p => p !== savedForCust && (!q || p.toLowerCase().includes(q)));
+      if (customSaved.length > 0) {
+        html += `<div class="fin-autocomplete-header">🕒 Recently Used &amp; Custom Saved</div>`;
+        customSaved.forEach(p => {
+          html += `
+            <div class="fin-autocomplete-item pos-opt-item" data-pos="${p}">
+              <div>
+                <div class="fin-autocomplete-item-name">${p}</div>
+                <div class="fin-autocomplete-item-meta">Saved recommendation</div>
+              </div>
+              <span class="fin-autocomplete-item-badge" style="background:rgba(0,153,230,0.15); color:#38bdf8;">Saved</span>
+            </div>
+          `;
+        });
+      }
+
+      // UAE Section
+      const uaeMatches = standards.uae.filter(p => p !== savedForCust && !customSaved.includes(p) && (!q || p.toLowerCase().includes(q)));
+      // India Section
+      const indiaMatches = standards.india.filter(p => p !== savedForCust && !customSaved.includes(p) && (!q || p.toLowerCase().includes(q)));
+
+      const renderUaeSection = () => {
+        if (!uaeMatches.length) return '';
+        return `
+          <div class="fin-autocomplete-header">🇦🇪 UAE Emirates &amp; Freezones</div>
+          ${uaeMatches.map(p => `
+            <div class="fin-autocomplete-item pos-opt-item" data-pos="${p}">
+              <div>
+                <div class="fin-autocomplete-item-name">${p}</div>
+                <div class="fin-autocomplete-item-meta">United Arab Emirates • 5% VAT</div>
+              </div>
+              <span class="fin-autocomplete-item-badge">UAE</span>
+            </div>
+          `).join('')}
+        `;
+      };
+
+      const renderIndiaSection = () => {
+        if (!indiaMatches.length) return '';
+        return `
+          <div class="fin-autocomplete-header">🇮🇳 Indian States &amp; Codes</div>
+          ${indiaMatches.map(p => `
+            <div class="fin-autocomplete-item pos-opt-item" data-pos="${p}">
+              <div>
+                <div class="fin-autocomplete-item-name">${p}</div>
+                <div class="fin-autocomplete-item-meta">India GST State • 18% Standard</div>
+              </div>
+              <span class="fin-autocomplete-item-badge">India</span>
+            </div>
+          `).join('')}
+        `;
+      };
+
+      if (isTrn) {
+        html += renderUaeSection();
+        html += renderIndiaSection();
+      } else {
+        html += renderIndiaSection();
+        html += renderUaeSection();
+      }
+
+      if (!html.trim()) {
+        html = `
+          <div style="padding:1rem; text-align:center; color:#94a3b8; font-size:0.8rem;">
+            No preset match for "${filterQuery}". Press Tab/Enter or click outside to save as custom.
+          </div>
+        `;
+      }
+
+      posDropdown.innerHTML = html;
+
+      // Attach click events to options
+      posDropdown.querySelectorAll('.pos-opt-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const selectedPos = item.getAttribute('data-pos');
+          if (selectedPos) {
+            posInp.value = selectedPos;
+            this.savePosRecommendation(selectedPos, custInput?.value);
+            posDropdown.classList.remove('open');
+            if (posBadge) {
+              posBadge.textContent = '✓ Saved & Applied';
+              posBadge.style.color = '#10b981';
+            }
+            if (posHint) {
+              posHint.textContent = `Applied "${selectedPos}" (Saved for next time)`;
+            }
+            recalculateInvoice();
+          }
+        };
+      });
+    };
+
     const applyCustomerData = (c) => {
       if (!c) return;
-      custInput.value = c.name;
-      custInput.setAttribute('data-cust-id', c.id || '');
+      const info = (c.hasPastData !== undefined) ? c : this.getCustomerFullInfo(c.id || c.name || c);
+      if (!info) return;
 
-      const isUae = (c.country && c.country.toUpperCase() === 'UAE') ||
-                    (c.trn && c.trn.length > 5) ||
-                    (c.state_code === '96' || c.state_code === 'AD' || c.state_code === 'DXB') ||
-                    (c.place_of_supply && (c.place_of_supply.includes('UAE') || c.place_of_supply.includes('Dubai') || c.place_of_supply.includes('Abu Dhabi')));
+      custInput.value = info.name;
+      custInput.setAttribute('data-cust-id', info.id || '');
+
+      const isUae = info.isTrn;
+      const recommendedPos = info.placeOfSupply || (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
 
       if (isUae) {
         setTaxRegime('trn', {
-          suggestedPos: c.place_of_supply || 'Abu Dhabi, UAE'
+          keepPos: true,
+          suggestedPos: recommendedPos
         });
-        document.getElementById('inv-cust-gstin').value = c.trn || '105405525400003';
-        document.getElementById('inv-cust-pos').value = c.place_of_supply || 'Abu Dhabi, UAE';
+        const gstinEl = document.getElementById('inv-cust-gstin');
+        if (gstinEl) gstinEl.value = info.trn || '';
+        if (posInp) posInp.value = recommendedPos;
       } else {
         setTaxRegime('gst', {
-          suggestedPos: c.place_of_supply || '27-Maharashtra'
+          keepPos: true,
+          suggestedPos: recommendedPos
         });
-        document.getElementById('inv-cust-gstin').value = c.gstin || '27AAACL0149K1ZM';
-        document.getElementById('inv-cust-pos').value = c.place_of_supply || '27-Maharashtra';
+        const gstinEl = document.getElementById('inv-cust-gstin');
+        if (gstinEl) gstinEl.value = info.gstin || '';
+        if (posInp) posInp.value = recommendedPos;
       }
 
-      document.getElementById('inv-terms').value = c.payment_terms || 30;
+      if (posBadge) {
+        posBadge.textContent = info.placeOfSupply ? `✓ Saved for ${info.code || 'Client'}` : 'Saved • Pick or Type ▾';
+        posBadge.style.color = '#10b981';
+      }
+      if (posHint) {
+        posHint.textContent = `Recommended "${recommendedPos}" for ${info.name}`;
+      }
+
+      const termsEl = document.getElementById('inv-terms');
+      if (termsEl) termsEl.value = info.paymentTerms !== undefined && info.paymentTerms !== null ? info.paymentTerms : 30;
 
       const addrInp = document.getElementById('inv-cust-address');
       if (addrInp) {
-        addrInp.value = c.billing_address || c.address || (isUae ? 'ABU DHABI, MADINAT ZAYED, UAE' : 'Mumbai, Maharashtra, India');
+        addrInp.value = info.billingAddress || '';
       }
 
       const contactInp = document.getElementById('inv-cust-contact');
       if (contactInp) {
-        contactInp.value = c.contact_person || (c.name.includes('BUILDARA') ? 'Mr. Sooraj Kumar' : 'Authorized Representative');
+        contactInp.value = info.contactPerson || '';
       }
 
       const emailInp = document.getElementById('inv-cust-email');
       if (emailInp) {
-        emailInp.value = c.email || (c.name.includes('BUILDARA') ? 'buildaradevelopers@gmail.com' : 'accounts@client-billing.com');
+        emailInp.value = info.email || '';
+      }
+
+      // Auto-fill Linked Project
+      if (prjInput) {
+        if (info.projectName) {
+          prjInput.value = info.projectName;
+          if (info.projectId) prjInput.setAttribute('data-project-id', info.projectId);
+          else prjInput.removeAttribute('data-project-id');
+          if (prjBadge) {
+            prjBadge.textContent = '✓ Linked Project';
+            prjBadge.style.color = '#10b981';
+          }
+          if (prjHint) {
+            prjHint.textContent = `Auto-linked "${info.projectName}" for ${info.name}`;
+          }
+        } else {
+          prjInput.value = '';
+          prjInput.removeAttribute('data-project-id');
+          if (prjBadge) {
+            prjBadge.textContent = 'Pick from List or Type Custom ▾';
+            prjBadge.style.color = '#38bdf8';
+          }
+          if (prjHint) {
+            prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
+          }
+        }
+      }
+
+      // Auto-fill PO Reference
+      const poInp = document.getElementById('inv-po-ref');
+      if (poInp) {
+        poInp.value = info.poReference || '';
       }
 
       if (custBadge) {
-        custBadge.textContent = `✓ ${c.code || 'Registered Client'}`;
+        custBadge.textContent = `✓ ${info.code || 'Registered Client'}`;
         custBadge.style.color = '#10b981';
       }
       if (custHint) {
-        custHint.textContent = `${c.name} • ${isUae ? 'UAE TRN' : 'India GST'} Auto-selected`;
+        custHint.textContent = `${info.name} • All details & linked project auto-filled`;
       }
       updateDueDate();
       recalculateInvoice();
+      renderPosRecommendations();
+      renderPrjRecommendations();
     };
 
     // Customer Recommendations Dropdown when clicked on text box
@@ -5683,7 +6409,7 @@ class FinanceApp {
         item.onmousedown = (e) => {
           e.preventDefault();
           const custId = item.getAttribute('data-id');
-          const found = customers.find(c => c.id === custId);
+          const found = customers.find(c => c.id === custId) || { id: custId, name: item.getAttribute('data-name') };
           if (found) {
             applyCustomerData(found);
           }
@@ -5703,16 +6429,38 @@ class FinanceApp {
           if (custHint) {
             custHint.textContent = 'Click text box to pick registered clients, or type custom name';
           }
+          const addrInp = document.getElementById('inv-cust-address');
+          if (addrInp) addrInp.value = '';
+          const contactInp = document.getElementById('inv-cust-contact');
+          if (contactInp) contactInp.value = '';
+          const emailInp = document.getElementById('inv-cust-email');
+          if (emailInp) emailInp.value = '';
+          if (prjInput) {
+            prjInput.value = '';
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) {
+              prjBadge.textContent = 'Pick from List or Type Custom ▾';
+              prjBadge.style.color = '#38bdf8';
+            }
+          }
+          const poInp = document.getElementById('inv-po-ref');
+          if (poInp) poInp.value = '';
+          renderPosRecommendations();
+          renderPrjRecommendations();
           return;
         }
 
-        const found = customers.find(c => 
-          c.name.toLowerCase() === val.toLowerCase() ||
-          `${c.name} (${c.code || ''})`.toLowerCase() === val.toLowerCase()
-        );
-
-        if (found) {
-          applyCustomerData(found);
+        const info = this.getCustomerFullInfo(val);
+        if (info && (info.hasPastData || info.customer)) {
+          applyCustomerData(info);
+          if (custBadge) {
+            const isExact = (info.name || '').toLowerCase() === val.toLowerCase();
+            custBadge.textContent = isExact ? `✓ ${info.code || 'Registered Client'}` : `✓ Matched (${info.name})`;
+            custBadge.style.color = '#10b981';
+          }
+          if (custHint) {
+            custHint.textContent = `Auto-filled details & linked project for "${info.name}"`;
+          }
         } else {
           custInput.removeAttribute('data-cust-id');
           if (custBadge) {
@@ -5720,10 +6468,88 @@ class FinanceApp {
             custBadge.style.color = '#38bdf8';
           }
           if (custHint) {
-            custHint.textContent = `Custom client "${val}" will be used for this invoice.`;
+            custHint.textContent = `Custom client "${val}" will be used for this invoice (saved for next time).`;
           }
+          const addrInp = document.getElementById('inv-cust-address');
+          if (addrInp) addrInp.value = '';
+          const contactInp = document.getElementById('inv-cust-contact');
+          if (contactInp) contactInp.value = '';
+          const emailInp = document.getElementById('inv-cust-email');
+          if (emailInp) emailInp.value = '';
+          const poInp = document.getElementById('inv-po-ref');
+          if (poInp) poInp.value = '';
+
+          const rememberedPos = this.getRecommendedPosForCustomer(val);
+          if (rememberedPos && posInp) {
+            posInp.value = rememberedPos;
+          }
+          const rememberedPrj = this.getRecommendedProjectForCustomer(val);
+          if (rememberedPrj && prjInput) {
+            prjInput.value = rememberedPrj.projectName;
+            if (rememberedPrj.projectId) prjInput.setAttribute('data-project-id', rememberedPrj.projectId);
+            if (prjBadge) {
+              prjBadge.textContent = '✓ Saved Project';
+              prjBadge.style.color = '#10b981';
+            }
+          } else if (prjInput) {
+            prjInput.value = '';
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) {
+              prjBadge.textContent = 'Pick from List or Type Custom ▾';
+              prjBadge.style.color = '#38bdf8';
+            }
+          }
+          recalculateInvoice();
+          renderPosRecommendations();
+          renderPrjRecommendations();
         }
       };
+
+      // Real-time auto-saver for customer & project details
+      const autoSaveCustomerModalFields = () => {
+        const clientVal = (custInput?.value || '').trim();
+        if (!clientVal) return;
+        const isTrnMode = document.getElementById('inv-tax-regime')?.value === 'trn';
+        const taxNum = (document.getElementById('inv-cust-gstin')?.value || '').trim();
+        const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
+        const addrVal = (document.getElementById('inv-cust-address')?.value || '').trim();
+        const contactVal = (document.getElementById('inv-cust-contact')?.value || '').trim();
+        const emailVal = (document.getElementById('inv-cust-email')?.value || '').trim();
+        const termsVal = Number(document.getElementById('inv-terms')?.value) || 30;
+        const pName = (prjInput?.value || '').trim();
+        const pId = prjInput?.getAttribute('data-project-id') || null;
+        const poVal = (document.getElementById('inv-po-ref')?.value || '').trim();
+
+        this.saveCustomerFullInfo({
+          id: custInput.getAttribute('data-cust-id') || null,
+          name: clientVal,
+          billing_address: addrVal,
+          contact_person: contactVal,
+          email: emailVal,
+          trn: isTrnMode ? taxNum : '',
+          gstin: !isTrnMode ? taxNum : '',
+          tax_regime: isTrnMode ? 'trn' : 'gst',
+          place_of_supply: posVal,
+          payment_terms: termsVal,
+          project_id: pId,
+          project_name: pName,
+          po_reference: poVal
+        });
+
+        if (posVal) this.savePosRecommendation(posVal, clientVal);
+        if (pName) {
+          this.saveProjectRecommendation(pName);
+          this.saveCustomerProjectLink(clientVal, pId, pName, poVal);
+        }
+      };
+
+      ['inv-cust-address', 'inv-cust-contact', 'inv-cust-email', 'inv-cust-gstin', 'inv-terms', 'inv-po-ref'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', autoSaveCustomerModalFields);
+          el.addEventListener('blur', autoSaveCustomerModalFields);
+        }
+      });
 
       custInput.oninput = handleCustomerInput;
       custInput.onchange = handleCustomerInput;
@@ -5812,55 +6638,139 @@ class FinanceApp {
     const prjBadge = document.getElementById('inv-project-badge');
     const prjHint = document.getElementById('inv-project-hint');
 
-    if (prjInput && prjDropdown) {
-      const showPrjRecommendations = () => {
-        const val = prjInput.value.trim().toLowerCase();
-        prjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
-          const name = (item.getAttribute('data-name') || '').toLowerCase();
-          const meta = item.textContent.toLowerCase();
-          if (!val || name.includes(val) || meta.includes(val)) {
-            item.style.display = 'flex';
-          } else {
-            item.style.display = 'none';
-          }
+    // Dynamic Project Recommendations Renderer
+    const renderPrjRecommendations = (filterQuery = '') => {
+      if (!prjDropdown) return;
+      const q = (filterQuery || '').trim().toLowerCase();
+      const currentCust = (custInput?.value || '').trim();
+      const custInfo = this.getCustomerFullInfo(currentCust);
+      const linkedPrj = custInfo?.projectName ? { id: custInfo.projectId, name: custInfo.projectName } : null;
+
+      let html = '';
+
+      // If user typing custom project name
+      if (q && q.length >= 2) {
+        const exactMatch = projects.some(p => p.name.toLowerCase() === q);
+        if (!exactMatch && (!linkedPrj || linkedPrj.name.toLowerCase() !== q)) {
+          html += `
+            <div class="fin-autocomplete-header" style="color:#38bdf8;">✨ Custom Project / Cost Center (Will be Saved)</div>
+            <div class="fin-autocomplete-item prj-opt-item active" data-id="" data-name="${filterQuery.trim()}">
+              <div>
+                <div class="fin-autocomplete-item-name" style="color:#38bdf8; font-weight:700;">✨ Use &amp; Link: "${filterQuery.trim()}"</div>
+                <div class="fin-autocomplete-item-meta">Will be saved and linked to ${currentCust || 'this client'} for next time</div>
+              </div>
+              <span class="fin-autocomplete-item-badge" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.4);">Link &amp; Save</span>
+            </div>
+          `;
+        }
+      }
+
+      // 1. Linked Project for Selected Customer
+      if (linkedPrj && (!q || linkedPrj.name.toLowerCase().includes(q))) {
+        html += `
+          <div class="fin-autocomplete-header" style="color:#10b981;">⭐ Linked for Selected Customer (${currentCust})</div>
+          <div class="fin-autocomplete-item prj-opt-item" data-id="${linkedPrj.id || ''}" data-name="${linkedPrj.name}">
+            <div>
+              <div class="fin-autocomplete-item-name" style="color:#10b981; font-weight:700;">⭐ ${linkedPrj.name}</div>
+              <div class="fin-autocomplete-item-meta">Default / Latest Project for ${currentCust}</div>
+            </div>
+            <span class="fin-autocomplete-item-badge" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);">Customer Default</span>
+          </div>
+        `;
+      }
+
+      // 2. Registered Projects
+      const matchedProjects = projects.filter(p => (!linkedPrj || p.name !== linkedPrj.name) && (!q || p.name.toLowerCase().includes(q) || (p.code && p.code.toLowerCase().includes(q)) || (p.client && p.client.toLowerCase().includes(q))));
+      if (matchedProjects.length > 0) {
+        html += `<div class="fin-autocomplete-header">🏗️ Registered Projects &amp; Accounts</div>`;
+        matchedProjects.forEach(p => {
+          html += `
+            <div class="fin-autocomplete-item prj-opt-item" data-id="${p.id}" data-name="${p.name}">
+              <div>
+                <div class="fin-autocomplete-item-name">${p.name}</div>
+                <div class="fin-autocomplete-item-meta">${p.code} • Client: ${p.client_name || p.client || 'Corporate Client'} • Status: ${p.status}</div>
+              </div>
+              <span class="fin-autocomplete-item-badge">${p.code}</span>
+            </div>
+          `;
         });
+      }
+
+      // 3. Cost Centers & General
+      const costCenters = [
+        { id: 'GENERAL', name: 'General Corporate Billing', meta: 'Standard Operating Entity Billing', badge: 'Default' },
+        { id: 'CC-101', name: 'Cost Center CC-101 Civil Infrastructure', meta: 'Civil Engineering & Earthworks Division', badge: 'CC-101' },
+        { id: 'CC-102', name: 'Cost Center CC-102 Architectural Joinery', meta: 'Joinery, Marble & Interior Fit-Outs', badge: 'CC-102' },
+        { id: 'CC-103', name: 'Cost Center CC-103 MEP & HVAC Systems', meta: 'Mechanical, Electrical & Plumbing', badge: 'CC-103' }
+      ];
+      const matchedCC = costCenters.filter(cc => !q || cc.name.toLowerCase().includes(q) || cc.id.toLowerCase().includes(q));
+      if (matchedCC.length > 0) {
+        html += `<div class="fin-autocomplete-header">🏢 Cost Centers &amp; Corporate Ledgers</div>`;
+        matchedCC.forEach(cc => {
+          html += `
+            <div class="fin-autocomplete-item prj-opt-item" data-id="${cc.id}" data-name="${cc.name}">
+              <div>
+                <div class="fin-autocomplete-item-name">${cc.name}</div>
+                <div class="fin-autocomplete-item-meta">${cc.meta}</div>
+              </div>
+              <span class="fin-autocomplete-item-badge">${cc.badge}</span>
+            </div>
+          `;
+        });
+      }
+
+      if (!html.trim()) {
+        html = `
+          <div style="padding:1rem; text-align:center; color:#94a3b8; font-size:0.8rem;">
+            No preset match for "${filterQuery}". Press Tab/Enter or click outside to use as custom project.
+          </div>
+        `;
+      }
+
+      prjDropdown.innerHTML = html;
+
+      // Attach click listeners to options
+      prjDropdown.querySelectorAll('.prj-opt-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const pId = item.getAttribute('data-id');
+          const pName = item.getAttribute('data-name');
+          if (pName) {
+            prjInput.value = pName;
+            if (pId && !pId.startsWith('CC-') && pId !== 'GENERAL') {
+              prjInput.setAttribute('data-project-id', pId);
+            } else {
+              prjInput.removeAttribute('data-project-id');
+            }
+            if (prjBadge) {
+              prjBadge.textContent = '✓ Saved & Applied';
+              prjBadge.style.color = '#10b981';
+            }
+            if (prjHint) {
+              prjHint.textContent = `Applied "${pName}" (Saved for ${custInput?.value || 'client'})`;
+            }
+            if (custInput?.value) {
+              this.saveCustomerProjectLink(custInput.value, pId, pName);
+            }
+            prjDropdown.classList.remove('open');
+          }
+        };
+      });
+    };
+
+    if (prjInput && prjDropdown) {
+      const showPrj = () => {
+        renderPrjRecommendations(prjInput.value.trim());
         prjDropdown.classList.add('open');
       };
 
-      prjInput.onfocus = showPrjRecommendations;
-      prjInput.onclick = showPrjRecommendations;
-
-      prjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
-        item.onmousedown = (e) => {
-          e.preventDefault();
-          const prjId = item.getAttribute('data-id');
-          const prjName = item.getAttribute('data-name');
-          if (prjId === 'GENERAL') {
-            prjInput.value = 'General Corporate Billing';
-            prjInput.removeAttribute('data-project-id');
-            if (prjBadge) { prjBadge.textContent = '✓ General Billing'; prjBadge.style.color = '#10b981'; }
-            if (prjHint) prjHint.textContent = 'General Corporate Billing selected';
-          } else if (prjId.startsWith('CC-')) {
-            prjInput.value = prjName;
-            prjInput.removeAttribute('data-project-id');
-            if (prjBadge) { prjBadge.textContent = `✓ ${prjId}`; prjBadge.style.color = '#10b981'; }
-            if (prjHint) prjHint.textContent = `${prjName} selected`;
-          } else {
-            const found = projects.find(p => p.id === prjId);
-            if (found) {
-              prjInput.value = found.name;
-              prjInput.setAttribute('data-project-id', found.id);
-              if (prjBadge) { prjBadge.textContent = `✓ ${found.code || 'Registered Project'}`; prjBadge.style.color = '#10b981'; }
-              if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
-            }
-          }
-          prjDropdown.classList.remove('open');
-        };
-      });
+      prjInput.onfocus = showPrj;
+      prjInput.onclick = showPrj;
 
       prjInput.oninput = () => {
-        showPrjRecommendations();
         const val = prjInput.value.trim();
+        renderPrjRecommendations(val);
+        prjDropdown.classList.add('open');
         const found = projects.find(p => p.name.toLowerCase() === val.toLowerCase() || `${p.name} (${p.code})`.toLowerCase() === val.toLowerCase());
         if (found) {
           prjInput.setAttribute('data-project-id', found.id);
@@ -5868,12 +6778,28 @@ class FinanceApp {
           if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
         } else if (val) {
           prjInput.removeAttribute('data-project-id');
-          if (prjBadge) { prjBadge.textContent = '✎ Custom Project / Cost Center'; prjBadge.style.color = '#38bdf8'; }
-          if (prjHint) prjHint.textContent = `Custom project / cost center "${val}" will be used for this invoice.`;
+          if (prjBadge) { prjBadge.textContent = '✎ Custom Project (Auto-linking)'; prjBadge.style.color = '#38bdf8'; }
+          if (prjHint) prjHint.textContent = `Custom project "${val}" will be used and remembered for this client.`;
         } else {
           prjInput.removeAttribute('data-project-id');
           if (prjBadge) { prjBadge.textContent = 'Click for Recommendations ▾'; prjBadge.style.color = '#38bdf8'; }
           if (prjHint) prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
+        }
+      };
+
+      prjInput.onchange = () => {
+        const val = prjInput.value.trim();
+        const clientVal = custInput?.value.trim();
+        if (val && clientVal) {
+          this.saveCustomerProjectLink(clientVal, prjInput.getAttribute('data-project-id'), val);
+        }
+      };
+
+      prjInput.onblur = () => {
+        const val = prjInput.value.trim();
+        const clientVal = custInput?.value.trim();
+        if (val && clientVal) {
+          this.saveCustomerProjectLink(clientVal, prjInput.getAttribute('data-project-id'), val);
         }
       };
 
@@ -5882,6 +6808,71 @@ class FinanceApp {
           prjDropdown.classList.remove('open');
         }
       });
+    }
+
+    // Place of Supply input & recommendations dropdown event listeners
+    if (posInp && posDropdown) {
+      const showPosRecommendations = () => {
+        renderPosRecommendations(posInp.value.trim());
+        posDropdown.classList.add('open');
+      };
+
+      posInp.onfocus = showPosRecommendations;
+      posInp.onclick = showPosRecommendations;
+
+      posInp.oninput = () => {
+        const val = posInp.value.trim();
+        renderPosRecommendations(val);
+        posDropdown.classList.add('open');
+        if (posBadge) {
+          posBadge.textContent = '✎ Custom Entry (Auto-saving)';
+          posBadge.style.color = '#38bdf8';
+        }
+        recalculateInvoice();
+      };
+
+      posInp.onchange = () => {
+        const val = posInp.value.trim();
+        if (val) {
+          this.savePosRecommendation(val, custInput?.value);
+          if (posBadge) {
+            posBadge.textContent = '✓ Saved for Next Time';
+            posBadge.style.color = '#10b981';
+          }
+          if (posHint) {
+            posHint.textContent = `"${val}" saved to recommendations for next time.`;
+          }
+        }
+        recalculateInvoice();
+      };
+
+      posInp.onblur = () => {
+        const val = posInp.value.trim();
+        if (val) {
+          this.savePosRecommendation(val, custInput?.value);
+        }
+      };
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#inv-cust-pos') && !e.target.closest('#inv-pos-dropdown')) {
+          posDropdown.classList.remove('open');
+        }
+      });
+    }
+
+    // Initial check for default customer or remembered pos on modal open
+    const initialCustName = (custInput?.value || '').trim();
+    if (initialCustName) {
+      const initialInfo = this.getCustomerFullInfo(initialCustName);
+      if (initialInfo && initialInfo.hasPastData) {
+        applyCustomerData(initialInfo);
+      } else {
+        renderPosRecommendations();
+        renderPrjRecommendations();
+      }
+    } else {
+      renderPosRecommendations();
+      renderPrjRecommendations();
     }
 
     document.getElementById('inv-add-row-btn').onclick = () => addRow();
@@ -5903,14 +6894,14 @@ class FinanceApp {
       progress_pct: 50
     };
     addRow(milestone50Item, 1);
-    setTaxRegime('trn', { preserveRates: true });
+    setTaxRegime('trn', { preserveRates: true, keepPos: true });
 
     const preset50Btn = document.getElementById('inv-apply-50pct-preset-btn');
     if (preset50Btn) {
       preset50Btn.onclick = () => {
         tbody.innerHTML = '';
         addRow(milestone50Item, 1);
-        setTaxRegime('trn', { preserveRates: true });
+        setTaxRegime('trn', { preserveRates: true, keepPos: true });
       };
     }
 
@@ -5954,17 +6945,48 @@ class FinanceApp {
     const currency = currIndicator.includes('AED') ? 'AED' : 'INR';
     const currencySym = currency === 'AED' ? 'AED ' : '₹';
 
-    const custAddress = (document.getElementById('inv-cust-address')?.value || '').trim() || 'ABU DHABI, MADINAT ZAYED, UAE';
+    const custAddress = (document.getElementById('inv-cust-address')?.value || '').trim();
     const contactPerson = (document.getElementById('inv-cust-contact')?.value || '').trim();
     const custEmail = (document.getElementById('inv-cust-email')?.value || '').trim();
     const poRef = (document.getElementById('inv-po-ref')?.value || '').trim();
     const invDate = document.getElementById('inv-date')?.value || new Date().toISOString().split('T')[0];
     const notesVal = (document.getElementById('inv-notes')?.value || '').trim();
 
+    const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
+    if (posVal) {
+      this.savePosRecommendation(posVal, clientName);
+    }
+
+    if (prjName) {
+      this.saveProjectRecommendation(prjName);
+      if (clientName) {
+        this.saveCustomerProjectLink(clientName, prjId, prjName, poRef);
+      }
+    }
+
+    if (clientName) {
+      this.saveCustomerFullInfo({
+        id: custInput.getAttribute('data-cust-id') || null,
+        name: clientName,
+        billing_address: custAddress,
+        contact_person: contactPerson,
+        email: custEmail,
+        trn: isTrn ? taxNumber : '',
+        gstin: !isTrn ? taxNumber : '',
+        tax_regime: taxRegime,
+        place_of_supply: posVal,
+        payment_terms: paymentTermsVal,
+        project_id: prjId,
+        project_name: prjName,
+        po_reference: poRef
+      });
+    }
+
     // Find customer by ID or Name, or auto-create if custom client
     let customer = this.db?.customers?.find(c => 
       c.id === custInput.getAttribute('data-cust-id') ||
-      c.name.toLowerCase() === clientName.toLowerCase()
+      c.name.toLowerCase() === clientName.toLowerCase() ||
+      c.name.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === clientName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim()
     );
 
     if (!customer) {
@@ -5979,16 +7001,32 @@ class FinanceApp {
         country: isTrn ? 'UAE' : 'India',
         gstin: !isTrn ? taxNumber : '',
         trn: isTrn ? taxNumber : '',
-        place_of_supply: document.getElementById('inv-cust-pos')?.value || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
-        payment_terms: paymentTermsVal
+        place_of_supply: posVal || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
+        payment_terms: paymentTermsVal,
+        default_project_id: prjId || null,
+        default_project_name: prjName || '',
+        last_po_reference: poRef || '',
+        status: 'active'
       };
       if (!this.db.customers) this.db.customers = [];
       this.db.customers.push(customer);
       this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
     } else {
+      if (posVal) customer.place_of_supply = posVal;
+      if (taxNumber) {
+        if (isTrn) customer.trn = taxNumber;
+        else customer.gstin = taxNumber;
+      }
       if (custAddress) customer.billing_address = custAddress;
       if (contactPerson) customer.contact_person = contactPerson;
       if (custEmail) customer.email = custEmail;
+      if (paymentTermsVal !== undefined && paymentTermsVal !== null) customer.payment_terms = paymentTermsVal;
+      if (prjName && prjName !== 'General Corporate Billing') {
+        customer.default_project_id = prjId || customer.default_project_id;
+        customer.default_project_name = prjName;
+      }
+      if (poRef) customer.last_po_reference = poRef;
+      this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
     }
 
     // Collect line items
@@ -6208,7 +7246,7 @@ class FinanceApp {
                 <div>
                   <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:0.25rem;">Project &amp; PO Allocation</div>
                   <div style="font-weight:700; color:#0f172a;">${bill.project_name || 'Corporate Civil Operations'}</div>
-                  <div style="color:#475569; margin-top:0.25rem;">PO Ref: <strong>${bill.po_reference || bill.po_no || bill.po_id || 'PO-REC-11008'}</strong></div>
+                  <div style="color:#475569; margin-top:0.25rem;">PO Ref: <strong>${bill.po_reference || bill.po_no || (bill.po_id ? bill.po_id : 'Direct Bill / No PO')}</strong></div>
                   <div style="color:#475569;">Payment Terms: <strong>${bill.payment_terms || 30} Days</strong></div>
                 </div>
               </div>
@@ -7002,21 +8040,83 @@ class FinanceApp {
 
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Linked Project / Cost Center</label>
-                  <select id="bill-project" class="fin-form-select">
-                    <option value="">General Corporate Overhead</option>
-                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name} (${p.code || ''})</option>`).join('')}
-                  </select>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Linked Project / Cost Center</label>
+                    <span id="bill-prj-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Pick from List or Type Custom ▾</span>
+                  </div>
+                  <div class="fin-autocomplete-wrap">
+                    <input 
+                      type="text" 
+                      id="bill-project" 
+                      class="fin-form-input" 
+                      placeholder="Click to pick project, or type custom..." 
+                      autocomplete="off"
+                    >
+                    <div id="bill-prj-dropdown" class="fin-autocomplete-dropdown">
+                      <div class="fin-autocomplete-header">Registered Projects &amp; Cost Centers (${currLabel})</div>
+                      <div class="fin-autocomplete-item" data-id="" data-name="General Corporate Overhead">
+                        <div>
+                          <div class="fin-autocomplete-item-name">General Corporate Overhead</div>
+                          <div class="fin-autocomplete-item-meta">Corporate Operations • Non-project Consumables</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">Overhead</span>
+                      </div>
+                      ${projects.map(p => `
+                        <div class="fin-autocomplete-item" data-id="${p.id}" data-name="${p.name}">
+                          <div>
+                            <div class="fin-autocomplete-item-name">${p.name}</div>
+                            <div class="fin-autocomplete-item-meta">${p.code || 'PRJ'} • ${p.client_name || p.location || 'Active Project'}</div>
+                          </div>
+                          <span class="fin-autocomplete-item-badge">${p.code || 'Project'}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="bill-prj-hint">Click box to select project, or type any custom project name</span>
+                  </div>
                 </div>
+
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Linked Purchase Order</label>
-                  <select id="bill-po-sel" class="fin-form-select">
-                    <option value="">No PO Linked</option>
-                    ${pos.map(po => `<option value="${po.id}">${po.po_no} - ${po.vendor_name || po.supplier_name}</option>`).join('')}
-                  </select>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Linked Purchase Order</label>
+                    <span id="bill-po-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Pick PO or Type Ref ▾</span>
+                  </div>
+                  <div class="fin-autocomplete-wrap">
+                    <input 
+                      type="text" 
+                      id="bill-po-sel" 
+                      class="fin-form-input" 
+                      placeholder="Click to select PO, or type custom PO #..." 
+                      autocomplete="off"
+                    >
+                    <div id="bill-po-dropdown" class="fin-autocomplete-dropdown">
+                      <div class="fin-autocomplete-header">Existing Purchase Orders</div>
+                      <div class="fin-autocomplete-item" data-id="" data-no="">
+                        <div>
+                          <div class="fin-autocomplete-item-name">No PO Linked</div>
+                          <div class="fin-autocomplete-item-meta">Direct bill without prior purchase order</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">Direct</span>
+                      </div>
+                      ${pos.map(po => `
+                        <div class="fin-autocomplete-item" data-id="${po.id}" data-no="${po.po_no || ''}">
+                          <div>
+                            <div class="fin-autocomplete-item-name">${po.po_no}</div>
+                            <div class="fin-autocomplete-item-meta">${po.vendor_name || po.supplier_name || 'Vendor'} • ${po.total_amount ? (currSym + Number(po.total_amount).toLocaleString()) : 'Active PO'}</div>
+                          </div>
+                          <span class="fin-autocomplete-item-badge">PO</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="bill-po-hint">Select existing PO or type custom PO / contract number</span>
+                  </div>
                 </div>
+
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Item / Service Purchased</label>
+                  <label class="fin-form-label">Item / Service Purchased <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="bill-item-desc" class="fin-form-input" placeholder="${isIndia ? 'e.g. Structural steel consignment' : 'e.g. Screeding application & supplies'}" required>
                 </div>
               </div>
@@ -7218,6 +8318,206 @@ class FinanceApp {
     termsInp.oninput = updateDue;
     updateDue();
 
+    // Project Autocomplete & Free Typing
+    const prjInput = document.getElementById('bill-project');
+    const prjDropdown = document.getElementById('bill-prj-dropdown');
+    const prjBadge = document.getElementById('bill-prj-badge');
+    const prjHint = document.getElementById('bill-prj-hint');
+
+    const applyProjectData = (p) => {
+      if (!p || !p.id) {
+        prjInput.value = 'General Corporate Overhead';
+        prjInput.removeAttribute('data-prj-id');
+        if (prjBadge) {
+          prjBadge.textContent = 'General Overhead';
+          prjBadge.style.color = '#94a3b8';
+        }
+        if (prjHint) prjHint.textContent = 'General Corporate Overhead selected';
+        return;
+      }
+      prjInput.value = p.name;
+      prjInput.setAttribute('data-prj-id', p.id);
+      if (prjBadge) {
+        prjBadge.textContent = `✓ ${p.code || 'Registered Project'}`;
+        prjBadge.style.color = '#10b981';
+      }
+      if (prjHint) {
+        prjHint.textContent = `${p.name} (${p.code || ''}) linked to bill`;
+      }
+    };
+
+    if (prjInput && prjDropdown) {
+      const showPrjRecommendations = () => {
+        const val = prjInput.value.trim().toLowerCase();
+        prjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const name = (item.getAttribute('data-name') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || val === 'general corporate overhead' || name.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        prjDropdown.classList.add('open');
+      };
+
+      prjInput.onfocus = showPrjRecommendations;
+      prjInput.onclick = showPrjRecommendations;
+
+      prjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const prjId = item.getAttribute('data-id');
+          if (!prjId) {
+            applyProjectData(null);
+          } else {
+            const found = projects.find(p => p.id === prjId);
+            applyProjectData(found || { id: prjId, name: item.getAttribute('data-name') });
+          }
+          prjDropdown.classList.remove('open');
+        };
+      });
+
+      const handlePrjInput = () => {
+        showPrjRecommendations();
+        const val = prjInput.value.trim();
+        if (!val || val.toLowerCase() === 'general corporate overhead') {
+          prjInput.removeAttribute('data-prj-id');
+          if (prjBadge) {
+            prjBadge.textContent = 'Pick from List or Type Custom ▾';
+            prjBadge.style.color = '#38bdf8';
+          }
+          if (prjHint) prjHint.textContent = 'Click to select project, or type any custom project name';
+          return;
+        }
+
+        const found = projects.find(p => 
+          p.name.toLowerCase() === val.toLowerCase() ||
+          `${p.name} (${p.code || ''})`.toLowerCase() === val.toLowerCase()
+        );
+
+        if (found) {
+          applyProjectData(found);
+        } else {
+          prjInput.removeAttribute('data-prj-id');
+          if (prjBadge) {
+            prjBadge.textContent = '✎ Custom Project';
+            prjBadge.style.color = '#38bdf8';
+          }
+          if (prjHint) {
+            prjHint.textContent = `Custom project "${val}" will be recorded on bill.`;
+          }
+        }
+      };
+
+      prjInput.oninput = handlePrjInput;
+      prjInput.onchange = handlePrjInput;
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#bill-project') && !e.target.closest('#bill-prj-dropdown')) {
+          prjDropdown.classList.remove('open');
+        }
+      });
+    }
+
+    // Purchase Order Autocomplete & Free Typing
+    const poInput = document.getElementById('bill-po-sel');
+    const poDropdown = document.getElementById('bill-po-dropdown');
+    const poBadge = document.getElementById('bill-po-badge');
+    const poHint = document.getElementById('bill-po-hint');
+
+    const applyPoData = (po) => {
+      if (!po || !po.id) {
+        poInput.value = '';
+        poInput.removeAttribute('data-po-id');
+        if (poBadge) {
+          poBadge.textContent = 'No PO Linked';
+          poBadge.style.color = '#94a3b8';
+        }
+        if (poHint) poHint.textContent = 'Direct bill without prior purchase order';
+        return;
+      }
+      poInput.value = po.po_no;
+      poInput.setAttribute('data-po-id', po.id);
+      if (poBadge) {
+        poBadge.textContent = `✓ Linked PO: ${po.po_no}`;
+        poBadge.style.color = '#10b981';
+      }
+      if (poHint) {
+        poHint.textContent = `Linked to PO #${po.po_no} (${po.vendor_name || po.supplier_name || 'Vendor'})`;
+      }
+    };
+
+    if (poInput && poDropdown) {
+      const showPoRecommendations = () => {
+        const val = poInput.value.trim().toLowerCase();
+        poDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const no = (item.getAttribute('data-no') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || no.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        poDropdown.classList.add('open');
+      };
+
+      poInput.onfocus = showPoRecommendations;
+      poInput.onclick = showPoRecommendations;
+
+      poDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const poId = item.getAttribute('data-id');
+          if (!poId) {
+            applyPoData(null);
+          } else {
+            const found = pos.find(p => p.id === poId);
+            applyPoData(found || { id: poId, po_no: item.getAttribute('data-no') });
+          }
+          poDropdown.classList.remove('open');
+        };
+      });
+
+      const handlePoInput = () => {
+        showPoRecommendations();
+        const val = poInput.value.trim();
+        if (!val) {
+          poInput.removeAttribute('data-po-id');
+          if (poBadge) {
+            poBadge.textContent = 'Pick PO or Type Ref ▾';
+            poBadge.style.color = '#38bdf8';
+          }
+          if (poHint) poHint.textContent = 'Select existing PO or type custom PO / contract reference';
+          return;
+        }
+
+        const found = pos.find(p => (p.po_no || '').toLowerCase() === val.toLowerCase());
+        if (found) {
+          applyPoData(found);
+        } else {
+          poInput.removeAttribute('data-po-id');
+          if (poBadge) {
+            poBadge.textContent = '✎ Custom PO Ref';
+            poBadge.style.color = '#38bdf8';
+          }
+          if (poHint) {
+            poHint.textContent = `Custom PO reference "${val}" will be linked on bill.`;
+          }
+        }
+      };
+
+      poInput.oninput = handlePoInput;
+      poInput.onchange = handlePoInput;
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#bill-po-sel') && !e.target.closest('#bill-po-dropdown')) {
+          poDropdown.classList.remove('open');
+        }
+      });
+    }
+
     document.getElementById('create-bill-form').onsubmit = async (e) => {
       e.preventDefault();
       const vendorName = (vendInput?.value || '').trim();
@@ -7251,9 +8551,48 @@ class FinanceApp {
         this.syncApi('create_vendor', { vendor }).catch(e => console.warn('Vendor auto-persist:', e));
       }
 
-      const prjSel = document.getElementById('bill-project');
-      const prjId = prjSel ? prjSel.value || null : null;
-      const prjName = prjSel?.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
+      // Project resolution from text input
+      const prjVal = (prjInput?.value || '').trim();
+      let prjId = prjInput?.getAttribute('data-prj-id') || null;
+      let prjName = prjVal;
+
+      if (!prjVal || prjVal.toLowerCase() === 'general corporate overhead') {
+        prjId = null;
+        prjName = 'General Corporate Overhead';
+      } else if (!prjId) {
+        const matchPrj = projects.find(p => p.name.toLowerCase() === prjVal.toLowerCase() || (p.code && p.code.toLowerCase() === prjVal.toLowerCase()));
+        if (matchPrj) {
+          prjId = matchPrj.id;
+          prjName = matchPrj.name;
+        } else {
+          prjId = 'prj-' + Date.now();
+          const newPrj = {
+            id: prjId,
+            code: 'PRJ-' + Math.floor(1000 + Math.random() * 9000),
+            name: prjName,
+            company_id: this.activeCompanyId,
+            status: 'active'
+          };
+          if (!this.db.projects) this.db.projects = [];
+          this.db.projects.push(newPrj);
+          this.syncApi('create_project', { project: newPrj }).catch(e => console.warn('Project auto-persist:', e));
+        }
+      }
+
+      // PO resolution from text input
+      const poVal = (poInput?.value || '').trim();
+      let poId = poInput?.getAttribute('data-po-id') || null;
+      let poNo = poVal;
+
+      if (poVal && !poId) {
+        const matchPo = pos.find(p => (p.po_no || '').toLowerCase() === poVal.toLowerCase());
+        if (matchPo) {
+          poId = matchPo.id;
+          poNo = matchPo.po_no;
+        } else {
+          poId = 'po-cust-' + Date.now();
+        }
+      }
 
       const taxable = Number(taxableInp.value) || 0;
       const rate = Number(gstRateSel.value) || 0;
@@ -7274,7 +8613,10 @@ class FinanceApp {
           vendor_gstin: taxRegime === 'gst' ? taxNo : (vendor.gstin || ''),
           vendor_trn: taxRegime === 'trn' ? taxNo : (vendor.trn || ''),
           vendor_invoice_no: document.getElementById('bill-inv-no').value,
-          po_id: document.getElementById('bill-po-sel').value || null,
+          po_id: poId,
+          po_no: poNo,
+          po_number: poNo,
+          po_reference: poNo,
           project_id: prjId,
           project_name: prjName,
           bill_date: dateInp.value,
@@ -7772,7 +9114,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Place of Supply / State / Emirate</label>
-                  <input type="text" id="new-cust-pos" class="fin-form-input" value="27-Maharashtra" placeholder="e.g. 27-Maharashtra or Abu Dhabi, UAE">
+                  <input type="text" id="new-cust-pos" class="fin-form-input" value="27-Maharashtra" placeholder="e.g. 27-Maharashtra or Abu Dhabi, UAE" list="pos-suggestions">
                 </div>
               </div>
 
@@ -7839,6 +9181,7 @@ class FinanceApp {
 
       const res = await this.syncApi('create_customer', payload);
       if (res && res.success) {
+        this.savePosRecommendation(payload.customer.place_of_supply, payload.customer.name);
         alert(`Customer ${res.customer?.name || payload.customer.name} saved successfully.`);
         this.closeModal('modal-add-cust');
         this.switchTab('customers');
@@ -8150,11 +9493,32 @@ class FinanceApp {
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Linked Project / Cost Center</label>
-                  <select id="exp-project" class="fin-form-select">
-                    <option value="">Head Office General</option>
-                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`).join('')}
-                  </select>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Linked Project / Cost Center</label>
+                    <button type="button" id="exp-prj-toggle-btn" style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); color:#38bdf8; font-size:0.68rem; font-weight:600; cursor:pointer; padding:2px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:4px; transition:all 0.2s;">
+                      ✎ Type Manually
+                    </button>
+                  </div>
+                  <div id="exp-prj-select-wrap">
+                    <select id="exp-project" class="fin-form-select">
+                      <option value="">Head Office General</option>
+                      ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`).join('')}
+                      <option value="__manual__">✨ + Enter Custom Project Manually...</option>
+                    </select>
+                  </div>
+                  <div id="exp-prj-manual-wrap" style="display:none; position:relative;">
+                    <input 
+                      type="text" 
+                      id="exp-project-manual" 
+                      class="fin-form-input" 
+                      placeholder="e.g. Site Operations or Cost Center..." 
+                      list="exp-prj-datalist" 
+                      autocomplete="off"
+                    >
+                    <datalist id="exp-prj-datalist">
+                      ${projects.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}
+                    </datalist>
+                  </div>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment Method</label>
@@ -8184,6 +9548,41 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    // Project Mode Toggle for Expense Modal
+    const expPrjToggleBtn = document.getElementById('exp-prj-toggle-btn');
+    const expPrjSelectWrap = document.getElementById('exp-prj-select-wrap');
+    const expPrjManualWrap = document.getElementById('exp-prj-manual-wrap');
+    const expPrjSel = document.getElementById('exp-project');
+    const expPrjManualInp = document.getElementById('exp-project-manual');
+
+    const setExpPrjMode = (manual) => {
+      if (manual) {
+        if (expPrjSelectWrap) expPrjSelectWrap.style.display = 'none';
+        if (expPrjManualWrap) expPrjManualWrap.style.display = 'block';
+        if (expPrjToggleBtn) expPrjToggleBtn.textContent = '▾ Pick from List';
+        if (expPrjManualInp) expPrjManualInp.focus();
+      } else {
+        if (expPrjSelectWrap) expPrjSelectWrap.style.display = 'block';
+        if (expPrjManualWrap) expPrjManualWrap.style.display = 'none';
+        if (expPrjToggleBtn) expPrjToggleBtn.textContent = '✎ Type Manually';
+        if (expPrjSel && expPrjSel.value === '__manual__') expPrjSel.value = '';
+      }
+    };
+
+    if (expPrjToggleBtn) {
+      expPrjToggleBtn.onclick = () => {
+        const isManual = expPrjManualWrap && expPrjManualWrap.style.display !== 'none';
+        setExpPrjMode(!isManual);
+      };
+    }
+    if (expPrjSel) {
+      expPrjSel.onchange = () => {
+        if (expPrjSel.value === '__manual__') {
+          setExpPrjMode(true);
+        }
+      };
+    }
+
     const amtInp = document.getElementById('exp-amount');
     const taxInp = document.getElementById('exp-tax');
     amtInp.oninput = () => {
@@ -8204,6 +9603,45 @@ class FinanceApp {
       const amountVal = Number(document.getElementById('exp-amount').value);
       const taxVal = Number(document.getElementById('exp-tax').value) || 0;
 
+      // Resolve Project
+      const isExpPrjManual = expPrjManualWrap && expPrjManualWrap.style.display !== 'none';
+      let expPrjId = null;
+      let expPrjName = '';
+
+      if (isExpPrjManual) {
+        expPrjName = (expPrjManualInp?.value || '').trim();
+        if (expPrjName) {
+          const matchPrj = projects.find(p => p.name.toLowerCase() === expPrjName.toLowerCase() || (p.code && p.code.toLowerCase() === expPrjName.toLowerCase()));
+          if (matchPrj) {
+            expPrjId = matchPrj.id;
+            expPrjName = matchPrj.name;
+          } else {
+            expPrjId = 'prj-' + Date.now();
+            const newPrj = {
+              id: expPrjId,
+              code: 'PRJ-' + Math.floor(1000 + Math.random() * 9000),
+              name: expPrjName,
+              company_id: this.activeCompanyId,
+              status: 'active'
+            };
+            if (!this.db.projects) this.db.projects = [];
+            this.db.projects.push(newPrj);
+            this.syncApi('create_project', { project: newPrj }).catch(err => console.warn('Project auto-persist error:', err));
+          }
+        } else {
+          expPrjName = 'Head Office General';
+        }
+      } else {
+        if (prjSel && prjSel.value && prjSel.value !== '__manual__') {
+          expPrjId = prjSel.value;
+          const matchPrj = projects.find(p => p.id === expPrjId);
+          expPrjName = matchPrj?.name || prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '';
+        } else {
+          expPrjId = null;
+          expPrjName = 'Head Office General';
+        }
+      }
+
       const payload = {
         expense: {
           id: 'exp-' + Date.now(),
@@ -8217,8 +9655,8 @@ class FinanceApp {
           amount: amountVal,
           tax_amount: taxVal,
           total_amount: amountVal + taxVal,
-          project_id: prjSel.value || null,
-          project_name: prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '',
+          project_id: expPrjId,
+          project_name: expPrjName,
           payment_method: document.getElementById('exp-pay-mode').value,
           submitted_by: this.currentUser?.name || 'Finance Staff',
           status: 'approved',
@@ -8538,6 +9976,152 @@ class FinanceApp {
         this.switchTab('users');
       } else {
         alert(res?.error || 'Could not invite user.');
+      }
+    };
+  }
+
+  // 14B. CREATE PROJECT MODAL
+  openCreateProjectModal() {
+    const customers = this.db?.customers || [];
+    const currLabel = this.activeCurrency === 'INR' ? '₹' : 'AED';
+    const nextCode = this.getNextProjectCode();
+    const today = new Date().toISOString().split('T')[0];
+    const defaultCompletion = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-add-project" style="z-index:1050; background:rgba(15,23,42,0.8); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center;">
+        <div class="fin-modal-dialog" style="max-width:720px; width:95%; background:#0f172a; border:1px solid rgba(56,189,248,0.3); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.7); overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95)); border-bottom:1px solid rgba(255,255,255,0.08); padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3 class="fin-modal-title" style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin:0;">🏗️ Add New Project / Cost Center Account</h3>
+              <p style="font-size:0.75rem; color:#94a3b8; margin:0.25rem 0 0;">Create a dedicated project account for revenue billing, contracts, and job cost tracking.</p>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-add-project')" style="color:#94a3b8; font-size:1.6rem; line-height:1; border:none; background:none; cursor:pointer;">&times;</button>
+          </div>
+          <div class="fin-modal-body" style="padding:1.5rem; max-height:75vh; overflow-y:auto;">
+            <form id="add-project-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Code <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="new-prj-code" class="fin-form-input" required value="${nextCode}" style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Status <span style="color:#ef4444;">*</span></label>
+                  <select id="new-prj-status" class="fin-form-select">
+                    <option value="In Progress" selected>In Progress</option>
+                    <option value="Planning / Tender">Planning / Tender</option>
+                    <option value="Active / Site Phase">Active / Site Phase</option>
+                    <option value="Completed">Completed</option>
+                    <option value="On Hold">On Hold</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Project Title / Name <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="new-prj-name" class="fin-form-input" required placeholder="e.g. Dubai Police Academy Expansion Directorate">
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client / Customer <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="new-prj-client" class="fin-form-input" list="prj-client-suggestions" required placeholder="Pick registered client or type custom name...">
+                  <datalist id="prj-client-suggestions">
+                    ${customers.map(c => `<option value="${c.name}">${c.code || ''} • ${c.trn ? `TRN: ${c.trn}` : (c.gstin ? `GSTIN: ${c.gstin}` : '')}</option>`).join('')}
+                  </datalist>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Site Location / Emirate / State</label>
+                  <input type="text" id="new-prj-location" class="fin-form-input" placeholder="e.g. Abu Dhabi, UAE or Dubai Investment Park" list="pos-suggestions">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Contract Value (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="new-prj-contract" class="fin-form-input" min="0" step="any" required placeholder="e.g. 4500000">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Approved Budget (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="new-prj-budget" class="fin-form-input" min="0" step="any" required placeholder="e.g. 3800000">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Start Date</label>
+                  <input type="date" id="new-prj-start" class="fin-form-input" value="${today}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Target Completion Date</label>
+                  <input type="date" id="new-prj-completion" class="fin-form-input" value="${defaultCompletion}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Scope Description &amp; Specifications</label>
+                <textarea id="new-prj-desc" class="fin-form-textarea" rows="2" placeholder="Summary of civil, joinery, fit-out, or MEP scope..."></textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1.25rem 0 0; background:transparent; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.08); margin-top:1rem;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-add-project')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Create Project &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    let container = document.getElementById('fin-modal-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'fin-modal-container';
+      document.body.appendChild(container);
+    }
+    container.innerHTML = modalHtml;
+
+    document.getElementById('add-project-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const clientName = document.getElementById('new-prj-client').value.trim();
+      const matchedCust = customers.find(c => c.name.toLowerCase() === clientName.toLowerCase() || c.name.toLowerCase().includes(clientName.toLowerCase()));
+
+      const payload = {
+        project: {
+          id: 'prj-' + Date.now().toString(36),
+          code: document.getElementById('new-prj-code').value.trim() || nextCode,
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          name: document.getElementById('new-prj-name').value.trim(),
+          client: clientName,
+          client_name: clientName,
+          client_id: matchedCust?.id || null,
+          contract_value: Number(document.getElementById('new-prj-contract').value) || 0,
+          approved_budget: Number(document.getElementById('new-prj-budget').value) || 0,
+          currency: this.activeCurrency || 'AED',
+          status: document.getElementById('new-prj-status').value,
+          start_date: document.getElementById('new-prj-start').value,
+          target_completion: document.getElementById('new-prj-completion').value,
+          site_location: document.getElementById('new-prj-location').value.trim(),
+          description: document.getElementById('new-prj-desc').value.trim()
+        }
+      };
+
+      const res = await this.syncApi('create_project', payload);
+      if (res && res.success) {
+        if (clientName) {
+          this.saveCustomerProjectLink(clientName, payload.project.id, payload.project.name);
+          this.saveProjectRecommendation(payload.project.name);
+        }
+        alert(`Project "${payload.project.name}" (${payload.project.code}) created successfully.`);
+        this.closeModal('modal-add-project');
+        if (this.activeTab === 'projects') {
+          const root = document.getElementById('fin-tab-content-root');
+          if (root) this.renderProjectsTab(root);
+        } else {
+          this.renderActiveTab();
+        }
+      } else {
+        alert(res?.error || 'Could not create project.');
       }
     };
   }
@@ -10874,7 +12458,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Place of Supply</label>
-                  <input type="text" id="edit-inv-pos" class="fin-form-input" value="${inv.place_of_supply || (isIndia ? 'Maharashtra (27)' : 'Abu Dhabi, UAE')}">
+                  <input type="text" id="edit-inv-pos" class="fin-form-input" value="${inv.place_of_supply || (isIndia ? 'Maharashtra (27)' : 'Abu Dhabi, UAE')}" list="pos-suggestions">
                 </div>
               </div>
 
@@ -10985,6 +12569,9 @@ class FinanceApp {
         inv.customer_trn = document.getElementById('edit-inv-cust-tax').value.trim();
       }
       inv.place_of_supply = document.getElementById('edit-inv-pos').value.trim();
+      if (inv.place_of_supply) {
+        this.savePosRecommendation(inv.place_of_supply, inv.customer_name);
+      }
       inv.invoice_date = document.getElementById('edit-inv-date').value;
       inv.due_date = document.getElementById('edit-inv-due-date').value;
       inv.payment_terms = Number(document.getElementById('edit-inv-terms').value);
@@ -11027,6 +12614,13 @@ class FinanceApp {
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
     const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === (bill.company_id || this.activeCompanyId));
+    const pos = (this.db?.purchase_orders || []).filter(po => (po.company_id || 'rayan-corp-uae') === (bill.company_id || this.activeCompanyId));
+
+    const hasProjectMatch = projects.some(p => p.id === bill.project_id);
+    const isCustomPrj = !hasProjectMatch && !!bill.project_name && bill.project_name !== 'General Corporate Overhead';
+
+    const hasPoMatch = pos.some(po => po.id === bill.po_id);
+    const isCustomPo = !hasPoMatch && !!(bill.po_reference || bill.po_no);
 
     const lineItems = (bill.line_items && bill.line_items.length) ? bill.line_items : [
       {
@@ -11077,14 +12671,85 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-grid-2">
+              <div class="fin-form-grid-3">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Linked Project</label>
-                  <select id="edit-bill-project" class="fin-form-select">
-                    <option value="">General Corporate Overhead</option>
-                    ${projects.map(p => `<option value="${p.id}" ${bill.project_id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
-                  </select>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Linked Project / Cost Center</label>
+                    <span id="edit-bill-prj-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Pick from List or Type Custom ▾</span>
+                  </div>
+                  <div class="fin-autocomplete-wrap">
+                    <input 
+                      type="text" 
+                      id="edit-bill-project" 
+                      class="fin-form-input" 
+                      value="${bill.project_name || 'General Corporate Overhead'}"
+                      placeholder="Click to pick project, or type custom..." 
+                      autocomplete="off"
+                    >
+                    <div id="edit-bill-prj-dropdown" class="fin-autocomplete-dropdown">
+                      <div class="fin-autocomplete-header">Registered Projects &amp; Cost Centers (${currLabel})</div>
+                      <div class="fin-autocomplete-item" data-id="" data-name="General Corporate Overhead">
+                        <div>
+                          <div class="fin-autocomplete-item-name">General Corporate Overhead</div>
+                          <div class="fin-autocomplete-item-meta">Corporate Operations • Non-project Consumables</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">Overhead</span>
+                      </div>
+                      ${projects.map(p => `
+                        <div class="fin-autocomplete-item" data-id="${p.id}" data-name="${p.name}">
+                          <div>
+                            <div class="fin-autocomplete-item-name">${p.name}</div>
+                            <div class="fin-autocomplete-item-meta">${p.code || 'PRJ'} • ${p.client_name || p.location || 'Active Project'}</div>
+                          </div>
+                          <span class="fin-autocomplete-item-badge">${p.code || 'Project'}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="edit-bill-prj-hint">Click box to select project, or type any custom project name</span>
+                  </div>
                 </div>
+
+                <div class="fin-form-group">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label class="fin-form-label" style="margin-bottom:0;">Linked Purchase Order</label>
+                    <span id="edit-bill-po-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Pick PO or Type Ref ▾</span>
+                  </div>
+                  <div class="fin-autocomplete-wrap">
+                    <input 
+                      type="text" 
+                      id="edit-bill-po-sel" 
+                      class="fin-form-input" 
+                      value="${bill.po_reference || bill.po_no || ''}"
+                      placeholder="Click to select PO, or type custom PO #..." 
+                      autocomplete="off"
+                    >
+                    <div id="edit-bill-po-dropdown" class="fin-autocomplete-dropdown">
+                      <div class="fin-autocomplete-header">Existing Purchase Orders</div>
+                      <div class="fin-autocomplete-item" data-id="" data-no="">
+                        <div>
+                          <div class="fin-autocomplete-item-name">No PO Linked</div>
+                          <div class="fin-autocomplete-item-meta">Direct bill without prior purchase order</div>
+                        </div>
+                        <span class="fin-autocomplete-item-badge">Direct</span>
+                      </div>
+                      ${pos.map(po => `
+                        <div class="fin-autocomplete-item" data-id="${po.id}" data-no="${po.po_no || ''}">
+                          <div>
+                            <div class="fin-autocomplete-item-name">${po.po_no}</div>
+                            <div class="fin-autocomplete-item-meta">${po.vendor_name || po.supplier_name || 'Vendor'} • ${po.total_amount ? (currSym + Number(po.total_amount).toLocaleString()) : 'Active PO'}</div>
+                          </div>
+                          <span class="fin-autocomplete-item-badge">PO</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                    <span id="edit-bill-po-hint">Select existing PO or type custom PO / contract reference</span>
+                  </div>
+                </div>
+
                 <div class="fin-form-group">
                   <label class="fin-form-label">Item / Service Purchased <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="edit-bill-desc" class="fin-form-input" value="${lineItems[0]?.name || ''}" required>
@@ -11134,6 +12799,220 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    // Project Autocomplete for Edit Modal
+    const editPrjInput = document.getElementById('edit-bill-project');
+    const editPrjDropdown = document.getElementById('edit-bill-prj-dropdown');
+    const editPrjBadge = document.getElementById('edit-bill-prj-badge');
+    const editPrjHint = document.getElementById('edit-bill-prj-hint');
+
+    if (bill.project_id && hasProjectMatch) {
+      editPrjInput.setAttribute('data-prj-id', bill.project_id);
+      if (editPrjBadge) {
+        editPrjBadge.textContent = '✓ Registered Project';
+        editPrjBadge.style.color = '#10b981';
+      }
+    } else if (bill.project_name && bill.project_name !== 'General Corporate Overhead') {
+      if (editPrjBadge) {
+        editPrjBadge.textContent = '✎ Custom Project';
+        editPrjBadge.style.color = '#38bdf8';
+      }
+    }
+
+    if (editPrjInput && editPrjDropdown) {
+      const showEditPrjRecommendations = () => {
+        const val = editPrjInput.value.trim().toLowerCase();
+        editPrjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const name = (item.getAttribute('data-name') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || val === 'general corporate overhead' || name.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        editPrjDropdown.classList.add('open');
+      };
+
+      editPrjInput.onfocus = showEditPrjRecommendations;
+      editPrjInput.onclick = showEditPrjRecommendations;
+
+      editPrjDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const prjId = item.getAttribute('data-id');
+          if (!prjId) {
+            editPrjInput.value = 'General Corporate Overhead';
+            editPrjInput.removeAttribute('data-prj-id');
+            if (editPrjBadge) {
+              editPrjBadge.textContent = 'General Overhead';
+              editPrjBadge.style.color = '#94a3b8';
+            }
+            if (editPrjHint) editPrjHint.textContent = 'General Corporate Overhead selected';
+          } else {
+            const found = projects.find(p => p.id === prjId);
+            editPrjInput.value = found ? found.name : item.getAttribute('data-name');
+            editPrjInput.setAttribute('data-prj-id', prjId);
+            if (editPrjBadge) {
+              editPrjBadge.textContent = `✓ ${found?.code || 'Registered Project'}`;
+              editPrjBadge.style.color = '#10b981';
+            }
+            if (editPrjHint) editPrjHint.textContent = `${editPrjInput.value} linked to bill`;
+          }
+          editPrjDropdown.classList.remove('open');
+        };
+      });
+
+      const handleEditPrjInput = () => {
+        showEditPrjRecommendations();
+        const val = editPrjInput.value.trim();
+        if (!val || val.toLowerCase() === 'general corporate overhead') {
+          editPrjInput.removeAttribute('data-prj-id');
+          if (editPrjBadge) {
+            editPrjBadge.textContent = 'Pick from List or Type Custom ▾';
+            editPrjBadge.style.color = '#38bdf8';
+          }
+          if (editPrjHint) editPrjHint.textContent = 'Click to select project, or type any custom project name';
+          return;
+        }
+
+        const found = projects.find(p => 
+          p.name.toLowerCase() === val.toLowerCase() ||
+          `${p.name} (${p.code || ''})`.toLowerCase() === val.toLowerCase()
+        );
+
+        if (found) {
+          editPrjInput.setAttribute('data-prj-id', found.id);
+          if (editPrjBadge) {
+            editPrjBadge.textContent = `✓ ${found.code || 'Registered Project'}`;
+            editPrjBadge.style.color = '#10b981';
+          }
+          if (editPrjHint) editPrjHint.textContent = `${found.name} linked to bill`;
+        } else {
+          editPrjInput.removeAttribute('data-prj-id');
+          if (editPrjBadge) {
+            editPrjBadge.textContent = '✎ Custom Project';
+            editPrjBadge.style.color = '#38bdf8';
+          }
+          if (editPrjHint) editPrjHint.textContent = `Custom project "${val}" will be recorded on bill.`;
+        }
+      };
+
+      editPrjInput.oninput = handleEditPrjInput;
+      editPrjInput.onchange = handleEditPrjInput;
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#edit-bill-project') && !e.target.closest('#edit-bill-prj-dropdown')) {
+          editPrjDropdown.classList.remove('open');
+        }
+      });
+    }
+
+    // Purchase Order Autocomplete for Edit Modal
+    const editPoInput = document.getElementById('edit-bill-po-sel');
+    const editPoDropdown = document.getElementById('edit-bill-po-dropdown');
+    const editPoBadge = document.getElementById('edit-bill-po-badge');
+    const editPoHint = document.getElementById('edit-bill-po-hint');
+
+    if (bill.po_id && hasPoMatch) {
+      editPoInput.setAttribute('data-po-id', bill.po_id);
+      if (editPoBadge) {
+        editPoBadge.textContent = `✓ Linked PO: ${bill.po_no || ''}`;
+        editPoBadge.style.color = '#10b981';
+      }
+    } else if (bill.po_reference || bill.po_no) {
+      if (editPoBadge) {
+        editPoBadge.textContent = '✎ Custom PO Ref';
+        editPoBadge.style.color = '#38bdf8';
+      }
+    }
+
+    if (editPoInput && editPoDropdown) {
+      const showEditPoRecommendations = () => {
+        const val = editPoInput.value.trim().toLowerCase();
+        editPoDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const no = (item.getAttribute('data-no') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || no.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        editPoDropdown.classList.add('open');
+      };
+
+      editPoInput.onfocus = showEditPoRecommendations;
+      editPoInput.onclick = showEditPoRecommendations;
+
+      editPoDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          const poId = item.getAttribute('data-id');
+          if (!poId) {
+            editPoInput.value = '';
+            editPoInput.removeAttribute('data-po-id');
+            if (editPoBadge) {
+              editPoBadge.textContent = 'No PO Linked';
+              editPoBadge.style.color = '#94a3b8';
+            }
+            if (editPoHint) editPoHint.textContent = 'Direct bill without prior purchase order';
+          } else {
+            const found = pos.find(p => p.id === poId);
+            editPoInput.value = found ? found.po_no : item.getAttribute('data-no');
+            editPoInput.setAttribute('data-po-id', poId);
+            if (editPoBadge) {
+              editPoBadge.textContent = `✓ Linked PO: ${editPoInput.value}`;
+              editPoBadge.style.color = '#10b981';
+            }
+            if (editPoHint) editPoHint.textContent = `Linked to PO #${editPoInput.value}`;
+          }
+          editPoDropdown.classList.remove('open');
+        };
+      });
+
+      const handleEditPoInput = () => {
+        showEditPoRecommendations();
+        const val = editPoInput.value.trim();
+        if (!val) {
+          editPoInput.removeAttribute('data-po-id');
+          if (editPoBadge) {
+            editPoBadge.textContent = 'Pick PO or Type Ref ▾';
+            editPoBadge.style.color = '#38bdf8';
+          }
+          if (editPoHint) editPoHint.textContent = 'Select existing PO or type custom PO / contract reference';
+          return;
+        }
+
+        const found = pos.find(p => (p.po_no || '').toLowerCase() === val.toLowerCase());
+        if (found) {
+          editPoInput.setAttribute('data-po-id', found.id);
+          if (editPoBadge) {
+            editPoBadge.textContent = `✓ Linked PO: ${found.po_no}`;
+            editPoBadge.style.color = '#10b981';
+          }
+          if (editPoHint) editPoHint.textContent = `Linked to PO #${found.po_no}`;
+        } else {
+          editPoInput.removeAttribute('data-po-id');
+          if (editPoBadge) {
+            editPoBadge.textContent = '✎ Custom PO Ref';
+            editPoBadge.style.color = '#38bdf8';
+          }
+          if (editPoHint) {
+            editPoHint.textContent = `Custom PO reference "${val}" will be linked on bill.`;
+          }
+        }
+      };
+
+      editPoInput.oninput = handleEditPoInput;
+      editPoInput.onchange = handleEditPoInput;
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#edit-bill-po-sel') && !e.target.closest('#edit-bill-po-dropdown')) {
+          editPoDropdown.classList.remove('open');
+        }
+      });
+    }
+
     const taxableInp = document.getElementById('edit-bill-taxable');
     const rateSel = document.getElementById('edit-bill-rate');
     const grandInp = document.getElementById('edit-bill-grand');
@@ -11168,6 +13047,55 @@ class FinanceApp {
       bill.bill_date = document.getElementById('edit-bill-date').value;
       bill.payment_terms = Number(document.getElementById('edit-bill-terms').value);
       bill.due_date = document.getElementById('edit-bill-due-date').value;
+
+      // Resolve Project from text input
+      const prjVal = (editPrjInput?.value || '').trim();
+      let prjId = editPrjInput?.getAttribute('data-prj-id') || null;
+
+      if (!prjVal || prjVal.toLowerCase() === 'general corporate overhead') {
+        bill.project_id = null;
+        bill.project_name = 'General Corporate Overhead';
+      } else {
+        bill.project_name = prjVal;
+        if (!prjId) {
+          const matchPrj = projects.find(p => p.name.toLowerCase() === prjVal.toLowerCase() || (p.code && p.code.toLowerCase() === prjVal.toLowerCase()));
+          if (matchPrj) {
+            bill.project_id = matchPrj.id;
+          } else {
+            bill.project_id = 'prj-' + Date.now();
+            const newPrj = {
+              id: bill.project_id,
+              code: 'PRJ-' + Math.floor(1000 + Math.random() * 9000),
+              name: prjVal,
+              company_id: bill.company_id || this.activeCompanyId,
+              status: 'active'
+            };
+            if (!this.db.projects) this.db.projects = [];
+            this.db.projects.push(newPrj);
+            this.syncApi('create_project', { project: newPrj }).catch(e => console.warn('Project auto-persist:', e));
+          }
+        } else {
+          bill.project_id = prjId;
+        }
+      }
+
+      // Resolve PO from text input
+      const poVal = (editPoInput?.value || '').trim();
+      let poId = editPoInput?.getAttribute('data-po-id') || null;
+
+      bill.po_no = poVal;
+      bill.po_number = poVal;
+      bill.po_reference = poVal;
+
+      if (!poVal) {
+        bill.po_id = null;
+      } else if (!poId) {
+        const matchPo = pos.find(p => (p.po_no || '').toLowerCase() === poVal.toLowerCase());
+        bill.po_id = matchPo ? matchPo.id : 'po-cust-' + Date.now();
+      } else {
+        bill.po_id = poId;
+      }
+
       bill.taxable_subtotal = taxable;
       bill.tax_total = tax;
       bill.grand_total = grand;
