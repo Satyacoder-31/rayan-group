@@ -154,12 +154,14 @@ class FinanceApp {
       'companies', 'users', 'customers', 'vendors', 'items', 'projects',
       'invoices', 'purchase_bills', 'customer_receipts', 'vendor_payments',
       'credit_notes', 'debit_notes', 'expenses', 'purchase_orders',
-      'audit_logs', 'notifications', 'documents'
+      'audit_logs', 'notifications', 'documents',
+      'bank_accounts', 'cash_in_hand', 'cheques', 'loan_accounts',
+      'bank_transfers', 'cash_vouchers', 'loan_transactions'
     ];
 
     const getUniqueKey = (item) => {
       if (!item || typeof item !== 'object') return null;
-      return item.id || item.receipt_no || item.invoice_no || item.bill_no || item.voucher_no || item.payment_no || item.po_no || item.expense_no || item.debit_note_no || item.credit_note_no || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
+      return item.id || item.receipt_no || item.invoice_no || item.bill_no || item.voucher_no || item.payment_no || item.po_no || item.expense_no || item.debit_note_no || item.credit_note_no || item.cheque_no || item.reference_no || item.account_number || item.iban || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
     };
 
     for (const key of collections) {
@@ -582,6 +584,212 @@ class FinanceApp {
       const docId = payload.document_id || payload.id;
       if (this.db.documents && docId) {
         this.db.documents = this.db.documents.filter(d => d.id !== docId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    // CASH & BANK LOCAL FALLBACKS
+    if (action === 'create_bank_account' && payload.bank_account) {
+      if (!this.db.bank_accounts) this.db.bank_accounts = [];
+      const newB = payload.bank_account;
+      const idx = this.db.bank_accounts.findIndex(b => b.id === newB.id);
+      if (idx >= 0) this.db.bank_accounts[idx] = newB;
+      else this.db.bank_accounts.unshift(newB);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, bank: newB };
+    }
+
+    if (action === 'update_bank_account' && payload.bank_account) {
+      if (!this.db.bank_accounts) this.db.bank_accounts = [];
+      const b = payload.bank_account;
+      const targetId = payload.id || b.id;
+      const idx = this.db.bank_accounts.findIndex(x => x.id === targetId);
+      if (idx >= 0) this.db.bank_accounts[idx] = { ...this.db.bank_accounts[idx], ...b };
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, bank: b };
+    }
+
+    if (action === 'delete_bank_account' && payload.id) {
+      if (this.db.bank_accounts) {
+        this.db.bank_accounts = this.db.bank_accounts.filter(b => b.id !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'record_bank_transfer' && payload.transfer) {
+      if (!this.db.bank_transfers) this.db.bank_transfers = [];
+      const trn = payload.transfer;
+      this.db.bank_transfers.unshift(trn);
+      const amt = Number(trn.amount) || 0;
+      if (amt > 0 && this.db.bank_accounts) {
+        const src = this.db.bank_accounts.find(x => x.id === trn.source_account_id);
+        if (src) src.balance = (Number(src.balance) || 0) - amt;
+        if (trn.destination_account_id) {
+          const dest = this.db.bank_accounts.find(x => x.id === trn.destination_account_id);
+          if (dest) dest.balance = (Number(dest.balance) || 0) + amt;
+        }
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, transfer: trn };
+    }
+
+    if (action === 'delete_bank_transfer' && payload.id) {
+      if (this.db.bank_transfers) {
+        this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'create_cash_register' && payload.register) {
+      if (!this.db.cash_in_hand) this.db.cash_in_hand = [];
+      const reg = payload.register;
+      const idx = this.db.cash_in_hand.findIndex(r => r.id === reg.id);
+      if (idx >= 0) this.db.cash_in_hand[idx] = reg;
+      else this.db.cash_in_hand.unshift(reg);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, register: reg };
+    }
+
+    if (action === 'update_cash_register' && payload.register) {
+      if (!this.db.cash_in_hand) this.db.cash_in_hand = [];
+      const reg = payload.register;
+      const targetId = payload.id || reg.id;
+      const idx = this.db.cash_in_hand.findIndex(r => r.id === targetId);
+      if (idx >= 0) this.db.cash_in_hand[idx] = { ...this.db.cash_in_hand[idx], ...reg };
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, register: reg };
+    }
+
+    if (action === 'delete_cash_register' && payload.id) {
+      if (this.db.cash_in_hand) {
+        this.db.cash_in_hand = this.db.cash_in_hand.filter(r => r.id !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'record_cash_voucher' && payload.voucher) {
+      if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+      const cv = payload.voucher;
+      this.db.cash_vouchers.unshift(cv);
+      const amt = Number(cv.amount) || 0;
+      if (amt > 0 && cv.register_id && this.db.cash_in_hand) {
+        const reg = this.db.cash_in_hand.find(r => r.id === cv.register_id);
+        if (reg) {
+          if (cv.type === 'inflow') {
+            reg.balance = (Number(reg.balance) || 0) + amt;
+          } else {
+            reg.balance = (Number(reg.balance) || 0) - amt;
+          }
+          reg.last_replenished = cv.date || new Date().toISOString().split('T')[0];
+        }
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, voucher: cv };
+    }
+
+    if (action === 'delete_cash_voucher' && payload.id) {
+      if (this.db.cash_vouchers) {
+        this.db.cash_vouchers = this.db.cash_vouchers.filter(v => v.id !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'record_cheque' && payload.cheque) {
+      if (!this.db.cheques) this.db.cheques = [];
+      const chq = payload.cheque;
+      const idx = this.db.cheques.findIndex(c => c.id === chq.id || c.cheque_no === chq.cheque_no);
+      if (idx >= 0) this.db.cheques[idx] = chq;
+      else this.db.cheques.unshift(chq);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, cheque: chq };
+    }
+
+    if (action === 'update_cheque_status' && payload.id) {
+      if (this.db.cheques) {
+        const chq = this.db.cheques.find(c => c.id === payload.id);
+        if (chq) {
+          const oldStatus = chq.status;
+          chq.status = payload.status || 'Cleared';
+          if (chq.status === 'Cleared' && oldStatus !== 'Cleared') {
+            const amt = Number(chq.amount) || 0;
+            if (amt > 0 && this.db.bank_accounts) {
+              const b = this.db.bank_accounts.find(acc => acc.id === payload.bank_account_id || (!payload.bank_account_id && (acc.bank_name || '').toLowerCase() === (chq.bank_name || '').toLowerCase()));
+              if (b) {
+                if (chq.type === 'inward') b.balance = (Number(b.balance) || 0) + amt;
+                else b.balance = (Number(b.balance) || 0) - amt;
+              }
+            }
+          }
+        }
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'delete_cheque' && payload.id) {
+      if (this.db.cheques) {
+        this.db.cheques = this.db.cheques.filter(c => c.id !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'create_loan_account' && payload.loan_account) {
+      if (!this.db.loan_accounts) this.db.loan_accounts = [];
+      const loan = payload.loan_account;
+      const idx = this.db.loan_accounts.findIndex(l => l.id === loan.id);
+      if (idx >= 0) this.db.loan_accounts[idx] = loan;
+      else this.db.loan_accounts.unshift(loan);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, loan };
+    }
+
+    if (action === 'update_loan_account' && payload.loan_account) {
+      if (!this.db.loan_accounts) this.db.loan_accounts = [];
+      const loan = payload.loan_account;
+      const targetId = payload.id || loan.id;
+      const idx = this.db.loan_accounts.findIndex(l => l.id === targetId);
+      if (idx >= 0) this.db.loan_accounts[idx] = { ...this.db.loan_accounts[idx], ...loan };
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, loan };
+    }
+
+    if (action === 'delete_loan_account' && payload.id) {
+      if (this.db.loan_accounts) {
+        this.db.loan_accounts = this.db.loan_accounts.filter(l => l.id !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'record_loan_transaction' && payload.transaction) {
+      if (!this.db.loan_transactions) this.db.loan_transactions = [];
+      const lt = payload.transaction;
+      this.db.loan_transactions.unshift(lt);
+      const amt = Number(lt.amount) || 0;
+      if (amt > 0 && lt.facility_id && this.db.loan_accounts) {
+        const lf = this.db.loan_accounts.find(l => l.id === lt.facility_id);
+        if (lf) {
+          if (lt.type === 'drawdown') {
+            lf.outstanding_balance = (Number(lf.outstanding_balance) || 0) + amt;
+          } else if (lt.type === 'repayment') {
+            lf.outstanding_balance = Math.max(0, (Number(lf.outstanding_balance) || 0) - amt);
+          }
+          lf.available_limit = Math.max(0, (Number(lf.sanctioned_limit) || 0) - (Number(lf.outstanding_balance) || 0));
+        }
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, transaction: lt };
+    }
+
+    if (action === 'delete_loan_transaction' && payload.id) {
+      if (this.db.loan_transactions) {
+        this.db.loan_transactions = this.db.loan_transactions.filter(t => t.id !== payload.id);
       }
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db };
@@ -1625,7 +1833,7 @@ class FinanceApp {
             this.openCreateNotePrompt('credit_note');
             break;
           case 'new-bank':
-            this.openBankTransferModal();
+            this.openAddBankAccountModal();
             break;
           case 'new-cash':
             this.openCashEntryModal();
@@ -3111,56 +3319,83 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // CASH & BANK MODULES (Matching Reference Image 3)
   // --------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
+  // CASH & BANK MODULES (Full Multi-Company Enterprise Implementation)
+  // --------------------------------------------------------------------------
   renderBankAccountsTab(root) {
-    const banks = this.db?.bank_accounts || [];
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const transfers = (this.db?.bank_transfers || []).filter(t => (t.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const totalTreasury = banks.reduce((sum, b) => sum + (Number(b.balance) || 0), 0);
 
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
           <div>
             <h2 class="fin-panel-title">🏛️ Corporate Bank Accounts &amp; Treasury Ledger</h2>
-            <p style="font-size:0.75rem; color:#94a3b8;">Multi-currency treasury management across India &amp; UAE banking institutions</p>
+            <p style="font-size:0.75rem; color:#94a3b8;">
+              ${comp ? comp.name : 'Rayan Group'} • Treasury liquidity &amp; multi-currency settlement (${isIndia ? 'INR ₹' : 'AED'})
+            </p>
           </div>
-          <div style="display:flex; gap:0.5rem; align-items:center;">
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <div style="padding:0.4rem 0.8rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; font-size:0.78rem; color:#38bdf8;">
+              Total Liquidity: <strong style="color:#ffffff;">${this.formatCurrency(totalTreasury)}</strong>
+            </div>
             <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openBankTransferModal()">
               ⇄ Record Transfer / Wire
             </button>
-            <button type="button" class="fin-btn-quick primary" onclick="alert('Add Bank Account: Connect corporate internet banking or register secondary account.')">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openAddBankAccountModal()">
               + Add Bank Account
             </button>
           </div>
         </div>
 
         <!-- Corporate Banking Grid -->
-        <div class="fin-bank-grid">
-          ${banks.map(b => `
-            <div class="fin-bank-card">
-              <div class="fin-bank-card-header">
-                <div>
-                  <strong style="font-size:0.95rem; color:#ffffff;">${b.bank_name}</strong>
-                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">${b.account_name}</div>
+        ${banks.length === 0 ? `
+          <div class="fin-empty-state-card">
+            <h4>No Bank Accounts Found</h4>
+            <p>No corporate banking accounts are currently configured for ${comp ? comp.name : 'this company'}. Click below to add an account in ${isIndia ? 'INR' : 'AED'}.</p>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openAddBankAccountModal()">+ Add Bank Account</button>
+          </div>
+        ` : `
+          <div class="fin-bank-grid">
+            ${banks.map(b => `
+              <div class="fin-bank-card">
+                <div class="fin-bank-card-header">
+                  <div>
+                    <strong style="font-size:0.95rem; color:#ffffff;">${b.bank_name}</strong>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">${b.account_name || 'Corporate Account'}</div>
+                  </div>
+                  <span class="fin-bank-badge" style="${b.status === 'Dormant' ? 'background:rgba(245,158,11,0.15); color:#f59e0b; border-color:rgba(245,158,11,0.3);' : ''}">
+                    ${b.status || 'Active'}
+                  </span>
                 </div>
-                <span class="fin-bank-badge">${b.status || 'Active'}</span>
+                <div class="fin-bank-balance">
+                  ${this.formatCurrency(b.balance)}
+                </div>
+                <div class="fin-bank-meta">
+                  <div><strong>A/c / IBAN:</strong> ${b.iban || b.account_number || '—'}</div>
+                  <div><strong>Branch:</strong> ${b.branch || '—'}</div>
+                  ${b.ifsc_code ? `<div><strong>IFSC:</strong> ${b.ifsc_code}</div>` : ''}
+                  ${b.swift ? `<div><strong>SWIFT / BIC:</strong> ${b.swift}</div>` : ''}
+                  <div style="color:#60a5fa; margin-top:4px;"><strong>Signatory:</strong> ${b.signatory || 'Authorized Officer'}</div>
+                </div>
+                <div class="fin-bank-card-actions">
+                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddBankAccountModal('${b.id}')">✏️ Edit</button>
+                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openBankTransferModal('${b.id}')">⇄ Wire Out</button>
+                  <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteBankAccount('${b.id}')">🗑️ Remove</button>
+                </div>
               </div>
-              <div class="fin-bank-balance">
-                ${b.currency === 'INR' ? '₹' + Number(b.balance).toLocaleString('en-IN') : 'AED ' + Number(b.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </div>
-              <div class="fin-bank-meta">
-                <div><strong>A/c / IBAN:</strong> ${b.iban || b.account_number}</div>
-                <div><strong>Branch:</strong> ${b.branch}</div>
-                ${b.ifsc_code ? `<div><strong>IFSC:</strong> ${b.ifsc_code}</div>` : ''}
-                ${b.swift ? `<div><strong>SWIFT / BIC:</strong> ${b.swift}</div>` : ''}
-                <div style="color:#60a5fa; margin-top:4px;"><strong>Signatory:</strong> ${b.signatory}</div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
+            `).join('')}
+          </div>
+        `}
 
         <!-- Recent Bank Wire Statements Table -->
         <div class="fin-panel-header" style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem;">
           <div>
             <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📜 Recent Bank Wires &amp; Remittance Clearances</h3>
-            <span style="font-size:0.72rem; color:#94a3b8;">Audited transaction records matched with bank statements</span>
+            <span style="font-size:0.72rem; color:#94a3b8;">Audited transaction records matched with corporate bank statements (${transfers.length} wires)</span>
           </div>
         </div>
 
@@ -3170,50 +3405,47 @@ class FinanceApp {
               <tr>
                 <th>Wire / UTR #</th>
                 <th>Settlement Date</th>
-                <th>Counterparty</th>
+                <th>Counterparty / Payee</th>
                 <th>Bank Account</th>
                 <th>Transaction Type</th>
-                <th>Amount</th>
+                <th style="text-align:right;">Amount</th>
                 <th>Status</th>
+                <th style="text-align:center;">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><strong>FAB-TRN-99042</strong></td>
-                <td>14 Oct 2026</td>
-                <td>Emaar Properties PJSC</td>
-                <td>First Abu Dhabi Bank (AED)</td>
-                <td><span style="color:#10b981; font-weight:600;">Inward Wire (Client Advance)</span></td>
-                <td><strong style="color:#10b981;">AED 350,000.00</strong></td>
-                <td><span class="fin-badge fin-badge-paid">Cleared</span></td>
-              </tr>
-              <tr>
-                <td><strong>SBIN-RTGS-88219</strong></td>
-                <td>13 Oct 2026</td>
-                <td>Larsen &amp; Toubro Ltd (ECC Div)</td>
-                <td>SBI Corporate Current (INR)</td>
-                <td><span style="color:#10b981; font-weight:600;">Inward RTGS (RA Bill 04)</span></td>
-                <td><strong style="color:#10b981;">₹1,850,000.00</strong></td>
-                <td><span class="fin-badge fin-badge-paid">Settled</span></td>
-              </tr>
-              <tr>
-                <td><strong>WIRE-FAB-001925</strong></td>
-                <td>12 Oct 2026</td>
-                <td>Siemens Middle East FZ-LLC</td>
-                <td>First Abu Dhabi Bank (AED)</td>
-                <td><span style="color:#fb923c; font-weight:600;">Outward Telegraphic Transfer</span></td>
-                <td><strong style="color:#fb923c;">AED 120,000.00</strong></td>
-                <td><span class="fin-badge fin-badge-paid">Completed</span></td>
-              </tr>
-              <tr>
-                <td><strong>SBIN-NEFT-44120</strong></td>
-                <td>10 Oct 2026</td>
-                <td>JSW Steel Ltd</td>
-                <td>SBI Corporate Current (INR)</td>
-                <td><span style="color:#fb923c; font-weight:600;">Outward Corporate NEFT</span></td>
-                <td><strong style="color:#fb923c;">₹980,000.00</strong></td>
-                <td><span class="fin-badge fin-badge-paid">Completed</span></td>
-              </tr>
+              ${transfers.length === 0 ? `
+                <tr>
+                  <td colspan="8" style="text-align:center; padding:2rem; color:#94a3b8;">
+                    No wire transfers recorded yet for this entity. Click <strong>"Record Transfer / Wire"</strong> above to log an inflow or outflow.
+                  </td>
+                </tr>
+              ` : transfers.map(t => {
+                const isInward = t.type === 'inward';
+                const isInter = t.type === 'inter_account';
+                const color = isInward ? '#10b981' : (isInter ? '#38bdf8' : '#fb923c');
+                const sign = isInward ? '+' : (isInter ? '⇄' : '-');
+                return `
+                  <tr>
+                    <td><strong>${t.reference_no}</strong></td>
+                    <td>${this.formatDate(t.date)}</td>
+                    <td>
+                      <div style="font-weight:600; color:#ffffff;">${t.counterparty || 'Corporate Treasury'}</div>
+                      ${t.purpose ? `<div style="font-size:0.7rem; color:#94a3b8;">${t.purpose}</div>` : ''}
+                    </td>
+                    <td>${t.source_bank || 'Corporate Account'}</td>
+                    <td><span style="color:${color}; font-weight:600;">${t.type_label || (isInward ? 'Inward Wire' : 'Outward Remittance')}</span></td>
+                    <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(t.amount)}</strong></td>
+                    <td><span class="fin-badge ${t.status === 'Cleared' || t.status === 'Completed' ? 'fin-badge-paid' : 'fin-badge-pending'}">${t.status || 'Cleared'}</span></td>
+                    <td style="text-align:center;">
+                      <div style="display:inline-flex; gap:4px;">
+                        <button type="button" class="fin-btn-card-action" title="Print Remittance Advice" onclick="window.finApp.printBankWireAdvice('${t.id}')">🖨️</button>
+                        <button type="button" class="fin-btn-card-action danger" title="Delete Wire" onclick="window.finApp.deleteBankTransfer('${t.id}')">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -3222,45 +3454,73 @@ class FinanceApp {
   }
 
   renderCashInHandTab(root) {
-    const registers = this.db?.cash_in_hand || [];
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const vouchers = (this.db?.cash_vouchers || []).filter(v => (v.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const totalCash = registers.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
           <div>
             <h2 class="fin-panel-title">💵 Cash In Hand &amp; Site Petty Cash Registers</h2>
-            <p style="font-size:0.75rem; color:#94a3b8;">Controlled imprest vaults for field site expenses, emergency fuel, and administrative operations</p>
+            <p style="font-size:0.75rem; color:#94a3b8;">
+              ${comp ? comp.name : 'Rayan Group'} • Controlled imprest vaults for field site expenses, emergency fuel, and administrative operations
+            </p>
           </div>
-          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCashEntryModal()">
-            + Record Cash Voucher
-          </button>
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <div style="padding:0.4rem 0.8rem; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:6px; font-size:0.78rem; color:#34d399;">
+              Total Cash In Vaults: <strong style="color:#ffffff;">${this.formatCurrency(totalCash)}</strong>
+            </div>
+            <button type="button" class="fin-btn-quick" style="border-color:#34d399; color:#34d399;" onclick="window.finApp.openAddCashRegisterModal()">
+              + Add Cash Vault
+            </button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCashEntryModal()">
+              + Record Cash Voucher
+            </button>
+          </div>
         </div>
 
-        <div class="fin-bank-grid">
-          ${registers.map(r => `
-            <div class="fin-bank-card">
-              <div class="fin-bank-card-header">
-                <div>
-                  <strong style="font-size:0.95rem; color:#ffffff;">${r.register_name}</strong>
-                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Location: ${r.location}</div>
+        ${registers.length === 0 ? `
+          <div class="fin-empty-state-card">
+            <h4>No Cash Registers Registered</h4>
+            <p>No site petty cash vaults configured for ${comp ? comp.name : 'this entity'}. Register a site cash vault to start issuing vouchers.</p>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openAddCashRegisterModal()">+ Add Cash Vault</button>
+          </div>
+        ` : `
+          <div class="fin-bank-grid">
+            ${registers.map(r => `
+              <div class="fin-bank-card">
+                <div class="fin-bank-card-header">
+                  <div>
+                    <strong style="font-size:0.95rem; color:#ffffff;">${r.register_name}</strong>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Location: ${r.location || 'Site Office'}</div>
+                  </div>
+                  <span class="fin-bank-badge">Active Imprest</span>
                 </div>
-                <span class="fin-bank-badge">Active Imprest</span>
+                <div class="fin-bank-balance" style="color:#34d399;">
+                  ${this.formatCurrency(r.balance)}
+                </div>
+                <div class="fin-bank-meta">
+                  <div><strong>Custodian:</strong> ${r.custodian || 'Site Admin'}</div>
+                  <div><strong>Last Replenished:</strong> ${this.formatDate(r.last_replenished)}</div>
+                  <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;">Weekly audit &amp; dual-signature compliance</div>
+                </div>
+                <div class="fin-bank-card-actions">
+                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddCashRegisterModal('${r.id}')">✏️ Edit Vault</button>
+                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openCashEntryModal('${r.id}')">+ Voucher</button>
+                  <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteCashRegister('${r.id}')">🗑️ Remove</button>
+                </div>
               </div>
-              <div class="fin-bank-balance" style="color:#34d399;">
-                ${r.currency === 'INR' ? '₹' + Number(r.balance).toLocaleString('en-IN') : 'AED ' + Number(r.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </div>
-              <div class="fin-bank-meta">
-                <div><strong>Custodian:</strong> ${r.custodian}</div>
-                <div><strong>Replenished:</strong> ${this.formatDate(r.last_replenished)}</div>
-                <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;">Audited weekly by Head of Accounts</div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
+            `).join('')}
+          </div>
+        `}
 
         <div class="fin-panel-header" style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem;">
           <div>
-            <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📝 Recent Petty Cash Disbursals</h3>
-            <span style="font-size:0.72rem; color:#94a3b8;">Dual-signatory verification receipts</span>
+            <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📝 Recent Petty Cash Disbursals &amp; Replenishments</h3>
+            <span style="font-size:0.72rem; color:#94a3b8;">Dual-signatory verification receipts &amp; petty cash vouchers (${vouchers.length} vouchers)</span>
           </div>
         </div>
 
@@ -3272,43 +3532,46 @@ class FinanceApp {
                 <th>Date</th>
                 <th>Register Vault</th>
                 <th>Custodian</th>
-                <th>Purpose / Description</th>
-                <th>Disbursed To</th>
-                <th>Amount</th>
+                <th>Purpose / Category</th>
+                <th>Disbursed To / Payee</th>
+                <th style="text-align:right;">Amount</th>
                 <th>Status</th>
+                <th style="text-align:center;">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><strong>PC-MUM-401</strong></td>
-                <td>15 Oct 2026</td>
-                <td>Mumbai HQ Vault</td>
-                <td>Accounts Executive</td>
-                <td>Site Consumables &amp; Express Courier</td>
-                <td>Site Runner</td>
-                <td><strong style="color:#fb923c;">₹4,250.00</strong></td>
-                <td><span class="fin-badge fin-badge-paid">Approved</span></td>
-              </tr>
-              <tr>
-                <td><strong>PC-DXB-210</strong></td>
-                <td>14 Oct 2026</td>
-                <td>Dubai Regional Office</td>
-                <td>Site Admin Manager</td>
-                <td>Diesel Generator Fuel for Al Quoz Yard</td>
-                <td>Logistics Driver</td>
-                <td><strong style="color:#fb923c;">AED 1,850.00</strong></td>
-                <td><span class="fin-badge fin-badge-paid">Approved</span></td>
-              </tr>
-              <tr>
-                <td><strong>PC-AD-109</strong></td>
-                <td>12 Oct 2026</td>
-                <td>Abu Dhabi Solar Park</td>
-                <td>Resident EPC Manager</td>
-                <td>Safety Equipment &amp; Hydration Supplies</td>
-                <td>Safety Officer</td>
-                <td><strong style="color:#fb923c;">AED 2,400.00</strong></td>
-                <td><span class="fin-badge fin-badge-paid">Approved</span></td>
-              </tr>
+              ${vouchers.length === 0 ? `
+                <tr>
+                  <td colspan="9" style="text-align:center; padding:2rem; color:#94a3b8;">
+                    No petty cash vouchers logged yet. Click <strong>"Record Cash Voucher"</strong> above to issue a voucher.
+                  </td>
+                </tr>
+              ` : vouchers.map(v => {
+                const isInflow = v.type === 'inflow';
+                const color = isInflow ? '#10b981' : '#fb923c';
+                const sign = isInflow ? '+' : '-';
+                return `
+                  <tr>
+                    <td><strong>${v.voucher_no}</strong></td>
+                    <td>${this.formatDate(v.date)}</td>
+                    <td>${v.register_name || 'Petty Cash Vault'}</td>
+                    <td>${v.custodian || 'Custodian'}</td>
+                    <td>
+                      <div style="font-weight:600; color:#ffffff;">${v.purpose}</div>
+                      ${v.category ? `<div style="font-size:0.7rem; color:#94a3b8;">${v.category}</div>` : ''}
+                    </td>
+                    <td>${v.payee || 'Site Runner'}</td>
+                    <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(v.amount)}</strong></td>
+                    <td><span class="fin-badge fin-badge-paid">${v.status || 'Approved'}</span></td>
+                    <td style="text-align:center;">
+                      <div style="display:inline-flex; gap:4px;">
+                        <button type="button" class="fin-btn-card-action" title="Print Cash Voucher" onclick="window.finApp.printCashVoucher('${v.id}')">🖨️</button>
+                        <button type="button" class="fin-btn-card-action danger" title="Delete Voucher" onclick="window.finApp.deleteCashVoucher('${v.id}')">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -3317,9 +3580,10 @@ class FinanceApp {
   }
 
   renderChequesTab(root) {
-    const cheques = this.db?.cheques || [];
+    const cheques = (this.db?.cheques || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const inward = cheques.filter(c => c.type === 'inward');
     const outward = cheques.filter(c => c.type === 'outward');
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
 
     root.innerHTML = `
       <div class="fin-dash-row-responsive">
@@ -3328,9 +3592,9 @@ class FinanceApp {
           <div class="fin-panel-header">
             <div>
               <h2 class="fin-panel-title">📥 Inward Cheques (Customer Receipts)</h2>
-              <p style="font-size:0.75rem; color:#94a3b8;">Cheques received from clients under banking clearance</p>
+              <p style="font-size:0.75rem; color:#94a3b8;">Cheques received from clients under banking clearance (${inward.length})</p>
             </div>
-            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordReceiptModal()">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordChequeModal('inward')">
               + Inward Cheque
             </button>
           </div>
@@ -3342,19 +3606,39 @@ class FinanceApp {
                   <th>Drawee Bank</th>
                   <th>Customer / Issuer</th>
                   <th>Date</th>
-                  <th>Amount</th>
+                  <th style="text-align:right;">Amount</th>
                   <th>Status</th>
+                  <th style="text-align:center;">Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${inward.map(c => `
+                ${inward.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">No inward cheques registered.</td>
+                  </tr>
+                ` : inward.map(c => `
                   <tr>
                     <td><strong>${c.cheque_no}</strong></td>
-                    <td>${c.bank_name}</td>
-                    <td><strong>${c.party_name}</strong></td>
+                    <td>${c.bank_name || '—'}</td>
+                    <td>
+                      <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
+                      ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
+                    </td>
                     <td>${this.formatDate(c.date)}</td>
-                    <td><strong style="color:#10b981;">${c.currency === 'INR' ? '₹' + Number(c.amount).toLocaleString('en-IN') : 'AED ' + Number(c.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
-                    <td><span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : 'fin-badge-pending'}">${c.status}</span></td>
+                    <td style="text-align:right;"><strong style="color:#10b981;">${this.formatCurrency(c.amount)}</strong></td>
+                    <td>
+                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : (c.status === 'Bounced' ? 'fin-badge-void' : 'fin-badge-pending')}">
+                        ${c.status}
+                      </span>
+                    </td>
+                    <td style="text-align:center;">
+                      <div style="display:inline-flex; gap:3px;">
+                        ${c.status !== 'Cleared' ? `
+                          <button type="button" class="fin-btn-card-action success" title="Clear & Credit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'inward')">⚡ Clear</button>
+                        ` : ''}
+                        <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
+                      </div>
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -3367,9 +3651,9 @@ class FinanceApp {
           <div class="fin-panel-header">
             <div>
               <h2 class="fin-panel-title">📤 Outward Cheques (Vendor Disbursements)</h2>
-              <p style="font-size:0.75rem; color:#94a3b8;">Corporate cheques issued against verified supplier bills</p>
+              <p style="font-size:0.75rem; color:#94a3b8;">Corporate cheques issued against verified supplier bills (${outward.length})</p>
             </div>
-            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordPaymentModal()">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordChequeModal('outward')">
               + Issue Cheque
             </button>
           </div>
@@ -3381,19 +3665,39 @@ class FinanceApp {
                   <th>Account Bank</th>
                   <th>Payee Vendor</th>
                   <th>Date</th>
-                  <th>Amount</th>
+                  <th style="text-align:right;">Amount</th>
                   <th>Status</th>
+                  <th style="text-align:center;">Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${outward.map(c => `
+                ${outward.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">No outward cheques issued.</td>
+                  </tr>
+                ` : outward.map(c => `
                   <tr>
                     <td><strong>${c.cheque_no}</strong></td>
-                    <td>${c.bank_name}</td>
-                    <td><strong>${c.party_name}</strong></td>
+                    <td>${c.bank_name || '—'}</td>
+                    <td>
+                      <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
+                      ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
+                    </td>
                     <td>${this.formatDate(c.date)}</td>
-                    <td><strong style="color:#fb923c;">${c.currency === 'INR' ? '₹' + Number(c.amount).toLocaleString('en-IN') : 'AED ' + Number(c.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
-                    <td><span class="fin-badge fin-badge-paid">${c.status}</span></td>
+                    <td style="text-align:right;"><strong style="color:#fb923c;">${this.formatCurrency(c.amount)}</strong></td>
+                    <td>
+                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : 'fin-badge-pending'}">
+                        ${c.status}
+                      </span>
+                    </td>
+                    <td style="text-align:center;">
+                      <div style="display:inline-flex; gap:3px;">
+                        ${c.status !== 'Cleared' ? `
+                          <button type="button" class="fin-btn-card-action success" title="Clear & Debit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'outward')">⚡ Clear</button>
+                        ` : ''}
+                        <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
+                      </div>
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -3405,42 +3709,117 @@ class FinanceApp {
   }
 
   renderLoanAccountsTab(root) {
-    const loans = this.db?.loan_accounts || [];
+    const loans = (this.db?.loan_accounts || []).filter(l => (l.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const transactions = (this.db?.loan_transactions || []).filter(t => (t.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+    const totalDebt = loans.reduce((sum, l) => sum + (Number(l.outstanding_balance) || 0), 0);
+    const totalLimit = loans.reduce((sum, l) => sum + (Number(l.sanctioned_limit) || 0), 0);
+
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
           <div>
             <h2 class="fin-panel-title">🏢 Corporate Loan Accounts &amp; Credit Facilities</h2>
-            <p style="font-size:0.75rem; color:#94a3b8;">Consortium working capital lines, heavy machinery hypothecation, and international LC/BG facilities</p>
+            <p style="font-size:0.75rem; color:#94a3b8;">
+              ${comp ? comp.name : 'Rayan Group'} • Working capital consortium lines, machinery hypothecation &amp; LC/BG guarantee facilities
+            </p>
           </div>
-          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openLoanEntryModal()">
-            + Record Drawdown / Repayment
-          </button>
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <div style="padding:0.4rem 0.8rem; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:6px; font-size:0.78rem; color:#f59e0b;">
+              Total Debt: <strong style="color:#ffffff;">${this.formatCurrency(totalDebt)}</strong>
+            </div>
+            <button type="button" class="fin-btn-quick" style="border-color:#f59e0b; color:#f59e0b;" onclick="window.finApp.openAddLoanFacilityModal()">
+              + Add Credit Facility
+            </button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openLoanEntryModal()">
+              + Record Drawdown / Repayment
+            </button>
+          </div>
         </div>
 
-        <div class="fin-bank-grid">
-          ${loans.map(l => `
-            <div class="fin-bank-card">
-              <div class="fin-bank-card-header">
-                <div>
-                  <strong style="font-size:0.95rem; color:#ffffff;">${l.facility_name}</strong>
-                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Lender: ${l.lender}</div>
+        ${loans.length === 0 ? `
+          <div class="fin-empty-state-card">
+            <h4>No Credit Facilities Configured</h4>
+            <p>No banking credit facilities, hypothecation loans, or letter of credit lines found for ${comp ? comp.name : 'this entity'}.</p>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openAddLoanFacilityModal()">+ Add Credit Facility</button>
+          </div>
+        ` : `
+          <div class="fin-bank-grid">
+            ${loans.map(l => `
+              <div class="fin-bank-card">
+                <div class="fin-bank-card-header">
+                  <div>
+                    <strong style="font-size:0.95rem; color:#ffffff;">${l.facility_name}</strong>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Lender: ${l.lender}</div>
+                  </div>
+                  <span class="fin-bank-badge" style="background:rgba(59,130,246,0.15); color:#60a5fa; border-color:rgba(59,130,246,0.3);">Sanctioned</span>
                 </div>
-                <span class="fin-bank-badge" style="background:rgba(59,130,246,0.15); color:#60a5fa; border-color:rgba(59,130,246,0.3);">Sanctioned</span>
+                <div class="fin-bank-balance" style="color:#f59e0b;">
+                  ${this.formatCurrency(l.outstanding_balance)}
+                  <span style="font-size:0.72rem; color:#94a3b8; font-weight:500; display:block; margin-top:2px;">Outstanding Debt / Utilization</span>
+                </div>
+                <div class="fin-bank-meta">
+                  <div><strong>Sanctioned Limit:</strong> ${this.formatCurrency(l.sanctioned_limit)}</div>
+                  <div><strong>Available Headroom:</strong> <span style="color:#34d399; font-weight:700;">${this.formatCurrency(l.available_limit)}</span></div>
+                  <div><strong>Rate / Commission:</strong> ${l.interest_rate || l.commission_rate || 'Standard Rate'}</div>
+                  <div><strong>Tenure:</strong> ${l.tenure || '36 Months'}</div>
+                  <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;"><strong>Security:</strong> ${l.security || 'Corporate Guarantee'}</div>
+                </div>
+                <div class="fin-bank-card-actions">
+                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddLoanFacilityModal('${l.id}')">✏️ Edit</button>
+                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openLoanEntryModal('${l.id}')">+ Transaction</button>
+                  <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteLoanAccount('${l.id}')">🗑️ Remove</button>
+                </div>
               </div>
-              <div class="fin-bank-balance" style="color:#f59e0b;">
-                ${l.currency === 'INR' ? '₹' + Number(l.outstanding_balance).toLocaleString('en-IN') : 'AED ' + Number(l.outstanding_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                <span style="font-size:0.72rem; color:#94a3b8; font-weight:500; display:block; margin-top:2px;">Outstanding Debt / Utilization</span>
-              </div>
-              <div class="fin-bank-meta">
-                <div><strong>Sanctioned Limit:</strong> ${l.currency === 'INR' ? '₹' + Number(l.sanctioned_limit).toLocaleString('en-IN') : 'AED ' + Number(l.sanctioned_limit).toLocaleString('en-US')}</div>
-                <div><strong>Available Headroom:</strong> ${l.currency === 'INR' ? '₹' + Number(l.available_limit).toLocaleString('en-IN') : 'AED ' + Number(l.available_limit).toLocaleString('en-US')}</div>
-                <div><strong>Rate / Commission:</strong> ${l.interest_rate || l.commission_rate}</div>
-                <div><strong>Tenure:</strong> ${l.tenure || '36 Months'}</div>
-                <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;"><strong>Security:</strong> ${l.security}</div>
-              </div>
-            </div>
-          `).join('')}
+            `).join('')}
+          </div>
+        `}
+
+        <!-- Recent Facility Transactions Table -->
+        <div class="fin-panel-header" style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem;">
+          <div>
+            <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📑 Recent Credit Facility Transactions</h3>
+            <span style="font-size:0.72rem; color:#94a3b8;">Drawdowns, repayments and interest servicing records (${transactions.length} entries)</span>
+          </div>
+        </div>
+
+        <div class="fin-table-responsive">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th>Advice / Ref #</th>
+                <th>Date</th>
+                <th>Facility Name</th>
+                <th>Transaction Type</th>
+                <th style="text-align:right;">Amount</th>
+                <th>Notes / Purpose</th>
+                <th style="text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${transactions.length === 0 ? `
+                <tr>
+                  <td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">No facility transactions logged yet.</td>
+                </tr>
+              ` : transactions.map(t => {
+                const isDrawdown = t.type === 'drawdown';
+                const color = isDrawdown ? '#f59e0b' : '#34d399';
+                return `
+                  <tr>
+                    <td><strong>${t.reference_no || t.id}</strong></td>
+                    <td>${this.formatDate(t.date)}</td>
+                    <td><strong>${t.facility_name || 'Credit Facility'}</strong></td>
+                    <td><span style="color:${color}; font-weight:600;">${t.type_label || (isDrawdown ? 'Facility Drawdown' : (t.type === 'repayment' ? 'Principal Repayment' : 'Interest Service'))}</span></td>
+                    <td style="text-align:right;"><strong style="color:${color};">${this.formatCurrency(t.amount)}</strong></td>
+                    <td>${t.notes || '—'}</td>
+                    <td style="text-align:center;">
+                      <button type="button" class="fin-btn-card-action danger" title="Delete Transaction" onclick="window.finApp.deleteLoanTransaction('${t.id}')">🗑️</button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
     `;
@@ -8277,27 +8656,190 @@ class FinanceApp {
   }
 
   // 17. BANK TRANSFER / WIRE MODAL
-  openBankTransferModal() {
+    // ==========================================================================
+  // CASH & BANK INTERACTIVE MODALS & HANDLERS
+  // ==========================================================================
+
+  // 1. ADD / EDIT BANK ACCOUNT MODAL
+  openAddBankAccountModal(bankId = null) {
     const banks = this.db?.bank_accounts || [];
+    const b = bankId ? banks.find(x => x.id === bankId) : null;
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+    const curr = b?.currency || (isIndia ? 'INR' : 'AED');
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-bank-account">
+        <div class="fin-modal-dialog" style="max-width:580px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">${b ? '✏️ Edit Corporate Bank Account' : '🏛️ Add Corporate Bank Account'}</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bank-account')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="bank-account-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Bank Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ba-bank-name" class="fin-form-input" list="bank-name-options" required placeholder="e.g. First Abu Dhabi Bank (FAB)" value="${b?.bank_name || ''}">
+                  <datalist id="bank-name-options">
+                    <option value="First Abu Dhabi Bank PJSC">
+                    <option value="National Bank of Abu Dhabi (NBAD)">
+                    <option value="Abu Dhabi Commercial Bank (ADCB)">
+                    <option value="Emirates NBD Bank">
+                    <option value="Dubai Islamic Bank">
+                    <option value="Mashreq Bank">
+                    <option value="Abu Dhabi Islamic Bank (ADIB)">
+                    <option value="State Bank of India">
+                    <option value="HDFC Bank Ltd">
+                    <option value="ICICI Bank">
+                  </datalist>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Account Name / Title <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ba-account-name" class="fin-form-input" required placeholder="e.g. Corporate Current Treasury" value="${b?.account_name || ''}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">A/c Number / IBAN <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ba-account-number" class="fin-form-input" required placeholder="e.g. AE07033104889218001" value="${b?.iban || b?.account_number || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Currency</label>
+                  <select id="ba-currency" class="fin-form-select">
+                    <option value="AED" ${curr === 'AED' ? 'selected' : ''}>AED (UAE Dirham)</option>
+                    <option value="INR" ${curr === 'INR' ? 'selected' : ''}>INR (Indian Rupee)</option>
+                    <option value="USD" ${curr === 'USD' ? 'selected' : ''}>USD (US Dollar)</option>
+                    <option value="EUR" ${curr === 'EUR' ? 'selected' : ''}>EUR (Euro)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Current / Opening Balance <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="ba-balance" class="fin-form-input" required step="any" placeholder="0.00" value="${b?.balance ?? ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Branch Location</label>
+                  <input type="text" id="ba-branch" class="fin-form-input" placeholder="e.g. Al Maryah Island Financial Center, Abu Dhabi" value="${b?.branch || ''}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">SWIFT / BIC Code</label>
+                  <input type="text" id="ba-swift" class="fin-form-input" placeholder="e.g. FABUAEAA" value="${b?.swift || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">IFSC Code (India)</label>
+                  <input type="text" id="ba-ifsc" class="fin-form-input" placeholder="e.g. SBIN0001234" value="${b?.ifsc_code || ''}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Authorized Signatory</label>
+                  <input type="text" id="ba-signatory" class="fin-form-input" placeholder="Arshad Alam Shaikh (Managing Director)" value="${b?.signatory || 'Arshad Alam Shaikh (Managing Director)'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Account Status</label>
+                  <select id="ba-status" class="fin-form-select">
+                    <option value="Active" ${(b?.status || 'Active') === 'Active' ? 'selected' : ''}>Active</option>
+                    <option value="Dormant" ${b?.status === 'Dormant' ? 'selected' : ''}>Dormant</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-bank-account')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">${b ? 'Save Account Changes' : 'Register Corporate Bank Account'} &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('bank-account-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const accountNum = document.getElementById('ba-account-number').value.trim();
+      const isIban = accountNum.toUpperCase().startsWith('AE') || accountNum.length >= 20;
+
+      const bankData = {
+        id: b ? b.id : `bank-${Date.now().toString(36)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        bank_name: document.getElementById('ba-bank-name').value.trim(),
+        account_name: document.getElementById('ba-account-name').value.trim(),
+        account_number: accountNum,
+        iban: isIban ? accountNum : (b?.iban || ''),
+        currency: document.getElementById('ba-currency').value,
+        balance: parseFloat(document.getElementById('ba-balance').value) || 0,
+        branch: document.getElementById('ba-branch').value.trim(),
+        swift: document.getElementById('ba-swift').value.trim(),
+        ifsc_code: document.getElementById('ba-ifsc').value.trim(),
+        signatory: document.getElementById('ba-signatory').value.trim(),
+        status: document.getElementById('ba-status').value
+      };
+
+      await this.syncApi(b ? 'update_bank_account' : 'create_bank_account', {
+        bank_account: bankData,
+        id: b ? b.id : undefined
+      });
+
+      this.closeModal('modal-bank-account');
+      this.activeTab = 'bank_accounts';
+      this.renderActiveTab();
+      this.showNotification(`Bank account "${bankData.bank_name}" saved successfully!`, 'success');
+    };
+  }
+
+  async deleteBankAccount(bankId) {
+    if (!confirm('Are you sure you want to delete this bank account from records?')) return;
+    await this.syncApi('delete_bank_account', { id: bankId });
+    this.renderActiveTab();
+    this.showNotification('Bank account removed.', 'info');
+  }
+
+  // 2. RECORD BANK WIRE / TRANSFER MODAL
+  openBankTransferModal(sourceBankId = null) {
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const defaultPrefix = isIndia ? 'RTGS-ASH' : 'FAB-TRN';
+    const autoUtr = `${defaultPrefix}-${Math.floor(10000 + Math.random() * 90000)}`;
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-bank-transfer">
-        <div class="fin-modal-dialog" style="max-width:550px;">
+        <div class="fin-modal-dialog" style="max-width:560px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">🏛️ Record Bank Wire / Inter-Account Transfer</h3>
+            <h3 class="fin-modal-title">🏛️ Record Bank Wire / Remittance Clearance</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bank-transfer')">&times;</button>
           </div>
           <div class="fin-modal-body">
             <form id="bank-transfer-form">
               <div class="fin-form-group">
-                <label class="fin-form-label">Source Account (Debit From) <span style="color:#ef4444;">*</span></label>
-                <select id="bt-source" class="fin-form-select" required>
-                  ${banks.map(b => `<option value="${b.id}">${b.bank_name} — ${b.account_name} (${b.currency} ${Number(b.balance).toLocaleString()})</option>`).join('')}
+                <label class="fin-form-label">Transfer Direction / Type <span style="color:#ef4444;">*</span></label>
+                <select id="bt-type" class="fin-form-select">
+                  <option value="outward">Outward Remittance (Vendor / Overseas Contractor Wire)</option>
+                  <option value="inward">Inward Wire (Client Advance / Settlement)</option>
+                  <option value="inter_account">Inter-Account Treasury Transfer (Internal)</option>
                 </select>
               </div>
 
-              <div class="fin-form-group">
-                <label class="fin-form-label">Beneficiary / Destination Account <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="bt-dest" class="fin-form-input" required placeholder="e.g. First Abu Dhabi Bank / Contractor Escrow / Vendor Remittance">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Source Bank Account <span style="color:#ef4444;">*</span></label>
+                  <select id="bt-source" class="fin-form-select" required>
+                    ${banks.map(b => `<option value="${b.id}" ${b.id === sourceBankId ? 'selected' : ''}>${b.bank_name} (${this.formatCurrency(b.balance)})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Counterparty / Beneficiary <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="bt-counterparty" class="fin-form-input" required placeholder="e.g. Siemens Middle East / Client Advance">
+                </div>
               </div>
 
               <div class="fin-form-grid-2">
@@ -8306,19 +8848,29 @@ class FinanceApp {
                   <input type="number" id="bt-amount" class="fin-form-input" required step="any" placeholder="0.00">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Transfer Date <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Settlement Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="bt-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
                 </div>
               </div>
 
-              <div class="fin-form-group">
-                <label class="fin-form-label">Bank Reference / UTR # <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="bt-utr" class="fin-form-input" required placeholder="e.g. UTR-FAB-2026-99042">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Bank Reference / UTR # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="bt-utr" class="fin-form-input" required value="${autoUtr}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Clearance Status</label>
+                  <select id="bt-status" class="fin-form-select">
+                    <option value="Cleared">Cleared</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending Clearance</option>
+                  </select>
+                </div>
               </div>
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Purpose / Description</label>
-                <textarea id="bt-purpose" class="fin-form-textarea" rows="2" placeholder="e.g. Treasury liquidity rebalancing / site project escrow allocation"></textarea>
+                <textarea id="bt-purpose" class="fin-form-textarea" rows="2" placeholder="e.g. Treasury liquidity replenishment / mobilization escrow"></textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -8333,20 +8885,208 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
-    document.getElementById('bank-transfer-form').onsubmit = (e) => {
+    document.getElementById('bank-transfer-form').onsubmit = async (e) => {
       e.preventDefault();
-      const amount = Number(document.getElementById('bt-amount').value) || 0;
-      const utr = document.getElementById('bt-utr').value.trim();
-      alert(`Bank wire voucher recorded successfully. UTR: ${utr} (${this.formatCurrency(amount)}).`);
+      const srcId = document.getElementById('bt-source').value;
+      const srcBank = banks.find(b => b.id === srcId);
+      const type = document.getElementById('bt-type').value;
+
+      const typeLabels = {
+        inward: 'Inward Wire (Client Settlement)',
+        outward: 'Outward Telegraphic Transfer',
+        inter_account: 'Inter-Account Treasury Transfer'
+      };
+
+      const transferData = {
+        id: `wire-${Date.now().toString(36)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        reference_no: document.getElementById('bt-utr').value.trim(),
+        date: document.getElementById('bt-date').value,
+        counterparty: document.getElementById('bt-counterparty').value.trim(),
+        source_account_id: srcId,
+        source_bank: srcBank ? `${srcBank.bank_name} (${srcBank.currency})` : 'Corporate Account',
+        type,
+        type_label: typeLabels[type] || 'Bank Wire',
+        amount: parseFloat(document.getElementById('bt-amount').value) || 0,
+        currency: srcBank?.currency || (isIndia ? 'INR' : 'AED'),
+        purpose: document.getElementById('bt-purpose').value.trim(),
+        status: document.getElementById('bt-status').value
+      };
+
+      await this.syncApi('record_bank_transfer', { transfer: transferData });
       this.closeModal('modal-bank-transfer');
       this.activeTab = 'bank_accounts';
       this.renderActiveTab();
+      this.showNotification(`Wire transfer ${transferData.reference_no} recorded successfully!`, 'success');
     };
   }
 
-  // 18. CASH ENTRY MODAL
-  openCashEntryModal() {
+  async deleteBankTransfer(transferId) {
+    if (!confirm('Are you sure you want to delete this bank wire record?')) return;
+    await this.syncApi('delete_bank_transfer', { id: transferId });
+    this.renderActiveTab();
+    this.showNotification('Bank wire record deleted.', 'info');
+  }
+
+  printBankWireAdvice(transferId) {
+    const trn = (this.db?.bank_transfers || []).find(t => t.id === transferId);
+    if (!trn) return;
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+
+    const adviceHtml = `
+      <div class="fin-modal-backdrop open" id="modal-wire-advice">
+        <div class="fin-modal-dialog" style="max-width:680px; background:#ffffff; color:#0f172a; padding:2rem;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0284c7; padding-bottom:1rem; margin-bottom:1.5rem;">
+            <div>
+              <h2 style="margin:0; font-size:1.4rem; color:#0369a1; font-weight:800;">${comp ? comp.name : 'RAYAN GROUP'}</h2>
+              <div style="font-size:0.8rem; color:#64748b;">CORPORATE TREASURY &amp; WIRE REMITTANCE ADVICE</div>
+            </div>
+            <div style="text-align:right;">
+              <span style="display:inline-block; padding:3px 10px; background:#e0f2fe; color:#0369a1; font-weight:700; border-radius:4px; font-size:0.75rem;">${trn.status || 'CLEARED'}</span>
+              <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">Date: ${this.formatDate(trn.date)}</div>
+            </div>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1.2rem; margin-bottom:1.5rem;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.85rem;">
+              <div><strong>UTR / Wire Reference:</strong> <span style="font-family:monospace; color:#0284c7; font-weight:700;">${trn.reference_no}</span></div>
+              <div><strong>Transaction Type:</strong> ${trn.type_label || trn.type}</div>
+              <div><strong>Originating Bank:</strong> ${trn.source_bank}</div>
+              <div><strong>Counterparty / Beneficiary:</strong> ${trn.counterparty}</div>
+            </div>
+            <div style="margin-top:1.2rem; padding-top:1rem; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.9rem; font-weight:700;">Remitted Settlement Amount:</span>
+              <span style="font-size:1.4rem; font-weight:800; color:#0369a1;">${this.formatCurrency(trn.amount)}</span>
+            </div>
+          </div>
+
+          ${trn.purpose ? `<div style="font-size:0.82rem; color:#475569; margin-bottom:1.5rem;"><strong>Remittance Purpose:</strong> ${trn.purpose}</div>` : ''}
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid #e2e8f0; font-size:0.78rem; text-align:center;">
+            <div>
+              <div style="font-family:'Courier New', monospace; font-size:1.1rem; color:#0369a1; font-weight:700;">Arshad Alam Shaikh</div>
+              <div style="border-top:1px solid #94a3b8; margin-top:4px; padding-top:4px; font-weight:600;">Authorized Signatory</div>
+            </div>
+            <div>
+              <div style="display:inline-block; padding:4px 12px; border:2px dashed #0284c7; border-radius:6px; color:#0284c7; font-weight:800; font-size:0.72rem; letter-spacing:0.08em;">
+                OFFICIALLY VERIFIED &amp; AUDITED
+              </div>
+              <div style="margin-top:4px; font-size:0.72rem; color:#64748b;">Rayan Treasury Desk</div>
+            </div>
+          </div>
+
+          <div style="margin-top:2rem; display:flex; justify-content:flex-end; gap:0.75rem;" class="no-print">
+            <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-wire-advice')">Close</button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Wire Advice</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('fin-modal-container').innerHTML = adviceHtml;
+  }
+
+  // 3. ADD / EDIT CASH VAULT REGISTER MODAL
+  openAddCashRegisterModal(regId = null) {
     const registers = this.db?.cash_in_hand || [];
+    const r = regId ? registers.find(x => x.id === regId) : null;
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-cash-register">
+        <div class="fin-modal-dialog" style="max-width:520px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">${r ? '✏️ Edit Site Petty Cash Vault' : '💵 Add Site Petty Cash Vault'}</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cash-register')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="cash-register-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Cash Vault Name <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="cr-name" class="fin-form-input" required placeholder="e.g. Dubai Regional Office — Petty Cash Register" value="${r?.register_name || ''}">
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Location / Site <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="cr-loc" class="fin-form-input" required placeholder="e.g. Dubai, UAE / Al Quoz Yard" value="${r?.location || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Custodian Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="cr-custodian" class="fin-form-input" required placeholder="e.g. Site Admin Manager" value="${r?.custodian || ''}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Opening / Imprest Balance <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="cr-balance" class="fin-form-input" required step="any" placeholder="0.00" value="${r?.balance ?? ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Currency</label>
+                  <select id="cr-currency" class="fin-form-select">
+                    <option value="AED" ${(r?.currency || (isIndia ? 'INR' : 'AED')) === 'AED' ? 'selected' : ''}>AED</option>
+                    <option value="INR" ${(r?.currency || (isIndia ? 'INR' : 'AED')) === 'INR' ? 'selected' : ''}>INR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-cash-register')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">${r ? 'Save Vault' : 'Create Cash Vault'} &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('cash-register-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const regData = {
+        id: r ? r.id : `cash-${Date.now().toString(36)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        register_name: document.getElementById('cr-name').value.trim(),
+        location: document.getElementById('cr-loc').value.trim(),
+        custodian: document.getElementById('cr-custodian').value.trim(),
+        balance: parseFloat(document.getElementById('cr-balance').value) || 0,
+        currency: document.getElementById('cr-currency').value,
+        last_replenished: new Date().toISOString().split('T')[0]
+      };
+
+      await this.syncApi(r ? 'update_cash_register' : 'create_cash_register', {
+        register: regData,
+        id: r ? r.id : undefined
+      });
+
+      this.closeModal('modal-cash-register');
+      this.activeTab = 'cash_in_hand';
+      this.renderActiveTab();
+      this.showNotification(`Cash register "${regData.register_name}" saved!`, 'success');
+    };
+  }
+
+  async deleteCashRegister(regId) {
+    if (!confirm('Are you sure you want to remove this cash vault register?')) return;
+    await this.syncApi('delete_cash_register', { id: regId });
+    this.renderActiveTab();
+    this.showNotification('Cash register removed.', 'info');
+  }
+
+  // 4. RECORD PETTY CASH VOUCHER MODAL
+  openCashEntryModal(preselectedVaultId = null) {
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const defaultPrefix = isIndia ? 'PC-MUM' : 'PC-DXB';
+    const autoVouchNo = `${defaultPrefix}-${Math.floor(100 + Math.random() * 900)}`;
+
+    if (registers.length === 0) {
+      alert('Please add a cash vault register first before issuing cash vouchers.');
+      this.openAddCashRegisterModal();
+      return;
+    }
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-cash-entry">
         <div class="fin-modal-dialog" style="max-width:550px;">
@@ -8356,32 +9096,65 @@ class FinanceApp {
           </div>
           <div class="fin-modal-body">
             <form id="cash-entry-form">
-              <div class="fin-form-group">
-                <label class="fin-form-label">Cash Register Vault <span style="color:#ef4444;">*</span></label>
-                <select id="ce-vault" class="fin-form-select" required>
-                  ${registers.map(r => `<option value="${r.id}">${r.register_name} (Bal: ${r.currency} ${Number(r.balance).toLocaleString()})</option>`).join('')}
-                </select>
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Cash Register Vault <span style="color:#ef4444;">*</span></label>
+                  <select id="ce-vault" class="fin-form-select" required>
+                    ${registers.map(r => `<option value="${r.id}" ${r.id === preselectedVaultId ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transaction Type</label>
+                  <select id="ce-type" class="fin-form-select">
+                    <option value="outflow">Expense / Disbursal (Cash Out)</option>
+                    <option value="inflow">Replenishment from Bank (Cash In)</option>
+                  </select>
+                </div>
               </div>
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Disbursed Amount <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="ce-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                  <label class="fin-form-label">Voucher Number <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ce-vouch-no" class="fin-form-input" required value="${autoVouchNo}">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Date <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Voucher Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="ce-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
                 </div>
               </div>
 
-              <div class="fin-form-group">
-                <label class="fin-form-label">Payee / Recipient Employee <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="ce-payee" class="fin-form-input" required placeholder="e.g. Site Runner / Equipment Operator">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Amount <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="ce-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Expense Category</label>
+                  <select id="ce-category" class="fin-form-select">
+                    <option value="Fuel & Transportation">Fuel &amp; Mobile Plant Generator</option>
+                    <option value="HSE & Consumables">Site Safety, PPE &amp; Hydration</option>
+                    <option value="Admin & Printing">Admin, Express Courier &amp; Blueprint Prints</option>
+                    <option value="Emergency Repairs">Emergency Site Repairs &amp; Hardware</option>
+                    <option value="Site Refreshment">Site Labor Refreshment &amp; Meals</option>
+                    <option value="Municipal Fees">Municipal Permit &amp; Toll Fees</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payee / Recipient Employee <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ce-payee" class="fin-form-input" required placeholder="e.g. Logistics Driver / Site Runner">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Custodian / Approver</label>
+                  <input type="text" id="ce-custodian" class="fin-form-input" placeholder="Accounts Executive" value="Site Admin Manager">
+                </div>
               </div>
 
               <div class="fin-form-group">
-                <label class="fin-form-label">Expense Purpose / Reason <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="ce-purpose" class="fin-form-input" required placeholder="e.g. Emergency generator diesel, local municipal permit fee">
+                <label class="fin-form-label">Expense Purpose / Details <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ce-purpose" class="fin-form-input" required placeholder="e.g. Emergency generator diesel fuel for Al Quoz Yard">
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -8396,19 +9169,390 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
-    document.getElementById('cash-entry-form').onsubmit = (e) => {
+    document.getElementById('cash-entry-form').onsubmit = async (e) => {
       e.preventDefault();
-      const amt = Number(document.getElementById('ce-amount').value) || 0;
-      alert(`Petty cash voucher issued for ${this.formatCurrency(amt)}. Approved by Accounts.`);
+      const vaultId = document.getElementById('ce-vault').value;
+      const vault = registers.find(r => r.id === vaultId);
+
+      const voucherData = {
+        id: `cv-${Date.now().toString(36)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        voucher_no: document.getElementById('ce-vouch-no').value.trim(),
+        date: document.getElementById('ce-date').value,
+        register_id: vaultId,
+        register_name: vault ? vault.register_name : 'Petty Cash Register',
+        type: document.getElementById('ce-type').value,
+        amount: parseFloat(document.getElementById('ce-amount').value) || 0,
+        currency: vault?.currency || (isIndia ? 'INR' : 'AED'),
+        category: document.getElementById('ce-category').value,
+        payee: document.getElementById('ce-payee').value.trim(),
+        custodian: document.getElementById('ce-custodian').value.trim(),
+        purpose: document.getElementById('ce-purpose').value.trim(),
+        status: 'Approved'
+      };
+
+      await this.syncApi('record_cash_voucher', { voucher: voucherData });
       this.closeModal('modal-cash-entry');
       this.activeTab = 'cash_in_hand';
       this.renderActiveTab();
+      this.showNotification(`Cash voucher ${voucherData.voucher_no} issued successfully!`, 'success');
     };
   }
 
-  // 19. LOAN ENTRY MODAL
-  openLoanEntryModal() {
+  async deleteCashVoucher(voucherId) {
+    if (!confirm('Are you sure you want to delete this petty cash voucher?')) return;
+    await this.syncApi('delete_cash_voucher', { id: voucherId });
+    this.renderActiveTab();
+    this.showNotification('Cash voucher deleted.', 'info');
+  }
+
+  printCashVoucher(voucherId) {
+    const v = (this.db?.cash_vouchers || []).find(x => x.id === voucherId);
+    if (!v) return;
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+
+    const voucherHtml = `
+      <div class="fin-modal-backdrop open" id="modal-voucher-print">
+        <div class="fin-modal-dialog" style="max-width:640px; background:#ffffff; color:#0f172a; padding:2rem;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #059669; padding-bottom:1rem; margin-bottom:1.5rem;">
+            <div>
+              <h2 style="margin:0; font-size:1.3rem; color:#047857; font-weight:800;">${comp ? comp.name : 'RAYAN GROUP'}</h2>
+              <div style="font-size:0.8rem; color:#64748b; font-weight:600;">PETTY CASH DISBURSAL VOUCHER</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:monospace; font-size:1rem; font-weight:800; color:#047857;">${v.voucher_no}</div>
+              <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Date: ${this.formatDate(v.date)}</div>
+            </div>
+          </div>
+
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:1.2rem; margin-bottom:1.5rem;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.85rem;">
+              <div><strong>Paid To (Payee):</strong> ${v.payee}</div>
+              <div><strong>Register Vault:</strong> ${v.register_name}</div>
+              <div><strong>Expense Category:</strong> ${v.category || 'General'}</div>
+              <div><strong>Vault Custodian:</strong> ${v.custodian || 'Site Admin'}</div>
+            </div>
+            <div style="margin-top:1.2rem; padding-top:1rem; border-top:1px dashed #86efac; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.9rem; font-weight:700;">Amount Disbursed:</span>
+              <span style="font-size:1.4rem; font-weight:800; color:#047857;">${this.formatCurrency(v.amount)}</span>
+            </div>
+          </div>
+
+          <div style="font-size:0.85rem; color:#334155; margin-bottom:2rem; padding:0.75rem; background:#f8fafc; border-radius:6px;">
+            <strong>Expense Description:</strong> ${v.purpose}
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid #e2e8f0; font-size:0.75rem; text-align:center;">
+            <div>
+              <div style="font-weight:700; color:#0f172a;">${v.payee}</div>
+              <div style="border-top:1px solid #94a3b8; margin-top:6px; padding-top:4px; color:#64748b;">Receiver's Signature</div>
+            </div>
+            <div>
+              <div style="font-weight:700; color:#0f172a;">${v.custodian || 'Custodian'}</div>
+              <div style="border-top:1px solid #94a3b8; margin-top:6px; padding-top:4px; color:#64748b;">Custodian Signature</div>
+            </div>
+            <div>
+              <div style="display:inline-block; padding:3px 8px; border:2px dashed #059669; border-radius:4px; color:#059669; font-weight:800; font-size:0.68rem;">
+                VERIFIED CASH
+              </div>
+              <div style="border-top:1px solid #94a3b8; margin-top:6px; padding-top:4px; color:#64748b;">Accounts Desk Stamp</div>
+            </div>
+          </div>
+
+          <div style="margin-top:2rem; display:flex; justify-content:flex-end; gap:0.75rem;" class="no-print">
+            <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-voucher-print')">Close</button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Petty Cash Voucher</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('fin-modal-container').innerHTML = voucherHtml;
+  }
+
+  // 5. RECORD CHEQUE MODAL
+  openRecordChequeModal(type = 'inward') {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const isInward = type === 'inward';
+    const autoChqNo = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-cheque-entry">
+        <div class="fin-modal-dialog" style="max-width:550px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">${isInward ? '📥 Record Inward Cheque (Receipt)' : '📤 Issue Outward Cheque (Disbursal)'}</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cheque-entry')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="cheque-entry-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Cheque Number <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="cq-number" class="fin-form-input" required value="${autoChqNo}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Cheque Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="cq-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">${isInward ? 'Drawee Bank Name' : 'Issuing Bank Account'} <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="cq-bank" class="fin-form-input" required placeholder="e.g. First Abu Dhabi Bank / State Bank of India">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">${isInward ? 'Customer / Issuer' : 'Payee Vendor'} <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="cq-party" class="fin-form-input" required placeholder="e.g. Emaar Properties / Siemens">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Cheque Amount <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="cq-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Initial Status</label>
+                  <select id="cq-status" class="fin-form-select">
+                    <option value="${isInward ? 'In Hand' : 'Issued'}">${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
+                    <option value="Deposited">${isInward ? 'Deposited in Bank' : 'Presented for Clearing'}</option>
+                    <option value="Cleared">Cleared Directly</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Notes / Linked Invoice or Project</label>
+                <input type="text" id="cq-notes" class="fin-form-input" placeholder="e.g. Milestone RA Bill payment / Spares supply">
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-cheque-entry')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">${isInward ? 'Record Inward Cheque' : 'Issue Cheque'} &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('cheque-entry-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const chqData = {
+        id: `chq-${Date.now().toString(36)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        type,
+        cheque_no: document.getElementById('cq-number').value.trim(),
+        date: document.getElementById('cq-date').value,
+        bank_name: document.getElementById('cq-bank').value.trim(),
+        party_name: document.getElementById('cq-party').value.trim(),
+        amount: parseFloat(document.getElementById('cq-amount').value) || 0,
+        currency: isIndia ? 'INR' : 'AED',
+        status: document.getElementById('cq-status').value,
+        notes: document.getElementById('cq-notes').value.trim()
+      };
+
+      await this.syncApi('record_cheque', { cheque: chqData });
+      this.closeModal('modal-cheque-entry');
+      this.activeTab = 'cheques';
+      this.renderActiveTab();
+      this.showNotification(`Cheque ${chqData.cheque_no} saved successfully!`, 'success');
+    };
+  }
+
+  async promptClearCheque(chequeId, type = 'inward') {
+    const chq = (this.db?.cheques || []).find(c => c.id === chequeId);
+    if (!chq) return;
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+
+    if (banks.length === 0) {
+      if (confirm('Mark cheque as Cleared?')) {
+        await this.syncApi('update_cheque_status', { id: chequeId, status: 'Cleared' });
+        this.renderActiveTab();
+      }
+      return;
+    }
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-clear-cheque">
+        <div class="fin-modal-dialog" style="max-width:480px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">⚡ Clear Cheque &amp; Update Bank</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-clear-cheque')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:1rem;">
+              Clearing Cheque <strong>#${chq.cheque_no}</strong> for <strong>${this.formatCurrency(chq.amount)}</strong>.
+              Select which corporate bank account should be ${type === 'inward' ? 'credited' : 'debited'}:
+            </p>
+            <form id="clear-cheque-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Corporate Bank Account</label>
+                <select id="cc-bank-id" class="fin-form-select">
+                  ${banks.map(b => `<option value="${b.id}">${b.bank_name} — ${b.account_name} (${this.formatCurrency(b.balance)})</option>`).join('')}
+                </select>
+              </div>
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-clear-cheque')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Confirm Clearance &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('clear-cheque-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const bankAccId = document.getElementById('cc-bank-id').value;
+      await this.syncApi('update_cheque_status', {
+        id: chequeId,
+        status: 'Cleared',
+        bank_account_id: bankAccId
+      });
+      this.closeModal('modal-clear-cheque');
+      this.renderActiveTab();
+      this.showNotification(`Cheque #${chq.cheque_no} cleared and bank account updated!`, 'success');
+    };
+  }
+
+  async deleteCheque(chequeId) {
+    if (!confirm('Are you sure you want to delete this cheque record?')) return;
+    await this.syncApi('delete_cheque', { id: chequeId });
+    this.renderActiveTab();
+    this.showNotification('Cheque record deleted.', 'info');
+  }
+
+  // 6. ADD / EDIT LOAN FACILITY MODAL
+  openAddLoanFacilityModal(loanId = null) {
     const loans = this.db?.loan_accounts || [];
+    const l = loanId ? loans.find(x => x.id === loanId) : null;
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-loan-facility">
+        <div class="fin-modal-dialog" style="max-width:580px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">${l ? '✏️ Edit Credit Facility' : '🏢 Add Corporate Loan / Credit Facility'}</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-loan-facility')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="loan-facility-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Facility Title / Line Name <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="lf-name" class="fin-form-input" required placeholder="e.g. FAB Bank Guarantee & Letter of Credit Facility" value="${l?.facility_name || ''}">
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Lending Bank / Financial Institution <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="lf-lender" class="fin-form-input" required placeholder="e.g. First Abu Dhabi Bank PJSC" value="${l?.lender || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Facility Type</label>
+                  <select id="lf-type" class="fin-form-select">
+                    <option value="Non-Fund Based (LC / BG Guarantees)">Non-Fund Based (LC / BG Guarantees)</option>
+                    <option value="Working Capital Consortium Line">Working Capital Consortium Line</option>
+                    <option value="Heavy Machinery Hypothecation">Heavy Machinery Hypothecation</option>
+                    <option value="Project Mobilization Escrow Line">Project Mobilization Escrow Line</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Total Sanctioned Limit <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="lf-limit" class="fin-form-input" required step="any" placeholder="0.00" value="${l?.sanctioned_limit ?? ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Current Outstanding Debt / Utilized <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="lf-out" class="fin-form-input" required step="any" placeholder="0.00" value="${l?.outstanding_balance ?? ''}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Interest Rate / Commission</label>
+                  <input type="text" id="lf-rate" class="fin-form-input" placeholder="e.g. 1.25% p.a. / MCLR + Spread" value="${l?.interest_rate || l?.commission_rate || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Facility Tenure / Renewal</label>
+                  <input type="text" id="lf-tenure" class="fin-form-input" placeholder="e.g. 36 Months / Reviewed Annually" value="${l?.tenure || '36 Months'}">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Security / Collateral Hypothecation</label>
+                <input type="text" id="lf-security" class="fin-form-input" placeholder="e.g. Hypothecation of Current Assets & Corporate Guarantee" value="${l?.security || ''}">
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-loan-facility')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">${l ? 'Save Changes' : 'Sanction Facility'} &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('loan-facility-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const limit = parseFloat(document.getElementById('lf-limit').value) || 0;
+      const outstanding = parseFloat(document.getElementById('lf-out').value) || 0;
+
+      const loanData = {
+        id: l ? l.id : `loan-${Date.now().toString(36)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        facility_name: document.getElementById('lf-name').value.trim(),
+        lender: document.getElementById('lf-lender').value.trim(),
+        facility_type: document.getElementById('lf-type').value,
+        sanctioned_limit: limit,
+        outstanding_balance: outstanding,
+        available_limit: Math.max(0, limit - outstanding),
+        currency: isIndia ? 'INR' : 'AED',
+        interest_rate: document.getElementById('lf-rate').value.trim(),
+        tenure: document.getElementById('lf-tenure').value.trim(),
+        security: document.getElementById('lf-security').value.trim()
+      };
+
+      await this.syncApi(l ? 'update_loan_account' : 'create_loan_account', {
+        loan_account: loanData,
+        id: l ? l.id : undefined
+      });
+
+      this.closeModal('modal-loan-facility');
+      this.activeTab = 'loan_accounts';
+      this.renderActiveTab();
+      this.showNotification(`Facility "${loanData.facility_name}" saved successfully!`, 'success');
+    };
+  }
+
+  async deleteLoanAccount(loanId) {
+    if (!confirm('Are you sure you want to remove this corporate credit facility?')) return;
+    await this.syncApi('delete_loan_account', { id: loanId });
+    this.renderActiveTab();
+    this.showNotification('Credit facility removed.', 'info');
+  }
+
+  // 7. RECORD LOAN DRAWDOWN / REPAYMENT MODAL
+  openLoanEntryModal(preselectedFacilityId = null) {
+    const loans = (this.db?.loan_accounts || []).filter(l => (l.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const autoRef = `LF-TRN-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    if (loans.length === 0) {
+      alert('Please add a credit facility first before logging transactions.');
+      this.openAddLoanFacilityModal();
+      return;
+    }
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-loan-entry">
         <div class="fin-modal-dialog" style="max-width:550px;">
@@ -8421,7 +9565,7 @@ class FinanceApp {
               <div class="fin-form-group">
                 <label class="fin-form-label">Corporate Credit Facility <span style="color:#ef4444;">*</span></label>
                 <select id="le-facility" class="fin-form-select" required>
-                  ${loans.map(l => `<option value="${l.id}">${l.facility_name} (${l.lender})</option>`).join('')}
+                  ${loans.map(l => `<option value="${l.id}" ${l.id === preselectedFacilityId ? 'selected' : ''}>${l.facility_name} (Debt: ${this.formatCurrency(l.outstanding_balance)} / Headroom: ${this.formatCurrency(l.available_limit)})</option>`).join('')}
                 </select>
               </div>
 
@@ -8429,9 +9573,9 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Transaction Type <span style="color:#ef4444;">*</span></label>
                   <select id="le-type" class="fin-form-select" required>
-                    <option value="repayment">Principal / EMI Repayment</option>
-                    <option value="drawdown">Facility Drawdown / Utilization</option>
-                    <option value="interest">Interest / Bank Commission Service</option>
+                    <option value="repayment">Principal / EMI Repayment (Decreases Debt)</option>
+                    <option value="drawdown">Facility Drawdown / LC Issuance (Increases Debt)</option>
+                    <option value="interest">Monthly Interest / Bank Commission Service</option>
                   </select>
                 </div>
                 <div class="fin-form-group">
@@ -8440,9 +9584,20 @@ class FinanceApp {
                 </div>
               </div>
 
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Bank Reference / Advice # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="le-ref" class="fin-form-input" required value="${autoRef}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="le-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
+                </div>
+              </div>
+
               <div class="fin-form-group">
-                <label class="fin-form-label">Bank Reference / Advice # <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="le-ref" class="fin-form-input" required placeholder="e.g. SBI-CONS-2026-OCT">
+                <label class="fin-form-label">Transaction Purpose / Notes</label>
+                <input type="text" id="le-notes" class="fin-form-input" placeholder="e.g. Advance payment guarantee issued for Marina project">
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -8457,14 +9612,45 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
-    document.getElementById('loan-entry-form').onsubmit = (e) => {
+    document.getElementById('loan-entry-form').onsubmit = async (e) => {
       e.preventDefault();
-      const amt = Number(document.getElementById('le-amount').value) || 0;
-      alert(`Corporate credit facility entry recorded for ${this.formatCurrency(amt)}.`);
+      const facId = document.getElementById('le-facility').value;
+      const fac = loans.find(l => l.id === facId);
+      const type = document.getElementById('le-type').value;
+
+      const typeLabels = {
+        drawdown: 'Facility Drawdown / LC Issuance',
+        repayment: 'Principal / EMI Repayment',
+        interest: 'Monthly Interest Service'
+      };
+
+      const transData = {
+        id: `lt-${Date.now().toString(36)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        facility_id: facId,
+        facility_name: fac ? fac.facility_name : 'Credit Facility',
+        type,
+        type_label: typeLabels[type] || 'Loan Transaction',
+        amount: parseFloat(document.getElementById('le-amount').value) || 0,
+        currency: isIndia ? 'INR' : 'AED',
+        date: document.getElementById('le-date').value,
+        reference_no: document.getElementById('le-ref').value.trim(),
+        notes: document.getElementById('le-notes').value.trim()
+      };
+
+      await this.syncApi('record_loan_transaction', { transaction: transData });
       this.closeModal('modal-loan-entry');
       this.activeTab = 'loan_accounts';
       this.renderActiveTab();
+      this.showNotification(`Facility transaction recorded successfully!`, 'success');
     };
+  }
+
+  async deleteLoanTransaction(transId) {
+    if (!confirm('Are you sure you want to delete this facility transaction?')) return;
+    await this.syncApi('delete_loan_transaction', { id: transId });
+    this.renderActiveTab();
+    this.showNotification('Transaction record deleted.', 'info');
   }
 
   // 20. PROMPT TO ISSUE CREDIT/DEBIT NOTE

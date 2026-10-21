@@ -930,6 +930,303 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
 
+        
+        case 'create_bank_account':
+            $bank = $body['bank_account'] ?? $body['bank'] ?? [];
+            if (!empty($bank) && !empty($bank['bank_name'])) {
+                if (empty($bank['id'])) $bank['id'] = 'bank-' . round(microtime(true) * 1000);
+                if (empty($bank['company_id'])) $bank['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($bank['currency'])) $bank['currency'] = ($bank['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (!isset($db['bank_accounts']) || !is_array($db['bank_accounts'])) $db['bank_accounts'] = [];
+                array_unshift($db['bank_accounts'], $bank);
+                $addAuditLog('create', 'bank_account', $bank['bank_name'] ?? '', 'Added corporate bank account ' . ($bank['bank_name'] ?? ''));
+            }
+            break;
+
+        case 'update_bank_account':
+            $bank = $body['bank_account'] ?? $body['bank'] ?? [];
+            $targetId = $body['id'] ?? $bank['id'] ?? '';
+            if (!empty($targetId) && !empty($db['bank_accounts'])) {
+                foreach ($db['bank_accounts'] as &$exB) {
+                    if (($exB['id'] ?? '') === $targetId) {
+                        $exB = array_merge($exB, $bank);
+                        break;
+                    }
+                }
+                unset($exB);
+                $addAuditLog('update', 'bank_account', $targetId, 'Updated bank account ' . $targetId);
+            }
+            break;
+
+        case 'delete_bank_account':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['bank_accounts'])) {
+                $db['bank_accounts'] = array_values(array_filter($db['bank_accounts'], function($b) use ($targetId) {
+                    return ($b['id'] ?? '') !== $targetId;
+                }));
+                $addAuditLog('delete', 'bank_account', $targetId, 'Removed bank account ' . $targetId);
+            }
+            break;
+
+        case 'record_bank_transfer':
+            $trn = $body['transfer'] ?? $body['bank_transfer'] ?? [];
+            if (!empty($trn)) {
+                if (empty($trn['id'])) $trn['id'] = 'wire-' . round(microtime(true) * 1000);
+                if (empty($trn['company_id'])) $trn['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($trn['currency'])) $trn['currency'] = ($trn['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (empty($trn['reference_no'])) {
+                    $prefix = ($trn['company_id'] === 'ashaz-eng-in') ? 'RTGS-ASH' : 'FAB-TRN';
+                    $trn['reference_no'] = $prefix . '-' . rand(10000, 99999);
+                }
+                if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) $db['bank_transfers'] = [];
+                array_unshift($db['bank_transfers'], $trn);
+
+                $amt = floatval($trn['amount'] ?? 0);
+                $srcId = $trn['source_account_id'] ?? '';
+                $destId = $trn['destination_account_id'] ?? '';
+                if ($amt > 0 && !empty($db['bank_accounts'])) {
+                    foreach ($db['bank_accounts'] as &$b) {
+                        if (($b['id'] ?? '') === $srcId) {
+                            $b['balance'] = floatval($b['balance'] ?? 0) - $amt;
+                        }
+                        if (!empty($destId) && ($b['id'] ?? '') === $destId) {
+                            $b['balance'] = floatval($b['balance'] ?? 0) + $amt;
+                        }
+                    }
+                    unset($b);
+                }
+                $addAuditLog('create', 'bank_transfer', $trn['reference_no'] ?? '', 'Recorded bank wire ' . ($trn['reference_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_bank_transfer':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['bank_transfers'])) {
+                $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($t) use ($targetId) {
+                    return ($t['id'] ?? '') !== $targetId;
+                }));
+                $addAuditLog('delete', 'bank_transfer', $targetId, 'Deleted wire transfer ' . $targetId);
+            }
+            break;
+
+        case 'create_cash_register':
+            $reg = $body['register'] ?? $body['cash_register'] ?? [];
+            if (!empty($reg) && !empty($reg['register_name'])) {
+                if (empty($reg['id'])) $reg['id'] = 'cash-' . round(microtime(true) * 1000);
+                if (empty($reg['company_id'])) $reg['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($reg['currency'])) $reg['currency'] = ($reg['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (!isset($db['cash_in_hand']) || !is_array($db['cash_in_hand'])) $db['cash_in_hand'] = [];
+                array_unshift($db['cash_in_hand'], $reg);
+                $addAuditLog('create', 'cash_register', $reg['register_name'] ?? '', 'Added cash register ' . ($reg['register_name'] ?? ''));
+            }
+            break;
+
+        case 'update_cash_register':
+            $reg = $body['register'] ?? $body['cash_register'] ?? [];
+            $targetId = $body['id'] ?? $reg['id'] ?? '';
+            if (!empty($targetId) && !empty($db['cash_in_hand'])) {
+                foreach ($db['cash_in_hand'] as &$exR) {
+                    if (($exR['id'] ?? '') === $targetId) {
+                        $exR = array_merge($exR, $reg);
+                        break;
+                    }
+                }
+                unset($exR);
+                $addAuditLog('update', 'cash_register', $targetId, 'Updated cash register ' . $targetId);
+            }
+            break;
+
+        case 'delete_cash_register':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['cash_in_hand'])) {
+                $db['cash_in_hand'] = array_values(array_filter($db['cash_in_hand'], function($r) use ($targetId) {
+                    return ($r['id'] ?? '') !== $targetId;
+                }));
+                $addAuditLog('delete', 'cash_register', $targetId, 'Deleted cash register ' . $targetId);
+            }
+            break;
+
+        case 'record_cash_voucher':
+            $cv = $body['voucher'] ?? $body['cash_voucher'] ?? [];
+            if (!empty($cv)) {
+                if (empty($cv['id'])) $cv['id'] = 'cv-' . round(microtime(true) * 1000);
+                if (empty($cv['company_id'])) $cv['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($cv['currency'])) $cv['currency'] = ($cv['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (empty($cv['voucher_no'])) {
+                    $prefix = ($cv['company_id'] === 'ashaz-eng-in') ? 'PC-MUM' : 'PC-DXB';
+                    $cv['voucher_no'] = $prefix . '-' . rand(100, 999);
+                }
+                if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+                array_unshift($db['cash_vouchers'], $cv);
+
+                $amt = floatval($cv['amount'] ?? 0);
+                $vaultId = $cv['register_id'] ?? '';
+                $type = $cv['type'] ?? 'outflow';
+                if ($amt > 0 && !empty($vaultId) && !empty($db['cash_in_hand'])) {
+                    foreach ($db['cash_in_hand'] as &$vr) {
+                        if (($vr['id'] ?? '') === $vaultId) {
+                            if ($type === 'inflow') {
+                                $vr['balance'] = floatval($vr['balance'] ?? 0) + $amt;
+                            } else {
+                                $vr['balance'] = floatval($vr['balance'] ?? 0) - $amt;
+                            }
+                            $vr['last_replenished'] = $cv['date'] ?? date('Y-m-d');
+                            break;
+                        }
+                    }
+                    unset($vr);
+                }
+                $addAuditLog('create', 'cash_voucher', $cv['voucher_no'] ?? '', 'Recorded petty cash voucher ' . ($cv['voucher_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_cash_voucher':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['cash_vouchers'])) {
+                $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($v) use ($targetId) {
+                    return ($v['id'] ?? '') !== $targetId;
+                }));
+                $addAuditLog('delete', 'cash_voucher', $targetId, 'Deleted cash voucher ' . $targetId);
+            }
+            break;
+
+        case 'record_cheque':
+            $chq = $body['cheque'] ?? [];
+            if (!empty($chq)) {
+                if (empty($chq['id'])) $chq['id'] = 'chq-' . round(microtime(true) * 1000);
+                if (empty($chq['company_id'])) $chq['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($chq['currency'])) $chq['currency'] = ($chq['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (!isset($db['cheques']) || !is_array($db['cheques'])) $db['cheques'] = [];
+                array_unshift($db['cheques'], $chq);
+                $addAuditLog('create', 'cheque', $chq['cheque_no'] ?? '', 'Recorded cheque ' . ($chq['cheque_no'] ?? ''));
+            }
+            break;
+
+        case 'update_cheque_status':
+            $targetId = $body['id'] ?? '';
+            $newStatus = $body['status'] ?? 'Cleared';
+            $bankAccId = $body['bank_account_id'] ?? '';
+            if (!empty($targetId) && !empty($db['cheques'])) {
+                foreach ($db['cheques'] as &$cq) {
+                    if (($cq['id'] ?? '') === $targetId) {
+                        $oldStatus = $cq['status'] ?? '';
+                        $cq['status'] = $newStatus;
+                        if ($newStatus === 'Cleared' && $oldStatus !== 'Cleared') {
+                            $amt = floatval($cq['amount'] ?? 0);
+                            if ($amt > 0 && !empty($db['bank_accounts'])) {
+                                foreach ($db['bank_accounts'] as &$b) {
+                                    if (($b['id'] ?? '') === $bankAccId || (empty($bankAccId) && strtolower($b['bank_name'] ?? '') === strtolower($cq['bank_name'] ?? ''))) {
+                                        if (($cq['type'] ?? '') === 'inward') {
+                                            $b['balance'] = floatval($b['balance'] ?? 0) + $amt;
+                                        } else {
+                                            $b['balance'] = floatval($b['balance'] ?? 0) - $amt;
+                                        }
+                                        break;
+                                    }
+                                }
+                                unset($b);
+                            }
+                        }
+                        break;
+                    }
+                }
+                unset($cq);
+                $addAuditLog('update', 'cheque', $targetId, 'Updated cheque status to ' . $newStatus);
+            }
+            break;
+
+        case 'delete_cheque':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['cheques'])) {
+                $db['cheques'] = array_values(array_filter($db['cheques'], function($c) use ($targetId) {
+                    return ($c['id'] ?? '') !== $targetId;
+                }));
+                $addAuditLog('delete', 'cheque', $targetId, 'Deleted cheque ' . $targetId);
+            }
+            break;
+
+        case 'create_loan_account':
+            $loan = $body['loan_account'] ?? $body['loan'] ?? [];
+            if (!empty($loan) && !empty($loan['facility_name'])) {
+                if (empty($loan['id'])) $loan['id'] = 'loan-' . round(microtime(true) * 1000);
+                if (empty($loan['company_id'])) $loan['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($loan['currency'])) $loan['currency'] = ($loan['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                $sanc = floatval($loan['sanctioned_limit'] ?? 0);
+                $out = floatval($loan['outstanding_balance'] ?? 0);
+                $loan['available_limit'] = max(0, $sanc - $out);
+                if (!isset($db['loan_accounts']) || !is_array($db['loan_accounts'])) $db['loan_accounts'] = [];
+                array_unshift($db['loan_accounts'], $loan);
+                $addAuditLog('create', 'loan_account', $loan['facility_name'] ?? '', 'Added corporate loan facility ' . ($loan['facility_name'] ?? ''));
+            }
+            break;
+
+        case 'update_loan_account':
+            $loan = $body['loan_account'] ?? $body['loan'] ?? [];
+            $targetId = $body['id'] ?? $loan['id'] ?? '';
+            if (!empty($targetId) && !empty($db['loan_accounts'])) {
+                foreach ($db['loan_accounts'] as &$exL) {
+                    if (($exL['id'] ?? '') === $targetId) {
+                        $exL = array_merge($exL, $loan);
+                        $sanc = floatval($exL['sanctioned_limit'] ?? 0);
+                        $out = floatval($exL['outstanding_balance'] ?? 0);
+                        $exL['available_limit'] = max(0, $sanc - $out);
+                        break;
+                    }
+                }
+                unset($exL);
+                $addAuditLog('update', 'loan_account', $targetId, 'Updated loan facility ' . $targetId);
+            }
+            break;
+
+        case 'delete_loan_account':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['loan_accounts'])) {
+                $db['loan_accounts'] = array_values(array_filter($db['loan_accounts'], function($l) use ($targetId) {
+                    return ($l['id'] ?? '') !== $targetId;
+                }));
+                $addAuditLog('delete', 'loan_account', $targetId, 'Deleted loan facility ' . $targetId);
+            }
+            break;
+
+        case 'record_loan_transaction':
+            $lt = $body['transaction'] ?? $body['loan_transaction'] ?? [];
+            if (!empty($lt)) {
+                if (empty($lt['id'])) $lt['id'] = 'lt-' . round(microtime(true) * 1000);
+                if (empty($lt['company_id'])) $lt['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
+                if (empty($lt['currency'])) $lt['currency'] = ($lt['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (!isset($db['loan_transactions']) || !is_array($db['loan_transactions'])) $db['loan_transactions'] = [];
+                array_unshift($db['loan_transactions'], $lt);
+
+                $facId = $lt['facility_id'] ?? '';
+                $amt = floatval($lt['amount'] ?? 0);
+                $tType = $lt['type'] ?? 'repayment';
+                if ($amt > 0 && !empty($facId) && !empty($db['loan_accounts'])) {
+                    foreach ($db['loan_accounts'] as &$lf) {
+                        if (($lf['id'] ?? '') === $facId) {
+                            if ($tType === 'drawdown') {
+                                $lf['outstanding_balance'] = floatval($lf['outstanding_balance'] ?? 0) + $amt;
+                            } else if ($tType === 'repayment') {
+                                $lf['outstanding_balance'] = max(0, floatval($lf['outstanding_balance'] ?? 0) - $amt);
+                            }
+                            $lf['available_limit'] = max(0, floatval($lf['sanctioned_limit'] ?? 0) - floatval($lf['outstanding_balance'] ?? 0));
+                            break;
+                        }
+                    }
+                    unset($lf);
+                }
+                $addAuditLog('create', 'loan_transaction', $lt['reference_no'] ?? '', 'Recorded loan transaction of ' . ($lt['amount'] ?? 0));
+            }
+            break;
+
+        case 'delete_loan_transaction':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['loan_transactions'])) {
+                $db['loan_transactions'] = array_values(array_filter($db['loan_transactions'], function($t) use ($targetId) {
+                    return ($t['id'] ?? '') !== $targetId;
+                }));
+                $addAuditLog('delete', 'loan_transaction', $targetId, 'Deleted loan transaction ' . $targetId);
+            }
+            break;
         case 'sync_full':
             if (!empty($body['full_db']) && is_array($body['full_db'])) {
                 $db = $body['full_db'];

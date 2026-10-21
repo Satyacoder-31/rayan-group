@@ -93,7 +93,7 @@ export default async function handler(req, res) {
         entity,
         entity_id: entityId,
         details,
-        ip_address: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1'
+        ip_address: (req.headers && req.headers['x-forwarded-for']) || req.socket?.remoteAddress || '127.0.0.1'
       };
       db.audit_logs.unshift(logEntry);
     };
@@ -696,7 +696,353 @@ export default async function handler(req, res) {
       return;
     }
 
-    // 17. RESET DEMO DATA
+    // 18. BANK ACCOUNTS
+    if (postAction === 'create_bank_account') {
+      const bank = body.bank_account || body.bank || {};
+      if (bank.bank_name) {
+        if (!bank.id) bank.id = 'bank-' + Date.now().toString(36);
+        if (!bank.company_id) bank.company_id = body.company_id || 'rayan-corp-uae';
+        if (!bank.currency) bank.currency = (bank.company_id === 'ashaz-eng-in') ? 'INR' : 'AED';
+        if (!db.bank_accounts) db.bank_accounts = [];
+        db.bank_accounts.unshift(bank);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'CREATE_BANK_ACCOUNT', 'Bank Account', bank.id, `Created bank account ${bank.bank_name}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, bank, data: db });
+        return;
+      }
+      res.status(400).json({ error: 'Bank name is required' });
+      return;
+    }
+
+    if (postAction === 'update_bank_account') {
+      const bank = body.bank_account || body.bank || {};
+      const targetId = body.id || bank.id;
+      const exB = (db.bank_accounts || []).find(b => b.id === targetId);
+      if (exB) {
+        Object.assign(exB, bank);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'UPDATE_BANK_ACCOUNT', 'Bank Account', targetId, `Updated bank account ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, bank: exB, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Bank account not found' });
+      return;
+    }
+
+    if (postAction === 'delete_bank_account') {
+      const targetId = body.id;
+      if (db.bank_accounts) {
+        db.bank_accounts = db.bank_accounts.filter(b => b.id !== targetId);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'DELETE_BANK_ACCOUNT', 'Bank Account', targetId, `Deleted bank account ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Bank account not found' });
+      return;
+    }
+
+    // 19. BANK WIRE TRANSFERS
+    if (postAction === 'record_bank_transfer') {
+      const trn = body.transfer || body.bank_transfer || {};
+      if (trn) {
+        if (!trn.id) trn.id = 'wire-' + Date.now().toString(36);
+        if (!trn.company_id) trn.company_id = body.company_id || 'rayan-corp-uae';
+        if (!trn.currency) trn.currency = (trn.company_id === 'ashaz-eng-in') ? 'INR' : 'AED';
+        if (!trn.reference_no) {
+          const prefix = (trn.company_id === 'ashaz-eng-in') ? 'RTGS-ASH' : 'FAB-TRN';
+          trn.reference_no = `${prefix}-${Math.floor(10000 + Math.random() * 90000)}`;
+        }
+        if (!db.bank_transfers) db.bank_transfers = [];
+        db.bank_transfers.unshift(trn);
+
+        const amt = Number(trn.amount) || 0;
+        const srcId = trn.source_account_id;
+        const destId = trn.destination_account_id;
+        if (amt > 0 && db.bank_accounts) {
+          const srcAcc = db.bank_accounts.find(b => b.id === srcId);
+          if (srcAcc) srcAcc.balance = (Number(srcAcc.balance) || 0) - amt;
+          if (destId) {
+            const destAcc = db.bank_accounts.find(b => b.id === destId);
+            if (destAcc) destAcc.balance = (Number(destAcc.balance) || 0) + amt;
+          }
+        }
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'RECORD_BANK_TRANSFER', 'Bank Transfer', trn.reference_no, `Recorded wire transfer ${trn.reference_no} for ${trn.currency} ${amt}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, transfer: trn, data: db });
+        return;
+      }
+      res.status(400).json({ error: 'Invalid transfer payload' });
+      return;
+    }
+
+    if (postAction === 'delete_bank_transfer') {
+      const targetId = body.id;
+      if (db.bank_transfers) {
+        db.bank_transfers = db.bank_transfers.filter(t => t.id !== targetId);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'DELETE_BANK_TRANSFER', 'Bank Transfer', targetId, `Deleted bank transfer ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Transfer not found' });
+      return;
+    }
+
+    // 20. CASH REGISTERS & VOUCHERS
+    if (postAction === 'create_cash_register') {
+      const reg = body.register || body.cash_register || {};
+      if (reg.register_name) {
+        if (!reg.id) reg.id = 'cash-' + Date.now().toString(36);
+        if (!reg.company_id) reg.company_id = body.company_id || 'rayan-corp-uae';
+        if (!reg.currency) reg.currency = (reg.company_id === 'ashaz-eng-in') ? 'INR' : 'AED';
+        if (!db.cash_in_hand) db.cash_in_hand = [];
+        db.cash_in_hand.unshift(reg);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'CREATE_CASH_REGISTER', 'Cash Register', reg.id, `Created cash register ${reg.register_name}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, register: reg, data: db });
+        return;
+      }
+      res.status(400).json({ error: 'Register name is required' });
+      return;
+    }
+
+    if (postAction === 'update_cash_register') {
+      const reg = body.register || body.cash_register || {};
+      const targetId = body.id || reg.id;
+      const exR = (db.cash_in_hand || []).find(r => r.id === targetId);
+      if (exR) {
+        Object.assign(exR, reg);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'UPDATE_CASH_REGISTER', 'Cash Register', targetId, `Updated cash register ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, register: exR, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Cash register not found' });
+      return;
+    }
+
+    if (postAction === 'delete_cash_register') {
+      const targetId = body.id;
+      if (db.cash_in_hand) {
+        db.cash_in_hand = db.cash_in_hand.filter(r => r.id !== targetId);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'DELETE_CASH_REGISTER', 'Cash Register', targetId, `Deleted cash register ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Cash register not found' });
+      return;
+    }
+
+    if (postAction === 'record_cash_voucher') {
+      const cv = body.voucher || body.cash_voucher || {};
+      if (cv) {
+        if (!cv.id) cv.id = 'cv-' + Date.now().toString(36);
+        if (!cv.company_id) cv.company_id = body.company_id || 'rayan-corp-uae';
+        if (!cv.currency) cv.currency = (cv.company_id === 'ashaz-eng-in') ? 'INR' : 'AED';
+        if (!cv.voucher_no) {
+          const prefix = (cv.company_id === 'ashaz-eng-in') ? 'PC-MUM' : 'PC-DXB';
+          cv.voucher_no = `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
+        }
+        if (!db.cash_vouchers) db.cash_vouchers = [];
+        db.cash_vouchers.unshift(cv);
+
+        const amt = Number(cv.amount) || 0;
+        const vaultId = cv.register_id;
+        const type = cv.type || 'outflow';
+        if (amt > 0 && vaultId && db.cash_in_hand) {
+          const reg = db.cash_in_hand.find(r => r.id === vaultId);
+          if (reg) {
+            if (type === 'inflow') {
+              reg.balance = (Number(reg.balance) || 0) + amt;
+            } else {
+              reg.balance = (Number(reg.balance) || 0) - amt;
+            }
+            reg.last_replenished = cv.date || new Date().toISOString().split('T')[0];
+          }
+        }
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'RECORD_CASH_VOUCHER', 'Cash Voucher', cv.voucher_no, `Recorded petty cash voucher ${cv.voucher_no} for ${cv.currency} ${amt}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, voucher: cv, data: db });
+        return;
+      }
+      res.status(400).json({ error: 'Invalid voucher payload' });
+      return;
+    }
+
+    if (postAction === 'delete_cash_voucher') {
+      const targetId = body.id;
+      if (db.cash_vouchers) {
+        db.cash_vouchers = db.cash_vouchers.filter(v => v.id !== targetId);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'DELETE_CASH_VOUCHER', 'Cash Voucher', targetId, `Deleted cash voucher ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Cash voucher not found' });
+      return;
+    }
+
+    // 21. CHEQUES
+    if (postAction === 'record_cheque') {
+      const chq = body.cheque || {};
+      if (chq) {
+        if (!chq.id) chq.id = 'chq-' + Date.now().toString(36);
+        if (!chq.company_id) chq.company_id = body.company_id || 'rayan-corp-uae';
+        if (!chq.currency) chq.currency = (chq.company_id === 'ashaz-eng-in') ? 'INR' : 'AED';
+        if (!db.cheques) db.cheques = [];
+        db.cheques.unshift(chq);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'RECORD_CHEQUE', 'Cheque', chq.cheque_no, `Recorded cheque ${chq.cheque_no}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, cheque: chq, data: db });
+        return;
+      }
+      res.status(400).json({ error: 'Invalid cheque payload' });
+      return;
+    }
+
+    if (postAction === 'update_cheque_status') {
+      const targetId = body.id;
+      const newStatus = body.status || 'Cleared';
+      const bankAccId = body.bank_account_id;
+      const chq = (db.cheques || []).find(c => c.id === targetId);
+      if (chq) {
+        const oldStatus = chq.status;
+        chq.status = newStatus;
+        if (newStatus === 'Cleared' && oldStatus !== 'Cleared') {
+          const amt = Number(chq.amount) || 0;
+          if (amt > 0 && db.bank_accounts) {
+            const b = db.bank_accounts.find(acc => acc.id === bankAccId || (!bankAccId && (acc.bank_name || '').toLowerCase() === (chq.bank_name || '').toLowerCase()));
+            if (b) {
+              if (chq.type === 'inward') {
+                b.balance = (Number(b.balance) || 0) + amt;
+              } else {
+                b.balance = (Number(b.balance) || 0) - amt;
+              }
+            }
+          }
+        }
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'UPDATE_CHEQUE_STATUS', 'Cheque', targetId, `Updated cheque status to ${newStatus}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, cheque: chq, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Cheque not found' });
+      return;
+    }
+
+    if (postAction === 'delete_cheque') {
+      const targetId = body.id;
+      if (db.cheques) {
+        db.cheques = db.cheques.filter(c => c.id !== targetId);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'DELETE_CHEQUE', 'Cheque', targetId, `Deleted cheque ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Cheque not found' });
+      return;
+    }
+
+    // 22. LOAN ACCOUNTS & TRANSACTIONS
+    if (postAction === 'create_loan_account') {
+      const loan = body.loan_account || body.loan || {};
+      if (loan.facility_name) {
+        if (!loan.id) loan.id = 'loan-' + Date.now().toString(36);
+        if (!loan.company_id) loan.company_id = body.company_id || 'rayan-corp-uae';
+        if (!loan.currency) loan.currency = (loan.company_id === 'ashaz-eng-in') ? 'INR' : 'AED';
+        const sanc = Number(loan.sanctioned_limit) || 0;
+        const out = Number(loan.outstanding_balance) || 0;
+        loan.available_limit = Math.max(0, sanc - out);
+        if (!db.loan_accounts) db.loan_accounts = [];
+        db.loan_accounts.unshift(loan);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'CREATE_LOAN_ACCOUNT', 'Loan Account', loan.id, `Created loan facility ${loan.facility_name}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, loan, data: db });
+        return;
+      }
+      res.status(400).json({ error: 'Facility name is required' });
+      return;
+    }
+
+    if (postAction === 'update_loan_account') {
+      const loan = body.loan_account || body.loan || {};
+      const targetId = body.id || loan.id;
+      const exL = (db.loan_accounts || []).find(l => l.id === targetId);
+      if (exL) {
+        Object.assign(exL, loan);
+        const sanc = Number(exL.sanctioned_limit) || 0;
+        const out = Number(exL.outstanding_balance) || 0;
+        exL.available_limit = Math.max(0, sanc - out);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'UPDATE_LOAN_ACCOUNT', 'Loan Account', targetId, `Updated loan facility ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, loan: exL, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Loan facility not found' });
+      return;
+    }
+
+    if (postAction === 'delete_loan_account') {
+      const targetId = body.id;
+      if (db.loan_accounts) {
+        db.loan_accounts = db.loan_accounts.filter(l => l.id !== targetId);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'DELETE_LOAN_ACCOUNT', 'Loan Account', targetId, `Deleted loan facility ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Loan facility not found' });
+      return;
+    }
+
+    if (postAction === 'record_loan_transaction') {
+      const lt = body.transaction || body.loan_transaction || {};
+      if (lt) {
+        if (!lt.id) lt.id = 'lt-' + Date.now().toString(36);
+        if (!lt.company_id) lt.company_id = body.company_id || 'rayan-corp-uae';
+        if (!lt.currency) lt.currency = (lt.company_id === 'ashaz-eng-in') ? 'INR' : 'AED';
+        if (!db.loan_transactions) db.loan_transactions = [];
+        db.loan_transactions.unshift(lt);
+
+        const amt = Number(lt.amount) || 0;
+        const facId = lt.facility_id;
+        const tType = lt.type || 'repayment';
+        if (amt > 0 && facId && db.loan_accounts) {
+          const lf = db.loan_accounts.find(l => l.id === facId);
+          if (lf) {
+            if (tType === 'drawdown') {
+              lf.outstanding_balance = (Number(lf.outstanding_balance) || 0) + amt;
+            } else if (tType === 'repayment') {
+              lf.outstanding_balance = Math.max(0, (Number(lf.outstanding_balance) || 0) - amt);
+            }
+            lf.available_limit = Math.max(0, (Number(lf.sanctioned_limit) || 0) - (Number(lf.outstanding_balance) || 0));
+          }
+        }
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'RECORD_LOAN_TRANSACTION', 'Loan Transaction', lt.id, `Recorded loan transaction of ${lt.currency} ${amt}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, transaction: lt, data: db });
+        return;
+      }
+      res.status(400).json({ error: 'Invalid loan transaction payload' });
+      return;
+    }
+
+    if (postAction === 'delete_loan_transaction') {
+      const targetId = body.id;
+      if (db.loan_transactions) {
+        db.loan_transactions = db.loan_transactions.filter(t => t.id !== targetId);
+        addAuditLog(body.user_name, body.user_role, body.user_email, 'DELETE_LOAN_TRANSACTION', 'Loan Transaction', targetId, `Deleted loan transaction ${targetId}.`);
+        writeDb(db);
+        res.status(200).json({ success: true, data: db });
+        return;
+      }
+      res.status(404).json({ error: 'Transaction not found' });
+      return;
+    }
+
+    // 23. RESET DEMO DATA
     if (postAction === 'reset_demo_data') {
       // Re-read or restore defaults
       res.status(200).json({ success: true, message: 'Reset completed', data: db });

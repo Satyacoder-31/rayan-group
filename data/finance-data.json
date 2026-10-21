@@ -1484,6 +1484,42 @@
   ],
   "audit_logs": [
     {
+      "id": "aud-mvhirxz4",
+      "timestamp": "2026-10-21T02:55:24.352Z",
+      "actor_name": "System",
+      "actor_role": "admin",
+      "actor_email": "system@rayangroup.com",
+      "action": "RECORD_CASH_VOUCHER",
+      "entity": "Cash Voucher",
+      "entity_id": "PC-DXB-315",
+      "details": "Recorded petty cash voucher PC-DXB-315 for AED 500.",
+      "ip_address": "127.0.0.1"
+    },
+    {
+      "id": "aud-mvhirxz0",
+      "timestamp": "2026-10-21T02:55:24.348Z",
+      "actor_name": "System",
+      "actor_role": "admin",
+      "actor_email": "system@rayangroup.com",
+      "action": "RECORD_BANK_TRANSFER",
+      "entity": "Bank Transfer",
+      "entity_id": "FAB-TRN-17710",
+      "details": "Recorded wire transfer FAB-TRN-17710 for AED 50000.",
+      "ip_address": "127.0.0.1"
+    },
+    {
+      "id": "aud-mvhirxyp",
+      "timestamp": "2026-10-21T02:55:24.337Z",
+      "actor_name": "System",
+      "actor_role": "admin",
+      "actor_email": "system@rayangroup.com",
+      "action": "CREATE_BANK_ACCOUNT",
+      "entity": "Bank Account",
+      "entity_id": "bank-mvhirxyp",
+      "details": "Created bank account Test Abu Dhabi Commercial Bank.",
+      "ip_address": "127.0.0.1"
+    },
+    {
       "id": "aud-1a14f414ad7",
       "timestamp": "2026-10-18T13:44:01+00:00",
       "actor_name": "Arshad Alam Shaikh",
@@ -1690,19 +1726,8 @@
   },
   "bank_accounts": [
     {
-      "id": "bank-sbi-corp",
-      "account_name": "State Bank of India — Corporate Current A/c",
-      "bank_name": "State Bank of India",
-      "account_number": "409210084920",
-      "ifsc_code": "SBIN0001234",
-      "branch": "Commercial Branch, Fort, Mumbai",
-      "currency": "INR",
-      "balance": 48205000,
-      "signatory": "Arshad Alam Shaikh (Managing Director)",
-      "status": "Active"
-    },
-    {
       "id": "bank-fab-uae",
+      "company_id": "rayan-corp-uae",
       "account_name": "First Abu Dhabi Bank (FAB) — Corporate Treasury",
       "bank_name": "First Abu Dhabi Bank PJSC",
       "account_number": "104889218001",
@@ -1715,7 +1740,22 @@
       "status": "Active"
     },
     {
+      "id": "bank-nbad-uae",
+      "company_id": "rayan-corp-uae",
+      "account_name": "National Bank of Abu Dhabi — Commercial Account",
+      "bank_name": "National Bank of Abu Dhabi (NBAD)",
+      "account_number": "204991827003",
+      "iban": "AE44033204991827003",
+      "swift": "NBADAEAA",
+      "branch": "Khalidiya Branch, Abu Dhabi, UAE",
+      "currency": "AED",
+      "balance": 874129,
+      "signatory": "Arshad Alam Shaikh (Managing Director)",
+      "status": "Active"
+    },
+    {
       "id": "bank-enbd-escrow",
+      "company_id": "rayan-corp-uae",
       "account_name": "Emirates NBD — EPC Escrow Account",
       "bank_name": "Emirates NBD Bank",
       "account_number": "032991004112",
@@ -1726,40 +1766,57 @@
       "balance": 750000,
       "signatory": "Board Resolution / Escrow Agent",
       "status": "Active"
+    },
+    {
+      "id": "bank-sbi-corp",
+      "company_id": "ashaz-eng-in",
+      "account_name": "State Bank of India — Corporate Current A/c",
+      "bank_name": "State Bank of India",
+      "account_number": "409210084920",
+      "ifsc_code": "SBIN0001234",
+      "branch": "Commercial Branch, Fort, Mumbai",
+      "currency": "INR",
+      "balance": 48205000,
+      "signatory": "Arshad Alam Shaikh (Managing Director)",
+      "status": "Active"
     }
   ],
   "cash_in_hand": [
     {
+      "id": "cash-dubai-reg",
+      "company_id": "rayan-corp-uae",
+      "register_name": "Dubai Regional Office — Petty Cash Register",
+      "location": "Dubai, UAE",
+      "custodian": "Site Administrative Manager",
+      "currency": "AED",
+      "balance": 35000,
+      "last_replenished": "2026-10-21"
+    },
+    {
+      "id": "cash-ad-solar",
+      "company_id": "rayan-corp-uae",
+      "register_name": "Abu Dhabi Solar Farm EPC — Field Petty Cash",
+      "location": "Al Dhafra / Sweihan, UAE",
+      "custodian": "Resident EPC Project Manager",
+      "currency": "AED",
+      "balance": 45000,
+      "last_replenished": "2026-10-18"
+    },
+    {
       "id": "cash-mumbai-hq",
+      "company_id": "ashaz-eng-in",
       "register_name": "Mumbai Corporate HQ — Main Cash Vault",
       "location": "Mumbai, India",
       "custodian": "Senior Accounts Executive",
       "currency": "INR",
       "balance": 125000,
       "last_replenished": "2026-10-10"
-    },
-    {
-      "id": "cash-dubai-reg",
-      "register_name": "Dubai Regional Office — Petty Cash Register",
-      "location": "Dubai, UAE",
-      "custodian": "Site Administrative Manager",
-      "currency": "AED",
-      "balance": 35000,
-      "last_replenished": "2026-10-12"
-    },
-    {
-      "id": "cash-ad-solar",
-      "register_name": "Abu Dhabi Solar Farm EPC — Field Petty Cash",
-      "location": "Al Dhafra / Sweihan, UAE",
-      "custodian": "Resident EPC Project Manager",
-      "currency": "AED",
-      "balance": 45000,
-      "last_replenished": "2026-10-14"
     }
   ],
   "cheques": [
     {
       "id": "chq-in-01",
+      "company_id": "rayan-corp-uae",
       "type": "inward",
       "cheque_no": "894102",
       "bank_name": "First Abu Dhabi Bank",
@@ -1771,7 +1828,21 @@
       "notes": "Advance for Downtown Dubai Substation Phase 2"
     },
     {
+      "id": "chq-out-02",
+      "company_id": "rayan-corp-uae",
+      "type": "outward",
+      "cheque_no": "001925",
+      "bank_name": "First Abu Dhabi Bank",
+      "party_name": "Siemens Middle East FZ-LLC",
+      "amount": 120000,
+      "currency": "AED",
+      "date": "2026-10-14",
+      "status": "Cleared",
+      "notes": "400kV GIS Switchgear Spares & Relay Protection"
+    },
+    {
       "id": "chq-in-02",
+      "company_id": "ashaz-eng-in",
       "type": "inward",
       "cheque_no": "440192",
       "bank_name": "HDFC Bank Ltd",
@@ -1784,6 +1855,7 @@
     },
     {
       "id": "chq-in-03",
+      "company_id": "ashaz-eng-in",
       "type": "inward",
       "cheque_no": "109284",
       "bank_name": "State Bank of India",
@@ -1796,6 +1868,7 @@
     },
     {
       "id": "chq-out-01",
+      "company_id": "ashaz-eng-in",
       "type": "outward",
       "cheque_no": "001924",
       "bank_name": "State Bank of India",
@@ -1805,23 +1878,26 @@
       "date": "2026-10-12",
       "status": "Presented",
       "notes": "Payment for Heavy Transmission Towers Steel Supply"
-    },
-    {
-      "id": "chq-out-02",
-      "type": "outward",
-      "cheque_no": "001925",
-      "bank_name": "First Abu Dhabi Bank",
-      "party_name": "Siemens Middle East FZ-LLC",
-      "amount": 120000,
-      "currency": "AED",
-      "date": "2026-10-14",
-      "status": "Cleared",
-      "notes": "400kV GIS Switchgear Spares & Relay Protection"
     }
   ],
   "loan_accounts": [
     {
+      "id": "loan-fab-lc-bg",
+      "company_id": "rayan-corp-uae",
+      "facility_name": "FAB Bank Guarantee & Letter of Credit Facility",
+      "lender": "First Abu Dhabi Bank PJSC",
+      "sanctioned_limit": 15000000,
+      "outstanding_balance": 4200000,
+      "available_limit": 10800000,
+      "currency": "AED",
+      "facility_type": "Non-Fund Based (Performance & Financial Guarantees)",
+      "commission_rate": "1.25% p.a.",
+      "tenure": "36 Months (Next Review: Dec 2027)",
+      "security": "100% Cash Margin on Escrow & Corporate Pledge"
+    },
+    {
       "id": "loan-sbi-wc",
+      "company_id": "ashaz-eng-in",
       "facility_name": "SBI Working Capital Consortium Credit Facility",
       "lender": "State Bank of India (Lead Banker)",
       "sanctioned_limit": 250000000,
@@ -1834,6 +1910,7 @@
     },
     {
       "id": "loan-equip-hypo",
+      "company_id": "ashaz-eng-in",
       "facility_name": "Heavy Machinery & Equipment Hypothecation Loan",
       "lender": "Tata Capital Financial Services",
       "sanctioned_limit": 45000000,
@@ -1844,18 +1921,161 @@
       "monthly_emi": 385000,
       "tenure": "36 Months (Maturity: Dec 2027)",
       "security": "Komatsu Excavators & Zoomlion 100T Mobile Cranes"
+    }
+  ],
+  "bank_transfers": [
+    {
+      "id": "wire-01",
+      "company_id": "rayan-corp-uae",
+      "reference_no": "FAB-TRN-99042",
+      "date": "2026-10-14",
+      "counterparty": "Emaar Properties PJSC",
+      "source_account_id": "bank-fab-uae",
+      "source_bank": "First Abu Dhabi Bank (AED)",
+      "type": "inward",
+      "type_label": "Inward Wire (Client Advance)",
+      "amount": 350000,
+      "currency": "AED",
+      "purpose": "Downtown Dubai Substation Phase 2 initial project mobilization advance",
+      "status": "Cleared"
     },
     {
-      "id": "loan-fab-lc-bg",
-      "facility_name": "FAB Bank Guarantee & Letter of Credit Facility",
-      "lender": "First Abu Dhabi Bank PJSC",
-      "sanctioned_limit": 15000000,
-      "outstanding_balance": 4200000,
-      "available_limit": 10800000,
+      "id": "wire-02",
+      "company_id": "rayan-corp-uae",
+      "reference_no": "WIRE-FAB-001925",
+      "date": "2026-10-12",
+      "counterparty": "Siemens Middle East FZ-LLC",
+      "source_account_id": "bank-fab-uae",
+      "source_bank": "First Abu Dhabi Bank (AED)",
+      "type": "outward",
+      "type_label": "Outward Telegraphic Transfer",
+      "amount": 120000,
       "currency": "AED",
-      "facility_type": "Non-Fund Based (Performance & Financial Guarantees)",
-      "commission_rate": "1.25% p.a.",
-      "security": "100% Cash Margin on Escrow & Corporate Pledge"
+      "purpose": "Direct import remittance for 400kV gas-insulated switchgear spares",
+      "status": "Completed"
+    },
+    {
+      "id": "wire-03",
+      "company_id": "rayan-corp-uae",
+      "reference_no": "PUHB698591780",
+      "date": "2026-10-19",
+      "counterparty": "M/S HLN TECHNICAL SERVICES LLC",
+      "source_account_id": "bank-nbad-uae",
+      "source_bank": "National Bank of Abu Dhabi (NBAD)",
+      "type": "inward",
+      "type_label": "Inward Wire (Voucher REC-RV-44028)",
+      "amount": 24129,
+      "currency": "AED",
+      "purpose": "Settlement for Invoice REC-RG-INV-44016 (Remaya International Sweihan Road)",
+      "status": "Cleared"
+    },
+    {
+      "id": "wire-04",
+      "company_id": "ashaz-eng-in",
+      "reference_no": "SBIN-RTGS-88219",
+      "date": "2026-10-13",
+      "counterparty": "Larsen & Toubro Ltd (ECC Div)",
+      "source_account_id": "bank-sbi-corp",
+      "source_bank": "SBI Corporate Current (INR)",
+      "type": "inward",
+      "type_label": "Inward RTGS (RA Bill 04)",
+      "amount": 1850000,
+      "currency": "INR",
+      "purpose": "Civil and electrical milestone payment for Mumbai Metro project",
+      "status": "Settled"
+    },
+    {
+      "id": "wire-05",
+      "company_id": "ashaz-eng-in",
+      "reference_no": "SBIN-NEFT-44120",
+      "date": "2026-10-10",
+      "counterparty": "JSW Steel Ltd",
+      "source_account_id": "bank-sbi-corp",
+      "source_bank": "SBI Corporate Current (INR)",
+      "type": "outward",
+      "type_label": "Outward Corporate NEFT",
+      "amount": 980000,
+      "currency": "INR",
+      "purpose": "Structural steel coils procurement for transmission corridor",
+      "status": "Completed"
+    }
+  ],
+  "cash_vouchers": [
+    {
+      "id": "cv-01",
+      "company_id": "rayan-corp-uae",
+      "voucher_no": "PC-DXB-210",
+      "date": "2026-10-14",
+      "register_id": "cash-dubai-reg",
+      "register_name": "Dubai Regional Office — Petty Cash Register",
+      "custodian": "Site Admin Manager",
+      "payee": "Logistics Driver (Rashid Khan)",
+      "purpose": "Emergency diesel fuel procurement for Al Quoz mobile plant",
+      "category": "Fuel & Transportation",
+      "amount": 1850,
+      "currency": "AED",
+      "type": "outflow",
+      "status": "Approved"
+    },
+    {
+      "id": "cv-02",
+      "company_id": "rayan-corp-uae",
+      "voucher_no": "PC-AD-109",
+      "date": "2026-10-12",
+      "register_id": "cash-ad-solar",
+      "register_name": "Abu Dhabi Solar Farm EPC — Field Petty Cash",
+      "custodian": "Resident EPC Project Manager",
+      "payee": "Site Safety Officer",
+      "purpose": "Field safety hydration supplies, electrolytes, and PPE replacement filters",
+      "category": "HSE & Consumables",
+      "amount": 2400,
+      "currency": "AED",
+      "type": "outflow",
+      "status": "Approved"
+    },
+    {
+      "id": "cv-03",
+      "company_id": "ashaz-eng-in",
+      "voucher_no": "PC-MUM-401",
+      "date": "2026-10-15",
+      "register_id": "cash-mumbai-hq",
+      "register_name": "Mumbai Corporate HQ — Main Cash Vault",
+      "custodian": "Senior Accounts Executive",
+      "payee": "Site Runner (Anil Patil)",
+      "purpose": "Urgent municipal document stamp duties, courier & project blueprint photocopies",
+      "category": "Admin & Printing",
+      "amount": 4250,
+      "currency": "INR",
+      "type": "outflow",
+      "status": "Approved"
+    }
+  ],
+  "loan_transactions": [
+    {
+      "id": "lt-01",
+      "company_id": "rayan-corp-uae",
+      "facility_id": "loan-fab-lc-bg",
+      "facility_name": "FAB Bank Guarantee & Letter of Credit Facility",
+      "type": "drawdown",
+      "type_label": "Facility Drawdown / LC Issuance",
+      "amount": 1200000,
+      "currency": "AED",
+      "date": "2026-10-05",
+      "reference_no": "LC-MARINA-2026-09",
+      "notes": "Advance payment guarantee issued for Marina Palace luxury project"
+    },
+    {
+      "id": "lt-02",
+      "company_id": "ashaz-eng-in",
+      "facility_id": "loan-sbi-wc",
+      "facility_name": "SBI Working Capital Consortium Credit Facility",
+      "type": "interest",
+      "type_label": "Monthly Interest Service",
+      "amount": 452000,
+      "currency": "INR",
+      "date": "2026-10-01",
+      "reference_no": "SBI-INT-OCT2026",
+      "notes": "Monthly interest debit by lead consortium bank"
     }
   ]
 }
