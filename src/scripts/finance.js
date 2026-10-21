@@ -8657,7 +8657,7 @@ class FinanceApp {
     return words ? words + ' Only.' : 'Zero Only.';
   }
 
-  // 1. TAX INVOICE PRINT MODAL
+  // 1. TAX INVOICE PRINT MODAL (Simple, Clean, Official with Logo, Stamp & Signature)
   openInvoicePrintModal(invoiceId, isVerifiedScan = false) {
     const list = this.db?.invoices || [];
     let inv = null;
@@ -8667,6 +8667,30 @@ class FinanceApp {
     if (!inv) {
       inv = list.find(i => i.invoice_no === 'REC-RG-INV-44049') || (defaultSeedData.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44049') || list[0] || (defaultSeedData.invoices || [])[0] || {};
     }
+
+    const curr = inv.currency || 'AED';
+    const isIndia = curr === 'INR' || inv.company_id === 'ashaz-eng-in' || inv.tax_regime === 'gst';
+    const taxableSubtotal = Number(inv.taxable_subtotal || 0);
+    const taxTotal = Number(inv.total_tax !== undefined ? inv.total_tax : (inv.vat_total !== undefined ? inv.vat_total : (inv.gst_total || 0)));
+    const grandTotal = Number(inv.grand_total || (taxableSubtotal + taxTotal));
+    const amountPaid = Number(inv.amount_paid || 0);
+    const balanceDue = Number(inv.balance_due !== undefined ? inv.balance_due : (grandTotal - amountPaid));
+    const formattedDate = inv.invoice_date ? this.formatDate(inv.invoice_date) : '19 Oct 2026';
+    const formattedDueDate = inv.due_date ? this.formatDate(inv.due_date) : (inv.payment_terms === 0 || !inv.payment_terms ? 'Due on Receipt' : '19 Oct 2026');
+    const words = this.numberToEnglishWords(grandTotal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.');
+
+    const lineItems = (inv.line_items && inv.line_items.length) ? inv.line_items : [
+      {
+        name: inv.project_name || "Civil Contracting & Specialized Fit-Out Works",
+        description: inv.notes || "Progressive Works Allocation",
+        qty: 1,
+        unit_price: taxableSubtotal || grandTotal,
+        taxable_amount: taxableSubtotal || grandTotal,
+        tax_rate: isIndia ? 18 : 5,
+        tax_amount: taxTotal,
+        total_amount: grandTotal
+      }
+    ];
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -8693,271 +8717,217 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper">
-            <div class="doc-top-accent-bar"></div>
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box;">
+            <!-- Top Elegant Accent Line -->
+            <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
 
-            <div class="fin-doc-inner-padding">
-              ${this.getRayanWatermark()}
-
-              ${isVerifiedScan ? `
-                <div class="doc-verification-live-banner">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:16px;">🛡️</span>
-                    <div>
-                      <div style="font-size:9px; font-weight:800; letter-spacing:0.04em;">OFFICIAL UAE TAX INVOICE — AUDIT VERIFIED</div>
-                      <div style="font-size:7px; opacity:0.9; margin-top:1px;">Digitally authenticated under RAYAN Group Corporate Governance &amp; UAE FTA Compliance Standards.</div>
-                    </div>
-                  </div>
-                  <div style="font-size:7.5px; background:rgba(255,255,255,0.22); padding:3px 8px; border-radius:4px; font-weight:800;">
-                    LIVE VERIFICATION: PASS ✓
-                  </div>
-                </div>
-              ` : ''}
-
-              <!-- Modern Brand Header -->
-              <div class="doc-header-modern">
-                <div class="doc-brand-block">
+            <!-- Header Section (Left: Logo & Company, Right: Title & Meta) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.5rem;">
+              <div style="max-width:55%;">
+                <div style="margin-bottom:0.65rem;">
                   ${this.getRayanLogoImg(false)}
-                  <div class="doc-company-title">RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C</div>
-                  <div class="doc-company-subtitle">
-                    Civil Contracting, Electromechanical &amp; Specialized Interior Fit-Outs<br>
-                    Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800
-                  </div>
-                  <div class="doc-company-badges">
-                    <span class="doc-badge-pill primary"><strong>TRN:</strong> ${inv.company_trn || '104937380400003'}</span>
-                    <span class="doc-badge-pill"><strong>Licence:</strong> CN-2894710</span>
-                    <span class="doc-badge-pill success">🇦🇪 UAE FTA Registered</span>
-                  </div>
                 </div>
-
-                <div class="doc-header-center">
-                  <div class="doc-title-en">TAX INVOICE</div>
-                  <div class="doc-number-bold">${inv.invoice_no || 'REC-RG-INV-44049'}</div>
+                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                  ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
-
-                <div class="doc-id-card">
-                  ${(inv.status === 'paid' || (inv.amount_paid > 0 && inv.balance_due <= 0.01)) ? `
-                    <div class="doc-status-badge status-received" style="background:#059669; color:#fff; font-weight:800;">✓ SETTLED &amp; PAID IN FULL</div>
-                  ` : (inv.status === 'partially_paid' || inv.amount_paid > 0 ? `
-                    <div class="doc-status-badge" style="background:#d97706; color:#fff; font-weight:800;">PARTIALLY PAID (${inv.currency || 'AED'} ${Number(inv.balance_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} DUE)</div>
-                  ` : `
-                    <div class="doc-status-badge">✓ Official Tax Invoice</div>
-                  `)}
-                  ${this.getRayanDynamicVerificationCode(inv, 'invoice')}
+                <div style="font-size:0.8rem; color:#475569; line-height:1.45; margin-top:0.35rem;">
+                  ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
                 </div>
               </div>
 
-              <!-- Two-Card Customer & Invoice Specifications Grid -->
-              <div class="doc-grid-cards">
-                <div class="doc-info-card">
-                  <div class="doc-info-card-header">
-                    <span>Billed To (Client / Buyer)</span>
-                    <span style="direction:rtl;">العميل المفوتر له</span>
-                  </div>
-                  <div class="doc-info-entity-name">${inv.customer_name || 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C'}</div>
-                  <div class="doc-info-line">${inv.customer_address || (inv.customer_name?.includes('BUILDARA') ? 'ABU DHABI, MADINAT ZAYED, UAE' : 'Abu Dhabi, United Arab Emirates')}</div>
-                  <div style="margin-top:2px; display:flex; flex-wrap:wrap; gap:4px;">
-                    <span class="doc-badge-pill primary"><strong>${inv.customer_trn ? 'TRN' : (inv.tax_type || 'TRN')}:</strong> ${inv.customer_trn || inv.customer_gstin || inv.tax_number || '105405525400003'}</span>
-                  </div>
-                  <div class="doc-info-line" style="margin-top:3px;">
-                    ${inv.contact_person ? `<strong>Attn:</strong> ${inv.contact_person}<br>` : (inv.customer_name?.includes('BUILDARA') ? '<strong>Attn:</strong> Mr. Sooraj Kumar<br>' : '')}
-                    ${inv.email ? `<strong>Email:</strong> <a href="mailto:${inv.email}" class="rayan-link-blue">${inv.email}</a>` : (inv.customer_name?.includes('BUILDARA') ? '<strong>Email:</strong> <a href="mailto:buildaradevelopers@gmail.com" class="rayan-link-blue">buildaradevelopers@gmail.com</a>' : '')}
+              <div style="text-align:right;">
+                <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
+                  TAX INVOICE
+                </div>
+                <div style="font-size:0.88rem; color:#64748b; font-weight:700; margin-top:2px;">
+                  فاتورة ضريبية
+                </div>
+                <div style="font-size:0.95rem; font-weight:700; color:#0284c7; margin-top:6px;">
+                  # ${inv.invoice_no || 'REC-RG-INV-44049'}
+                </div>
+
+                <!-- Highlight Box: Balance Due -->
+                <div style="margin-top:10px; background:${balanceDue <= 0.01 ? '#f0fdf4' : '#fffbeb'}; border:1px solid ${balanceDue <= 0.01 ? '#bbf7d0' : '#fde68a'}; border-radius:6px; padding:6px 14px; display:inline-block; text-align:right;">
+                  <div style="font-size:0.68rem; color:${balanceDue <= 0.01 ? '#15803d' : '#b45309'}; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Balance Due</div>
+                  <div style="font-size:1.35rem; font-weight:800; color:${balanceDue <= 0.01 ? '#16a34a' : '#0f172a'}; font-variant-numeric:tabular-nums;">
+                    ${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
 
-                <div class="doc-info-card">
-                  <div class="doc-info-card-header">
-                    <span>Document Specifications</span>
-                    <span style="direction:rtl;">بيانات المستند</span>
-                  </div>
-                  <div class="doc-key-value-list">
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Invoice Date / تاريخ:</span>
-                      <span class="doc-val">${inv.invoice_date ? this.formatDate(inv.invoice_date) : '13-Oct-2026'}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Due Date / الاستحقاق:</span>
-                      <span class="doc-val">${inv.due_date ? this.formatDate(inv.due_date) : (inv.payment_terms === 0 || !inv.payment_terms ? 'Immediate / Due Upon Receipt' : '—')}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">PO / LPO Reference:</span>
-                      <span class="doc-val" style="font-weight:800; color:#0284c7;">${inv.po_reference || (inv.customer_name?.includes('BUILDARA') ? 'LPO/BD/2026/12' : '—')}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Payment Terms:</span>
-                      <span class="doc-val">${inv.payment_terms_label || (inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due Upon Receipt')}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Place of Supply / Emirate:</span>
-                      <span class="doc-val">${inv.place_of_supply || 'Abu Dhabi, UAE'}</span>
-                    </div>
-                  </div>
+                <!-- Meta Details -->
+                <div style="font-size:0.8rem; color:#475569; line-height:1.5; margin-top:8px;">
+                  <div>Invoice Date : <strong>${formattedDate}</strong></div>
+                  <div>Terms : <strong>${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</strong></div>
+                  <div>Due Date : <strong>${formattedDueDate}</strong></div>
+                  ${inv.po_reference ? `<div>PO # : <strong>${inv.po_reference}</strong></div>` : ''}
                 </div>
-              </div>
-
-              <!-- Project Highlight Ribbon -->
-              <div class="doc-project-ribbon">
-                <span>🏗️ <strong style="font-size:8.5px; color:#0f172a;">${inv.project_name || 'General Corporate Billing'}</strong></span>
-                <span style="font-size:7.5px; color:#0284c7; background:rgba(2,132,199,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">CONTRACT ACCREDITED</span>
-              </div>
-
-              <!-- Modern Line Items Table -->
-              <table class="doc-table-modern">
-                <thead>
-                  <tr>
-                    <th style="width:4%; text-align:center;">#</th>
-                    <th style="width:38%;">ITEM DESCRIPTION &amp; SCOPE OF WORK</th>
-                    <th style="width:8%; text-align:center;">UOM</th>
-                    <th style="width:7%; text-align:center;">QTY</th>
-                    <th style="width:14%; text-align:right;">PROJECT PRICE</th>
-                    <th style="width:14%; text-align:right;">TAXABLE AMT</th>
-                    <th style="width:8%; text-align:center;">VAT 5%</th>
-                    <th style="width:15%; text-align:right;">TOTAL (${inv.currency || 'AED'})</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(inv.line_items && inv.line_items.length ? inv.line_items : [
-                    {
-                      sr: 1,
-                      name: "50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT",
-                      description: "Civil & Interior Work at Khalidiyah Mall, Abu Dhabi",
-                      unit: "%",
-                      qty: 1,
-                      project_price: 1000,
-                      invoice_amount: 500,
-                      vat_amount: 25,
-                      total_amount: 525
-                    }
-                  ]).map((item, idx) => {
-                    const isPct = item.uom === '%' || item.unit === '%';
-                    const qty = item.qty !== undefined && item.qty !== null ? item.qty : 1;
-                    const uom = item.unit || item.uom || (isPct ? '%' : 'LSUM');
-                    const projectPrice = Number(item.project_price !== undefined ? item.project_price : (item.unit_price || 0));
-                    const taxableAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (item.taxable_amount !== undefined ? item.taxable_amount : (qty * (item.unit_price || 0))));
-                    const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.gst_rate !== undefined ? item.gst_rate : (item.tax_rate !== undefined ? item.tax_rate : 5)));
-                    const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (item.tax_amount !== undefined ? item.tax_amount : (taxableAmt * (vatRate / 100))));
-                    const totalAmt = Number(item.total_amount !== undefined ? item.total_amount : (taxableAmt + vatAmt));
-                    const curr = inv.currency || 'AED';
-
-                    return `
-                    <tr>
-                      <td style="text-align:center; font-weight:700; color:#64748b;">${item.sr || (idx + 1)}</td>
-                      <td>
-                        <div class="doc-item-title">${item.name || item.description || 'Engineering Scope of Work'}</div>
-                        ${item.description && item.description !== item.name ? `<div class="doc-item-desc">${item.description}</div>` : ''}
-                        <div style="display:flex; align-items:center; gap:6px; margin-top:2px; flex-wrap:wrap;">
-                          ${item.hsn_sac_code ? `<span style="font-size:7px; color:#64748b; font-family:monospace;">HSN/SAC: ${item.hsn_sac_code}</span>` : ''}
-                          ${isPct && (item.progress_pct || item.qty) ? `<span style="font-size:7px; font-weight:700; color:#0284c7; background:rgba(2,132,199,0.08); padding:1px 5px; border-radius:3px;">⚡ Billed Milestone: ${item.progress_pct || item.qty}%</span>` : ''}
-                        </div>
-                      </td>
-                      <td style="text-align:center; font-weight:700;">${uom}</td>
-                      <td style="text-align:center; font-weight:800;">${qty}</td>
-                      <td style="text-align:right; font-variant-numeric:tabular-nums;">${projectPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">${taxableAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style="text-align:center; font-weight:700; color:#059669; font-variant-numeric:tabular-nums;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style="text-align:right; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
-
-              <!-- Totals & Payment Instructions Container -->
-              <div class="doc-financials-container">
-                <div class="doc-left-financials">
-                  <div class="doc-words-box">
-                    <div class="doc-words-label">Payable Amount in Words / المبلغ المستحق بالحروف:</div>
-                    <div class="doc-words-text">💵 ${inv.amount_in_words || (this.numberToEnglishWords(inv.grand_total) + ` ${inv.currency || 'AED'} Only.`)}</div>
-                  </div>
-
-                  <div class="doc-banking-box">
-                    <strong>Official Bank Remittance Instructions:</strong><br>
-                    ${inv.tax_regime === 'gst' || inv.currency === 'INR' ? `
-                      Beneficiary: <strong>Ashaz Engineering Private Limited (Rayan Group India)</strong><br>
-                      Bank: <strong>State Bank of India (Corporate Banking)</strong> • Andheri East, Mumbai<br>
-                      <strong>Account:</strong> 392019485721 • <strong>IFSC:</strong> SBIN0001824
-                    ` : `
-                      Beneficiary: <strong>RAYAN ENGINEERING AND CONTRACTING - L.L.C - S.P.C</strong><br>
-                      Bank: <strong>First Abu Dhabi Bank (FAB) Corporate Banking</strong> • Abu Dhabi, UAE<br>
-                      <strong>IBAN:</strong> AE49033000001049281749201 • <strong>SWIFT:</strong> FABAAEAD
-                    `}
-                  </div>
-
-                  ${inv.notes ? `
-                    <div style="margin-top:6px; font-size:7.5px; color:#334155; background:#f8fafc; padding:5px 8px; border-left:2.5px solid #00a699; border-radius:3px;">
-                      <strong>Special Payment Notes / Instructions:</strong> ${inv.notes}
-                    </div>
-                  ` : ''}
-
-                  <div class="rayan-copy-notice">
-                    Please keep a copy of this official tax invoice for your accounting and VAT audit records.
-                  </div>
-                </div>
-
-                <div class="doc-totals-card">
-                  <div class="doc-totals-row">
-                    <span>Taxable Subtotal (المجموع الخاضع):</span>
-                    <span class="doc-num">${Number(inv.taxable_subtotal !== undefined ? inv.taxable_subtotal : (inv.subtotal || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
-                  </div>
-                  <div class="doc-totals-row">
-                    <span>${inv.tax_type === 'GSTIN' ? 'GST Total (ضريبة السلع والخدمات)' : 'VAT 5% (ضريبة القيمة المضافة)'}:</span>
-                    <span class="doc-num" style="color:#059669;">+ ${Number(inv.vat_total !== undefined ? inv.vat_total : (inv.total_tax !== undefined ? inv.total_tax : 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
-                  </div>
-                  ${inv.adjustment ? `
-                    <div class="doc-totals-row">
-                      <span>Adjustment / Retentions:</span>
-                      <span class="doc-num">${Number(inv.adjustment).toLocaleString('en-US', { minimumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
-                    </div>
-                  ` : ''}
-                  <div class="doc-totals-row grand-total">
-                    <span>Grand Total (الإجمالي)</span>
-                    <span>${inv.currency || 'AED'} ${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                  ${(inv.amount_paid && Number(inv.amount_paid) > 0) ? `
-                    <div class="doc-totals-row" style="color:#059669; font-weight:700; margin-top:4px;">
-                      <span>Amount Received / Paid (المبلغ المدفوع):</span>
-                      <span class="doc-num">- ${Number(inv.amount_paid).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}</span>
-                    </div>
-                    <div class="doc-totals-row" style="font-weight:800; border-top:1.5px solid #0f172a; margin-top:4px; padding-top:4px; color:${Number(inv.balance_due) > 0.01 ? '#b91c1c' : '#059669'};">
-                      <span>Balance Due (الرصيد المتبقي):</span>
-                      <span class="doc-num">${Number(inv.balance_due) <= 0.01 ? 'PAID IN FULL ✓' : `${Number(inv.balance_due).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${inv.currency || 'AED'}`}</span>
-                    </div>
-                  ` : ''}
-                </div>
-              </div>
-
-              <!-- Signatures & Official Stamp Block -->
-              <div class="doc-signatures-modern">
-                <div class="doc-sign-team-meta">
-                  <strong>Best Wishes</strong><br>
-                  <strong>RAYAN Group Corporate Finance</strong><br>
-                  Hotline : 025654497 • Abu Dhabi, UAE<br>
-                  <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
-                  <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
-                </div>
-
-                <div class="doc-sign-card">
-                  <div class="doc-auth-label">Authorised Signatory / المفوض بالتوقيع</div>
-                  ${this.getRayanSignatureImg('default')}
-                  <div class="doc-sign-name">Arshad Alam Shaikh</div>
-                  ${this.getRayanStampImg()}
-                </div>
-              </div>
-
-              <!-- Computer Generated Notice (Preserved as requested) -->
-              <div class="rayan-computer-generated-notice">
-                <span>🔒</span>
-                <span>This is a Computer Generated Tax Invoice</span>
               </div>
             </div>
 
-            <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
-            <div class="doc-minimal-footer">
-              <div class="doc-minimal-footer-line"></div>
-              <div class="doc-minimal-footer-content">
-                <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Tax Invoice for ${inv.customer_name || 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C'}</span>
-                <span class="doc-minimal-footer-right">Page 1</span>
+            <!-- Bill To Section -->
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:2rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+              <div>
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Bill To (Client)</div>
+                <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
+                  ${inv.customer_name || 'Client / Entity'}
+                </div>
+                ${inv.customer_trn ? `<div style="font-size:0.8rem; color:#0284c7; font-weight:700;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.8rem; color:#0284c7; font-weight:700;">GSTIN: ${inv.customer_gstin}</div>` : '')}
+                ${inv.contact_person ? `<div style="font-size:0.82rem; color:#475569;">Attn: <strong>${inv.contact_person}</strong></div>` : ''}
+                ${inv.email ? `<div style="font-size:0.82rem; color:#475569;">Email: <a href="mailto:${inv.email}" style="color:#0284c7; text-decoration:none;">${inv.email}</a></div>` : ''}
+                ${inv.customer_address ? `<div style="font-size:0.82rem; color:#475569;">${inv.customer_address}</div>` : ''}
               </div>
+
+              <div style="font-size:0.82rem; color:#475569; line-height:1.5;">
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Project &amp; Supply Scope</div>
+                <div><strong>Subject:</strong> ${inv.subject || inv.project_name || 'Civil & Specialized Interior Fit-Out Works'}</div>
+                <div><strong>Place of Supply:</strong> ${inv.place_of_supply || 'Abu Dhabi, UAE'}</div>
+                ${inv.po_reference ? `<div><strong>LPO Ref:</strong> <span style="color:#0284c7; font-weight:700;">${inv.po_reference}</span></div>` : ''}
+              </div>
+            </div>
+
+            <!-- Line Items Table (Matching Reference Screenshot 1 & 3) -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem; font-size:0.85rem;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff; text-align:left;">
+                  <th style="padding:10px 12px; width:5%; text-align:center;">#</th>
+                  <th style="padding:10px 12px; width:43%;">Item &amp; Description</th>
+                  <th style="padding:10px 12px; width:8%; text-align:center;">Qty</th>
+                  <th style="padding:10px 12px; width:14%; text-align:right;">Rate</th>
+                  <th style="padding:10px 12px; width:15%; text-align:right;">Taxable Amt</th>
+                  <th style="padding:10px 12px; width:15%; text-align:right;">Amount (${curr})</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${lineItems.map((item, idx) => {
+                  const qty = Number(item.qty !== undefined ? item.qty : 1);
+                  const rate = Number(item.unit_price !== undefined ? item.unit_price : (item.rate || item.price || 0));
+                  const taxable = Number(item.taxable_amount !== undefined ? item.taxable_amount : (item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate)));
+                  const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.gst_rate !== undefined ? item.gst_rate : (isIndia ? 18 : 5)));
+                  const vatAmt = Number(item.tax_amount !== undefined ? item.tax_amount : (taxable * (vatRate / 100)));
+                  const total = Number(item.total_amount !== undefined ? item.total_amount : (taxable + vatAmt));
+
+                  return `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:12px; text-align:center; color:#64748b; font-weight:600;">${idx + 1}</td>
+                      <td style="padding:12px;">
+                        <div style="font-weight:700; color:#0f172a; font-size:0.9rem;">${item.name || item.description || 'Contract Scope'}</div>
+                        ${item.description && item.description !== item.name ? `<div style="font-size:0.78rem; color:#64748b; margin-top:3px;">${item.description}</div>` : ''}
+                      </td>
+                      <td style="padding:12px; text-align:center; color:#334155;">${qty.toFixed(2)}</td>
+                      <td style="padding:12px; text-align:right; color:#334155; font-variant-numeric:tabular-nums;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:12px; text-align:right; color:#334155; font-variant-numeric:tabular-nums;">${taxable.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:12px; text-align:right; font-weight:700; color:#0f172a; font-variant-numeric:tabular-nums;">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+
+            <!-- Financials Summary: Subtotal, Tax, Payment Made, Balance Due -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.5rem;">
+              <!-- Left: Words & Notes -->
+              <div style="flex:1;">
+                <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Total In Words:</div>
+                <div style="font-size:0.88rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.4;">
+                  ${words}
+                </div>
+
+                <!-- Tax Summary Table (Matching Screenshot 1 Reference) -->
+                <div style="margin-top:1.25rem;">
+                  <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Tax Summary</div>
+                  <table style="width:100%; max-width:400px; border-collapse:collapse; font-size:0.8rem; border:1px solid #e2e8f0;">
+                    <thead>
+                      <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; color:#475569; text-align:left;">
+                        <th style="padding:5px 8px;">Tax Details</th>
+                        <th style="padding:5px 8px; text-align:right;">Taxable (${curr})</th>
+                        <th style="padding:5px 8px; text-align:right;">Tax (${curr})</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="padding:5px 8px; border-bottom:1px solid #e2e8f0;">${isIndia ? 'Standard GST (18%)' : 'Standard Rate (5%)'}</td>
+                        <td style="padding:5px 8px; text-align:right; border-bottom:1px solid #e2e8f0;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 8px; text-align:right; border-bottom:1px solid #e2e8f0;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr style="font-weight:700; background:#f8fafc;">
+                        <td style="padding:5px 8px;">Total</td>
+                        <td style="padding:5px 8px; text-align:right;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 8px; text-align:right;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="margin-top:1rem;">
+                  <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Notes:</div>
+                  <div style="font-size:0.82rem; color:#475569;">
+                    Thanks for your business. Please keep a copy of this official invoice for your records.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Detailed Totals Box (Matching Screenshot 1) -->
+              <div style="width:280px; border-top:1px solid #e2e8f0; padding-top:6px;">
+                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+                  <span>Sub Total</span>
+                  <span style="font-variant-numeric:tabular-nums;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+                  <span>${isIndia ? 'GST Total (18%)' : 'VAT Total (5%)'}</span>
+                  <span style="font-variant-numeric:tabular-nums;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:7px 0; font-size:1.05rem; font-weight:800; color:#0f172a; border-top:1px solid #e2e8f0; margin-top:2px;">
+                  <span>Total</span>
+                  <span style="font-variant-numeric:tabular-nums;">${curr} ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                ${amountPaid > 0 ? `
+                  <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#059669; font-weight:700;">
+                    <span>Payment Made</span>
+                    <span style="font-variant-numeric:tabular-nums;">(-) ${amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                ` : ''}
+                <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:1.15rem; font-weight:800; color:#0f172a; border-top:2px solid #0f172a; background:#f8fafc; margin-top:4px; padding-left:6px; padding-right:6px; border-radius:4px;">
+                  <span>Balance Due</span>
+                  <span style="font-variant-numeric:tabular-nums; color:${balanceDue <= 0.01 ? '#16a34a' : '#0f172a'};">${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Signatures & Official Stamp Block (Matching Reference Screenshot 3) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:1.5rem; border-top:1px solid #e2e8f0; margin-top:1.5rem;">
+              <!-- Left: Team Contact -->
+              <div style="font-size:0.82rem; color:#475569; line-height:1.55;">
+                <div style="margin-bottom:2px;">Best wishes,</div>
+                <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Team'}</strong><br>
+                Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
+                <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
+                <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" style="color:#0284c7; text-decoration:none;">www.rayan-group.com</a>
+              </div>
+
+              <!-- Right: Real Signature + Official Stamp -->
+              <div style="position:relative; width:220px; text-align:center; padding-top:10px;">
+                <div style="position:relative; z-index:2; min-height:42px;">
+                  ${this.getRayanSignatureImg('default')}
+                </div>
+                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:4px;">
+                  Arshad Alam Shaikh
+                </div>
+                <div style="font-size:0.75rem; color:#64748b; font-weight:600;">
+                  Authorised Signatory
+                </div>
+                <!-- Real Circular Purple/Blue Official Stamp -->
+                <div style="position:absolute; right:5px; top:-25px; z-index:5; pointer-events:none;">
+                  ${this.getRayanStampImg()}
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Teal Banner (Matching Rayan Official Document Format) -->
+            <div style="margin-top:2rem; background:#00a699; color:#ffffff; padding:7px 12px; border-radius:4px; font-size:0.78rem; text-align:center; font-weight:700; letter-spacing:0.02em;">
+              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+            </div>
+            <div style="text-align:center; font-size:8px; color:#94a3b8; margin-top:5px;">
+              This is a Computer Generated Tax Invoice
             </div>
           </div>
         </div>
