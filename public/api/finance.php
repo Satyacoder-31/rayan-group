@@ -186,6 +186,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 if ($data && is_array($data) && !empty($data['companies'])) {
                     // Check if relational tables have any additional records
                     syncFromRelationalTables($pdo, $data);
+                    // Keep relational tables populated
+                    syncToRelationalTables($pdo, $data);
                     return $data;
                 }
             }
