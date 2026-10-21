@@ -1549,25 +1549,13 @@ class FinanceApp {
       };
     }
 
-    // 4. Accordion Toggle and Navigation
+    // 4. Accordion Toggle
     document.querySelectorAll('.fin-accordion-header').forEach(hdr => {
       hdr.onclick = (e) => {
         e.stopPropagation();
         const grp = hdr.closest('.fin-accordion-group');
         if (grp) {
           grp.classList.toggle('open');
-          const toggleTarget = hdr.getAttribute('data-toggle');
-          if (toggleTarget === 'fin-grp-purchases') {
-            this.switchTab('bills');
-          } else if (toggleTarget === 'fin-grp-sales') {
-            this.switchTab('invoices');
-          } else if (toggleTarget === 'fin-grp-bank') {
-            this.switchTab('payment_in');
-          } else if (toggleTarget === 'fin-grp-ops') {
-            this.switchTab('projects');
-          } else if (toggleTarget === 'fin-grp-reports') {
-            this.switchTab('reports');
-          }
         }
       };
     });
@@ -1784,10 +1772,6 @@ class FinanceApp {
     document.querySelectorAll('.fin-nav-subitem, .fin-tab-item').forEach(b => {
       const isAct = b.getAttribute('data-tab') === this.activeTab;
       b.classList.toggle('active', isAct);
-      if (isAct) {
-        const parentGrp = b.closest('.fin-accordion-group');
-        if (parentGrp) parentGrp.classList.add('open');
-      }
     });
 
     switch (this.activeTab) {
