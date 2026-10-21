@@ -3391,7 +3391,7 @@ class FinanceApp {
                     <td>${this.formatDate(r.receipt_date)}</td>
                     <td><strong>${r.customer_name}</strong></td>
                     <td>
-                      <div style="font-weight:600;">${r.payment_mode}</div>
+                      <div style="font-weight:600;">${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
                       ${r.bank_name ? `<div style="font-size:0.7rem; color:#38bdf8; font-weight:600;">🏦 ${r.bank_name}</div>` : ''}
                       <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}</span>
                     </td>
@@ -3445,7 +3445,7 @@ class FinanceApp {
                     <td>${this.formatDate(p.payment_date)}</td>
                     <td><strong>${p.vendor_name}</strong></td>
                     <td>
-                      <div>${p.payment_mode}</div>
+                      <div>${(p.payment_mode === 'Corporate RTGS' || p.payment_mode === 'RTGS') ? 'Online' : (p.payment_mode || 'Online')}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no}</span>
                     </td>
                     <td><strong style="color:#fb923c;">${this.formatCurrency(p.amount_paid)}</strong></td>
@@ -3624,7 +3624,7 @@ class FinanceApp {
                     <td>${this.formatDate(r.receipt_date)}</td>
                     <td><strong>${r.customer_name}</strong></td>
                     <td>
-                      <div>${r.payment_mode}</div>
+                      <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no} • ${r.bank_name || 'State Bank of India'}</span>
                     </td>
                     <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
@@ -3702,7 +3702,7 @@ class FinanceApp {
                     <td>${this.formatDate(p.payment_date)}</td>
                     <td><strong>${p.vendor_name}</strong></td>
                     <td>
-                      <div>${p.payment_mode}</div>
+                      <div>${(p.payment_mode === 'Corporate RTGS' || p.payment_mode === 'RTGS') ? 'Online' : (p.payment_mode || 'Online')}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no}</span>
                     </td>
                     <td><strong style="color:#fb923c;">${this.formatCurrency(p.amount_paid)}</strong></td>
@@ -5297,7 +5297,7 @@ class FinanceApp {
 
               <div class="fin-form-group" style="margin-top:1.5rem;">
                 <label class="fin-form-label">Notes &amp; Payment Instructions</label>
-                <textarea id="inv-notes" class="fin-form-textarea" rows="2" placeholder="Payment terms: Bank wire via RTGS to State Bank of India corporate account."></textarea>
+                <textarea id="inv-notes" class="fin-form-textarea" rows="2" placeholder="Payment terms: Bank wire via Online Transfer to State Bank of India corporate account."></textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -7530,7 +7530,7 @@ class FinanceApp {
                     <select id="rec-online-channel" class="fin-form-select">
                       <option value="Online Bank Transfer" selected>Online Bank Transfer / Corporate Wire</option>
                       <option value="Central Bank Direct Clearing">Central Bank Direct Clearing</option>
-                      <option value="RTGS / NEFT Wire Remittance">RTGS / NEFT Wire Remittance</option>
+                      <option value="Online / Direct Remittance">Online / Direct Remittance</option>
                       <option value="SWIFT International Wire">SWIFT International Wire</option>
                       <option value="Instant Direct Remittance">Instant Direct Remittance (Aani / UPI)</option>
                     </select>
@@ -8688,7 +8688,7 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Disbursement Mode</label>
                   <select id="pay-mode" class="fin-form-select" required>
-                    <option value="Corporate RTGS" selected>${isIndia ? 'Corporate RTGS' : 'ADCB / FAB Bank Wire'}</option>
+                    <option value="Online" selected>Online</option>
                     <option value="Corporate Cheque">Corporate Cheque</option>
                     <option value="International Wire">International Wire</option>
                     <option value="Petty Cash">Petty Cash</option>
@@ -8703,7 +8703,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment UTR / CMS Ref #</label>
-                  <input type="text" id="pay-ref" class="fin-form-input" required placeholder="${isIndia ? 'e.g. CMS-RTGS-991203' : 'e.g. ADCB-FT-994821'}">
+                  <input type="text" id="pay-ref" class="fin-form-input" required placeholder="${isIndia ? 'e.g. CMS-ONLINE-991203' : 'e.g. ADCB-FT-994821'}">
                 </div>
               </div>
 
@@ -10392,7 +10392,7 @@ class FinanceApp {
   openBankTransferModal(sourceBankId = null) {
     const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
-    const defaultPrefix = isIndia ? 'RTGS-ASH' : 'FAB-TRN';
+    const defaultPrefix = isIndia ? 'ONL-ASH' : 'FAB-TRN';
     const autoUtr = `${defaultPrefix}-${Math.floor(10000 + Math.random() * 90000)}`;
 
     const modalHtml = `
@@ -11874,7 +11874,7 @@ class FinanceApp {
                 <!-- Meta Details -->
                 <div style="font-size:0.8rem; color:#475569; line-height:1.5; margin-top:8px;">
                   <div>Receipt Date : <strong>${formattedDate}</strong></div>
-                  <div>Payment Mode : <strong>${rec.payment_mode || 'Bank Transfer'}</strong></div>
+                  <div>Payment Mode : <strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
                   ${rec.reference_no || rec.cheque_no ? `<div>Ref / Instrument # : <strong>${rec.reference_no || rec.cheque_no}</strong></div>` : ''}
                 </div>
               </div>
@@ -11923,7 +11923,7 @@ class FinanceApp {
                     </div>
                   </td>
                   <td style="padding:12px; font-size:0.82rem; color:#334155;">
-                    <div><strong>${rec.payment_mode || 'Bank Transfer'}</strong></div>
+                    <div><strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
                     <div style="color:#64748b; font-size:0.75rem;">
                       ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
                       ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
@@ -13157,9 +13157,9 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment Mode</label>
                   <select id="edit-rcp-mode" class="fin-form-select" required>
+                    <option value="Online" ${rcp.payment_mode === 'Online' || rcp.payment_mode === 'RTGS' || rcp.payment_mode === 'Corporate RTGS' || rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Online</option>
                     <option value="Cheque" ${rcp.payment_mode === 'Cheque' ? 'selected' : ''}>Cheque</option>
                     <option value="Bank Wire" ${rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Direct Bank Wire</option>
-                    <option value="RTGS" ${rcp.payment_mode === 'RTGS' ? 'selected' : ''}>Corporate RTGS</option>
                     <option value="Cash" ${rcp.payment_mode === 'Cash' ? 'selected' : ''}>Cash Deposit</option>
                   </select>
                 </div>
@@ -13392,8 +13392,8 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Disbursement Channel</label>
                   <select id="edit-pay-mode" class="fin-form-select">
-                    <option value="Corporate RTGS" ${pay.payment_mode === 'Corporate RTGS' ? 'selected' : ''}>Corporate RTGS</option>
-                    <option value="Corporate Cheque" ${pay.payment_mode === 'Corporate Cheque' ? 'selected' : ''}>Corporate Cheque</option>
+                    <option value="Online" ${(!pay.payment_mode || pay.payment_mode === 'Online' || pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS' || pay.payment_mode === 'Corporate Online' || pay.payment_mode === 'ADCB / FAB Bank Wire') ? 'selected' : ''}>Online</option>
+                    <option value="Corporate Cheque" ${pay.payment_mode === 'Corporate Cheque' || pay.payment_mode === 'Cheque' ? 'selected' : ''}>Corporate Cheque</option>
                     <option value="International Wire" ${pay.payment_mode === 'International Wire' ? 'selected' : ''}>International Wire</option>
                     <option value="Petty Cash" ${pay.payment_mode === 'Petty Cash' ? 'selected' : ''}>Petty Cash</option>
                   </select>
