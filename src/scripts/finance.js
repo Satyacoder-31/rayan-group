@@ -1721,6 +1721,23 @@ class FinanceApp {
 
     const qaPo = document.getElementById('qa-btn-po');
     if (qaPo) qaPo.onclick = () => this.openCreatePOModal();
+
+    // Native Print Handlers
+    window.addEventListener('beforeprint', () => {
+      const hasModal = document.getElementById('fin-doc-print-modal') || document.querySelector('.fin-modal-backdrop.open');
+      if (hasModal) {
+        document.body.classList.add('fin-doc-open');
+      }
+      document.body.classList.add('fin-printing-now');
+    });
+
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('fin-printing-now');
+      const hasModal = document.getElementById('fin-doc-print-modal') || document.querySelector('.fin-modal-backdrop.open');
+      if (!hasModal) {
+        document.body.classList.remove('fin-doc-open');
+      }
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -2051,7 +2068,7 @@ class FinanceApp {
                     <td>${this.formatCurrency(inv.balance_due)}</td>
                     <td><span class="fin-badge fin-badge-${inv.status}">${inv.status.replace('_', ' ')}</span></td>
                     <td>
-                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')">View</button>
+                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="Print &amp; View Official Tax Invoice">Print / View</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -2092,7 +2109,7 @@ class FinanceApp {
                     <td>${this.formatCurrency(b.balance_due)}</td>
                     <td><span class="fin-badge fin-badge-${b.status}">${b.status.replace('_', ' ')}</span></td>
                     <td>
-                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')">View</button>
+                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')" title="Print &amp; View Purchase Bill">Print / View</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -2324,7 +2341,7 @@ class FinanceApp {
         <td><strong style="color:${inv.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(inv.balance_due)}</strong></td>
         <td><span class="fin-badge fin-badge-${inv.status}">${inv.status.replace('_', ' ')}</span></td>
         <td style="white-space:nowrap;">
-          <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="View &amp; Print Official Tax Invoice">View</button>
+          <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="Print &amp; View Official Tax Invoice">Print / View</button>
           <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditInvoiceModal('${inv.id}')" title="Edit Tax Invoice">Edit</button>
           ${inv.balance_due > 0 && this.hasPermission('record_receipt') ? `
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openQuickPayInvoice('${inv.id}')" style="color:#10b981;" title="Record Customer Payment">Receive</button>
@@ -2395,7 +2412,7 @@ class FinanceApp {
                   <td><span class="fin-badge fin-badge-${b.approval_status}">${b.approval_status}</span></td>
                   <td><span class="fin-badge fin-badge-${b.status}">${b.status.replace('_', ' ')}</span></td>
                   <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')">View</button>
+                    <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')" title="Print &amp; View Purchase Bill">Print / View</button>
                     <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditBillModal('${b.id}')" title="Edit Purchase Bill">Edit</button>
                     ${b.approval_status === 'pending' && this.hasPermission('approve_bill') ? `
                       <button type="button" class="fin-btn-row-action" style="color:#10b981;" onclick="window.finApp.approveBill('${b.id}')">Approve</button>
@@ -3690,7 +3707,7 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Audited reports, GSTR-1 Tax Summary, Profit &amp; Loss Statement, and Cash Flows.</p>
           </div>
           <div class="fin-panel-actions">
-            <button type="button" class="fin-btn-quick primary" onclick="window.print()">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">
               🖨️ Print Statement
             </button>
             <button type="button" class="fin-btn-quick" onclick="window.finApp.exportReportsExcel()">
@@ -5791,7 +5808,7 @@ class FinanceApp {
             </div>
             <div style="display:flex; gap:0.5rem;">
               <button type="button" class="fin-btn-quick" style="border-color:#f59e0b; color:#f59e0b;" onclick="window.finApp.closeModal('modal-bill-detail'); window.finApp.openEditBillModal('${bill.id}')">✏️ Edit Bill</button>
-              <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Purchase Bill</button>
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Purchase Bill</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bill-detail')">&times;</button>
             </div>
           </div>
@@ -5916,6 +5933,7 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
 
@@ -7033,7 +7051,7 @@ class FinanceApp {
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">Customer Profile: ${cust.name}</h3>
             <div style="display:flex; gap:0.5rem;">
-              <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Statement (SOA)</button>
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Statement (SOA)</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cust-profile')">&times;</button>
             </div>
           </div>
@@ -7136,6 +7154,7 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
   // 7. VENDOR PROFILE & STATEMENT
@@ -7156,7 +7175,7 @@ class FinanceApp {
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">Vendor Profile: ${vend.name}</h3>
             <div style="display:flex; gap:0.5rem;">
-              <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Vendor Statement</button>
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Vendor Statement</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-vend-profile')">&times;</button>
             </div>
           </div>
@@ -7232,6 +7251,7 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
   // 8. ADD CUSTOMER MODAL
@@ -8132,11 +8152,16 @@ class FinanceApp {
   closeModal(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
+    const remaining = document.querySelector('.fin-modal-backdrop.open, .fin-doc-modal-backdrop');
+    if (!remaining) {
+      document.body.classList.remove('fin-doc-open');
+    }
   }
 
   closeDocPrintModal() {
     const el = document.getElementById('fin-doc-print-modal');
     if (el) el.remove();
+    document.body.classList.remove('fin-doc-open');
     if (window.location.search.includes('verify=') || window.location.search.includes('doc=')) {
       if (this.currentUser) {
         this.showAppView();
@@ -8147,6 +8172,17 @@ class FinanceApp {
         window.history.replaceState({}, document.title, window.location.pathname);
       } catch (e) {}
     }
+  }
+
+  printDocument() {
+    document.body.classList.add('fin-doc-open');
+    document.body.classList.add('fin-printing-now');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('fin-printing-now');
+      }, 500);
+    }, 60);
   }
 
   openInvoiceDetail(id) {
@@ -8647,7 +8683,7 @@ class FinanceApp {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
@@ -8929,6 +8965,7 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
   // 2. RECEIPT VOUCHER PRINT MODAL
@@ -8956,7 +8993,7 @@ class FinanceApp {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
@@ -9170,6 +9207,7 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
   // 3. PURCHASE ORDER PRINT MODAL (2 Full Pages)
@@ -9194,7 +9232,7 @@ class FinanceApp {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
@@ -9508,6 +9546,7 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
   // --------------------------------------------------------------------------
