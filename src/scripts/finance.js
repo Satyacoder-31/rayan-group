@@ -4383,7 +4383,7 @@ class FinanceApp {
                   <td><strong>${this.formatCurrency(exp.total_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-${exp.status}">${exp.status}</span></td>
                   <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" onclick="alert('Attached proof: ${exp.receipt_filename}')">Receipt</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.downloadExpenseReceipt('${exp.id}')" title="Download &amp; View Official Receipt">Receipt</button>
                     <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditExpenseModal('${exp.id}')" title="Edit Expense Claim">Edit</button>
                     <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteExpense('${exp.id}')" title="Delete Expense">Delete</button>
                   </td>
@@ -9598,7 +9598,22 @@ class FinanceApp {
       e.preventDefault();
       const prjSel = document.getElementById('exp-project');
       const fileInp = document.getElementById('exp-file');
-      const filename = fileInp.files.length ? fileInp.files[0].name : 'expense-receipt.pdf';
+      let receiptData = null;
+      let filename = 'expense-receipt.pdf';
+      if (fileInp && fileInp.files && fileInp.files.length > 0) {
+        const file = fileInp.files[0];
+        filename = file.name;
+        try {
+          receiptData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        } catch (err) {
+          console.warn('Could not read attached receipt:', err);
+        }
+      }
       const expenseNo = this.getNextExpenseNumber();
       const amountVal = Number(document.getElementById('exp-amount').value);
       const taxVal = Number(document.getElementById('exp-tax').value) || 0;
@@ -9660,7 +9675,8 @@ class FinanceApp {
           payment_method: document.getElementById('exp-pay-mode').value,
           submitted_by: this.currentUser?.name || 'Finance Staff',
           status: 'approved',
-          receipt_filename: filename
+          receipt_filename: filename,
+          receipt_data: receiptData
         }
       };
 
@@ -13309,6 +13325,21 @@ class FinanceApp {
                 </select>
               </div>
 
+              <div class="fin-form-group">
+                <label class="fin-form-label">Attach / Replace Receipt Proof (PDF / Image)</label>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <input type="file" id="edit-exp-file" class="fin-form-input" accept=".pdf,image/*" style="flex:1;">
+                  ${exp.receipt_data || exp.receipt_filename ? `
+                    <button type="button" class="fin-btn-quick" style="white-space:nowrap; padding:0.45rem 0.8rem; font-size:0.75rem; border-color:#0284c7; color:#0284c7;" onclick="window.finApp.downloadExpenseReceipt('${exp.id}')">
+                      📥 Current Receipt
+                    </button>
+                  ` : ''}
+                </div>
+                <div id="edit-exp-file-info" style="font-size:0.72rem; color:#94a3b8; margin-top:4px;">
+                  ${exp.receipt_filename ? `Attached File: <strong>${exp.receipt_filename}</strong>` : 'No file attached yet (official voucher will be auto-generated)'}
+                </div>
+              </div>
+
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-expense')">Cancel</button>
                 <button type="submit" class="fin-btn-quick primary">Save &amp; Update Expense &rarr;</button>
@@ -13345,11 +13376,356 @@ class FinanceApp {
       exp.payment_method = document.getElementById('edit-exp-mode').value;
       exp.status = document.getElementById('edit-exp-status').value;
 
+      const editFileInp = document.getElementById('edit-exp-file');
+      if (editFileInp && editFileInp.files && editFileInp.files.length > 0) {
+        const file = editFileInp.files[0];
+        exp.receipt_filename = file.name;
+        try {
+          exp.receipt_data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        } catch (err) {
+          console.warn('Could not read edit receipt file:', err);
+        }
+      }
+
       await this.syncApi('update_expense', { expense: exp });
       alert(`Expense ${exp.expense_no} updated successfully.`);
       this.closeModal('modal-edit-expense');
       this.renderActiveTab();
     };
+  }
+
+  // DOWNLOAD & VIEW EXPENSE RECEIPT
+  downloadExpenseReceipt(expenseId) {
+    const exp = (this.db?.expenses || []).find(e => e.id === expenseId || e.expense_no === expenseId);
+    if (!exp) {
+      alert('Expense record not found.');
+      return;
+    }
+
+    // 1. If an actual file (base64 data URL) is attached
+    if (exp.receipt_data && typeof exp.receipt_data === 'string' && exp.receipt_data.startsWith('data:')) {
+      const a = document.createElement('a');
+      a.href = exp.receipt_data;
+      a.download = exp.receipt_filename || `${exp.expense_no}_receipt.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      this.showNotification(`Downloaded receipt: ${exp.receipt_filename || exp.expense_no}`, 'success');
+      this.openExpenseReceiptModal(expenseId);
+      return;
+    }
+
+    // 2. Generate and download official standalone Corporate Expense Tax Receipt Document
+    const comp = (this.db?.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) || this.db?.companies?.[0];
+    const isIndia = (exp.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const curr = exp.currency || (isIndia ? 'INR' : 'AED');
+    const currSym = exp.currency_symbol || (isIndia ? '₹' : 'AED ');
+    const formattedAmount = Number(exp.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedTax = Number(exp.tax_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedTotal = Number(exp.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedDate = this.formatDate(exp.date);
+
+    const docHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Receipt Voucher - ${exp.expense_no}</title>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f1f5f9; padding: 2rem; color: #0f172a; }
+    .receipt-card { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2.2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0284c7; padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+    .company-name { font-size: 1.25rem; font-weight: 800; color: #0369a1; text-transform: uppercase; letter-spacing: -0.01em; }
+    .company-sub { font-size: 0.78rem; color: #64748b; margin-top: 3px; }
+    .voucher-title { font-size: 1rem; font-weight: 800; color: #0284c7; text-align: right; }
+    .voucher-meta { font-size: 0.8rem; color: #64748b; margin-top: 4px; text-align: right; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; font-size: 0.82rem; }
+    .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.9rem 1.1rem; }
+    .info-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .info-val { font-size: 0.95rem; font-weight: 700; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+    th { background: #0f172a; color: #ffffff; padding: 10px 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    .totals-area { display: flex; justify-content: flex-end; margin-bottom: 1.75rem; }
+    .totals-box { width: 280px; font-size: 0.85rem; }
+    .totals-row { display: flex; justify-content: space-between; padding: 5px 0; color: #475569; }
+    .totals-grand { display: flex; justify-content: space-between; padding: 10px 0; border-top: 2px solid #0284c7; font-size: 1.1rem; font-weight: 800; color: #0369a1; }
+    .signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; text-align: center; font-size: 0.75rem; }
+    .sig-line { border-top: 1px solid #94a3b8; margin-top: 28px; padding-top: 5px; color: #64748b; font-weight: 600; }
+    .stamp-badge { display: inline-block; padding: 4px 10px; border: 2px dashed #0284c7; border-radius: 6px; color: #0284c7; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
+    .no-print { text-align: center; margin-top: 1.5rem; }
+    .btn-print { background: #0284c7; color: #fff; border: none; padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .receipt-card { border: none; box-shadow: none; padding: 0; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-card">
+    <div class="header">
+      <div>
+        <div class="company-name">\${comp ? comp.name : 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C'}</div>
+        <div class="company-sub">\${comp ? comp.address : 'Mussafah Industrial Area M-36, Abu Dhabi, UAE'}</div>
+        \${comp?.trn_vat ? \`<div class="company-sub">TRN / Tax ID: <strong>\${comp.trn_vat}</strong></div>\` : ''}
+      </div>
+      <div>
+        <div class="voucher-title">OFFICIAL EXPENSE RECEIPT</div>
+        <div class="voucher-meta">Voucher #: <strong>\${exp.expense_no}</strong></div>
+        <div class="voucher-meta">Claim Date: \${formattedDate}</div>
+        <div class="voucher-meta" style="color:#059669; font-weight:700;">Status: APPROVED</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="info-card">
+        <div class="info-label">Claimant / Submitted By</div>
+        <div class="info-val">\${exp.submitted_by || 'Authorized Staff'}</div>
+        <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Department: Site Field Operations</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Expense Category &amp; Channel</div>
+        <div class="info-val">\${exp.category || 'Equipment & Fuel'}</div>
+        <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Paid via: \${exp.payment_method || 'Corporate Debit Card'}</div>
+      </div>
+    </div>
+
+    <div class="info-card" style="margin-bottom:1.25rem;">
+      <div class="info-label">Linked Project / Cost Center</div>
+      <div class="info-val">\${exp.project_name || 'Corporate Civil Operations'}</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Proof Ref: \${exp.receipt_filename || 'Official Fuel / Material Slip'}</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:8%; text-align:center;">#</th>
+          <th>Particulars / Expense Description</th>
+          <th style="width:25%; text-align:right;">Subtotal (\${curr})</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align:center; color:#64748b;">1</td>
+          <td>
+            <div style="font-weight:700; color:#0f172a;">\${exp.description}</div>
+            <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Category: \${exp.category} • Cost Center: \${exp.project_name || 'General HQ'}</div>
+          </td>
+          <td style="text-align:right; font-weight:700; color:#0f172a;">\${currSym}\${formattedAmount}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals-area">
+      <div class="totals-box">
+        <div class="totals-row">
+          <span>Taxable Subtotal:</span>
+          <span>\${currSym}\${formattedAmount}</span>
+        </div>
+        <div class="totals-row">
+          <span>\${isIndia ? 'GST (18%):' : 'UAE VAT (5%):'}</span>
+          <span>\${currSym}\${formattedTax}</span>
+        </div>
+        <div class="totals-grand">
+          <span>Total Reimbursed:</span>
+          <span>\${currSym}\${formattedTotal}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="signatures">
+      <div>
+        <div style="font-weight:700; color:#0f172a;">\${exp.submitted_by || 'Employee'}</div>
+        <div class="sig-line">Claimant Signature</div>
+      </div>
+      <div>
+        <div style="font-weight:700; color:#0f172a;">Finance Dept</div>
+        <div class="sig-line">Audited &amp; Verified</div>
+      </div>
+      <div>
+        <div class="stamp-badge">VERIFIED &amp; PASSED</div>
+        <div class="sig-line">Official Accounts Stamp</div>
+      </div>
+    </div>
+
+    <div class="no-print">
+      <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    this.downloadFile(`${exp.expense_no}_Receipt.html`, docHtml, 'text/html');
+    this.showNotification(`Downloaded ${exp.expense_no} Tax Receipt Voucher.`, 'success');
+    this.openExpenseReceiptModal(expenseId);
+  }
+
+  // INTERACTIVE EXPENSE RECEIPT MODAL
+  openExpenseReceiptModal(expenseId) {
+    const exp = (this.db?.expenses || []).find(e => e.id === expenseId || e.expense_no === expenseId);
+    if (!exp) {
+      alert('Expense record not found.');
+      return;
+    }
+    const comp = (this.db?.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) || this.db?.companies?.[0];
+    const isIndia = (exp.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const curr = exp.currency || (isIndia ? 'INR' : 'AED');
+    const currSym = exp.currency_symbol || (isIndia ? '₹' : 'AED ');
+    const formattedAmount = Number(exp.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedTax = Number(exp.tax_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedTotal = Number(exp.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedDate = this.formatDate(exp.date);
+
+    const hasAttachment = Boolean(exp.receipt_data && typeof exp.receipt_data === 'string' && exp.receipt_data.startsWith('data:'));
+    const isImage = hasAttachment && (exp.receipt_data.startsWith('data:image/') || (exp.receipt_filename && /\.(jpg|jpeg|png|webp|gif)$/i.test(exp.receipt_filename)));
+    const isPdf = hasAttachment && (exp.receipt_data.startsWith('data:application/pdf') || (exp.receipt_filename && /\.pdf$/i.test(exp.receipt_filename)));
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-expense-receipt">
+        <div class="fin-modal-dialog" style="max-width:720px; background:#ffffff; color:#0f172a; padding:1.75rem; border-radius:12px;">
+          <!-- Controls Header -->
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; margin-bottom:1.25rem;" class="no-print">
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <span style="font-size:1.1rem;">🧾</span>
+              <span style="font-weight:800; font-size:1rem; color:#0f172a;">Official Expense Receipt &amp; Voucher (${exp.expense_no})</span>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button type="button" class="fin-btn-quick" style="border-color:#0284c7; color:#0284c7; font-weight:700; padding:6px 14px;" onclick="window.finApp.downloadExpenseReceipt('${exp.id}')">
+                📥 Download
+              </button>
+              <button type="button" class="fin-btn-quick primary" style="padding:6px 14px;" onclick="window.print()">
+                🖨️ Print
+              </button>
+              <button type="button" class="fin-modal-close" style="color:#64748b; font-size:1.5rem; margin-left:0.5rem;" onclick="window.finApp.closeModal('modal-expense-receipt')">&times;</button>
+            </div>
+          </div>
+
+          <!-- If image attachment exists, show preview -->
+          ${isImage ? `
+            <div style="margin-bottom:1.25rem; text-align:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem;" class="no-print">
+              <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.5rem; font-weight:600;">Uploaded Receipt Proof (${exp.receipt_filename}):</div>
+              <img src="${exp.receipt_data}" alt="Receipt Proof" style="max-height:280px; max-width:100%; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+            </div>
+          ` : ''}
+
+          <!-- If PDF attachment exists, embed object -->
+          ${isPdf ? `
+            <div style="margin-bottom:1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem;" class="no-print">
+              <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.4rem; font-weight:600;">Attached PDF Document: <strong>${exp.receipt_filename}</strong></div>
+              <iframe src="${exp.receipt_data}" style="width:100%; height:260px; border:1px solid #cbd5e1; border-radius:4px;"></iframe>
+            </div>
+          ` : ''}
+
+          <!-- Printable Official Voucher Card -->
+          <div style="border:1px solid #cbd5e1; border-radius:10px; padding:1.5rem; background:#ffffff;">
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0284c7; padding-bottom:1rem; margin-bottom:1.25rem;">
+              <div>
+                <div style="font-size:1.15rem; font-weight:800; color:#0369a1; text-transform:uppercase;">${comp ? comp.name : 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C'}</div>
+                <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">${comp ? comp.address : 'Mussafah Industrial Area M-36, Abu Dhabi, UAE'}</div>
+                ${comp?.trn_vat ? `<div style="font-size:0.75rem; color:#64748b;">TRN / Tax ID: <strong>${comp.trn_vat}</strong></div>` : ''}
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.95rem; font-weight:800; color:#0284c7;">EXPENSE CLAIM RECEIPT</div>
+                <div style="font-family:monospace; font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:3px;">${exp.expense_no}</div>
+                <div style="font-size:0.75rem; color:#64748b;">Date: ${formattedDate}</div>
+                <div style="font-size:0.75rem; color:#059669; font-weight:700;">Status: APPROVED</div>
+              </div>
+            </div>
+
+            <!-- Meta details grid -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem; font-size:0.8rem;">
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.85rem;">
+                <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700;">Claimant / Submitted By</div>
+                <div style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:2px;">${exp.submitted_by || 'Authorized Staff'}</div>
+              </div>
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.85rem;">
+                <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700;">Category &amp; Disbursement</div>
+                <div style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:2px;">${exp.category || 'General'} • ${exp.payment_method || 'Corporate Debit Card'}</div>
+              </div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.85rem; margin-bottom:1rem; font-size:0.8rem;">
+              <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700;">Linked Project / Cost Center</div>
+              <div style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:2px;">${exp.project_name || 'Corporate Civil Operations'}</div>
+              <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Proof Reference: ${exp.receipt_filename || 'Official Fuel / Material Slip'}</div>
+            </div>
+
+            <!-- Items Table -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:1rem; font-size:0.82rem;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff;">
+                  <th style="padding:8px 10px; width:8%; text-align:center;">#</th>
+                  <th style="padding:8px 10px; text-align:left;">Description</th>
+                  <th style="padding:8px 10px; width:30%; text-align:right;">Total Amount (${curr})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:10px; text-align:center; color:#64748b;">1</td>
+                  <td style="padding:10px;">
+                    <div style="font-weight:700; color:#0f172a;">${exp.description}</div>
+                    <div style="font-size:0.72rem; color:#64748b;">${exp.category} • Cost Center: ${exp.project_name || 'General HQ'}</div>
+                  </td>
+                  <td style="padding:10px; text-align:right; font-weight:800; color:#0f172a;">${currSym}${formattedAmount}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Totals Area -->
+            <div style="display:flex; justify-content:flex-end; margin-bottom:1.25rem;">
+              <div style="width:260px; font-size:0.82rem;">
+                <div style="display:flex; justify-content:space-between; padding:3px 0; color:#475569;">
+                  <span>Taxable Subtotal:</span>
+                  <span>${currSym}${formattedAmount}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:3px 0; color:#475569;">
+                  <span>${isIndia ? 'GST (18%):' : 'UAE VAT (5%):'}</span>
+                  <span>${currSym}${formattedTax}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-top:2px solid #0284c7; font-size:1rem; font-weight:800; color:#0369a1;">
+                  <span>Total Amount:</span>
+                  <span>${currSym}${formattedTotal}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Signatures -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-top:1.5rem; padding-top:1rem; border-top:1px solid #e2e8f0; font-size:0.72rem; text-align:center;">
+              <div>
+                <div style="font-weight:700; color:#0f172a;">${exp.submitted_by || 'Employee'}</div>
+                <div style="border-top:1px solid #94a3b8; margin-top:22px; padding-top:3px; color:#64748b;">Claimant Signature</div>
+              </div>
+              <div>
+                <div style="font-weight:700; color:#0f172a;">Internal Audit</div>
+                <div style="border-top:1px solid #94a3b8; margin-top:22px; padding-top:3px; color:#64748b;">QC &amp; Audit Passed</div>
+              </div>
+              <div>
+                <div style="display:inline-block; padding:3px 8px; border:2px dashed #0284c7; border-radius:4px; color:#0284c7; font-weight:800; font-size:0.65rem;">
+                  VERIFIED &amp; APPROVED
+                </div>
+                <div style="border-top:1px solid #94a3b8; margin-top:16px; padding-top:3px; color:#64748b;">Finance Signatory</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Footer -->
+          <div style="margin-top:1.25rem; display:flex; justify-content:flex-end; gap:0.5rem;" class="no-print">
+            <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-expense-receipt')">Close</button>
+            <button type="button" class="fin-btn-quick" style="border-color:#0284c7; color:#0284c7; font-weight:700;" onclick="window.finApp.downloadExpenseReceipt('${exp.id}')">📥 Download File</button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Voucher</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
   }
 
   async deleteExpense(expenseId) {

@@ -2149,7 +2149,7 @@ import"./live-overrides-Bz1C8oj0.js";import"./main-BNJq5JwO.js";var e={companies
                   <td><strong>${this.formatCurrency(e.total_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-${e.status}">${e.status}</span></td>
                   <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" onclick="alert('Attached proof: ${e.receipt_filename}')">Receipt</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.downloadExpenseReceipt('${e.id}')" title="Download &amp; View Official Receipt">Receipt</button>
                     <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditExpenseModal('${e.id}')" title="Edit Expense Claim">Edit</button>
                     <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteExpense('${e.id}')" title="Delete Expense">Delete</button>
                   </td>
@@ -4402,7 +4402,7 @@ import"./live-overrides-Bz1C8oj0.js";import"./main-BNJq5JwO.js";var e={companies
           </div>
         </div>
       </div>
-    `;document.getElementById(`fin-modal-container`).innerHTML=i;let a=document.getElementById(`exp-prj-toggle-btn`),o=document.getElementById(`exp-prj-select-wrap`),s=document.getElementById(`exp-prj-manual-wrap`),c=document.getElementById(`exp-project`),l=document.getElementById(`exp-project-manual`),u=e=>{e?(o&&(o.style.display=`none`),s&&(s.style.display=`block`),a&&(a.textContent=`▾ Pick from List`),l&&l.focus()):(o&&(o.style.display=`block`),s&&(s.style.display=`none`),a&&(a.textContent=`✎ Type Manually`),c&&c.value===`__manual__`&&(c.value=``))};a&&(a.onclick=()=>{let e=s&&s.style.display!==`none`;u(!e)}),c&&(c.onchange=()=>{c.value===`__manual__`&&u(!0)});let d=document.getElementById(`exp-amount`),f=document.getElementById(`exp-tax`);d.oninput=()=>{let t=Number(d.value)||0;e?f.value=(t*.18).toFixed(2):f.value=(t*.05).toFixed(2)},document.getElementById(`create-expense-form`).onsubmit=async i=>{i.preventDefault();let a=document.getElementById(`exp-project`),o=document.getElementById(`exp-file`),c=o.files.length?o.files[0].name:`expense-receipt.pdf`,u=this.getNextExpenseNumber(),d=Number(document.getElementById(`exp-amount`).value),f=Number(document.getElementById(`exp-tax`).value)||0,p=s&&s.style.display!==`none`,m=null,h=``;if(p){if(h=(l?.value||``).trim(),h){let e=r.find(e=>e.name.toLowerCase()===h.toLowerCase()||e.code&&e.code.toLowerCase()===h.toLowerCase());if(e)m=e.id,h=e.name;else{m=`prj-`+Date.now();let e={id:m,code:`PRJ-`+Math.floor(1e3+Math.random()*9e3),name:h,company_id:this.activeCompanyId,status:`active`};this.db.projects||(this.db.projects=[]),this.db.projects.push(e),this.syncApi(`create_project`,{project:e}).catch(e=>console.warn(`Project auto-persist error:`,e))}}else h=`Head Office General`}else a&&a.value&&a.value!==`__manual__`?(m=a.value,h=r.find(e=>e.id===m)?.name||a.options[a.selectedIndex]?.getAttribute(`data-name`)||``):(m=null,h=`Head Office General`);let g={expense:{id:`exp-`+Date.now(),expense_no:u,company_id:this.activeCompanyId,currency:e?`INR`:`AED`,currency_symbol:n,date:document.getElementById(`exp-date`).value,category:document.getElementById(`exp-category`).value,description:document.getElementById(`exp-desc`).value.trim(),amount:d,tax_amount:f,total_amount:d+f,project_id:m,project_name:h,payment_method:document.getElementById(`exp-pay-mode`).value,submitted_by:this.currentUser?.name||`Finance Staff`,status:`approved`,receipt_filename:c}},_=await this.syncApi(`create_expense`,g);_&&_.success&&(alert(`Expense ${_.expense?.expense_no||u} recorded successfully in ${t}.`),this.closeModal(`modal-expense`),this.switchTab(`expenses`))}}openCreatePOModal(){let e=this.activeCompanyId===`ashaz-eng-in`,t=e?`INR`:`AED`,n=e?`₹`:`AED `,r=(this.db?.vendors||[]).filter(e=>!e.company_id||e.company_id===this.activeCompanyId),i=(this.db?.projects||[]).filter(e=>!e.company_id||e.company_id===this.activeCompanyId),a=(this.db?.items||[]).filter(e=>!e.company_id||e.company_id===this.activeCompanyId),o=`
+    `;document.getElementById(`fin-modal-container`).innerHTML=i;let a=document.getElementById(`exp-prj-toggle-btn`),o=document.getElementById(`exp-prj-select-wrap`),s=document.getElementById(`exp-prj-manual-wrap`),c=document.getElementById(`exp-project`),l=document.getElementById(`exp-project-manual`),u=e=>{e?(o&&(o.style.display=`none`),s&&(s.style.display=`block`),a&&(a.textContent=`▾ Pick from List`),l&&l.focus()):(o&&(o.style.display=`block`),s&&(s.style.display=`none`),a&&(a.textContent=`✎ Type Manually`),c&&c.value===`__manual__`&&(c.value=``))};a&&(a.onclick=()=>{let e=s&&s.style.display!==`none`;u(!e)}),c&&(c.onchange=()=>{c.value===`__manual__`&&u(!0)});let d=document.getElementById(`exp-amount`),f=document.getElementById(`exp-tax`);d.oninput=()=>{let t=Number(d.value)||0;e?f.value=(t*.18).toFixed(2):f.value=(t*.05).toFixed(2)},document.getElementById(`create-expense-form`).onsubmit=async i=>{i.preventDefault();let a=document.getElementById(`exp-project`),o=document.getElementById(`exp-file`),c=null,u=`expense-receipt.pdf`;if(o&&o.files&&o.files.length>0){let e=o.files[0];u=e.name;try{c=await new Promise((t,n)=>{let r=new FileReader;r.onload=()=>t(r.result),r.onerror=n,r.readAsDataURL(e)})}catch(e){console.warn(`Could not read attached receipt:`,e)}}let d=this.getNextExpenseNumber(),f=Number(document.getElementById(`exp-amount`).value),p=Number(document.getElementById(`exp-tax`).value)||0,m=s&&s.style.display!==`none`,h=null,g=``;if(m){if(g=(l?.value||``).trim(),g){let e=r.find(e=>e.name.toLowerCase()===g.toLowerCase()||e.code&&e.code.toLowerCase()===g.toLowerCase());if(e)h=e.id,g=e.name;else{h=`prj-`+Date.now();let e={id:h,code:`PRJ-`+Math.floor(1e3+Math.random()*9e3),name:g,company_id:this.activeCompanyId,status:`active`};this.db.projects||(this.db.projects=[]),this.db.projects.push(e),this.syncApi(`create_project`,{project:e}).catch(e=>console.warn(`Project auto-persist error:`,e))}}else g=`Head Office General`}else a&&a.value&&a.value!==`__manual__`?(h=a.value,g=r.find(e=>e.id===h)?.name||a.options[a.selectedIndex]?.getAttribute(`data-name`)||``):(h=null,g=`Head Office General`);let _={expense:{id:`exp-`+Date.now(),expense_no:d,company_id:this.activeCompanyId,currency:e?`INR`:`AED`,currency_symbol:n,date:document.getElementById(`exp-date`).value,category:document.getElementById(`exp-category`).value,description:document.getElementById(`exp-desc`).value.trim(),amount:f,tax_amount:p,total_amount:f+p,project_id:h,project_name:g,payment_method:document.getElementById(`exp-pay-mode`).value,submitted_by:this.currentUser?.name||`Finance Staff`,status:`approved`,receipt_filename:u,receipt_data:c}},v=await this.syncApi(`create_expense`,_);v&&v.success&&(alert(`Expense ${v.expense?.expense_no||d} recorded successfully in ${t}.`),this.closeModal(`modal-expense`),this.switchTab(`expenses`))}}openCreatePOModal(){let e=this.activeCompanyId===`ashaz-eng-in`,t=e?`INR`:`AED`,n=e?`₹`:`AED `,r=(this.db?.vendors||[]).filter(e=>!e.company_id||e.company_id===this.activeCompanyId),i=(this.db?.projects||[]).filter(e=>!e.company_id||e.company_id===this.activeCompanyId),a=(this.db?.items||[]).filter(e=>!e.company_id||e.company_id===this.activeCompanyId),o=`
       <div class="fin-modal-backdrop open" id="modal-po">
         <div class="fin-modal-dialog" style="max-width:680px;">
           <div class="fin-modal-header">
@@ -6518,6 +6518,21 @@ import"./live-overrides-Bz1C8oj0.js";import"./main-BNJq5JwO.js";var e={companies
                 </select>
               </div>
 
+              <div class="fin-form-group">
+                <label class="fin-form-label">Attach / Replace Receipt Proof (PDF / Image)</label>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <input type="file" id="edit-exp-file" class="fin-form-input" accept=".pdf,image/*" style="flex:1;">
+                  ${t.receipt_data||t.receipt_filename?`
+                    <button type="button" class="fin-btn-quick" style="white-space:nowrap; padding:0.45rem 0.8rem; font-size:0.75rem; border-color:#0284c7; color:#0284c7;" onclick="window.finApp.downloadExpenseReceipt('${t.id}')">
+                      📥 Current Receipt
+                    </button>
+                  `:``}
+                </div>
+                <div id="edit-exp-file-info" style="font-size:0.72rem; color:#94a3b8; margin-top:4px;">
+                  ${t.receipt_filename?`Attached File: <strong>${t.receipt_filename}</strong>`:`No file attached yet (official voucher will be auto-generated)`}
+                </div>
+              </div>
+
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-expense')">Cancel</button>
                 <button type="submit" class="fin-btn-quick primary">Save &amp; Update Expense &rarr;</button>
@@ -6526,7 +6541,273 @@ import"./live-overrides-Bz1C8oj0.js";import"./main-BNJq5JwO.js";var e={companies
           </div>
         </div>
       </div>
-    `;document.getElementById(`fin-modal-container`).innerHTML=a;let o=document.getElementById(`edit-exp-amount`),s=document.getElementById(`edit-exp-tax`);o.oninput=()=>{let e=Number(o.value)||0;s.value=n?(e*.18).toFixed(2):(e*.05).toFixed(2)},document.getElementById(`edit-expense-form`).onsubmit=async e=>{e.preventDefault();let n=document.getElementById(`edit-exp-project`),r=Number(o.value)||0,i=Number(s.value)||0;t.date=document.getElementById(`edit-exp-date`).value,t.category=document.getElementById(`edit-exp-category`).value,t.description=document.getElementById(`edit-exp-desc`).value.trim(),t.amount=r,t.tax_amount=i,t.total_amount=r+i,t.project_id=n.value||null,t.project_name=n.options[n.selectedIndex]?.text||`Corporate Civil Operations`,t.payment_method=document.getElementById(`edit-exp-mode`).value,t.status=document.getElementById(`edit-exp-status`).value,await this.syncApi(`update_expense`,{expense:t}),alert(`Expense ${t.expense_no} updated successfully.`),this.closeModal(`modal-edit-expense`),this.renderActiveTab()}}async deleteExpense(e){confirm(`Are you sure you want to delete this expense record?`)&&(await this.syncApi(`delete_expense`,{expense_id:e}),alert(`Expense record deleted successfully.`),this.renderActiveTab())}openEditPaymentModal(e){let t=(this.db?.vendor_payments||[]).find(t=>t.id===e||t.voucher_no===e);if(!t){alert(`Payment voucher not found.`);return}let n=(t.company_id||this.activeCompanyId)===`ashaz-eng-in`?`INR`:`AED`,r=`
+    `;document.getElementById(`fin-modal-container`).innerHTML=a;let o=document.getElementById(`edit-exp-amount`),s=document.getElementById(`edit-exp-tax`);o.oninput=()=>{let e=Number(o.value)||0;s.value=n?(e*.18).toFixed(2):(e*.05).toFixed(2)},document.getElementById(`edit-expense-form`).onsubmit=async e=>{e.preventDefault();let n=document.getElementById(`edit-exp-project`),r=Number(o.value)||0,i=Number(s.value)||0;t.date=document.getElementById(`edit-exp-date`).value,t.category=document.getElementById(`edit-exp-category`).value,t.description=document.getElementById(`edit-exp-desc`).value.trim(),t.amount=r,t.tax_amount=i,t.total_amount=r+i,t.project_id=n.value||null,t.project_name=n.options[n.selectedIndex]?.text||`Corporate Civil Operations`,t.payment_method=document.getElementById(`edit-exp-mode`).value,t.status=document.getElementById(`edit-exp-status`).value;let a=document.getElementById(`edit-exp-file`);if(a&&a.files&&a.files.length>0){let e=a.files[0];t.receipt_filename=e.name;try{t.receipt_data=await new Promise((t,n)=>{let r=new FileReader;r.onload=()=>t(r.result),r.onerror=n,r.readAsDataURL(e)})}catch(e){console.warn(`Could not read edit receipt file:`,e)}}await this.syncApi(`update_expense`,{expense:t}),alert(`Expense ${t.expense_no} updated successfully.`),this.closeModal(`modal-edit-expense`),this.renderActiveTab()}}downloadExpenseReceipt(e){let t=(this.db?.expenses||[]).find(t=>t.id===e||t.expense_no===e);if(!t){alert(`Expense record not found.`);return}if(t.receipt_data&&typeof t.receipt_data==`string`&&t.receipt_data.startsWith(`data:`)){let n=document.createElement(`a`);n.href=t.receipt_data,n.download=t.receipt_filename||`${t.expense_no}_receipt.pdf`,document.body.appendChild(n),n.click(),document.body.removeChild(n),this.showNotification(`Downloaded receipt: ${t.receipt_filename||t.expense_no}`,`success`),this.openExpenseReceiptModal(e);return}(this.db?.companies||[]).find(e=>e.id===(t.company_id||this.activeCompanyId))||this.db?.companies?.[0],t.company_id||this.activeCompanyId,t.currency,t.currency_symbol,Number(t.amount||0).toLocaleString(`en-US`,{minimumFractionDigits:2}),Number(t.tax_amount||0).toLocaleString(`en-US`,{minimumFractionDigits:2}),Number(t.total_amount||0).toLocaleString(`en-US`,{minimumFractionDigits:2}),this.formatDate(t.date);let n=`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Receipt Voucher - ${t.expense_no}</title>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f1f5f9; padding: 2rem; color: #0f172a; }
+    .receipt-card { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2.2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0284c7; padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+    .company-name { font-size: 1.25rem; font-weight: 800; color: #0369a1; text-transform: uppercase; letter-spacing: -0.01em; }
+    .company-sub { font-size: 0.78rem; color: #64748b; margin-top: 3px; }
+    .voucher-title { font-size: 1rem; font-weight: 800; color: #0284c7; text-align: right; }
+    .voucher-meta { font-size: 0.8rem; color: #64748b; margin-top: 4px; text-align: right; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; font-size: 0.82rem; }
+    .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.9rem 1.1rem; }
+    .info-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .info-val { font-size: 0.95rem; font-weight: 700; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.85rem; }
+    th { background: #0f172a; color: #ffffff; padding: 10px 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    .totals-area { display: flex; justify-content: flex-end; margin-bottom: 1.75rem; }
+    .totals-box { width: 280px; font-size: 0.85rem; }
+    .totals-row { display: flex; justify-content: space-between; padding: 5px 0; color: #475569; }
+    .totals-grand { display: flex; justify-content: space-between; padding: 10px 0; border-top: 2px solid #0284c7; font-size: 1.1rem; font-weight: 800; color: #0369a1; }
+    .signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; text-align: center; font-size: 0.75rem; }
+    .sig-line { border-top: 1px solid #94a3b8; margin-top: 28px; padding-top: 5px; color: #64748b; font-weight: 600; }
+    .stamp-badge { display: inline-block; padding: 4px 10px; border: 2px dashed #0284c7; border-radius: 6px; color: #0284c7; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
+    .no-print { text-align: center; margin-top: 1.5rem; }
+    .btn-print { background: #0284c7; color: #fff; border: none; padding: 10px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .receipt-card { border: none; box-shadow: none; padding: 0; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-card">
+    <div class="header">
+      <div>
+        <div class="company-name">\${comp ? comp.name : 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C'}</div>
+        <div class="company-sub">\${comp ? comp.address : 'Mussafah Industrial Area M-36, Abu Dhabi, UAE'}</div>
+        \${comp?.trn_vat ? \`<div class="company-sub">TRN / Tax ID: <strong>\${comp.trn_vat}</strong></div>\` : ''}
+      </div>
+      <div>
+        <div class="voucher-title">OFFICIAL EXPENSE RECEIPT</div>
+        <div class="voucher-meta">Voucher #: <strong>\${exp.expense_no}</strong></div>
+        <div class="voucher-meta">Claim Date: \${formattedDate}</div>
+        <div class="voucher-meta" style="color:#059669; font-weight:700;">Status: APPROVED</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="info-card">
+        <div class="info-label">Claimant / Submitted By</div>
+        <div class="info-val">\${exp.submitted_by || 'Authorized Staff'}</div>
+        <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Department: Site Field Operations</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Expense Category &amp; Channel</div>
+        <div class="info-val">\${exp.category || 'Equipment & Fuel'}</div>
+        <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Paid via: \${exp.payment_method || 'Corporate Debit Card'}</div>
+      </div>
+    </div>
+
+    <div class="info-card" style="margin-bottom:1.25rem;">
+      <div class="info-label">Linked Project / Cost Center</div>
+      <div class="info-val">\${exp.project_name || 'Corporate Civil Operations'}</div>
+      <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">Proof Ref: \${exp.receipt_filename || 'Official Fuel / Material Slip'}</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:8%; text-align:center;">#</th>
+          <th>Particulars / Expense Description</th>
+          <th style="width:25%; text-align:right;">Subtotal (\${curr})</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align:center; color:#64748b;">1</td>
+          <td>
+            <div style="font-weight:700; color:#0f172a;">\${exp.description}</div>
+            <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Category: \${exp.category} • Cost Center: \${exp.project_name || 'General HQ'}</div>
+          </td>
+          <td style="text-align:right; font-weight:700; color:#0f172a;">\${currSym}\${formattedAmount}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals-area">
+      <div class="totals-box">
+        <div class="totals-row">
+          <span>Taxable Subtotal:</span>
+          <span>\${currSym}\${formattedAmount}</span>
+        </div>
+        <div class="totals-row">
+          <span>\${isIndia ? 'GST (18%):' : 'UAE VAT (5%):'}</span>
+          <span>\${currSym}\${formattedTax}</span>
+        </div>
+        <div class="totals-grand">
+          <span>Total Reimbursed:</span>
+          <span>\${currSym}\${formattedTotal}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="signatures">
+      <div>
+        <div style="font-weight:700; color:#0f172a;">\${exp.submitted_by || 'Employee'}</div>
+        <div class="sig-line">Claimant Signature</div>
+      </div>
+      <div>
+        <div style="font-weight:700; color:#0f172a;">Finance Dept</div>
+        <div class="sig-line">Audited &amp; Verified</div>
+      </div>
+      <div>
+        <div class="stamp-badge">VERIFIED &amp; PASSED</div>
+        <div class="sig-line">Official Accounts Stamp</div>
+      </div>
+    </div>
+
+    <div class="no-print">
+      <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+  </div>
+</body>
+</html>`;this.downloadFile(`${t.expense_no}_Receipt.html`,n,`text/html`),this.showNotification(`Downloaded ${t.expense_no} Tax Receipt Voucher.`,`success`),this.openExpenseReceiptModal(e)}openExpenseReceiptModal(e){let t=(this.db?.expenses||[]).find(t=>t.id===e||t.expense_no===e);if(!t){alert(`Expense record not found.`);return}let n=(this.db?.companies||[]).find(e=>e.id===(t.company_id||this.activeCompanyId))||this.db?.companies?.[0],r=(t.company_id||this.activeCompanyId)===`ashaz-eng-in`,i=t.currency||(r?`INR`:`AED`),a=t.currency_symbol||(r?`₹`:`AED `),o=Number(t.amount||0).toLocaleString(`en-US`,{minimumFractionDigits:2}),s=Number(t.tax_amount||0).toLocaleString(`en-US`,{minimumFractionDigits:2}),c=Number(t.total_amount||0).toLocaleString(`en-US`,{minimumFractionDigits:2}),l=this.formatDate(t.date),u=!!(t.receipt_data&&typeof t.receipt_data==`string`&&t.receipt_data.startsWith(`data:`)),d=u&&(t.receipt_data.startsWith(`data:image/`)||t.receipt_filename&&/\.(jpg|jpeg|png|webp|gif)$/i.test(t.receipt_filename)),f=u&&(t.receipt_data.startsWith(`data:application/pdf`)||t.receipt_filename&&/\.pdf$/i.test(t.receipt_filename)),p=`
+      <div class="fin-modal-backdrop open" id="modal-expense-receipt">
+        <div class="fin-modal-dialog" style="max-width:720px; background:#ffffff; color:#0f172a; padding:1.75rem; border-radius:12px;">
+          <!-- Controls Header -->
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; margin-bottom:1.25rem;" class="no-print">
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <span style="font-size:1.1rem;">🧾</span>
+              <span style="font-weight:800; font-size:1rem; color:#0f172a;">Official Expense Receipt &amp; Voucher (${t.expense_no})</span>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button type="button" class="fin-btn-quick" style="border-color:#0284c7; color:#0284c7; font-weight:700; padding:6px 14px;" onclick="window.finApp.downloadExpenseReceipt('${t.id}')">
+                📥 Download
+              </button>
+              <button type="button" class="fin-btn-quick primary" style="padding:6px 14px;" onclick="window.print()">
+                🖨️ Print
+              </button>
+              <button type="button" class="fin-modal-close" style="color:#64748b; font-size:1.5rem; margin-left:0.5rem;" onclick="window.finApp.closeModal('modal-expense-receipt')">&times;</button>
+            </div>
+          </div>
+
+          <!-- If image attachment exists, show preview -->
+          ${d?`
+            <div style="margin-bottom:1.25rem; text-align:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem;" class="no-print">
+              <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.5rem; font-weight:600;">Uploaded Receipt Proof (${t.receipt_filename}):</div>
+              <img src="${t.receipt_data}" alt="Receipt Proof" style="max-height:280px; max-width:100%; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+            </div>
+          `:``}
+
+          <!-- If PDF attachment exists, embed object -->
+          ${f?`
+            <div style="margin-bottom:1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem;" class="no-print">
+              <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.4rem; font-weight:600;">Attached PDF Document: <strong>${t.receipt_filename}</strong></div>
+              <iframe src="${t.receipt_data}" style="width:100%; height:260px; border:1px solid #cbd5e1; border-radius:4px;"></iframe>
+            </div>
+          `:``}
+
+          <!-- Printable Official Voucher Card -->
+          <div style="border:1px solid #cbd5e1; border-radius:10px; padding:1.5rem; background:#ffffff;">
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0284c7; padding-bottom:1rem; margin-bottom:1.25rem;">
+              <div>
+                <div style="font-size:1.15rem; font-weight:800; color:#0369a1; text-transform:uppercase;">${n?n.name:`RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C`}</div>
+                <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">${n?n.address:`Mussafah Industrial Area M-36, Abu Dhabi, UAE`}</div>
+                ${n?.trn_vat?`<div style="font-size:0.75rem; color:#64748b;">TRN / Tax ID: <strong>${n.trn_vat}</strong></div>`:``}
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.95rem; font-weight:800; color:#0284c7;">EXPENSE CLAIM RECEIPT</div>
+                <div style="font-family:monospace; font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:3px;">${t.expense_no}</div>
+                <div style="font-size:0.75rem; color:#64748b;">Date: ${l}</div>
+                <div style="font-size:0.75rem; color:#059669; font-weight:700;">Status: APPROVED</div>
+              </div>
+            </div>
+
+            <!-- Meta details grid -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem; font-size:0.8rem;">
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.85rem;">
+                <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700;">Claimant / Submitted By</div>
+                <div style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:2px;">${t.submitted_by||`Authorized Staff`}</div>
+              </div>
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.85rem;">
+                <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700;">Category &amp; Disbursement</div>
+                <div style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:2px;">${t.category||`General`} • ${t.payment_method||`Corporate Debit Card`}</div>
+              </div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.85rem; margin-bottom:1rem; font-size:0.8rem;">
+              <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700;">Linked Project / Cost Center</div>
+              <div style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-top:2px;">${t.project_name||`Corporate Civil Operations`}</div>
+              <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Proof Reference: ${t.receipt_filename||`Official Fuel / Material Slip`}</div>
+            </div>
+
+            <!-- Items Table -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:1rem; font-size:0.82rem;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff;">
+                  <th style="padding:8px 10px; width:8%; text-align:center;">#</th>
+                  <th style="padding:8px 10px; text-align:left;">Description</th>
+                  <th style="padding:8px 10px; width:30%; text-align:right;">Total Amount (${i})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:10px; text-align:center; color:#64748b;">1</td>
+                  <td style="padding:10px;">
+                    <div style="font-weight:700; color:#0f172a;">${t.description}</div>
+                    <div style="font-size:0.72rem; color:#64748b;">${t.category} • Cost Center: ${t.project_name||`General HQ`}</div>
+                  </td>
+                  <td style="padding:10px; text-align:right; font-weight:800; color:#0f172a;">${a}${o}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Totals Area -->
+            <div style="display:flex; justify-content:flex-end; margin-bottom:1.25rem;">
+              <div style="width:260px; font-size:0.82rem;">
+                <div style="display:flex; justify-content:space-between; padding:3px 0; color:#475569;">
+                  <span>Taxable Subtotal:</span>
+                  <span>${a}${o}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:3px 0; color:#475569;">
+                  <span>${r?`GST (18%):`:`UAE VAT (5%):`}</span>
+                  <span>${a}${s}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-top:2px solid #0284c7; font-size:1rem; font-weight:800; color:#0369a1;">
+                  <span>Total Amount:</span>
+                  <span>${a}${c}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Signatures -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-top:1.5rem; padding-top:1rem; border-top:1px solid #e2e8f0; font-size:0.72rem; text-align:center;">
+              <div>
+                <div style="font-weight:700; color:#0f172a;">${t.submitted_by||`Employee`}</div>
+                <div style="border-top:1px solid #94a3b8; margin-top:22px; padding-top:3px; color:#64748b;">Claimant Signature</div>
+              </div>
+              <div>
+                <div style="font-weight:700; color:#0f172a;">Internal Audit</div>
+                <div style="border-top:1px solid #94a3b8; margin-top:22px; padding-top:3px; color:#64748b;">QC &amp; Audit Passed</div>
+              </div>
+              <div>
+                <div style="display:inline-block; padding:3px 8px; border:2px dashed #0284c7; border-radius:4px; color:#0284c7; font-weight:800; font-size:0.65rem;">
+                  VERIFIED &amp; APPROVED
+                </div>
+                <div style="border-top:1px solid #94a3b8; margin-top:16px; padding-top:3px; color:#64748b;">Finance Signatory</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Footer -->
+          <div style="margin-top:1.25rem; display:flex; justify-content:flex-end; gap:0.5rem;" class="no-print">
+            <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-expense-receipt')">Close</button>
+            <button type="button" class="fin-btn-quick" style="border-color:#0284c7; color:#0284c7; font-weight:700;" onclick="window.finApp.downloadExpenseReceipt('${t.id}')">📥 Download File</button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Voucher</button>
+          </div>
+        </div>
+      </div>
+    `;document.getElementById(`fin-modal-container`).innerHTML=p}async deleteExpense(e){confirm(`Are you sure you want to delete this expense record?`)&&(await this.syncApi(`delete_expense`,{expense_id:e}),alert(`Expense record deleted successfully.`),this.renderActiveTab())}openEditPaymentModal(e){let t=(this.db?.vendor_payments||[]).find(t=>t.id===e||t.voucher_no===e);if(!t){alert(`Payment voucher not found.`);return}let n=(t.company_id||this.activeCompanyId)===`ashaz-eng-in`?`INR`:`AED`,r=`
       <div class="fin-modal-backdrop open" id="modal-edit-pay">
         <div class="fin-modal-dialog" style="max-width:600px;">
           <div class="fin-modal-header">
