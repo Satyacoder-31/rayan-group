@@ -8968,7 +8968,7 @@ class FinanceApp {
     document.body.classList.add('fin-doc-open');
   }
 
-  // 2. RECEIPT VOUCHER PRINT MODAL
+  // 2. RECEIPT VOUCHER PRINT MODAL (Simple, Clean, Official with Logo, Stamp & Signature)
   openReceiptPrintModal(receiptId, isVerifiedScan = false) {
     let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
     if (!rec) {
@@ -8977,6 +8977,10 @@ class FinanceApp {
 
     const curr = rec.currency || 'AED';
     const isIndia = curr === 'INR' || rec.company_id === 'ashaz-eng-in';
+    const amountVal = Number(rec.amount_received || 0);
+    const formattedAmount = amountVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const formattedDate = rec.receipt_date ? this.formatDate(rec.receipt_date) : '19 Oct 2026';
+    const amountInWords = rec.amount_in_words || (this.numberToEnglishWords(amountVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -9003,203 +9007,173 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper">
-            <div class="doc-top-accent-bar"></div>
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box;">
+            <!-- Top Elegant Accent Line -->
+            <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
 
-            <div class="fin-doc-inner-padding">
-              ${this.getRayanWatermark()}
-
-              ${isVerifiedScan ? `
-                <div class="doc-verification-live-banner">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:16px;">💳</span>
-                    <div>
-                      <div style="font-size:9px; font-weight:800; letter-spacing:0.04em;">OFFICIAL RECEIPT VOUCHER — SETTLEMENT VERIFIED</div>
-                      <div style="font-size:7px; opacity:0.9; margin-top:1px;">Official Treasury verification confirming cleared funds against corporate invoice settlement.</div>
-                    </div>
-                  </div>
-                  <div style="font-size:7.5px; background:rgba(255,255,255,0.22); padding:3px 8px; border-radius:4px; font-weight:800;">
-                    SETTLED &amp; CLEARED ✓
-                  </div>
-                </div>
-              ` : ''}
-
-              <!-- Modern Brand Header -->
-              <div class="doc-header-modern">
-                <div class="doc-brand-block">
+            <!-- Header Section (Left: Logo & Company, Right: Receipt Title & Meta) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.5rem;">
+              <div style="max-width:55%;">
+                <div style="margin-bottom:0.65rem;">
                   ${this.getRayanLogoImg(false)}
-                  <div class="doc-brand-text">
-                    <div class="doc-company-title">${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C'}</div>
-                    <div class="doc-company-sub">${isIndia ? 'Engineering Consultancy • Civil &amp; Industrial Fit-Out' : 'Engineering Consultancy • General Contracting • Interior Fit-Out'}</div>
-                    <div class="doc-company-badges">
-                      <span class="doc-badge-pill">${isIndia ? 'GSTIN: 27AABCA1234F1Z5' : 'TRN: 100234567800003'}</span>
-                      <span class="doc-badge-pill">${isIndia ? 'CIN: U45200MH2020PTC342819' : 'Lic: CN-2849102'}</span>
-                      <span class="doc-badge-pill">${isIndia ? 'Mumbai, India' : 'Abu Dhabi, UAE'}</span>
-                    </div>
-                  </div>
                 </div>
-
-                <div class="doc-header-center">
-                  <div class="doc-title-en">RECEIPT VOUCHER</div>
-                  <div class="doc-number-bold">${rec.receipt_no || 'REC-RV-44025'}</div>
+                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                  ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
-
-                <div class="doc-id-card">
-                  <div class="doc-status-badge status-received">✓ PAYMENT RECEIVED</div>
-                  ${this.getRayanDynamicVerificationCode(rec, 'receipt')}
+                <div style="font-size:0.8rem; color:#475569; line-height:1.45; margin-top:0.35rem;">
+                  ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
                 </div>
               </div>
 
-              <!-- Dual Party & Specification Grid -->
-              <div class="doc-grid-cards">
-                <div class="doc-info-card">
-                  <div class="doc-info-card-header">
-                    <span>RECEIVED FROM (استلمنا من السيد/السادة)</span>
-                    <span>CLIENT / ENTITY</span>
-                  </div>
-                  <div class="doc-info-entity-name">${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}</div>
-                  <div class="doc-info-line">
-                    <strong>Contact Person:</strong> ${rec.contact_person || (isIndia ? 'Mr. Rajesh Sharma' : 'Mr. Shahil')}<br>
-                    <strong>Email Address:</strong> <a href="mailto:${rec.email || (isIndia ? 'accounts@ashaz-eng.com' : 'procurementofficer@toprockinteriors.com')}" class="rayan-link-blue">${rec.email || (isIndia ? 'accounts@ashaz-eng.com' : 'procurementofficer@toprockinteriors.com')}</a><br>
-                    <strong>Received By:</strong> ${rec.received_by || (isIndia ? 'Ashaz Engineering Private Limited' : 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C')}
+              <div style="text-align:right;">
+                <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
+                  RECEIPT VOUCHER
+                </div>
+                <div style="font-size:0.88rem; color:#64748b; font-weight:700; margin-top:2px;">
+                  سند قبض
+                </div>
+                <div style="font-size:0.95rem; font-weight:700; color:#0284c7; margin-top:6px;">
+                  # ${rec.receipt_no || 'REC-RV-44025'}
+                </div>
+
+                <!-- Highlight Box: Amount Received -->
+                <div style="margin-top:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:6px 14px; display:inline-block; text-align:right;">
+                  <div style="font-size:0.68rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Received</div>
+                  <div style="font-size:1.35rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
+                    ${curr} ${formattedAmount}
                   </div>
                 </div>
 
-                <div class="doc-info-card">
-                  <div class="doc-info-card-header">
-                    <span>VOUCHER SPECIFICATION (بيانات السند)</span>
-                    <span>SETTLEMENT REF</span>
-                  </div>
-                  <div class="doc-key-value-list">
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Receipt Date &amp; Time:</span>
-                      <span class="doc-val">${rec.receipt_date || '17/Sep/2026'} &nbsp; ${rec.receipt_time || '1:40 PM'}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Reference Number:</span>
-                      <span class="doc-val" style="color:#0284c7;">${rec.receipt_no || 'REC-RV-44025'}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Ref. Tax Invoice:</span>
-                      <span class="doc-val">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'REC-RG-INV-44043')}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Payment Mode:</span>
-                      <span class="doc-val">${rec.payment_mode || 'Online'}</span>
-                    </div>
-                  </div>
+                <!-- Meta Details -->
+                <div style="font-size:0.8rem; color:#475569; line-height:1.5; margin-top:8px;">
+                  <div>Receipt Date : <strong>${formattedDate}</strong></div>
+                  <div>Payment Mode : <strong>${rec.payment_mode || 'Bank Transfer'}</strong></div>
+                  ${rec.reference_no || rec.cheque_no ? `<div>Ref / Instrument # : <strong>${rec.reference_no || rec.cheque_no}</strong></div>` : ''}
                 </div>
-              </div>
-
-              <!-- Settlement Link Ribbon -->
-              <div class="doc-project-ribbon">
-                <span>🏗️ <strong style="font-size:8.5px; color:#0f172a;">${rec.project_name || rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Project Settlement')}</strong></span>
-                <span style="font-size:7.5px; color:#059669; background:rgba(16,185,129,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">VERIFIED CLEARED FUNDS</span>
-              </div>
-
-              <!-- Modern Payment Breakdown Table -->
-              <table class="doc-table-modern">
-                <thead>
-                  <tr>
-                    <th style="width:4%; text-align:center;">#</th>
-                    <th style="width:30%;">PAYMENT MODE / طريقة الدفع</th>
-                    <th style="width:24%;">CHEQUE / REF NO / رقم الشيك</th>
-                    <th style="width:24%;">DRAWEE BANK / LOCATION</th>
-                    <th style="width:18%; text-align:right;">AMOUNT RECEIVED (${curr})</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="text-align:center; font-weight:700; color:#64748b;">1</td>
-                    <td>
-                      <div class="doc-item-title">${rec.payment_type || (rec.payment_mode === 'Cheque' ? 'Account Payee Cheque' : rec.payment_mode === 'Cash' ? 'Official Cash Tender' : 'Online Bank Transfer')}</div>
-                      <div class="doc-item-desc">${rec.payment_mode === 'Cheque' ? (rec.cheque_status || 'Cleared & Verified') : (rec.payment_mode === 'Cash' ? (rec.cash_bearer ? `Bearer: ${rec.cash_bearer}` : 'Cash Received at Desk') : (isIndia ? 'NEFT/RTGS/IMPS Wire Remittance' : 'UAE Central Bank Clearance'))}</div>
-                    </td>
-                    <td>
-                      <div class="doc-item-title">${rec.cheque_no || rec.reference_no || 'REC-REF-001'}</div>
-                      <div class="doc-item-desc">${rec.payment_mode === 'Cheque' ? 'Cheque Date: ' : 'Value Date: '} ${rec.cheque_date || rec.receipt_date || '17/09/2026'}</div>
-                    </td>
-                    <td>
-                      <div class="doc-item-title">${rec.bank_name || (rec.payment_mode === 'Cash' ? (rec.cash_location || 'Corporate Treasury Desk') : (isIndia ? 'State Bank of India' : 'First Abu Dhabi Bank (FAB)'))}</div>
-                      <div class="doc-item-desc">${rec.bank_branch ? `Branch: ${rec.bank_branch}` : (rec.payment_mode === 'Cash' ? (rec.cashier ? `Cashier: ${rec.cashier}` : 'Cash Desk') : (isIndia ? 'Mumbai Corporate Branch' : 'Abu Dhabi UAE Branch'))}</div>
-                    </td>
-                    <td style="text-align:right; font-weight:800; color:#059669; font-size:11px; font-variant-numeric:tabular-nums;">
-                      ${curr} ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <!-- Financials & Amount in Words -->
-              <div class="doc-financials-container">
-                <div class="doc-left-financials">
-                  <div class="doc-words-box">
-                    <div class="doc-words-label">The Sum Of (المبلغ وقدره بالحروف):</div>
-                    <div class="doc-words-text">💵 ${rec.amount_in_words || (this.numberToEnglishWords(rec.amount_received || 155837) + (curr === 'INR' ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'))}</div>
-                  </div>
-
-                  <div class="doc-banking-box">
-                    <strong>Official Treasury Acknowledgement:</strong><br>
-                    Received with thanks the sum stated above against the referenced tax invoice settlement. Please retain this official receipt voucher for corporate audit &amp; VAT reconciliation.
-                  </div>
-
-                  <div class="rayan-copy-notice">
-                    Please keep a copy of this official receipt voucher for your records.
-                  </div>
-                </div>
-
-                <div class="doc-totals-card">
-                  <div class="doc-totals-row">
-                    <span>Payment Mode:</span>
-                    <span class="doc-num">${rec.payment_mode || 'Online'}</span>
-                  </div>
-                  <div class="doc-totals-row">
-                    <span>Instrument Date:</span>
-                    <span class="doc-num">${rec.cheque_date || rec.receipt_date || '17/Sep/2026'}</span>
-                  </div>
-                  <div class="doc-totals-row">
-                    <span>Settlement Status:</span>
-                    <span class="doc-num" style="color:#059669;">${rec.cheque_status || 'Cleared &amp; Acknowledged'}</span>
-                  </div>
-                  <div class="doc-totals-row grand-total">
-                    <span>Net Received (الصافي)</span>
-                    <span style="color:#34d399;">${curr} ${Number(rec.amount_received || 155837).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Signatures & Stamp Block -->
-              <div class="doc-signatures-modern">
-                <div class="doc-sign-team-meta">
-                  <strong>Best Wishes</strong><br>
-                  <strong>${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Corporate Treasury'}</strong><br>
-                  ${isIndia ? 'Hotline: +91 22 2839 0100 • Mumbai, India' : 'Hotline: 025654497 • Abu Dhabi, UAE'}<br>
-                  <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" class="rayan-link-blue">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
-                  <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" class="rayan-link-blue">http://rayan-group.com</a>
-                </div>
-
-                <div class="doc-sign-card">
-                  <div class="doc-auth-label">Receiver's Sign / توقيع المستلم</div>
-                  ${this.getRayanSignatureImg('receipt')}
-                  <div class="doc-sign-name">${rec.receiver_sign || 'Arshad Alam Shaikh'}</div>
-                  ${this.getRayanStampImg()}
-                </div>
-              </div>
-
-              <!-- Computer Generated Notice (Preserved as requested) -->
-              <div class="rayan-computer-generated-notice">
-                <span>🔒</span>
-                <span>This is a Computer Generated Receipt Voucher</span>
               </div>
             </div>
 
-            <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
-            <div class="doc-minimal-footer">
-              <div class="doc-minimal-footer-line"></div>
-              <div class="doc-minimal-footer-content">
-                <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Receipt Voucher for ${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}</span>
-                <span class="doc-minimal-footer-right">Page 1</span>
+            <!-- Bill To (Received From) & Settlement Details -->
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:2rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+              <div>
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Received From (Bill To)</div>
+                <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
+                  ${rec.customer_name || 'Client / Entity'}
+                </div>
+                ${rec.contact_person ? `<div style="font-size:0.82rem; color:#475569;">Attn: <strong>${rec.contact_person}</strong></div>` : ''}
+                ${rec.email ? `<div style="font-size:0.82rem; color:#475569;">Email: <a href="mailto:${rec.email}" style="color:#0284c7; text-decoration:none;">${rec.email}</a></div>` : ''}
+                ${rec.customer_address ? `<div style="font-size:0.82rem; color:#475569;">${rec.customer_address}</div>` : ''}
               </div>
+
+              <div style="font-size:0.82rem; color:#475569; line-height:1.5;">
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Settlement Details</div>
+                <div><strong>Subject / Towards:</strong> ${rec.notes || 'Tax Invoice Settlement'}</div>
+                <div><strong>Against Invoice:</strong> <span style="color:#0284c7; font-weight:700;">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Advance on Account')}</span></div>
+                ${rec.project_name ? `<div><strong>Project:</strong> ${rec.project_name}</div>` : ''}
+                ${rec.bank_name ? `<div><strong>Drawee Bank:</strong> ${rec.bank_name}</div>` : ''}
+              </div>
+            </div>
+
+            <!-- Simple Clean Items Table (Matching Reference Format) -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem; font-size:0.85rem;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff; text-align:left;">
+                  <th style="padding:10px 12px; width:5%; text-align:center;">#</th>
+                  <th style="padding:10px 12px; width:45%;">Item &amp; Description</th>
+                  <th style="padding:10px 12px; width:25%;">Payment Mode &amp; Instrument</th>
+                  <th style="padding:10px 12px; width:25%; text-align:right;">Amount Received (${curr})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:12px; text-align:center; color:#64748b; font-weight:600;">1</td>
+                  <td style="padding:12px;">
+                    <div style="font-weight:700; color:#0f172a; font-size:0.9rem;">
+                      ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
+                    </div>
+                    <div style="font-size:0.78rem; color:#64748b; margin-top:3px;">
+                      ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
+                    </div>
+                  </td>
+                  <td style="padding:12px; font-size:0.82rem; color:#334155;">
+                    <div><strong>${rec.payment_mode || 'Bank Transfer'}</strong></div>
+                    <div style="color:#64748b; font-size:0.75rem;">
+                      ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
+                      ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
+                    </div>
+                  </td>
+                  <td style="padding:12px; text-align:right; font-weight:800; font-size:0.95rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                    ${formattedAmount}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Financials Summary & Amount in Words -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2rem; gap:1.5rem;">
+              <!-- Left: Total in Words & Notes -->
+              <div style="flex:1;">
+                <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Total In Words:</div>
+                <div style="font-size:0.88rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.4;">
+                  ${amountInWords}
+                </div>
+
+                <div style="margin-top:1.25rem;">
+                  <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Notes:</div>
+                  <div style="font-size:0.82rem; color:#475569;">
+                    Thanks for your business. Please keep a copy of this official receipt voucher for your records.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Subtotal & Total Box -->
+              <div style="width:260px; border-top:1px solid #e2e8f0; padding-top:6px;">
+                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+                  <span>Sub Total</span>
+                  <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:1.1rem; font-weight:800; color:#0f172a; border-top:2px solid #0f172a; margin-top:4px;">
+                  <span>Total Received</span>
+                  <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedAmount}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Signatures & Official Stamp Block (Matching Reference Screenshot 3) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:1.5rem; border-top:1px solid #e2e8f0; margin-top:1.5rem;">
+              <!-- Left: Team Contact -->
+              <div style="font-size:0.82rem; color:#475569; line-height:1.55;">
+                <div style="margin-bottom:2px;">Best wishes,</div>
+                <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Team'}</strong><br>
+                Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
+                <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
+                <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" style="color:#0284c7; text-decoration:none;">www.rayan-group.com</a>
+              </div>
+
+              <!-- Right: Real Signature + Official Stamp -->
+              <div style="position:relative; width:220px; text-align:center; padding-top:10px;">
+                <div style="position:relative; z-index:2; min-height:42px;">
+                  ${this.getRayanSignatureImg('receipt')}
+                </div>
+                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:4px;">
+                  ${rec.receiver_sign || 'Arshad Alam Shaikh'}
+                </div>
+                <div style="font-size:0.75rem; color:#64748b; font-weight:600;">
+                  Authorised Signatory
+                </div>
+                <!-- Real Circular Purple/Blue Official Stamp -->
+                <div style="position:absolute; right:5px; top:-25px; z-index:5; pointer-events:none;">
+                  ${this.getRayanStampImg()}
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Teal Banner (Matching Rayan Official Document Format) -->
+            <div style="margin-top:2rem; background:#00a699; color:#ffffff; padding:7px 12px; border-radius:4px; font-size:0.78rem; text-align:center; font-weight:700; letter-spacing:0.02em;">
+              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+            </div>
+            <div style="text-align:center; font-size:8px; color:#94a3b8; margin-top:5px;">
+              This is a Computer Generated Official Receipt Voucher
             </div>
           </div>
         </div>
