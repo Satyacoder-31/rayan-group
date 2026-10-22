@@ -2975,7 +2975,7 @@ class FinanceApp {
                   <th>Item / Description</th>
                   <th>Category</th>
                   <th>Unit Rate</th>
-                  <th>GST Rate</th>
+                  <th>${this.activeCompanyId === 'ashaz-eng-in' ? 'GST Rate' : 'VAT Rate'}</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -3123,7 +3123,7 @@ class FinanceApp {
                 <th>Customer Name</th>
                 <th>Place of Supply</th>
                 <th>Taxable Value</th>
-                <th>Tax (CGST/SGST/IGST)</th>
+                <th>Tax (${this.activeCompanyId === 'ashaz-eng-in' ? 'CGST/SGST/IGST' : 'VAT 5%'})</th>
                 <th>Grand Total</th>
                 <th>Paid</th>
                 <th>Balance Due</th>
@@ -3461,7 +3461,7 @@ class FinanceApp {
                 <th>UOM</th>
                 <th>Default Sales Price</th>
                 <th>Default Cost Price</th>
-                <th>GST Rate</th>
+                <th>${this.activeCompanyId === 'ashaz-eng-in' ? 'GST Rate' : 'VAT Rate'}</th>
                 <th>Status</th>
               </tr>
             </thead>
