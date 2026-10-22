@@ -178,7 +178,17 @@ class FinanceApp {
 
     const getUniqueKey = (item) => {
       if (!item || typeof item !== 'object') return null;
-      return item.id || item.receipt_no || item.invoice_no || item.bill_no || item.voucher_no || item.payment_no || item.po_no || item.expense_no || item.debit_note_no || item.credit_note_no || item.cheque_no || item.reference_no || item.account_number || item.iban || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
+      if (item.po_no) return `po-${item.po_no.trim().toLowerCase()}`;
+      if (item.invoice_no) return `inv-${item.invoice_no.trim().toLowerCase()}`;
+      if (item.bill_no) return `bill-${item.bill_no.trim().toLowerCase()}`;
+      if (item.receipt_no) return `rec-${item.receipt_no.trim().toLowerCase()}`;
+      if (item.voucher_no) return `vouch-${item.voucher_no.trim().toLowerCase()}`;
+      if (item.payment_no) return `pay-${item.payment_no.trim().toLowerCase()}`;
+      if (item.expense_no) return `exp-${item.expense_no.trim().toLowerCase()}`;
+      if (item.credit_note_no) return `cn-${item.credit_note_no.trim().toLowerCase()}`;
+      if (item.debit_note_no) return `dn-${item.debit_note_no.trim().toLowerCase()}`;
+      if (item.cheque_no) return `chq-${item.cheque_no.trim().toLowerCase()}`;
+      return item.id || item.reference_no || item.account_number || item.iban || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
     };
 
     for (const key of collections) {
@@ -223,6 +233,41 @@ class FinanceApp {
       });
 
       merged[key] = Array.from(map.values());
+    }
+
+    // Auto-discover and ensure all purchase order references from bills are registered in purchase_orders
+    if (Array.isArray(merged.purchase_bills)) {
+      if (!Array.isArray(merged.purchase_orders)) merged.purchase_orders = [];
+      const poSet = new Set();
+      merged.purchase_orders.forEach(p => {
+        if (p.po_no) poSet.add(p.po_no.trim().toLowerCase());
+        if (p.id) poSet.add(p.id.trim().toLowerCase());
+      });
+      merged.purchase_bills.forEach(b => {
+        const poRef = (b.po_no || b.po_reference || b.po_number || '').trim();
+        if (poRef && !poSet.has(poRef.toLowerCase())) {
+          poSet.add(poRef.toLowerCase());
+          merged.purchase_orders.push({
+            id: b.po_id || `po-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            po_no: poRef,
+            company_id: b.company_id || 'rayan-corp-uae',
+            vendor_id: b.vendor_id || null,
+            vendor_name: b.vendor_name || 'Vendor',
+            supplier_name: b.vendor_name || 'Vendor',
+            supplier_trn: b.vendor_trn || '',
+            project_id: b.project_id || null,
+            project_name: b.project_name || '',
+            currency: b.currency || 'AED',
+            date: b.bill_date || new Date().toISOString().split('T')[0],
+            subtotal: Number(b.taxable_subtotal) || 0,
+            tax_total: Number(b.tax_total) || 0,
+            total_value: Number(b.grand_total) || 0,
+            grand_total: Number(b.grand_total) || 0,
+            status: 'approved',
+            approved_by: 'Auto-linked from Purchase Bill'
+          });
+        }
+      });
     }
 
     if (sourceData.settings && typeof sourceData.settings === 'object') {
@@ -7985,7 +8030,35 @@ class FinanceApp {
     const defaultRegime = isIndia ? 'gst' : 'trn';
     const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === this.activeCompanyId);
     const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
-    const pos = (this.db?.purchase_orders || []).filter(po => (po.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    
+    // Gather all purchase orders for the company (including any referenced in previous bills)
+    const poMap = new Map();
+    (this.db?.purchase_orders || [])
+      .filter(po => !po.company_id || po.company_id === this.activeCompanyId)
+      .forEach(po => {
+        const key = (po.po_no || po.id || '').trim().toLowerCase();
+        if (key) poMap.set(key, po);
+      });
+    (this.db?.purchase_bills || [])
+      .filter(b => !b.company_id || b.company_id === this.activeCompanyId)
+      .forEach(b => {
+        const poRef = (b.po_no || b.po_reference || b.po_number || '').trim();
+        if (poRef && !poMap.has(poRef.toLowerCase())) {
+          poMap.set(poRef.toLowerCase(), {
+            id: b.po_id || ('po-' + Date.now()),
+            po_no: poRef,
+            company_id: b.company_id || this.activeCompanyId,
+            vendor_name: b.vendor_name || 'Vendor',
+            supplier_name: b.vendor_name || 'Vendor',
+            supplier_trn: b.vendor_trn || '',
+            project_name: b.project_name || '',
+            grand_total: b.grand_total || b.taxable_subtotal || 0,
+            total_value: b.grand_total || b.taxable_subtotal || 0,
+            status: 'approved'
+          });
+        }
+      });
+    const pos = Array.from(poMap.values());
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-bill">
@@ -8127,7 +8200,7 @@ class FinanceApp {
                         <div class="fin-autocomplete-item" data-id="${po.id}" data-no="${po.po_no || ''}">
                           <div>
                             <div class="fin-autocomplete-item-name">${po.po_no}</div>
-                            <div class="fin-autocomplete-item-meta">${po.vendor_name || po.supplier_name || 'Vendor'} • ${po.total_amount ? (currSym + Number(po.total_amount).toLocaleString()) : 'Active PO'}</div>
+                            <div class="fin-autocomplete-item-meta">${po.vendor_name || po.supplier_name || 'Vendor'} • ${(po.grand_total || po.total_value || po.total_amount) ? (currSym + Number(po.grand_total || po.total_value || po.total_amount).toLocaleString()) : 'Active PO'}</div>
                           </div>
                           <span class="fin-autocomplete-item-badge">PO</span>
                         </div>
@@ -8470,6 +8543,31 @@ class FinanceApp {
       if (poHint) {
         poHint.textContent = `Linked to PO #${po.po_no} (${po.vendor_name || po.supplier_name || 'Vendor'})`;
       }
+
+      // Auto-populate vendor from PO if vendor is empty or not yet filled
+      if ((!vendInput.value || vendInput.value.trim() === '') && (po.vendor_name || po.supplier_name)) {
+        const vName = po.vendor_name || po.supplier_name;
+        const matchingVend = vendors.find(v => (po.vendor_id && v.id === po.vendor_id) || v.name.toLowerCase() === vName.toLowerCase());
+        if (matchingVend) {
+          applyVendorData(matchingVend);
+        } else {
+          vendInput.value = vName;
+          if (po.supplier_trn) {
+            setBillRegime('trn');
+            billTaxInp.value = po.supplier_trn;
+          }
+        }
+      }
+
+      // Auto-populate project from PO if project is empty or default
+      if ((!prjInput.value || prjInput.value.trim() === '' || prjInput.value === 'General Corporate Overhead') && po.project_name) {
+        const matchingPrj = projects.find(p => (po.project_id && p.id === po.project_id) || p.name.toLowerCase() === po.project_name.toLowerCase());
+        if (matchingPrj) {
+          applyProjectData(matchingPrj);
+        } else {
+          prjInput.value = po.project_name;
+        }
+      }
     };
 
     if (poInput && poDropdown) {
@@ -8603,25 +8701,67 @@ class FinanceApp {
         }
       }
 
-      // PO resolution from text input
-      const poVal = (poInput?.value || '').trim();
-      let poId = poInput?.getAttribute('data-po-id') || null;
-      let poNo = poVal;
-
-      if (poVal && !poId) {
-        const matchPo = pos.find(p => (p.po_no || '').toLowerCase() === poVal.toLowerCase());
-        if (matchPo) {
-          poId = matchPo.id;
-          poNo = matchPo.po_no;
-        } else {
-          poId = 'po-cust-' + Date.now();
-        }
-      }
-
       const taxable = Number(taxableInp.value) || 0;
       const rate = Number(gstRateSel.value) || 0;
       const tax = taxable * (rate / 100);
       const grand = taxable + tax;
+
+      // PO resolution from text input with auto-creation & auto-persistence
+      const poVal = (poInput?.value || '').trim();
+      let poId = poInput?.getAttribute('data-po-id') || null;
+      let poNo = poVal;
+
+      if (poVal) {
+        let matchPo = (this.db?.purchase_orders || []).find(p => 
+          (p.po_no || '').toLowerCase() === poVal.toLowerCase() || 
+          (poId && p.id === poId)
+        );
+        if (matchPo) {
+          poId = matchPo.id;
+          poNo = matchPo.po_no;
+        } else {
+          poId = poId || ('po-cust-' + Date.now());
+          const newPo = {
+            id: poId,
+            po_no: poVal,
+            company_id: this.activeCompanyId,
+            currency: isIndia ? 'INR' : 'AED',
+            currency_symbol: currSym,
+            vendor_id: vendor ? vendor.id : null,
+            vendor_name: vendor ? vendor.name : '',
+            supplier_name: vendor ? vendor.name : '',
+            supplier_trn: vendor ? (vendor.trn || '') : '',
+            supplier_gstin: vendor ? (vendor.gstin || '') : '',
+            project_id: prjId,
+            project_name: prjName,
+            date: dateInp ? dateInp.value : new Date().toISOString().split('T')[0],
+            expected_delivery: dueInp ? dueInp.value : '',
+            subtotal: taxable,
+            tax_total: tax,
+            total_value: grand,
+            grand_total: grand,
+            status: 'approved',
+            approved_by: this.currentUser?.name || 'Executive Sign-off',
+            line_items: [
+              {
+                name: document.getElementById('bill-item-desc')?.value || 'Procurement Material / Application',
+                qty: 1,
+                uom: 'LSUM',
+                unit_price: taxable,
+                taxable_amount: taxable,
+                tax_amount: tax,
+                total_amount: grand
+              }
+            ]
+          };
+          if (!this.db.purchase_orders) this.db.purchase_orders = [];
+          this.db.purchase_orders.unshift(newPo);
+          this.syncApi('create_po', { po: newPo }).catch(e => console.warn('PO auto-persist:', e));
+        }
+      } else {
+        poId = null;
+        poNo = '';
+      }
 
       const billNo = this.getNextBillNumber();
       const payload = {
@@ -12661,7 +12801,33 @@ class FinanceApp {
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
     const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === (bill.company_id || this.activeCompanyId));
-    const pos = (this.db?.purchase_orders || []).filter(po => (po.company_id || 'rayan-corp-uae') === (bill.company_id || this.activeCompanyId));
+    const poMap = new Map();
+    (this.db?.purchase_orders || [])
+      .filter(po => !po.company_id || po.company_id === (bill.company_id || this.activeCompanyId))
+      .forEach(po => {
+        const key = (po.po_no || po.id || '').trim().toLowerCase();
+        if (key) poMap.set(key, po);
+      });
+    (this.db?.purchase_bills || [])
+      .filter(b => !b.company_id || b.company_id === (bill.company_id || this.activeCompanyId))
+      .forEach(b => {
+        const poRef = (b.po_no || b.po_reference || b.po_number || '').trim();
+        if (poRef && !poMap.has(poRef.toLowerCase())) {
+          poMap.set(poRef.toLowerCase(), {
+            id: b.po_id || ('po-' + Date.now()),
+            po_no: poRef,
+            company_id: b.company_id || this.activeCompanyId,
+            vendor_name: b.vendor_name || 'Vendor',
+            supplier_name: b.vendor_name || 'Vendor',
+            supplier_trn: b.vendor_trn || '',
+            project_name: b.project_name || '',
+            grand_total: b.grand_total || b.taxable_subtotal || 0,
+            total_value: b.grand_total || b.taxable_subtotal || 0,
+            status: 'approved'
+          });
+        }
+      });
+    const pos = Array.from(poMap.values());
 
     const hasProjectMatch = projects.some(p => p.id === bill.project_id);
     const isCustomPrj = !hasProjectMatch && !!bill.project_name && bill.project_name !== 'General Corporate Overhead';
@@ -12785,7 +12951,7 @@ class FinanceApp {
                         <div class="fin-autocomplete-item" data-id="${po.id}" data-no="${po.po_no || ''}">
                           <div>
                             <div class="fin-autocomplete-item-name">${po.po_no}</div>
-                            <div class="fin-autocomplete-item-meta">${po.vendor_name || po.supplier_name || 'Vendor'} • ${po.total_amount ? (currSym + Number(po.total_amount).toLocaleString()) : 'Active PO'}</div>
+                            <div class="fin-autocomplete-item-meta">${po.vendor_name || po.supplier_name || 'Vendor'} • ${(po.grand_total || po.total_value || po.total_amount) ? (currSym + Number(po.grand_total || po.total_value || po.total_amount).toLocaleString()) : 'Active PO'}</div>
                           </div>
                           <span class="fin-autocomplete-item-badge">PO</span>
                         </div>
@@ -13126,7 +13292,7 @@ class FinanceApp {
         }
       }
 
-      // Resolve PO from text input
+      // Resolve PO from text input with auto-creation & auto-persistence
       const poVal = (editPoInput?.value || '').trim();
       let poId = editPoInput?.getAttribute('data-po-id') || null;
 
@@ -13136,11 +13302,56 @@ class FinanceApp {
 
       if (!poVal) {
         bill.po_id = null;
-      } else if (!poId) {
-        const matchPo = pos.find(p => (p.po_no || '').toLowerCase() === poVal.toLowerCase());
-        bill.po_id = matchPo ? matchPo.id : 'po-cust-' + Date.now();
       } else {
-        bill.po_id = poId;
+        let matchPo = (this.db?.purchase_orders || []).find(p => 
+          (p.po_no || '').toLowerCase() === poVal.toLowerCase() || 
+          (poId && p.id === poId)
+        );
+        if (matchPo) {
+          bill.po_id = matchPo.id;
+          bill.po_no = matchPo.po_no;
+          bill.po_number = matchPo.po_no;
+          bill.po_reference = matchPo.po_no;
+        } else {
+          const newPoId = poId || ('po-cust-' + Date.now());
+          bill.po_id = newPoId;
+          const newPo = {
+            id: newPoId,
+            po_no: poVal,
+            company_id: bill.company_id || this.activeCompanyId,
+            currency: isIndia ? 'INR' : 'AED',
+            currency_symbol: currSym,
+            vendor_id: bill.vendor_id || null,
+            vendor_name: bill.vendor_name || '',
+            supplier_name: bill.vendor_name || '',
+            supplier_trn: bill.vendor_trn || '',
+            supplier_gstin: bill.vendor_gstin || '',
+            project_id: bill.project_id,
+            project_name: bill.project_name,
+            date: bill.bill_date || new Date().toISOString().split('T')[0],
+            expected_delivery: bill.due_date || '',
+            subtotal: taxable,
+            tax_total: tax,
+            total_value: grand,
+            grand_total: grand,
+            status: 'approved',
+            approved_by: this.currentUser?.name || 'Executive Sign-off',
+            line_items: [
+              {
+                name: document.getElementById('edit-bill-desc')?.value.trim() || 'Procurement Material / Application',
+                qty: 1,
+                uom: 'LSUM',
+                unit_price: taxable,
+                taxable_amount: taxable,
+                tax_amount: tax,
+                total_amount: grand
+              }
+            ]
+          };
+          if (!this.db.purchase_orders) this.db.purchase_orders = [];
+          this.db.purchase_orders.unshift(newPo);
+          this.syncApi('create_po', { po: newPo }).catch(e => console.warn('PO auto-persist on edit:', e));
+        }
       }
 
       bill.taxable_subtotal = taxable;

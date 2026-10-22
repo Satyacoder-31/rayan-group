@@ -1558,6 +1558,47 @@
       "status": "approved",
       "amount_in_words": "AED Ten Thousand Eighty Only.",
       "approved_by": "Arshad Alam Shaikh"
+    },
+    {
+      "id": "po-lpo-bd-2026-12",
+      "po_no": "LPO/BD/2026/12",
+      "company_id": "rayan-corp-uae",
+      "date": "2026-10-13",
+      "payment_terms": "30 Days",
+      "currency": "AED",
+      "po_type": "Supply/Application",
+      "iref": "LPO/BD/2026/12",
+      "vendor_id": "vend-1792605674571",
+      "vendor_name": "PINK CITY CERAMIC AND SANITARY TRADING LLC SPC",
+      "supplier_name": "PINK CITY CERAMIC AND SANITARY TRADING LLC SPC",
+      "supplier_trn": "105119952700003",
+      "project_id": "prj-yok-02",
+      "project_name": "Yateem Optician Khalidiyah Mall Fitout",
+      "subtotal": 57000,
+      "subtotal_ex_vat": 57000,
+      "tax_total": 2850,
+      "vat_total": 2850,
+      "total_value": 59850,
+      "grand_total": 59850,
+      "billed_value": 1368.15,
+      "status": "approved",
+      "amount_in_words": "AED Fifty Nine Thousand Eight Hundred Fifty Only.",
+      "approved_by": "Arshad Alam Shaikh",
+      "line_items": [
+        {
+          "sr": 1,
+          "name": "Supply & Installation of Ceramic & Sanitary Material for Yateem Optician Khalidiyah Mall Fitout",
+          "description": "Supply & Installation of Ceramic & Sanitary Material for Yateem Optician Khalidiyah Mall Fitout",
+          "unit": "LSUM",
+          "uom": "LSUM",
+          "qty": 1,
+          "unit_price": 57000,
+          "invoice_amount": 57000,
+          "vat_rate": 5,
+          "vat_amount": 2850,
+          "total_amount": 59850
+        }
+      ]
     }
   ],
   "audit_logs": [

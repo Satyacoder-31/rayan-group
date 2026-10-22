@@ -604,6 +604,44 @@ function syncFromRelationalTables($pdo, &$data) {
                 }
             } catch (Exception $e) {}
         }
+
+        // Auto-discover and populate purchase orders from any purchase bills that reference a PO
+        if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+            if (!isset($data['purchase_orders']) || !is_array($data['purchase_orders'])) {
+                $data['purchase_orders'] = [];
+            }
+            $existingPoNos = [];
+            foreach ($data['purchase_orders'] as $p) {
+                if (!empty($p['po_no'])) $existingPoNos[strtolower(trim($p['po_no']))] = true;
+                if (!empty($p['id'])) $existingPoNos[strtolower(trim($p['id']))] = true;
+            }
+            foreach ($data['purchase_bills'] as $b) {
+                $poRef = trim($b['po_no'] ?? $b['po_reference'] ?? $b['po_number'] ?? '');
+                if ($poRef && !isset($existingPoNos[strtolower($poRef)])) {
+                    $synthPo = [
+                        'id' => !empty($b['po_id']) ? $b['po_id'] : ('po-' . md5($poRef)),
+                        'po_no' => $poRef,
+                        'company_id' => $b['company_id'] ?? 'rayan-corp-uae',
+                        'currency' => $b['currency'] ?? 'AED',
+                        'vendor_id' => $b['vendor_id'] ?? null,
+                        'vendor_name' => $b['vendor_name'] ?? '',
+                        'supplier_name' => $b['vendor_name'] ?? '',
+                        'supplier_trn' => $b['vendor_trn'] ?? '',
+                        'project_id' => $b['project_id'] ?? null,
+                        'project_name' => $b['project_name'] ?? '',
+                        'date' => $b['bill_date'] ?? date('Y-m-d'),
+                        'total_value' => floatval($b['grand_total'] ?? 0),
+                        'grand_total' => floatval($b['grand_total'] ?? 0),
+                        'subtotal' => floatval($b['taxable_subtotal'] ?? 0),
+                        'tax_total' => floatval($b['tax_total'] ?? 0),
+                        'status' => 'approved',
+                        'approved_by' => 'Auto-linked from Purchase Bill'
+                    ];
+                    array_unshift($data['purchase_orders'], $synthPo);
+                    $existingPoNos[strtolower($poRef)] = true;
+                }
+            }
+        }
     } catch (Exception $e) {
         error_log("syncFromRelationalTables error: " . $e->getMessage());
     }
@@ -863,8 +901,8 @@ function syncToRelationalTables($pdo, &$data) {
                     ':po_no' => $po['po_no'],
                     ':company_id' => $po['company_id'] ?? 'rayan-corp-uae',
                     ':po_date' => !empty($po['date']) ? $po['date'] : date('Y-m-d'),
-                    ':supplier_name' => $po['supplier_name'] ?? '',
-                    ':supplier_trn' => $po['supplier_trn'] ?? '',
+                    ':supplier_name' => $po['supplier_name'] ?? $po['vendor_name'] ?? '',
+                    ':supplier_trn' => $po['supplier_trn'] ?? $po['vendor_trn'] ?? '',
                     ':project_name' => $po['project_name'] ?? '',
                     ':grand_total' => floatval($po['grand_total'] ?? $po['total_value'] ?? 0),
                     ':currency' => $po['currency'] ?? 'AED',
@@ -1310,6 +1348,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 unset($existingB);
+
+                // Auto-register and persist PO if a PO number or reference is present
+                $poRef = trim($bill['po_no'] ?? $bill['po_reference'] ?? $bill['po_number'] ?? '');
+                if (!empty($poRef)) {
+                    if (!isset($db['purchase_orders']) || !is_array($db['purchase_orders'])) {
+                        $db['purchase_orders'] = [];
+                    }
+                    $poExists = false;
+                    foreach ($db['purchase_orders'] as &$existingPo) {
+                        if (strtolower(trim($existingPo['po_no'] ?? '')) === strtolower($poRef) || ($existingPo['id'] ?? '') === ($bill['po_id'] ?? '')) {
+                            $poExists = true;
+                            if (empty($existingPo['vendor_name']) && !empty($bill['vendor_name'])) {
+                                $existingPo['vendor_name'] = $bill['vendor_name'];
+                                $existingPo['supplier_name'] = $bill['vendor_name'];
+                            }
+                            break;
+                        }
+                    }
+                    unset($existingPo);
+                    if (!$poExists) {
+                        $newPo = [
+                            'id' => !empty($bill['po_id']) ? $bill['po_id'] : ('po-' . round(microtime(true) * 1000)),
+                            'po_no' => $poRef,
+                            'company_id' => $bill['company_id'] ?? 'rayan-corp-uae',
+                            'currency' => $bill['currency'] ?? 'AED',
+                            'vendor_id' => $bill['vendor_id'] ?? null,
+                            'vendor_name' => $bill['vendor_name'] ?? '',
+                            'supplier_name' => $bill['vendor_name'] ?? '',
+                            'supplier_trn' => $bill['vendor_trn'] ?? '',
+                            'project_id' => $bill['project_id'] ?? null,
+                            'project_name' => $bill['project_name'] ?? '',
+                            'date' => $bill['bill_date'] ?? date('Y-m-d'),
+                            'subtotal' => floatval($bill['taxable_subtotal'] ?? 0),
+                            'tax_total' => floatval($bill['tax_total'] ?? 0),
+                            'total_value' => floatval($bill['grand_total'] ?? 0),
+                            'grand_total' => floatval($bill['grand_total'] ?? 0),
+                            'status' => 'approved',
+                            'approved_by' => $body['user_name'] ?? 'System Sign-off'
+                        ];
+                        array_unshift($db['purchase_orders'], $newPo);
+                    }
+                }
+
                 $addAuditLog('update', 'bill', $bill['bill_no'] ?? '', 'Updated purchase bill ' . ($bill['bill_no'] ?? ''));
             }
             break;
@@ -1669,6 +1750,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db['purchase_bills'] = [];
                 }
                 array_unshift($db['purchase_bills'], $bill);
+
+                // Auto-register and persist PO if a PO number or reference is present
+                $poRef = trim($bill['po_no'] ?? $bill['po_reference'] ?? $bill['po_number'] ?? '');
+                if (!empty($poRef)) {
+                    if (!isset($db['purchase_orders']) || !is_array($db['purchase_orders'])) {
+                        $db['purchase_orders'] = [];
+                    }
+                    $poExists = false;
+                    foreach ($db['purchase_orders'] as &$existingPo) {
+                        if (strtolower(trim($existingPo['po_no'] ?? '')) === strtolower($poRef) || ($existingPo['id'] ?? '') === ($bill['po_id'] ?? '')) {
+                            $poExists = true;
+                            if (empty($existingPo['vendor_name']) && !empty($bill['vendor_name'])) {
+                                $existingPo['vendor_name'] = $bill['vendor_name'];
+                                $existingPo['supplier_name'] = $bill['vendor_name'];
+                            }
+                            break;
+                        }
+                    }
+                    unset($existingPo);
+                    if (!$poExists) {
+                        $newPo = [
+                            'id' => !empty($bill['po_id']) ? $bill['po_id'] : ('po-' . round(microtime(true) * 1000)),
+                            'po_no' => $poRef,
+                            'company_id' => $bill['company_id'] ?? 'rayan-corp-uae',
+                            'currency' => $bill['currency'] ?? 'AED',
+                            'vendor_id' => $bill['vendor_id'] ?? null,
+                            'vendor_name' => $bill['vendor_name'] ?? '',
+                            'supplier_name' => $bill['vendor_name'] ?? '',
+                            'supplier_trn' => $bill['vendor_trn'] ?? '',
+                            'project_id' => $bill['project_id'] ?? null,
+                            'project_name' => $bill['project_name'] ?? '',
+                            'date' => $bill['bill_date'] ?? date('Y-m-d'),
+                            'subtotal' => floatval($bill['taxable_subtotal'] ?? 0),
+                            'tax_total' => floatval($bill['tax_total'] ?? 0),
+                            'total_value' => floatval($bill['grand_total'] ?? 0),
+                            'grand_total' => floatval($bill['grand_total'] ?? 0),
+                            'status' => 'approved',
+                            'approved_by' => $body['user_name'] ?? 'System Sign-off'
+                        ];
+                        array_unshift($db['purchase_orders'], $newPo);
+                    }
+                }
+
                 $addAuditLog('create', 'bill', $bill['bill_no'] ?? '', 'Created purchase bill for ' . ($bill['vendor_name'] ?? ''));
             }
             break;
