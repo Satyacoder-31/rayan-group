@@ -537,6 +537,24 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_loan_transactions WHERE id IN ('lt-01', 'lt-02')");
             $pdo->exec("DELETE FROM finance_notifications WHERE id IN ('notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee')");
             $pdo->exec("DELETE FROM finance_audit_logs WHERE id IN ('aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp')");
+            $pdo->exec("DELETE FROM finance_bank_accounts WHERE id IN ('bank-nbad-uae', 'bank-enbd-escrow') OR bank_name LIKE '%National Bank of Abu Dhabi%' OR bank_name LIKE '%NBAD%' OR bank_name LIKE '%Emirates NBD%' OR (id = 'bank-fab-uae' AND bank_name LIKE '%First Abu Dhabi%')");
+            $pdo->exec("REPLACE INTO finance_bank_accounts (id, company_id, account_name, bank_name, account_number, iban, swift, branch, currency, balance, signatory, status, data_json, updated_at) VALUES (
+                'bank-adcb-uae',
+                'rayan-corp-uae',
+                'RAYAN ENGINEERING AND CONTRACTING LLC SPC',
+                'Abu Dhabi Commercial Bank (ADCB)',
+                'AE920030012697347820001',
+                'AE920030012697347820001',
+                'ADCBAEAA',
+                'Dalma Mall - Abu Dhabi',
+                'AED',
+                156625.95,
+                'Arshad Alam Shaikh',
+                'Active',
+                '{\"id\":\"bank-adcb-uae\",\"company_id\":\"rayan-corp-uae\",\"account_name\":\"RAYAN ENGINEERING AND CONTRACTING LLC SPC\",\"bank_name\":\"Abu Dhabi Commercial Bank (ADCB)\",\"account_number\":\"AE920030012697347820001\",\"iban\":\"AE920030012697347820001\",\"swift\":\"ADCBAEAA\",\"branch\":\"Dalma Mall - Abu Dhabi\",\"currency\":\"AED\",\"balance\":156625.95,\"signatory\":\"Arshad Alam Shaikh\",\"status\":\"Active\"}',
+                NOW()
+            )");
+            $pdo->exec("DELETE FROM finance_bank_accounts WHERE id = 'bank-fab-uae'");
         } catch (Exception $e) {}
     }
 
@@ -691,6 +709,65 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             return !in_array($id, $dummyAudIds);
         }));
         if (count($data['audit_logs']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+        $orig = count($data['bank_accounts']);
+        $data['bank_accounts'] = array_values(array_filter($data['bank_accounts'], function($b) {
+            $cid = $b['company_id'] ?? 'rayan-corp-uae';
+            if ($cid === 'rayan-corp-uae') {
+                $id = strtolower(trim($b['id'] ?? ''));
+                $bn = strtolower(trim($b['bank_name'] ?? ''));
+                if ($id === 'bank-nbad-uae' || $id === 'bank-enbd-escrow') return false;
+                if (strpos($bn, 'nbad') !== false || strpos($bn, 'national bank of abu dhabi') !== false || strpos($bn, 'emirates nbd') !== false) return false;
+                if ($id === 'bank-fab-uae' && (strpos($bn, 'first abu dhabi') !== false || strpos($bn, 'fab') !== false)) return false;
+            }
+            return true;
+        }));
+
+        $hasAdcb = false;
+        foreach ($data['bank_accounts'] as &$b) {
+            if (($b['company_id'] ?? '') === 'rayan-corp-uae') {
+                $bn = strtolower($b['bank_name'] ?? '');
+                if (strpos($bn, 'adcb') !== false || strpos($bn, 'commercial') !== false || ($b['iban'] ?? '') === 'AE920030012697347820001' || ($b['id'] ?? '') === 'bank-fab-uae' || ($b['id'] ?? '') === 'bank-adcb-uae') {
+                    $b['id'] = 'bank-adcb-uae';
+                    $b['company_id'] = 'rayan-corp-uae';
+                    $b['account_name'] = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+                    $b['bank_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
+                    $b['account_number'] = 'AE920030012697347820001';
+                    $b['iban'] = 'AE920030012697347820001';
+                    $b['swift'] = 'ADCBAEAA';
+                    $b['branch'] = 'Dalma Mall - Abu Dhabi';
+                    $b['currency'] = 'AED';
+                    $b['signatory'] = 'Arshad Alam Shaikh';
+                    $b['status'] = 'Active';
+                    if (empty($b['balance']) || floatval($b['balance']) == 1450000) {
+                        $b['balance'] = 156625.95;
+                    }
+                    $hasAdcb = true;
+                    break;
+                }
+            }
+        }
+        unset($b);
+
+        if (!$hasAdcb) {
+            array_unshift($data['bank_accounts'], [
+                'id' => 'bank-adcb-uae',
+                'company_id' => 'rayan-corp-uae',
+                'account_name' => 'RAYAN ENGINEERING AND CONTRACTING LLC SPC',
+                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'account_number' => 'AE920030012697347820001',
+                'iban' => 'AE920030012697347820001',
+                'swift' => 'ADCBAEAA',
+                'branch' => 'Dalma Mall - Abu Dhabi',
+                'currency' => 'AED',
+                'balance' => 156625.95,
+                'signatory' => 'Arshad Alam Shaikh',
+                'status' => 'Active'
+            ]);
+        }
+        if (count($data['bank_accounts']) !== $orig || !$hasAdcb) $changed = true;
     }
 
     if ($changed && $pdo) {

@@ -221,6 +221,17 @@ class FinanceApp {
       const expNo = String(item.expense_no || '').trim().toLowerCase();
       const poNo = String(item.po_no || '').trim().toLowerCase();
       const chequeNo = String(item.cheque_no || '').trim().toLowerCase();
+
+      // Strictly purge the other two demo bank accounts (NBAD & Emirates NBD) and old demo FAB
+      if (id === 'bank-nbad-uae' || id === 'bank-enbd-escrow') return true;
+      const bName = String(item.bank_name || '').toLowerCase();
+      if (bName.includes('nbad') || bName.includes('national bank of abu dhabi') || bName.includes('emirates nbd')) {
+        return true;
+      }
+      if (id === 'bank-fab-uae' && !bName.includes('adcb') && !bName.includes('commercial')) {
+        return true;
+      }
+
       return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo) || dummyBlacklist.has(expNo) || dummyBlacklist.has(poNo) || dummyBlacklist.has(chequeNo);
     };
 
@@ -257,6 +268,26 @@ class FinanceApp {
         });
       }
 
+      if (key === 'bank_accounts') {
+        incomingArr.forEach(b => {
+          const bName = (b.bank_name || '').toLowerCase();
+          if (b.id === 'bank-fab-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
+            b.id = 'bank-adcb-uae';
+            b.company_id = 'rayan-corp-uae';
+            b.account_name = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+            b.bank_name = 'Abu Dhabi Commercial Bank (ADCB)';
+            b.account_number = 'AE920030012697347820001';
+            b.iban = 'AE920030012697347820001';
+            b.swift = 'ADCBAEAA';
+            b.branch = 'Dalma Mall - Abu Dhabi';
+            b.currency = 'AED';
+            b.signatory = 'Arshad Alam Shaikh';
+            b.status = 'Active';
+            if (!b.balance || b.balance === 1450000) b.balance = 156625.95;
+          }
+        });
+      }
+
       // Add incoming user items first so newest submissions stay at top
       const map = new Map();
       incomingArr.forEach(item => {
@@ -278,6 +309,16 @@ class FinanceApp {
       });
 
       merged[key] = Array.from(map.values()).filter(item => !isBlacklisted(item));
+
+      if (key === 'bank_accounts') {
+        merged.bank_accounts = merged.bank_accounts.filter(b => {
+          if (!b) return false;
+          if ((b.company_id || 'rayan-corp-uae') === 'rayan-corp-uae') {
+            return b.id === 'bank-adcb-uae' || (b.bank_name || '').includes('Abu Dhabi Commercial');
+          }
+          return true;
+        });
+      }
     }
 
     // Auto-discover and ensure all purchase order references from bills are registered in purchase_orders
@@ -322,6 +363,59 @@ class FinanceApp {
     return merged;
   }
 
+  sanitizeBankAccounts() {
+    if (!this.db || !Array.isArray(this.db.bank_accounts)) return;
+    this.db.bank_accounts = this.db.bank_accounts.filter(b => {
+      if (!b) return false;
+      const bName = (b.bank_name || '').toLowerCase();
+      if (b.id === 'bank-nbad-uae' || b.id === 'bank-enbd-escrow') return false;
+      if (bName.includes('nbad') || bName.includes('national bank of abu dhabi') || bName.includes('emirates nbd')) return false;
+      if (b.id === 'bank-fab-uae' && !bName.includes('adcb') && !bName.includes('commercial')) return false;
+      return true;
+    });
+
+    let hasAdcb = false;
+    this.db.bank_accounts.forEach(b => {
+      const bName = (b.bank_name || '').toLowerCase();
+      if (b.id === 'bank-fab-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
+        b.id = 'bank-adcb-uae';
+        b.company_id = 'rayan-corp-uae';
+        b.account_name = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+        b.bank_name = 'Abu Dhabi Commercial Bank (ADCB)';
+        b.account_number = 'AE920030012697347820001';
+        b.iban = 'AE920030012697347820001';
+        b.swift = 'ADCBAEAA';
+        b.branch = 'Dalma Mall - Abu Dhabi';
+        b.currency = 'AED';
+        b.signatory = 'Arshad Alam Shaikh';
+        b.status = 'Active';
+        if (!b.balance || b.balance === 1450000) b.balance = 156625.95;
+        hasAdcb = true;
+      }
+    });
+
+    if (!hasAdcb) {
+      this.db.bank_accounts.unshift({
+        id: 'bank-adcb-uae',
+        company_id: 'rayan-corp-uae',
+        account_name: 'RAYAN ENGINEERING AND CONTRACTING LLC SPC',
+        bank_name: 'Abu Dhabi Commercial Bank (ADCB)',
+        account_number: 'AE920030012697347820001',
+        iban: 'AE920030012697347820001',
+        swift: 'ADCBAEAA',
+        branch: 'Dalma Mall - Abu Dhabi',
+        currency: 'AED',
+        balance: 156625.95,
+        signatory: 'Arshad Alam Shaikh',
+        status: 'Active'
+      });
+    }
+
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) {}
+  }
+
   async loadDatabase() {
     // 1. Initial quick load from local cache if present
     const cached = localStorage.getItem('rayan_fin_db_cache');
@@ -333,6 +427,7 @@ class FinanceApp {
     } else {
       this.db = this.mergeWithSeedData(this.db);
     }
+    this.sanitizeBankAccounts();
 
     // 2. Fetch authoritative state directly from Hostinger MySQL Database API
     const endpoints = ['/api/finance.php?action=get_state', '/api/finance?action=get_state'];
@@ -343,9 +438,7 @@ class FinanceApp {
           const json = await res.json();
           if (json.data && typeof json.data === 'object' && json.data.companies && json.data.companies.length > 0) {
             this.db = this.mergeWithSeedData(json.data);
-            try {
-              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-            } catch (e) {}
+            this.sanitizeBankAccounts();
             return;
           }
         }
@@ -7801,10 +7894,8 @@ class FinanceApp {
   // Helper: Get comprehensive list of known, regional and saved banks
   getKnownBanksList() {
     const defaultList = [
-      'National Bank of Abu Dhabi (NBAD)',
-      'First Abu Dhabi Bank (FAB)',
       'Abu Dhabi Commercial Bank (ADCB)',
-      'Emirates NBD Bank',
+      'First Abu Dhabi Bank (FAB)',
       'Dubai Islamic Bank (DIB)',
       'Mashreq Bank',
       'Abu Dhabi Islamic Bank (ADIB)',
@@ -7867,21 +7958,21 @@ class FinanceApp {
 
     const knownBanks = this.getKnownBanksList();
     const quickBanks = [
-      'National Bank of Abu Dhabi (NBAD)',
-      'First Abu Dhabi Bank (FAB)',
       'Abu Dhabi Commercial Bank (ADCB)',
-      'Emirates NBD Bank',
+      'First Abu Dhabi Bank (FAB)',
       'Dubai Islamic Bank (DIB)',
-      'Mashreq Bank'
+      'Mashreq Bank',
+      'Abu Dhabi Islamic Bank (ADIB)',
+      'Commercial Bank of Dubai (CBD)'
     ];
 
-    let initialBank = 'National Bank of Abu Dhabi (NBAD)';
+    let initialBank = 'Abu Dhabi Commercial Bank (ADCB)';
     if (targetInv) {
       const c = customers.find(cust => cust.id === targetInv.customer_id);
       const prevR = (this.db?.customer_receipts || []).find(r => (r.customer_id === targetInv.customer_id || (targetInv.customer_name && r.customer_name === targetInv.customer_name)) && r.bank_name);
-      initialBank = c?.preferred_bank || c?.bank_name || prevR?.bank_name || localStorage.getItem('fin_last_used_bank') || 'National Bank of Abu Dhabi (NBAD)';
+      initialBank = c?.preferred_bank || c?.bank_name || prevR?.bank_name || localStorage.getItem('fin_last_used_bank') || 'Abu Dhabi Commercial Bank (ADCB)';
     } else {
-      initialBank = localStorage.getItem('fin_last_used_bank') || 'National Bank of Abu Dhabi (NBAD)';
+      initialBank = localStorage.getItem('fin_last_used_bank') || 'Abu Dhabi Commercial Bank (ADCB)';
     }
 
     const modalHtml = `
@@ -8281,14 +8372,14 @@ class FinanceApp {
       if (mode === 'Cheque') {
         chequeNo = document.getElementById('rec-cheque-no').value.trim();
         chequeDate = document.getElementById('rec-cheque-date').value;
-        bankName = document.getElementById('rec-cheque-bank').value.trim() || 'National Bank of Abu Dhabi (NBAD)';
+        bankName = document.getElementById('rec-cheque-bank').value.trim() || 'Abu Dhabi Commercial Bank (ADCB)';
         bankBranch = document.getElementById('rec-cheque-branch').value.trim();
         chequeStatus = document.getElementById('rec-cheque-status').value;
         refNo = chequeNo;
         paymentType = 'Corporate Account Payee Cheque';
       } else if (mode === 'Online') {
         refNo = document.getElementById('rec-ref').value.trim();
-        bankName = document.getElementById('rec-online-bank').value.trim() || 'National Bank of Abu Dhabi (NBAD)';
+        bankName = document.getElementById('rec-online-bank').value.trim() || 'Abu Dhabi Commercial Bank (ADCB)';
         chequeDate = document.getElementById('rec-online-date').value;
         paymentType = document.getElementById('rec-online-channel').value;
       } else if (mode === 'Cash') {
@@ -13881,7 +13972,7 @@ class FinanceApp {
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Remitting / Drawee Bank Name</label>
-                <input type="text" id="edit-rcp-bank" class="fin-form-input" list="rec-banks-list" value="${rcp.bank_name || ''}" placeholder="e.g. National Bank of Abu Dhabi (NBAD)">
+                <input type="text" id="edit-rcp-bank" class="fin-form-input" list="rec-banks-list" value="${rcp.bank_name || ''}" placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)">
               </div>
 
               <div class="fin-form-group">
