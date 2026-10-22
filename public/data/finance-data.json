@@ -1,6 +1,26 @@
 {
   "companies": [
     {
+      "id": "rayan-group",
+      "name": "Rayan Group",
+      "short_name": "Rayan Group",
+      "country": "UAE",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "trn_vat": "104937380400003",
+      "state": "Abu Dhabi",
+      "state_code": "AD",
+      "address": "Office No. 09, Plot 42, Mussafah M-36, P.O. Box 91800, Abu Dhabi, United Arab Emirates",
+      "email": "info@rayan-group.com",
+      "phone": "+971 2 565 4497",
+      "bank_name": "First Abu Dhabi Bank (FAB)",
+      "account_no": "104889218001",
+      "ifsc_code": "FABUAEAA",
+      "branch": "Al Maryah Island Financial Center, Abu Dhabi",
+      "financial_year": "2025-2026",
+      "is_default": false
+    },
+    {
       "id": "rayan-corp-uae",
       "name": "Rayan Engineering & Contracting L.L.C - S.P.C",
       "short_name": "Rayan Engineering",
@@ -96,9 +116,11 @@
       "avatar": "👨‍💼",
       "status": "active",
       "assigned_companies": [
-        "ashaz-eng-in",
+        "rayan-group",
         "rayan-corp-uae",
-        "rayan-energy-uae"
+        "rayan-energy-uae",
+        "rayan-properties-uae",
+        "ashaz-eng-in"
       ],
       "created_at": "2025-01-10T08:00:00Z"
     },
@@ -115,8 +137,11 @@
       "avatar": "💼",
       "status": "active",
       "assigned_companies": [
-        "ashaz-eng-in",
-        "rayan-corp-uae"
+        "rayan-group",
+        "rayan-corp-uae",
+        "rayan-energy-uae",
+        "rayan-properties-uae",
+        "ashaz-eng-in"
       ],
       "created_at": "2025-01-15T09:30:00Z"
     },
@@ -185,9 +210,11 @@
       "avatar": "📊",
       "status": "active",
       "assigned_companies": [
-        "ashaz-eng-in",
+        "rayan-group",
         "rayan-corp-uae",
-        "rayan-energy-uae"
+        "rayan-energy-uae",
+        "rayan-properties-uae",
+        "ashaz-eng-in"
       ],
       "created_at": "2025-03-05T14:00:00Z"
     }
@@ -1646,6 +1673,20 @@
       "branch": "Commercial Branch, Fort, Mumbai",
       "currency": "INR",
       "balance": 48205000,
+      "signatory": "Arshad Alam Shaikh (Managing Director)",
+      "status": "Active"
+    },
+    {
+      "id": "bank-fab-group",
+      "company_id": "rayan-group",
+      "account_name": "First Abu Dhabi Bank (FAB) — Rayan Group Treasury",
+      "bank_name": "First Abu Dhabi Bank PJSC",
+      "account_number": "104889218001",
+      "iban": "AE07033104889218001",
+      "swift": "FABUAEAA",
+      "branch": "Al Maryah Island Financial Center, Abu Dhabi",
+      "currency": "AED",
+      "balance": 2500000,
       "signatory": "Arshad Alam Shaikh (Managing Director)",
       "status": "Active"
     }

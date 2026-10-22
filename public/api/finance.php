@@ -566,6 +566,11 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
             if ($row && !empty($row['state_json'])) {
                 $data = json_decode($row['state_json'], true);
                 if ($data && is_array($data) && !empty($data['companies'])) {
+                    // Always synchronize companies list with master seed definition
+                    $masterSeed = getMasterSeed($candidates);
+                    if ($masterSeed && !empty($masterSeed['companies'])) {
+                        $data['companies'] = $masterSeed['companies'];
+                    }
                     // Check if relational tables have any additional records
                     syncFromRelationalTables($pdo, $data);
                     // Purge dummy entries if any exist
