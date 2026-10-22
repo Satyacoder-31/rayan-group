@@ -191,15 +191,32 @@ class FinanceApp {
       return item.id || item.reference_no || item.account_number || item.iban || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
     };
 
+    const dummyBlacklist = new Set([
+      'bill-rg-001', 'bill-rg-002', 'bill-rg-003',
+      'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003',
+      'pay-rg-001', 'pay-rg-002',
+      'pv-rg-2026-001', 'pv-rg-2026-002',
+      'dn-rg-001', 'dn-rg-2026-001'
+    ]);
+
+    const isBlacklisted = (item) => {
+      if (!item) return true;
+      const id = String(item.id || '').trim().toLowerCase();
+      const billNo = String(item.bill_no || '').trim().toLowerCase();
+      const vouchNo = String(item.voucher_no || '').trim().toLowerCase();
+      const dnNo = String(item.debit_note_no || '').trim().toLowerCase();
+      return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo);
+    };
+
     for (const key of collections) {
       if (key === 'companies') {
         merged.companies = defaultSeedData.companies;
         continue;
       }
-      const seedArr = merged[key] || [];
+      const seedArr = (merged[key] || []).filter(item => !isBlacklisted(item));
       const incomingRaw = Array.isArray(sourceData[key]) ? sourceData[key] : [];
       const incomingArr = incomingRaw.filter(item => {
-        if (!item) return false;
+        if (!item || isBlacklisted(item)) return false;
         const no = item.invoice_no || item.receipt_no || item.code || item.id || '';
         if (typeof no === 'string' && (no.startsWith('INV-2026-') || no.startsWith('REC-2026-') || ['CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK'].includes(no))) {
           return false;
@@ -215,7 +232,7 @@ class FinanceApp {
       // Add incoming user items first so newest submissions stay at top
       const map = new Map();
       incomingArr.forEach(item => {
-        if (item) {
+        if (item && !isBlacklisted(item)) {
           const uniqueKey = getUniqueKey(item) || `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
           if (!item.id) item.id = uniqueKey;
           map.set(uniqueKey, item);
@@ -224,7 +241,7 @@ class FinanceApp {
 
       // Overlay / append missing seed items without duplicating
       seedArr.forEach(item => {
-        if (item) {
+        if (item && !isBlacklisted(item)) {
           const uniqueKey = getUniqueKey(item);
           if (uniqueKey && !map.has(uniqueKey)) {
             map.set(uniqueKey, item);
@@ -232,7 +249,7 @@ class FinanceApp {
         }
       });
 
-      merged[key] = Array.from(map.values());
+      merged[key] = Array.from(map.values()).filter(item => !isBlacklisted(item));
     }
 
     // Auto-discover and ensure all purchase order references from bills are registered in purchase_orders
@@ -9628,15 +9645,21 @@ class FinanceApp {
                   <input type="date" id="exp-date" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}" required>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Category <span style="color:#ef4444;">*</span></label>
-                  <select id="exp-category" class="fin-form-select" required>
-                    <option value="Site Expenses & Consumables">Site Expenses &amp; Consumables</option>
-                    <option value="Equipment & Fuel">Equipment &amp; Fuel</option>
-                    <option value="Utilities & Maintenance">Utilities &amp; Maintenance</option>
-                    <option value="Travel & Accommodation">Travel &amp; Accommodation</option>
-                    <option value="Professional Services">Professional &amp; Legal Services</option>
-                    <option value="Employee Reimbursements">Employee Reimbursements</option>
-                  </select>
+                  <label class="fin-form-label">Category <span style="font-size:0.75rem; color:#94a3b8; font-weight:normal;">(Optional)</span></label>
+                  <input type="text" id="exp-category" class="fin-form-input" list="exp-category-list" placeholder="Select or type custom category..." autocomplete="off">
+                  <datalist id="exp-category-list">
+                    <option value="Site Expenses & Consumables">
+                    <option value="Equipment & Fuel">
+                    <option value="Utilities & Maintenance">
+                    <option value="Travel & Accommodation">
+                    <option value="Professional & Legal Services">
+                    <option value="Employee Reimbursements">
+                    <option value="Office Supplies & Stationery">
+                    <option value="Material & Hardware Supplies">
+                    <option value="Repairs & Site Maintenance">
+                    <option value="Transportation & Freight">
+                    <option value="General Corporate Expense">
+                  </datalist>
                 </div>
               </div>
 
@@ -9830,7 +9853,7 @@ class FinanceApp {
           currency: isIndia ? 'INR' : 'AED',
           currency_symbol: currSym,
           date: document.getElementById('exp-date').value,
-          category: document.getElementById('exp-category').value,
+          category: (document.getElementById('exp-category')?.value || '').trim() || 'General Expense',
           description: document.getElementById('exp-desc').value.trim(),
           amount: amountVal,
           tax_amount: taxVal,
@@ -13511,15 +13534,21 @@ class FinanceApp {
                   <input type="date" id="edit-exp-date" class="fin-form-input" value="${exp.date || ''}" required>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Category <span style="color:#ef4444;">*</span></label>
-                  <select id="edit-exp-category" class="fin-form-select" required>
-                    <option value="Equipment & Fuel" ${exp.category === 'Equipment & Fuel' ? 'selected' : ''}>Equipment &amp; Fuel</option>
-                    <option value="Site Expenses & Consumables" ${exp.category === 'Site Expenses & Consumables' ? 'selected' : ''}>Site Expenses &amp; Consumables</option>
-                    <option value="Utilities & Maintenance" ${exp.category === 'Utilities & Maintenance' ? 'selected' : ''}>Utilities &amp; Maintenance</option>
-                    <option value="Travel & Accommodation" ${exp.category === 'Travel & Accommodation' ? 'selected' : ''}>Travel &amp; Accommodation</option>
-                    <option value="Professional Services" ${exp.category === 'Professional Services' ? 'selected' : ''}>Professional Services</option>
-                    <option value="Employee Reimbursements" ${exp.category === 'Employee Reimbursements' ? 'selected' : ''}>Employee Reimbursements</option>
-                  </select>
+                  <label class="fin-form-label">Category <span style="font-size:0.75rem; color:#94a3b8; font-weight:normal;">(Optional)</span></label>
+                  <input type="text" id="edit-exp-category" class="fin-form-input" list="edit-exp-category-list" value="${exp.category || ''}" placeholder="Select or type custom category..." autocomplete="off">
+                  <datalist id="edit-exp-category-list">
+                    <option value="Site Expenses & Consumables">
+                    <option value="Equipment & Fuel">
+                    <option value="Utilities & Maintenance">
+                    <option value="Travel & Accommodation">
+                    <option value="Professional & Legal Services">
+                    <option value="Employee Reimbursements">
+                    <option value="Office Supplies & Stationery">
+                    <option value="Material & Hardware Supplies">
+                    <option value="Repairs & Site Maintenance">
+                    <option value="Transportation & Freight">
+                    <option value="General Corporate Expense">
+                  </datalist>
                 </div>
               </div>
 
@@ -13608,7 +13637,7 @@ class FinanceApp {
       const taxVal = Number(taxInp.value) || 0;
 
       exp.date = document.getElementById('edit-exp-date').value;
-      exp.category = document.getElementById('edit-exp-category').value;
+      exp.category = (document.getElementById('edit-exp-category')?.value || '').trim() || 'General Expense';
       exp.description = document.getElementById('edit-exp-desc').value.trim();
       exp.amount = amountVal;
       exp.tax_amount = taxVal;

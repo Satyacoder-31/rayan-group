@@ -498,6 +498,64 @@ if (!$dataFile) {
 }
 
 // 3. MySQL & File Loading Logic
+function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
+    if (!$data || !is_array($data)) return;
+
+    $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003'];
+    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pv-rg-2026-001', 'pv-rg-2026-002'];
+    $dummyDnIds = ['dn-rg-001', 'dn-rg-2026-001'];
+
+    $changed = false;
+
+    if ($pdo) {
+        try {
+            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003') OR bill_no IN ('BILL-RG-2026-001', 'BILL-RG-2026-002', 'BILL-RG-2026-003')");
+            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002') OR voucher_no IN ('PV-RG-2026-001', 'PV-RG-2026-002')");
+            $pdo->exec("DELETE FROM finance_debit_notes WHERE id IN ('dn-rg-001') OR debit_note_no IN ('DN-RG-2026-001')");
+        } catch (Exception $e) {}
+    }
+
+    if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+        $orig = count($data['purchase_bills']);
+        $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) use ($dummyBillIds) {
+            $id = strtolower(trim($b['id'] ?? ''));
+            $no = strtolower(trim($b['bill_no'] ?? ''));
+            return !in_array($id, $dummyBillIds) && !in_array($no, $dummyBillIds);
+        }));
+        if (count($data['purchase_bills']) !== $orig) {
+            $changed = true;
+        }
+    }
+
+    if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        $orig = count($data['vendor_payments']);
+        $data['vendor_payments'] = array_values(array_filter($data['vendor_payments'], function($p) use ($dummyPayIds) {
+            $id = strtolower(trim($p['id'] ?? ''));
+            $no = strtolower(trim($p['voucher_no'] ?? ''));
+            return !in_array($id, $dummyPayIds) && !in_array($no, $dummyPayIds);
+        }));
+        if (count($data['vendor_payments']) !== $orig) {
+            $changed = true;
+        }
+    }
+
+    if (!empty($data['debit_notes']) && is_array($data['debit_notes'])) {
+        $orig = count($data['debit_notes']);
+        $data['debit_notes'] = array_values(array_filter($data['debit_notes'], function($dn) use ($dummyDnIds) {
+            $id = strtolower(trim($dn['id'] ?? ''));
+            $no = strtolower(trim($dn['debit_note_no'] ?? ''));
+            return !in_array($id, $dummyDnIds) && !in_array($no, $dummyDnIds);
+        }));
+        if (count($data['debit_notes']) !== $orig) {
+            $changed = true;
+        }
+    }
+
+    if ($changed && $pdo) {
+        saveFinanceDb($pdo, $dataFile, $data, $candidates);
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -510,6 +568,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 if ($data && is_array($data) && !empty($data['companies'])) {
                     // Check if relational tables have any additional records
                     syncFromRelationalTables($pdo, $data);
+                    // Purge dummy entries if any exist
+                    purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
                     // Keep relational tables populated
                     syncToRelationalTables($pdo, $data);
                     return $data;
@@ -526,6 +586,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
         if ($raw) {
             $data = json_decode($raw, true);
             if ($data && is_array($data) && !empty($data['companies'])) {
+                purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
                     saveFinanceDb($pdo, null, $data, $candidates);
@@ -538,6 +599,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
     // C. Master seed
     $seed = getMasterSeed($candidates);
     if ($seed && $pdo) {
+        purgeDummyFinanceRecords($pdo, $seed, $dataFile, $candidates);
         saveFinanceDb($pdo, $dataFile, $seed, $candidates);
     }
     return $seed;
