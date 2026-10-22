@@ -194,8 +194,8 @@ class FinanceApp {
     const dummyBlacklist = new Set([
       'bill-rg-001', 'bill-rg-002', 'bill-rg-003',
       'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003',
-      'pay-rg-001', 'pay-rg-002',
-      'pv-rg-2026-001', 'pv-rg-2026-002',
+      'pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681',
+      'pv-rg-2026-001', 'pv-rg-2026-002', 'pv-rg-2026-003',
       'dn-rg-001', 'dn-rg-2026-001'
     ]);
 

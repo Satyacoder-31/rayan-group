@@ -1261,24 +1261,7 @@
       "recorded_at": "2026-09-17T13:40:00Z"
     }
   ],
-  "vendor_payments": [
-    {
-      "id": "pay-rg-003",
-      "voucher_no": "PV-RG-2026-003",
-      "company_id": "rayan-corp-uae",
-      "currency": "AED",
-      "currency_symbol": "AED ",
-      "vendor_id": "vend-8334",
-      "vendor_name": "PINK CITY CERAMIC AND SANITARY TRADING LLC SPC",
-      "payment_date": "2026-10-18",
-      "payment_mode": "ADCB / FAB Bank Wire",
-      "reference_no": "049299826291AG8Q",
-      "amount_paid": 1140.30,
-      "allocations": [],
-      "notes": "Approved by CFO for immediate release",
-      "approved_by": "Zameer Ahmed Khan (CFO)"
-    }
-  ],
+  "vendor_payments": [],
   "credit_notes": [],
   "debit_notes": [],
   "expenses": [

@@ -502,7 +502,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if (!$data || !is_array($data)) return;
 
     $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003'];
-    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pv-rg-2026-001', 'pv-rg-2026-002'];
+    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pv-rg-2026-001', 'pv-rg-2026-002', 'pv-rg-2026-003'];
     $dummyDnIds = ['dn-rg-001', 'dn-rg-2026-001'];
 
     $changed = false;
@@ -510,7 +510,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if ($pdo) {
         try {
             $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003') OR bill_no IN ('BILL-RG-2026-001', 'BILL-RG-2026-002', 'BILL-RG-2026-003')");
-            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002') OR voucher_no IN ('PV-RG-2026-001', 'PV-RG-2026-002')");
+            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681') OR voucher_no IN ('PV-RG-2026-001', 'PV-RG-2026-002', 'PV-RG-2026-003')");
             $pdo->exec("DELETE FROM finance_debit_notes WHERE id IN ('dn-rg-001') OR debit_note_no IN ('DN-RG-2026-001')");
         } catch (Exception $e) {}
     }
