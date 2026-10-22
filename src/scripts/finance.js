@@ -234,7 +234,7 @@ class FinanceApp {
       const incomingArr = incomingRaw.filter(item => {
         if (!item || isBlacklisted(item)) return false;
         const no = item.invoice_no || item.receipt_no || item.code || item.id || '';
-        if (typeof no === 'string' && (no.startsWith('INV-2026-') || no.startsWith('REC-2026-') || ['CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK'].includes(no))) {
+        if (typeof no === 'string' && ['CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK'].includes(no)) {
           return false;
         }
         return true;
@@ -3069,7 +3069,13 @@ class FinanceApp {
   // 2. SALES & INVOICES MODULE
   // --------------------------------------------------------------------------
   renderInvoicesTab(root) {
-    const rawInvoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isUaeEntity = (id) => id === 'rayan-corp-uae' || id === 'rayan-group';
+    const currentIsUae = isUaeEntity(this.activeCompanyId);
+    const rawInvoices = (this.db?.invoices || []).filter(i => {
+      const compId = i.company_id || 'rayan-corp-uae';
+      if (currentIsUae && isUaeEntity(compId)) return true;
+      return compId === this.activeCompanyId;
+    });
     const invoices = [...rawInvoices].sort((a, b) => {
       const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
       const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
@@ -3184,10 +3190,13 @@ class FinanceApp {
         <td style="white-space:nowrap;">
           <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="Print &amp; View Official Tax Invoice">Print / View</button>
           <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditInvoiceModal('${inv.id}')" title="Edit Tax Invoice">Edit</button>
-          ${inv.balance_due > 0 && this.hasPermission('record_receipt') ? `
+          ${inv.status === 'draft' ? `
+            <button type="button" class="fin-btn-row-action" style="color:#10b981; font-weight:700; border-color:#10b981;" onclick="window.finApp.postDraftInvoice('${inv.id}')" title="Officially Issue and Post Draft Invoice">Issue →</button>
+          ` : ''}
+          ${inv.balance_due > 0 && inv.status !== 'draft' && this.hasPermission('record_receipt') ? `
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openQuickPayInvoice('${inv.id}')" style="color:#10b981;" title="Record Customer Payment">Receive</button>
           ` : ''}
-          ${inv.status !== 'void' && this.hasPermission('create_credit_note') ? `
+          ${inv.status !== 'void' && inv.status !== 'draft' && this.hasPermission('create_credit_note') ? `
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCreateCreditNoteModal('${inv.id}')" title="Issue Credit Note">Cr. Note</button>
           ` : ''}
         </td>
@@ -5126,21 +5135,38 @@ class FinanceApp {
   }
 
   // 1. CREATE TAX INVOICE MODAL
-  openCreateInvoiceModal() {
+  openCreateInvoiceModal(editInvoiceId = null) {
+    const editInv = editInvoiceId ? (this.db?.invoices || []).find(i => i.id === editInvoiceId || i.invoice_no === editInvoiceId) : null;
     const customers = this.db?.customers || [];
     const items = this.db?.items || [];
     const projects = this.db?.projects || [];
-    const nextInvoiceNo = this.getNextInvoiceNumber();
+    const nextInvoiceNo = editInv ? editInv.invoice_no : this.getNextInvoiceNumber();
+
+    const isEditing = !!editInv;
+    const modalTitle = isEditing ? (editInv.status === 'draft' ? '✏️ Edit Draft Invoice' : '✏️ Edit Sales Tax Invoice') : '📄 Create Sales Tax Invoice';
+    const initialCustName = editInv ? (editInv.customer_name || '') : 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C';
+    const initialCustTrn = editInv ? (editInv.customer_trn || editInv.customer_gstin || editInv.tax_number || '') : '105405525400003';
+    const initialPos = editInv ? (editInv.place_of_supply || 'Abu Dhabi, UAE') : 'Abu Dhabi, UAE';
+    const initialAddress = editInv ? (editInv.customer_address || '') : 'ABU DHABI, MADINAT ZAYED, UAE';
+    const initialContact = editInv ? (editInv.contact_person || '') : 'Mr. Sooraj Kumar';
+    const initialEmail = editInv ? (editInv.email || '') : 'buildaradevelopers@gmail.com';
+    const initialDate = editInv ? (editInv.invoice_date || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
+    const initialTerms = editInv ? (editInv.payment_terms !== undefined ? editInv.payment_terms : 30) : 30;
+    const initialDueDate = editInv ? (editInv.due_date || '') : '';
+    const initialPrj = editInv ? (editInv.project_name || '') : '';
+    const initialPoRef = editInv ? (editInv.po_reference || '') : '';
+    const initialNotes = editInv ? (editInv.notes || '') : '';
+    const initialRegime = editInv ? (editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst')) : 'trn';
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-invoice">
         <div class="fin-modal-dialog">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">📄 Create Sales Tax Invoice</h3>
+            <h3 class="fin-modal-title">${modalTitle}</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-invoice')">&times;</button>
           </div>
           <div class="fin-modal-body">
-            <form id="create-invoice-form">
+            <form id="create-invoice-form" data-edit-id="${editInv ? editInv.id : ''}">
               <!-- Auto-Sequenced Invoice Number Banner -->
               <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(56,189,248,0.25); border-radius:10px; padding:0.85rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
                 <div style="display:flex; align-items:center; gap:0.85rem;">
@@ -5153,7 +5179,7 @@ class FinanceApp {
                     </div>
                     <div style="display:flex; align-items:center; gap:0.5rem; margin-top:2px;">
                       <span id="inv-auto-seq-badge" style="font-family:monospace; font-size:1.15rem; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 10px; border-radius:6px; border:1px solid rgba(56,189,248,0.35);">${nextInvoiceNo}</span>
-                      <span style="font-size:0.7rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.25);">✓ Auto-Generated Sequence</span>
+                      <span style="font-size:0.7rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.25);">${isEditing ? (editInv.status === 'draft' ? '📝 Draft Invoice' : '📄 Existing Invoice') : '✓ Auto-Generated Sequence'}</span>
                     </div>
                   </div>
                 </div>
@@ -5174,7 +5200,7 @@ class FinanceApp {
                       type="text" 
                       id="inv-cust-input" 
                       class="fin-form-input" 
-                      value="M/s. BUILDARA GENERAL CONTRACTING - L.L.C"
+                      value="${initialCustName}"
                       placeholder="Click to view registered clients or write custom name..." 
                       required 
                       autocomplete="off"
@@ -5203,20 +5229,20 @@ class FinanceApp {
                       <span id="inv-tax-type-text">CUSTOMER TRN</span> <span style="color:#ef4444;">*</span>
                     </label>
                     <div class="fin-tax-regime-pills">
-                      <button type="button" id="regime-toggle-trn" class="fin-tax-pill active trn-pill" title="UAE VAT Regime (15-digit TRN Number)">
+                      <button type="button" id="regime-toggle-trn" class="fin-tax-pill ${initialRegime === 'trn' ? 'active trn-pill' : ''}" title="UAE VAT Regime (15-digit TRN Number)">
                         🇦🇪 TRN
                       </button>
-                      <button type="button" id="regime-toggle-gst" class="fin-tax-pill" title="India GST Regime (15-character GSTIN)">
+                      <button type="button" id="regime-toggle-gst" class="fin-tax-pill ${initialRegime === 'gst' ? 'active' : ''}" title="India GST Regime (15-character GSTIN)">
                         🇮🇳 GST
                       </button>
                     </div>
                   </div>
-                  <input type="text" id="inv-cust-gstin" class="fin-form-input" required value="105405525400003" placeholder="e.g. 100492817200003 (15-digit UAE TRN)" maxlength="25" style="font-family:monospace; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">
+                  <input type="text" id="inv-cust-gstin" class="fin-form-input" required value="${initialCustTrn}" placeholder="e.g. 100492817200003 (15-digit UAE TRN)" maxlength="25" style="font-family:monospace; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
                     <span id="inv-tax-helper-text">UAE VAT Registration # (15 Digits)</span>
                     <span id="inv-currency-indicator" style="color:#0099e6; font-weight:700; cursor:pointer;" title="Click to toggle currency (AED د.إ / INR ₹)">Currency: <span id="inv-currency-symbol">AED (د.إ)</span> ⇄</span>
                   </div>
-                  <input type="hidden" id="inv-tax-regime" value="trn">
+                  <input type="hidden" id="inv-tax-regime" value="${initialRegime}">
                 </div>
 
                 <div class="fin-form-group">
@@ -5232,7 +5258,7 @@ class FinanceApp {
                       id="inv-cust-pos" 
                       class="fin-form-input" 
                       required 
-                      value="Abu Dhabi, UAE" 
+                      value="${initialPos}" 
                       placeholder="e.g. Abu Dhabi, UAE or 27-Maharashtra" 
                       list="pos-suggestions"
                       autocomplete="off"
@@ -5250,17 +5276,17 @@ class FinanceApp {
               <div class="fin-form-grid-3" style="margin-top:0.75rem; margin-bottom:0.25rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Client Billing Address</label>
-                  <input type="text" id="inv-cust-address" class="fin-form-input" placeholder="e.g. ABU DHABI, MADINAT ZAYED, UAE" value="ABU DHABI, MADINAT ZAYED, UAE">
+                  <input type="text" id="inv-cust-address" class="fin-form-input" placeholder="e.g. ABU DHABI, MADINAT ZAYED, UAE" value="${initialAddress}">
                   <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">Printed directly on Tax Invoice receipt</div>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Attention / Contact Person</label>
-                  <input type="text" id="inv-cust-contact" class="fin-form-input" placeholder="e.g. Mr. Sooraj Kumar" value="Mr. Sooraj Kumar">
+                  <input type="text" id="inv-cust-contact" class="fin-form-input" placeholder="e.g. Mr. Sooraj Kumar" value="${initialContact}">
                   <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">Recipient / Representative</div>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Client Email / Contact</label>
-                  <input type="text" id="inv-cust-email" class="fin-form-input" placeholder="e.g. buildaradevelopers@gmail.com" value="buildaradevelopers@gmail.com">
+                  <input type="text" id="inv-cust-email" class="fin-form-input" placeholder="e.g. buildaradevelopers@gmail.com" value="${initialEmail}">
                   <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">For formal invoice documentation</div>
                 </div>
               </div>
@@ -5268,21 +5294,21 @@ class FinanceApp {
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Invoice Date</label>
-                  <input type="date" id="inv-date" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}" required>
+                  <input type="date" id="inv-date" class="fin-form-input" value="${initialDate}" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label" id="inv-terms-label">Payment Terms (Days)</label>
-                  <input type="number" id="inv-terms" class="fin-form-input" value="30">
+                  <input type="number" id="inv-terms" class="fin-form-input" value="${initialTerms}">
                 </div>
                 <div class="fin-form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
                     <label class="fin-form-label" style="margin-bottom:0;">Due Date</label>
                     <label style="font-size:0.7rem; color:#94a3b8; display:flex; align-items:center; gap:0.35rem; cursor:pointer; user-select:none;">
-                      <input type="checkbox" id="inv-no-due-date" style="cursor:pointer; accent-color:#0099e6;"> No Due Date
+                      <input type="checkbox" id="inv-no-due-date" ${!initialDueDate ? 'checked' : ''} style="cursor:pointer; accent-color:#0099e6;"> No Due Date
                     </label>
                   </div>
-                  <input type="date" id="inv-due-date" class="fin-form-input" required>
-                  <span id="inv-no-due-date-hint" style="display:none; font-size:0.68rem; color:#38bdf8; margin-top:0.25rem;">Immediate Payment / Due Upon Receipt</span>
+                  <input type="date" id="inv-due-date" class="fin-form-input" value="${initialDueDate}" ${!initialDueDate ? 'disabled' : 'required'}>
+                  <span id="inv-no-due-date-hint" style="${!initialDueDate ? 'display:block;' : 'display:none;'} font-size:0.68rem; color:#38bdf8; margin-top:0.25rem;">Immediate Payment / Due Upon Receipt</span>
                 </div>
               </div>
 
@@ -5297,6 +5323,7 @@ class FinanceApp {
                       type="text" 
                       id="inv-project-input" 
                       class="fin-form-input" 
+                      value="${initialPrj}"
                       placeholder="Click to view registered projects / cost centers, or type custom..." 
                       autocomplete="off"
                     >
@@ -5361,7 +5388,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">PO / Contract Reference #</label>
-                  <input type="text" id="inv-po-ref" class="fin-form-input" placeholder="e.g. LPO/BD/2026/12 or PO-LT-2025-99">
+                  <input type="text" id="inv-po-ref" class="fin-form-input" placeholder="e.g. LPO/BD/2026/12 or PO-LT-2025-99" value="${initialPoRef}">
                 </div>
               </div>
 
@@ -5483,13 +5510,13 @@ class FinanceApp {
 
               <div class="fin-form-group" style="margin-top:1.5rem;">
                 <label class="fin-form-label">Notes &amp; Payment Instructions</label>
-                <textarea id="inv-notes" class="fin-form-textarea" rows="2" placeholder="Payment terms: Bank wire via Online Transfer to State Bank of India corporate account."></textarea>
+                <textarea id="inv-notes" class="fin-form-textarea" rows="2" placeholder="Payment terms: Bank wire via Online Transfer to State Bank of India corporate account.">${initialNotes}</textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-invoice')">Cancel</button>
-                <button type="button" class="fin-btn-quick" id="inv-save-draft-btn">Save as Draft</button>
-                <button type="submit" class="fin-btn-quick primary">Issue &amp; Post Invoice &rarr;</button>
+                <button type="button" class="fin-btn-quick" id="inv-save-draft-btn">${isEditing && editInv.status === 'draft' ? 'Save Draft' : 'Save as Draft'}</button>
+                <button type="submit" class="fin-btn-quick primary">${isEditing ? (editInv.status === 'draft' ? 'Issue &amp; Post Draft &rarr;' : 'Update Invoice &rarr;') : 'Issue &amp; Post Invoice &rarr;'}</button>
               </div>
             </form>
           </div>
@@ -5640,8 +5667,45 @@ class FinanceApp {
       };
     }
 
+    // Check and render friendly empty-state when no line rows exist
+    const checkEmptyTbody = () => {
+      const activeRows = tbody.querySelectorAll('tr:not(.inv-items-empty-row)');
+      const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
+      if (activeRows.length === 0) {
+        if (!existingPlaceholder) {
+          const emptyTr = document.createElement('tr');
+          emptyTr.className = 'inv-items-empty-row';
+          emptyTr.innerHTML = `
+            <td colspan="8" style="text-align:center; padding:1.75rem 1rem; color:#94a3b8; font-size:0.85rem; background:rgba(15,23,42,0.45); border:1px dashed rgba(56,189,248,0.3); border-radius:8px;">
+              <div style="display:flex; flex-direction:column; align-items:center; gap:0.55rem;">
+                <span style="color:#f1f5f9; font-weight:700; font-size:0.9rem;">⚠️ No line items currently added</span>
+                <span style="font-size:0.75rem; color:#94a3b8;">Enter line rates or milestone claim % to calculate subtotal and VAT.</span>
+                <button type="button" class="fin-btn-quick" id="inv-empty-add-row-btn" style="background:linear-gradient(135deg, rgba(56,189,248,0.22), rgba(0,166,153,0.28)); color:#38bdf8; border:1px solid rgba(56,189,248,0.5); font-size:0.82rem; padding:0.45rem 1.15rem; border-radius:6px; cursor:pointer; font-weight:700; margin-top:0.25rem;">
+                  + Click to Add Line Item
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(emptyTr);
+          const emptyAddBtn = emptyTr.querySelector('#inv-empty-add-row-btn');
+          if (emptyAddBtn) {
+            emptyAddBtn.onclick = (e) => {
+              e.preventDefault();
+              emptyTr.remove();
+              addRow();
+            };
+          }
+        }
+      } else if (existingPlaceholder) {
+        existingPlaceholder.remove();
+      }
+    };
+
     // Line items manager matching user's photo
     const addRow = (defaultItem = null, defaultQty = 1) => {
+      const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
+      if (existingPlaceholder) existingPlaceholder.remove();
+
       const tr = document.createElement('tr');
       const isTrn = currentRegime === 'trn';
       const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
@@ -5658,6 +5722,15 @@ class FinanceApp {
       if (isPercentInitial) {
         tr.classList.add('milestone-active');
       }
+
+      const catalogOptions = (items || [])
+        .filter(it => it && !(it.id || '').startsWith('item-milestone'))
+        .map(it => {
+          const itId = it.id || it.code || Math.random().toString();
+          const itName = it.name || 'Catalog Item';
+          const isSel = itemId === itId || (itemName && itName === itemName);
+          return `<option value="${itId}" ${isSel ? 'selected' : ''}>${itName}</option>`;
+        }).join('');
 
       tr.innerHTML = `
         <td style="width:34%; vertical-align:top;">
@@ -5681,7 +5754,7 @@ class FinanceApp {
               </option>
             </optgroup>
             <optgroup label="📦 Construction &amp; Engineering Catalog">
-              ${items.filter(it => !it.id.startsWith('item-milestone')).map(it => `<option value="${it.id}" ${itemId === it.id || (itemName && it.name === itemName) ? 'selected' : ''}>${it.name}</option>`).join('')}
+              ${catalogOptions}
             </optgroup>
           </select>
           <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Enter item description or milestone..." value="${itemName}" style="font-size:0.82rem;">
@@ -5888,6 +5961,7 @@ class FinanceApp {
       tr.querySelector('.row-del').onclick = () => {
         tr.remove();
         recalculateInvoice();
+        checkEmptyTbody();
       };
 
       recalculateInvoice();
@@ -5911,7 +5985,7 @@ class FinanceApp {
       let milestonePercentUsed = 50;
       let totalContractBase = 0;
 
-      tbody.querySelectorAll('tr').forEach(tr => {
+      tbody.querySelectorAll('tr:not(.inv-items-empty-row)').forEach(tr => {
         const qtyInp = tr.querySelector('.row-qty');
         const rateInp = tr.querySelector('.row-rate');
         const taxInp = tr.querySelector('.row-gst');
@@ -6073,6 +6147,8 @@ class FinanceApp {
           compText.textContent = '⚖️ Compliant with India GST Rules & E-Invoice Standard Guidelines';
         }
       }
+
+      checkEmptyTbody();
     };
 
     // Billed Item/s List Modal (Vyapar Style)
@@ -7142,9 +7218,9 @@ class FinanceApp {
     }
 
     // Initial check for default customer or remembered pos on modal open
-    const initialCustName = (custInput?.value || '').trim();
-    if (initialCustName) {
-      const initialInfo = this.getCustomerFullInfo(initialCustName);
+    const currentCustVal = (custInput?.value || '').trim();
+    if (currentCustVal) {
+      const initialInfo = this.getCustomerFullInfo(currentCustVal);
       if (initialInfo && initialInfo.hasPastData) {
         applyCustomerData(initialInfo);
       } else {
@@ -7156,7 +7232,11 @@ class FinanceApp {
       renderPrjRecommendations();
     }
 
-    document.getElementById('inv-add-row-btn').onclick = () => addRow();
+    document.getElementById('inv-add-row-btn').onclick = () => {
+      const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
+      if (existingPlaceholder) existingPlaceholder.remove();
+      addRow();
+    };
 
     const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
     const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
@@ -7164,7 +7244,7 @@ class FinanceApp {
     // Initial default row matching user's exact specification:
     // 50% Progressive Milestone Claim (Civil & Interior Works)
     // Qty: 1, Rate: 1000 AED, UOM: %, Milestone: 50% -> Billed Milestone (50%): 500.00 AED (Taxable Subtotal)
-    const milestone50Item = items.find(it => it.id === 'item-milestone-50' || it.code === 'MILESTONE-50') || {
+    const milestone50Item = (items || []).find(it => it && (it.id === 'item-milestone-50' || it.code === 'MILESTONE-50')) || {
       id: 'item-milestone-50',
       code: 'MILESTONE-50',
       name: '50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT',
@@ -7174,8 +7254,36 @@ class FinanceApp {
       gst_rate: 5,
       progress_pct: 50
     };
-    addRow(milestone50Item, 1);
-    setTaxRegime('trn', { preserveRates: true, keepPos: true });
+
+    if (editInv && Array.isArray(editInv.line_items) && editInv.line_items.length > 0) {
+      tbody.innerHTML = '';
+      editInv.line_items.forEach(it => {
+        const itemObj = {
+          id: it.id || '',
+          code: it.code || '',
+          name: it.name || it.description || '',
+          description: it.description || it.name || '',
+          hsn_sac_code: it.hsn_sac_code || '9954',
+          uom: it.uom || it.unit || 'LSUM',
+          sales_price: it.unit_price !== undefined ? it.unit_price : (it.rate || 0),
+          gst_rate: it.gst_rate !== undefined ? it.gst_rate : (it.vat_rate !== undefined ? it.vat_rate : 5),
+          progress_pct: it.progress_pct
+        };
+        addRow(itemObj, it.qty || 1);
+      });
+      const editRegime = editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst');
+      setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
+      recalculateInvoice();
+    } else if (editInv) {
+      tbody.innerHTML = '';
+      checkEmptyTbody();
+      const editRegime = editInv.tax_regime || 'trn';
+      setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
+      recalculateInvoice();
+    } else {
+      addRow(milestone50Item, 1);
+      setTaxRegime('trn', { preserveRates: true, keepPos: true });
+    }
 
     const preset50Btn = document.getElementById('inv-apply-50pct-preset-btn');
     if (preset50Btn) {
@@ -7193,283 +7301,359 @@ class FinanceApp {
     };
 
     // Save as draft
-    document.getElementById('inv-save-draft-btn').onclick = async () => {
+    document.getElementById('inv-save-draft-btn').onclick = async (e) => {
+      e.preventDefault();
       await this.saveInvoiceHandler('draft');
     };
   }
 
   async saveInvoiceHandler(status = 'issued') {
-    const custInput = document.getElementById('inv-cust-input');
-    const clientName = (custInput?.value || '').trim();
-    if (!clientName) {
-      alert('Please write or select a Customer / Client name.');
-      custInput?.focus();
-      return;
-    }
+    const submitBtn = document.querySelector('#create-invoice-form button[type="submit"]');
+    const draftBtn = document.getElementById('inv-save-draft-btn');
+    if (submitBtn) submitBtn.disabled = true;
+    if (draftBtn) draftBtn.disabled = true;
 
-    const nextGeneratedSeq = this.getNextInvoiceNumber();
-    const invoiceNo = (document.getElementById('inv-custom-seq-no')?.value || '').trim() || nextGeneratedSeq;
-    const invoiceId = 'inv-' + invoiceNo.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    try {
+      const custInput = document.getElementById('inv-cust-input');
+      const clientName = (custInput?.value || '').trim();
+      if (!clientName) {
+        alert('Please write or select a Customer / Client name.');
+        custInput?.focus();
+        if (submitBtn) submitBtn.disabled = false;
+        if (draftBtn) draftBtn.disabled = false;
+        return;
+      }
 
-    const prjInput = document.getElementById('inv-project-input');
-    const prjName = (prjInput?.value || '').trim() || 'General Corporate Billing';
-    const prjId = prjInput?.getAttribute('data-project-id') || null;
+      const formEl = document.getElementById('create-invoice-form');
+      const editId = formEl?.getAttribute('data-edit-id') || null;
+      const nextGeneratedSeq = this.getNextInvoiceNumber();
+      const invoiceNo = (document.getElementById('inv-custom-seq-no')?.value || '').trim() || nextGeneratedSeq;
+      const invoiceId = editId || ('inv-' + invoiceNo.toLowerCase().replace(/[^a-z0-9-]/g, '-'));
 
-    const noDueDate = document.getElementById('inv-no-due-date')?.checked;
-    const dueDateVal = noDueDate ? null : (document.getElementById('inv-due-date')?.value || null);
-    const paymentTermsVal = noDueDate ? 0 : (Number(document.getElementById('inv-terms')?.value) || 0);
+      const prjInput = document.getElementById('inv-project-input');
+      const prjName = (prjInput?.value || '').trim() || 'General Corporate Billing';
+      const prjId = prjInput?.getAttribute('data-project-id') || null;
 
-    const taxRegime = document.getElementById('inv-tax-regime')?.value || 'trn';
-    const taxNumber = (document.getElementById('inv-cust-gstin')?.value || '').trim();
-    const isTrn = taxRegime === 'trn';
-    const currIndicator = document.getElementById('inv-currency-symbol')?.textContent || '';
-    const currency = currIndicator.includes('AED') ? 'AED' : 'INR';
-    const currencySym = currency === 'AED' ? 'AED ' : '₹';
+      const noDueDate = document.getElementById('inv-no-due-date')?.checked;
+      const dueDateVal = noDueDate ? null : (document.getElementById('inv-due-date')?.value || null);
+      const paymentTermsVal = noDueDate ? 0 : (Number(document.getElementById('inv-terms')?.value) || 0);
 
-    const custAddress = (document.getElementById('inv-cust-address')?.value || '').trim();
-    const contactPerson = (document.getElementById('inv-cust-contact')?.value || '').trim();
-    const custEmail = (document.getElementById('inv-cust-email')?.value || '').trim();
-    const poRef = (document.getElementById('inv-po-ref')?.value || '').trim();
-    const invDate = document.getElementById('inv-date')?.value || new Date().toISOString().split('T')[0];
-    const notesVal = (document.getElementById('inv-notes')?.value || '').trim();
+      const taxRegime = document.getElementById('inv-tax-regime')?.value || 'trn';
+      const taxNumber = (document.getElementById('inv-cust-gstin')?.value || '').trim();
+      const isTrn = taxRegime === 'trn';
+      const currIndicator = document.getElementById('inv-currency-symbol')?.textContent || '';
+      const currency = currIndicator.includes('AED') ? 'AED' : 'INR';
+      const currencySym = currency === 'AED' ? 'AED ' : '₹';
 
-    const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
-    if (posVal) {
-      this.savePosRecommendation(posVal, clientName);
-    }
+      const custAddress = (document.getElementById('inv-cust-address')?.value || '').trim();
+      const contactPerson = (document.getElementById('inv-cust-contact')?.value || '').trim();
+      const custEmail = (document.getElementById('inv-cust-email')?.value || '').trim();
+      const poRef = (document.getElementById('inv-po-ref')?.value || '').trim();
+      const invDate = document.getElementById('inv-date')?.value || new Date().toISOString().split('T')[0];
+      const notesVal = (document.getElementById('inv-notes')?.value || '').trim();
 
-    if (prjName) {
-      this.saveProjectRecommendation(prjName);
+      const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
+      if (posVal) {
+        this.savePosRecommendation(posVal, clientName);
+      }
+
+      if (prjName) {
+        this.saveProjectRecommendation(prjName);
+        if (clientName) {
+          this.saveCustomerProjectLink(clientName, prjId, prjName, poRef);
+        }
+      }
+
       if (clientName) {
-        this.saveCustomerProjectLink(clientName, prjId, prjName, poRef);
+        this.saveCustomerFullInfo({
+          id: custInput.getAttribute('data-cust-id') || null,
+          name: clientName,
+          billing_address: custAddress,
+          contact_person: contactPerson,
+          email: custEmail,
+          trn: isTrn ? taxNumber : '',
+          gstin: !isTrn ? taxNumber : '',
+          tax_regime: taxRegime,
+          place_of_supply: posVal,
+          payment_terms: paymentTermsVal,
+          project_id: prjId,
+          project_name: prjName,
+          po_reference: poRef
+        });
       }
-    }
 
-    if (clientName) {
-      this.saveCustomerFullInfo({
-        id: custInput.getAttribute('data-cust-id') || null,
-        name: clientName,
-        billing_address: custAddress,
-        contact_person: contactPerson,
-        email: custEmail,
-        trn: isTrn ? taxNumber : '',
-        gstin: !isTrn ? taxNumber : '',
-        tax_regime: taxRegime,
-        place_of_supply: posVal,
-        payment_terms: paymentTermsVal,
-        project_id: prjId,
-        project_name: prjName,
-        po_reference: poRef
-      });
-    }
-
-    // Find customer by ID or Name, or auto-create if custom client
-    let customer = this.db?.customers?.find(c => 
-      c.id === custInput.getAttribute('data-cust-id') ||
-      c.name.toLowerCase() === clientName.toLowerCase() ||
-      c.name.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === clientName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim()
-    );
-
-    if (!customer) {
-      const newCustId = 'cust-' + Date.now();
-      customer = {
-        id: newCustId,
-        code: 'CUST-' + Math.floor(1000 + Math.random() * 9000),
-        name: clientName,
-        billing_address: custAddress,
-        contact_person: contactPerson,
-        email: custEmail,
-        country: isTrn ? 'UAE' : 'India',
-        gstin: !isTrn ? taxNumber : '',
-        trn: isTrn ? taxNumber : '',
-        place_of_supply: posVal || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
-        payment_terms: paymentTermsVal,
-        default_project_id: prjId || null,
-        default_project_name: prjName || '',
-        last_po_reference: poRef || '',
-        status: 'active'
-      };
-      if (!this.db.customers) this.db.customers = [];
-      this.db.customers.push(customer);
-      this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
-    } else {
-      if (posVal) customer.place_of_supply = posVal;
-      if (taxNumber) {
-        if (isTrn) customer.trn = taxNumber;
-        else customer.gstin = taxNumber;
-      }
-      if (custAddress) customer.billing_address = custAddress;
-      if (contactPerson) customer.contact_person = contactPerson;
-      if (custEmail) customer.email = custEmail;
-      if (paymentTermsVal !== undefined && paymentTermsVal !== null) customer.payment_terms = paymentTermsVal;
-      if (prjName && prjName !== 'General Corporate Billing') {
-        customer.default_project_id = prjId || customer.default_project_id;
-        customer.default_project_name = prjName;
-      }
-      if (poRef) customer.last_po_reference = poRef;
-      this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
-    }
-
-    // Collect line items
-    const lineItems = [];
-    let taxableSubtotal = 0;
-    let cgstTotal = 0;
-    let sgstTotal = 0;
-    let igstTotal = 0;
-    let totalTax = 0;
-
-    const pos = (document.getElementById('inv-cust-pos').value || '').toLowerCase();
-    const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
-
-    const rows = document.querySelectorAll('#inv-items-tbody tr');
-    rows.forEach((tr, idx) => {
-      const desc = tr.querySelector('.row-desc').value.trim() || 'Civil & Architectural Works';
-      const hsn = tr.querySelector('.row-hsn').value.trim() || '9954';
-      const qty = Number(tr.querySelector('.row-qty').value) || 1;
-      const uom = (tr.querySelector('.row-uom').value || '').trim().toUpperCase() || 'LSUM';
-      const unitPrice = Number(tr.querySelector('.row-rate').value) || 0;
-      const taxRate = Number(tr.querySelector('.row-gst').value) || 0;
-      const explicitPct = Number(tr.querySelector('.row-pct-val')?.value);
-
-      const isPercent = uom === '%' || uom.includes('PERCENT');
-      let taxable = 0;
-      let pctClaimed = null;
-
-      if (isPercent) {
-        if (!isNaN(explicitPct) && explicitPct > 0) {
-          pctClaimed = explicitPct;
-          taxable = (qty * unitPrice) * (explicitPct / 100);
-        } else if (qty > 0 && qty <= 100) {
-          pctClaimed = qty;
-          taxable = unitPrice * (qty / 100);
-        } else if (qty > 0 && qty < 1) {
-          pctClaimed = qty * 100;
-          taxable = unitPrice * qty;
+      // Check if line items exist in table
+      let rows = document.querySelectorAll('#inv-items-tbody tr:not(.inv-items-empty-row)');
+      if (rows.length === 0) {
+        if (status === 'issued') {
+          alert('Please add at least one line item to the invoice before issuing.');
+          const addBtn = document.getElementById('inv-add-row-btn');
+          if (addBtn) addBtn.click();
+          if (submitBtn) submitBtn.disabled = false;
+          if (draftBtn) draftBtn.disabled = false;
+          return;
         } else {
-          pctClaimed = 100;
+          // If saving as draft with 0 rows, auto-add a draft placeholder item
+          const addBtn = document.getElementById('inv-add-row-btn');
+          if (addBtn) addBtn.click();
+          rows = document.querySelectorAll('#inv-items-tbody tr:not(.inv-items-empty-row)');
+        }
+      }
+
+      // Safe Customer lookup
+      const custId = custInput.getAttribute('data-cust-id');
+      const cleanClient = clientName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+      let customer = (this.db?.customers || []).find(c => {
+        if (!c) return false;
+        if (custId && c.id === custId) return true;
+        const cName = (c.name || '').toLowerCase();
+        if (cName === clientName.toLowerCase()) return true;
+        const cClean = cName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+        return cClean === cleanClient;
+      });
+
+      if (!customer) {
+        const newCustId = 'cust-' + Date.now();
+        customer = {
+          id: newCustId,
+          code: 'CUST-' + Math.floor(1000 + Math.random() * 9000),
+          name: clientName,
+          billing_address: custAddress,
+          contact_person: contactPerson,
+          email: custEmail,
+          country: isTrn ? 'UAE' : 'India',
+          gstin: !isTrn ? taxNumber : '',
+          trn: isTrn ? taxNumber : '',
+          place_of_supply: posVal || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
+          payment_terms: paymentTermsVal,
+          default_project_id: prjId || null,
+          default_project_name: prjName || '',
+          last_po_reference: poRef || '',
+          status: 'active'
+        };
+        if (!this.db.customers) this.db.customers = [];
+        this.db.customers.push(customer);
+        this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
+      } else {
+        if (posVal) customer.place_of_supply = posVal;
+        if (taxNumber) {
+          if (isTrn) customer.trn = taxNumber;
+          else customer.gstin = taxNumber;
+        }
+        if (custAddress) customer.billing_address = custAddress;
+        if (contactPerson) customer.contact_person = contactPerson;
+        if (custEmail) customer.email = custEmail;
+        if (paymentTermsVal !== undefined && paymentTermsVal !== null) customer.payment_terms = paymentTermsVal;
+        if (prjName && prjName !== 'General Corporate Billing') {
+          customer.default_project_id = prjId || customer.default_project_id;
+          customer.default_project_name = prjName;
+        }
+        if (poRef) customer.last_po_reference = poRef;
+        this.syncApi('create_customer', { customer }).catch(e => console.warn('Customer auto-persist:', e));
+      }
+
+      // Collect line items
+      const lineItems = [];
+      let taxableSubtotal = 0;
+      let cgstTotal = 0;
+      let sgstTotal = 0;
+      let igstTotal = 0;
+      let totalTax = 0;
+
+      const pos = (posVal || '').toLowerCase();
+      const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
+
+      rows.forEach((tr, idx) => {
+        const desc = tr.querySelector('.row-desc')?.value?.trim() || 'Civil & Architectural Works';
+        const hsn = tr.querySelector('.row-hsn')?.value?.trim() || '9954';
+        const qty = Number(tr.querySelector('.row-qty')?.value) || 1;
+        const uom = (tr.querySelector('.row-uom')?.value || '').trim().toUpperCase() || 'LSUM';
+        const unitPrice = Number(tr.querySelector('.row-rate')?.value) || 0;
+        const taxRate = Number(tr.querySelector('.row-gst')?.value) || (isTrn ? 5 : 18);
+        const explicitPct = Number(tr.querySelector('.row-pct-val')?.value);
+
+        const isPercent = uom === '%' || uom.includes('PERCENT');
+        let taxable = 0;
+        let pctClaimed = null;
+
+        if (isPercent) {
+          if (!isNaN(explicitPct) && explicitPct > 0) {
+            pctClaimed = explicitPct;
+            taxable = (qty * unitPrice) * (explicitPct / 100);
+          } else if (qty > 0 && qty <= 100) {
+            pctClaimed = qty;
+            taxable = unitPrice * (qty / 100);
+          } else if (qty > 0 && qty < 1) {
+            pctClaimed = qty * 100;
+            taxable = unitPrice * qty;
+          } else {
+            pctClaimed = 100;
+            taxable = qty * unitPrice;
+          }
+        } else {
           taxable = qty * unitPrice;
         }
-      } else {
-        taxable = qty * unitPrice;
-      }
 
-      const tax = taxable * (taxRate / 100);
-      const total = taxable + tax;
+        const tax = taxable * (taxRate / 100);
+        const total = taxable + tax;
 
-      let cgst = 0, sgst = 0, igst = 0;
-      if (!isTrn) {
-        if (isInterState) {
-          igst = tax;
-        } else {
-          cgst = tax / 2;
-          sgst = tax / 2;
+        let cgst = 0, sgst = 0, igst = 0;
+        if (!isTrn) {
+          if (isInterState) {
+            igst = tax;
+          } else {
+            cgst = tax / 2;
+            sgst = tax / 2;
+          }
         }
-      }
 
-      taxableSubtotal += taxable;
-      totalTax += tax;
-      cgstTotal += cgst;
-      sgstTotal += sgst;
-      igstTotal += igst;
+        taxableSubtotal += taxable;
+        totalTax += tax;
+        cgstTotal += cgst;
+        sgstTotal += sgst;
+        igstTotal += igst;
 
-      lineItems.push({
-        sr: idx + 1,
-        name: desc,
-        description: desc,
-        hsn_sac_code: hsn,
-        qty,
-        progress_pct: pctClaimed,
-        uom,
-        unit: uom,
-        unit_price: unitPrice,
-        project_price: isPercent ? unitPrice : (qty * unitPrice),
-        invoice_amount: taxable,
-        taxable_amount: taxable,
-        gst_rate: taxRate,
-        vat_rate: taxRate,
-        tax_rate: taxRate,
-        cgst_amount: cgst,
-        sgst_amount: sgst,
-        igst_amount: igst,
-        vat_amount: isTrn ? tax : 0,
-        tax_amount: tax,
-        total_amount: total
+        lineItems.push({
+          sr: idx + 1,
+          name: desc,
+          description: desc,
+          hsn_sac_code: hsn,
+          qty,
+          progress_pct: pctClaimed,
+          uom,
+          unit: uom,
+          unit_price: unitPrice,
+          project_price: isPercent ? unitPrice : (qty * unitPrice),
+          invoice_amount: taxable,
+          taxable_amount: taxable,
+          gst_rate: taxRate,
+          vat_rate: taxRate,
+          tax_rate: taxRate,
+          cgst_amount: cgst,
+          sgst_amount: sgst,
+          igst_amount: igst,
+          vat_amount: isTrn ? tax : 0,
+          tax_amount: tax,
+          total_amount: total
+        });
       });
-    });
 
-    const grandTotal = taxableSubtotal + totalTax;
+      const grandTotal = taxableSubtotal + totalTax;
 
-    const newInvoice = {
-      id: invoiceId,
-      invoice_no: invoiceNo,
-      company_id: this.activeCompanyId || 'rayan-corp-uae',
-      customer_id: customer.id,
-      customer_name: customer.name,
-      customer_address: custAddress,
-      contact_person: contactPerson,
-      email: custEmail,
-      customer_gstin: isTrn ? (customer.gstin || '') : taxNumber,
-      customer_trn: isTrn ? taxNumber : (customer.trn || ''),
-      tax_regime: taxRegime,
-      tax_type: isTrn ? 'TRN' : 'GSTIN',
-      tax_number: taxNumber,
-      currency,
-      currency_symbol: currencySym,
-      place_of_supply: document.getElementById('inv-cust-pos')?.value || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
-      project_id: prjId,
-      project_name: prjName,
-      po_reference: poRef,
-      invoice_date: invDate,
-      due_date: dueDateVal,
-      payment_terms: paymentTermsVal,
-      payment_terms_label: noDueDate ? 'Due Upon Receipt / No Due Date' : `${paymentTermsVal} Days Net`,
-      line_items: lineItems,
-      taxable_subtotal: taxableSubtotal,
-      cgst_total: cgstTotal,
-      sgst_total: sgstTotal,
-      igst_total: igstTotal,
-      vat_total: isTrn ? totalTax : 0,
-      total_tax: totalTax,
-      grand_total: grandTotal,
-      amount_paid: 0,
-      balance_due: grandTotal,
-      status,
-      notes: notesVal,
-      amount_in_words: this.numberToEnglishWords(grandTotal) + ` ${currency} Only.`,
-      created_by: this.currentUser?.name || 'Arshad Alam Shaikh',
-      created_at: new Date().toISOString()
-    };
+      const newInvoice = {
+        id: invoiceId,
+        invoice_no: invoiceNo,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        customer_id: customer?.id || '',
+        customer_name: customer?.name || clientName,
+        customer_address: custAddress,
+        contact_person: contactPerson,
+        email: custEmail,
+        customer_gstin: isTrn ? (customer?.gstin || '') : taxNumber,
+        customer_trn: isTrn ? taxNumber : (customer?.trn || ''),
+        tax_regime: taxRegime,
+        tax_type: isTrn ? 'TRN' : 'GSTIN',
+        tax_number: taxNumber,
+        currency,
+        currency_symbol: currencySym,
+        place_of_supply: posVal || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
+        project_id: prjId,
+        project_name: prjName,
+        po_reference: poRef,
+        invoice_date: invDate,
+        due_date: dueDateVal,
+        payment_terms: paymentTermsVal,
+        payment_terms_label: noDueDate ? 'Due Upon Receipt / No Due Date' : `${paymentTermsVal} Days Net`,
+        line_items: lineItems,
+        taxable_subtotal: taxableSubtotal,
+        cgst_total: cgstTotal,
+        sgst_total: sgstTotal,
+        igst_total: igstTotal,
+        vat_total: isTrn ? totalTax : 0,
+        total_tax: totalTax,
+        grand_total: grandTotal,
+        amount_paid: 0,
+        balance_due: grandTotal,
+        status, // 'draft' or 'issued'
+        notes: notesVal,
+        amount_in_words: this.numberToEnglishWords(grandTotal) + ` ${currency} Only.`,
+        created_by: this.currentUser?.name || 'Arshad Alam Shaikh',
+        created_at: new Date().toISOString()
+      };
 
-    // Store immediately into local DB state
-    if (!this.db.invoices) this.db.invoices = [];
-    const existingIdx = this.db.invoices.findIndex(i => i.id === newInvoice.id || i.invoice_no === newInvoice.invoice_no);
-    if (existingIdx >= 0) {
-      this.db.invoices[existingIdx] = newInvoice;
-    } else {
-      this.db.invoices.unshift(newInvoice);
-    }
-    localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-
-    // Sync to API
-    const res = await this.syncApi('create_invoice', { invoice: newInvoice });
-    if (res && res.data && typeof res.data === 'object') {
-      this.db = this.mergeWithSeedData(res.data);
+      // Store immediately into local DB state
+      if (!this.db.invoices) this.db.invoices = [];
+      const existingIdx = this.db.invoices.findIndex(i => i.id === newInvoice.id || i.invoice_no === newInvoice.invoice_no);
+      if (existingIdx >= 0) {
+        this.db.invoices[existingIdx] = newInvoice;
+      } else {
+        this.db.invoices.unshift(newInvoice);
+      }
       try {
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       } catch (e) {}
+
+      // Sync to backend API
+      try {
+        const res = await this.syncApi('create_invoice', { invoice: newInvoice });
+        if (res && res.data && typeof res.data === 'object') {
+          this.db = this.mergeWithSeedData(res.data);
+          try {
+            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+          } catch (e) {}
+        }
+      } catch (syncErr) {
+        console.warn('Backend sync warning (fallback offline):', syncErr);
+      }
+
+      // Close creation modal and switch to invoices tab
+      this.closeModal('modal-invoice');
+      this.switchTab('invoices');
+
+      if (status === 'draft') {
+        alert(`✓ Invoice ${invoiceNo} saved as DRAFT successfully!\n\nYou can review it in the Invoices table under the "Draft" filter, edit it at any time, or click "Issue" when ready.`);
+      } else {
+        alert(`✓ Invoice ${invoiceNo} issued and posted successfully!`);
+        // Immediately open the newly generated tax invoice receipt!
+        this.openInvoicePrintModal(newInvoice.id);
+      }
+    } catch (err) {
+      console.error('Invoice save failed:', err);
+      alert('Error saving invoice: ' + (err.message || 'Please check form inputs.'));
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (draftBtn) draftBtn.disabled = false;
     }
+  }
 
-    // Close creation modal and re-render underlying tables
-    this.closeModal('modal-invoice');
-    this.switchTab('invoices');
-
-    // Immediately open the newly generated tax invoice receipt!
-    this.openInvoicePrintModal(newInvoice.id);
+  async postDraftInvoice(invoiceId) {
+    const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    if (!inv) {
+      alert('Invoice not found.');
+      return;
+    }
+    if (!confirm(`Are you sure you want to officially issue and post Draft Invoice ${inv.invoice_no}?`)) {
+      return;
+    }
+    inv.status = 'issued';
+    inv.updated_at = new Date().toISOString();
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) {}
+    await this.syncApi('create_invoice', { invoice: inv });
+    this.renderInvoicesTab(document.getElementById('fin-content-pane'));
+    alert(`✓ Invoice ${inv.invoice_no} has been officially issued and posted.`);
+    this.openInvoicePrintModal(inv.id);
   }
 
   // 2. INVOICE DETAIL & PDF GENERATION PREVIEW
   openInvoiceDetail(invoiceId) {
     this.openInvoicePrintModal(invoiceId);
+  }
+
+  // 2A. EDIT INVOICE MODAL
+  openEditInvoiceModal(invoiceId) {
+    this.openCreateInvoiceModal(invoiceId);
   }
 
   // 2B. VENDOR PURCHASE BILL DETAIL MODAL

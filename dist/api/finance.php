@@ -2673,8 +2673,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db = $body['full_db'];
                 if ($pdo) {
                     try {
-                        $pdo->exec("DELETE FROM finance_invoices WHERE invoice_no LIKE 'INV-2026-%'");
-                        $pdo->exec("DELETE FROM finance_receipts WHERE receipt_no LIKE 'REC-2026-%'");
+                        // Only cleanup specific old mock seeds if needed, never delete user invoices or receipts
                         $pdo->exec("DELETE FROM finance_customers WHERE code IN ('CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK')");
                     } catch (Exception $e) {
                         error_log("Mock cleanup error: " . $e->getMessage());
