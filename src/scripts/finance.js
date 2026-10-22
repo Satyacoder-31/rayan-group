@@ -196,7 +196,20 @@ class FinanceApp {
       'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003',
       'pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681',
       'pv-rg-2026-001', 'pv-rg-2026-002', 'pv-rg-2026-003',
-      'dn-rg-001', 'dn-rg-2026-001'
+      'dn-rg-001', 'dn-rg-2026-001',
+      'exp-rg-001', 'exp-rg-002', 'exp-rg-003',
+      'exp-rg-2026-001', 'exp-rg-2026-002', 'exp-rg-2026-003',
+      'po-rec-11008',
+      'vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae',
+      'vend-001', 'vend-002', 'vend-003', 'vend-004',
+      'cust-004', 'prj-dpa-01',
+      'doc-001', 'doc-002', 'doc-003', 'doc-004',
+      'chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01',
+      'cv-01', 'cv-02', 'cv-03',
+      'wire-01', 'wire-02', 'wire-04', 'wire-05',
+      'lt-01', 'lt-02',
+      'notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee',
+      'aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp'
     ]);
 
     const isBlacklisted = (item) => {
@@ -205,7 +218,10 @@ class FinanceApp {
       const billNo = String(item.bill_no || '').trim().toLowerCase();
       const vouchNo = String(item.voucher_no || '').trim().toLowerCase();
       const dnNo = String(item.debit_note_no || '').trim().toLowerCase();
-      return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo);
+      const expNo = String(item.expense_no || '').trim().toLowerCase();
+      const poNo = String(item.po_no || '').trim().toLowerCase();
+      const chequeNo = String(item.cheque_no || '').trim().toLowerCase();
+      return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo) || dummyBlacklist.has(expNo) || dummyBlacklist.has(poNo) || dummyBlacklist.has(chequeNo);
     };
 
     for (const key of collections) {
@@ -2142,13 +2158,13 @@ class FinanceApp {
                   <div class="fin-nav-subitem" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
                     <span class="fin-subitem-text">Receipt Voucher (Sample)</span>
                   </div>
-                  <div class="fin-nav-subitem" onclick="window.finApp.openPaymentPrintModal('pay-rg-003')">
+                  <div class="fin-nav-subitem" onclick="window.finApp.openPaymentPrintModal()">
                     <span class="fin-subitem-text">Payment Voucher (Sample)</span>
                   </div>
-                  <div class="fin-nav-subitem" onclick="window.finApp.openExpensePrintModal('exp-rg-001')">
+                  <div class="fin-nav-subitem" onclick="window.finApp.openExpensePrintModal()">
                     <span class="fin-subitem-text">Expense Claim Receipt</span>
                   </div>
-                  <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-rec-11008')">
+                  <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-lpo-bd-2026-12')">
                     <span class="fin-subitem-text">Purchase Order (2p)</span>
                   </div>
                 </div>
@@ -2809,8 +2825,8 @@ class FinanceApp {
           <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
             💳 Receipt Voucher (REC-RV-44025)
           </button>
-          <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openPOPrintModal('po-rec-11008')">
-            📑 Purchase Order (PO-REC-11008)
+          <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openPOPrintModal('po-lpo-bd-2026-12')">
+            📑 Purchase Order (LPO/BD/2026/12)
           </button>
         </div>
       </div>
@@ -3179,7 +3195,15 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody>
-              ${bills.map(b => `
+              ${bills.length === 0 ? `
+                <tr>
+                  <td colspan="12" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">📥</div>
+                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No purchase bills recorded yet</div>
+                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Purchase Bill" to record a new supplier bill.</div>
+                  </td>
+                </tr>
+              ` : bills.map(b => `
                 <tr>
                   <td><strong>${b.bill_no}</strong></td>
                   <td>${b.vendor_invoice_no}</td>
@@ -3523,7 +3547,15 @@ class FinanceApp {
                 </tr>
               </thead>
               <tbody>
-                ${payments.map(p => `
+                ${payments.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                      <div style="font-size:1.6rem; margin-bottom:0.4rem;">📤</div>
+                      <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No vendor payments recorded yet</div>
+                      <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Vendor Payment" to disburse funds to a supplier.</div>
+                    </td>
+                  </tr>
+                ` : payments.map(p => `
                   <tr>
                     <td><strong>${p.voucher_no}</strong></td>
                     <td>${this.formatDate(p.payment_date)}</td>
@@ -3887,7 +3919,15 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody>
-              ${debitNotes.map(dn => `
+              ${debitNotes.length === 0 ? `
+                <tr>
+                  <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔄</div>
+                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No debit notes recorded yet</div>
+                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Debit Note" to issue vendor deductions or transit returns.</div>
+                  </td>
+                </tr>
+              ` : debitNotes.map(dn => `
                 <tr>
                   <td><strong>${dn.debit_note_no}</strong></td>
                   <td><code>${dn.bill_no}</code></td>
@@ -4456,7 +4496,15 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody>
-              ${expenses.map(exp => `
+              ${expenses.length === 0 ? `
+                <tr>
+                  <td colspan="11" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">🧾</div>
+                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No expense claims recorded yet</div>
+                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Expense Claim" to track operational or site expenditures.</div>
+                  </td>
+                </tr>
+              ` : expenses.map(exp => `
                 <tr>
                   <td><strong>${exp.expense_no}</strong></td>
                   <td>${this.formatDate(exp.date)}</td>
@@ -4496,7 +4544,7 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Issue official purchase commitments to suppliers and track fulfillment versus billing.</p>
           </div>
           <div class="fin-panel-actions">
-            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openPOPrintModal('po-rec-11008')">
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openPOPrintModal('po-lpo-bd-2026-12')">
               📑 Sample Purchase Order (2p)
             </button>
             ${this.hasPermission('create_po') ? `
@@ -4823,7 +4871,15 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody>
-              ${docs.map(doc => `
+              ${docs.length === 0 ? `
+                <tr>
+                  <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">📁</div>
+                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No documents uploaded yet</div>
+                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Upload Document" to attach contracts, delivery notes, or financial records.</div>
+                  </td>
+                </tr>
+              ` : docs.map(doc => `
                 <tr>
                   <td><strong>📑 ${doc.name}</strong></td>
                   <td><span class="fin-badge fin-badge-issued">${doc.category}</span></td>
@@ -12309,7 +12365,7 @@ class FinanceApp {
   openPOPrintModal(poId, isVerifiedScan = false) {
     let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
     if (!po) {
-      po = (this.db?.purchase_orders || []).find(p => p.po_no === 'PO-REC-11008') || (this.db?.purchase_orders || [])[0] || {};
+      po = (this.db?.purchase_orders || []).find(p => p.po_no === 'LPO/BD/2026/12') || (this.db?.purchase_orders || [])[0] || {};
     }
 
     const modalHtml = `
@@ -12378,7 +12434,7 @@ class FinanceApp {
 
                 <div class="doc-header-center">
                   <div class="doc-title-en">PURCHASE ORDER</div>
-                  <div class="doc-number-bold">${po.po_no || 'PO-REC-11008'}</div>
+                  <div class="doc-number-bold">${po.po_no || 'LPO/BD/2026/12'}</div>
                 </div>
 
                 <div class="doc-id-card">
@@ -12572,7 +12628,7 @@ class FinanceApp {
                 </div>
                 <div class="doc-id-card">
                   <div class="doc-title-en">PURCHASE ORDER</div>
-                  <div class="doc-number-pill">${po.po_no || 'PO-REC-11008'}</div>
+                  <div class="doc-number-pill">${po.po_no || 'LPO/BD/2026/12'}</div>
                 </div>
               </div>
 
@@ -13760,7 +13816,16 @@ class FinanceApp {
   openExpensePrintModal(expenseId) {
     let exp = (this.db?.expenses || []).find(e => e.id === expenseId || e.expense_no === expenseId);
     if (!exp) {
-      exp = (this.db?.expenses || [])[0] || {};
+      exp = (this.db?.expenses || [])[0] || {
+        expense_no: 'EXP-RG-2026-001',
+        category: 'Operational Expense',
+        description: 'Site / Office Operational Expenditure',
+        amount: 0,
+        tax_amount: 0,
+        total_amount: 0,
+        date: new Date().toISOString().split('T')[0],
+        status: 'approved'
+      };
     }
 
     const comp = (this.db?.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) || this.db?.companies?.[0];
@@ -14059,9 +14124,16 @@ class FinanceApp {
   openPaymentPrintModal(paymentId, isVerifiedScan = false) {
     let pay = (this.db?.vendor_payments || []).find(p => p.id === paymentId || p.voucher_no === paymentId);
     if (!pay) {
-      pay = (this.db?.vendor_payments || []).find(p => p.voucher_no === 'PV-RG-2026-003') ||
-            (this.db?.vendor_payments || [])[0] ||
-            (defaultSeedData.vendor_payments || [])[0] || {};
+      pay = (this.db?.vendor_payments || [])[0] || {
+        voucher_no: 'PV-RG-2026-001',
+        payment_date: new Date().toISOString().split('T')[0],
+        vendor_name: 'Vendor Disbursement',
+        payment_mode: 'Online',
+        reference_no: 'ADCB-FT-00000',
+        amount_paid: 0,
+        allocations: [],
+        notes: 'Corporate vendor disbursement voucher.'
+      };
     }
 
     const comp = (this.db?.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) || this.db?.companies?.[0];

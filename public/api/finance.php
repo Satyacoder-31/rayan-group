@@ -504,6 +504,18 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003'];
     $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pv-rg-2026-001', 'pv-rg-2026-002', 'pv-rg-2026-003'];
     $dummyDnIds = ['dn-rg-001', 'dn-rg-2026-001'];
+    $dummyExpIds = ['exp-rg-001', 'exp-rg-002', 'exp-rg-003', 'exp-rg-2026-001', 'exp-rg-2026-002', 'exp-rg-2026-003'];
+    $dummyPoIds = ['po-rec-11008'];
+    $dummyDocIds = ['doc-001', 'doc-002', 'doc-003', 'doc-004'];
+    $dummyVendorIds = ['vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004'];
+    $dummyCustIds = ['cust-004'];
+    $dummyProjIds = ['prj-dpa-01'];
+    $dummyChequeIds = ['chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01'];
+    $dummyCvIds = ['cv-01', 'cv-02', 'cv-03'];
+    $dummyWireIds = ['wire-01', 'wire-02', 'wire-04', 'wire-05'];
+    $dummyLtIds = ['lt-01', 'lt-02'];
+    $dummyNotifIds = ['notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee'];
+    $dummyAudIds = ['aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp'];
 
     $changed = false;
 
@@ -512,6 +524,18 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003') OR bill_no IN ('BILL-RG-2026-001', 'BILL-RG-2026-002', 'BILL-RG-2026-003')");
             $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681') OR voucher_no IN ('PV-RG-2026-001', 'PV-RG-2026-002', 'PV-RG-2026-003')");
             $pdo->exec("DELETE FROM finance_debit_notes WHERE id IN ('dn-rg-001') OR debit_note_no IN ('DN-RG-2026-001')");
+            $pdo->exec("DELETE FROM finance_expenses WHERE id IN ('exp-rg-001', 'exp-rg-002', 'exp-rg-003') OR expense_no IN ('EXP-RG-2026-001', 'EXP-RG-2026-002', 'EXP-RG-2026-003')");
+            $pdo->exec("DELETE FROM finance_purchase_orders WHERE id = 'po-rec-11008' OR po_no = 'PO-REC-11008'");
+            $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
+            $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004')");
+            $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004')");
+            $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01')");
+            $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
+            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-01', 'wire-02', 'wire-04', 'wire-05')");
+            $pdo->exec("DELETE FROM finance_loan_transactions WHERE id IN ('lt-01', 'lt-02')");
+            $pdo->exec("DELETE FROM finance_notifications WHERE id IN ('notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee')");
+            $pdo->exec("DELETE FROM finance_audit_logs WHERE id IN ('aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp')");
         } catch (Exception $e) {}
     }
 
@@ -522,9 +546,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $no = strtolower(trim($b['bill_no'] ?? ''));
             return !in_array($id, $dummyBillIds) && !in_array($no, $dummyBillIds);
         }));
-        if (count($data['purchase_bills']) !== $orig) {
-            $changed = true;
-        }
+        if (count($data['purchase_bills']) !== $orig) $changed = true;
     }
 
     if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
@@ -534,9 +556,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $no = strtolower(trim($p['voucher_no'] ?? ''));
             return !in_array($id, $dummyPayIds) && !in_array($no, $dummyPayIds);
         }));
-        if (count($data['vendor_payments']) !== $orig) {
-            $changed = true;
-        }
+        if (count($data['vendor_payments']) !== $orig) $changed = true;
     }
 
     if (!empty($data['debit_notes']) && is_array($data['debit_notes'])) {
@@ -546,9 +566,117 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $no = strtolower(trim($dn['debit_note_no'] ?? ''));
             return !in_array($id, $dummyDnIds) && !in_array($no, $dummyDnIds);
         }));
-        if (count($data['debit_notes']) !== $orig) {
-            $changed = true;
-        }
+        if (count($data['debit_notes']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['expenses']) && is_array($data['expenses'])) {
+        $orig = count($data['expenses']);
+        $data['expenses'] = array_values(array_filter($data['expenses'], function($exp) use ($dummyExpIds) {
+            $id = strtolower(trim($exp['id'] ?? ''));
+            $no = strtolower(trim($exp['expense_no'] ?? ''));
+            return !in_array($id, $dummyExpIds) && !in_array($no, $dummyExpIds);
+        }));
+        if (count($data['expenses']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {
+        $orig = count($data['purchase_orders']);
+        $data['purchase_orders'] = array_values(array_filter($data['purchase_orders'], function($po) use ($dummyPoIds) {
+            $id = strtolower(trim($po['id'] ?? ''));
+            $no = strtolower(trim($po['po_no'] ?? ''));
+            return !in_array($id, $dummyPoIds) && !in_array($no, $dummyPoIds);
+        }));
+        if (count($data['purchase_orders']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['documents']) && is_array($data['documents'])) {
+        $orig = count($data['documents']);
+        $data['documents'] = array_values(array_filter($data['documents'], function($d) use ($dummyDocIds) {
+            $id = strtolower(trim($d['id'] ?? ''));
+            return !in_array($id, $dummyDocIds);
+        }));
+        if (count($data['documents']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['vendors']) && is_array($data['vendors'])) {
+        $orig = count($data['vendors']);
+        $data['vendors'] = array_values(array_filter($data['vendors'], function($v) use ($dummyVendorIds) {
+            $id = strtolower(trim($v['id'] ?? ''));
+            return !in_array($id, $dummyVendorIds);
+        }));
+        if (count($data['vendors']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['customers']) && is_array($data['customers'])) {
+        $orig = count($data['customers']);
+        $data['customers'] = array_values(array_filter($data['customers'], function($c) use ($dummyCustIds) {
+            $id = strtolower(trim($c['id'] ?? ''));
+            return !in_array($id, $dummyCustIds);
+        }));
+        if (count($data['customers']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['projects']) && is_array($data['projects'])) {
+        $orig = count($data['projects']);
+        $data['projects'] = array_values(array_filter($data['projects'], function($p) use ($dummyProjIds) {
+            $id = strtolower(trim($p['id'] ?? ''));
+            return !in_array($id, $dummyProjIds);
+        }));
+        if (count($data['projects']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['cheques']) && is_array($data['cheques'])) {
+        $orig = count($data['cheques']);
+        $data['cheques'] = array_values(array_filter($data['cheques'], function($chq) use ($dummyChequeIds) {
+            $id = strtolower(trim($chq['id'] ?? ''));
+            return !in_array($id, $dummyChequeIds);
+        }));
+        if (count($data['cheques']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+        $orig = count($data['cash_vouchers']);
+        $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($cv) use ($dummyCvIds) {
+            $id = strtolower(trim($cv['id'] ?? ''));
+            return !in_array($id, $dummyCvIds);
+        }));
+        if (count($data['cash_vouchers']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        $orig = count($data['bank_transfers']);
+        $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) use ($dummyWireIds) {
+            $id = strtolower(trim($bt['id'] ?? ''));
+            return !in_array($id, $dummyWireIds);
+        }));
+        if (count($data['bank_transfers']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['loan_transactions']) && is_array($data['loan_transactions'])) {
+        $orig = count($data['loan_transactions']);
+        $data['loan_transactions'] = array_values(array_filter($data['loan_transactions'], function($lt) use ($dummyLtIds) {
+            $id = strtolower(trim($lt['id'] ?? ''));
+            return !in_array($id, $dummyLtIds);
+        }));
+        if (count($data['loan_transactions']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['notifications']) && is_array($data['notifications'])) {
+        $orig = count($data['notifications']);
+        $data['notifications'] = array_values(array_filter($data['notifications'], function($n) use ($dummyNotifIds) {
+            $id = strtolower(trim($n['id'] ?? ''));
+            return !in_array($id, $dummyNotifIds);
+        }));
+        if (count($data['notifications']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['audit_logs']) && is_array($data['audit_logs'])) {
+        $orig = count($data['audit_logs']);
+        $data['audit_logs'] = array_values(array_filter($data['audit_logs'], function($a) use ($dummyAudIds) {
+            $id = strtolower(trim($a['id'] ?? ''));
+            return !in_array($id, $dummyAudIds);
+        }));
+        if (count($data['audit_logs']) !== $orig) $changed = true;
     }
 
     if ($changed && $pdo) {
