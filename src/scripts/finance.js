@@ -11806,53 +11806,53 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 12mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
 
             <!-- Header Section (Left: Logo & Company, Right: Tax Invoice Title & Metadata) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
               <div style="max-width:55%;">
-                <div style="margin-bottom:0.75rem;">
+                <div style="margin-bottom:0.4rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-size:0.92rem; font-weight:700; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.35;">
+                <div style="font-size:0.9rem; font-weight:700; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.3;">
                   ${compName}
                 </div>
-                <div style="font-size:0.85rem; color:#4b5563; line-height:1.45; margin-top:4px;">
+                <div style="font-size:0.8rem; color:#4b5563; line-height:1.4; margin-top:3px;">
                   ${compCity}<br>
                   ${compCountry}<br>
                   ${compPhone}<br>
                   ${compEmail}
-                  ${compTrn ? `<br><span style="color:#6b7280; font-size:0.78rem;">${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}</span>` : ''}
+                  ${compTrn ? `<br><span style="color:#6b7280; font-size:0.75rem;">${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}</span>` : ''}
                 </div>
               </div>
 
               <div style="text-align:right;">
-                <div style="font-size:2.15rem; font-weight:700; color:#111827; letter-spacing:-0.01em; line-height:1;">
+                <div style="font-size:1.85rem; font-weight:700; color:#111827; letter-spacing:-0.01em; line-height:1;">
                   TAX INVOICE
                 </div>
-                <div style="font-size:0.95rem; font-weight:600; color:#4b5563; margin-top:6px;">
+                <div style="font-size:0.9rem; font-weight:600; color:#4b5563; margin-top:4px;">
                   # ${inv.invoice_no || 'INV-1100002'}
                 </div>
 
-                <div style="margin-top:14px;">
-                  <div style="font-size:0.78rem; font-weight:600; color:#4b5563;">Balance Due</div>
-                  <div style="font-size:1.25rem; font-weight:700; color:#111827; margin-top:2px;">
+                <div style="margin-top:8px;">
+                  <div style="font-size:0.75rem; font-weight:600; color:#4b5563;">Balance Due</div>
+                  <div style="font-size:1.15rem; font-weight:700; color:#111827; margin-top:2px;">
                     ${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
 
-                <div style="margin-top:18px; font-size:0.85rem; color:#374151; line-height:1.6;">
+                <div style="margin-top:10px; font-size:0.82rem; color:#374151; line-height:1.5;">
                   <table style="margin-left:auto; border-collapse:collapse; text-align:right;">
                     <tr>
-                      <td style="color:#4b5563; padding-right:12px;">Invoice Date :</td>
-                      <td style="font-weight:500; color:#111827;">${formattedDate}</td>
+                      <td style="color:#4b5563; padding-right:10px; padding-bottom:2px;">Invoice Date :</td>
+                      <td style="font-weight:500; color:#111827; padding-bottom:2px;">${formattedDate}</td>
                     </tr>
                     <tr>
-                      <td style="color:#4b5563; padding-right:12px;">Terms :</td>
-                      <td style="font-weight:500; color:#111827;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
+                      <td style="color:#4b5563; padding-right:10px; padding-bottom:2px;">Terms :</td>
+                      <td style="font-weight:500; color:#111827; padding-bottom:2px;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
                     </tr>
                     <tr>
-                      <td style="color:#4b5563; padding-right:12px;">Due Date :</td>
+                      <td style="color:#4b5563; padding-right:10px;">Due Date :</td>
                       <td style="font-weight:500; color:#111827;">${formattedDueDate}</td>
                     </tr>
                   </table>
@@ -11861,33 +11861,33 @@ class FinanceApp {
             </div>
 
             <!-- Bill To & Subject Section (Unboxed, clean minimalist typography) -->
-            <div style="margin-top:2.25rem; margin-bottom:1.5rem;">
-              <div style="font-size:0.85rem; color:#6b7280; font-weight:500; margin-bottom:4px;">Bill To</div>
-              <div style="font-size:0.98rem; font-weight:700; color:#111827; text-transform:uppercase;">
+            <div style="margin-top:0.75rem; margin-bottom:0.75rem;">
+              <div style="font-size:0.78rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Bill To</div>
+              <div style="font-size:0.95rem; font-weight:700; color:#111827; text-transform:uppercase;">
                 ${inv.customer_name || 'NMDC ENERGY'}
               </div>
-              ${inv.customer_address ? `<div style="font-size:0.82rem; color:#4b5563; margin-top:2px;">${inv.customer_address}</div>` : ''}
-              ${inv.customer_trn ? `<div style="font-size:0.82rem; color:#4b5563; margin-top:2px;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.82rem; color:#4b5563; margin-top:2px;">GSTIN: ${inv.customer_gstin}</div>` : '')}
+              ${inv.customer_address ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">${inv.customer_address}</div>` : ''}
+              ${inv.customer_trn ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">GSTIN: ${inv.customer_gstin}</div>` : '')}
 
-              <div style="margin-top:1.25rem;">
-                <div style="font-size:0.85rem; color:#4b5563; margin-bottom:2px;">Subject :</div>
-                <div style="font-size:0.9rem; font-weight:600; color:#111827;">
+              <div style="margin-top:0.6rem;">
+                <div style="font-size:0.8rem; color:#4b5563; margin-bottom:1px;">Subject :</div>
+                <div style="font-size:0.88rem; font-weight:600; color:#111827;">
                   ${inv.subject || inv.project_name || (inv.line_items?.[0]?.name ? inv.line_items[0].name.split('for')[0] : 'Advance Payment')}
                 </div>
               </div>
             </div>
 
             <!-- Line Items Table (Dark Header Bar matching reference) -->
-            <table style="width:100%; border-collapse:collapse; margin-top:1rem; margin-bottom:0;">
+            <table style="width:100%; border-collapse:collapse; margin-top:0.6rem; margin-bottom:0;">
               <thead>
-                <tr style="background:#1e242d; color:#ffffff; font-size:0.82rem; font-weight:600;">
-                  <th style="padding:10px 12px; text-align:left; width:4%;">#</th>
-                  <th style="padding:10px 12px; text-align:left; width:38%;">Item &amp; Description</th>
-                  <th style="padding:10px 12px; text-align:right; width:8%;">Qty</th>
-                  <th style="padding:10px 12px; text-align:right; width:14%;">Rate</th>
-                  <th style="padding:10px 12px; text-align:right; width:14%;">Taxable Amount</th>
-                  <th style="padding:10px 12px; text-align:right; width:10%;">Tax</th>
-                  <th style="padding:10px 12px; text-align:right; width:12%;">Amount</th>
+                <tr style="background:#1e242d; color:#ffffff; font-size:0.8rem; font-weight:600;">
+                  <th style="padding:7px 10px; text-align:left; width:4%;">#</th>
+                  <th style="padding:7px 10px; text-align:left; width:38%;">Item &amp; Description</th>
+                  <th style="padding:7px 10px; text-align:right; width:8%;">Qty</th>
+                  <th style="padding:7px 10px; text-align:right; width:14%;">Rate</th>
+                  <th style="padding:7px 10px; text-align:right; width:14%;">Taxable Amount</th>
+                  <th style="padding:7px 10px; text-align:right; width:10%;">Tax</th>
+                  <th style="padding:7px 10px; text-align:right; width:12%;">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -11900,45 +11900,45 @@ class FinanceApp {
                   const total = Number(item.total_amount !== undefined ? item.total_amount : (taxable + vatAmt));
 
                   return `
-                    <tr style="border-bottom:1px solid #e5e7eb; font-size:0.85rem;">
-                      <td style="padding:12px; text-align:left; color:#4b5563; vertical-align:top;">${idx + 1}</td>
-                      <td style="padding:12px; text-align:left; vertical-align:top;">
+                    <tr style="border-bottom:1px solid #e5e7eb; font-size:0.82rem;">
+                      <td style="padding:7px 10px; text-align:left; color:#4b5563; vertical-align:top;">${idx + 1}</td>
+                      <td style="padding:7px 10px; text-align:left; vertical-align:top;">
                         <div style="color:#111827; font-weight:500;">${item.name || item.description || '20% Advance payment against PO#2002'}</div>
-                        ${item.description && item.description !== item.name ? `<div style="color:#6b7280; font-size:0.78rem; margin-top:3px;">${item.description}</div>` : ''}
+                        ${item.description && item.description !== item.name ? `<div style="color:#6b7280; font-size:0.75rem; margin-top:2px;">${item.description}</div>` : ''}
                       </td>
-                      <td style="padding:12px; text-align:right; color:#111827; vertical-align:top;">${qty.toFixed(2)}</td>
-                      <td style="padding:12px; text-align:right; color:#111827; vertical-align:top;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="padding:12px; text-align:right; color:#111827; vertical-align:top;">${taxable.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="padding:12px; text-align:right; color:#111827; vertical-align:top; line-height:1.3;">
+                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${qty.toFixed(2)}</td>
+                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxable.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top; line-height:1.2;">
                         ${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        <div style="font-size:0.72rem; color:#6b7280;">${vatRate.toFixed(2)}%</div>
+                        <div style="font-size:0.7rem; color:#6b7280;">${vatRate.toFixed(2)}%</div>
                       </td>
-                      <td style="padding:12px; text-align:right; font-weight:600; color:#111827; vertical-align:top;">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 10px; text-align:right; font-weight:600; color:#111827; vertical-align:top;">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   `;
                 }).join('')}
                 <!-- Sub Total Row -->
-                <tr style="border-top:1px solid #111827; border-bottom:1px solid #111827; font-size:0.85rem; font-weight:700;">
-                  <td colspan="4" style="padding:10px 12px; text-align:right; color:#111827;">Sub Total</td>
-                  <td style="padding:10px 12px; text-align:right; color:#111827;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  <td style="padding:10px 12px; text-align:right; color:#111827;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  <td style="padding:10px 12px; text-align:right; color:#111827;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <tr style="border-top:1px solid #111827; border-bottom:1px solid #111827; font-size:0.82rem; font-weight:700;">
+                  <td colspan="4" style="padding:7px 10px; text-align:right; color:#111827;">Sub Total</td>
+                  <td style="padding:7px 10px; text-align:right; color:#111827;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                  <td style="padding:7px 10px; text-align:right; color:#111827;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                  <td style="padding:7px 10px; text-align:right; color:#111827;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 </tr>
               </tbody>
             </table>
 
             <!-- Totals Section (Right Aligned) -->
-            <div style="display:flex; justify-content:flex-end; margin-top:14px; margin-bottom:2rem;">
-              <div style="width:290px; font-size:0.85rem;">
-                <div style="display:flex; justify-content:space-between; padding:6px 0; font-weight:700; color:#111827;">
+            <div style="display:flex; justify-content:flex-end; margin-top:8px; margin-bottom:0.75rem;">
+              <div style="width:280px; font-size:0.82rem;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; font-weight:700; color:#111827;">
                   <span>Total</span>
                   <span>${curr} ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:6px 0; color:#ef4444; font-weight:500;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#ef4444; font-weight:500;">
                   <span>Payment Made</span>
                   <span>(-) ${amountPaid > 0 ? amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 }) : (balanceDue <= 0.01 && grandTotal > 0 ? grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00')}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#f3f4f6; border-radius:4px; font-weight:800; font-size:0.98rem; color:#111827; margin-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:6px 10px; background:#f3f4f6; border-radius:4px; font-weight:800; font-size:0.92rem; color:#111827; margin-top:3px;">
                   <span>Balance Due</span>
                   <span>${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
@@ -11946,71 +11946,75 @@ class FinanceApp {
             </div>
 
             <!-- Tax Summary Table -->
-            <div style="margin-top:1.5rem; margin-bottom:1.5rem;">
-              <div style="font-size:0.9rem; font-weight:700; color:#111827; margin-bottom:8px;">Tax Summary</div>
-              <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+            <div style="margin-top:0.75rem; margin-bottom:0.75rem;">
+              <div style="font-size:0.82rem; font-weight:700; color:#111827; margin-bottom:4px;">Tax Summary</div>
+              <table style="width:100%; border-collapse:collapse; font-size:0.78rem;">
                 <thead>
                   <tr style="background:#1e242d; color:#ffffff; text-align:left; font-weight:600;">
-                    <th style="padding:8px 12px; width:50%;">Tax Details</th>
-                    <th style="padding:8px 12px; text-align:right; width:25%;">Taxable Amount (${curr})</th>
-                    <th style="padding:8px 12px; text-align:right; width:25%;">Tax Amount (${curr})</th>
+                    <th style="padding:6px 10px; width:50%;">Tax Details</th>
+                    <th style="padding:6px 10px; text-align:right; width:25%;">Taxable Amount (${curr})</th>
+                    <th style="padding:6px 10px; text-align:right; width:25%;">Tax Amount (${curr})</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style="border-bottom:1px solid #e5e7eb;">
-                    <td style="padding:9px 12px; color:#374151;">${isIndia ? 'Standard Rate (18%)' : 'Standard Rate (5%)'}</td>
-                    <td style="padding:9px 12px; text-align:right; color:#111827;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                    <td style="padding:9px 12px; text-align:right; color:#111827;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td style="padding:6px 10px; color:#374151;">${isIndia ? 'Standard Rate (18%)' : 'Standard Rate (5%)'}</td>
+                    <td style="padding:6px 10px; text-align:right; color:#111827;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td style="padding:6px 10px; text-align:right; color:#111827;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="border-top:1px solid #111827; border-bottom:1px solid #111827; font-weight:700;">
-                    <td style="padding:9px 12px; color:#111827;">Total</td>
-                    <td style="padding:9px 12px; text-align:right; color:#111827;">${curr} ${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                    <td style="padding:9px 12px; text-align:right; color:#111827;">${curr} ${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td style="padding:6px 10px; color:#111827;">Total</td>
+                    <td style="padding:6px 10px; text-align:right; color:#111827;">${curr} ${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td style="padding:6px 10px; text-align:right; color:#111827;">${curr} ${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             <!-- Notes Section -->
-            <div style="margin-top:1.5rem; margin-bottom:1.5rem;">
-              <div style="font-size:0.85rem; font-weight:600; color:#111827; margin-bottom:4px;">Notes</div>
-              <div style="font-size:0.85rem; color:#4b5563;">
+            <div style="margin-top:0.75rem; margin-bottom:0.75rem;">
+              <div style="font-size:0.8rem; font-weight:600; color:#111827; margin-bottom:2px;">Notes</div>
+              <div style="font-size:0.8rem; color:#4b5563; line-height:1.35;">
                 ${inv.notes || 'Thanks for your business.'}
               </div>
-              <div style="font-size:0.78rem; color:#6b7280; font-style:italic; margin-top:6px;">
+              <div style="font-size:0.74rem; color:#6b7280; font-style:italic; margin-top:3px;">
                 Total in words: ${words}
               </div>
             </div>
 
             <!-- Signatures & Official Stamp Block (Requested: include logo stamp and signature) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:2rem; padding-top:1.25rem; border-top:1px solid #e5e7eb;">
-              <div style="font-size:0.8rem; color:#6b7280; line-height:1.55;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:0.85rem; padding-top:0.75rem; border-top:1px solid #e5e7eb;">
+              <div style="font-size:0.76rem; color:#6b7280; line-height:1.45;">
                 <div style="font-weight:700; color:#111827; text-transform:uppercase;">${compName}</div>
                 <div>Authorized Signatory &amp; Official Seal</div>
                 <div>Tel: ${compPhone} • Email: ${compEmail}</div>
               </div>
 
-              <div style="position:relative; width:230px; text-align:center;">
+              <div style="position:relative; width:220px; text-align:center;">
                 <!-- Real Signature -->
-                <div style="min-height:48px; display:flex; align-items:flex-end; justify-content:center; position:relative; z-index:2;">
+                <div style="min-height:38px; display:flex; align-items:flex-end; justify-content:center; position:relative; z-index:2;">
                   ${this.getRayanSignatureImg('default')}
                 </div>
-                <div style="border-top:1px solid #111827; padding-top:4px; font-weight:700; font-size:0.88rem; color:#111827;">
+                <div style="border-top:1px solid #111827; padding-top:3px; font-weight:700; font-size:0.85rem; color:#111827;">
                   Arshad Alam Shaikh
                 </div>
-                <div style="font-size:0.72rem; color:#6b7280; font-weight:500;">
+                <div style="font-size:0.7rem; color:#6b7280; font-weight:500;">
                   Authorized Signatory
                 </div>
                 <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:6px; top:-25px; z-index:5; pointer-events:none;">
+                <div style="position:absolute; right:6px; top:-22px; z-index:5; pointer-events:none;">
                   ${this.getRayanStampImg()}
                 </div>
               </div>
             </div>
 
-            <!-- Bottom Page Number -->
-            <div style="display:flex; justify-content:flex-end; margin-top:1.5rem; font-size:0.75rem; color:#9ca3af;">
-              <span>1</span>
+            <!-- Sleek Matching Dark Charcoal Theme Footer -->
+            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
+              Tel: ${compPhone} | ${compCity}, ${compCountry} | ${compEmail} | www.rayan-group.com
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
+              <span>This is a Computer Generated Tax Invoice</span>
+              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
@@ -12036,9 +12040,9 @@ class FinanceApp {
     body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
     @media print {
-      @page { size: A4 portrait; margin: 8mm; }
+      @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>
@@ -12085,6 +12089,9 @@ class FinanceApp {
             <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadReceiptDocument('${rec.id || ''}')">
+              📥 Download Document
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
               ✕ Close
             </button>
@@ -12092,20 +12099,18 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto;">
-            <!-- Top Elegant Accent Line -->
-            <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
 
             <!-- Header Section (Left: Logo & Company, Right: Receipt Title & Meta) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
               <div style="max-width:55%;">
-                <div style="margin-bottom:0.65rem;">
+                <div style="margin-bottom:0.4rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
                   ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
-                <div style="font-size:0.8rem; color:#475569; line-height:1.45; margin-top:0.35rem;">
+                <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
                   ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
                 </div>
               </div>
@@ -12114,23 +12119,23 @@ class FinanceApp {
                 <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
                   RECEIPT VOUCHER
                 </div>
-                <div style="font-size:0.88rem; color:#64748b; font-weight:700; margin-top:2px;">
+                <div style="font-size:0.82rem; color:#64748b; font-weight:700; margin-top:2px;">
                   سند قبض
                 </div>
-                <div style="font-size:0.95rem; font-weight:700; color:#0284c7; margin-top:6px;">
+                <div style="font-size:0.9rem; font-weight:700; color:#0284c7; margin-top:4px;">
                   # ${rec.receipt_no || 'REC-RV-44025'}
                 </div>
 
                 <!-- Highlight Box: Amount Received -->
-                <div style="margin-top:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:6px 14px; display:inline-block; text-align:right;">
-                  <div style="font-size:0.68rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Received</div>
-                  <div style="font-size:1.35rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
+                <div style="margin-top:6px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:4px 12px; display:inline-block; text-align:right;">
+                  <div style="font-size:0.65rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Received</div>
+                  <div style="font-size:1.2rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
                     ${curr} ${formattedAmount}
                   </div>
                 </div>
 
                 <!-- Meta Details -->
-                <div style="font-size:0.8rem; color:#475569; line-height:1.5; margin-top:8px;">
+                <div style="font-size:0.78rem; color:#475569; line-height:1.45; margin-top:6px;">
                   <div>Receipt Date : <strong>${formattedDate}</strong></div>
                   <div>Payment Mode : <strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
                   ${rec.reference_no || rec.cheque_no ? `<div>Ref / Instrument # : <strong>${rec.reference_no || rec.cheque_no}</strong></div>` : ''}
@@ -12139,19 +12144,19 @@ class FinanceApp {
             </div>
 
             <!-- Bill To (Received From) & Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; margin-bottom:0.75rem; padding:0.65rem 0.9rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
               <div>
-                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Received From (Bill To)</div>
-                <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Received From (Bill To)</div>
+                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
                   ${rec.customer_name || 'Client / Entity'}
                 </div>
-                ${rec.contact_person ? `<div style="font-size:0.82rem; color:#475569;">Attn: <strong>${rec.contact_person}</strong></div>` : ''}
-                ${rec.email ? `<div style="font-size:0.82rem; color:#475569;">Email: <a href="mailto:${rec.email}" style="color:#0284c7; text-decoration:none;">${rec.email}</a></div>` : ''}
-                ${rec.customer_address ? `<div style="font-size:0.82rem; color:#475569;">${rec.customer_address}</div>` : ''}
+                ${rec.contact_person ? `<div style="font-size:0.78rem; color:#475569;">Attn: <strong>${rec.contact_person}</strong></div>` : ''}
+                ${rec.email ? `<div style="font-size:0.78rem; color:#475569;">Email: <a href="mailto:${rec.email}" style="color:#0284c7; text-decoration:none;">${rec.email}</a></div>` : ''}
+                ${rec.customer_address ? `<div style="font-size:0.78rem; color:#475569;">${rec.customer_address}</div>` : ''}
               </div>
 
-              <div style="font-size:0.82rem; color:#475569; line-height:1.5;">
-                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Settlement Details</div>
+              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Settlement Details</div>
                 <div><strong>Subject / Towards:</strong> ${rec.notes || 'Tax Invoice Settlement'}</div>
                 <div><strong>Against Invoice:</strong> <span style="color:#0284c7; font-weight:700;">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Advance on Account')}</span></div>
                 ${rec.project_name ? `<div><strong>Project:</strong> ${rec.project_name}</div>` : ''}
@@ -12160,34 +12165,34 @@ class FinanceApp {
             </div>
 
             <!-- Simple Clean Items Table (Matching Reference Format) -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem; font-size:0.85rem;">
+            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem;">
               <thead>
-                <tr style="background:#0f172a; color:#ffffff; text-align:left;">
-                  <th style="padding:10px 12px; width:5%; text-align:center;">#</th>
-                  <th style="padding:10px 12px; width:45%;">Item &amp; Description</th>
-                  <th style="padding:10px 12px; width:25%;">Payment Mode &amp; Instrument</th>
-                  <th style="padding:10px 12px; width:25%; text-align:right;">Amount Received (${curr})</th>
+                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
+                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
+                  <th style="padding:7px 10px; width:45%;">Item &amp; Description</th>
+                  <th style="padding:7px 10px; width:25%;">Payment Mode &amp; Instrument</th>
+                  <th style="padding:7px 10px; width:25%; text-align:right;">Amount Received (${curr})</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:12px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                  <td style="padding:12px;">
-                    <div style="font-weight:700; color:#0f172a; font-size:0.9rem;">
+                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
+                  <td style="padding:8px 10px;">
+                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
                       ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
                     </div>
-                    <div style="font-size:0.78rem; color:#64748b; margin-top:3px;">
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
                       ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
                     </div>
                   </td>
-                  <td style="padding:12px; font-size:0.82rem; color:#334155;">
+                  <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
                     <div><strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
-                    <div style="color:#64748b; font-size:0.75rem;">
+                    <div style="color:#64748b; font-size:0.72rem;">
                       ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
                       ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
                     </div>
                   </td>
-                  <td style="padding:12px; text-align:right; font-weight:800; font-size:0.95rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
                     ${formattedAmount}
                   </td>
                 </tr>
@@ -12195,29 +12200,29 @@ class FinanceApp {
             </table>
 
             <!-- Financials Summary & Amount in Words -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2rem; gap:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
               <!-- Left: Total in Words & Notes -->
               <div style="flex:1;">
-                <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Total In Words:</div>
-                <div style="font-size:0.88rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.4;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Total In Words:</div>
+                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
                   ${amountInWords}
                 </div>
 
-                <div style="margin-top:1.25rem;">
-                  <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Notes:</div>
-                  <div style="font-size:0.82rem; color:#475569;">
+                <div style="margin-top:0.6rem;">
+                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:1px;">Notes:</div>
+                  <div style="font-size:0.78rem; color:#475569; line-height:1.35;">
                     Thanks for your business. Please keep a copy of this official receipt voucher for your records.
                   </div>
                 </div>
               </div>
 
               <!-- Right: Subtotal & Total Box -->
-              <div style="width:260px; border-top:1px solid #e2e8f0; padding-top:6px;">
-                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
                   <span>Sub Total</span>
                   <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:1.1rem; font-weight:800; color:#0f172a; border-top:2px solid #0f172a; margin-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
                   <span>Total Received</span>
                   <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedAmount}</span>
                 </div>
@@ -12225,10 +12230,10 @@ class FinanceApp {
             </div>
 
             <!-- Signatures & Official Stamp Block (Matching Reference Screenshot 3) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:1.5rem; border-top:1px solid #e2e8f0; margin-top:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:0.75rem; border-top:1px solid #e2e8f0; margin-top:0.75rem;">
               <!-- Left: Team Contact -->
-              <div style="font-size:0.82rem; color:#475569; line-height:1.55;">
-                <div style="margin-bottom:2px;">Best wishes,</div>
+              <div style="font-size:0.76rem; color:#475569; line-height:1.45;">
+                <div style="margin-bottom:1px;">Best wishes,</div>
                 <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Team'}</strong><br>
                 Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
                 <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
@@ -12236,29 +12241,30 @@ class FinanceApp {
               </div>
 
               <!-- Right: Real Signature + Official Stamp -->
-              <div style="position:relative; width:220px; text-align:center; padding-top:10px;">
-                <div style="position:relative; z-index:2; min-height:42px;">
+              <div style="position:relative; width:220px; text-align:center;">
+                <div style="position:relative; z-index:2; min-height:38px; display:flex; align-items:flex-end; justify-content:center;">
                   ${this.getRayanSignatureImg('receipt')}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:4px;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; font-weight:800; color:#0f172a; margin-top:2px;">
                   ${rec.receiver_sign || 'Arshad Alam Shaikh'}
                 </div>
-                <div style="font-size:0.75rem; color:#64748b; font-weight:600;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:600;">
                   Authorised Signatory
                 </div>
                 <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:5px; top:-25px; z-index:5; pointer-events:none;">
+                <div style="position:absolute; right:5px; top:-22px; z-index:5; pointer-events:none;">
                   ${this.getRayanStampImg()}
                 </div>
               </div>
             </div>
 
-            <!-- Bottom Teal Banner (Matching Rayan Official Document Format) -->
-            <div style="margin-top:2rem; background:#00a699; color:#ffffff; padding:7px 12px; border-radius:4px; font-size:0.78rem; text-align:center; font-weight:700; letter-spacing:0.02em;">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+            <!-- Sleek Matching Dark Charcoal Theme Footer -->
+            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
+              Tel: ${isIndia ? '+91 22 2839 0100' : '+971-25654497 / 0559945466'} | ${isIndia ? 'Mumbai, India' : 'Abu Dhabi, United Arab Emirates'} | ${isIndia ? 'info@ashaz-eng.com' : 'rayan@rayan-group.com'} | www.rayan-group.com
             </div>
-            <div style="text-align:center; font-size:8px; color:#94a3b8; margin-top:5px;">
-              This is a Computer Generated Official Receipt Voucher
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
+              <span>This is a Computer Generated Official Receipt Voucher</span>
+              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
@@ -12267,6 +12273,36 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+  }
+
+  downloadReceiptDocument(receiptId) {
+    let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt Voucher - ${rec?.receipt_no || 'Document'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 6mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${rec?.receipt_no || 'Receipt_Voucher'}.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${rec?.receipt_no || 'Receipt Voucher'} document.`, 'success');
+    }
   }
 
   // 3. PURCHASE ORDER PRINT MODAL (2 Full Pages)
@@ -13770,20 +13806,18 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto;">
-            <!-- Top Elegant Accent Line -->
-            <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
 
             <!-- Header Section (Left: Logo & Company, Right: Expense Title & Meta) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
               <div style="max-width:55%;">
-                <div style="margin-bottom:0.65rem;">
+                <div style="margin-bottom:0.4rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
                   ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
-                <div style="font-size:0.8rem; color:#475569; line-height:1.45; margin-top:0.35rem;">
+                <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
                   ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
                 </div>
               </div>
@@ -13792,23 +13826,23 @@ class FinanceApp {
                 <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
                   EXPENSE RECEIPT
                 </div>
-                <div style="font-size:0.88rem; color:#64748b; font-weight:700; margin-top:2px;">
+                <div style="font-size:0.82rem; color:#64748b; font-weight:700; margin-top:2px;">
                   سند صرف ومطالبة مصروفات
                 </div>
-                <div style="font-size:0.95rem; font-weight:700; color:#0284c7; margin-top:6px;">
+                <div style="font-size:0.9rem; font-weight:700; color:#0284c7; margin-top:4px;">
                   # ${exp.expense_no || 'EXP-RG-2026-004'}
                 </div>
 
                 <!-- Highlight Box: Total Amount Reimbursed -->
-                <div style="margin-top:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:6px 14px; display:inline-block; text-align:right;">
-                  <div style="font-size:0.68rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Total Disbursed</div>
-                  <div style="font-size:1.35rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
+                <div style="margin-top:6px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:4px 12px; display:inline-block; text-align:right;">
+                  <div style="font-size:0.65rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Total Disbursed</div>
+                  <div style="font-size:1.2rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
                     ${curr} ${formattedTotal}
                   </div>
                 </div>
 
                 <!-- Meta Details -->
-                <div style="font-size:0.8rem; color:#475569; line-height:1.5; margin-top:8px;">
+                <div style="font-size:0.78rem; color:#475569; line-height:1.45; margin-top:6px;">
                   <div>Claim Date : <strong>${formattedDate}</strong></div>
                   <div>Payment Channel : <strong>${exp.payment_method || 'Corporate Debit Card'}</strong></div>
                   <div>Audit Status : <strong style="color:#16a34a;">${(exp.status || 'APPROVED').toUpperCase()}</strong></div>
@@ -13818,18 +13852,18 @@ class FinanceApp {
             </div>
 
             <!-- Claimant & Cost Center / Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; margin-bottom:0.75rem; padding:0.65rem 0.9rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
               <div>
-                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Claimant (Submitted By)</div>
-                <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Claimant (Submitted By)</div>
+                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
                   ${exp.submitted_by || 'Authorized Personnel'}
                 </div>
-                <div style="font-size:0.82rem; color:#475569;">Designation / Dept: <strong>Project Field &amp; Civil Operations</strong></div>
-                <div style="font-size:0.82rem; color:#475569;">Entity: <strong>${comp ? comp.name : 'Rayan Engineering & Contracting LLC - SPC'}</strong></div>
+                <div style="font-size:0.78rem; color:#475569;">Designation / Dept: <strong>Project Field &amp; Civil Operations</strong></div>
+                <div style="font-size:0.78rem; color:#475569;">Entity: <strong>${comp ? comp.name : 'Rayan Engineering & Contracting LLC - SPC'}</strong></div>
               </div>
 
-              <div style="font-size:0.82rem; color:#475569; line-height:1.5;">
-                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Cost Center &amp; Allocation</div>
+              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Cost Center &amp; Allocation</div>
                 <div><strong>Subject / Nature:</strong> ${exp.description || 'Operational Site Expense'}</div>
                 <div><strong>Linked Project:</strong> <span style="color:#0284c7; font-weight:700;">${exp.project_name || 'General Corporate Overhead'}</span></div>
                 <div><strong>Category:</strong> ${exp.category || 'Equipment & Fuel'}</div>
@@ -13837,34 +13871,34 @@ class FinanceApp {
             </div>
 
             <!-- Simple Clean Items Table (Matching Reference Format) -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem; font-size:0.85rem;">
+            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem;">
               <thead>
-                <tr style="background:#0f172a; color:#ffffff; text-align:left;">
-                  <th style="padding:10px 12px; width:5%; text-align:center;">#</th>
-                  <th style="padding:10px 12px; width:45%;">Item / Expense Particulars</th>
-                  <th style="padding:10px 12px; width:20%; text-align:right;">Taxable Subtotal (${curr})</th>
-                  <th style="padding:10px 12px; width:15%; text-align:right;">VAT (5%) (${curr})</th>
-                  <th style="padding:10px 12px; width:15%; text-align:right;">Total (${curr})</th>
+                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
+                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
+                  <th style="padding:7px 10px; width:45%;">Item / Expense Particulars</th>
+                  <th style="padding:7px 10px; width:20%; text-align:right;">Taxable Subtotal (${curr})</th>
+                  <th style="padding:7px 10px; width:15%; text-align:right;">VAT (5%) (${curr})</th>
+                  <th style="padding:7px 10px; width:15%; text-align:right;">Total (${curr})</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:12px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                  <td style="padding:12px;">
-                    <div style="font-weight:700; color:#0f172a; font-size:0.9rem;">
+                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
+                  <td style="padding:8px 10px;">
+                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
                       ${exp.description}
                     </div>
-                    <div style="font-size:0.78rem; color:#64748b; margin-top:3px;">
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
                       ${exp.project_name ? `Project: ${exp.project_name} • ` : ''}Category: ${exp.category}
                     </div>
                   </td>
-                  <td style="padding:12px; text-align:right; font-weight:600; color:#334155; font-variant-numeric:tabular-nums;">
+                  <td style="padding:8px 10px; text-align:right; font-weight:600; color:#334155; font-variant-numeric:tabular-nums;">
                     ${formattedAmount}
                   </td>
-                  <td style="padding:12px; text-align:right; font-weight:600; color:#334155; font-variant-numeric:tabular-nums;">
+                  <td style="padding:8px 10px; text-align:right; font-weight:600; color:#334155; font-variant-numeric:tabular-nums;">
                     ${formattedTax}
                   </td>
-                  <td style="padding:12px; text-align:right; font-weight:800; font-size:0.95rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
                     ${formattedTotal}
                   </td>
                 </tr>
@@ -13872,33 +13906,33 @@ class FinanceApp {
             </table>
 
             <!-- Financials Summary & Amount in Words -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
               <!-- Left: Total in Words & Notes -->
               <div style="flex:1;">
-                <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Total In Words:</div>
-                <div style="font-size:0.88rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.4;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Total In Words:</div>
+                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
                   ${amountInWords}
                 </div>
 
-                <div style="margin-top:1.25rem;">
-                  <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Internal Audit &amp; Tax Compliance:</div>
-                  <div style="font-size:0.82rem; color:#475569;">
+                <div style="margin-top:0.6rem;">
+                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:1px;">Internal Audit &amp; Tax Compliance:</div>
+                  <div style="font-size:0.78rem; color:#475569; line-height:1.35;">
                     This operational disbursement has been audited and approved in compliance with UAE Federal Tax Authority (FTA) input VAT recovery guidelines.
                   </div>
                 </div>
               </div>
 
               <!-- Right: Subtotal & Total Box -->
-              <div style="width:260px; border-top:1px solid #e2e8f0; padding-top:6px;">
-                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
                   <span>Taxable Subtotal</span>
                   <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
                   <span>${isIndia ? 'GST (18%)' : 'UAE VAT (5%)'}</span>
                   <span style="font-variant-numeric:tabular-nums;">${formattedTax}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:1.1rem; font-weight:800; color:#0f172a; border-top:2px solid #0f172a; margin-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
                   <span>Total Disbursed</span>
                   <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedTotal}</span>
                 </div>
@@ -13907,26 +13941,26 @@ class FinanceApp {
 
             <!-- If user has an attached raw receipt image/PDF, show an embedded preview section -->
             ${exp.receipt_data ? `
-              <div style="margin-bottom:1.5rem; padding:10px 14px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; font-size:0.8rem;">
-                <div style="font-weight:700; color:#0369a1; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                  <span>📎 Attached Verification Fuel / Expense Slip: <strong>${exp.receipt_filename}</strong></span>
-                  <button type="button" class="fin-btn-quick" style="padding:3px 10px; font-size:0.75rem; border-color:#0284c7; color:#0284c7;" onclick="window.finApp.downloadRawReceiptProof('${exp.id}')">
+              <div style="margin-bottom:0.75rem; padding:8px 12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; font-size:0.78rem;">
+                <div style="font-weight:700; color:#0369a1; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+                  <span>📎 Attached Verification Slip: <strong>${exp.receipt_filename}</strong></span>
+                  <button type="button" class="fin-btn-quick" style="padding:2px 8px; font-size:0.72rem; border-color:#0284c7; color:#0284c7;" onclick="window.finApp.downloadRawReceiptProof('${exp.id}')">
                     📥 Download Original Slip &rarr;
                   </button>
                 </div>
                 ${exp.receipt_data.startsWith('data:image/') ? `
-                  <div style="text-align:center; padding:8px; background:#ffffff; border-radius:4px;">
-                    <img src="${exp.receipt_data}" alt="Receipt Slip" style="max-height:180px; max-width:100%; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+                  <div style="text-align:center; padding:6px; background:#ffffff; border-radius:4px;">
+                    <img src="${exp.receipt_data}" alt="Receipt Slip" style="max-height:120px; max-width:100%; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
                   </div>
                 ` : ''}
               </div>
             ` : ''}
 
             <!-- Signatures & Official Stamp Block (Matching Reference Screenshot 3) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:1.5rem; border-top:1px solid #e2e8f0; margin-top:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:0.75rem; border-top:1px solid #e2e8f0; margin-top:0.75rem;">
               <!-- Left: Team Contact -->
-              <div style="font-size:0.82rem; color:#475569; line-height:1.55;">
-                <div style="margin-bottom:2px;">Disbursed by,</div>
+              <div style="font-size:0.76rem; color:#475569; line-height:1.45;">
+                <div style="margin-bottom:1px;">Disbursed by,</div>
                 <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Corporate Finance'}</strong><br>
                 Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
                 <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
@@ -13934,29 +13968,30 @@ class FinanceApp {
               </div>
 
               <!-- Right: Real Signature + Official Stamp -->
-              <div style="position:relative; width:220px; text-align:center; padding-top:10px;">
-                <div style="position:relative; z-index:2; min-height:42px;">
+              <div style="position:relative; width:220px; text-align:center;">
+                <div style="position:relative; z-index:2; min-height:38px; display:flex; align-items:flex-end; justify-content:center;">
                   ${this.getRayanSignatureImg('receipt')}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:4px;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; font-weight:800; color:#0f172a; margin-top:2px;">
                   Arshad Alam Shaikh
                 </div>
-                <div style="font-size:0.75rem; color:#64748b; font-weight:600;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:600;">
                   Authorised Signatory - Rayan Group
                 </div>
                 <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:5px; top:-25px; z-index:5; pointer-events:none;">
+                <div style="position:absolute; right:5px; top:-22px; z-index:5; pointer-events:none;">
                   ${this.getRayanStampImg()}
                 </div>
               </div>
             </div>
 
-            <!-- Bottom Teal Banner (Matching Rayan Official Document Format) -->
-            <div style="margin-top:2rem; background:#00a699; color:#ffffff; padding:7px 12px; border-radius:4px; font-size:0.78rem; text-align:center; font-weight:700; letter-spacing:0.02em;">
+            <!-- Sleek Matching Dark Charcoal Theme Footer -->
+            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
               Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
             </div>
-            <div style="text-align:center; font-size:8px; color:#94a3b8; margin-top:5px;">
-              This is a Computer Generated Official Expense Claim Receipt &amp; Voucher
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
+              <span>This is a Computer Generated Official Expense Claim Receipt &amp; Voucher</span>
+              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
@@ -13983,8 +14018,9 @@ class FinanceApp {
     body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; }
     @media print {
+      @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>
@@ -14074,20 +14110,18 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2.5rem auto;">
-            <!-- Top Elegant Accent Line -->
-            <div style="height:4px; background:linear-gradient(90deg, #00a699 0%, #0284c7 100%); width:100%; border-radius:2px; margin-bottom:1.25rem;"></div>
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
 
             <!-- Header Section (Left: Logo & Company, Right: Payment Title & Meta) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.25rem; flex-wrap:wrap;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem; flex-wrap:wrap;">
               <div style="max-width:55%; min-width:280px;">
-                <div style="margin-bottom:0.65rem;">
+                <div style="margin-bottom:0.4rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
                   ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
-                <div style="font-size:0.8rem; color:#475569; line-height:1.45; margin-top:0.35rem;">
+                <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
                   ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
                 </div>
               </div>
@@ -14096,23 +14130,23 @@ class FinanceApp {
                 <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
                   PAYMENT VOUCHER
                 </div>
-                <div style="font-size:0.88rem; color:#64748b; font-weight:700; margin-top:2px;">
+                <div style="font-size:0.82rem; color:#64748b; font-weight:700; margin-top:2px;">
                   سند صرف
                 </div>
-                <div style="font-size:0.95rem; font-weight:700; color:#0284c7; margin-top:6px;">
+                <div style="font-size:0.9rem; font-weight:700; color:#0284c7; margin-top:4px;">
                   # ${pay.voucher_no || 'PV-RG-2026-001'}
                 </div>
 
                 <!-- Highlight Box: Amount Disbursed -->
-                <div style="margin-top:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:6px 14px; display:inline-block; text-align:right;">
-                  <div style="font-size:0.68rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Disbursed</div>
-                  <div style="font-size:1.35rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
+                <div style="margin-top:6px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:4px 12px; display:inline-block; text-align:right;">
+                  <div style="font-size:0.65rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Disbursed</div>
+                  <div style="font-size:1.2rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
                     ${curr} ${formattedAmount}
                   </div>
                 </div>
 
                 <!-- Meta Details -->
-                <div style="font-size:0.8rem; color:#475569; line-height:1.5; margin-top:8px;">
+                <div style="font-size:0.78rem; color:#475569; line-height:1.45; margin-top:6px;">
                   <div>Payment Date : <strong>${formattedDate}</strong></div>
                   <div>Disbursement Mode : <strong>${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</strong></div>
                   ${pay.reference_no ? `<div>Payment UTR / CMS Ref # : <strong>${pay.reference_no}</strong></div>` : ''}
@@ -14121,59 +14155,59 @@ class FinanceApp {
             </div>
 
             <!-- Payee (Vendor / Subcontractor) & Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; margin-bottom:0.75rem; padding:0.65rem 0.9rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
               <div>
-                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Disbursed To (Vendor / Subcontractor)</div>
-                <div style="font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Disbursed To (Vendor / Subcontractor)</div>
+                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
                   ${pay.vendor_name || 'Vendor / Subcontractor'}
                 </div>
-                ${vendorObj?.trn ? `<div style="font-size:0.8rem; color:#0284c7; font-weight:700;">TRN: ${vendorObj.trn}</div>` : (vendorObj?.gstin ? `<div style="font-size:0.8rem; color:#0284c7; font-weight:700;">GSTIN: ${vendorObj.gstin}</div>` : '')}
-                ${vendorObj?.code ? `<div style="font-size:0.8rem; color:#64748b; font-weight:600;">Vendor Code: ${vendorObj.code}</div>` : ''}
-                ${vendorObj?.contact_person ? `<div style="font-size:0.82rem; color:#475569;">Attn: <strong>${vendorObj.contact_person}</strong></div>` : ''}
-                ${vendorObj?.email ? `<div style="font-size:0.82rem; color:#475569;">Email: <a href="mailto:${vendorObj.email}" style="color:#0284c7; text-decoration:none;">${vendorObj.email}</a></div>` : ''}
-                ${vendorObj?.address ? `<div style="font-size:0.82rem; color:#475569;">${vendorObj.address}</div>` : ''}
+                ${vendorObj?.trn ? `<div style="font-size:0.78rem; color:#0284c7; font-weight:700;">TRN: ${vendorObj.trn}</div>` : (vendorObj?.gstin ? `<div style="font-size:0.78rem; color:#0284c7; font-weight:700;">GSTIN: ${vendorObj.gstin}</div>` : '')}
+                ${vendorObj?.code ? `<div style="font-size:0.78rem; color:#64748b; font-weight:600;">Vendor Code: ${vendorObj.code}</div>` : ''}
+                ${vendorObj?.contact_person ? `<div style="font-size:0.78rem; color:#475569;">Attn: <strong>${vendorObj.contact_person}</strong></div>` : ''}
+                ${vendorObj?.email ? `<div style="font-size:0.78rem; color:#475569;">Email: <a href="mailto:${vendorObj.email}" style="color:#0284c7; text-decoration:none;">${vendorObj.email}</a></div>` : ''}
+                ${vendorObj?.address ? `<div style="font-size:0.78rem; color:#475569;">${vendorObj.address}</div>` : ''}
               </div>
 
-              <div style="font-size:0.82rem; color:#475569; line-height:1.5;">
-                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">Disbursement &amp; Approval Details</div>
+              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Disbursement &amp; Approval Details</div>
                 <div><strong>Disbursement Mode:</strong> ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</div>
                 <div><strong>Payment UTR / CMS Ref #:</strong> <span style="color:#0284c7; font-weight:700;">${pay.reference_no || 'Direct Transfer'}</span></div>
                 <div><strong>Notes &amp; Approver Sign-off:</strong> ${pay.notes || 'Approved by CFO for immediate release'}</div>
-                <div><strong>Status:</strong> <span style="display:inline-block; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#15803d; font-weight:700; font-size:0.75rem;">RELEASED &amp; RECONCILED ✓</span></div>
+                <div><strong>Status:</strong> <span style="display:inline-block; padding:1px 6px; border-radius:4px; background:#dcfce7; color:#15803d; font-weight:700; font-size:0.72rem;">RELEASED &amp; RECONCILED ✓</span></div>
               </div>
             </div>
 
-            <!-- Allocate Against Approved Bills Section (Directly satisfies user prompt & screenshot) -->
-            <div style="margin-bottom:1.25rem; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; box-sizing:border-box;">
-              <div style="background:#f1f5f9; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0;">
-                <span style="font-size:0.78rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">
+            <!-- Allocate Against Approved Bills Section -->
+            <div style="margin-bottom:0.75rem; border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; box-sizing:border-box;">
+              <div style="background:#f1f5f9; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0;">
+                <span style="font-size:0.75rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">
                   📋 Allocate Against Approved Bills (${curr})
                 </span>
-                <span style="font-size:0.72rem; color:#64748b; font-weight:600;">
+                <span style="font-size:0.7rem; color:#64748b; font-weight:600;">
                   ${hasAllocations ? `${allocations.length} Bill(s) Linked` : 'Direct Vendor Settlement / Advance'}
                 </span>
               </div>
 
               ${hasAllocations ? `
-                <table style="width:100%; border-collapse:collapse; font-size:0.82rem; box-sizing:border-box;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; box-sizing:border-box;">
                   <thead>
                     <tr style="background:#f8fafc; color:#475569; text-align:left; border-bottom:1px solid #e2e8f0;">
-                      <th style="padding:8px 12px; width:5%; text-align:center;">#</th>
-                      <th style="padding:8px 12px; width:45%;">Approved Purchase Bill Ref</th>
-                      <th style="padding:8px 12px; width:25%;">Project / Scope</th>
-                      <th style="padding:8px 12px; width:25%; text-align:right;">Allocated Amount (${curr})</th>
+                      <th style="padding:6px 10px; width:5%; text-align:center;">#</th>
+                      <th style="padding:6px 10px; width:45%;">Approved Purchase Bill Ref</th>
+                      <th style="padding:6px 10px; width:25%;">Project / Scope</th>
+                      <th style="padding:6px 10px; width:25%; text-align:right;">Allocated Amount (${curr})</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${allocations.map((a, idx) => `
                       <tr style="border-bottom:1px solid #e2e8f0;">
-                        <td style="padding:8px 12px; text-align:center; color:#64748b;">${idx + 1}</td>
-                        <td style="padding:8px 12px;">
+                        <td style="padding:6px 10px; text-align:center; color:#64748b;">${idx + 1}</td>
+                        <td style="padding:6px 10px;">
                           <strong style="color:#0f172a;">${a.bill_no || 'Approved Bill'}</strong>
-                          ${a.vendor_invoice_no ? `<span style="font-size:0.75rem; color:#64748b;"> (Inv: ${a.vendor_invoice_no})</span>` : ''}
+                          ${a.vendor_invoice_no ? `<span style="font-size:0.72rem; color:#64748b;"> (Inv: ${a.vendor_invoice_no})</span>` : ''}
                         </td>
-                        <td style="padding:8px 12px; color:#475569;">${a.project_name || 'Civil / Architectural Procurement'}</td>
-                        <td style="padding:8px 12px; text-align:right; font-weight:700; color:#0f172a; font-variant-numeric:tabular-nums;">
+                        <td style="padding:6px 10px; color:#475569;">${a.project_name || 'Civil / Architectural Procurement'}</td>
+                        <td style="padding:6px 10px; text-align:right; font-weight:700; color:#0f172a; font-variant-numeric:tabular-nums;">
                           ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
@@ -14181,19 +14215,19 @@ class FinanceApp {
                   </tbody>
                 </table>
               ` : `
-                <div style="padding:12px 16px; background:#f0fdf4; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="color:#16a34a; font-size:1.1rem; font-weight:bold;">✓</span>
+                <div style="padding:8px 12px; background:#f0fdf4; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:#16a34a; font-size:1rem; font-weight:bold;">✓</span>
                     <div>
-                      <div style="font-size:0.84rem; font-weight:700; color:#15803d;">
+                      <div style="font-size:0.8rem; font-weight:700; color:#15803d;">
                         Direct Vendor Settlement / Advance Disbursement on Account
                       </div>
-                      <div style="font-size:0.75rem; color:#166534; margin-top:2px;">
+                      <div style="font-size:0.72rem; color:#166534; margin-top:1px;">
                         No unpaid approved bills found for this vendor in ${curr}. Disbursed directly against vendor account and signed off for release.
                       </div>
                     </div>
                   </div>
-                  <div style="text-align:right; font-size:0.85rem; font-weight:800; color:#15803d; font-variant-numeric:tabular-nums; white-space:nowrap;">
+                  <div style="text-align:right; font-size:0.82rem; font-weight:800; color:#15803d; font-variant-numeric:tabular-nums; white-space:nowrap;">
                     ${curr} ${formattedAmount}
                   </div>
                 </div>
@@ -14201,33 +14235,33 @@ class FinanceApp {
             </div>
 
             <!-- Simple Clean Particulars Table -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem; font-size:0.85rem; box-sizing:border-box;">
+            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem; box-sizing:border-box;">
               <thead>
-                <tr style="background:#0f172a; color:#ffffff; text-align:left;">
-                  <th style="padding:10px 12px; width:5%; text-align:center;">#</th>
-                  <th style="padding:10px 12px; width:45%;">Disbursement Particulars &amp; Purpose</th>
-                  <th style="padding:10px 12px; width:25%;">Payment Channel &amp; Reference</th>
-                  <th style="padding:10px 12px; width:25%; text-align:right;">Amount Disbursed (${curr})</th>
+                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
+                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
+                  <th style="padding:7px 10px; width:45%;">Disbursement Particulars &amp; Purpose</th>
+                  <th style="padding:7px 10px; width:25%;">Payment Channel &amp; Reference</th>
+                  <th style="padding:7px 10px; width:25%; text-align:right;">Amount Disbursed (${curr})</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:12px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                  <td style="padding:12px;">
-                    <div style="font-weight:700; color:#0f172a; font-size:0.9rem;">
+                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
+                  <td style="padding:8px 10px;">
+                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
                       Disbursement to ${pay.vendor_name || 'Vendor / Subcontractor'}
                     </div>
-                    <div style="font-size:0.78rem; color:#64748b; margin-top:3px;">
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
                       ${hasAllocations ? `Settlement against ${allocations.length} approved purchase bill(s)` : 'Direct Vendor Settlement / Advance on Account (No prior bill linked)'} • Notes: ${pay.notes || 'Approved by CFO for immediate release'}
                     </div>
                   </td>
-                  <td style="padding:12px; font-size:0.82rem; color:#334155;">
+                  <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
                     <div><strong>${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</strong></div>
-                    <div style="color:#64748b; font-size:0.75rem;">
+                    <div style="color:#64748b; font-size:0.72rem;">
                       ${pay.reference_no ? `Ref #: ${pay.reference_no}` : ''}
                     </div>
                   </td>
-                  <td style="padding:12px; text-align:right; font-weight:800; font-size:0.95rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
                     ${formattedAmount}
                   </td>
                 </tr>
@@ -14235,17 +14269,17 @@ class FinanceApp {
             </table>
 
             <!-- Financials Summary & Amount in Words -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; gap:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
               <!-- Left: Total in Words & Notes -->
               <div style="flex:1;">
-                <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Amount Disbursed In Words:</div>
-                <div style="font-size:0.88rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.4;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Amount Disbursed In Words:</div>
+                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
                   ${amountInWords}
                 </div>
 
-                <div style="margin-top:1.25rem;">
-                  <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Disbursement Authorization &amp; Compliance:</div>
-                  <div style="font-size:0.82rem; color:#475569;">
+                <div style="margin-top:0.6rem;">
+                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:1px;">Disbursement Authorization &amp; Compliance:</div>
+                  <div style="font-size:0.78rem; color:#475569; line-height:1.35;">
                     ${pay.notes ? `Sign-Off: <strong>${pay.notes}</strong><br>` : ''}
                     This official vendor payment voucher has been authorized by Group Finance &amp; Corporate Treasury in full compliance with Rayan Group Financial Governance.
                   </div>
@@ -14253,12 +14287,12 @@ class FinanceApp {
               </div>
 
               <!-- Right: Subtotal & Total Box -->
-              <div style="width:260px; border-top:1px solid #e2e8f0; padding-top:6px;">
-                <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:0.88rem; color:#475569;">
+              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
                   <span>Sub Total</span>
                   <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:1.1rem; font-weight:800; color:#0f172a; border-top:2px solid #0f172a; margin-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
                   <span>Total Disbursed</span>
                   <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedAmount}</span>
                 </div>
@@ -14266,10 +14300,10 @@ class FinanceApp {
             </div>
 
             <!-- Signatures & Official Stamp Block -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:1.5rem; border-top:1px solid #e2e8f0; margin-top:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:0.75rem; border-top:1px solid #e2e8f0; margin-top:0.75rem;">
               <!-- Left: Team Contact -->
-              <div style="font-size:0.82rem; color:#475569; line-height:1.55;">
-                <div style="margin-bottom:2px;">Disbursed &amp; Released by,</div>
+              <div style="font-size:0.76rem; color:#475569; line-height:1.45;">
+                <div style="margin-bottom:1px;">Disbursed &amp; Released by,</div>
                 <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Corporate Treasury'}</strong><br>
                 Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
                 <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
@@ -14277,29 +14311,30 @@ class FinanceApp {
               </div>
 
               <!-- Right: Real Signature + Official Stamp -->
-              <div style="position:relative; width:220px; text-align:center; padding-top:10px;">
-                <div style="position:relative; z-index:2; min-height:42px;">
+              <div style="position:relative; width:220px; text-align:center;">
+                <div style="position:relative; z-index:2; min-height:38px; display:flex; align-items:flex-end; justify-content:center;">
                   ${this.getRayanSignatureImg('receipt')}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:4px;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; font-weight:800; color:#0f172a; margin-top:2px;">
                   Arshad Alam Shaikh
                 </div>
-                <div style="font-size:0.75rem; color:#64748b; font-weight:600;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:600;">
                   Authorised Signatory - Rayan Group
                 </div>
                 <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:4px; top:-25px; z-index:5; pointer-events:none;">
+                <div style="position:absolute; right:4px; top:-22px; z-index:5; pointer-events:none;">
                   ${this.getRayanStampImg()}
                 </div>
               </div>
             </div>
 
-            <!-- Bottom Teal Banner -->
-            <div style="margin-top:2rem; background:#00a699; color:#ffffff; padding:7px 12px; border-radius:4px; font-size:0.78rem; text-align:center; font-weight:700; letter-spacing:0.02em;">
+            <!-- Sleek Matching Dark Charcoal Theme Footer -->
+            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
               Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
             </div>
-            <div style="text-align:center; font-size:8px; color:#94a3b8; margin-top:5px;">
-              This is a Computer Generated Official Vendor Payment Voucher
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
+              <span>This is a Computer Generated Official Vendor Payment Voucher</span>
+              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
@@ -14326,9 +14361,9 @@ class FinanceApp {
     body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
     @media print {
-      @page { size: A4 portrait; margin: 8mm; }
+      @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>

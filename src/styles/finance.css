@@ -3839,12 +3839,19 @@ select option:focus,
     print-color-adjust: exact !important;
   }
 
-  /* 10. Standard A4 Page Setup with side-bleed protection */
+  /* 10. Standard A4 Page Setup with side-bleed protection & single-page fit */
   @page {
     size: A4 portrait;
-    margin: 8mm 8mm 8mm 8mm;
+    margin: 6mm 8mm 6mm 8mm;
+  }
+
+  .fin-document-paper table,
+  .fin-document-paper tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
+
 
 /* Bank Selector Chips & Auto-suggestion Tags */
 .fin-bank-chips {
