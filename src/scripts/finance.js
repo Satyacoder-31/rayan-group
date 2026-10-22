@@ -7777,22 +7777,14 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Signatory Footer -->
-              <div class="fin-print-footer">
-                <div>
-                  <div style="font-size:0.72rem; color:#94a3b8;">Procurement Bill verified against Delivery Notes and Purchase Order.</div>
-                  <div style="font-size:0.72rem; color:#94a3b8;">Authorized under Rayan Group Internal Audit &amp; Finance Control.</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-family:'Outfit', cursive; font-size:1.15rem; color:#0099e6; margin-bottom:0.2rem;">Arshad Alam Shaikh</div>
-                  <div style="border-top:1px solid #94a3b8; padding-top:0.25rem; font-size:0.75rem; font-weight:700; color:#1e293b;">
-                    Authorized Signatory<br>
-                    <span style="font-weight:400; color:#64748b;">Rayan Group Finance Committee</span>
-                  </div>
+              <!-- System Generated Notice & Page Number Footer -->
+              <div style="margin-top:auto; padding-top:2.5rem;">
+                <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                  <span style="min-width:24px;"></span>
+                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Purchase bill and does not require any signatories</span>
+                  <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
                 </div>
               </div>
-
-              <div class="rayan-computer-generated-notice" style="border-top:1px solid #e2e8f0; margin-top:1.25rem; padding-top:0.75rem;">This is a Computer Generated Purchase Bill</div>
             </div>
           </div>
         </div>
@@ -11129,16 +11121,12 @@ class FinanceApp {
 
           ${trn.purpose ? `<div style="font-size:0.82rem; color:#475569; margin-bottom:1.5rem;"><strong>Remittance Purpose:</strong> ${trn.purpose}</div>` : ''}
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid #e2e8f0; font-size:0.78rem; text-align:center;">
-            <div>
-              <div style="font-family:'Courier New', monospace; font-size:1.1rem; color:#0369a1; font-weight:700;">Arshad Alam Shaikh</div>
-              <div style="border-top:1px solid #94a3b8; margin-top:4px; padding-top:4px; font-weight:600;">Authorized Signatory</div>
-            </div>
-            <div>
-              <div style="display:inline-block; padding:4px 12px; border:2px dashed #0284c7; border-radius:6px; color:#0284c7; font-weight:800; font-size:0.72rem; letter-spacing:0.08em;">
-                OFFICIALLY VERIFIED &amp; AUDITED
-              </div>
-              <div style="margin-top:4px; font-size:0.72rem; color:#64748b;">Rayan Treasury Desk</div>
+          <!-- System Generated Notice & Page Number Footer -->
+          <div style="margin-top:auto; padding-top:2.5rem;">
+            <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+              <span style="min-width:24px;"></span>
+              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Wire Advice and does not require any signatories</span>
+              <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
             </div>
           </div>
 
@@ -11409,20 +11397,12 @@ class FinanceApp {
             <strong>Expense Description:</strong> ${v.purpose}
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid #e2e8f0; font-size:0.75rem; text-align:center;">
-            <div>
-              <div style="font-weight:700; color:#0f172a;">${v.payee}</div>
-              <div style="border-top:1px solid #94a3b8; margin-top:6px; padding-top:4px; color:#64748b;">Receiver's Signature</div>
-            </div>
-            <div>
-              <div style="font-weight:700; color:#0f172a;">${v.custodian || 'Custodian'}</div>
-              <div style="border-top:1px solid #94a3b8; margin-top:6px; padding-top:4px; color:#64748b;">Custodian Signature</div>
-            </div>
-            <div>
-              <div style="display:inline-block; padding:3px 8px; border:2px dashed #059669; border-radius:4px; color:#059669; font-weight:800; font-size:0.68rem;">
-                VERIFIED CASH
-              </div>
-              <div style="border-top:1px solid #94a3b8; margin-top:6px; padding-top:4px; color:#64748b;">Accounts Desk Stamp</div>
+          <!-- System Generated Notice & Page Number Footer -->
+          <div style="margin-top:auto; padding-top:2.5rem;">
+            <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+              <span style="min-width:24px;"></span>
+              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Petty Cash Voucher and does not require any signatories</span>
+              <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
             </div>
           </div>
 
@@ -12361,39 +12341,13 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Signatures & Official Stamp Block (Requested: include logo stamp and signature) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:0.85rem; padding-top:0.75rem; border-top:1px solid #e5e7eb;">
-              <div style="font-size:0.76rem; color:#6b7280; line-height:1.45;">
-                <div style="font-weight:700; color:#111827; text-transform:uppercase;">${compName}</div>
-                <div>Authorized Signatory &amp; Official Seal</div>
-                <div>Tel: ${compPhone} • Email: ${compEmail}</div>
+            <!-- System Generated Notice & Page Number Footer -->
+            <div style="margin-top:auto; padding-top:2.5rem;">
+              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                <span style="min-width:24px;"></span>
+                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Tax Invoice and does not require any signatories</span>
+                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
               </div>
-
-              <div style="position:relative; width:220px; text-align:center;">
-                <!-- Real Signature -->
-                <div style="min-height:38px; display:flex; align-items:flex-end; justify-content:center; position:relative; z-index:2;">
-                  ${this.getRayanSignatureImg('default')}
-                </div>
-                <div style="border-top:1px solid #111827; padding-top:3px; font-weight:700; font-size:0.85rem; color:#111827;">
-                  Arshad Alam Shaikh
-                </div>
-                <div style="font-size:0.7rem; color:#6b7280; font-weight:500;">
-                  Authorized Signatory
-                </div>
-                <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:6px; top:-22px; z-index:5; pointer-events:none;">
-                  ${this.getRayanStampImg()}
-                </div>
-              </div>
-            </div>
-
-            <!-- Sleek Matching Dark Charcoal Theme Footer -->
-            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
-              Tel: ${compPhone} | ${compCity}, ${compCountry} | ${compEmail} | www.rayan-group.com
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
-              <span>This is a Computer Generated Tax Invoice</span>
-              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
@@ -12608,42 +12562,13 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Signatures & Official Stamp Block (Matching Reference Screenshot 3) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:0.75rem; border-top:1px solid #e2e8f0; margin-top:0.75rem;">
-              <!-- Left: Team Contact -->
-              <div style="font-size:0.76rem; color:#475569; line-height:1.45;">
-                <div style="margin-bottom:1px;">Best wishes,</div>
-                <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Team'}</strong><br>
-                Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
-                <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
-                <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" style="color:#0284c7; text-decoration:none;">www.rayan-group.com</a>
+            <!-- System Generated Notice & Page Number Footer -->
+            <div style="margin-top:auto; padding-top:2.5rem;">
+              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                <span style="min-width:24px;"></span>
+                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Receipt Voucher and does not require any signatories</span>
+                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
               </div>
-
-              <!-- Right: Real Signature + Official Stamp -->
-              <div style="position:relative; width:220px; text-align:center;">
-                <div style="position:relative; z-index:2; min-height:38px; display:flex; align-items:flex-end; justify-content:center;">
-                  ${this.getRayanSignatureImg('receipt')}
-                </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; font-weight:800; color:#0f172a; margin-top:2px;">
-                  ${rec.receiver_sign || 'Arshad Alam Shaikh'}
-                </div>
-                <div style="font-size:0.7rem; color:#64748b; font-weight:600;">
-                  Authorised Signatory
-                </div>
-                <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:5px; top:-22px; z-index:5; pointer-events:none;">
-                  ${this.getRayanStampImg()}
-                </div>
-              </div>
-            </div>
-
-            <!-- Sleek Matching Dark Charcoal Theme Footer -->
-            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
-              Tel: ${isIndia ? '+91 22 2839 0100' : '+971-25654497 / 0559945466'} | ${isIndia ? 'Mumbai, India' : 'Abu Dhabi, United Arab Emirates'} | ${isIndia ? 'info@ashaz-eng.com' : 'rayan@rayan-group.com'} | www.rayan-group.com
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
-              <span>This is a Computer Generated Official Receipt Voucher</span>
-              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
@@ -12918,18 +12843,12 @@ class FinanceApp {
                 <strong>7. Receipt &amp; Acceptance:</strong> Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense.
               </div>
 
-              <!-- Computer Generated Notice (Page 1) -->
-              <div class="rayan-computer-generated-notice">
-                <span>🔒</span>
-                <span>This is a Computer Generated Purchase Order</span>
-              </div>
-
-              <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
-              <div class="doc-minimal-footer">
-                <div class="doc-minimal-footer-line"></div>
-                <div class="doc-minimal-footer-content">
-                  <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Purchase Order for ${po.supplier_name || 'Al Rayan Building Materials'}</span>
-                  <span class="doc-minimal-footer-right">Page 1 of 2</span>
+              <!-- System Generated Notice & Page Number Footer (Page 1) -->
+              <div style="margin-top:auto; padding-top:2rem;">
+                <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                  <span style="min-width:24px;"></span>
+                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated PO and does not require any signatories</span>
+                  <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
                 </div>
               </div>
             </div>
@@ -12977,42 +12896,12 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Signatories & Stamps Modern Block -->
-              <div class="doc-signatures-modern" style="padding-top:10px; margin-top:auto;">
-                <div class="doc-sign-team-meta">
-                  <strong>Best Wishes</strong><br>
-                  <strong>RAYAN Group Procurement Committee</strong><br>
-                  Hotline : 025654497 • Abu Dhabi, UAE<br>
-                  <a href="mailto:cc.info@rayan-group.com" class="rayan-link-blue">cc.info@rayan-group.com</a><br>
-                  <a href="http://rayan-group.com" class="rayan-link-blue">http://rayan-group.com</a>
-                </div>
-
-                <div class="doc-sign-card">
-                  <div class="doc-auth-label">Authorised Signatory (Purchaser)</div>
-                  ${this.getRayanSignatureImg('default')}
-                  <div class="doc-sign-name">Arshad Alam Shaikh</div>
-                  ${this.getRayanStampImg()}
-                </div>
-
-                <div class="doc-sign-card">
-                  <div class="doc-auth-label">Authorised Signatory (Supplier)</div>
-                  <div style="height:38px;"></div>
-                  <div class="doc-sign-name">${po.supplier_attn || 'Mr. Mohammad Gulam'}</div>
-                </div>
-              </div>
-
-              <!-- Preserved Computer Generated Notice (Page 2) -->
-              <div class="rayan-computer-generated-notice">
-                <span>🔒</span>
-                <span>This is a Computer Generated Purchase Order</span>
-              </div>
-
-              <!-- Minimal Clean Document Footer (matching user quotation/invoice style) -->
-              <div class="doc-minimal-footer">
-                <div class="doc-minimal-footer-line"></div>
-                <div class="doc-minimal-footer-content">
-                  <span class="doc-minimal-footer-left">Rayan Engineering &amp; Contracting | Purchase Order Terms &amp; Conditions</span>
-                  <span class="doc-minimal-footer-right">Page 2 of 2</span>
+              <!-- System Generated Notice & Page Number Footer (Page 2) -->
+              <div style="margin-top:auto; padding-top:2.5rem;">
+                <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                  <span style="min-width:24px;"></span>
+                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated PO and does not require any signatories</span>
+                  <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">2</span>
                 </div>
               </div>
             </div>
@@ -14344,42 +14233,13 @@ class FinanceApp {
               </div>
             ` : ''}
 
-            <!-- Signatures & Official Stamp Block (Matching Reference Screenshot 3) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:0.75rem; border-top:1px solid #e2e8f0; margin-top:0.75rem;">
-              <!-- Left: Team Contact -->
-              <div style="font-size:0.76rem; color:#475569; line-height:1.45;">
-                <div style="margin-bottom:1px;">Disbursed by,</div>
-                <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Corporate Finance'}</strong><br>
-                Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
-                <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
-                <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" style="color:#0284c7; text-decoration:none;">www.rayan-group.com</a>
+            <!-- System Generated Notice & Page Number Footer -->
+            <div style="margin-top:auto; padding-top:2.5rem;">
+              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                <span style="min-width:24px;"></span>
+                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Expense Voucher and does not require any signatories</span>
+                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
               </div>
-
-              <!-- Right: Real Signature + Official Stamp -->
-              <div style="position:relative; width:220px; text-align:center;">
-                <div style="position:relative; z-index:2; min-height:38px; display:flex; align-items:flex-end; justify-content:center;">
-                  ${this.getRayanSignatureImg('receipt')}
-                </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; font-weight:800; color:#0f172a; margin-top:2px;">
-                  Arshad Alam Shaikh
-                </div>
-                <div style="font-size:0.7rem; color:#64748b; font-weight:600;">
-                  Authorised Signatory - Rayan Group
-                </div>
-                <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:5px; top:-22px; z-index:5; pointer-events:none;">
-                  ${this.getRayanStampImg()}
-                </div>
-              </div>
-            </div>
-
-            <!-- Sleek Matching Dark Charcoal Theme Footer -->
-            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
-              <span>This is a Computer Generated Official Expense Claim Receipt &amp; Voucher</span>
-              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
@@ -14694,42 +14554,13 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Signatures & Official Stamp Block -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:0.75rem; border-top:1px solid #e2e8f0; margin-top:0.75rem;">
-              <!-- Left: Team Contact -->
-              <div style="font-size:0.76rem; color:#475569; line-height:1.45;">
-                <div style="margin-bottom:1px;">Disbursed &amp; Released by,</div>
-                <strong style="color:#0f172a;">${isIndia ? 'Ashaz Engineering Corporate Treasury' : 'RAYAN Group Corporate Treasury'}</strong><br>
-                Hotline : ${isIndia ? '+91 22 2839 0100' : '025654497 / 0559945466'}<br>
-                <a href="mailto:${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}" style="color:#0284c7; text-decoration:none;">${isIndia ? 'finance@ashaz-eng.com' : 'cc.info@rayan-group.com'}</a><br>
-                <a href="${isIndia ? 'https://rayan-group.com' : 'http://rayan-group.com'}" style="color:#0284c7; text-decoration:none;">www.rayan-group.com</a>
+            <!-- System Generated Notice & Page Number Footer -->
+            <div style="margin-top:auto; padding-top:2.5rem;">
+              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                <span style="min-width:24px;"></span>
+                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Payment Voucher and does not require any signatories</span>
+                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
               </div>
-
-              <!-- Right: Real Signature + Official Stamp -->
-              <div style="position:relative; width:220px; text-align:center;">
-                <div style="position:relative; z-index:2; min-height:38px; display:flex; align-items:flex-end; justify-content:center;">
-                  ${this.getRayanSignatureImg('receipt')}
-                </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; font-weight:800; color:#0f172a; margin-top:2px;">
-                  Arshad Alam Shaikh
-                </div>
-                <div style="font-size:0.7rem; color:#64748b; font-weight:600;">
-                  Authorised Signatory - Rayan Group
-                </div>
-                <!-- Real Circular Purple/Blue Official Stamp -->
-                <div style="position:absolute; right:4px; top:-22px; z-index:5; pointer-events:none;">
-                  ${this.getRayanStampImg()}
-                </div>
-              </div>
-            </div>
-
-            <!-- Sleek Matching Dark Charcoal Theme Footer -->
-            <div style="margin-top:0.85rem; background:#1e242d; color:#ffffff; padding:6px 12px; border-radius:4px; font-size:0.72rem; text-align:center; font-weight:600; letter-spacing:0.02em;">
-              Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:8px; color:#9ca3af; margin-top:4px;">
-              <span>This is a Computer Generated Official Vendor Payment Voucher</span>
-              <span>Page 1 of 1</span>
             </div>
           </div>
         </div>
