@@ -5502,6 +5502,9 @@ class FinanceApp {
         if (taxInp) {
           taxInp.placeholder = 'e.g. 100492817200003 (15-digit UAE TRN)';
           taxInp.title = '15-digit UAE Tax Registration Number (TRN)';
+          if (options.taxNumber !== undefined) {
+            taxInp.value = options.taxNumber;
+          }
         }
         if (taxHelper) taxHelper.textContent = 'UAE VAT Registration # (15 Digits)';
         if (posLabel) posLabel.innerHTML = 'Place of Supply / Emirate <span style="color:#ef4444;">*</span>';
@@ -5537,6 +5540,9 @@ class FinanceApp {
         if (taxInp) {
           taxInp.placeholder = 'e.g. 27AAACL0149K1ZM (India GST)';
           taxInp.title = '15-character Indian Goods & Services Tax Identification Number';
+          if (options.taxNumber !== undefined) {
+            taxInp.value = options.taxNumber;
+          }
         }
         if (taxHelper) taxHelper.textContent = 'India GSTIN (15 Alphanumeric)';
         if (posLabel) posLabel.innerHTML = 'Place of Supply State <span style="color:#ef4444;">*</span>';
@@ -5846,6 +5852,7 @@ class FinanceApp {
     const recalculateInvoice = () => {
       const isTrn = currentRegime === 'trn';
       const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
+      const pos = (document.getElementById('inv-cust-pos')?.value || '').toLowerCase();
       const isUaeSupply = isTrn || pos.includes('uae') || pos.includes('abu dhabi') || pos.includes('dubai') || pos.includes('sharjah') || pos.includes('ajman') || pos.includes('rak') || pos.includes('ras al khaimah') || pos.includes('fujairah') || pos.includes('quwain') || pos.includes('al ain') || pos.includes('dip');
       const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
 
@@ -6427,314 +6434,6 @@ class FinanceApp {
       });
     };
 
-    const applyCustomerData = (c) => {
-      if (!c) return;
-      const info = (c.hasPastData !== undefined) ? c : this.getCustomerFullInfo(c.id || c.name || c);
-      if (!info) return;
-
-      custInput.value = info.name;
-      custInput.setAttribute('data-cust-id', info.id || '');
-
-      const isUae = info.isTrn;
-      const recommendedPos = info.placeOfSupply || (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
-
-      if (isUae) {
-        setTaxRegime('trn', {
-          keepPos: true,
-          suggestedPos: recommendedPos
-        });
-        const gstinEl = document.getElementById('inv-cust-gstin');
-        if (gstinEl) gstinEl.value = info.trn || '';
-        if (posInp) posInp.value = recommendedPos;
-      } else {
-        setTaxRegime('gst', {
-          keepPos: true,
-          suggestedPos: recommendedPos
-        });
-        const gstinEl = document.getElementById('inv-cust-gstin');
-        if (gstinEl) gstinEl.value = info.gstin || '';
-        if (posInp) posInp.value = recommendedPos;
-      }
-
-      if (posBadge) {
-        posBadge.textContent = info.placeOfSupply ? `✓ Saved for ${info.code || 'Client'}` : 'Saved • Pick or Type ▾';
-        posBadge.style.color = '#10b981';
-      }
-      if (posHint) {
-        posHint.textContent = `Recommended "${recommendedPos}" for ${info.name}`;
-      }
-
-      const termsEl = document.getElementById('inv-terms');
-      if (termsEl) termsEl.value = info.paymentTerms !== undefined && info.paymentTerms !== null ? info.paymentTerms : 30;
-
-      const addrInp = document.getElementById('inv-cust-address');
-      if (addrInp) {
-        addrInp.value = info.billingAddress || '';
-      }
-
-      const contactInp = document.getElementById('inv-cust-contact');
-      if (contactInp) {
-        contactInp.value = info.contactPerson || '';
-      }
-
-      const emailInp = document.getElementById('inv-cust-email');
-      if (emailInp) {
-        emailInp.value = info.email || '';
-      }
-
-      // Auto-fill Linked Project
-      if (prjInput) {
-        if (info.projectName) {
-          prjInput.value = info.projectName;
-          if (info.projectId) prjInput.setAttribute('data-project-id', info.projectId);
-          else prjInput.removeAttribute('data-project-id');
-          if (prjBadge) {
-            prjBadge.textContent = '✓ Linked Project';
-            prjBadge.style.color = '#10b981';
-          }
-          if (prjHint) {
-            prjHint.textContent = `Auto-linked "${info.projectName}" for ${info.name}`;
-          }
-        } else {
-          prjInput.value = '';
-          prjInput.removeAttribute('data-project-id');
-          if (prjBadge) {
-            prjBadge.textContent = 'Pick from List or Type Custom ▾';
-            prjBadge.style.color = '#38bdf8';
-          }
-          if (prjHint) {
-            prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
-          }
-        }
-      }
-
-      // Auto-fill PO Reference
-      const poInp = document.getElementById('inv-po-ref');
-      if (poInp) {
-        poInp.value = info.poReference || '';
-      }
-
-      if (custBadge) {
-        custBadge.textContent = `✓ ${info.code || 'Registered Client'}`;
-        custBadge.style.color = '#10b981';
-      }
-      if (custHint) {
-        custHint.textContent = `${info.name} • All details & linked project auto-filled`;
-      }
-      updateDueDate();
-      recalculateInvoice();
-      renderPosRecommendations();
-      renderPrjRecommendations();
-    };
-
-    // Customer Recommendations Dropdown when clicked on text box
-    const custDropdown = document.getElementById('inv-cust-dropdown');
-    if (custInput && custDropdown) {
-      const showCustRecommendations = () => {
-        const val = custInput.value.trim().toLowerCase();
-        custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
-          const name = (item.getAttribute('data-name') || '').toLowerCase();
-          const meta = item.textContent.toLowerCase();
-          if (!val || name.includes(val) || meta.includes(val)) {
-            item.style.display = 'flex';
-          } else {
-            item.style.display = 'none';
-          }
-        });
-        custDropdown.classList.add('open');
-      };
-
-      custInput.onfocus = showCustRecommendations;
-      custInput.onclick = showCustRecommendations;
-
-      custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
-        item.onmousedown = (e) => {
-          e.preventDefault();
-          const custId = item.getAttribute('data-id');
-          const found = customers.find(c => c.id === custId) || { id: custId, name: item.getAttribute('data-name') };
-          if (found) {
-            applyCustomerData(found);
-          }
-          custDropdown.classList.remove('open');
-        };
-      });
-
-      const handleCustomerInput = () => {
-        showCustRecommendations();
-        const val = custInput.value.trim();
-        if (!val) {
-          custInput.removeAttribute('data-cust-id');
-          if (custBadge) {
-            custBadge.textContent = 'Editable • Click for Options ▾';
-            custBadge.style.color = '#38bdf8';
-          }
-          if (custHint) {
-            custHint.textContent = 'Click text box to pick registered clients, or type custom name';
-          }
-          const addrInp = document.getElementById('inv-cust-address');
-          if (addrInp) addrInp.value = '';
-          const contactInp = document.getElementById('inv-cust-contact');
-          if (contactInp) contactInp.value = '';
-          const emailInp = document.getElementById('inv-cust-email');
-          if (emailInp) emailInp.value = '';
-          if (prjInput) {
-            prjInput.value = '';
-            prjInput.removeAttribute('data-project-id');
-            if (prjBadge) {
-              prjBadge.textContent = 'Pick from List or Type Custom ▾';
-              prjBadge.style.color = '#38bdf8';
-            }
-          }
-          const poInp = document.getElementById('inv-po-ref');
-          if (poInp) poInp.value = '';
-          renderPosRecommendations();
-          renderPrjRecommendations();
-          return;
-        }
-
-        const info = this.getCustomerFullInfo(val);
-        if (info && (info.hasPastData || info.customer)) {
-          applyCustomerData(info);
-          if (custBadge) {
-            const isExact = (info.name || '').toLowerCase() === val.toLowerCase();
-            custBadge.textContent = isExact ? `✓ ${info.code || 'Registered Client'}` : `✓ Matched (${info.name})`;
-            custBadge.style.color = '#10b981';
-          }
-          if (custHint) {
-            custHint.textContent = `Auto-filled details & linked project for "${info.name}"`;
-          }
-        } else {
-          custInput.removeAttribute('data-cust-id');
-          if (custBadge) {
-            custBadge.textContent = '✎ Custom Client';
-            custBadge.style.color = '#38bdf8';
-          }
-          if (custHint) {
-            custHint.textContent = `Custom client "${val}" will be used for this invoice (saved for next time).`;
-          }
-          const addrInp = document.getElementById('inv-cust-address');
-          if (addrInp) addrInp.value = '';
-          const contactInp = document.getElementById('inv-cust-contact');
-          if (contactInp) contactInp.value = '';
-          const emailInp = document.getElementById('inv-cust-email');
-          if (emailInp) emailInp.value = '';
-          const poInp = document.getElementById('inv-po-ref');
-          if (poInp) poInp.value = '';
-
-          const rememberedPos = this.getRecommendedPosForCustomer(val);
-          if (rememberedPos && posInp) {
-            posInp.value = rememberedPos;
-          }
-          const rememberedPrj = this.getRecommendedProjectForCustomer(val);
-          if (rememberedPrj && prjInput) {
-            prjInput.value = rememberedPrj.projectName;
-            if (rememberedPrj.projectId) prjInput.setAttribute('data-project-id', rememberedPrj.projectId);
-            if (prjBadge) {
-              prjBadge.textContent = '✓ Saved Project';
-              prjBadge.style.color = '#10b981';
-            }
-          } else if (prjInput) {
-            prjInput.value = '';
-            prjInput.removeAttribute('data-project-id');
-            if (prjBadge) {
-              prjBadge.textContent = 'Pick from List or Type Custom ▾';
-              prjBadge.style.color = '#38bdf8';
-            }
-          }
-          recalculateInvoice();
-          renderPosRecommendations();
-          renderPrjRecommendations();
-        }
-      };
-
-      // Real-time auto-saver for customer & project details
-      const autoSaveCustomerModalFields = () => {
-        const clientVal = (custInput?.value || '').trim();
-        if (!clientVal) return;
-        const isTrnMode = document.getElementById('inv-tax-regime')?.value === 'trn';
-        const taxNum = (document.getElementById('inv-cust-gstin')?.value || '').trim();
-        const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
-        const addrVal = (document.getElementById('inv-cust-address')?.value || '').trim();
-        const contactVal = (document.getElementById('inv-cust-contact')?.value || '').trim();
-        const emailVal = (document.getElementById('inv-cust-email')?.value || '').trim();
-        const termsVal = Number(document.getElementById('inv-terms')?.value) || 30;
-        const pName = (prjInput?.value || '').trim();
-        const pId = prjInput?.getAttribute('data-project-id') || null;
-        const poVal = (document.getElementById('inv-po-ref')?.value || '').trim();
-
-        this.saveCustomerFullInfo({
-          id: custInput.getAttribute('data-cust-id') || null,
-          name: clientVal,
-          billing_address: addrVal,
-          contact_person: contactVal,
-          email: emailVal,
-          trn: isTrnMode ? taxNum : '',
-          gstin: !isTrnMode ? taxNum : '',
-          tax_regime: isTrnMode ? 'trn' : 'gst',
-          place_of_supply: posVal,
-          payment_terms: termsVal,
-          project_id: pId,
-          project_name: pName,
-          po_reference: poVal
-        });
-
-        if (posVal) this.savePosRecommendation(posVal, clientVal);
-        if (pName) {
-          this.saveProjectRecommendation(pName);
-          this.saveCustomerProjectLink(clientVal, pId, pName, poVal);
-        }
-      };
-
-      ['inv-cust-address', 'inv-cust-contact', 'inv-cust-email', 'inv-cust-gstin', 'inv-terms', 'inv-po-ref'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener('change', autoSaveCustomerModalFields);
-          el.addEventListener('blur', autoSaveCustomerModalFields);
-        }
-      });
-
-      custInput.oninput = handleCustomerInput;
-      custInput.onchange = handleCustomerInput;
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#inv-cust-input') && !e.target.closest('#inv-cust-dropdown')) {
-          custDropdown.classList.remove('open');
-        }
-      });
-    }
-
-    // Regime toggle buttons
-    const btnGst = document.getElementById('regime-toggle-gst');
-    const btnTrn = document.getElementById('regime-toggle-trn');
-
-    if (btnGst) {
-      btnGst.onclick = () => {
-        const val = (custInput?.value || '').trim();
-        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || x.name.toLowerCase() === val.toLowerCase());
-        setTaxRegime('gst', {
-          suggestedPos: c?.place_of_supply && !c.place_of_supply.includes('UAE') ? c.place_of_supply : '27-Maharashtra'
-        });
-        if (c && c.gstin && !c.gstin.startsWith('EXEMPT')) {
-          document.getElementById('inv-cust-gstin').value = c.gstin;
-        }
-      };
-    }
-
-    if (btnTrn) {
-      btnTrn.onclick = () => {
-        const val = (custInput?.value || '').trim();
-        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || x.name.toLowerCase() === val.toLowerCase());
-        setTaxRegime('trn', {
-          suggestedPos: c?.place_of_supply && c.place_of_supply.includes('UAE') ? c.place_of_supply : 'Abu Dhabi, UAE'
-        });
-        if (c && c.trn) {
-          document.getElementById('inv-cust-gstin').value = c.trn;
-        } else if (!document.getElementById('inv-cust-gstin').value || document.getElementById('inv-cust-gstin').value.includes('27')) {
-          document.getElementById('inv-cust-gstin').value = '105405525400003';
-        }
-      };
-    }
-
     // Update due date with No Due Date toggle support
     const updateDueDate = () => {
       const noDue = document.getElementById('inv-no-due-date')?.checked;
@@ -6762,7 +6461,8 @@ class FinanceApp {
       if (noDueHint) noDueHint.style.display = 'none';
       if (termsInp) termsInp.disabled = false;
 
-      const invDate = new Date(document.getElementById('inv-date').value);
+      const invDateEl = document.getElementById('inv-date');
+      const invDate = invDateEl?.value ? new Date(invDateEl.value) : new Date();
       const terms = Number(termsInp?.value) || 30;
       invDate.setDate(invDate.getDate() + terms);
       if (dueInp) dueInp.value = invDate.toISOString().split('T')[0];
@@ -6774,7 +6474,7 @@ class FinanceApp {
     if (noDueCheckbox) noDueCheckbox.onchange = updateDueDate;
     updateDueDate();
 
-    // Project / Cost Center Recommendations Dropdown when clicked on text box
+    // Project / Cost Center Recommendations Dropdown
     const prjInput = document.getElementById('inv-project-input');
     const prjDropdown = document.getElementById('inv-project-dropdown');
     const prjBadge = document.getElementById('inv-project-badge');
@@ -6950,6 +6650,379 @@ class FinanceApp {
           prjDropdown.classList.remove('open');
         }
       });
+    }
+
+    const applyCustomerData = (c) => {
+      if (!c) return;
+      const custObj = (typeof c === 'object') ? c : null;
+      const info = (c && c.hasPastData !== undefined) ? c : (this.getCustomerFullInfo(c?.id || c?.name || c) || c);
+      if (!info) return;
+
+      const clientName = info.name || custObj?.name || (typeof c === 'string' ? c : '');
+      const clientId = info.id || custObj?.id || '';
+      const clientCode = info.code || custObj?.code || '';
+      const clientTrn = info.trn || custObj?.trn || custObj?.customer_trn || '';
+      const clientGstin = info.gstin || custObj?.gstin || custObj?.customer_gstin || '';
+      const clientPos = info.placeOfSupply || custObj?.place_of_supply || '';
+      const clientAddr = info.billingAddress || custObj?.billing_address || custObj?.address || '';
+      const clientContact = info.contactPerson || custObj?.contact_person || '';
+      const clientEmail = info.email || custObj?.email || '';
+      const clientTerms = (info.paymentTerms !== undefined && info.paymentTerms !== null) ? info.paymentTerms : (custObj?.payment_terms || 30);
+      const clientPrjName = info.projectName || custObj?.default_project_name || '';
+      const clientPrjId = info.projectId || custObj?.default_project_id || '';
+      const clientPoRef = info.poReference || custObj?.last_po_reference || '';
+
+      if (custInput) {
+        custInput.value = clientName;
+        if (clientId) custInput.setAttribute('data-cust-id', clientId);
+        else custInput.removeAttribute('data-cust-id');
+      }
+
+      const isUae = Boolean(
+        clientTrn ||
+        (custObj?.country && custObj.country.toUpperCase() === 'UAE') ||
+        (info.country && info.country.toUpperCase() === 'UAE') ||
+        (clientPos && (clientPos.includes('UAE') || clientPos.includes('Abu Dhabi') || clientPos.includes('Dubai'))) ||
+        info.isTrn ||
+        this.activeCompanyId !== 'ashaz-eng-in'
+      );
+      const recommendedPos = clientPos || (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
+
+      // Update TRN / GSTIN field directly FIRST so it reflects immediately
+      const gstinEl = document.getElementById('inv-cust-gstin');
+      const targetTaxNo = isUae ? clientTrn : (clientGstin || clientTrn);
+      if (gstinEl) {
+        gstinEl.value = targetTaxNo || '';
+      }
+      if (posInp) posInp.value = recommendedPos;
+
+      if (isUae) {
+        setTaxRegime('trn', {
+          keepPos: true,
+          suggestedPos: recommendedPos,
+          taxNumber: targetTaxNo
+        });
+      } else {
+        setTaxRegime('gst', {
+          keepPos: true,
+          suggestedPos: recommendedPos,
+          taxNumber: targetTaxNo
+        });
+      }
+
+      // Re-verify TRN input has targetTaxNo
+      if (gstinEl && targetTaxNo) {
+        gstinEl.value = targetTaxNo;
+      }
+
+      if (posBadge) {
+        posBadge.textContent = clientPos ? `✓ Saved for ${clientCode || 'Client'}` : 'Saved • Pick or Type ▾';
+        posBadge.style.color = '#10b981';
+      }
+      if (posHint) {
+        posHint.textContent = `Recommended "${recommendedPos}" for ${clientName}`;
+      }
+
+      const termsEl = document.getElementById('inv-terms');
+      if (termsEl) termsEl.value = clientTerms;
+
+      const addrInp = document.getElementById('inv-cust-address');
+      if (addrInp) {
+        addrInp.value = clientAddr;
+      }
+
+      const contactInp = document.getElementById('inv-cust-contact');
+      if (contactInp) {
+        contactInp.value = clientContact;
+      }
+
+      const emailInp = document.getElementById('inv-cust-email');
+      if (emailInp) {
+        emailInp.value = clientEmail;
+      }
+
+      // Auto-fill Linked Project
+      if (prjInput) {
+        if (clientPrjName) {
+          prjInput.value = clientPrjName;
+          if (clientPrjId) prjInput.setAttribute('data-project-id', clientPrjId);
+          else prjInput.removeAttribute('data-project-id');
+          if (prjBadge) {
+            prjBadge.textContent = '✓ Linked Project';
+            prjBadge.style.color = '#10b981';
+          }
+          if (prjHint) {
+            prjHint.textContent = `Auto-linked "${clientPrjName}" for ${clientName}`;
+          }
+        } else {
+          prjInput.value = '';
+          prjInput.removeAttribute('data-project-id');
+          if (prjBadge) {
+            prjBadge.textContent = 'Pick from List or Type Custom ▾';
+            prjBadge.style.color = '#38bdf8';
+          }
+          if (prjHint) {
+            prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
+          }
+        }
+      }
+
+      // Auto-fill PO Reference
+      const poInp = document.getElementById('inv-po-ref');
+      if (poInp) {
+        poInp.value = clientPoRef;
+      }
+
+      if (custBadge) {
+        custBadge.textContent = `✓ ${clientCode || 'Registered Client'}`;
+        custBadge.style.color = '#10b981';
+      }
+      if (custHint) {
+        custHint.textContent = `${clientName} • TRN: ${clientTrn || 'N/A'} • Details auto-filled`;
+      }
+
+      updateDueDate();
+      recalculateInvoice();
+      renderPosRecommendations();
+      renderPrjRecommendations();
+    };
+
+    // Customer Recommendations Dropdown when clicked on text box
+    const custDropdown = document.getElementById('inv-cust-dropdown');
+    if (custInput && custDropdown) {
+      const showCustRecommendations = () => {
+        const val = (custInput?.value || '').trim().toLowerCase();
+        custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          const name = (item.getAttribute('data-name') || '').toLowerCase();
+          const meta = item.textContent.toLowerCase();
+          if (!val || name.includes(val) || meta.includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        custDropdown.classList.add('open');
+      };
+
+      custInput.onfocus = showCustRecommendations;
+      custInput.onclick = showCustRecommendations;
+
+      const selectCustomerItem = (item) => {
+        const custId = item.getAttribute('data-id');
+        const custName = item.getAttribute('data-name');
+        const found = customers.find(c => c.id === custId || (custName && c.name === custName)) ||
+                      (this.db?.customers || []).find(c => c.id === custId || (custName && c.name === custName)) ||
+                      { id: custId, name: custName };
+        applyCustomerData(found);
+        custDropdown.classList.remove('open');
+      };
+
+      custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          selectCustomerItem(item);
+        });
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          selectCustomerItem(item);
+        });
+      });
+
+      // Event delegation for items inside custDropdown
+      custDropdown.addEventListener('click', (e) => {
+        const item = e.target.closest('.fin-autocomplete-item');
+        if (item) {
+          e.preventDefault();
+          selectCustomerItem(item);
+        }
+      });
+      custDropdown.addEventListener('mousedown', (e) => {
+        const item = e.target.closest('.fin-autocomplete-item');
+        if (item) {
+          e.preventDefault();
+          selectCustomerItem(item);
+        }
+      });
+
+      const handleCustomerInput = () => {
+        showCustRecommendations();
+        const val = custInput.value.trim();
+        if (!val) {
+          custInput.removeAttribute('data-cust-id');
+          if (custBadge) {
+            custBadge.textContent = 'Editable • Click for Options ▾';
+            custBadge.style.color = '#38bdf8';
+          }
+          if (custHint) {
+            custHint.textContent = 'Click text box to pick registered clients, or type custom name';
+          }
+          const gstinEl = document.getElementById('inv-cust-gstin');
+          if (gstinEl) gstinEl.value = '';
+          const addrInp = document.getElementById('inv-cust-address');
+          if (addrInp) addrInp.value = '';
+          const contactInp = document.getElementById('inv-cust-contact');
+          if (contactInp) contactInp.value = '';
+          const emailInp = document.getElementById('inv-cust-email');
+          if (emailInp) emailInp.value = '';
+          if (prjInput) {
+            prjInput.value = '';
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) {
+              prjBadge.textContent = 'Pick from List or Type Custom ▾';
+              prjBadge.style.color = '#38bdf8';
+            }
+          }
+          const poInp = document.getElementById('inv-po-ref');
+          if (poInp) poInp.value = '';
+          renderPosRecommendations();
+          renderPrjRecommendations();
+          return;
+        }
+
+        const foundExact = customers.find(c => (c.name || '').toLowerCase() === val.toLowerCase() || (c.code || '').toLowerCase() === val.toLowerCase()) ||
+                           (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === val.toLowerCase() || (c.code || '').toLowerCase() === val.toLowerCase());
+
+        const info = foundExact || this.getCustomerFullInfo(val);
+        if (info && (info.hasPastData || info.customer || info.trn || info.gstin || foundExact)) {
+          applyCustomerData(info);
+          if (custBadge) {
+            const isExact = (info.name || '').toLowerCase() === val.toLowerCase();
+            custBadge.textContent = isExact ? `✓ ${info.code || 'Registered Client'}` : `✓ Matched (${info.name})`;
+            custBadge.style.color = '#10b981';
+          }
+          if (custHint) {
+            custHint.textContent = `Auto-filled details & linked project for "${info.name}"`;
+          }
+        } else {
+          custInput.removeAttribute('data-cust-id');
+          if (custBadge) {
+            custBadge.textContent = '✎ Custom Client';
+            custBadge.style.color = '#38bdf8';
+          }
+          if (custHint) {
+            custHint.textContent = `Custom client "${val}" will be used for this invoice (saved for next time).`;
+          }
+          const addrInp = document.getElementById('inv-cust-address');
+          if (addrInp) addrInp.value = '';
+          const contactInp = document.getElementById('inv-cust-contact');
+          if (contactInp) contactInp.value = '';
+          const emailInp = document.getElementById('inv-cust-email');
+          if (emailInp) emailInp.value = '';
+          const poInp = document.getElementById('inv-po-ref');
+          if (poInp) poInp.value = '';
+
+          const rememberedPos = this.getRecommendedPosForCustomer(val);
+          if (rememberedPos && posInp) {
+            posInp.value = rememberedPos;
+          }
+          const rememberedPrj = this.getRecommendedProjectForCustomer(val);
+          if (rememberedPrj && prjInput) {
+            prjInput.value = rememberedPrj.projectName;
+            if (rememberedPrj.projectId) prjInput.setAttribute('data-project-id', rememberedPrj.projectId);
+            if (prjBadge) {
+              prjBadge.textContent = '✓ Saved Project';
+              prjBadge.style.color = '#10b981';
+            }
+          } else if (prjInput) {
+            prjInput.value = '';
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) {
+              prjBadge.textContent = 'Pick from List or Type Custom ▾';
+              prjBadge.style.color = '#38bdf8';
+            }
+          }
+          recalculateInvoice();
+          renderPosRecommendations();
+          renderPrjRecommendations();
+        }
+      };
+
+      // Real-time auto-saver for customer & project details
+      const autoSaveCustomerModalFields = () => {
+        const clientVal = (custInput?.value || '').trim();
+        if (!clientVal) return;
+        const isTrnMode = document.getElementById('inv-tax-regime')?.value === 'trn';
+        const taxNum = (document.getElementById('inv-cust-gstin')?.value || '').trim();
+        const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
+        const addrVal = (document.getElementById('inv-cust-address')?.value || '').trim();
+        const contactVal = (document.getElementById('inv-cust-contact')?.value || '').trim();
+        const emailVal = (document.getElementById('inv-cust-email')?.value || '').trim();
+        const termsVal = Number(document.getElementById('inv-terms')?.value) || 30;
+        const pName = (prjInput?.value || '').trim();
+        const pId = prjInput?.getAttribute('data-project-id') || null;
+        const poVal = (document.getElementById('inv-po-ref')?.value || '').trim();
+
+        this.saveCustomerFullInfo({
+          id: custInput.getAttribute('data-cust-id') || null,
+          name: clientVal,
+          billing_address: addrVal,
+          contact_person: contactVal,
+          email: emailVal,
+          trn: isTrnMode ? taxNum : '',
+          gstin: !isTrnMode ? taxNum : '',
+          tax_regime: isTrnMode ? 'trn' : 'gst',
+          place_of_supply: posVal,
+          payment_terms: termsVal,
+          project_id: pId,
+          project_name: pName,
+          po_reference: poVal
+        });
+
+        if (posVal) this.savePosRecommendation(posVal, clientVal);
+        if (pName) {
+          this.saveProjectRecommendation(pName);
+          this.saveCustomerProjectLink(clientVal, pId, pName, poVal);
+        }
+      };
+
+      ['inv-cust-address', 'inv-cust-contact', 'inv-cust-email', 'inv-cust-gstin', 'inv-terms', 'inv-po-ref'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', autoSaveCustomerModalFields);
+          el.addEventListener('blur', autoSaveCustomerModalFields);
+        }
+      });
+
+      custInput.oninput = handleCustomerInput;
+      custInput.onchange = handleCustomerInput;
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#inv-cust-input') && !e.target.closest('#inv-cust-dropdown')) {
+          custDropdown.classList.remove('open');
+        }
+      });
+    }
+
+    // Regime toggle buttons
+    const btnGst = document.getElementById('regime-toggle-gst');
+    const btnTrn = document.getElementById('regime-toggle-trn');
+
+    if (btnGst) {
+      btnGst.onclick = () => {
+        const val = (custInput?.value || '').trim();
+        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase())) ||
+                  (this.db?.customers || []).find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase()));
+        setTaxRegime('gst', {
+          suggestedPos: c?.place_of_supply && !c.place_of_supply.includes('UAE') ? c.place_of_supply : '27-Maharashtra'
+        });
+        if (c && c.gstin && !c.gstin.startsWith('EXEMPT')) {
+          document.getElementById('inv-cust-gstin').value = c.gstin;
+        }
+      };
+    }
+
+    if (btnTrn) {
+      btnTrn.onclick = () => {
+        const val = (custInput?.value || '').trim();
+        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase())) ||
+                  (this.db?.customers || []).find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase()));
+        setTaxRegime('trn', {
+          suggestedPos: c?.place_of_supply && c.place_of_supply.includes('UAE') ? c.place_of_supply : 'Abu Dhabi, UAE'
+        });
+        if (c && c.trn) {
+          document.getElementById('inv-cust-gstin').value = c.trn;
+        }
+      };
     }
 
     // Place of Supply input & recommendations dropdown event listeners
