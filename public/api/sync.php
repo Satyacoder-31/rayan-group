@@ -186,6 +186,10 @@ if (!$rootDir || !is_writable($rootDir)) {
             if ($liveData && $srcData && is_array($liveData) && is_array($srcData)) {
                 // Merge all collections: live user entries must take priority!
                 foreach ($srcData as $col => $srcItems) {
+                    if ($col === 'companies' && is_array($srcItems)) {
+                        $liveData['companies'] = $srcItems;
+                        continue;
+                    }
                     if (is_array($srcItems) && isset($liveData[$col]) && is_array($liveData[$col])) {
                         $liveKeys = [];
                         foreach ($liveData[$col] as $item) {

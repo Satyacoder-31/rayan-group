@@ -571,6 +571,14 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     if ($masterSeed && !empty($masterSeed['companies'])) {
                         $data['companies'] = $masterSeed['companies'];
                     }
+                    $companyOrder = ['rayan-group', 'rayan-corp-uae', 'rayan-energy-uae', 'rayan-properties-uae', 'ashaz-eng-in'];
+                    usort($data['companies'], function($a, $b) use ($companyOrder) {
+                        $posA = array_search($a['id'] ?? '', $companyOrder);
+                        $posB = array_search($b['id'] ?? '', $companyOrder);
+                        if ($posA === false) $posA = 999;
+                        if ($posB === false) $posB = 999;
+                        return $posA - $posB;
+                    });
                     // Check if relational tables have any additional records
                     syncFromRelationalTables($pdo, $data);
                     // Purge dummy entries if any exist
