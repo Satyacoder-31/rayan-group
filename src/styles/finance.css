@@ -1815,6 +1815,12 @@
   color: #64748b;
 }
 
+.fin-badge-security {
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.45);
+  color: #38bdf8;
+}
+
 /* Action button icons in table row */
 .fin-btn-row-action {
   padding: 0.25rem 0.55rem;

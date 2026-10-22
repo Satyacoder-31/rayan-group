@@ -4311,8 +4311,8 @@ class FinanceApp {
                     <td>${this.formatDate(c.date)}</td>
                     <td style="text-align:right;"><strong style="color:#10b981;">${this.formatCurrency(c.amount)}</strong></td>
                     <td>
-                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : (c.status === 'Bounced' ? 'fin-badge-void' : 'fin-badge-pending')}">
-                        ${c.status}
+                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : (c.status === 'Bounced' ? 'fin-badge-void' : (c.status === 'Security Cheque' ? 'fin-badge-security' : 'fin-badge-pending'))}">
+                        ${c.status === 'Security Cheque' ? '🛡️ Security Cheque' : c.status}
                       </span>
                     </td>
                     <td style="text-align:center;">
@@ -4320,6 +4320,7 @@ class FinanceApp {
                         ${c.status !== 'Cleared' ? `
                           <button type="button" class="fin-btn-card-action success" title="Clear & Credit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'inward')">⚡ Clear</button>
                         ` : ''}
+                        <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
                         <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
                       </div>
                     </td>
@@ -4370,8 +4371,8 @@ class FinanceApp {
                     <td>${this.formatDate(c.date)}</td>
                     <td style="text-align:right;"><strong style="color:#fb923c;">${this.formatCurrency(c.amount)}</strong></td>
                     <td>
-                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : 'fin-badge-pending'}">
-                        ${c.status}
+                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : (c.status === 'Bounced' ? 'fin-badge-void' : (c.status === 'Security Cheque' ? 'fin-badge-security' : 'fin-badge-pending'))}">
+                        ${c.status === 'Security Cheque' ? '🛡️ Security Cheque' : c.status}
                       </span>
                     </td>
                     <td style="text-align:center;">
@@ -4379,6 +4380,7 @@ class FinanceApp {
                         ${c.status !== 'Cleared' ? `
                           <button type="button" class="fin-btn-card-action success" title="Clear & Debit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'outward')">⚡ Clear</button>
                         ` : ''}
+                        <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
                         <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
                       </div>
                     </td>
@@ -8019,6 +8021,7 @@ class FinanceApp {
                     <select id="rec-cheque-status" class="fin-form-select">
                       <option value="Cleared & Verified" selected>Cleared &amp; Funds Verified</option>
                       <option value="Deposited - Under Clearance">Deposited - Under Clearance</option>
+                      <option value="Security Cheque">Security Cheque</option>
                       <option value="Post-Dated Cheque (PDC)">Post-Dated Cheque (PDC)</option>
                     </select>
                   </div>
@@ -9242,6 +9245,7 @@ class FinanceApp {
                   <select id="pay-mode" class="fin-form-select" required>
                     <option value="Online" selected>Online</option>
                     <option value="Corporate Cheque">Corporate Cheque</option>
+                    <option value="Security Cheque">Security Cheque</option>
                     <option value="International Wire">International Wire</option>
                     <option value="Petty Cash">Petty Cash</option>
                   </select>
@@ -11463,6 +11467,7 @@ class FinanceApp {
                   <select id="cq-status" class="fin-form-select">
                     <option value="${isInward ? 'In Hand' : 'Issued'}">${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
                     <option value="Deposited">${isInward ? 'Deposited in Bank' : 'Presented for Clearing'}</option>
+                    <option value="Security Cheque">Security Cheque</option>
                     <option value="Cleared">Cleared Directly</option>
                   </select>
                 </div>
@@ -11564,6 +11569,68 @@ class FinanceApp {
       this.closeModal('modal-clear-cheque');
       this.renderActiveTab();
       this.showNotification(`Cheque #${chq.cheque_no} cleared and bank account updated!`, 'success');
+    };
+  }
+
+  openUpdateChequeStatusModal(chequeId) {
+    const chq = (this.db?.cheques || []).find(c => c.id === chequeId);
+    if (!chq) return;
+    const isInward = chq.type === 'inward';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-update-cheque-status">
+        <div class="fin-modal-dialog" style="max-width:440px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Update Cheque #${chq.cheque_no} Status</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-update-cheque-status')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="update-cheque-status-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Cheque Details</label>
+                <div style="font-size:0.82rem; color:#94a3b8; background:rgba(0,0,0,0.2); padding:8px 12px; border-radius:6px; margin-bottom:1rem;">
+                  <div><strong>Party:</strong> ${chq.party_name}</div>
+                  <div><strong>Bank:</strong> ${chq.bank_name || '—'}</div>
+                  <div><strong>Amount:</strong> <span style="color:#38bdf8; font-weight:700;">${this.formatCurrency(chq.amount)}</span></div>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Current Status: <strong style="color:#38bdf8;">${chq.status}</strong></label>
+                <select id="chq-new-status" class="fin-form-select">
+                  <option value="${isInward ? 'In Hand' : 'Issued'}" ${chq.status === 'In Hand' || chq.status === 'Issued' ? 'selected' : ''}>${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
+                  <option value="Deposited" ${chq.status === 'Deposited' ? 'selected' : ''}>${isInward ? 'Deposited in Bank' : 'Presented for Clearing'}</option>
+                  <option value="Security Cheque" ${chq.status === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
+                  <option value="Cleared" ${chq.status === 'Cleared' ? 'selected' : ''}>Cleared Directly</option>
+                  <option value="Returned" ${chq.status === 'Returned' ? 'selected' : ''}>Returned / Cancelled</option>
+                  <option value="Bounced" ${chq.status === 'Bounced' ? 'selected' : ''}>Bounced</option>
+                </select>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-update-cheque-status')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save Status &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('update-cheque-status-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const newStatus = document.getElementById('chq-new-status').value;
+      if (newStatus === 'Cleared' && chq.status !== 'Cleared') {
+        this.closeModal('modal-update-cheque-status');
+        this.promptClearCheque(chequeId, chq.type);
+        return;
+      }
+      await this.syncApi('update_cheque_status', { id: chequeId, status: newStatus });
+      this.closeModal('modal-update-cheque-status');
+      this.renderActiveTab();
+      this.showNotification(`Cheque #${chq.cheque_no} status updated to ${newStatus}.`, 'success');
     };
   }
 
@@ -13794,6 +13861,7 @@ class FinanceApp {
                   <select id="edit-rcp-mode" class="fin-form-select" required>
                     <option value="Online" ${rcp.payment_mode === 'Online' || rcp.payment_mode === 'RTGS' || rcp.payment_mode === 'Corporate RTGS' || rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Online</option>
                     <option value="Cheque" ${rcp.payment_mode === 'Cheque' ? 'selected' : ''}>Cheque</option>
+                    <option value="Security Cheque" ${rcp.payment_mode === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
                     <option value="Bank Wire" ${rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Direct Bank Wire</option>
                     <option value="Cash" ${rcp.payment_mode === 'Cash' ? 'selected' : ''}>Cash Deposit</option>
                   </select>
@@ -14637,6 +14705,7 @@ class FinanceApp {
                   <select id="edit-pay-mode" class="fin-form-select">
                     <option value="Online" ${(!pay.payment_mode || pay.payment_mode === 'Online' || pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS' || pay.payment_mode === 'Corporate Online' || pay.payment_mode === 'ADCB / FAB Bank Wire') ? 'selected' : ''}>Online</option>
                     <option value="Corporate Cheque" ${pay.payment_mode === 'Corporate Cheque' || pay.payment_mode === 'Cheque' ? 'selected' : ''}>Corporate Cheque</option>
+                    <option value="Security Cheque" ${pay.payment_mode === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
                     <option value="International Wire" ${pay.payment_mode === 'International Wire' ? 'selected' : ''}>International Wire</option>
                     <option value="Petty Cash" ${pay.payment_mode === 'Petty Cash' ? 'selected' : ''}>Petty Cash</option>
                   </select>
