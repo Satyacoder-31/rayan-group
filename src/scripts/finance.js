@@ -245,6 +245,18 @@ class FinanceApp {
         continue;
       }
 
+      if (key === 'customers') {
+        incomingArr.forEach(c => {
+          if (c && (c.name || '').includes('TOP ROCK')) {
+            c.trn = '10457119600003';
+            c.place_of_supply = 'Dubai, UAE';
+            c.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+            c.contact_person = 'MR. SHAHIL';
+            c.email = 'procurementofficer@toprockinteriors.com';
+          }
+        });
+      }
+
       // Add incoming user items first so newest submissions stay at top
       const map = new Map();
       incomingArr.forEach(item => {
@@ -1174,6 +1186,7 @@ class FinanceApp {
     const cleanName = String(info.name).trim();
     const lowerName = cleanName.toLowerCase();
     const cleanKey = lowerName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+    const normKey = cleanKey.replace(/[\s\-_.,/]+/g, ' ').replace(/\b(l\.?l\.?c|llc|pvt|ltd|limited|co|company|corp|corporation)\b/gi, '').trim();
 
     try {
       const stored = localStorage.getItem('rayan_fin_customer_info_map');
@@ -1185,8 +1198,39 @@ class FinanceApp {
       if (cleanKey && cleanKey !== lowerName) {
         map[cleanKey] = map[lowerName];
       }
+      if (normKey && normKey !== lowerName && normKey !== cleanKey) {
+        map[normKey] = map[lowerName];
+      }
       localStorage.setItem('rayan_fin_customer_info_map', JSON.stringify(map));
     } catch (e) {}
+
+    // Update in this.db.customers immediately
+    if (this.db && Array.isArray(this.db.customers)) {
+      const existing = this.db.customers.find(c => {
+        if (!c) return false;
+        const cName = (c.name || '').toLowerCase();
+        const cClean = cName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+        const cNorm = cClean.replace(/[\s\-_.,/]+/g, ' ').replace(/\b(l\.?l\.?c|llc|pvt|ltd|limited|co|company|corp|corporation)\b/gi, '').trim();
+        return (info.id && c.id === info.id) ||
+               cName === lowerName ||
+               cClean === cleanKey ||
+               (normKey && cNorm === normKey);
+      });
+      if (existing) {
+        if (info.trn) existing.trn = info.trn;
+        if (info.gstin) existing.gstin = info.gstin;
+        if (info.billing_address !== undefined) existing.billing_address = info.billing_address;
+        if (info.contact_person !== undefined) existing.contact_person = info.contact_person;
+        if (info.email !== undefined) existing.email = info.email;
+        if (info.place_of_supply !== undefined) existing.place_of_supply = info.place_of_supply;
+        if (info.payment_terms !== undefined) existing.payment_terms = info.payment_terms;
+        if (info.project_name) existing.default_project_name = info.project_name;
+        if (info.project_id) existing.default_project_id = info.project_id;
+        if (info.po_reference) existing.last_po_reference = info.po_reference;
+
+        this.syncApi('create_customer', { customer: existing }).catch(e => console.warn('Sync customer update:', e));
+      }
+    }
 
     // Save Place of Supply
     if (info.place_of_supply) {
@@ -1304,42 +1348,42 @@ class FinanceApp {
       };
     }
 
-    const name = cust?.name || latestInv?.customer_name || localInfo?.name || rawKey;
-    const id = cust?.id || latestInv?.customer_id || (localInfo?.id || '');
+    const name = localInfo?.name || cust?.name || latestInv?.customer_name || rawKey;
+    const id = cust?.id || localInfo?.id || latestInv?.customer_id || '';
     const code = cust?.code || localInfo?.code || '';
-    const trn = cust?.trn || latestInv?.customer_trn || localInfo?.trn || (cleanKey.includes('buildara') ? '105405525400003' : '');
-    const gstin = cust?.gstin || latestInv?.customer_gstin || localInfo?.gstin || '';
+    const trn = localInfo?.trn || cust?.trn || latestInv?.customer_trn || (cleanKey.includes('buildara') ? '105405525400003' : '');
+    const gstin = localInfo?.gstin || cust?.gstin || latestInv?.customer_gstin || '';
 
     const isUae = (cust?.country && cust.country.toUpperCase() === 'UAE') ||
                   (trn && trn.length > 5) ||
                   (latestInv?.tax_regime === 'trn') ||
                   (this.activeCompanyId !== 'ashaz-eng-in');
 
-    const placeOfSupply = this.getRecommendedPosForCustomer(name) ||
-                          latestInv?.place_of_supply ||
+    const placeOfSupply = localInfo?.place_of_supply ||
+                          this.getRecommendedPosForCustomer(name) ||
                           cust?.place_of_supply ||
-                          localInfo?.place_of_supply ||
+                          latestInv?.place_of_supply ||
                           (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
 
-    const billingAddress = cust?.billing_address ||
+    const billingAddress = localInfo?.billing_address ||
+                           cust?.billing_address ||
                            cust?.address ||
                            latestInv?.customer_address ||
-                           localInfo?.billing_address ||
                            (cleanKey.includes('buildara') ? 'ABU DHABI, MADINAT ZAYED, UAE' : '');
 
-    const contactPerson = cust?.contact_person ||
+    const contactPerson = localInfo?.contact_person ||
+                          cust?.contact_person ||
                           latestInv?.contact_person ||
-                          localInfo?.contact_person ||
                           (cleanKey.includes('buildara') ? 'Mr. Sooraj Kumar' : '');
 
-    const email = cust?.email ||
+    const email = localInfo?.email ||
+                  cust?.email ||
                   latestInv?.email ||
-                  localInfo?.email ||
                   (cleanKey.includes('buildara') ? 'buildaradevelopers@gmail.com' : '');
 
-    const paymentTerms = cust?.payment_terms ||
+    const paymentTerms = localInfo?.payment_terms ||
+                         cust?.payment_terms ||
                          latestInv?.payment_terms ||
-                         localInfo?.payment_terms ||
                          30;
 
     const projectId = recPrj?.projectId ||
@@ -6938,6 +6982,7 @@ class FinanceApp {
       };
 
       // Real-time auto-saver for customer & project details
+      let autoSaveTimer = null;
       const autoSaveCustomerModalFields = () => {
         const clientVal = (custInput?.value || '').trim();
         if (!clientVal) return;
@@ -6968,6 +7013,21 @@ class FinanceApp {
           po_reference: poVal
         });
 
+        // Update dropdown item meta text in real-time
+        if (custDropdown) {
+          const matchedItem = Array.from(custDropdown.querySelectorAll('.fin-autocomplete-item')).find(item => {
+            const name = (item.getAttribute('data-name') || '').toLowerCase();
+            return name === clientVal.toLowerCase() || name.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === clientVal.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+          });
+          if (matchedItem && taxNum) {
+            const metaEl = matchedItem.querySelector('.fin-autocomplete-item-meta');
+            if (metaEl) {
+              const code = matchedItem.getAttribute('data-code') || '';
+              metaEl.textContent = `${code ? code + ' • ' : ''}${isTrnMode ? 'TRN: ' : 'GSTIN: '}${taxNum}`;
+            }
+          }
+        }
+
         if (posVal) this.savePosRecommendation(posVal, clientVal);
         if (pName) {
           this.saveProjectRecommendation(pName);
@@ -6975,9 +7035,15 @@ class FinanceApp {
         }
       };
 
-      ['inv-cust-address', 'inv-cust-contact', 'inv-cust-email', 'inv-cust-gstin', 'inv-terms', 'inv-po-ref'].forEach(id => {
+      const debouncedAutoSave = () => {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(autoSaveCustomerModalFields, 300);
+      };
+
+      ['inv-cust-gstin', 'inv-cust-pos', 'inv-cust-address', 'inv-cust-contact', 'inv-cust-email', 'inv-terms', 'inv-po-ref'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
+          el.addEventListener('input', debouncedAutoSave);
           el.addEventListener('change', autoSaveCustomerModalFields);
           el.addEventListener('blur', autoSaveCustomerModalFields);
         }

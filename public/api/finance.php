@@ -529,6 +529,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
             $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004')");
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004')");
+            $pdo->exec("UPDATE finance_customers SET trn = '10457119600003', contact_person = 'MR. SHAHIL', email = 'procurementofficer@toprockinteriors.com', billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE', place_of_supply = 'Dubai, UAE' WHERE name LIKE '%TOP ROCK%'");
             $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01')");
             $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
@@ -613,6 +614,19 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $id = strtolower(trim($c['id'] ?? ''));
             return !in_array($id, $dummyCustIds);
         }));
+        foreach ($data['customers'] as &$c) {
+            if (stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
+                if (($c['trn'] ?? '') !== '10457119600003' || ($c['contact_person'] ?? '') !== 'MR. SHAHIL') {
+                    $c['trn'] = '10457119600003';
+                    $c['contact_person'] = 'MR. SHAHIL';
+                    $c['email'] = 'procurementofficer@toprockinteriors.com';
+                    $c['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                    $c['place_of_supply'] = 'Dubai, UAE';
+                    $changed = true;
+                }
+            }
+        }
+        unset($c);
         if (count($data['customers']) !== $orig) $changed = true;
     }
 
