@@ -1202,6 +1202,22 @@ class FinanceApp {
     }
   }
 
+  saveProjectRecommendation(projectName) {
+    if (!projectName) return;
+    const cleanPrjName = String(projectName).trim();
+    if (!cleanPrjName || cleanPrjName.toLowerCase() === 'general corporate billing') return;
+    try {
+      const storedList = localStorage.getItem('rayan_fin_saved_project_list');
+      const list = storedList ? JSON.parse(storedList) : [];
+      const filtered = list.filter(p => {
+        const pName = typeof p === 'string' ? p : (p?.name || '');
+        return pName.toLowerCase() !== cleanPrjName.toLowerCase();
+      });
+      filtered.unshift({ id: null, name: cleanPrjName });
+      localStorage.setItem('rayan_fin_saved_project_list', JSON.stringify(filtered.slice(0, 50)));
+    } catch (e) {}
+  }
+
   getRecommendedProjectForCustomer(customerNameOrId) {
     if (!customerNameOrId) return null;
     const raw = String(customerNameOrId).trim();
@@ -3077,7 +3093,7 @@ class FinanceApp {
                   <tr>
                     <td>
                       <strong>${item.name}</strong><br>
-                      <span style="font-size:0.68rem; color:#94a3b8;">HSN/SAC: ${item.hsn_sac_code || '—'} • ${item.code}</span>
+                      <span style="font-size:0.68rem; color:#94a3b8;">${this.activeCompanyId === 'ashaz-eng-in' ? `HSN/SAC: ${item.hsn_sac_code || '—'} • ` : ''}${item.code}</span>
                     </td>
                     <td><span class="fin-badge fin-badge-issued">${item.category}</span></td>
                     <td><strong>${this.formatCurrency(item.sales_price)}</strong> / ${item.uom}</td>
@@ -3559,7 +3575,7 @@ class FinanceApp {
                 <th>Item Code</th>
                 <th>Product / Service Description</th>
                 <th>Category</th>
-                <th>HSN / SAC</th>
+                ${this.activeCompanyId === 'ashaz-eng-in' ? '<th>HSN / SAC</th>' : ''}
                 <th>UOM</th>
                 <th>Default Sales Price</th>
                 <th>Default Cost Price</th>
@@ -3576,7 +3592,7 @@ class FinanceApp {
                     <div style="font-size:0.68rem; color:#94a3b8;">${i.description || ''}</div>
                   </td>
                   <td><span class="fin-badge fin-badge-issued">${i.category}</span></td>
-                  <td><code>${i.hsn_sac_code || '—'}</code></td>
+                  ${this.activeCompanyId === 'ashaz-eng-in' ? `<td><code>${i.hsn_sac_code || '—'}</code></td>` : ''}
                   <td>${i.uom}</td>
                   <td><strong>${this.formatCurrency(i.sales_price)}</strong></td>
                   <td>${this.formatCurrency(i.purchase_price)}</td>
@@ -5532,8 +5548,8 @@ class FinanceApp {
                   <table class="fin-line-item-table" id="inv-items-table">
                     <thead>
                       <tr>
-                        <th style="width:34%; text-align:left;">ITEM DESCRIPTION &amp; PROGRESSIVE MILESTONE</th>
-                        <th style="width:10%; text-align:center;">HSN / SAC</th>
+                        <th id="inv-desc-col-header" style="width:${initialRegime === 'trn' ? '44%' : '34%'}; text-align:left;">ITEM DESCRIPTION &amp; PROGRESSIVE MILESTONE</th>
+                        <th id="inv-hsn-col-header" style="width:10%; text-align:center; display:${initialRegime === 'trn' ? 'none' : ''};">HSN / SAC</th>
                         <th style="width:11%; text-align:center;">QTY / CLAIM %</th>
                         <th style="width:11%; text-align:center;">UNIT (UOM)</th>
                         <th style="width:14%; text-align:right;" id="inv-rate-col-header">CONTRACT / RATE (AED)</th>
@@ -5742,6 +5758,19 @@ class FinanceApp {
         });
       }
 
+      // HSN / SAC column visibility (hidden for UAE TRN VAT, shown for India GST)
+      const hsnHeader = document.getElementById('inv-hsn-col-header');
+      const descHeader = document.getElementById('inv-desc-col-header');
+      if (hsnHeader) hsnHeader.style.display = isTrn ? 'none' : '';
+      if (descHeader) descHeader.style.width = isTrn ? '44%' : '34%';
+
+      tbody.querySelectorAll('.row-hsn-cell').forEach(cell => {
+        cell.style.display = isTrn ? 'none' : '';
+      });
+      tbody.querySelectorAll('.row-desc-cell').forEach(cell => {
+        cell.style.width = isTrn ? '44%' : '34%';
+      });
+
       recalculateInvoice();
     };
 
@@ -5828,7 +5857,7 @@ class FinanceApp {
         }).join('');
 
       tr.innerHTML = `
-        <td style="width:34%; vertical-align:top;">
+        <td class="row-desc-cell" style="width:${currentRegime === 'trn' ? '44%' : '34%'}; vertical-align:top;">
           <select class="fin-form-select row-item-sel" style="margin-bottom:0.4rem; font-size:0.82rem; font-weight:600;">
             <option value="">Custom Item / Service / Milestone</option>
             <optgroup label="⚡ Progressive Milestone &amp; % Payments">
@@ -5855,7 +5884,7 @@ class FinanceApp {
           <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Enter item description or milestone..." value="${itemName}" style="font-size:0.82rem;">
           <div class="row-pct-note" style="display:${isPercentInitial ? 'flex' : 'none'};"></div>
         </td>
-        <td style="width:10%; vertical-align:top;">
+        <td class="row-hsn-cell" style="width:10%; vertical-align:top; display:${currentRegime === 'trn' ? 'none' : ''};">
           <input type="text" class="fin-form-input row-hsn" placeholder="9954" value="${hsn}" style="font-size:0.82rem; font-family:monospace; text-align:center;">
           <div style="font-size:0.65rem; color:#64748b; margin-top:3px; text-align:center;">HSN/SAC</div>
         </td>
@@ -6753,6 +6782,36 @@ class FinanceApp {
         });
       }
 
+      // 2b. Recent & Custom Saved Projects
+      let savedPrjs = [];
+      try {
+        const stored = localStorage.getItem('rayan_fin_saved_project_list');
+        if (stored) {
+          const list = JSON.parse(stored);
+          savedPrjs = list.filter(p => {
+            const pName = typeof p === 'string' ? p : (p?.name || '');
+            return pName && (!linkedPrj || pName.toLowerCase() !== linkedPrj.name.toLowerCase()) &&
+                   !matchedProjects.some(pj => pj.name.toLowerCase() === pName.toLowerCase()) &&
+                   (!q || pName.toLowerCase().includes(q));
+          });
+        }
+      } catch (e) {}
+      if (savedPrjs.length > 0) {
+        html += `<div class="fin-autocomplete-header" style="color:#38bdf8;">🕒 Recent &amp; Custom Saved Projects</div>`;
+        savedPrjs.forEach(p => {
+          const pName = typeof p === 'string' ? p : (p?.name || '');
+          html += `
+            <div class="fin-autocomplete-item prj-opt-item" data-id="${p.id || ''}" data-name="${pName}">
+              <div>
+                <div class="fin-autocomplete-item-name">${pName}</div>
+                <div class="fin-autocomplete-item-meta">Recent Project • Auto-Saved</div>
+              </div>
+              <span class="fin-autocomplete-item-badge" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);">Saved</span>
+            </div>
+          `;
+        });
+      }
+
       // 3. Cost Centers & General
       const costCenters = [
         { id: 'GENERAL', name: 'General Corporate Billing', meta: 'Standard Operating Entity Billing', badge: 'Default' },
@@ -7560,7 +7619,7 @@ class FinanceApp {
 
       rows.forEach((tr, idx) => {
         const desc = tr.querySelector('.row-desc')?.value?.trim() || 'Civil & Architectural Works';
-        const hsn = tr.querySelector('.row-hsn')?.value?.trim() || '9954';
+        const hsn = isTrn ? '' : (tr.querySelector('.row-hsn')?.value?.trim() || '');
         const qty = Number(tr.querySelector('.row-qty')?.value) || 1;
         const uom = (tr.querySelector('.row-uom')?.value || '').trim().toUpperCase() || 'LSUM';
         const unitPrice = Number(tr.querySelector('.row-rate')?.value) || 0;
