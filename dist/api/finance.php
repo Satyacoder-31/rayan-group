@@ -508,14 +508,16 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     $dummyPoIds = ['po-rec-11008'];
     $dummyDocIds = ['doc-001', 'doc-002', 'doc-003', 'doc-004'];
     $dummyVendorIds = ['vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004'];
-    $dummyCustIds = ['cust-004'];
+    $dummyCustIds = ['cust-004', 'cust-005', 'cust-kgc-alias'];
+    $dummyInvIds = ['inv-rec-rg-inv-44052', 'rec-rg-inv-44052'];
+    $dummyRecIds = ['rec-mvdvmilf', 'rec-rv-44026'];
     $dummyProjIds = ['prj-dpa-01'];
     $dummyChequeIds = ['chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01'];
     $dummyCvIds = ['cv-01', 'cv-02', 'cv-03'];
     $dummyWireIds = ['wire-01', 'wire-02', 'wire-04', 'wire-05'];
     $dummyLtIds = ['lt-01', 'lt-02'];
     $dummyNotifIds = ['notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee'];
-    $dummyAudIds = ['aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp'];
+    $dummyAudIds = ['aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7'];
 
     $changed = false;
 
@@ -528,15 +530,49 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_purchase_orders WHERE id = 'po-rec-11008' OR po_no = 'PO-REC-11008'");
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
             $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004')");
-            $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004')");
-            $pdo->exec("UPDATE finance_customers SET trn = '10457119600003', contact_person = 'MR. SHAHIL', email = 'procurementofficer@toprockinteriors.com', billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE', place_of_supply = 'Dubai, UAE' WHERE name LIKE '%TOP ROCK%'");
+            $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004', 'cust-005', 'cust-kgc-alias')");
+            $pdo->exec("DELETE FROM finance_invoices WHERE id IN ('inv-rec-rg-inv-44052') OR invoice_no IN ('REC-RG-INV-44052')");
+            $pdo->exec("DELETE FROM finance_customer_receipts WHERE id IN ('rec-mvdvmilf') OR receipt_no IN ('REC-RV-44026')");
+            $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
+            $pdo->exec("UPDATE finance_customers SET 
+                trn = '100360644700003', 
+                customer_type = 'Business',
+                contact_person = 'Mr. Shahil', 
+                salutation = 'Mr.',
+                first_name = 'Shahil',
+                email = 'procurementofficer@toprockinteriors.com', 
+                phone = '+971 502131834',
+                billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE', 
+                office_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+                place_of_supply = 'Dubai, UAE',
+                tax_treatment = 'VAT Registered',
+                currency = 'AED',
+                payment_terms = 0,
+                payment_terms_label = 'Due on Receipt',
+                accounts_receivable = 'Accounts Receivable'
+            WHERE name LIKE '%TOP ROCK%'");
+            $pdo->exec("UPDATE finance_invoices SET 
+                customer_trn = '100360644700003', 
+                trn = '100360644700003', 
+                tax_number = '100360644700003', 
+                contact_person = 'Mr. Shahil', 
+                email = 'procurementofficer@toprockinteriors.com', 
+                payment_terms = 0, 
+                payment_terms_label = 'Due on Receipt', 
+                customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE', 
+                billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' 
+            WHERE customer_name LIKE '%TOP ROCK%'");
+            $pdo->exec("UPDATE finance_customer_receipts SET 
+                contact_person = 'Mr. Shahil', 
+                email = 'procurementofficer@toprockinteriors.com' 
+            WHERE customer_name LIKE '%TOP ROCK%'");
             $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01')");
             $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
             $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-01', 'wire-02', 'wire-04', 'wire-05')");
             $pdo->exec("DELETE FROM finance_loan_transactions WHERE id IN ('lt-01', 'lt-02')");
             $pdo->exec("DELETE FROM finance_notifications WHERE id IN ('notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee')");
-            $pdo->exec("DELETE FROM finance_audit_logs WHERE id IN ('aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp')");
+            $pdo->exec("DELETE FROM finance_audit_logs WHERE id IN ('aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7')");
             $pdo->exec("DELETE FROM finance_bank_accounts WHERE id IN ('bank-nbad-uae', 'bank-enbd-escrow') OR bank_name LIKE '%National Bank of Abu Dhabi%' OR bank_name LIKE '%NBAD%' OR bank_name LIKE '%Emirates NBD%' OR (id = 'bank-fab-uae' AND bank_name LIKE '%First Abu Dhabi%')");
             $pdo->exec("REPLACE INTO finance_bank_accounts (id, company_id, account_name, bank_name, account_number, iban, swift, branch, currency, balance, signatory, status, data_json, updated_at) VALUES (
                 'bank-adcb-uae',
@@ -634,18 +670,86 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         }));
         foreach ($data['customers'] as &$c) {
             if (stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
-                if (($c['trn'] ?? '') !== '10457119600003' || ($c['contact_person'] ?? '') !== 'MR. SHAHIL') {
-                    $c['trn'] = '10457119600003';
-                    $c['contact_person'] = 'MR. SHAHIL';
-                    $c['email'] = 'procurementofficer@toprockinteriors.com';
-                    $c['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                if (($c['trn'] ?? '') !== '100360644700003' || ($c['phone'] ?? '') !== '+971 502131834' || ($c['contact_person'] ?? '') !== 'Mr. Shahil') {
+                    $c['customer_type'] = 'Business';
+                    $c['name'] = 'M/S TOP ROCK INTERIORS LLC.';
+                    $c['display_name'] = 'M/S TOP ROCK INTERIORS LLC.';
+                    $c['trn'] = '100360644700003';
+                    $c['tax_treatment'] = 'VAT Registered';
                     $c['place_of_supply'] = 'Dubai, UAE';
+                    $c['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                    $c['office_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                    $c['contact_person'] = 'Mr. Shahil';
+                    $c['salutation'] = 'Mr.';
+                    $c['first_name'] = 'Shahil';
+                    $c['email'] = 'procurementofficer@toprockinteriors.com';
+                    $c['phone'] = '+971 502131834';
+                    $c['currency'] = 'AED';
+                    $c['payment_terms'] = 0;
+                    $c['payment_terms_label'] = 'Due on Receipt';
+                    $c['accounts_receivable'] = 'Accounts Receivable';
                     $changed = true;
                 }
             }
         }
         unset($c);
         if (count($data['customers']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        $orig = count($data['invoices']);
+        $data['invoices'] = array_values(array_filter($data['invoices'], function($inv) use ($dummyInvIds) {
+            $id = strtolower(trim($inv['id'] ?? ''));
+            $no = strtolower(trim($inv['invoice_no'] ?? ''));
+            return !in_array($id, $dummyInvIds) && !in_array($no, $dummyInvIds);
+        }));
+        foreach ($data['invoices'] as &$inv) {
+            if (stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false) {
+                if (($inv['customer_trn'] ?? '') !== '100360644700003' || ($inv['contact_person'] ?? '') !== 'Mr. Shahil') {
+                    $inv['customer_trn'] = '100360644700003';
+                    $inv['trn'] = '100360644700003';
+                    $inv['tax_number'] = '100360644700003';
+                    $inv['contact_person'] = 'Mr. Shahil';
+                    $inv['email'] = 'procurementofficer@toprockinteriors.com';
+                    $inv['payment_terms'] = 0;
+                    $inv['payment_terms_label'] = 'Due on Receipt';
+                    $inv['customer_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                    $inv['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                    $changed = true;
+                }
+            }
+        }
+        unset($inv);
+        if (count($data['invoices']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+        $orig = count($data['customer_receipts']);
+        $data['customer_receipts'] = array_values(array_filter($data['customer_receipts'], function($r) use ($dummyRecIds) {
+            $id = strtolower(trim($r['id'] ?? ''));
+            $no = strtolower(trim($r['receipt_no'] ?? ''));
+            return !in_array($id, $dummyRecIds) && !in_array($no, $dummyRecIds);
+        }));
+        foreach ($data['customer_receipts'] as &$r) {
+            if (stripos($r['customer_name'] ?? '', 'TOP ROCK') !== false) {
+                if (($r['contact_person'] ?? '') !== 'Mr. Shahil') {
+                    $r['contact_person'] = 'Mr. Shahil';
+                    $r['email'] = 'procurementofficer@toprockinteriors.com';
+                    $changed = true;
+                }
+            }
+        }
+        unset($r);
+        if (count($data['customer_receipts']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['items']) && is_array($data['items'])) {
+        $orig = count($data['items']);
+        $data['items'] = array_values(array_filter($data['items'], function($it) {
+            $id = strtolower(trim($it['id'] ?? ''));
+            return strpos($id, 'item-00') !== 0;
+        }));
+        if (count($data['items']) !== $orig) $changed = true;
     }
 
     if (!empty($data['projects']) && is_array($data['projects'])) {

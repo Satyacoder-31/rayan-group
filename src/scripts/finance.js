@@ -202,25 +202,34 @@ class FinanceApp {
       'po-rec-11008',
       'vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae',
       'vend-001', 'vend-002', 'vend-003', 'vend-004',
-      'cust-004', 'prj-dpa-01',
+      'cust-004', 'cust-005', 'cust-kgc-alias', 'prj-dpa-01',
+      'inv-rec-rg-inv-44052', 'rec-rg-inv-44052',
+      'rec-mvdvmilf', 'rec-rv-44026',
+      'item-001', 'item-002', 'item-003', 'item-004', 'item-005', 'item-006', 'item-007', 'item-008',
       'doc-001', 'doc-002', 'doc-003', 'doc-004',
       'chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01',
       'cv-01', 'cv-02', 'cv-03',
       'wire-01', 'wire-02', 'wire-04', 'wire-05',
       'lt-01', 'lt-02',
       'notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee',
-      'aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp'
+      'aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7'
     ]);
 
     const isBlacklisted = (item) => {
       if (!item) return true;
       const id = String(item.id || '').trim().toLowerCase();
+      const name = String(item.name || item.customer_name || '').trim().toLowerCase();
       const billNo = String(item.bill_no || '').trim().toLowerCase();
       const vouchNo = String(item.voucher_no || '').trim().toLowerCase();
       const dnNo = String(item.debit_note_no || '').trim().toLowerCase();
       const expNo = String(item.expense_no || '').trim().toLowerCase();
       const poNo = String(item.po_no || '').trim().toLowerCase();
       const chequeNo = String(item.cheque_no || '').trim().toLowerCase();
+      const invNo = String(item.invoice_no || '').trim().toLowerCase();
+      const recNo = String(item.receipt_no || '').trim().toLowerCase();
+
+      if (name.includes('krishna general') || name.includes('yateem optician retail group')) return true;
+      if (id.startsWith('item-00')) return true;
 
       // Strictly purge the other two demo bank accounts (NBAD & Emirates NBD) and old demo FAB
       if (id === 'bank-nbad-uae' || id === 'bank-enbd-escrow') return true;
@@ -232,7 +241,7 @@ class FinanceApp {
         return true;
       }
 
-      return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo) || dummyBlacklist.has(expNo) || dummyBlacklist.has(poNo) || dummyBlacklist.has(chequeNo);
+      return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo) || dummyBlacklist.has(expNo) || dummyBlacklist.has(poNo) || dummyBlacklist.has(chequeNo) || dummyBlacklist.has(invNo) || dummyBlacklist.has(recNo);
     };
 
     for (const key of collections) {
@@ -245,7 +254,7 @@ class FinanceApp {
       const incomingArr = incomingRaw.filter(item => {
         if (!item || isBlacklisted(item)) return false;
         const no = item.invoice_no || item.receipt_no || item.code || item.id || '';
-        if (typeof no === 'string' && ['CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK'].includes(no)) {
+        if (typeof no === 'string' && ['CUST-LT', 'CUST-EMAAR', 'CUST-NHAI', 'CUST-DPA', 'CUST-YOK', 'CUST-KGC'].includes(no)) {
           return false;
         }
         return true;
@@ -259,11 +268,49 @@ class FinanceApp {
       if (key === 'customers') {
         incomingArr.forEach(c => {
           if (c && (c.name || '').includes('TOP ROCK')) {
-            c.trn = '10457119600003';
+            c.customer_type = 'Business';
+            c.name = 'M/S TOP ROCK INTERIORS LLC.';
+            c.company_name = 'M/S TOP ROCK INTERIORS LLC.';
+            c.display_name = 'M/S TOP ROCK INTERIORS LLC.';
+            c.trn = '100360644700003';
+            c.tax_treatment = 'VAT Registered';
             c.place_of_supply = 'Dubai, UAE';
             c.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-            c.contact_person = 'MR. SHAHIL';
+            c.office_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+            c.contact_person = 'Mr. Shahil';
+            c.salutation = 'Mr.';
+            c.first_name = 'Shahil';
             c.email = 'procurementofficer@toprockinteriors.com';
+            c.phone = '+971 502131834';
+            c.currency = 'AED';
+            c.payment_terms = 0;
+            c.payment_terms_label = 'Due on Receipt';
+            c.accounts_receivable = 'Accounts Receivable';
+          }
+        });
+      }
+
+      if (key === 'invoices') {
+        incomingArr.forEach(inv => {
+          if (inv && (inv.customer_name || '').includes('TOP ROCK')) {
+            inv.customer_trn = '100360644700003';
+            inv.trn = '100360644700003';
+            inv.tax_number = '100360644700003';
+            inv.contact_person = 'Mr. Shahil';
+            inv.email = 'procurementofficer@toprockinteriors.com';
+            inv.payment_terms = 0;
+            inv.payment_terms_label = 'Due on Receipt';
+            inv.customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+            inv.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+          }
+        });
+      }
+
+      if (key === 'customer_receipts') {
+        incomingArr.forEach(r => {
+          if (r && (r.customer_name || '').includes('TOP ROCK')) {
+            r.contact_person = 'Mr. Shahil';
+            r.email = 'procurementofficer@toprockinteriors.com';
           }
         });
       }
@@ -1396,8 +1443,9 @@ class FinanceApp {
              cNorm === normKey ||
              (cTrn && cTrn === lowerKey) ||
              (cleanKey.length >= 3 && (cClean.includes(cleanKey) || cleanKey.includes(cClean))) ||
-             (normKey.length >= 3 && (cNorm.includes(normKey) || normKey.includes(cNorm))) ||
-             (cleanKey.includes('buildara') && (cClean.includes('buildara') || cClean.includes('krishna')));
+              (normKey.length >= 3 && (cNorm.includes(normKey) || normKey.includes(cNorm))) ||
+              (cleanKey.includes('buildara') && cClean.includes('buildara')) ||
+              (cleanKey.includes('top rock') && cClean.includes('top rock'));
     });
 
     // 3. Find latest invoices in this.db.invoices
@@ -1413,7 +1461,8 @@ class FinanceApp {
              iNorm === normKey ||
              (cleanKey.length >= 3 && (iClean.includes(cleanKey) || cleanKey.includes(iClean))) ||
              (normKey.length >= 3 && (iNorm.includes(normKey) || normKey.includes(iNorm))) ||
-             (cleanKey.includes('buildara') && (iClean.includes('buildara') || iClean.includes('krishna')));
+             (cleanKey.includes('buildara') && iClean.includes('buildara')) ||
+             (cleanKey.includes('top rock') && iClean.includes('top rock'));
     });
     matchedInvoices.sort((a, b) => new Date(b.invoice_date || 0) - new Date(a.invoice_date || 0));
     const latestInv = matchedInvoices[0] || null;
@@ -1431,7 +1480,8 @@ class FinanceApp {
              pClient === lowerKey ||
              pClean === cleanKey ||
              (cleanKey.length >= 3 && (pClean.includes(cleanKey) || cleanKey.includes(pClean))) ||
-             (cleanKey.includes('buildara') && (pClean.includes('buildara') || pClean.includes('krishna')));
+             (cleanKey.includes('buildara') && pClean.includes('buildara')) ||
+             (cleanKey.includes('top rock') && pClean.includes('top rock'));
     });
 
     // If neither customer, nor latest invoice, nor local cache, nor project found
@@ -1457,10 +1507,13 @@ class FinanceApp {
       };
     }
 
+    const isTopRock = cleanKey.includes('top rock') || (cust?.name && cust.name.toLowerCase().includes('top rock'));
+    const isBuildara = cleanKey.includes('buildara') || (cust?.name && cust.name.toLowerCase().includes('buildara'));
+
     const name = localInfo?.name || cust?.name || latestInv?.customer_name || rawKey;
     const id = cust?.id || localInfo?.id || latestInv?.customer_id || '';
     const code = cust?.code || localInfo?.code || '';
-    const trn = localInfo?.trn || cust?.trn || latestInv?.customer_trn || (cleanKey.includes('buildara') ? '105405525400003' : '');
+    const trn = isTopRock ? '100360644700003' : (localInfo?.trn || cust?.trn || latestInv?.customer_trn || (isBuildara ? '105405525400003' : ''));
     const gstin = localInfo?.gstin || cust?.gstin || latestInv?.customer_gstin || '';
 
     const isUae = (cust?.country && cust.country.toUpperCase() === 'UAE') ||
@@ -1468,32 +1521,31 @@ class FinanceApp {
                   (latestInv?.tax_regime === 'trn') ||
                   (this.activeCompanyId !== 'ashaz-eng-in');
 
-    const placeOfSupply = localInfo?.place_of_supply ||
+    const placeOfSupply = isTopRock ? 'Dubai, UAE' : (localInfo?.place_of_supply ||
                           this.getRecommendedPosForCustomer(name) ||
                           cust?.place_of_supply ||
                           latestInv?.place_of_supply ||
-                          (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
+                          (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra'));
 
-    const billingAddress = localInfo?.billing_address ||
+    const billingAddress = isTopRock ? 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' : (localInfo?.billing_address ||
                            cust?.billing_address ||
                            cust?.address ||
                            latestInv?.customer_address ||
-                           (cleanKey.includes('buildara') ? 'ABU DHABI, MADINAT ZAYED, UAE' : '');
+                           (isBuildara ? 'ABU DHABI, MADINAT ZAYED, UAE' : ''));
 
-    const contactPerson = localInfo?.contact_person ||
+    const contactPerson = isTopRock ? 'Mr. Shahil' : (localInfo?.contact_person ||
                           cust?.contact_person ||
                           latestInv?.contact_person ||
-                          (cleanKey.includes('buildara') ? 'Mr. Sooraj Kumar' : '');
+                          (isBuildara ? 'Mr. Sooraj Kumar' : ''));
 
-    const email = localInfo?.email ||
+    const email = isTopRock ? 'procurementofficer@toprockinteriors.com' : (localInfo?.email ||
                   cust?.email ||
                   latestInv?.email ||
-                  (cleanKey.includes('buildara') ? 'buildaradevelopers@gmail.com' : '');
+                  (isBuildara ? 'buildaradevelopers@gmail.com' : ''));
 
-    const paymentTerms = localInfo?.payment_terms ||
-                         cust?.payment_terms ||
-                         latestInv?.payment_terms ||
-                         30;
+    const paymentTerms = isTopRock ? 0 : (localInfo?.payment_terms !== undefined ? localInfo.payment_terms :
+                         (cust?.payment_terms !== undefined ? cust.payment_terms :
+                         (latestInv?.payment_terms !== undefined ? latestInv.payment_terms : 30)));
 
     const projectId = recPrj?.projectId ||
                       cust?.default_project_id ||
@@ -5255,14 +5307,14 @@ class FinanceApp {
 
     const isEditing = !!editInv;
     const modalTitle = isEditing ? (editInv.status === 'draft' ? '✏️ Edit Draft Invoice' : '✏️ Edit Sales Tax Invoice') : '📄 Create Sales Tax Invoice';
-    const initialCustName = editInv ? (editInv.customer_name || '') : 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C';
-    const initialCustTrn = editInv ? (editInv.customer_trn || editInv.customer_gstin || editInv.tax_number || '') : '105405525400003';
-    const initialPos = editInv ? (editInv.place_of_supply || 'Abu Dhabi, UAE') : 'Abu Dhabi, UAE';
-    const initialAddress = editInv ? (editInv.customer_address || '') : 'ABU DHABI, MADINAT ZAYED, UAE';
-    const initialContact = editInv ? (editInv.contact_person || '') : 'Mr. Sooraj Kumar';
-    const initialEmail = editInv ? (editInv.email || '') : 'buildaradevelopers@gmail.com';
+    const initialCustName = editInv ? (editInv.customer_name || '') : '';
+    const initialCustTrn = editInv ? (editInv.customer_trn || editInv.customer_gstin || editInv.tax_number || '') : '';
+    const initialPos = editInv ? (editInv.place_of_supply || 'Dubai, UAE') : 'Dubai, UAE';
+    const initialAddress = editInv ? (editInv.customer_address || '') : '';
+    const initialContact = editInv ? (editInv.contact_person || '') : '';
+    const initialEmail = editInv ? (editInv.email || '') : '';
     const initialDate = editInv ? (editInv.invoice_date || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
-    const initialTerms = editInv ? (editInv.payment_terms !== undefined ? editInv.payment_terms : 30) : 30;
+    const initialTerms = editInv ? (editInv.payment_terms !== undefined ? editInv.payment_terms : 0) : 0;
     const initialDueDate = editInv ? (editInv.due_date || '') : '';
     const initialPrj = editInv ? (editInv.project_name || '') : '';
     const initialPoRef = editInv ? (editInv.po_reference || '') : '';
@@ -9773,66 +9825,146 @@ class FinanceApp {
   openCreateCustomerModal() {
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-add-cust">
-        <div class="fin-modal-dialog" style="max-width:650px;">
+        <div class="fin-modal-dialog" style="max-width:720px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">👥 Add New Corporate Client / Customer</h3>
+            <h3 class="fin-modal-title">New Customer</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-add-cust')">&times;</button>
           </div>
           <div class="fin-modal-body">
             <form id="add-cust-form">
-              <div class="fin-form-group">
-                <label class="fin-form-label">Client Company Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="new-cust-name" class="fin-form-input" required placeholder="e.g. Shapoorji Pallonji EPC Division">
+              <!-- Customer Type -->
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label" style="margin-bottom:0.4rem;">Customer Type</label>
+                <div style="display:flex; gap:1.5rem; align-items:center;">
+                  <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#f8fafc; font-size:0.88rem;">
+                    <input type="radio" name="new-cust-type" value="Business" checked> Business
+                  </label>
+                  <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#94a3b8; font-size:0.88rem;">
+                    <input type="radio" name="new-cust-type" value="Individual"> Individual
+                  </label>
+                </div>
               </div>
 
+              <!-- Primary Contact -->
+              <div class="fin-form-group">
+                <label class="fin-form-label">Primary Contact</label>
+                <div style="display:grid; grid-template-columns: 100px 1fr 1fr; gap:0.75rem;">
+                  <select id="new-cust-salutation" class="fin-form-select">
+                    <option value="Mr." selected>Mr.</option>
+                    <option value="Mrs.">Mrs.</option>
+                    <option value="Ms.">Ms.</option>
+                    <option value="Miss">Miss</option>
+                    <option value="Dr.">Dr.</option>
+                    <option value="Eng.">Eng.</option>
+                  </select>
+                  <input type="text" id="new-cust-firstname" class="fin-form-input" placeholder="First Name">
+                  <input type="text" id="new-cust-lastname" class="fin-form-input" placeholder="Last Name">
+                </div>
+              </div>
+
+              <!-- Company Name & Display Name -->
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Contact Person</label>
-                  <input type="text" id="new-cust-contact" class="fin-form-input" placeholder="e.g. Sanjeev Varma">
+                  <label class="fin-form-label">Company Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="new-cust-company" class="fin-form-input" required placeholder="e.g. M/S TOP ROCK INTERIORS LLC.">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Email Address <span style="color:#ef4444;">*</span></label>
-                  <input type="email" id="new-cust-email" class="fin-form-input" required placeholder="finance@client.com">
+                  <label class="fin-form-label">Display Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="new-cust-display" class="fin-form-input" required placeholder="e.g. M/S TOP ROCK INTERIORS LLC.">
                 </div>
               </div>
 
-              <div class="fin-form-grid-3">
+              <!-- Email & Phone -->
+              <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Country / Jurisdiction</label>
-                  <select id="new-cust-country" class="fin-form-select">
-                    <option value="India" selected>🇮🇳 India</option>
-                    <option value="UAE">🇦🇪 United Arab Emirates (UAE)</option>
+                  <label class="fin-form-label">Email Address <span style="color:#ef4444;">*</span></label>
+                  <input type="email" id="new-cust-email" class="fin-form-input" required placeholder="procurementofficer@toprockinteriors.com">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Phone</label>
+                  <div style="display:grid; grid-template-columns: 85px 1fr; gap:0.5rem;">
+                    <select id="new-cust-phone-prefix" class="fin-form-select">
+                      <option value="+971" selected>+971</option>
+                      <option value="+91">+91</option>
+                      <option value="+1">+1</option>
+                      <option value="+44">+44</option>
+                      <option value="+966">+966</option>
+                    </select>
+                    <input type="tel" id="new-cust-phone" class="fin-form-input" placeholder="502131834">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tax Treatment & TRN -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Tax Treatment <span style="color:#ef4444;">*</span></label>
+                  <select id="new-cust-tax-treatment" class="fin-form-select">
+                    <option value="VAT Registered" selected>VAT Registered</option>
+                    <option value="Non-VAT Registered">Non-VAT Registered</option>
+                    <option value="Designated Zone">Designated Zone (Tax Free)</option>
+                    <option value="GCC VAT Registered">GCC VAT Registered</option>
+                    <option value="Out of Scope">Out of Scope</option>
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">GSTIN (India)</label>
-                  <input type="text" id="new-cust-gstin" class="fin-form-input" placeholder="27AAACS1234F1Z9">
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">TRN (UAE VAT)</label>
-                  <input type="text" id="new-cust-trn" class="fin-form-input" placeholder="100492817200003">
+                  <label class="fin-form-label">Tax Registration Number (TRN) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="new-cust-trn" class="fin-form-input" placeholder="100360644700003">
                 </div>
               </div>
 
+              <!-- Place of Supply & Currency -->
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Place of Supply <span style="color:#ef4444;">*</span></label>
+                  <select id="new-cust-pos" class="fin-form-select">
+                    <option value="Dubai" selected>Dubai</option>
+                    <option value="Abu Dhabi">Abu Dhabi</option>
+                    <option value="Sharjah">Sharjah</option>
+                    <option value="Ajman">Ajman</option>
+                    <option value="Umm Al Quwain">Umm Al Quwain</option>
+                    <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+                    <option value="Fujairah">Fujairah</option>
+                    <option value="27-Maharashtra">27-Maharashtra (India)</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Currency</label>
+                  <select id="new-cust-currency" class="fin-form-select">
+                    <option value="AED" selected>AED - UAE Dirham</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="USD">USD - US Dollar</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Accounts Receivable</label>
+                  <input type="text" id="new-cust-ar" class="fin-form-input" value="Accounts Receivable" readonly style="opacity:0.8;">
+                </div>
+              </div>
+
+              <!-- Payment Terms & Opening Balance -->
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Phone Number</label>
-                  <input type="tel" id="new-cust-phone" class="fin-form-input" placeholder="+91 22 6000 0000 / +971 4 000 0000">
+                  <label class="fin-form-label">Payment Terms</label>
+                  <select id="new-cust-terms" class="fin-form-select">
+                    <option value="0" selected>Due on Receipt</option>
+                    <option value="15">Net 15 Days</option>
+                    <option value="30">Net 30 Days</option>
+                    <option value="45">Net 45 Days</option>
+                    <option value="60">Net 60 Days</option>
+                    <option value="90">Net 90 Days</option>
+                  </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Place of Supply / State / Emirate</label>
-                  <input type="text" id="new-cust-pos" class="fin-form-input" value="27-Maharashtra" placeholder="e.g. 27-Maharashtra or Abu Dhabi, UAE" list="pos-suggestions">
+                  <label class="fin-form-label">Opening Balance</label>
+                  <input type="number" id="new-cust-opening-bal" class="fin-form-input" placeholder="0.00" value="0">
                 </div>
               </div>
 
+              <!-- Office / Billing Address -->
               <div class="fin-form-group">
-                <label class="fin-form-label">Billing Address</label>
-                <textarea id="new-cust-address" class="fin-form-textarea" rows="2" placeholder="Registered office address..."></textarea>
-              </div>
-
-              <div class="fin-form-group">
-                <label class="fin-form-label">Credit Limit (₹ / AED)</label>
-                <input type="number" id="new-cust-credit" class="fin-form-input" value="50000000">
+                <label class="fin-form-label">Office / Billing Address</label>
+                <textarea id="new-cust-address" class="fin-form-textarea" rows="2" placeholder="e.g. TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE"></textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -9847,42 +9979,67 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
-    const countrySel = document.getElementById('new-cust-country');
-    const posInp = document.getElementById('new-cust-pos');
-    if (countrySel && posInp) {
-      countrySel.onchange = () => {
-        if (countrySel.value === 'UAE') {
-          if (posInp.value === '27-Maharashtra') posInp.value = 'Abu Dhabi, UAE';
-        } else {
-          if (posInp.value === 'Abu Dhabi, UAE') posInp.value = '27-Maharashtra';
+    // Auto-sync company name to display name
+    const compInp = document.getElementById('new-cust-company');
+    const dispInp = document.getElementById('new-cust-display');
+    if (compInp && dispInp) {
+      compInp.addEventListener('input', () => {
+        if (!dispInp.getAttribute('data-manual')) {
+          dispInp.value = compInp.value;
         }
-      };
+      });
+      dispInp.addEventListener('input', () => {
+        dispInp.setAttribute('data-manual', 'true');
+      });
     }
 
     document.getElementById('add-cust-form').onsubmit = async (e) => {
       e.preventDefault();
-      const custName = document.getElementById('new-cust-name').value.trim();
-      const codePart = custName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'CUST';
+      const compName = document.getElementById('new-cust-company').value.trim();
+      const dispName = document.getElementById('new-cust-display').value.trim() || compName;
+      const salutation = document.getElementById('new-cust-salutation').value;
+      const firstName = document.getElementById('new-cust-firstname').value.trim();
+      const lastName = document.getElementById('new-cust-lastname').value.trim();
+      const contactPerson = [salutation, firstName, lastName].filter(Boolean).join(' ').trim();
+      const phonePrefix = document.getElementById('new-cust-phone-prefix').value;
+      const phoneNum = document.getElementById('new-cust-phone').value.trim();
+      const fullPhone = phoneNum ? `${phonePrefix} ${phoneNum}`.trim() : '';
+
+      const codePart = compName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'CUST';
       const custId = `cust-${Date.now().toString(36)}`;
       const custCode = `CUST-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
+
+      const termsDays = Number(document.getElementById('new-cust-terms').value) || 0;
+      const termsLabel = termsDays === 0 ? 'Due on Receipt' : `${termsDays} Days`;
 
       const payload = {
         customer: {
           id: custId,
           code: custCode,
-          name: custName,
+          name: compName,
+          company_name: compName,
+          display_name: dispName,
+          customer_type: document.querySelector('input[name="new-cust-type"]:checked')?.value || 'Business',
           company_id: this.activeCompanyId || 'rayan-corp-uae',
           status: 'Active',
-          contact_person: document.getElementById('new-cust-contact').value.trim(),
+          contact_person: contactPerson,
+          salutation: salutation,
+          first_name: firstName,
+          last_name: lastName,
           email: document.getElementById('new-cust-email').value.trim(),
-          phone: document.getElementById('new-cust-phone').value.trim(),
-          country: document.getElementById('new-cust-country').value,
-          gstin: document.getElementById('new-cust-gstin').value.trim().toUpperCase(),
+          phone: fullPhone,
+          tax_treatment: document.getElementById('new-cust-tax-treatment').value,
           trn: document.getElementById('new-cust-trn').value.trim(),
+          country: 'UAE',
+          place_of_supply: document.getElementById('new-cust-pos').value,
+          currency: document.getElementById('new-cust-currency').value,
+          accounts_receivable: 'Accounts Receivable',
+          opening_balance: Number(document.getElementById('new-cust-opening-bal').value) || 0,
           billing_address: document.getElementById('new-cust-address').value.trim(),
-          place_of_supply: document.getElementById('new-cust-pos').value.trim(),
-          credit_limit: Number(document.getElementById('new-cust-credit').value) || 10000000,
-          payment_terms: 30
+          office_address: document.getElementById('new-cust-address').value.trim(),
+          payment_terms: termsDays,
+          payment_terms_label: termsLabel,
+          credit_limit: 15000000
         }
       };
 

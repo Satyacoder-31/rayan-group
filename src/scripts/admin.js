@@ -1205,38 +1205,6 @@ class RayanAdminPortal {
 
     let merged = Array.from(sessionMap.values()).sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
 
-    // If still 0 sessions, generate a live demo visitor so the desk is NEVER blank
-    if (merged.length === 0) {
-      const demoId = 'sess_demo_live';
-      const demoSession = {
-        id: demoId,
-        visitorName: 'Tariq Al-Nuaimi (Apex Infrastructure)',
-        page: '/projects/waldorf-astoria-renovation-rak/',
-        createdAt: Date.now() - 300000,
-        lastActivity: Date.now() - 60000,
-        lastMessage: 'Inquiring about turnkey EPC delivery for luxury hospitality renovation in Abu Dhabi.',
-        unreadForAdmin: 1,
-        unreadForVisitor: 0,
-        status: 'active'
-      };
-      merged = [demoSession];
-
-      // Seed initial messages for demo
-      if (!localStorage.getItem(`rayan_chat_msgs_${demoId}`)) {
-        const demoMsgs = [
-          {
-            id: 'demo_msg_1',
-            sessionId: demoId,
-            sender: 'visitor',
-            senderName: 'Tariq Al-Nuaimi',
-            text: 'Hello, we are reviewing your Waldorf Astoria hospitality renovation project and would like to request an executive briefing for a commercial project in Abu Dhabi.',
-            timestamp: Date.now() - 120000
-          }
-        ];
-        localStorage.setItem(`rayan_chat_msgs_${demoId}`, JSON.stringify(demoMsgs));
-      }
-    }
-
     this.sessions = merged;
     this.renderSessionsList();
     this.updateNavUnreadCount();
