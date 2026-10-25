@@ -4358,3 +4358,298 @@ select option:focus,
   background: #f8fafc;
   border-color: #94a3b8;
 }
+
+/* ==========================================================================
+   Screenshot 1 & 2: Zoho Books Item Table & Whole-Invoice Payment Claim
+   ========================================================================== */
+
+/* Whole-Invoice Payment Stage Card */
+.fin-inv-stage-card {
+  margin: 1.25rem 0 1rem;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  padding: 1.1rem 1.35rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.fin-stage-pill-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+}
+
+@media (max-width: 768px) {
+  .fin-stage-pill-group {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.fin-stage-pill-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #cbd5e1;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fin-stage-pill-opt:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+}
+
+.fin-stage-pill-opt.active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(56, 189, 248, 0.25));
+  border: 1.5px solid #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+.fin-stage-pill-opt .stage-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.fin-pct-pill-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fin-pct-pill-btn:hover {
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.fin-pct-pill-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+}
+
+/* Zoho Books Item Table (Screenshot 1 Matching) */
+.fin-item-table-container {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden;
+  margin: 1.25rem 0 1.25rem;
+}
+
+.fin-screenshot1-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  font-size: 0.84rem;
+}
+
+.fin-screenshot1-table th {
+  background: #ffffff;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.fin-screenshot1-table td {
+  padding: 0.75rem 0.65rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  color: #1e293b;
+}
+
+.fin-screenshot1-table tr:hover td {
+  background: #f8fafc;
+}
+
+.fin-s1-item-desc {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.fin-s1-item-desc:focus,
+.fin-s1-item-desc:hover {
+  background: #ffffff;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.fin-s1-unit-code-row {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fin-s1-uom-select {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  color: #2563eb;
+  background: #ffffff;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.fin-s1-uom-select:focus,
+.fin-s1-uom-select:hover {
+  border-color: #2563eb;
+}
+
+.fin-s1-qty,
+.fin-s1-rate {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.88rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+  text-align: right;
+  transition: all 0.15s ease;
+}
+
+.fin-s1-qty:focus,
+.fin-s1-qty:hover,
+.fin-s1-rate:focus,
+.fin-s1-rate:hover {
+  background: #ffffff;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.fin-s1-discount-val {
+  width: 52px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.84rem;
+  padding: 3px 5px;
+  border-radius: 4px;
+  outline: none;
+  text-align: right;
+  transition: all 0.15s ease;
+}
+
+.fin-s1-discount-val:focus,
+.fin-s1-discount-val:hover {
+  background: #ffffff;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.fin-s1-discount-type {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+
+.fin-s1-tax-select {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.78rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fin-s1-tax-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.fin-s1-tax-clear {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.fin-s1-tax-clear:hover {
+  color: #ef4444;
+}
+
+.fin-s1-row-amount {
+  font-weight: 700;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: block;
+  text-align: right;
+  font-size: 0.92rem;
+  padding-top: 5px;
+}
+
+.fin-s1-row-del {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.92rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.fin-s1-row-del:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+/* Summary Card matching Screenshot 1 */
+.fin-summary-card-s1 {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.15rem 1.35rem;
+  color: #1e293b;
+}

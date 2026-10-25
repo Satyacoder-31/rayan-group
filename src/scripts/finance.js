@@ -5646,6 +5646,8 @@ class FinanceApp {
     const initialSalesperson = editInv ? (editInv.salesperson || '') : '';
     const initialDrc = editInv ? Boolean(editInv.drc_applicable) : false;
     const initialSubject = editInv ? (editInv.subject || '') : '';
+    const initialPaymentStage = editInv?.payment_stage || (editInv?.line_items?.[0]?.name?.includes('PROGRESSIVE') ? 'progressive' : (editInv?.line_items?.[0]?.name?.includes('ADVANCE') ? 'advance' : (editInv?.line_items?.[0]?.name?.includes('FINAL') ? 'final' : 'standard')));
+    const initialClaimPct = editInv?.claim_pct || 20;
 
     this.currentBillingAddress = editInv?.billing_address_details || (editInv?.customer_address ? {
       street1: editInv.customer_address,
@@ -5904,59 +5906,125 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Line Items & Tax Calculation Section -->
-              <div style="display:flex; justify-content:space-between; align-items:center; margin:1.5rem 0 0.75rem; flex-wrap:wrap; gap:0.75rem; padding-bottom:0.6rem; border-bottom:1px solid rgba(255,255,255,0.08);">
-                <div style="display:flex; align-items:center; gap:0.65rem;">
-                  <div style="width:36px; height:36px; border-radius:8px; background:rgba(0,153,230,0.12); border:1px solid rgba(0,153,230,0.25); display:flex; align-items:center; justify-content:center; color:#38bdf8; font-size:1.15rem;">
-                    📑
-                  </div>
+              <!-- Autocomplete suggestions datalist for items -->
+              <datalist id="inv-item-catalog-suggestions">
+                <option value="Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)">
+                <option value="Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)">
+                <option value="Rockwool Stud &amp; Furing For Academy Building (PODSUB-2026/0810)">
+                <option value="Normal Ceiling Work For Academy Building (PODSUB-2026/0858)">
+                <option value="Civil &amp; Interior Fit-Out Works at Yateem Optician">
+                <option value="Supply &amp; Fabrication of Structural Steel Members">
+                <option value="Reinforced Concrete Casting &amp; Shuttering Works">
+                <option value="Aluminum &amp; Glazing Facade System Installation">
+                ${items.map(it => `<option value="${it.name}">Catalog: ${it.name} (${it.uom || 'SQM'})</option>`).join('')}
+              </datalist>
+
+              <!-- Whole-Invoice Payment Stage Bar -->
+              <div class="fin-inv-stage-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
                   <div>
-                    <h4 style="font-family:var(--fin-font-heading); font-size:1.1rem; color:#f8fafc; margin:0; display:flex; align-items:center; gap:0.5rem;">
-                      Line Items &amp; Tax Calculation
-                      <span style="font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(16,185,129,0.14); color:#10b981; border:1px solid rgba(16,185,129,0.3);">Milestone &amp; VAT 5% Active</span>
-                    </h4>
-                    <div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">
-                      Enter line rate or select progressive milestone (% billing) for progress claims
+                    <div style="font-weight:700; font-size:0.88rem; color:#f8fafc; display:flex; align-items:center; gap:0.45rem;">
+                      <span>💳</span>
+                      <span>Payment Claim Stage (Whole Invoice)</span>
+                      <span style="font-size:0.68rem; font-weight:600; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(56,189,248,0.3);">Invoice-Level Claim</span>
+                    </div>
+                    <div style="font-size:0.73rem; color:#94a3b8; margin-top:2px;">
+                      Select payment milestone claim for the whole invoice (advance, progressive, final) or bill standard 100%
                     </div>
                   </div>
                 </div>
-                <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-                  <button type="button" class="fin-btn-quick" id="inv-apply-50pct-preset-btn" style="background:rgba(16,185,129,0.16); color:#34d399; border:1px solid rgba(16,185,129,0.4); font-size:0.78rem; padding:0.4rem 0.95rem; border-radius:6px; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; transition:all 0.2s ease;">
-                    <span>⚡ Quick 50% Milestone</span>
+
+                <div class="fin-stage-pill-group">
+                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'standard' ? 'active' : ''}" data-stage="standard" id="stage-opt-standard">
+                    <span class="stage-icon">📄</span>
+                    <div class="stage-text">
+                      <strong style="display:block; font-size:0.82rem;">Standard (100%)</strong>
+                      <span style="font-size:0.68rem; opacity:0.8;">Full BOQ Items</span>
+                    </div>
                   </button>
-                  <button type="button" class="fin-btn-quick" id="inv-open-billed-modal-btn" style="background:rgba(37,99,235,0.16); color:#60a5fa; border:1px solid rgba(59,130,246,0.35); font-size:0.78rem; padding:0.4rem 0.95rem; border-radius:6px; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;">
-                    <span>📋 Spreadsheet View</span>
+                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'advance' ? 'active' : ''}" data-stage="advance" id="stage-opt-advance">
+                    <span class="stage-icon">⚡</span>
+                    <div class="stage-text">
+                      <strong style="display:block; font-size:0.82rem;">Advance Payment</strong>
+                      <span style="font-size:0.68rem; opacity:0.8;">Mobilization Claim</span>
+                    </div>
                   </button>
+                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'progressive' ? 'active' : ''}" data-stage="progressive" id="stage-opt-progressive">
+                    <span class="stage-icon">📊</span>
+                    <div class="stage-text">
+                      <strong style="display:block; font-size:0.82rem;">Progressive Payment</strong>
+                      <span style="font-size:0.68rem; opacity:0.8;">Milestone / RA Bill</span>
+                    </div>
+                  </button>
+                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'final' ? 'active' : ''}" data-stage="final" id="stage-opt-final">
+                    <span class="stage-icon">🏁</span>
+                    <div class="stage-text">
+                      <strong style="display:block; font-size:0.82rem;">Final Payment</strong>
+                      <span style="font-size:0.68rem; opacity:0.8;">Completion / Retention</span>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- Claim Settings Drawer -->
+                <div id="fin-stage-claim-drawer" style="display:${initialPaymentStage !== 'standard' ? 'block' : 'none'}; margin-top:0.85rem; background:rgba(11,17,30,0.65); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.85rem 1rem;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                      <label style="font-size:0.78rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.04em;">Claim Percentage:</label>
+                      <div style="display:flex; align-items:center; gap:0.35rem;">
+                        <input type="number" id="inv-stage-pct-input" value="${initialClaimPct || 20}" min="0.01" max="100" step="any" style="width:65px; padding:3px 6px; font-weight:800; font-size:0.95rem; text-align:center; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid #38bdf8; border-radius:5px;">
+                        <span style="font-weight:800; color:#38bdf8; font-size:1rem;">%</span>
+                      </div>
+                      <div class="fin-pct-quick-pills" style="display:flex; gap:0.35rem;">
+                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 10 ? 'active' : ''}" data-pct="10">10%</button>
+                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 20 ? 'active' : ''}" data-pct="20">20%</button>
+                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 30 ? 'active' : ''}" data-pct="30">30%</button>
+                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 50 ? 'active' : ''}" data-pct="50">50%</button>
+                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 100 ? 'active' : ''}" data-pct="100">100%</button>
+                      </div>
+                    </div>
+                    <div style="font-size:0.74rem; color:#94a3b8; font-family:monospace;" id="inv-stage-math-hint">
+                      Contract Base: AED 0.00 &times; ${initialClaimPct}% = <strong style="color:#ffffff;">AED 0.00</strong> Taxable
+                    </div>
+                  </div>
+                  <!-- Printed Invoice Headline Preview matching Screenshot 2 -->
+                  <div style="margin-top:0.6rem; padding:0.5rem 0.75rem; background:rgba(30,41,59,0.85); border-radius:6px; border:1px dashed rgba(56,189,248,0.3); font-size:0.78rem; color:#cbd5e1; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="color:#38bdf8; font-size:0.9rem;">📌</span>
+                    <span style="font-weight:600; color:#94a3b8; white-space:nowrap;">Printed Headline:</span>
+                    <span id="inv-stage-headline-preview" style="font-weight:700; color:#f8fafc; font-family:monospace;">
+                      ${initialClaimPct}% ${(initialPaymentStage || 'progressive').toUpperCase()} PAYMENT FOR PO NO. ${initialPoRef || 'LPO/BD/2026/12'} ${initialPrj || initialSubject || initialCustName || 'Civil & Interior Work at Yateem Optician, Khalidiyah Mall, Abu Dhabi'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Milestone and Catalog Autocomplete Datalist -->
-              <datalist id="inv-item-milestone-suggestions">
-                <option value="20% ADVANCE PAYMENT AGAINST PURCHASE ORDER">
-                <option value="10 PROGRESSIVE PAYMENT">
-                <option value="50% PROGRESSIVE PAYMENT - CIVIL &amp; INTERIOR FIT-OUT">
-                <option value="RUNNING ACCOUNT (RA) BILL - STRUCTURAL WORKS">
-                <option value="SECOND PROGRESSIVE PAYMENT - MEP INSTALLATION">
-                <option value="FINAL COMPLETION &amp; RETENTION RELEASE (5%)">
-                <option value="SUPPLY &amp; FABRICATION OF STRUCTURAL STEEL">
-                <option value="CIVIL WORKS &amp; REINFORCED CONCRETE CASTING">
-                <option value="ALUMINUM &amp; GLAZING FACADE WORKS">
-                ${items.map(it => `<option value="${it.name}">Catalog: ${it.name} (${it.hsn_sac_code || ''})</option>`).join('')}
-              </datalist>
+              <!-- Item Table (Screenshot 1 Matching) -->
+              <div class="fin-item-table-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1.25rem; background:#ffffff; border-bottom:1px solid #f1f5f9;">
+                  <div style="font-size:1.05rem; font-weight:700; color:#0f172a; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+                    Item Table
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <button type="button" class="fin-item-table-top-btn" id="inv-scan-item-btn" style="background:#ffffff; color:#334155; border:1px solid #cbd5e1; border-radius:6px; padding:0.4rem 0.85rem; font-size:0.8rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                      <span>📷</span> Scan Item
+                    </button>
+                    <button type="button" class="fin-item-table-top-btn" id="inv-bulk-actions-btn" style="background:#ffffff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; padding:0.4rem 0.85rem; font-size:0.8rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                      <span>✓</span> Bulk Actions
+                    </button>
+                  </div>
+                </div>
 
-              <div class="fin-table-card">
-                <div class="fin-table-responsive" style="margin:0;">
-                  <table class="fin-line-item-table" id="inv-items-table">
+                <div style="overflow-x:auto;">
+                  <table class="fin-screenshot1-table" id="inv-items-table">
                     <thead>
                       <tr>
-                        <th id="inv-desc-col-header" style="width:${initialRegime === 'trn' ? '44%' : '34%'}; text-align:left;">ITEM DESCRIPTION &amp; PROGRESSIVE MILESTONE</th>
-                        <th id="inv-hsn-col-header" style="width:10%; text-align:center; display:${initialRegime === 'trn' ? 'none' : ''};">HSN / SAC</th>
-                        <th style="width:11%; text-align:center;">QTY / CLAIM %</th>
-                        <th style="width:11%; text-align:center;">UNIT (UOM)</th>
-                        <th style="width:14%; text-align:right;" id="inv-rate-col-header">CONTRACT / RATE (AED)</th>
-                        <th style="width:9%; text-align:center;" id="inv-tax-col-header">VAT 5%</th>
-                        <th style="width:13%; text-align:right;" id="inv-total-col-header">AMOUNT (AED)</th>
-                        <th style="width:4%; text-align:center;"></th>
+                        <th style="padding:0.75rem 0.5rem; width:28px; text-align:center;"></th>
+                        <th style="padding:0.75rem 0.75rem; text-align:left; min-width:280px;">ITEM DETAILS</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:right; width:110px;">QUANTITY</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:right; width:110px;">RATE ⊞</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:center; width:125px;">DISCOUNT</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:left; width:180px;">TAX</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:right; width:130px;">AMOUNT</th>
+                        <th style="padding:0.75rem 0.5rem; width:36px; text-align:center;"></th>
                       </tr>
                     </thead>
                     <tbody id="inv-items-tbody">
@@ -5964,68 +6032,64 @@ class FinanceApp {
                     </tbody>
                   </table>
                 </div>
-              </div>
 
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; flex-wrap:wrap; gap:0.5rem;">
-                <button type="button" class="fin-btn-quick" id="inv-add-row-btn" style="background:linear-gradient(135deg, rgba(56,189,248,0.18), rgba(0,153,230,0.22)); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); font-weight:700; padding:0.5rem 1.25rem; border-radius:7px; display:inline-flex; align-items:center; gap:0.45rem; font-size:0.84rem; cursor:pointer; box-shadow:0 2px 8px rgba(0,153,230,0.15);">
-                  <span style="font-size:1.2rem; line-height:1; font-weight:900;">+</span> Add Line Item
-                </button>
-                <div style="font-size:0.74rem; color:#94a3b8; display:flex; align-items:center; gap:0.35rem;">
-                  <span>💡 Tip: Set UOM to <strong style="color:#38bdf8;">%</strong> for milestone progress billing against total contract value.</span>
-                </div>
-              </div>
-
-              <!-- Realtime Calculations Executive Card -->
-              <div class="fin-calc-summary-box">
-                <div class="fin-calc-header">
-                  <span class="fin-calc-header-title">
-                    <span>📊</span>
-                    <span>Billing Summary &amp; Tax Breakdown</span>
-                  </span>
-                  <span id="inv-calc-regime-badge" style="font-size:0.68rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.12); padding:3px 9px; border-radius:5px; border:1px solid rgba(16,185,129,0.3);">🇦🇪 UAE VAT (5%)</span>
-                </div>
-                <div class="fin-calc-row" id="inv-calc-base-row" style="display:none;">
-                  <span style="font-weight:600; color:#94a3b8;">Contract Base Value</span>
-                  <span id="inv-calc-base" style="font-weight:600; color:#cbd5e1; font-family:monospace; font-size:0.88rem;">AED 0.00</span>
-                </div>
-                <div class="fin-calc-row">
-                  <span id="inv-calc-taxable-label" style="font-weight:600; color:#cbd5e1;">Taxable Subtotal</span>
-                  <span id="inv-calc-taxable" style="font-weight:700; color:#f8fafc; font-family:monospace; font-size:0.92rem;">AED 0.00</span>
-                </div>
-                <div class="fin-calc-row" id="inv-calc-cgst-row" style="display:none;">
-                  <span>Central GST (CGST)</span>
-                  <span id="inv-calc-cgst" style="font-weight:600; color:#cbd5e1; font-family:monospace;">₹0.00</span>
-                </div>
-                <div class="fin-calc-row" id="inv-calc-sgst-row" style="display:none;">
-                  <span>State GST (SGST)</span>
-                  <span id="inv-calc-sgst" style="font-weight:600; color:#cbd5e1; font-family:monospace;">₹0.00</span>
-                </div>
-                <div class="fin-calc-row" id="inv-calc-igst-row" style="display:none;">
-                  <span>Integrated GST (IGST)</span>
-                  <span id="inv-calc-igst" style="font-weight:600; color:#cbd5e1; font-family:monospace;">₹0.00</span>
-                </div>
-                <div class="fin-calc-row" id="inv-calc-vat-row">
-                  <span style="display:flex; align-items:center; gap:0.4rem;">
-                    <span>VAT (5%)</span>
-                    <span style="font-size:0.64rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.14); padding:1px 6px; border-radius:4px; border:1px solid rgba(16,185,129,0.3);">Standard Rate</span>
-                  </span>
-                  <span id="inv-calc-vat" style="color:#10b981; font-weight:700; font-family:monospace; font-size:0.92rem;">AED 0.00</span>
-                </div>
-                <div class="fin-calc-row grand-total">
-                  <span>Grand Total (AED)</span>
-                  <span id="inv-calc-grand">AED 0.00</span>
-                </div>
-                <div class="fin-calc-compliance-note">
-                  <span id="inv-compliance-text">⚖️ Compliant with UAE FTA VAT Executive Regulations (5% Standard Rate)</span>
+                <div style="display:flex; align-items:center; gap:0.6rem; padding:0.85rem 1.25rem; background:#ffffff; border-top:1px solid #f1f5f9;">
+                  <button type="button" id="inv-add-row-btn" style="background:#2563eb; color:#ffffff; border:none; border-radius:6px; padding:0.45rem 1rem; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 1px 3px rgba(37,99,235,0.3);">
+                    <span>⊕ Add New Row ▾</span>
+                  </button>
+                  <button type="button" id="inv-add-bulk-btn" style="background:#f1f5f9; color:#2563eb; border:1px solid #cbd5e1; border-radius:6px; padding:0.45rem 1rem; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                    <span>⊕ Add Items in Bulk</span>
+                  </button>
                 </div>
               </div>
 
-              <div class="fin-form-group" style="margin-top:1.5rem;">
-                <label class="fin-form-label">Notes &amp; Payment Instructions</label>
-                <textarea id="inv-notes" class="fin-form-textarea" rows="2" placeholder="Payment terms: Bank wire via Online Transfer to State Bank of India corporate account.">${initialNotes}</textarea>
+              <!-- Bottom Layout (Customer Notes Left, Summary Card Right matching Screenshot 1) -->
+              <div style="display:grid; grid-template-columns: 1fr 340px; gap:1.75rem; margin-top:1.25rem; align-items:start;">
+                <!-- Customer Notes (Left) -->
+                <div>
+                  <label style="display:block; font-size:0.84rem; font-weight:600; color:#334155; margin-bottom:0.35rem;">Customer Notes</label>
+                  <textarea id="inv-notes" style="width:100%; border:1px solid #cbd5e1; border-radius:6px; padding:0.65rem 0.75rem; font-size:0.84rem; color:#0f172a; outline:none; resize:vertical; min-height:80px; box-sizing:border-box; background:#ffffff;" placeholder="Thanks for your business.">${initialNotes || 'Thanks for your business.'}</textarea>
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:0.3rem;">Will be displayed on the invoice</div>
+                </div>
+
+                <!-- Summary Box (Right) matching Screenshot 1 -->
+                <div class="fin-summary-card-s1">
+                  <!-- Contract Base breakdown when advance/progressive/final is active -->
+                  <div id="fin-s1-stage-summary-wrap" style="display:${initialPaymentStage !== 'standard' ? 'block' : 'none'}; padding-bottom:0.6rem; margin-bottom:0.6rem; border-bottom:1px dashed #cbd5e1;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#64748b; margin-bottom:3px;">
+                      <span>Total Contract Items Value</span>
+                      <span id="fin-s1-contract-base" style="font-weight:600; font-family:monospace; color:#334155;">0.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#2563eb; font-weight:600;">
+                      <span id="fin-s1-stage-badge">${initialClaimPct}% ${(initialPaymentStage || 'progressive').toUpperCase()} PAYMENT</span>
+                      <span id="fin-s1-stage-rate-math" style="font-family:monospace;">(${initialClaimPct}% Claim)</span>
+                    </div>
+                  </div>
+
+                  <!-- Sub Total line -->
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; font-size:0.9rem;">
+                    <div>
+                      <div style="font-weight:600; color:#334155;">Sub Total</div>
+                      <div style="font-size:0.68rem; color:#64748b;" id="fin-s1-tax-inc-label">(Tax Inclusive)</div>
+                    </div>
+                    <span id="inv-calc-taxable" style="font-weight:700; font-family:monospace; font-size:1.02rem; color:#0f172a;">0.00</span>
+                  </div>
+
+                  <!-- Tax line -->
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; font-size:0.88rem; border-top:1px solid #f1f5f9;">
+                    <span style="color:#475569;" id="fin-s1-tax-label">Standard Rate [5%]</span>
+                    <span id="inv-calc-vat" style="font-weight:600; font-family:monospace; color:#0f172a;">0.00</span>
+                  </div>
+
+                  <!-- Grand Total line -->
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0 0.25rem; border-top:2px solid #e2e8f0; margin-top:0.35rem;">
+                    <span style="font-weight:700; font-size:1.05rem; color:#0f172a;">Total ( <span id="fin-s1-curr-label">${currentCurrency}</span> )</span>
+                    <span id="inv-calc-grand" style="font-weight:800; font-size:1.25rem; font-family:monospace; color:#0f172a;">0.00</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+              <div class="fin-modal-footer" style="padding:1.5rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-invoice')">Cancel</button>
                 <button type="button" class="fin-btn-quick" id="inv-save-draft-btn">${isEditing && editInv.status === 'draft' ? 'Save Draft' : 'Save as Draft'}</button>
                 <button type="submit" class="fin-btn-quick primary">${isEditing ? (editInv.status === 'draft' ? 'Issue &amp; Post Draft &rarr;' : 'Update Invoice &rarr;') : 'Issue &amp; Post Invoice &rarr;'}</button>
@@ -6448,7 +6512,10 @@ class FinanceApp {
       }
     };
 
-    // Line items manager matching user's photo
+    // Current Invoice-level Payment Stage: 'standard' | 'advance' | 'progressive' | 'final'
+    window._currentInvoicePaymentStage = initialPaymentStage || 'standard';
+
+    // Line items manager matching Screenshot 1 (Zoho Books Style)
     const addRow = (defaultItem = null, defaultQty = 1) => {
       const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
       if (existingPlaceholder) existingPlaceholder.remove();
@@ -6457,250 +6524,118 @@ class FinanceApp {
       const isTrn = currentRegime === 'trn';
       const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
 
-      const itemId = defaultItem ? (defaultItem.id || defaultItem.code || '') : '';
       const itemName = defaultItem ? (defaultItem.name || defaultItem.description || '') : '';
-      const hsn = defaultItem ? (defaultItem.hsn_sac_code || '9954') : '9954';
-      const uom = defaultItem ? (defaultItem.uom || (itemName && itemName.includes('%') ? '%' : 'LSUM')) : (defaultQty > 1 && defaultQty <= 100 ? '%' : 'LSUM');
+      const uom = defaultItem ? (defaultItem.uom || defaultItem.unit || 'SQM') : 'SQM';
+      const qty = defaultItem && defaultItem.qty !== undefined ? defaultItem.qty : defaultQty;
       const rate = defaultItem ? (defaultItem.sales_price !== undefined ? defaultItem.sales_price : (defaultItem.rate || 0)) : 0;
+      const discountVal = defaultItem && defaultItem.discount_val !== undefined ? defaultItem.discount_val : (defaultItem?.discount || 0);
+      const discountType = defaultItem && defaultItem.discount_type ? defaultItem.discount_type : 'pct';
       const gstRate = defaultItem && defaultItem.gst_rate !== undefined ? defaultItem.gst_rate : (isTrn ? 5 : 18);
-      const isPercentInitial = uom === '%' || uom.includes('PERCENT') || (itemName && itemName.includes('%'));
-      const initialPctVal = defaultItem?.progress_pct || defaultItem?.pct || (isPercentInitial ? (defaultQty > 1 && defaultQty <= 100 ? defaultQty : 50) : 50);
-
-      if (isPercentInitial) {
-        tr.classList.add('milestone-active');
-      }
-
-      const catalogOptions = (items || [])
-        .filter(it => it && !(it.id || '').startsWith('item-milestone'))
-        .map(it => {
-          const itId = it.id || it.code || Math.random().toString();
-          const itName = it.name || 'Catalog Item';
-          const isSel = itemId === itId || (itemName && itName === itemName);
-          return `<option value="${itId}" ${isSel ? 'selected' : ''}>${itName}</option>`;
-        }).join('');
 
       tr.innerHTML = `
-        <td class="row-desc-cell" style="width:${currentRegime === 'trn' ? '44%' : '34%'}; vertical-align:top;">
-          <select class="fin-form-select row-item-sel" style="margin-bottom:0.4rem; font-size:0.82rem; font-weight:600;">
-            <option value="">Custom Item / Service / Milestone</option>
-            <optgroup label="⚡ Progressive Milestone &amp; % Payments">
-              <option value="MILESTONE-50" ${itemId === 'item-milestone-50' || itemId === 'MILESTONE-50' || itemName.includes('50%') ? 'selected' : ''}>
-                ⭐ Billed Milestone (50%): 500.00 AED (Taxable Subtotal)
-              </option>
-              <option value="MILESTONE-20" ${itemId === 'item-milestone-20' || itemId === 'MILESTONE-20' || itemName.includes('20%') ? 'selected' : ''}>
-                20% Mobilization &amp; Advance Payment Against LPO
-              </option>
-              <option value="MILESTONE-30" ${itemId === 'item-milestone-30' || itemId === 'MILESTONE-30' || itemName.includes('30%') ? 'selected' : ''}>
-                30% Running Account (RA) Bill Payment - MEP &amp; Structural
-              </option>
-              <option value="MILESTONE-10" ${itemId === 'MILESTONE-10' || itemName.includes('10%') ? 'selected' : ''}>
-                10% Progressive Milestone Payment
-              </option>
-              <option value="MILESTONE-PCT" ${itemId === 'item-milestone-pct' || itemId === 'MILESTONE-PCT' ? 'selected' : ''}>
-                % Custom Progressive Milestone Claim
-              </option>
-            </optgroup>
-            <optgroup label="📦 Construction &amp; Engineering Catalog">
-              ${catalogOptions}
-            </optgroup>
-          </select>
-          <input type="text" class="fin-form-input row-desc" list="inv-item-milestone-suggestions" placeholder="Enter item description or milestone..." value="${itemName}" style="font-size:0.82rem;">
-          <div class="row-pct-note" style="display:${isPercentInitial ? 'flex' : 'none'};"></div>
+        <td style="padding:0.75rem 0.5rem; text-align:center; vertical-align:middle; width:28px;">
+          <span style="color:#94a3b8; font-size:0.9rem; cursor:grab;" title="Drag row">:::</span>
         </td>
-        <td class="row-hsn-cell" style="width:10%; vertical-align:top; display:${currentRegime === 'trn' ? 'none' : ''};">
-          <input type="text" class="fin-form-input row-hsn" placeholder="9954" value="${hsn}" style="font-size:0.82rem; font-family:monospace; text-align:center;">
-          <div style="font-size:0.65rem; color:#64748b; margin-top:3px; text-align:center;">HSN/SAC</div>
-        </td>
-        <td style="width:11%; vertical-align:top; text-align:center;">
-          <input type="number" class="fin-form-input row-qty" value="${defaultQty || 1}" min="0.001" step="any" style="text-align:center; font-size:0.85rem; font-weight:700;">
-          <div class="row-pct-subfield" style="display:${isPercentInitial ? 'flex' : 'none'}; align-items:center; justify-content:center; gap:2px; margin-top:4px;">
-            <span style="font-size:0.65rem; color:#94a3b8; font-weight:600;">CLAIM:</span>
-            <input type="number" class="fin-form-input row-pct-val" value="${initialPctVal}" placeholder="50" min="0.01" max="100" step="any" style="width:46px; padding:2px 3px; font-size:0.75rem; text-align:center; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid #38bdf8; border-radius:4px;">
-            <span style="font-weight:800; color:#38bdf8; font-size:0.75rem;">%</span>
-          </div>
-        </td>
-        <td style="width:11%; vertical-align:top;">
-          <select class="fin-form-select row-uom" style="font-size:0.82rem; font-weight:700; text-align:center;">
-            <optgroup label="⚡ Progressive Milestone">
-              <option value="%" ${uom === '%' ? 'selected' : ''}>% (Progress %)</option>
-            </optgroup>
-            <optgroup label="Standard Engineering Units">
-              <option value="LSUM" ${uom === 'LSUM' ? 'selected' : ''}>LSUM</option>
-              <option value="JOB" ${uom === 'JOB' ? 'selected' : ''}>JOB</option>
+        <td style="padding:0.75rem 0.65rem; min-width:280px; vertical-align:top;">
+          <input type="text" class="fin-s1-item-desc row-desc" list="inv-item-catalog-suggestions" placeholder="Enter item details..." value="${itemName}">
+          <div class="fin-s1-unit-code-row">
+            <span>Unit Code:</span>
+            <select class="fin-s1-uom-select row-uom">
               <option value="SQM" ${uom === 'SQM' ? 'selected' : ''}>SQM</option>
               <option value="SQFT" ${uom === 'SQFT' ? 'selected' : ''}>SQFT</option>
-              <option value="CUM" ${uom === 'CUM' ? 'selected' : ''}>CUM</option>
-              <option value="MT" ${uom === 'MT' ? 'selected' : ''}>MT</option>
-              <option value="KG" ${uom === 'KG' ? 'selected' : ''}>KG</option>
-              <option value="BAG" ${uom === 'BAG' ? 'selected' : ''}>BAG</option>
-              <option value="NOS" ${uom === 'NOS' ? 'selected' : ''}>NOS</option>
-              <option value="PCS" ${uom === 'PCS' ? 'selected' : ''}>PCS</option>
-              <option value="SET" ${uom === 'SET' ? 'selected' : ''}>SET</option>
               <option value="MTR" ${uom === 'MTR' ? 'selected' : ''}>MTR</option>
               <option value="RMT" ${uom === 'RMT' ? 'selected' : ''}>RMT</option>
-              <option value="HRS" ${uom === 'HRS' ? 'selected' : ''}>HRS</option>
+              <option value="PCS" ${uom === 'PCS' ? 'selected' : ''}>PCS</option>
+              <option value="NOS" ${uom === 'NOS' ? 'selected' : ''}>NOS</option>
+              <option value="LSUM" ${uom === 'LSUM' ? 'selected' : ''}>LSUM</option>
+              <option value="JOB" ${uom === 'JOB' ? 'selected' : ''}>JOB</option>
+              <option value="CUM" ${uom === 'CUM' ? 'selected' : ''}>CUM</option>
+              <option value="KG" ${uom === 'KG' ? 'selected' : ''}>KG</option>
+              <option value="MT" ${uom === 'MT' ? 'selected' : ''}>MT</option>
+              <option value="BAG" ${uom === 'BAG' ? 'selected' : ''}>BAG</option>
+              <option value="SET" ${uom === 'SET' ? 'selected' : ''}>SET</option>
               <option value="DAY" ${uom === 'DAY' ? 'selected' : ''}>DAY</option>
               <option value="MTH" ${uom === 'MTH' ? 'selected' : ''}>MTH</option>
-              <option value="MD" ${uom === 'MD' ? 'selected' : ''}>MD</option>
-              <option value="ANNUM" ${uom === 'ANNUM' ? 'selected' : ''}>ANNUM</option>
-            </optgroup>
-          </select>
+            </select>
+            <span style="color:#2563eb; font-size:0.75rem; cursor:pointer;" title="Click to update unit code">✎</span>
+          </div>
         </td>
-        <td style="width:14%; vertical-align:top;">
-          <input type="number" class="fin-form-input row-rate" value="${rate > 0 ? rate : (defaultItem ? 0 : '')}" placeholder="0.00" step="any" style="font-size:0.85rem; font-weight:700; text-align:right; font-family:monospace;">
-          <div style="font-size:0.65rem; color:#64748b; margin-top:3px; text-align:right;">Contract / Rate</div>
+        <td style="padding:0.75rem 0.65rem; width:110px; vertical-align:top; text-align:right;">
+          <input type="number" class="fin-s1-qty row-qty" value="${qty}" min="0" step="any" placeholder="1.00">
         </td>
-        <td style="width:9%; vertical-align:top;">
-          <select class="fin-form-select row-gst" style="font-size:0.82rem; font-weight:700; text-align:center;">
-            ${isTrn ? `
-              <option value="5" ${Number(gstRate) === 5 ? 'selected' : ''}>5%</option>
-              <option value="0" ${Number(gstRate) === 0 ? 'selected' : ''}>0%</option>
-            ` : `
-              <option value="18" ${Number(gstRate) === 18 ? 'selected' : ''}>18%</option>
-              <option value="12" ${Number(gstRate) === 12 ? 'selected' : ''}>12%</option>
-              <option value="5" ${Number(gstRate) === 5 ? 'selected' : ''}>5%</option>
-              <option value="28" ${Number(gstRate) === 28 ? 'selected' : ''}>28%</option>
-              <option value="0" ${Number(gstRate) === 0 ? 'selected' : ''}>0%</option>
-            `}
-          </select>
-          <div style="font-size:0.65rem; color:#64748b; margin-top:3px; text-align:center;">Tax %</div>
+        <td style="padding:0.75rem 0.65rem; width:110px; vertical-align:top; text-align:right;">
+          <input type="number" class="fin-s1-rate row-rate" value="${rate > 0 ? rate : ''}" min="0" step="any" placeholder="0.00">
         </td>
-        <td style="width:13%; vertical-align:top; text-align:right; padding-top:0.95rem;">
-          <strong class="row-total" style="color:#38bdf8; font-size:0.95rem; font-family:monospace; display:block;">${currSym}0.00</strong>
+        <td style="padding:0.75rem 0.65rem; width:125px; vertical-align:top; text-align:center;">
+          <div style="display:flex; align-items:center; gap:3px; justify-content:center;">
+            <input type="number" class="fin-s1-discount-val row-discount-val" value="${discountVal !== undefined ? discountVal : 0}" min="0" step="any" placeholder="0">
+            <select class="fin-s1-discount-type row-discount-type">
+              <option value="pct" ${discountType === 'pct' ? 'selected' : ''}>% ▾</option>
+              <option value="curr" ${discountType === 'curr' ? 'selected' : ''}>${currentCurrency === 'AED' ? 'AED' : '₹'} ▾</option>
+            </select>
+          </div>
         </td>
-        <td style="width:4%; vertical-align:top; text-align:center; padding-top:0.75rem;">
-          <button type="button" class="fin-row-del-btn row-del" title="Remove row">🗑️</button>
+        <td style="padding:0.75rem 0.65rem; width:180px; vertical-align:top;">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <select class="fin-s1-tax-select row-gst">
+              ${isTrn ? `
+                <option value="5" ${Number(gstRate) === 5 ? 'selected' : ''}>Standard Rate [5%]</option>
+                <option value="0" ${Number(gstRate) === 0 ? 'selected' : ''}>Zero Rate [0%]</option>
+                <option value="exempt" ${String(gstRate) === 'exempt' ? 'selected' : ''}>Exempt [0%]</option>
+              ` : `
+                <option value="18" ${Number(gstRate) === 18 ? 'selected' : ''}>GST 18%</option>
+                <option value="12" ${Number(gstRate) === 12 ? 'selected' : ''}>GST 12%</option>
+                <option value="5" ${Number(gstRate) === 5 ? 'selected' : ''}>GST 5%</option>
+                <option value="28" ${Number(gstRate) === 28 ? 'selected' : ''}>GST 28%</option>
+                <option value="0" ${Number(gstRate) === 0 ? 'selected' : ''}>Zero 0%</option>
+              `}
+            </select>
+            <button type="button" class="fin-s1-tax-clear" title="Clear Tax">✕</button>
+          </div>
+        </td>
+        <td style="padding:0.75rem 0.65rem; width:130px; vertical-align:top; text-align:right;">
+          <span class="fin-s1-row-amount row-total">0.00</span>
+        </td>
+        <td style="padding:0.75rem 0.5rem; width:36px; vertical-align:top; text-align:center;">
+          <button type="button" class="fin-s1-row-del row-del" title="Delete Row">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
 
-      const sel = tr.querySelector('.row-item-sel');
-      sel.onchange = () => {
-        const val = sel.value;
-        const uomSel = tr.querySelector('.row-uom');
-        const pctSubfield = tr.querySelector('.row-pct-subfield');
-        const pctValInp = tr.querySelector('.row-pct-val');
-        const descInp = tr.querySelector('.row-desc');
-        const hsnInp = tr.querySelector('.row-hsn');
-        const rateInp = tr.querySelector('.row-rate');
-        const qtyInp = tr.querySelector('.row-qty');
-        const gstSelect = tr.querySelector('.row-gst');
-
-        if (val === 'MILESTONE-50' || val === 'item-milestone-50') {
-          descInp.value = '50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT';
-          hsnInp.value = '9954';
-          if (uomSel) uomSel.value = '%';
-          qtyInp.value = '1';
-          rateInp.value = '1000';
-          if (pctValInp) pctValInp.value = '50';
-          if (pctSubfield) pctSubfield.style.display = 'flex';
-          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
-          tr.classList.add('milestone-active');
-        } else if (val === 'MILESTONE-20' || val === 'item-milestone-20') {
-          descInp.value = '20% MOBILIZATION & ADVANCE PAYMENT AGAINST LPO';
-          hsnInp.value = '9954';
-          if (uomSel) uomSel.value = '%';
-          qtyInp.value = '1';
-          rateInp.value = '1000';
-          if (pctValInp) pctValInp.value = '20';
-          if (pctSubfield) pctSubfield.style.display = 'flex';
-          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
-          tr.classList.add('milestone-active');
-        } else if (val === 'MILESTONE-30' || val === 'item-milestone-30') {
-          descInp.value = '30% RUNNING ACCOUNT (RA) BILL PAYMENT - MEP & STRUCTURAL';
-          hsnInp.value = '9954';
-          if (uomSel) uomSel.value = '%';
-          qtyInp.value = '1';
-          rateInp.value = '1000';
-          if (pctValInp) pctValInp.value = '30';
-          if (pctSubfield) pctSubfield.style.display = 'flex';
-          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
-          tr.classList.add('milestone-active');
-        } else if (val === 'MILESTONE-10') {
-          descInp.value = '10% PROGRESSIVE MILESTONE PAYMENT';
-          hsnInp.value = '9954';
-          if (uomSel) uomSel.value = '%';
-          qtyInp.value = '1';
-          rateInp.value = '1000';
-          if (pctValInp) pctValInp.value = '10';
-          if (pctSubfield) pctSubfield.style.display = 'flex';
-          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
-          tr.classList.add('milestone-active');
-        } else if (val === 'MILESTONE-PCT' || val === 'item-milestone-pct') {
-          descInp.value = '% PROGRESSIVE WORK CERTIFICATION';
-          hsnInp.value = '9954';
-          if (uomSel) uomSel.value = '%';
-          qtyInp.value = '1';
-          if (!rateInp.value || Number(rateInp.value) === 0) rateInp.value = '1000';
-          if (pctValInp && (!pctValInp.value || Number(pctValInp.value) === 0)) pctValInp.value = '50';
-          if (pctSubfield) pctSubfield.style.display = 'flex';
-          gstSelect.value = currentRegime === 'trn' ? '5' : '18';
-          tr.classList.add('milestone-active');
-        } else {
-          const found = items.find(it => it.id === val);
-          if (found) {
-            descInp.value = found.name;
-            hsnInp.value = found.hsn_sac_code || '9954';
-            if (uomSel) uomSel.value = found.uom || 'LSUM';
-            rateInp.value = found.sales_price || 0;
-            gstSelect.value = currentRegime === 'trn' ? '5' : String(found.gst_rate || 18);
-            if (found.uom === '%') {
-              if (pctSubfield) pctSubfield.style.display = 'flex';
-              if (pctValInp && (!pctValInp.value || Number(pctValInp.value) === 0)) pctValInp.value = '50';
-              tr.classList.add('milestone-active');
-            } else {
-              if (pctSubfield) pctSubfield.style.display = 'none';
-              tr.classList.remove('milestone-active');
-            }
-          }
-        }
-        recalculateInvoice();
-      };
-
-      const descInp = tr.querySelector('.row-desc');
-      descInp.oninput = () => {
-        const val = descInp.value.trim().toLowerCase();
-        const found = items.find(it => it.name.toLowerCase() === val);
-        if (found) {
-          sel.value = found.id;
-          tr.querySelector('.row-hsn').value = found.hsn_sac_code || '9954';
-          const uomSel = tr.querySelector('.row-uom');
-          if (uomSel) uomSel.value = found.uom || 'LSUM';
-          if (!tr.querySelector('.row-rate').value || Number(tr.querySelector('.row-rate').value) === 0) {
-            tr.querySelector('.row-rate').value = found.sales_price || 0;
-          }
-          if (found.uom === '%') {
-            const pctSub = tr.querySelector('.row-pct-subfield');
-            if (pctSub) pctSub.style.display = 'flex';
-            tr.classList.add('milestone-active');
-          }
-        } else if (val.includes('%') || val.includes('milestone')) {
-          const uomSel = tr.querySelector('.row-uom');
-          if (uomSel) uomSel.value = '%';
-          const pctSub = tr.querySelector('.row-pct-subfield');
-          if (pctSub) pctSub.style.display = 'flex';
-          const pctValInp = tr.querySelector('.row-pct-val');
-          const match = val.match(/(\d+)%/);
-          if (match && pctValInp) {
-            pctValInp.value = match[1];
-          }
-          tr.classList.add('milestone-active');
-        }
-        recalculateInvoice();
-      };
-
-      const uomSelect = tr.querySelector('.row-uom');
-      if (uomSelect) {
-        uomSelect.onchange = () => {
-          const isPct = uomSelect.value === '%' || uomSelect.value.includes('PERCENT');
-          const pctSub = tr.querySelector('.row-pct-subfield');
-          if (pctSub) pctSub.style.display = isPct ? 'flex' : 'none';
-          tr.classList.toggle('milestone-active', isPct);
+      // Clear tax button ✕
+      const clearBtn = tr.querySelector('.fin-s1-tax-clear');
+      if (clearBtn) {
+        clearBtn.onclick = () => {
+          const taxSel = tr.querySelector('.row-gst');
+          if (taxSel) taxSel.value = '0';
           recalculateInvoice();
         };
       }
 
-      tr.querySelectorAll('.row-hsn, .row-qty, .row-uom, .row-rate, .row-gst, .row-pct-val').forEach(inp => {
+      // Autocomplete helper from catalog
+      const descInp = tr.querySelector('.row-desc');
+      if (descInp) {
+        descInp.oninput = () => {
+          const val = descInp.value.trim().toLowerCase();
+          const demoCatalog = [
+            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', rate: 56, uom: 'SQM', discount: 50 },
+            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', rate: 51, uom: 'SQM', discount: 50 },
+            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', rate: 11, uom: 'SQM', discount: 0 },
+            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', rate: 40, uom: 'SQM', discount: 50 },
+            ...(items || [])
+          ];
+          const found = demoCatalog.find(it => (it.name || '').toLowerCase() === val);
+          if (found) {
+            if (found.rate) tr.querySelector('.row-rate').value = found.rate;
+            if (found.sales_price) tr.querySelector('.row-rate').value = found.sales_price;
+            if (found.uom) tr.querySelector('.row-uom').value = found.uom;
+            if (found.discount !== undefined) tr.querySelector('.row-discount-val').value = found.discount;
+          }
+          recalculateInvoice();
+        };
+      }
+
+      tr.querySelectorAll('.row-desc, .row-qty, .row-rate, .row-discount-val, .row-discount-type, .row-gst, .row-uom').forEach(inp => {
         inp.oninput = () => recalculateInvoice();
         inp.onchange = () => recalculateInvoice();
       });
@@ -6717,186 +6652,207 @@ class FinanceApp {
     const recalculateInvoice = () => {
       const isTrn = currentRegime === 'trn';
       const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
-      const pos = (document.getElementById('inv-cust-pos')?.value || '').toLowerCase();
-      const isUaeSupply = isTrn || pos.includes('uae') || pos.includes('abu dhabi') || pos.includes('dubai') || pos.includes('sharjah') || pos.includes('ajman') || pos.includes('rak') || pos.includes('ras al khaimah') || pos.includes('fujairah') || pos.includes('quwain') || pos.includes('al ain') || pos.includes('dip');
-      const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
 
-      let taxableSum = 0;
-      let taxSum = 0;
-      let cgstSum = 0;
-      let sgstSum = 0;
-      let igstSum = 0;
-      let vatSum = 0;
-      let hasOnly5Or0Tax = true;
-      let hasPercentRow = false;
-      let milestonePercentUsed = 50;
       let totalContractBase = 0;
+      let totalGross = 0;
+      let totalDiscount = 0;
+      let totalRowTax = 0;
 
       tbody.querySelectorAll('tr:not(.inv-items-empty-row)').forEach(tr => {
-        const qtyInp = tr.querySelector('.row-qty');
-        const rateInp = tr.querySelector('.row-rate');
-        const taxInp = tr.querySelector('.row-gst');
-        const uomInp = tr.querySelector('.row-uom');
-        const pctSubfield = tr.querySelector('.row-pct-subfield');
-        const pctValInp = tr.querySelector('.row-pct-val');
-        const pctNote = tr.querySelector('.row-pct-note');
+        const qty = Number(tr.querySelector('.row-qty')?.value) || 0;
+        const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
+        const gross = qty * rate;
 
-        const qty = Number(qtyInp?.value) || 0;
-        const rate = Number(rateInp?.value) || 0;
-        const taxRate = Number(taxInp?.value) || 0;
-        const uom = (uomInp?.value || '').trim().toUpperCase();
+        const discountVal = Number(tr.querySelector('.row-discount-val')?.value) || 0;
+        const discountType = tr.querySelector('.row-discount-type')?.value || 'pct';
+        const discountAmt = discountType === 'pct' ? (gross * (discountVal / 100)) : discountVal;
 
-        const isPercent = uom === '%' || uom.includes('PERCENT');
-        if (pctSubfield) pctSubfield.style.display = isPercent ? 'flex' : 'none';
-        tr.classList.toggle('milestone-active', isPercent);
+        const netTaxable = Math.max(0, gross - discountAmt);
+        const taxRateVal = tr.querySelector('.row-gst')?.value;
+        const taxRate = taxRateVal === 'exempt' ? 0 : (Number(taxRateVal) || 0);
+        const rowTax = netTaxable * (taxRate / 100);
 
-        let rowTaxable = 0;
-        let pctUsed = 0;
-
-        if (isPercent) {
-          hasPercentRow = true;
-          totalContractBase += (qty * rate);
-          const explicitPct = Number(pctValInp?.value);
-          if (!isNaN(explicitPct) && explicitPct > 0) {
-            pctUsed = explicitPct;
-            rowTaxable = (qty * rate) * (explicitPct / 100);
-          } else if (qty > 0 && qty <= 100) {
-            pctUsed = qty;
-            rowTaxable = rate * (qty / 100);
-          } else if (qty > 0 && qty < 1) {
-            pctUsed = qty * 100;
-            rowTaxable = rate * qty;
-          } else {
-            pctUsed = 100;
-            rowTaxable = qty * rate;
-          }
-          milestonePercentUsed = pctUsed;
-
-          if (pctNote) {
-            pctNote.style.display = 'flex';
-            const baseContract = qty * rate;
-            pctNote.innerHTML = `
-              <div class="row-pct-pill">
-                <span>⚡</span>
-                <span>Billed Milestone (<strong>${pctUsed}%</strong>): ${currSym}${baseContract.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &times; ${pctUsed}% = <strong style="color:#ffffff;">${currSym}${rowTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> (Taxable Subtotal)</span>
-              </div>
-            `;
-          }
-        } else {
-          if (pctNote) pctNote.style.display = 'none';
-          rowTaxable = qty * rate;
+        const rowAmountEl = tr.querySelector('.row-total');
+        if (rowAmountEl) {
+          rowAmountEl.textContent = netTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        if (taxRate !== 5 && taxRate !== 0) {
-          hasOnly5Or0Tax = false;
-        }
-
-        const rowTax = rowTaxable * (taxRate / 100);
-        const rowGrand = rowTaxable + rowTax;
-
-        const rowTotEl = tr.querySelector('.row-total');
-        if (rowTotEl) {
-          rowTotEl.textContent = `${currSym}${rowGrand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        }
-
-        taxableSum += rowTaxable;
-        taxSum += rowTax;
-
-        if (isUaeSupply || isTrn || (taxRate === 5 && !isInterState)) {
-          vatSum += rowTax;
-        } else if (!isTrn) {
-          if (isInterState) {
-            igstSum += rowTax;
-          } else {
-            cgstSum += rowTax / 2;
-            sgstSum += rowTax / 2;
-          }
-        }
+        totalGross += gross;
+        totalDiscount += discountAmt;
+        totalContractBase += netTaxable;
+        totalRowTax += rowTax;
       });
 
-      // Update column header dynamically to VAT 5% when TRN or 5% tax is used
-      const taxCol = document.getElementById('inv-tax-col-header');
-      if (taxCol) {
-        if (isTrn || isUaeSupply || hasOnly5Or0Tax) {
-          taxCol.textContent = 'VAT 5%';
-        } else {
-          taxCol.textContent = 'GST %';
-        }
-      }
+      const currentStage = window._currentInvoicePaymentStage || 'standard';
+      const stagePctInp = document.getElementById('inv-stage-pct-input');
+      const claimPct = Number(stagePctInp?.value) || 20;
 
-      const grandTotal = taxableSum + taxSum;
-      const fmt = (val) => `${currSym}${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      let invoiceTaxableSubtotal = 0;
+      let invoiceVat = 0;
+      let invoiceGrandTotal = 0;
 
-      // Base Contract summary row (if milestone used)
-      const baseRow = document.getElementById('inv-calc-base-row');
-      const baseEl = document.getElementById('inv-calc-base');
-      if (baseRow && baseEl) {
-        if (hasPercentRow && totalContractBase > 0) {
-          baseRow.style.display = 'flex';
-          baseEl.textContent = fmt(totalContractBase);
-        } else {
-          baseRow.style.display = 'none';
-        }
-      }
+      const stageDrawer = document.getElementById('fin-stage-claim-drawer');
+      const stageSummaryWrap = document.getElementById('fin-s1-stage-summary-wrap');
+      const headlinePreview = document.getElementById('inv-stage-headline-preview');
+      const mathHint = document.getElementById('inv-stage-math-hint');
 
-      document.getElementById('inv-calc-taxable').textContent = fmt(taxableSum);
-      document.getElementById('inv-calc-grand').textContent = fmt(grandTotal);
+      const poRef = document.getElementById('inv-po-ref')?.value?.trim() || 'LPO/BD/2026/12';
+      const prj = document.getElementById('inv-project-input')?.value?.trim() || '';
+      const subj = document.getElementById('inv-subject')?.value?.trim() || '';
+      const custName = document.getElementById('inv-cust-input')?.value?.trim() || '';
+      const scopeDesc = prj || subj || custName || 'Civil & Interior Work at Yateem Optician, Khalidiyah Mall, Abu Dhabi';
 
-      const cgstRow = document.getElementById('inv-calc-cgst-row');
-      const sgstRow = document.getElementById('inv-calc-sgst-row');
-      const igstRow = document.getElementById('inv-calc-igst-row');
-      const vatRow = document.getElementById('inv-calc-vat-row');
-      const taxableLabel = document.getElementById('inv-calc-taxable-label');
+      if (currentStage === 'standard') {
+        if (stageDrawer) stageDrawer.style.display = 'none';
+        if (stageSummaryWrap) stageSummaryWrap.style.display = 'none';
 
-      if (taxableLabel) {
-        if (hasPercentRow) {
-          taxableLabel.innerHTML = `Billed Milestone (${milestonePercentUsed}%): <span style="font-size:0.75rem; color:#94a3b8; font-weight:normal;">(Taxable Subtotal)</span>`;
-        } else {
-          taxableLabel.textContent = 'Taxable Subtotal';
-        }
-      }
-
-      if (isTrn || isUaeSupply || (hasOnly5Or0Tax && vatSum > 0)) {
-        if (cgstRow) cgstRow.style.display = 'none';
-        if (sgstRow) sgstRow.style.display = 'none';
-        if (igstRow) igstRow.style.display = 'none';
-        if (vatRow) {
-          vatRow.style.display = 'flex';
-          document.getElementById('inv-calc-vat').textContent = fmt(taxSum);
-        }
+        invoiceTaxableSubtotal = totalContractBase;
+        invoiceVat = totalRowTax;
+        invoiceGrandTotal = invoiceTaxableSubtotal + invoiceVat;
       } else {
-        if (vatRow) vatRow.style.display = 'none';
-        if (isInterState) {
-          if (cgstRow) cgstRow.style.display = 'none';
-          if (sgstRow) sgstRow.style.display = 'none';
-          if (igstRow) {
-            igstRow.style.display = 'flex';
-            document.getElementById('inv-calc-igst').textContent = fmt(igstSum);
-          }
-        } else {
-          if (cgstRow) {
-            cgstRow.style.display = 'flex';
-            document.getElementById('inv-calc-cgst').textContent = fmt(cgstSum);
-          }
-          if (sgstRow) {
-            sgstRow.style.display = 'flex';
-            document.getElementById('inv-calc-sgst').textContent = fmt(sgstSum);
-          }
-          if (igstRow) igstRow.style.display = 'none';
+        if (stageDrawer) stageDrawer.style.display = 'block';
+        if (stageSummaryWrap) stageSummaryWrap.style.display = 'block';
+
+        invoiceTaxableSubtotal = totalContractBase * (claimPct / 100);
+        invoiceVat = invoiceTaxableSubtotal * 0.05; // 5% UAE Standard VAT
+        invoiceGrandTotal = invoiceTaxableSubtotal + invoiceVat;
+
+        const stageLabel = currentStage === 'advance' ? 'Advance Payment' : (currentStage === 'final' ? 'Final Payment' : 'Progressive Payment');
+
+        if (stageSummaryWrap) {
+          const baseEl = document.getElementById('fin-s1-contract-base');
+          if (baseEl) baseEl.textContent = `${currSym}${totalContractBase.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          const badgeEl = document.getElementById('fin-s1-stage-badge');
+          if (badgeEl) badgeEl.textContent = `${claimPct}% ${stageLabel.toUpperCase()}`;
+          const mathEl = document.getElementById('fin-s1-stage-rate-math');
+          if (mathEl) mathEl.textContent = `(${claimPct}% Claim)`;
+        }
+
+        if (mathHint) {
+          mathHint.innerHTML = `Contract Base: ${currSym}${totalContractBase.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &times; ${claimPct}% = <strong style="color:#ffffff;">${currSym}${invoiceTaxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> Taxable`;
+        }
+
+        if (headlinePreview) {
+          headlinePreview.textContent = `${claimPct}% ${currentStage.toUpperCase()} PAYMENT FOR PO NO. ${poRef} ${scopeDesc}`;
         }
       }
 
-      const compText = document.getElementById('inv-compliance-text');
-      if (compText) {
-        if (isTrn || isUaeSupply || (hasOnly5Or0Tax && vatSum > 0)) {
-          compText.textContent = '⚖️ Compliant with UAE FTA VAT Executive Regulations (5% Standard Rate)';
-        } else {
-          compText.textContent = '⚖️ Compliant with India GST Rules & E-Invoice Standard Guidelines';
-        }
-      }
+      // Update Summary Box right card matching Screenshot 1
+      const taxableEl = document.getElementById('inv-calc-taxable');
+      if (taxableEl) taxableEl.textContent = invoiceTaxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const vatEl = document.getElementById('inv-calc-vat');
+      if (vatEl) vatEl.textContent = invoiceVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const grandEl = document.getElementById('inv-calc-grand');
+      if (grandEl) grandEl.textContent = invoiceGrandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const currLabel = document.getElementById('fin-s1-curr-label');
+      if (currLabel) currLabel.textContent = currentCurrency;
 
       checkEmptyTbody();
     };
+
+    // Setup Whole-Invoice Payment Stage Pills & Claim Drawer
+    const setupPaymentStageControls = () => {
+      const pillOpts = document.querySelectorAll('.fin-stage-pill-opt');
+      pillOpts.forEach(pill => {
+        pill.onclick = (e) => {
+          e.preventDefault();
+          pillOpts.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          window._currentInvoicePaymentStage = pill.getAttribute('data-stage') || 'standard';
+          recalculateInvoice();
+        };
+      });
+
+      const pctBtns = document.querySelectorAll('.fin-pct-pill-btn');
+      pctBtns.forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          pctBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const pct = btn.getAttribute('data-pct');
+          const inp = document.getElementById('inv-stage-pct-input');
+          if (inp) {
+            inp.value = pct;
+            recalculateInvoice();
+          }
+        };
+      });
+
+      const pctInp = document.getElementById('inv-stage-pct-input');
+      if (pctInp) {
+        pctInp.oninput = () => recalculateInvoice();
+        pctInp.onchange = () => recalculateInvoice();
+      }
+
+      const poRefEl = document.getElementById('inv-po-ref');
+      if (poRefEl) {
+        poRefEl.oninput = () => recalculateInvoice();
+      }
+
+      const prjInpEl = document.getElementById('inv-project-input');
+      if (prjInpEl) {
+        prjInpEl.oninput = () => recalculateInvoice();
+      }
+
+      // Add New Row button
+      const addRowBtn = document.getElementById('inv-add-row-btn');
+      if (addRowBtn) {
+        addRowBtn.onclick = (e) => {
+          e.preventDefault();
+          addRow();
+        };
+      }
+
+      // Add Items in Bulk button (loads Screenshot 1 sample items or bulk prompt)
+      const bulkBtn = document.getElementById('inv-add-bulk-btn');
+      if (bulkBtn) {
+        bulkBtn.onclick = (e) => {
+          e.preventDefault();
+          const demoItems = [
+            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
+            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
+            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, discount_val: 0, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
+            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 }
+          ];
+          tbody.innerHTML = '';
+          demoItems.forEach(it => addRow(it));
+          recalculateInvoice();
+        };
+      }
+
+      // Scan Item button
+      const scanBtn = document.getElementById('inv-scan-item-btn');
+      if (scanBtn) {
+        scanBtn.onclick = (e) => {
+          e.preventDefault();
+          alert('📷 Barcode & Item Scanner: Place scanner over item barcode or label to auto-insert line item.');
+        };
+      }
+
+      // Bulk actions button
+      const bulkActionsBtn = document.getElementById('inv-bulk-actions-btn');
+      if (bulkActionsBtn) {
+        bulkActionsBtn.onclick = (e) => {
+          e.preventDefault();
+          const action = prompt('Bulk Actions:\n1: Apply 5% VAT to all rows\n2: Apply 0% VAT to all rows\n3: Clear all discounts\n\nEnter 1, 2, or 3:');
+          if (action === '1') {
+            tbody.querySelectorAll('.row-gst').forEach(sel => sel.value = '5');
+            recalculateInvoice();
+          } else if (action === '2') {
+            tbody.querySelectorAll('.row-gst').forEach(sel => sel.value = '0');
+            recalculateInvoice();
+          } else if (action === '3') {
+            tbody.querySelectorAll('.row-discount-val').forEach(inp => inp.value = '0');
+            recalculateInvoice();
+          }
+        };
+      }
+    };
+
+    setupPaymentStageControls();
 
     // Billed Item/s List Modal (Vyapar Style)
     const openBilledItemsModal = () => {
@@ -8066,20 +8022,6 @@ class FinanceApp {
     const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
     const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
     if (openBilledBtn1) openBilledBtn1.onclick = () => openBilledItemsModal();
-    // Initial default row matching user's exact specification:
-    // 50% Progressive Milestone Claim (Civil & Interior Works)
-    // Qty: 1, Rate: 1000 AED, UOM: %, Milestone: 50% -> Billed Milestone (50%): 500.00 AED (Taxable Subtotal)
-    const milestone50Item = (items || []).find(it => it && (it.id === 'item-milestone-50' || it.code === 'MILESTONE-50')) || {
-      id: 'item-milestone-50',
-      code: 'MILESTONE-50',
-      name: '50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT',
-      hsn_sac_code: '9954',
-      uom: '%',
-      sales_price: 1000,
-      gst_rate: 5,
-      progress_pct: 50
-    };
-
     if (editInv && Array.isArray(editInv.line_items) && editInv.line_items.length > 0) {
       tbody.innerHTML = '';
       editInv.line_items.forEach(it => {
@@ -8088,11 +8030,11 @@ class FinanceApp {
           code: it.code || '',
           name: it.name || it.description || '',
           description: it.description || it.name || '',
-          hsn_sac_code: it.hsn_sac_code || '9954',
-          uom: it.uom || it.unit || 'LSUM',
+          uom: it.uom || it.unit || 'SQM',
           sales_price: it.unit_price !== undefined ? it.unit_price : (it.rate || 0),
-          gst_rate: it.gst_rate !== undefined ? it.gst_rate : (it.vat_rate !== undefined ? it.vat_rate : 5),
-          progress_pct: it.progress_pct
+          discount_val: it.discount_val !== undefined ? it.discount_val : (it.discount || 0),
+          discount_type: it.discount_type || 'pct',
+          gst_rate: it.gst_rate !== undefined ? it.gst_rate : (it.vat_rate !== undefined ? it.vat_rate : 5)
         };
         addRow(itemObj, it.qty || 1);
       });
@@ -8106,17 +8048,17 @@ class FinanceApp {
       setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
       recalculateInvoice();
     } else {
-      addRow(milestone50Item, 1);
+      // Preload items matching Screenshot 1 exactly
+      const demoItems = [
+        { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
+        { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
+        { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, discount_val: 0, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
+        { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 }
+      ];
+      tbody.innerHTML = '';
+      demoItems.forEach(it => addRow(it));
       setTaxRegime('trn', { preserveRates: true, keepPos: true });
-    }
-
-    const preset50Btn = document.getElementById('inv-apply-50pct-preset-btn');
-    if (preset50Btn) {
-      preset50Btn.onclick = () => {
-        tbody.innerHTML = '';
-        addRow(milestone50Item, 1);
-        setTaxRegime('trn', { preserveRates: true, keepPos: true });
-      };
+      recalculateInvoice();
     }
 
     // Form submit: Issue invoice
@@ -8323,47 +8265,33 @@ class FinanceApp {
       }
 
       // Collect line items
+      // Collect payment stage & line items
+      const paymentStage = window._currentInvoicePaymentStage || 'standard';
+      const claimPct = Number(document.getElementById('inv-stage-pct-input')?.value) || 20;
+      const claimHeadline = document.getElementById('inv-stage-headline-preview')?.textContent?.trim() || '';
+
       const lineItems = [];
-      let taxableSubtotal = 0;
+      let totalContractBase = 0;
+      let totalRowTax = 0;
       let cgstTotal = 0;
       let sgstTotal = 0;
       let igstTotal = 0;
-      let totalTax = 0;
 
       const pos = (posVal || '').toLowerCase();
       const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
 
       rows.forEach((tr, idx) => {
-        const desc = tr.querySelector('.row-desc')?.value?.trim() || 'Civil & Architectural Works';
-        const hsn = isTrn ? '' : (tr.querySelector('.row-hsn')?.value?.trim() || '');
+        const desc = tr.querySelector('.row-desc')?.value?.trim() || 'Work Item';
         const qty = Number(tr.querySelector('.row-qty')?.value) || 1;
-        const uom = (tr.querySelector('.row-uom')?.value || '').trim().toUpperCase() || 'LSUM';
+        const uom = (tr.querySelector('.row-uom')?.value || '').trim().toUpperCase() || 'SQM';
         const unitPrice = Number(tr.querySelector('.row-rate')?.value) || 0;
-        const taxRate = Number(tr.querySelector('.row-gst')?.value) || (isTrn ? 5 : 18);
-        const explicitPct = Number(tr.querySelector('.row-pct-val')?.value);
+        const discountVal = Number(tr.querySelector('.row-discount-val')?.value) || 0;
+        const discountType = tr.querySelector('.row-discount-type')?.value || 'pct';
+        const taxRate = tr.querySelector('.row-gst')?.value === 'exempt' ? 0 : (Number(tr.querySelector('.row-gst')?.value) || (isTrn ? 5 : 18));
 
-        const isPercent = uom === '%' || uom.includes('PERCENT');
-        let taxable = 0;
-        let pctClaimed = null;
-
-        if (isPercent) {
-          if (!isNaN(explicitPct) && explicitPct > 0) {
-            pctClaimed = explicitPct;
-            taxable = (qty * unitPrice) * (explicitPct / 100);
-          } else if (qty > 0 && qty <= 100) {
-            pctClaimed = qty;
-            taxable = unitPrice * (qty / 100);
-          } else if (qty > 0 && qty < 1) {
-            pctClaimed = qty * 100;
-            taxable = unitPrice * qty;
-          } else {
-            pctClaimed = 100;
-            taxable = qty * unitPrice;
-          }
-        } else {
-          taxable = qty * unitPrice;
-        }
-
+        const gross = qty * unitPrice;
+        const discountAmt = discountType === 'pct' ? (gross * (discountVal / 100)) : discountVal;
+        const taxable = Math.max(0, gross - discountAmt);
         const tax = taxable * (taxRate / 100);
         const total = taxable + tax;
 
@@ -8377,8 +8305,8 @@ class FinanceApp {
           }
         }
 
-        taxableSubtotal += taxable;
-        totalTax += tax;
+        totalContractBase += taxable;
+        totalRowTax += tax;
         cgstTotal += cgst;
         sgstTotal += sgst;
         igstTotal += igst;
@@ -8387,15 +8315,17 @@ class FinanceApp {
           sr: idx + 1,
           name: desc,
           description: desc,
-          hsn_sac_code: hsn,
+          hsn_sac_code: isTrn ? '' : '9954',
           qty,
-          progress_pct: pctClaimed,
           uom,
           unit: uom,
           unit_price: unitPrice,
-          project_price: isPercent ? unitPrice : (qty * unitPrice),
-          invoice_amount: taxable,
+          rate: unitPrice,
+          discount_val: discountVal,
+          discount_type: discountType,
+          discount_amount: discountAmt,
           taxable_amount: taxable,
+          invoice_amount: taxable,
           gst_rate: taxRate,
           vat_rate: taxRate,
           tax_rate: taxRate,
@@ -8408,12 +8338,28 @@ class FinanceApp {
         });
       });
 
-      const grandTotal = taxableSubtotal + totalTax;
+      let taxableSubtotal = 0;
+      let totalTax = 0;
+      let grandTotal = 0;
+
+      if (paymentStage === 'standard') {
+        taxableSubtotal = totalContractBase;
+        totalTax = totalRowTax;
+        grandTotal = taxableSubtotal + totalTax;
+      } else {
+        taxableSubtotal = totalContractBase * (claimPct / 100);
+        totalTax = taxableSubtotal * 0.05;
+        grandTotal = taxableSubtotal + totalTax;
+      }
 
       const newInvoice = {
         id: invoiceId,
         invoice_no: invoiceNo,
         company_id: this.activeCompanyId || 'rayan-corp-uae',
+        payment_stage: paymentStage,
+        claim_pct: claimPct,
+        claim_headline: claimHeadline,
+        contract_base_value: totalContractBase,
         customer_id: customer?.id || '',
         customer_name: customer?.name || clientName,
         customer_address: formattedBillingAddr || custAddress,
@@ -13684,32 +13630,62 @@ class FinanceApp {
                 </tr>
               </thead>
               <tbody>
-                ${lineItems.map((item, idx) => {
-                  const qty = Number(item.qty !== undefined ? item.qty : 1);
-                  const rate = Number(item.unit_price !== undefined ? item.unit_price : (item.rate || item.price || 0));
-                  const taxable = Number(item.taxable_amount !== undefined ? item.taxable_amount : (item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate)));
-                  const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (item.gst_rate !== undefined ? item.gst_rate : (isIndia ? 18 : 5))));
-                  const vatAmt = Number(item.tax_amount !== undefined ? item.tax_amount : (item.vat_amount !== undefined ? item.vat_amount : (taxable * (vatRate / 100))));
-                  const total = Number(item.total_amount !== undefined ? item.total_amount : (taxable + vatAmt));
+                ${(() => {
+                  const isStageClaim = (inv.payment_stage && inv.payment_stage !== 'standard') ||
+                                       (inv.line_items?.[0]?.name && (inv.line_items[0].name.includes('PROGRESSIVE') || inv.line_items[0].name.includes('ADVANCE') || inv.line_items[0].name.includes('FINAL')));
 
-                  return `
-                    <tr style="border-bottom:1px solid #e5e7eb; font-size:0.82rem;">
-                      <td style="padding:7px 10px; text-align:left; color:#4b5563; vertical-align:top;">${idx + 1}</td>
-                      <td style="padding:7px 10px; text-align:left; vertical-align:top;">
-                        <div style="color:#111827; font-weight:500;">${item.name || item.description || '20% Advance payment against PO#2002'}</div>
-                        ${item.description && item.description !== item.name ? `<div style="color:#6b7280; font-size:0.75rem; margin-top:2px;">${item.description}</div>` : ''}
-                      </td>
-                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${qty.toFixed(2)}</td>
-                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxable.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top; line-height:1.2;">
-                        ${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        <div style="font-size:0.7rem; color:#6b7280;">${vatRate.toFixed(2)}%</div>
-                      </td>
-                      <td style="padding:7px 10px; text-align:right; font-weight:600; color:#111827; vertical-align:top;">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                  `;
-                }).join('')}
+                  const stageHeadline = inv.claim_headline ||
+                    (inv.payment_stage && inv.payment_stage !== 'standard'
+                      ? `${inv.claim_pct || 20}% ${inv.payment_stage.toUpperCase()} PAYMENT FOR PO NO. ${inv.po_reference || 'LPO/BD/2026/12'} ${inv.project_name || inv.subject || ''}`
+                      : (inv.line_items?.[0]?.name?.includes('PAYMENT') ? inv.line_items[0].name : null));
+
+                  if (isStageClaim && stageHeadline) {
+                    // Exact circled row from Screenshot 2
+                    return `
+                      <tr style="border-bottom:1px solid #e5e7eb; font-size:0.82rem;">
+                        <td style="padding:7px 10px; text-align:left; color:#4b5563; vertical-align:top;">1</td>
+                        <td style="padding:7px 10px; text-align:left; vertical-align:top;">
+                          <div style="color:#111827; font-weight:700; font-size:0.86rem; line-height:1.4;">${stageHeadline}</div>
+                        </td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">1.00</td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top; line-height:1.2;">
+                          ${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          <div style="font-size:0.7rem; color:#6b7280;">5.00%</div>
+                        </td>
+                        <td style="padding:7px 10px; text-align:right; font-weight:600; color:#111827; vertical-align:top;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    `;
+                  }
+
+                  return lineItems.map((item, idx) => {
+                    const qty = Number(item.qty !== undefined ? item.qty : 1);
+                    const rate = Number(item.unit_price !== undefined ? item.unit_price : (item.rate || item.price || 0));
+                    const taxable = Number(item.taxable_amount !== undefined ? item.taxable_amount : (item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate)));
+                    const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (item.gst_rate !== undefined ? item.gst_rate : (isIndia ? 18 : 5))));
+                    const vatAmt = Number(item.tax_amount !== undefined ? item.tax_amount : (item.vat_amount !== undefined ? item.vat_amount : (taxable * (vatRate / 100))));
+                    const total = Number(item.total_amount !== undefined ? item.total_amount : (taxable + vatAmt));
+
+                    return `
+                      <tr style="border-bottom:1px solid #e5e7eb; font-size:0.82rem;">
+                        <td style="padding:7px 10px; text-align:left; color:#4b5563; vertical-align:top;">${idx + 1}</td>
+                        <td style="padding:7px 10px; text-align:left; vertical-align:top;">
+                          <div style="color:#111827; font-weight:500;">${item.name || item.description || 'BOQ Line Item'}</div>
+                          <div style="color:#2563eb; font-size:0.72rem; margin-top:2px; font-weight:600;">Unit Code: ${item.uom || item.unit || 'SQM'}</div>
+                        </td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${qty.toFixed(2)}</td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxable.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top; line-height:1.2;">
+                          ${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          <div style="font-size:0.7rem; color:#6b7280;">${vatRate.toFixed(2)}%</div>
+                        </td>
+                        <td style="padding:7px 10px; text-align:right; font-weight:600; color:#111827; vertical-align:top;">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    `;
+                  }).join('');
+                })()}
                 <!-- Sub Total Row -->
                 <tr style="border-top:1px solid #111827; border-bottom:1px solid #111827; font-size:0.82rem; font-weight:700;">
                   <td colspan="4" style="padding:7px 10px; text-align:right; color:#111827;">Sub Total</td>
@@ -13719,6 +13695,48 @@ class FinanceApp {
                 </tr>
               </tbody>
             </table>
+
+            <!-- Underlying Contract BOQ Schedule Breakdown (When Progressive / Advance Claim is Active with underlying BOQ items) -->
+            ${(() => {
+              const isStageClaim = (inv.payment_stage && inv.payment_stage !== 'standard') ||
+                                   (inv.line_items?.[0]?.name && (inv.line_items[0].name.includes('PROGRESSIVE') || inv.line_items[0].name.includes('ADVANCE') || inv.line_items[0].name.includes('FINAL')));
+              const validBoqItems = (inv.line_items || []).filter(it => it && !it.name?.includes('PROGRESSIVE PAYMENT') && !it.name?.includes('ADVANCE PAYMENT'));
+              if (isStageClaim && validBoqItems.length > 0) {
+                return `
+                  <div style="margin-top:0.85rem; margin-bottom:0.75rem; border:1px solid #e5e7eb; border-radius:6px; overflow:hidden;">
+                    <div style="background:#f8fafc; padding:6px 10px; font-size:0.74rem; font-weight:700; color:#334155; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+                      <span>CONTRACT BOQ WORK ITEMS &amp; MEASUREMENT METRICS SCHEDULE</span>
+                      <span>Contract Items Value: ${curr} ${(inv.contract_base_value || taxableSubtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.75rem;">
+                      <thead>
+                        <tr style="background:#ffffff; color:#64748b; border-bottom:1px solid #e5e7eb; text-align:left;">
+                          <th style="padding:5px 8px; width:4%;">#</th>
+                          <th style="padding:5px 8px; width:44%;">Item Description</th>
+                          <th style="padding:5px 8px; text-align:right; width:12%;">Qty</th>
+                          <th style="padding:5px 8px; text-align:center; width:10%;">Metric</th>
+                          <th style="padding:5px 8px; text-align:right; width:14%;">Rate (${curr})</th>
+                          <th style="padding:5px 8px; text-align:right; width:16%;">Amount (${curr})</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${validBoqItems.map((it, idx) => `
+                          <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:5px 8px; color:#64748b;">${idx + 1}</td>
+                            <td style="padding:5px 8px; color:#1e293b; font-weight:500;">${it.name || it.description}</td>
+                            <td style="padding:5px 8px; text-align:right; color:#1e293b;">${Number(it.qty || 1).toFixed(2)}</td>
+                            <td style="padding:5px 8px; text-align:center; color:#2563eb; font-weight:700;">${it.uom || it.unit || 'SQM'}</td>
+                            <td style="padding:5px 8px; text-align:right; color:#1e293b;">${Number(it.unit_price || it.rate || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td style="padding:5px 8px; text-align:right; font-weight:600; color:#1e293b;">${Number(it.taxable_amount || it.invoice_amount || (it.qty * it.unit_price)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                `;
+              }
+              return '';
+            })()}
 
             <!-- Totals Section (Right Aligned) -->
             <div style="display:flex; justify-content:flex-end; margin-top:8px; margin-bottom:0.75rem;">
