@@ -1604,8 +1604,82 @@ class FinanceApp {
   }
 
   // --------------------------------------------------------------------------
-  // FORMATTING UTILITIES & AUTO-SEQUENCING
+  // FORMATTING UTILITIES & AUTO-SEQUENCING & NOTIFICATIONS
   // --------------------------------------------------------------------------
+  showNotification(message, type = 'info') {
+    try {
+      let container = document.getElementById('fin-toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'fin-toast-container';
+        container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:440px;';
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.className = `fin-toast fin-toast-${type}`;
+
+      let borderColor = 'rgba(56, 189, 248, 0.4)';
+      let icon = 'ℹ️';
+      let iconColor = '#38bdf8';
+      if (type === 'success') {
+        borderColor = 'rgba(16, 185, 129, 0.4)';
+        icon = '✓';
+        iconColor = '#10b981';
+      } else if (type === 'error') {
+        borderColor = 'rgba(239, 68, 68, 0.4)';
+        icon = '⚠️';
+        iconColor = '#ef4444';
+      } else if (type === 'warning') {
+        borderColor = 'rgba(245, 158, 11, 0.4)';
+        icon = '⚡';
+        iconColor = '#f59e0b';
+      }
+
+      toast.style.cssText = `
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(8, 14, 26, 0.98));
+        border: 1px solid ${borderColor};
+        color: #f8fafc;
+        padding: 0.85rem 1.15rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65), 0 0 15px rgba(0, 166, 153, 0.12);
+        font-size: 0.84rem;
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        pointer-events: auto;
+        cursor: pointer;
+        backdrop-filter: blur(12px);
+        transition: all 0.25s ease;
+      `;
+
+      toast.innerHTML = `
+        <span style="font-weight:800; font-size:1rem; color:${iconColor}; line-height:1;">${icon}</span>
+        <span style="flex:1; line-height:1.4;">${message}</span>
+        <span style="opacity:0.5; font-size:0.75rem; margin-left:6px;">✕</span>
+      `;
+
+      toast.onclick = () => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 250);
+      };
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+          setTimeout(() => toast.remove(), 250);
+        }
+      }, 4500);
+    } catch (e) {
+      console.log(`[Notification ${type}]:`, message);
+    }
+  }
+
   getNextInvoiceNumber() {
     const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     let maxSeq = 44049;
@@ -8457,9 +8531,17 @@ class FinanceApp {
       this.switchTab('invoices');
 
       if (status === 'draft') {
-        this.showNotification(`✓ Invoice ${invoiceNo} saved as DRAFT successfully!`, 'success');
+        if (typeof this.showNotification === 'function') {
+          this.showNotification(`✓ Invoice ${invoiceNo} saved as DRAFT successfully!`, 'success');
+        } else {
+          alert(`✓ Invoice ${invoiceNo} saved as DRAFT successfully!`);
+        }
       } else {
-        this.showNotification(`✓ Invoice ${invoiceNo} issued and posted successfully!`, 'success');
+        if (typeof this.showNotification === 'function') {
+          this.showNotification(`✓ Invoice ${invoiceNo} issued and posted successfully!`, 'success');
+        } else {
+          alert(`✓ Invoice ${invoiceNo} issued and posted successfully!`);
+        }
         // Immediately open the newly generated tax invoice receipt passing the exact invoice object!
         this.openInvoicePrintModal(newInvoice);
       }
