@@ -7,9 +7,6 @@
  * Endpoint: /api/finance.php
  */
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -511,6 +508,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     $dummyExpIds = ['exp-rg-001', 'exp-rg-002', 'exp-rg-003', 'exp-rg-2026-001', 'exp-rg-2026-002', 'exp-rg-2026-003'];
     $dummyPoIds = ['po-rec-11008'];
     $dummyDocIds = ['doc-001', 'doc-002', 'doc-003', 'doc-004'];
+    $dummyVendorIds = ['vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004'];
     $dummyCustIds = ['cust-004', 'cust-005', 'cust-kgc-alias'];
     $dummyInvIds = [];
     $dummyRecIds = ['rec-mvdvmilf', 'rec-rv-44026'];
