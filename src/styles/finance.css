@@ -3986,3 +3986,375 @@ select option:focus,
   color: #94a3b8;
   max-width: 460px;
 }
+
+/* ==========================================================================
+   BILINGUAL BILLING & SHIPPING ADDRESS (ZOHO BOOKS STYLE)
+   ========================================================================== */
+
+.fin-inv-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fin-inv-header-title {
+  font-family: var(--fin-font-heading, 'Outfit', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.fin-inv-cust-search-btn {
+  background: #0284c7;
+  color: #ffffff;
+  border: 1px solid #0284c7;
+  border-radius: 6px;
+  width: 36px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.fin-inv-cust-search-btn:hover {
+  background: #0369a1;
+}
+
+.fin-inv-curr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fin-inv-curr-badge:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+/* Address Language Switcher Pills */
+.fin-addr-lang-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.fin-addr-lang-label {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.fin-addr-lang-pills {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.fin-addr-lang-pill {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 4px 14px;
+  border-radius: 16px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fin-addr-lang-pill.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  font-weight: 700;
+}
+
+/* Dual Address Box (Billing & Shipping) */
+.fin-addr-dual-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.fin-addr-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 80px;
+}
+
+.fin-addr-header-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.fin-addr-link-action {
+  color: #0284c7;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.fin-addr-link-action:hover {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
+.fin-addr-card-preview {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.fin-addr-card-preview.arabic-mode {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+.fin-tax-treatment-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+}
+
+.fin-tax-treatment-link {
+  color: #0284c7;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.fin-tax-treatment-link:hover {
+  text-decoration: underline;
+}
+
+/* Bilingual Address Modal (Light Styled matching Screenshot 2 & 3) */
+.fin-addr-modal-dialog {
+  max-width: 680px;
+  width: 95%;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-radius: 12px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.fin-addr-modal-header {
+  padding: 1.25rem 1.5rem 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.fin-addr-modal-title {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.fin-addr-modal-close {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.fin-addr-modal-close:hover {
+  color: #dc2626;
+}
+
+.fin-addr-modal-body {
+  padding: 1.25rem 1.5rem;
+  max-height: 75vh;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.fin-addr-grid-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.75rem;
+}
+
+.fin-addr-grid-table th {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748b;
+  text-align: left;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.fin-addr-grid-table td.field-label {
+  width: 110px;
+  vertical-align: top;
+  padding-top: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.fin-addr-grid-table td.field-input {
+  vertical-align: top;
+  padding: 0 0.4rem;
+}
+
+.fin-addr-input {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.84rem;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fin-addr-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.fin-addr-textarea {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.84rem;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 38px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fin-addr-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.fin-addr-select {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.84rem;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.fin-addr-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.fin-addr-phone-wrap {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.fin-addr-modal-footer {
+  padding: 1rem 1.5rem;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+}
+
+.fin-btn-addr-save {
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1.4rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fin-btn-addr-save:hover {
+  background: #2563eb;
+}
+
+.fin-btn-addr-cancel {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fin-btn-addr-cancel:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}

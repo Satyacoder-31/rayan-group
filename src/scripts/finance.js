@@ -5322,6 +5322,299 @@ class FinanceApp {
     this.renderActiveTab();
   }
 
+  // BILINGUAL BILLING / SHIPPING ADDRESS MODAL (Zoho Books Style)
+  openAddressModal(type = 'billing', isDropship = false) {
+    const isBilling = type === 'billing';
+    let modalTitle = isBilling ? 'Billing Address' : (isDropship ? 'Dropshipping Address' : 'Shipping Address');
+
+    // Get current address object if present
+    const currentAddr = isBilling ? this.currentBillingAddress : this.currentShippingAddress;
+    const attention = currentAddr?.attention || (isBilling ? (document.getElementById('inv-cust-contact')?.value || '') : '') || '';
+    const attentionAr = currentAddr?.attention_ar || '';
+    const country = currentAddr?.country || 'United Arab Emirates';
+    const countryAr = currentAddr?.country_ar || 'الإمارات العربية المتحدة';
+    const street1 = currentAddr?.street1 || '';
+    const street1Ar = currentAddr?.street1_ar || '';
+    const street2 = currentAddr?.street2 || '';
+    const street2Ar = currentAddr?.street2_ar || '';
+    const city = currentAddr?.city || '';
+    const cityAr = currentAddr?.city_ar || '';
+    const state = currentAddr?.state || 'Dubai';
+    const stateAr = currentAddr?.state_ar || 'دبي';
+    const zip = currentAddr?.zip || '';
+    const zipAr = currentAddr?.zip_ar || '';
+    const phoneCode = currentAddr?.phone_code || '+971';
+    const phone = currentAddr?.phone || '';
+    const phoneAr = currentAddr?.phone_ar || '';
+    const fax = currentAddr?.fax || '';
+    const faxAr = currentAddr?.fax_ar || '';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-address-editor" style="z-index: 10050; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;">
+        <div class="fin-addr-modal-dialog">
+          <div class="fin-addr-modal-header">
+            <h3 class="fin-addr-modal-title">${modalTitle}</h3>
+            <button type="button" class="fin-addr-modal-close" id="addr-modal-close-btn">&times;</button>
+          </div>
+          <div class="fin-addr-modal-body">
+            <table class="fin-addr-grid-table">
+              <thead>
+                <tr>
+                  <th style="width: 120px;">Fields</th>
+                  <th style="width: 45%;">In Primary Language</th>
+                  <th style="width: 45%;">In Secondary Language (Arabic)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="field-label">Attention</td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" id="addr-modal-attention" value="${attention}">
+                  </td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" dir="rtl" id="addr-modal-attention-ar" value="${attentionAr}">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">Country/Region</td>
+                  <td class="field-input">
+                    <select class="fin-addr-select" id="addr-modal-country">
+                      <option value="">Select or type to add</option>
+                      <option value="United Arab Emirates" ${country === 'United Arab Emirates' || !country ? 'selected' : ''}>United Arab Emirates</option>
+                      <option value="Saudi Arabia" ${country === 'Saudi Arabia' ? 'selected' : ''}>Saudi Arabia</option>
+                      <option value="Oman" ${country === 'Oman' ? 'selected' : ''}>Oman</option>
+                      <option value="Qatar" ${country === 'Qatar' ? 'selected' : ''}>Qatar</option>
+                      <option value="Kuwait" ${country === 'Kuwait' ? 'selected' : ''}>Kuwait</option>
+                      <option value="Bahrain" ${country === 'Bahrain' ? 'selected' : ''}>Bahrain</option>
+                      <option value="India" ${country === 'India' ? 'selected' : ''}>India</option>
+                      <option value="United States" ${country === 'United States' ? 'selected' : ''}>United States</option>
+                      <option value="United Kingdom" ${country === 'United Kingdom' ? 'selected' : ''}>United Kingdom</option>
+                    </select>
+                  </td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" dir="rtl" id="addr-modal-country-ar" value="${countryAr}" placeholder="الإمارات العربية المتحدة">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">Address</td>
+                  <td class="field-input">
+                    <textarea class="fin-addr-textarea" id="addr-modal-street1" placeholder="Street 1" rows="1">${street1}</textarea>
+                    <textarea class="fin-addr-textarea" id="addr-modal-street2" placeholder="Street 2" rows="1" style="margin-top:6px;">${street2}</textarea>
+                  </td>
+                  <td class="field-input">
+                    <textarea class="fin-addr-textarea" dir="rtl" id="addr-modal-street1-ar" placeholder="Street 1" rows="1">${street1Ar}</textarea>
+                    <textarea class="fin-addr-textarea" dir="rtl" id="addr-modal-street2-ar" placeholder="Street 2" rows="1" style="margin-top:6px;">${street2Ar}</textarea>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">City</td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" id="addr-modal-city" value="${city}">
+                  </td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" dir="rtl" id="addr-modal-city-ar" value="${cityAr}">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">State</td>
+                  <td class="field-input">
+                    <select class="fin-addr-select" id="addr-modal-state">
+                      <option value="">Select or type to add</option>
+                      <option value="Dubai" ${state === 'Dubai' || !state ? 'selected' : ''}>Dubai</option>
+                      <option value="Abu Dhabi" ${state === 'Abu Dhabi' ? 'selected' : ''}>Abu Dhabi</option>
+                      <option value="Sharjah" ${state === 'Sharjah' ? 'selected' : ''}>Sharjah</option>
+                      <option value="Ajman" ${state === 'Ajman' ? 'selected' : ''}>Ajman</option>
+                      <option value="Umm Al Quwain" ${state === 'Umm Al Quwain' ? 'selected' : ''}>Umm Al Quwain</option>
+                      <option value="Ras Al Khaimah" ${state === 'Ras Al Khaimah' ? 'selected' : ''}>Ras Al Khaimah</option>
+                      <option value="Fujairah" ${state === 'Fujairah' ? 'selected' : ''}>Fujairah</option>
+                      <option value="27-Maharashtra" ${state === '27-Maharashtra' ? 'selected' : ''}>27-Maharashtra</option>
+                    </select>
+                  </td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" dir="rtl" id="addr-modal-state-ar" value="${stateAr}">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">ZIP Code</td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" id="addr-modal-zip" value="${zip}">
+                  </td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" dir="rtl" id="addr-modal-zip-ar" value="${zipAr}">
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">Phone</td>
+                  <td class="field-input">
+                    <div class="fin-addr-phone-wrap">
+                      <select class="fin-addr-select" id="addr-modal-phone-code" style="width: 105px;">
+                        <option value="+971" ${phoneCode === '+971' ? 'selected' : ''}>+971 ⌵</option>
+                        <option value="+966" ${phoneCode === '+966' ? 'selected' : ''}>+966 ⌵</option>
+                        <option value="+968" ${phoneCode === '+968' ? 'selected' : ''}>+968 ⌵</option>
+                        <option value="+974" ${phoneCode === '+974' ? 'selected' : ''}>+974 ⌵</option>
+                        <option value="+965" ${phoneCode === '+965' ? 'selected' : ''}>+965 ⌵</option>
+                        <option value="+973" ${phoneCode === '+973' ? 'selected' : ''}>+973 ⌵</option>
+                        <option value="+91" ${phoneCode === '+91' ? 'selected' : ''}>+91 ⌵</option>
+                        <option value="+1" ${phoneCode === '+1' ? 'selected' : ''}>+1 ⌵</option>
+                        <option value="+44" ${phoneCode === '+44' ? 'selected' : ''}>+44 ⌵</option>
+                      </select>
+                      <input type="text" class="fin-addr-input" id="addr-modal-phone" value="${phone}">
+                    </div>
+                  </td>
+                  <td class="field-input">
+                    <div class="fin-addr-phone-wrap">
+                      <select class="fin-addr-select" id="addr-modal-phone-code-ar" style="width: 105px;">
+                        <option value="+971" selected>+971 ⌵</option>
+                        <option value="+966">+966 ⌵</option>
+                        <option value="+91">+91 ⌵</option>
+                      </select>
+                      <input type="text" class="fin-addr-input" dir="rtl" id="addr-modal-phone-ar" value="${phoneAr}">
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="field-label">Fax Number</td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" id="addr-modal-fax" value="${fax}">
+                  </td>
+                  <td class="field-input">
+                    <input type="text" class="fin-addr-input" dir="rtl" id="addr-modal-fax-ar" value="${faxAr}">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="font-size:0.8rem; color:#475569; margin-top:1.25rem;">
+              <strong>Note:</strong> Changes made here will be updated for this customer.
+            </div>
+          </div>
+          <div class="fin-addr-modal-footer">
+            <button type="button" class="fin-btn-addr-save" id="addr-modal-save-btn">Save</button>
+            <button type="button" class="fin-btn-addr-cancel" id="addr-modal-cancel-btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const existingModal = document.getElementById('modal-address-editor');
+    if (existingModal) existingModal.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const closeModal = () => {
+      document.getElementById('modal-address-editor')?.remove();
+    };
+
+    document.getElementById('addr-modal-close-btn').onclick = closeModal;
+    document.getElementById('addr-modal-cancel-btn').onclick = closeModal;
+
+    document.getElementById('addr-modal-save-btn').onclick = () => {
+      const savedAttention = document.getElementById('addr-modal-attention')?.value.trim() || '';
+      const savedAttentionAr = document.getElementById('addr-modal-attention-ar')?.value.trim() || '';
+      const savedCountry = document.getElementById('addr-modal-country')?.value.trim() || 'United Arab Emirates';
+      const savedCountryAr = document.getElementById('addr-modal-country-ar')?.value.trim() || 'الإمارات العربية المتحدة';
+      const savedStreet1 = document.getElementById('addr-modal-street1')?.value.trim() || '';
+      const savedStreet1Ar = document.getElementById('addr-modal-street1-ar')?.value.trim() || '';
+      const savedStreet2 = document.getElementById('addr-modal-street2')?.value.trim() || '';
+      const savedStreet2Ar = document.getElementById('addr-modal-street2-ar')?.value.trim() || '';
+      const savedCity = document.getElementById('addr-modal-city')?.value.trim() || '';
+      const savedCityAr = document.getElementById('addr-modal-city-ar')?.value.trim() || '';
+      const savedState = document.getElementById('addr-modal-state')?.value.trim() || '';
+      const savedStateAr = document.getElementById('addr-modal-state-ar')?.value.trim() || '';
+      const savedZip = document.getElementById('addr-modal-zip')?.value.trim() || '';
+      const savedZipAr = document.getElementById('addr-modal-zip-ar')?.value.trim() || '';
+      const savedPhoneCode = document.getElementById('addr-modal-phone-code')?.value.trim() || '+971';
+      const savedPhone = document.getElementById('addr-modal-phone')?.value.trim() || '';
+      const savedPhoneAr = document.getElementById('addr-modal-phone-ar')?.value.trim() || '';
+      const savedFax = document.getElementById('addr-modal-fax')?.value.trim() || '';
+      const savedFaxAr = document.getElementById('addr-modal-fax-ar')?.value.trim() || '';
+
+      const addrObj = {
+        attention: savedAttention,
+        attention_ar: savedAttentionAr,
+        country: savedCountry,
+        country_ar: savedCountryAr,
+        street1: savedStreet1,
+        street1_ar: savedStreet1Ar,
+        street2: savedStreet2,
+        street2_ar: savedStreet2Ar,
+        city: savedCity,
+        city_ar: savedCityAr,
+        state: savedState,
+        state_ar: savedStateAr,
+        zip: savedZip,
+        zip_ar: savedZipAr,
+        phone_code: savedPhoneCode,
+        phone: savedPhone,
+        phone_ar: savedPhoneAr,
+        fax: savedFax,
+        fax_ar: savedFaxAr,
+        is_dropship: Boolean(isDropship)
+      };
+
+      const formattedPrimary = [
+        savedAttention ? `Attn: ${savedAttention}` : '',
+        savedStreet1,
+        savedStreet2,
+        [savedCity, savedState, savedZip].filter(Boolean).join(', '),
+        savedCountry,
+        savedPhone ? `Phone: ${savedPhoneCode} ${savedPhone}` : '',
+        savedFax ? `Fax: ${savedFax}` : ''
+      ].filter(Boolean).join('\n');
+
+      const formattedArabic = [
+        savedAttentionAr ? `عناية: ${savedAttentionAr}` : '',
+        savedStreet1Ar,
+        savedStreet2Ar,
+        [savedCityAr, savedStateAr, savedZipAr].filter(Boolean).join('، '),
+        savedCountryAr,
+        savedPhoneAr ? `هاتف: ${savedPhoneAr}` : '',
+        savedFaxAr ? `فاكس: ${savedFaxAr}` : ''
+      ].filter(Boolean).join('\n');
+
+      if (isBilling) {
+        this.currentBillingAddress = addrObj;
+        const legacyAddrInp = document.getElementById('inv-cust-address');
+        if (legacyAddrInp) legacyAddrInp.value = formattedPrimary;
+        const legacyContactInp = document.getElementById('inv-cust-contact');
+        if (legacyContactInp && savedAttention) legacyContactInp.value = savedAttention;
+      } else {
+        this.currentShippingAddress = addrObj;
+      }
+
+      // Sync with customer record if customer is chosen
+      const custName = (document.getElementById('inv-cust-input')?.value || '').trim();
+      const custId = document.getElementById('inv-cust-input')?.getAttribute('data-cust-id');
+      if (custName) {
+        let customer = (this.db?.customers || []).find(c => (custId && c.id === custId) || (c.name && c.name.toLowerCase() === custName.toLowerCase()));
+        if (!customer) {
+          customer = {
+            id: custId || ('cust-' + Date.now()),
+            name: custName,
+            status: 'active'
+          };
+          if (!this.db.customers) this.db.customers = [];
+          this.db.customers.push(customer);
+        }
+        if (isBilling) {
+          customer.billing_address_details = addrObj;
+          customer.billing_address = formattedPrimary;
+          customer.billing_address_ar = formattedArabic;
+          if (savedAttention) customer.contact_person = savedAttention;
+          if (savedPhone) customer.phone = `${savedPhoneCode} ${savedPhone}`;
+        } else {
+          customer.shipping_address_details = addrObj;
+          customer.shipping_address = formattedPrimary;
+          customer.shipping_address_ar = formattedArabic;
+        }
+        this.syncApi('create_customer', { customer }).catch(e => console.warn('Sync customer addr error:', e));
+      }
+
+      closeModal();
+      if (typeof window._reRenderInvoiceAddresses === 'function') {
+        window._reRenderInvoiceAddresses();
+      }
+    };
+  }
+
   // 1. CREATE TAX INVOICE MODAL
   openCreateInvoiceModal(editInvoiceId = null) {
     const editInv = editInvoiceId ? (this.db?.invoices || []).find(i => i.id === editInvoiceId || i.invoice_no === editInvoiceId) : null;
@@ -5334,7 +5627,7 @@ class FinanceApp {
     const modalTitle = isEditing ? (editInv.status === 'draft' ? '✏️ Edit Draft Invoice' : '✏️ Edit Sales Tax Invoice') : '📄 Create Sales Tax Invoice';
     const initialCustName = editInv ? (editInv.customer_name || '') : '';
     const initialCustTrn = editInv ? (editInv.customer_trn || editInv.customer_gstin || editInv.tax_number || '') : '';
-    const initialPos = editInv ? (editInv.place_of_supply || 'Dubai, UAE') : 'Dubai, UAE';
+    const initialPos = editInv ? (editInv.place_of_supply || 'Dubai') : 'Dubai';
     const initialAddress = editInv ? (editInv.customer_address || '') : '';
     const initialContact = editInv ? (editInv.contact_person || '') : '';
     const initialEmail = editInv ? (editInv.email || '') : '';
@@ -5346,6 +5639,27 @@ class FinanceApp {
     const initialNotes = editInv ? (editInv.notes || '') : '';
     const initialRegime = editInv ? (editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst')) : 'trn';
 
+    // Zoho Books Billing, Shipping & Invoice Accounting fields
+    const initialOrderNo = editInv ? (editInv.order_no || editInv.order_number || '') : '';
+    const initialTaxTreatment = editInv ? (editInv.tax_treatment || 'VAT Registered') : 'VAT Registered';
+    const initialArAccount = editInv ? (editInv.accounts_receivable || 'Accounts Receivable') : 'Accounts Receivable';
+    const initialSalesperson = editInv ? (editInv.salesperson || '') : '';
+    const initialDrc = editInv ? Boolean(editInv.drc_applicable) : false;
+    const initialSubject = editInv ? (editInv.subject || '') : '';
+
+    this.currentBillingAddress = editInv?.billing_address_details || (editInv?.customer_address ? {
+      street1: editInv.customer_address,
+      attention: editInv.contact_person || '',
+      country: 'United Arab Emirates'
+    } : null);
+
+    this.currentShippingAddress = editInv?.shipping_address_details || (editInv?.shipping_address ? {
+      street1: editInv.shipping_address,
+      country: 'United Arab Emirates'
+    } : null);
+
+    let currentAddressLang = 'primary'; // 'primary' | 'secondary'
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-invoice">
         <div class="fin-modal-dialog">
@@ -5355,41 +5669,22 @@ class FinanceApp {
           </div>
           <div class="fin-modal-body">
             <form id="create-invoice-form" data-edit-id="${editInv ? editInv.id : ''}">
-              <!-- Auto-Sequenced Invoice Number Banner -->
-              <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(56,189,248,0.25); border-radius:10px; padding:0.85rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-                <div style="display:flex; align-items:center; gap:0.85rem;">
-                  <div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg, rgba(56,189,248,0.2), rgba(0,166,153,0.25)); display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:1px solid rgba(56,189,248,0.35);">
-                    ⚡
-                  </div>
-                  <div>
-                    <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; font-weight:700;">
-                      Official Invoice Sequence Number
-                    </div>
-                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:2px;">
-                      <span id="inv-auto-seq-badge" style="font-family:monospace; font-size:1.15rem; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 10px; border-radius:6px; border:1px solid rgba(56,189,248,0.35);">${nextInvoiceNo}</span>
-                      <span style="font-size:0.7rem; color:#10b981; font-weight:700; background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:10px; border:1px solid rgba(16,185,129,0.25);">${isEditing ? (editInv.status === 'draft' ? '📝 Draft Invoice' : '📄 Existing Invoice') : '✓ Auto-Generated Sequence'}</span>
-                    </div>
-                  </div>
+              <!-- Customer Name Row with Search & Currency Pill (Matching Screenshot 1) -->
+              <div class="fin-form-group" style="margin-bottom:0.85rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                  <label class="fin-form-label" style="margin-bottom:0;">
+                    Customer Name <span style="color:#ef4444;">*</span>
+                  </label>
+                  <span id="inv-cust-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Editable • Pick or Type ▾</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:0.6rem;">
-                  <label for="inv-custom-seq-no" style="font-size:0.74rem; color:#cbd5e1; font-weight:600;">Invoice # Ref:</label>
-                  <input type="text" id="inv-custom-seq-no" class="fin-form-input" value="${nextInvoiceNo}" style="width:190px; padding:0.4rem 0.75rem; font-size:0.85rem; font-family:monospace; font-weight:700; color:#38bdf8; background:rgba(15,23,42,0.9); border-color:rgba(56,189,248,0.4);" title="Auto-sequenced invoice number. You can also customize if needed.">
-                </div>
-              </div>
-
-              <div class="fin-form-grid-3">
-                <div class="fin-form-group">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                    <label class="fin-form-label" style="margin-bottom:0;">Customer / Client <span style="color:#ef4444;">*</span></label>
-                    <span id="inv-cust-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Editable • Type or Pick ▾</span>
-                  </div>
-                  <div class="fin-autocomplete-wrap">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <div class="fin-autocomplete-wrap" style="flex:1;">
                     <input 
                       type="text" 
                       id="inv-cust-input" 
                       class="fin-form-input" 
                       value="${initialCustName}"
-                      placeholder="Click to view registered clients or write custom name..." 
+                      placeholder="Select or type Customer Name..." 
                       required 
                       autocomplete="off"
                     >
@@ -5406,87 +5701,119 @@ class FinanceApp {
                       `).join('')}
                     </div>
                   </div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="inv-cust-hint">Click text box to view registered clients, or type custom name</span>
-                  </div>
+                  <button type="button" class="fin-inv-cust-search-btn" id="inv-cust-search-btn" title="Search Customers">🔍</button>
+                  <button type="button" class="fin-inv-curr-badge" id="inv-currency-indicator" title="Click to toggle currency (AED / INR)">
+                    <span>⟐</span> <span id="inv-currency-symbol">AED</span>
+                  </button>
                 </div>
-
-                <div class="fin-form-group">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                    <label class="fin-form-label" id="inv-tax-header-label" style="margin-bottom:0;">
-                      <span id="inv-tax-type-text">CUSTOMER TRN</span> <span style="color:#ef4444;">*</span>
-                    </label>
-                    <div class="fin-tax-regime-pills">
-                      <button type="button" id="regime-toggle-trn" class="fin-tax-pill ${initialRegime === 'trn' ? 'active trn-pill' : ''}" title="UAE VAT Regime (15-digit TRN Number)">
-                        🇦🇪 TRN
-                      </button>
-                      <button type="button" id="regime-toggle-gst" class="fin-tax-pill ${initialRegime === 'gst' ? 'active' : ''}" title="India GST Regime (15-character GSTIN)">
-                        🇮🇳 GST
-                      </button>
-                    </div>
-                  </div>
-                  <input type="text" id="inv-cust-gstin" class="fin-form-input" required value="${initialCustTrn}" placeholder="e.g. 100492817200003 (15-digit UAE TRN)" maxlength="25" style="font-family:monospace; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="inv-tax-helper-text">UAE VAT Registration # (15 Digits)</span>
-                    <span id="inv-currency-indicator" style="color:#0099e6; font-weight:700; cursor:pointer;" title="Click to toggle currency (AED د.إ / INR ₹)">Currency: <span id="inv-currency-symbol">AED (د.إ)</span> ⇄</span>
-                  </div>
-                  <input type="hidden" id="inv-tax-regime" value="${initialRegime}">
-                </div>
-
-                <div class="fin-form-group">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                    <label class="fin-form-label" id="inv-pos-label" style="margin-bottom:0;">
-                      Place of Supply / Emirate <span style="color:#ef4444;">*</span>
-                    </label>
-                    <span id="inv-pos-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Saved • Pick or Type ▾</span>
-                  </div>
-                  <div class="fin-autocomplete-wrap">
-                    <input 
-                      type="text" 
-                      id="inv-cust-pos" 
-                      class="fin-form-input" 
-                      required 
-                      value="${initialPos}" 
-                      placeholder="e.g. Abu Dhabi, UAE or 27-Maharashtra" 
-                      list="pos-suggestions"
-                      autocomplete="off"
-                    >
-                    <div id="inv-pos-dropdown" class="fin-autocomplete-dropdown"></div>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="inv-pos-hint">Click text box to view recommendations, or type custom</span>
-                  </div>
-                  <datalist id="pos-suggestions"></datalist>
+                <div style="font-size:0.68rem; color:#64748b; margin-top:0.25rem;">
+                  <span id="inv-cust-hint">Click text box to view registered clients, or type custom name</span>
                 </div>
               </div>
 
-              <!-- Customer Address & Contact Details Row -->
-              <div class="fin-form-grid-3" style="margin-top:0.75rem; margin-bottom:0.25rem;">
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Client Billing Address</label>
-                  <input type="text" id="inv-cust-address" class="fin-form-input" placeholder="e.g. ABU DHABI, MADINAT ZAYED, UAE" value="${initialAddress}">
-                  <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">Printed directly on Tax Invoice receipt</div>
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Attention / Contact Person</label>
-                  <input type="text" id="inv-cust-contact" class="fin-form-input" placeholder="e.g. Mr. Sooraj Kumar" value="${initialContact}">
-                  <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">Recipient / Representative</div>
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Client Email / Contact</label>
-                  <input type="text" id="inv-cust-email" class="fin-form-input" placeholder="e.g. buildaradevelopers@gmail.com" value="${initialEmail}">
-                  <div style="font-size:0.65rem; color:#64748b; margin-top:0.25rem;">For formal invoice documentation</div>
+              <!-- Customer Address Section (Zoho Books Style with Primary/Arabic Switcher) -->
+              <div class="fin-addr-lang-wrap">
+                <span class="fin-addr-lang-label">Customer Address</span>
+                <div class="fin-addr-lang-pills">
+                  <button type="button" class="fin-addr-lang-pill active" id="addr-lang-primary">Primary Language</button>
+                  <button type="button" class="fin-addr-lang-pill" id="addr-lang-secondary">Secondary Language (Arabic)</button>
                 </div>
               </div>
 
-              <div class="fin-form-grid-3">
+              <!-- Dual Address Box (Billing Address & Shipping Address) -->
+              <div class="fin-addr-dual-box">
+                <div class="fin-addr-col">
+                  <div class="fin-addr-header-title">BILLING ADDRESS</div>
+                  <div id="inv-billing-addr-container"></div>
+                </div>
+                <div class="fin-addr-col">
+                  <div class="fin-addr-header-title">SHIPPING ADDRESS</div>
+                  <div id="inv-shipping-addr-container"></div>
+                </div>
+              </div>
+
+              <!-- Tax Treatment Row -->
+              <div class="fin-tax-treatment-row">
+                <span>Tax Treatment:</span>
+                <span class="fin-tax-treatment-link" id="inv-tax-treatment-btn" title="Click to Change Tax Treatment">
+                  <strong id="inv-tax-treatment-val">${initialTaxTreatment}</strong> ✎
+                </span>
+              </div>
+
+              <!-- Place of Supply Row (Required) -->
+              <div class="fin-form-group" style="margin-top:1rem; margin-bottom:1.15rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                  <label class="fin-form-label" id="inv-pos-label" style="margin-bottom:0;">
+                    Place of Supply <span style="color:#ef4444;">*</span>
+                  </label>
+                  <span id="inv-pos-badge" style="font-size:0.68rem; color:#38bdf8; font-weight:600;">Saved • Pick or Type ▾</span>
+                </div>
+                <div class="fin-autocomplete-wrap">
+                  <input 
+                    type="text" 
+                    id="inv-cust-pos" 
+                    class="fin-form-input" 
+                    required 
+                    value="${initialPos}" 
+                    placeholder="e.g. Dubai, Abu Dhabi, or 27-Maharashtra" 
+                    list="pos-suggestions"
+                    autocomplete="off"
+                  >
+                  <div id="inv-pos-dropdown" class="fin-autocomplete-dropdown"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
+                  <span id="inv-pos-hint">Click text box to view recommendations, or type custom</span>
+                </div>
+                <datalist id="pos-suggestions"></datalist>
+              </div>
+
+              <!-- Hidden TRN & Regime state inputs -->
+              <div style="display:none;">
+                <input type="text" id="inv-cust-gstin" value="${initialCustTrn}">
+                <input type="hidden" id="inv-tax-regime" value="${initialRegime}">
+                <input type="text" id="inv-cust-address" value="${initialAddress}">
+                <input type="text" id="inv-cust-contact" value="${initialContact}">
+                <input type="text" id="inv-cust-email" value="${initialEmail}">
+                <button type="button" id="regime-toggle-trn"></button>
+                <button type="button" id="regime-toggle-gst"></button>
+                <span id="inv-tax-type-text">CUSTOMER TRN</span>
+                <span id="inv-tax-helper-text">UAE VAT Registration # (15 Digits)</span>
+              </div>
+
+              <div style="border-top:1px solid rgba(255,255,255,0.08); margin:1.25rem 0;"></div>
+
+              <!-- Invoice# & Order Number Row -->
+              <div class="fin-form-grid-2" style="margin-bottom:0.85rem;">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Invoice Date</label>
+                  <label class="fin-form-label">Invoice# <span style="color:#ef4444;">*</span></label>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <input type="text" id="inv-custom-seq-no" class="fin-form-input" value="${nextInvoiceNo}" style="font-family:monospace; font-weight:700; color:#38bdf8;" required>
+                    <button type="button" id="inv-seq-refresh-btn" class="fin-btn-quick" style="padding:0.45rem 0.75rem;" title="Regenerate Sequence Number">⚙</button>
+                  </div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Order Number</label>
+                  <input type="text" id="inv-order-no" class="fin-form-input" placeholder="e.g. PO-TRI-2026-01" value="${initialOrderNo}">
+                </div>
+              </div>
+
+              <!-- Invoice Date, Terms & Due Date Row -->
+              <div class="fin-form-grid-3" style="margin-bottom:0.85rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Invoice Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="inv-date" class="fin-form-input" value="${initialDate}" required>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label" id="inv-terms-label">Payment Terms (Days)</label>
-                  <input type="number" id="inv-terms" class="fin-form-input" value="${initialTerms}">
+                  <label class="fin-form-label">Terms</label>
+                  <select id="inv-terms-select" class="fin-form-select">
+                    <option value="0" ${initialTerms === 0 ? 'selected' : ''}>Due on Receipt</option>
+                    <option value="15" ${initialTerms === 15 ? 'selected' : ''}>Net 15</option>
+                    <option value="30" ${initialTerms === 30 ? 'selected' : ''}>Net 30</option>
+                    <option value="45" ${initialTerms === 45 ? 'selected' : ''}>Net 45</option>
+                    <option value="60" ${initialTerms === 60 ? 'selected' : ''}>Net 60</option>
+                    <option value="custom" ${![0, 15, 30, 45, 60].includes(initialTerms) ? 'selected' : ''}>Custom</option>
+                  </select>
+                  <input type="number" id="inv-terms" class="fin-form-input" value="${initialTerms}" style="display:none;">
                 </div>
                 <div class="fin-form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
@@ -5500,7 +5827,42 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-grid-2">
+              <!-- Accounts Receivable Row -->
+              <div class="fin-form-group" style="margin-bottom:0.85rem;">
+                <label class="fin-form-label">Accounts Receivable <span style="font-size:0.75rem; color:#64748b;" title="General ledger asset account receiving this invoice balance">ⓘ</span></label>
+                <select id="inv-ar-account" class="fin-form-select">
+                  <option value="Accounts Receivable" ${initialArAccount === 'Accounts Receivable' ? 'selected' : ''}>Accounts Receivable</option>
+                  <option value="Accounts Receivable - Trade Debtors" ${initialArAccount === 'Accounts Receivable - Trade Debtors' ? 'selected' : ''}>Accounts Receivable - Trade Debtors</option>
+                  <option value="Retention Receivable" ${initialArAccount === 'Retention Receivable' ? 'selected' : ''}>Retention Receivable</option>
+                  <option value="Unbilled Revenue / Progress Claims" ${initialArAccount === 'Unbilled Revenue / Progress Claims' ? 'selected' : ''}>Unbilled Revenue / Progress Claims</option>
+                  <option value="Intercompany Accounts Receivable" ${initialArAccount === 'Intercompany Accounts Receivable' ? 'selected' : ''}>Intercompany Accounts Receivable</option>
+                </select>
+              </div>
+
+              <!-- Salesperson & DRC Row -->
+              <div class="fin-form-group" style="margin-bottom:0.85rem;">
+                <label class="fin-form-label">Salesperson</label>
+                <select id="inv-salesperson" class="fin-form-select">
+                  <option value="">Select or Add Salesperson</option>
+                  <option value="Arshad Alam Shaikh" ${initialSalesperson === 'Arshad Alam Shaikh' ? 'selected' : ''}>Arshad Alam Shaikh</option>
+                  <option value="Sooraj Kumar" ${initialSalesperson === 'Sooraj Kumar' ? 'selected' : ''}>Sooraj Kumar</option>
+                  <option value="Mohammed Rayan" ${initialSalesperson === 'Mohammed Rayan' ? 'selected' : ''}>Mohammed Rayan</option>
+                  <option value="Deepak Sharma" ${initialSalesperson === 'Deepak Sharma' ? 'selected' : ''}>Deepak Sharma</option>
+                </select>
+                <label style="display:flex; align-items:center; gap:0.45rem; font-size:0.8rem; color:#cbd5e1; cursor:pointer; margin-top:0.5rem; user-select:none;">
+                  <input type="checkbox" id="inv-drc-checkbox" ${initialDrc ? 'checked' : ''} style="cursor:pointer; accent-color:#0099e6;">
+                  <span>This transaction is applicable for Domestic Reverse Charge (DRC)</span>
+                </label>
+              </div>
+
+              <!-- Subject Row -->
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label">Subject <span style="font-size:0.75rem; color:#64748b;" title="Subject line visible on invoice">ⓘ</span></label>
+                <textarea id="inv-subject" class="fin-form-textarea" rows="1" placeholder="Let your customer know what this Invoice is for">${initialSubject}</textarea>
+              </div>
+
+              <!-- Linked Project / Cost Center & PO Ref (Secondary) -->
+              <div class="fin-form-grid-2" style="margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
                     <label class="fin-form-label" style="margin-bottom:0;">Linked Project / Cost Center</label>
@@ -5533,45 +5895,7 @@ class FinanceApp {
                           <span class="fin-autocomplete-item-badge">${p.code}</span>
                         </div>
                       `).join('')}
-                      <div class="fin-autocomplete-item" data-id="CC-101" data-name="Cost Center CC-101 Civil Infrastructure">
-                        <div>
-                          <div class="fin-autocomplete-item-name">Cost Center CC-101 Civil Infrastructure</div>
-                          <div class="fin-autocomplete-item-meta">Foundation, Superstructures &amp; Heavy Earthworks</div>
-                        </div>
-                        <span class="fin-autocomplete-item-badge">CC-101</span>
-                      </div>
-                      <div class="fin-autocomplete-item" data-id="CC-102" data-name="Cost Center CC-102 MEP Engineering &amp; HVAC">
-                        <div>
-                          <div class="fin-autocomplete-item-name">Cost Center CC-102 MEP Engineering &amp; HVAC</div>
-                          <div class="fin-autocomplete-item-meta">Mechanical, Electrical, Plumbing &amp; Climate Control</div>
-                        </div>
-                        <span class="fin-autocomplete-item-badge">CC-102</span>
-                      </div>
-                      <div class="fin-autocomplete-item" data-id="CC-103" data-name="Cost Center CC-103 Commercial Fitouts &amp; Glazing">
-                        <div>
-                          <div class="fin-autocomplete-item-name">Cost Center CC-103 Commercial Fitouts &amp; Glazing</div>
-                          <div class="fin-autocomplete-item-meta">Architectural Curtain Wall, Ceilings &amp; Luxury Interiors</div>
-                        </div>
-                        <span class="fin-autocomplete-item-badge">CC-103</span>
-                      </div>
-                      <div class="fin-autocomplete-item" data-id="CC-104" data-name="Cost Center CC-104 Plant, Machinery &amp; Crane Hire">
-                        <div>
-                          <div class="fin-autocomplete-item-name">Cost Center CC-104 Plant, Machinery &amp; Crane Hire</div>
-                          <div class="fin-autocomplete-item-meta">Heavy Machinery, Hydraulic Cranes &amp; Fleet Logistics</div>
-                        </div>
-                        <span class="fin-autocomplete-item-badge">CC-104</span>
-                      </div>
-                      <div class="fin-autocomplete-item" data-id="CC-105" data-name="Cost Center CC-105 Energy &amp; Offshore Facilities">
-                        <div>
-                          <div class="fin-autocomplete-item-name">Cost Center CC-105 Energy &amp; Offshore Facilities</div>
-                          <div class="fin-autocomplete-item-meta">Refinery Process Structures &amp; Marine Logistics</div>
-                        </div>
-                        <span class="fin-autocomplete-item-badge">CC-105</span>
-                      </div>
                     </div>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem; font-size:0.68rem; color:#64748b;">
-                    <span id="inv-project-hint">Click text box to view registered projects / cost centers, or type custom</span>
                   </div>
                 </div>
                 <div class="fin-form-group">
@@ -5719,6 +6043,228 @@ class FinanceApp {
     let currentCurrency = 'AED'; // 'AED' | 'INR'
 
     const tbody = document.getElementById('inv-items-tbody');
+
+    // Render Bilingual Address Cards in Invoice Modal (Zoho Books Style)
+    const renderInvoiceAddressCards = () => {
+      const bContainer = document.getElementById('inv-billing-addr-container');
+      const sContainer = document.getElementById('inv-shipping-addr-container');
+      const isArabic = currentAddressLang === 'secondary';
+
+      // 1. Billing Address
+      if (bContainer) {
+        const b = this.currentBillingAddress;
+        const hasBilling = b && (b.street1 || b.attention || b.city || b.country || b.street1_ar || b.attention_ar);
+        if (!hasBilling) {
+          bContainer.innerHTML = `<button type="button" class="fin-addr-link-action" id="inv-new-billing-link">New Address</button>`;
+          const btn = document.getElementById('inv-new-billing-link');
+          if (btn) btn.onclick = (e) => { e.preventDefault(); this.openAddressModal('billing'); };
+        } else {
+          let lines = [];
+          if (!isArabic) {
+            if (b.attention) lines.push(`<strong style="color:#f1f5f9;">${b.attention}</strong>`);
+            if (b.street1) lines.push(b.street1);
+            if (b.street2) lines.push(b.street2);
+            const loc = [b.city, b.state, b.zip].filter(Boolean).join(', ');
+            if (loc) lines.push(loc);
+            if (b.country) lines.push(b.country);
+            if (b.phone) lines.push(`Phone: ${b.phone_code || '+971'} ${b.phone}`);
+            if (b.fax) lines.push(`Fax: ${b.fax}`);
+          } else {
+            if (b.attention_ar || b.attention) lines.push(`<strong style="color:#f1f5f9;">${b.attention_ar || b.attention}</strong>`);
+            if (b.street1_ar || b.street1) lines.push(b.street1_ar || b.street1);
+            if (b.street2_ar || b.street2) lines.push(b.street2_ar || b.street2);
+            const locAr = [b.city_ar || b.city, b.state_ar || b.state, b.zip_ar || b.zip].filter(Boolean).join('، ');
+            if (locAr) lines.push(locAr);
+            if (b.country_ar || b.country) lines.push(b.country_ar || b.country);
+            if (b.phone_ar || b.phone) lines.push(`هاتف: ${b.phone_ar || b.phone}`);
+          }
+          if (lines.length === 0) {
+            lines.push('<span style="color:#94a3b8; font-style:italic;">(No address in this language)</span>');
+          }
+          bContainer.innerHTML = `
+            <div class="fin-addr-card-preview ${isArabic ? 'arabic-mode' : ''}">
+              ${lines.join('<br>')}
+              <div style="margin-top:6px;">
+                <button type="button" class="fin-addr-link-action" id="inv-edit-billing-link">Change</button>
+              </div>
+            </div>
+          `;
+          const editBtn = document.getElementById('inv-edit-billing-link');
+          if (editBtn) editBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('billing'); };
+        }
+      }
+
+      // 2. Shipping Address
+      if (sContainer) {
+        const s = this.currentShippingAddress;
+        const hasShipping = s && (s.street1 || s.attention || s.city || s.country || s.street1_ar || s.attention_ar);
+        if (!hasShipping) {
+          sContainer.innerHTML = `
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+              <button type="button" class="fin-addr-link-action" id="inv-new-shipping-link">New Address</button>
+              <button type="button" class="fin-addr-link-action" id="inv-dropship-link" style="color:#0284c7;">+ Dropshipping Address</button>
+              <button type="button" class="fin-addr-link-action" id="inv-copy-billing-link" style="color:#64748b; font-size:0.76rem;">+ Copy from Billing</button>
+            </div>
+          `;
+          const newBtn = document.getElementById('inv-new-shipping-link');
+          if (newBtn) newBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', false); };
+          const dropBtn = document.getElementById('inv-dropship-link');
+          if (dropBtn) dropBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', true); };
+          const copyBtn = document.getElementById('inv-copy-billing-link');
+          if (copyBtn) copyBtn.onclick = (e) => {
+            e.preventDefault();
+            if (!this.currentBillingAddress) {
+              alert('Please enter a Billing Address first.');
+              return;
+            }
+            this.currentShippingAddress = JSON.parse(JSON.stringify(this.currentBillingAddress));
+            renderInvoiceAddressCards();
+          };
+        } else {
+          let lines = [];
+          if (!isArabic) {
+            if (s.is_dropship) {
+              lines.push(`<span style="font-size:0.68rem; background:rgba(2,132,199,0.18); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700; border:1px solid rgba(2,132,199,0.35); display:inline-block; margin-bottom:4px;">Dropshipping Address</span>`);
+            }
+            if (s.attention) lines.push(`<strong style="color:#f1f5f9;">${s.attention}</strong>`);
+            if (s.street1) lines.push(s.street1);
+            if (s.street2) lines.push(s.street2);
+            const loc = [s.city, s.state, s.zip].filter(Boolean).join(', ');
+            if (loc) lines.push(loc);
+            if (s.country) lines.push(s.country);
+            if (s.phone) lines.push(`Phone: ${s.phone_code || '+971'} ${s.phone}`);
+            if (s.fax) lines.push(`Fax: ${s.fax}`);
+          } else {
+            if (s.is_dropship) {
+              lines.push(`<span style="font-size:0.68rem; background:rgba(2,132,199,0.18); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700; border:1px solid rgba(2,132,199,0.35); display:inline-block; margin-bottom:4px;">عنوان دروبشيبينغ</span>`);
+            }
+            if (s.attention_ar || s.attention) lines.push(`<strong style="color:#f1f5f9;">${s.attention_ar || s.attention}</strong>`);
+            if (s.street1_ar || s.street1) lines.push(s.street1_ar || s.street1);
+            if (s.street2_ar || s.street2) lines.push(s.street2_ar || s.street2);
+            const locAr = [s.city_ar || s.city, s.state_ar || s.state, s.zip_ar || s.zip].filter(Boolean).join('، ');
+            if (locAr) lines.push(locAr);
+            if (s.country_ar || s.country) lines.push(s.country_ar || s.country);
+            if (s.phone_ar || s.phone) lines.push(`هاتف: ${s.phone_ar || s.phone}`);
+          }
+          if (lines.length === 0) {
+            lines.push('<span style="color:#94a3b8; font-style:italic;">(No address in this language)</span>');
+          }
+          sContainer.innerHTML = `
+            <div class="fin-addr-card-preview ${isArabic ? 'arabic-mode' : ''}">
+              ${lines.join('<br>')}
+              <div style="margin-top:6px; display:flex; gap:0.65rem; align-items:center;">
+                <button type="button" class="fin-addr-link-action" id="inv-edit-shipping-link">Change</button>
+                <button type="button" class="fin-addr-link-action" id="inv-clear-shipping-link" style="color:#94a3b8; font-size:0.75rem;">Clear</button>
+              </div>
+            </div>
+          `;
+          const editBtn = document.getElementById('inv-edit-shipping-link');
+          if (editBtn) editBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', Boolean(s.is_dropship)); };
+          const clearBtn = document.getElementById('inv-clear-shipping-link');
+          if (clearBtn) clearBtn.onclick = (e) => {
+            e.preventDefault();
+            this.currentShippingAddress = null;
+            renderInvoiceAddressCards();
+          };
+        }
+      }
+    };
+
+    window._reRenderInvoiceAddresses = renderInvoiceAddressCards;
+    renderInvoiceAddressCards();
+
+    // Language switcher pills listener
+    const pillPrimary = document.getElementById('addr-lang-primary');
+    const pillSecondary = document.getElementById('addr-lang-secondary');
+    if (pillPrimary && pillSecondary) {
+      pillPrimary.onclick = (e) => {
+        e.preventDefault();
+        currentAddressLang = 'primary';
+        pillPrimary.classList.add('active');
+        pillSecondary.classList.remove('active');
+        renderInvoiceAddressCards();
+      };
+      pillSecondary.onclick = (e) => {
+        e.preventDefault();
+        currentAddressLang = 'secondary';
+        pillSecondary.classList.add('active');
+        pillPrimary.classList.remove('active');
+        renderInvoiceAddressCards();
+      };
+    }
+
+    // Customer search button
+    const searchBtn = document.getElementById('inv-cust-search-btn');
+    if (searchBtn) {
+      searchBtn.onclick = (e) => {
+        e.preventDefault();
+        const inp = document.getElementById('inv-cust-input');
+        if (inp) {
+          inp.focus();
+          inp.click();
+        }
+      };
+    }
+
+    // Sequence refresh button
+    const seqRefreshBtn = document.getElementById('inv-seq-refresh-btn');
+    if (seqRefreshBtn) {
+      seqRefreshBtn.onclick = (e) => {
+        e.preventDefault();
+        const newSeq = this.getNextInvoiceNumber();
+        const seqInp = document.getElementById('inv-custom-seq-no');
+        if (seqInp) seqInp.value = newSeq;
+      };
+    }
+
+    // Terms select dropdown
+    const termsSelect = document.getElementById('inv-terms-select');
+    if (termsSelect) {
+      termsSelect.onchange = () => {
+        const val = termsSelect.value;
+        const termsInp = document.getElementById('inv-terms');
+        if (val === 'custom') {
+          if (termsInp) {
+            termsInp.style.display = 'block';
+            termsInp.focus();
+          }
+        } else {
+          if (termsInp) {
+            termsInp.style.display = 'none';
+            termsInp.value = val;
+          }
+          if (typeof updateDueDate === 'function') updateDueDate();
+        }
+      };
+    }
+
+    // Tax Treatment editor
+    const taxTreatmentBtn = document.getElementById('inv-tax-treatment-btn');
+    if (taxTreatmentBtn) {
+      taxTreatmentBtn.onclick = (e) => {
+        e.preventDefault();
+        const treatments = [
+          'VAT Registered',
+          'Non-VAT Registered',
+          'Designated Zone (Tax-Free / 0%)',
+          'GCC VAT Registered (Reverse Charge)',
+          'Out of Scope / Zero-Rated'
+        ];
+        const valEl = document.getElementById('inv-tax-treatment-val');
+        const currentVal = valEl?.textContent.trim() || 'VAT Registered';
+        const nextIdx = (treatments.indexOf(currentVal) + 1) % treatments.length;
+        const nextVal = treatments[nextIdx];
+        if (valEl) valEl.textContent = nextVal;
+
+        if (nextVal.includes('0%') || nextVal.includes('Zero') || nextVal.includes('Designated')) {
+          tbody?.querySelectorAll('.row-gst').forEach(sel => { sel.value = '0'; });
+          if (typeof recalculateInvoice === 'function') recalculateInvoice();
+        } else if (nextVal === 'VAT Registered') {
+          tbody?.querySelectorAll('.row-gst').forEach(sel => { sel.value = '5'; });
+          if (typeof recalculateInvoice === 'function') recalculateInvoice();
+        }
+      };
+    }
 
     const setTaxRegime = (regime, options = {}) => {
       currentRegime = regime;
@@ -7077,6 +7623,17 @@ class FinanceApp {
       const termsEl = document.getElementById('inv-terms');
       if (termsEl) termsEl.value = clientTerms;
 
+      const termsSelect = document.getElementById('inv-terms-select');
+      if (termsSelect) {
+        if ([0, 15, 30, 45, 60].includes(Number(clientTerms))) {
+          termsSelect.value = String(clientTerms);
+          if (termsEl) termsEl.style.display = 'none';
+        } else {
+          termsSelect.value = 'custom';
+          if (termsEl) termsEl.style.display = 'block';
+        }
+      }
+
       const addrInp = document.getElementById('inv-cust-address');
       if (addrInp) {
         addrInp.value = clientAddr;
@@ -7091,6 +7648,43 @@ class FinanceApp {
       if (emailInp) {
         emailInp.value = clientEmail;
       }
+
+      // Populate Bilingual Billing & Shipping Addresses
+      if (custObj?.billing_address_details || info.billing_address_details) {
+        this.currentBillingAddress = custObj?.billing_address_details || info.billing_address_details;
+      } else if (clientAddr) {
+        this.currentBillingAddress = {
+          attention: clientContact,
+          street1: clientAddr,
+          country: isUae ? 'United Arab Emirates' : 'India'
+        };
+      }
+
+      if (custObj?.shipping_address_details || info.shipping_address_details) {
+        this.currentShippingAddress = custObj?.shipping_address_details || info.shipping_address_details;
+      } else if (custObj?.shipping_address || info.shipping_address) {
+        this.currentShippingAddress = {
+          street1: custObj?.shipping_address || info.shipping_address,
+          country: isUae ? 'United Arab Emirates' : 'India'
+        };
+      }
+
+      const taxTreatEl = document.getElementById('inv-tax-treatment-val');
+      if (taxTreatEl) {
+        taxTreatEl.textContent = custObj?.tax_treatment || info.tax_treatment || (clientTrn ? 'VAT Registered' : (isUae ? 'VAT Registered' : 'GST Registered'));
+      }
+
+      const arEl = document.getElementById('inv-ar-account');
+      if (arEl && (custObj?.accounts_receivable || info.accounts_receivable)) {
+        arEl.value = custObj?.accounts_receivable || info.accounts_receivable;
+      }
+
+      const spEl = document.getElementById('inv-salesperson');
+      if (spEl && (custObj?.salesperson || info.salesperson)) {
+        spEl.value = custObj?.salesperson || info.salesperson;
+      }
+
+      renderInvoiceAddressCards();
 
       // Auto-fill Linked Project
       if (prjInput) {
@@ -7583,6 +8177,39 @@ class FinanceApp {
       const invDate = document.getElementById('inv-date')?.value || new Date().toISOString().split('T')[0];
       const notesVal = (document.getElementById('inv-notes')?.value || '').trim();
 
+      // Extract new Zoho Books fields
+      const orderNoVal = (document.getElementById('inv-order-no')?.value || '').trim();
+      const taxTreatmentVal = (document.getElementById('inv-tax-treatment-val')?.textContent || 'VAT Registered').trim();
+      const arAccountVal = (document.getElementById('inv-ar-account')?.value || 'Accounts Receivable').trim();
+      const salespersonVal = (document.getElementById('inv-salesperson')?.value || '').trim();
+      const drcApplicable = Boolean(document.getElementById('inv-drc-checkbox')?.checked);
+      const subjectVal = (document.getElementById('inv-subject')?.value || '').trim();
+
+      const billingAddressDetails = this.currentBillingAddress || (custAddress ? {
+        street1: custAddress,
+        attention: contactPerson,
+        country: isTrn ? 'United Arab Emirates' : 'India'
+      } : null);
+
+      const shippingAddressDetails = this.currentShippingAddress || null;
+      const formattedShippingAddr = shippingAddressDetails ? [
+        shippingAddressDetails.attention ? `Attn: ${shippingAddressDetails.attention}` : '',
+        shippingAddressDetails.street1,
+        shippingAddressDetails.street2,
+        [shippingAddressDetails.city, shippingAddressDetails.state, shippingAddressDetails.zip].filter(Boolean).join(', '),
+        shippingAddressDetails.country,
+        shippingAddressDetails.phone ? `Phone: ${shippingAddressDetails.phone_code || '+971'} ${shippingAddressDetails.phone}` : ''
+      ].filter(Boolean).join('\n') : '';
+
+      const formattedBillingAddr = billingAddressDetails ? [
+        billingAddressDetails.attention ? `Attn: ${billingAddressDetails.attention}` : '',
+        billingAddressDetails.street1,
+        billingAddressDetails.street2,
+        [billingAddressDetails.city, billingAddressDetails.state, billingAddressDetails.zip].filter(Boolean).join(', '),
+        billingAddressDetails.country,
+        billingAddressDetails.phone ? `Phone: ${billingAddressDetails.phone_code || '+971'} ${billingAddressDetails.phone}` : ''
+      ].filter(Boolean).join('\n') : custAddress;
+
       const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
       if (posVal) {
         this.savePosRecommendation(posVal, clientName);
@@ -7599,7 +8226,7 @@ class FinanceApp {
         this.saveCustomerFullInfo({
           id: custInput.getAttribute('data-cust-id') || null,
           name: clientName,
-          billing_address: custAddress,
+          billing_address: formattedBillingAddr || custAddress,
           contact_person: contactPerson,
           email: custEmail,
           trn: isTrn ? taxNumber : '',
@@ -7649,7 +8276,10 @@ class FinanceApp {
           id: newCustId,
           code: 'CUST-' + Math.floor(1000 + Math.random() * 9000),
           name: clientName,
-          billing_address: custAddress,
+          billing_address: formattedBillingAddr || custAddress,
+          billing_address_details: billingAddressDetails,
+          shipping_address: formattedShippingAddr,
+          shipping_address_details: shippingAddressDetails,
           contact_person: contactPerson,
           email: custEmail,
           country: isTrn ? 'UAE' : 'India',
@@ -7657,6 +8287,9 @@ class FinanceApp {
           trn: isTrn ? taxNumber : '',
           place_of_supply: posVal || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
           payment_terms: paymentTermsVal,
+          tax_treatment: taxTreatmentVal,
+          accounts_receivable: arAccountVal,
+          salesperson: salespersonVal,
           default_project_id: prjId || null,
           default_project_name: prjName || '',
           last_po_reference: poRef || '',
@@ -7671,10 +8304,16 @@ class FinanceApp {
           if (isTrn) customer.trn = taxNumber;
           else customer.gstin = taxNumber;
         }
-        if (custAddress) customer.billing_address = custAddress;
+        if (formattedBillingAddr || custAddress) customer.billing_address = formattedBillingAddr || custAddress;
+        if (billingAddressDetails) customer.billing_address_details = billingAddressDetails;
+        if (formattedShippingAddr) customer.shipping_address = formattedShippingAddr;
+        if (shippingAddressDetails) customer.shipping_address_details = shippingAddressDetails;
         if (contactPerson) customer.contact_person = contactPerson;
         if (custEmail) customer.email = custEmail;
         if (paymentTermsVal !== undefined && paymentTermsVal !== null) customer.payment_terms = paymentTermsVal;
+        if (taxTreatmentVal) customer.tax_treatment = taxTreatmentVal;
+        if (arAccountVal) customer.accounts_receivable = arAccountVal;
+        if (salespersonVal) customer.salesperson = salespersonVal;
         if (prjName && prjName !== 'General Corporate Billing') {
           customer.default_project_id = prjId || customer.default_project_id;
           customer.default_project_name = prjName;
@@ -7777,7 +8416,10 @@ class FinanceApp {
         company_id: this.activeCompanyId || 'rayan-corp-uae',
         customer_id: customer?.id || '',
         customer_name: customer?.name || clientName,
-        customer_address: custAddress,
+        customer_address: formattedBillingAddr || custAddress,
+        billing_address_details: billingAddressDetails,
+        shipping_address: formattedShippingAddr,
+        shipping_address_details: shippingAddressDetails,
         contact_person: contactPerson,
         email: custEmail,
         customer_gstin: isTrn ? (customer?.gstin || '') : taxNumber,
@@ -7787,7 +8429,14 @@ class FinanceApp {
         tax_number: taxNumber,
         currency,
         currency_symbol: currencySym,
-        place_of_supply: posVal || (isTrn ? 'Abu Dhabi, UAE' : '27-Maharashtra'),
+        place_of_supply: posVal || (isTrn ? 'Dubai' : '27-Maharashtra'),
+        order_no: orderNoVal,
+        order_number: orderNoVal,
+        tax_treatment: taxTreatmentVal,
+        accounts_receivable: arAccountVal,
+        salesperson: salespersonVal,
+        drc_applicable: drcApplicable,
+        subject: subjectVal,
         project_id: prjId,
         project_name: prjName,
         po_reference: poRef,
@@ -12957,6 +13606,12 @@ class FinanceApp {
 
                 <div style="margin-top:10px; font-size:0.82rem; color:#374151; line-height:1.5;">
                   <table style="margin-left:auto; border-collapse:collapse; text-align:right;">
+                    ${inv.order_no ? `
+                    <tr>
+                      <td style="color:#4b5563; padding-right:10px; padding-bottom:2px;">Order# :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${inv.order_no}</td>
+                    </tr>
+                    ` : ''}
                     <tr>
                       <td style="color:#4b5563; padding-right:10px; padding-bottom:2px;">Invoice Date :</td>
                       <td style="font-weight:500; color:#111827; padding-bottom:2px;">${formattedDate}</td>
@@ -12974,22 +13629,46 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Bill To & Subject Section (Unboxed, clean minimalist typography) -->
-            <div style="margin-top:0.75rem; margin-bottom:0.75rem;">
-              <div style="font-size:0.78rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Bill To</div>
-              <div style="font-size:0.95rem; font-weight:700; color:#111827; text-transform:uppercase;">
-                ${inv.customer_name || 'NMDC ENERGY'}
-              </div>
-              ${inv.customer_address ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">${inv.customer_address}</div>` : ''}
-              ${inv.customer_trn ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">GSTIN: ${inv.customer_gstin}</div>` : '')}
-
-              <div style="margin-top:0.6rem;">
-                <div style="font-size:0.8rem; color:#4b5563; margin-bottom:1px;">Subject :</div>
-                <div style="font-size:0.88rem; font-weight:600; color:#111827;">
-                  ${inv.subject || inv.project_name || (inv.line_items?.[0]?.name ? inv.line_items[0].name.split('for')[0] : 'Advance Payment')}
+            <!-- Bill To & Ship To Section (Clean 2-Column Minimalist Typography) -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:0.75rem; margin-bottom:0.75rem;">
+              <div>
+                <div style="font-size:0.78rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Bill To</div>
+                <div style="font-size:0.95rem; font-weight:700; color:#111827; text-transform:uppercase;">
+                  ${inv.customer_name || 'NMDC ENERGY'}
                 </div>
+                ${inv.customer_address ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px; white-space:pre-line;">${inv.customer_address}</div>` : ''}
+                ${inv.customer_trn ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">GSTIN: ${inv.customer_gstin}</div>` : '')}
+              </div>
+
+              ${(inv.shipping_address || inv.shipping_address_details) ? `
+              <div>
+                <div style="font-size:0.78rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px; display:flex; align-items:center; gap:6px;">
+                  <span>Ship To</span>
+                  ${inv.shipping_address_details?.is_dropship ? '<span style="font-size:0.65rem; background:#e0f2fe; color:#0284c7; padding:1px 5px; border-radius:3px; font-weight:700;">Dropship</span>' : ''}
+                </div>
+                <div style="font-size:0.95rem; font-weight:700; color:#111827; text-transform:uppercase;">
+                  ${inv.shipping_address_details?.attention || inv.customer_name || ''}
+                </div>
+                <div style="font-size:0.8rem; color:#4b5563; margin-top:1px; white-space:pre-line;">${inv.shipping_address || ''}</div>
+              </div>
+              ` : '<div></div>'}
+            </div>
+
+            ${inv.subject ? `
+            <div style="margin-top:0.25rem; margin-bottom:0.75rem;">
+              <div style="font-size:0.78rem; color:#4b5563; margin-bottom:1px; font-weight:600;">Subject :</div>
+              <div style="font-size:0.88rem; font-weight:600; color:#111827;">
+                ${inv.subject}
               </div>
             </div>
+            ` : (inv.project_name ? `
+            <div style="margin-top:0.25rem; margin-bottom:0.75rem;">
+              <div style="font-size:0.78rem; color:#4b5563; margin-bottom:1px; font-weight:600;">Subject :</div>
+              <div style="font-size:0.88rem; font-weight:600; color:#111827;">
+                ${inv.project_name}
+              </div>
+            </div>
+            ` : '')}
 
             <!-- Line Items Table (Dark Header Bar matching reference) -->
             <table style="width:100%; border-collapse:collapse; margin-top:0.6rem; margin-bottom:0;">
