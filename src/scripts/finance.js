@@ -203,7 +203,6 @@ class FinanceApp {
       'vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae',
       'vend-001', 'vend-002', 'vend-003', 'vend-004',
       'cust-004', 'cust-005', 'cust-kgc-alias', 'prj-dpa-01',
-      'inv-rec-rg-inv-44052', 'rec-rg-inv-44052',
       'rec-mvdvmilf', 'rec-rv-44026',
       'item-001', 'item-002', 'item-003', 'item-004', 'item-005', 'item-006', 'item-007', 'item-008',
       'doc-001', 'doc-002', 'doc-003', 'doc-004',
@@ -228,7 +227,7 @@ class FinanceApp {
       const invNo = String(item.invoice_no || '').trim().toLowerCase();
       const recNo = String(item.receipt_no || '').trim().toLowerCase();
 
-      if (name.includes('krishna general') || name.includes('yateem optician retail group')) return true;
+      if (name.includes('krishna general')) return true;
       if (id.startsWith('item-00')) return true;
 
       // Strictly purge the other two demo bank accounts (NBAD & Emirates NBD) and old demo FAB
@@ -6000,17 +5999,17 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Item Table (Screenshot 1 Matching) -->
+              <!-- Item Table (Screenshot 1 Matching with Rayan Luxury Dark Theme) -->
               <div class="fin-item-table-container">
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1.25rem; background:#ffffff; border-bottom:1px solid #f1f5f9;">
-                  <div style="font-size:1.05rem; font-weight:700; color:#0f172a; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
-                    Item Table
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1.25rem; background:rgba(15,23,42,0.95); border-bottom:1px solid rgba(56,189,248,0.22);">
+                  <div style="font-size:1.05rem; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; display:flex; align-items:center; gap:0.5rem;">
+                    <span>📦</span> Item Table
                   </div>
                   <div style="display:flex; align-items:center; gap:0.6rem;">
-                    <button type="button" class="fin-item-table-top-btn" id="inv-scan-item-btn" style="background:#ffffff; color:#334155; border:1px solid #cbd5e1; border-radius:6px; padding:0.4rem 0.85rem; font-size:0.8rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                    <button type="button" class="fin-item-table-top-btn" id="inv-scan-item-btn" style="background:rgba(15,23,42,0.7); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:0.4rem 0.85rem; font-size:0.8rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; transition:all 0.2s ease;">
                       <span>📷</span> Scan Item
                     </button>
-                    <button type="button" class="fin-item-table-top-btn" id="inv-bulk-actions-btn" style="background:#ffffff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; padding:0.4rem 0.85rem; font-size:0.8rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                    <button type="button" class="fin-item-table-top-btn" id="inv-bulk-actions-btn" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); border-radius:6px; padding:0.4rem 0.85rem; font-size:0.8rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; transition:all 0.2s ease;">
                       <span>✓</span> Bulk Actions
                     </button>
                   </div>
@@ -6036,11 +6035,11 @@ class FinanceApp {
                   </table>
                 </div>
 
-                <div style="display:flex; align-items:center; gap:0.6rem; padding:0.85rem 1.25rem; background:#ffffff; border-top:1px solid #f1f5f9;">
-                  <button type="button" id="inv-add-row-btn" style="background:#2563eb; color:#ffffff; border:none; border-radius:6px; padding:0.45rem 1rem; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 1px 3px rgba(37,99,235,0.3);">
+                <div style="display:flex; align-items:center; gap:0.6rem; padding:0.85rem 1.25rem; background:rgba(15,23,42,0.7); border-top:1px solid rgba(255,255,255,0.08);">
+                  <button type="button" id="inv-add-row-btn" style="background:linear-gradient(135deg, #0284c7, #0369a1); color:#ffffff; border:none; border-radius:6px; padding:0.45rem 1rem; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; box-shadow:0 2px 8px rgba(2,132,199,0.35); transition:all 0.2s ease;">
                     <span>⊕ Add New Row ▾</span>
                   </button>
-                  <button type="button" id="inv-add-bulk-btn" style="background:#f1f5f9; color:#2563eb; border:1px solid #cbd5e1; border-radius:6px; padding:0.45rem 1rem; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
+                  <button type="button" id="inv-add-bulk-btn" style="background:rgba(15,23,42,0.85); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); border-radius:6px; padding:0.45rem 1rem; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; transition:all 0.2s ease;">
                     <span>⊕ Add Items in Bulk</span>
                   </button>
                 </div>
@@ -6050,20 +6049,20 @@ class FinanceApp {
               <div style="display:grid; grid-template-columns: 1fr 340px; gap:1.75rem; margin-top:1.25rem; align-items:start;">
                 <!-- Customer Notes (Left) -->
                 <div>
-                  <label style="display:block; font-size:0.84rem; font-weight:600; color:#334155; margin-bottom:0.35rem;">Customer Notes</label>
-                  <textarea id="inv-notes" style="width:100%; border:1px solid #cbd5e1; border-radius:6px; padding:0.65rem 0.75rem; font-size:0.84rem; color:#0f172a; outline:none; resize:vertical; min-height:80px; box-sizing:border-box; background:#ffffff;" placeholder="Thanks for your business.">${initialNotes || 'Thanks for your business.'}</textarea>
+                  <label style="display:block; font-size:0.84rem; font-weight:600; color:#94a3b8; margin-bottom:0.35rem;">Customer Notes</label>
+                  <textarea id="inv-notes" style="width:100%; border:1px solid rgba(255,255,255,0.15); border-radius:6px; padding:0.65rem 0.75rem; font-size:0.84rem; color:#f8fafc; outline:none; resize:vertical; min-height:80px; box-sizing:border-box; background:rgba(15,23,42,0.7); transition:border-color 0.2s ease;" placeholder="Thanks for your business.">${initialNotes || 'Thanks for your business.'}</textarea>
                   <div style="font-size:0.72rem; color:#64748b; margin-top:0.3rem;">Will be displayed on the invoice</div>
                 </div>
 
-                <!-- Summary Box (Right) matching Screenshot 1 -->
+                <!-- Summary Box (Right) matching Screenshot 1 with Rayan Dark Executive Theme -->
                 <div class="fin-summary-card-s1">
                   <!-- Contract Base breakdown when advance/progressive/final is active -->
-                  <div id="fin-s1-stage-summary-wrap" style="display:${initialPaymentStage !== 'standard' ? 'block' : 'none'}; padding-bottom:0.6rem; margin-bottom:0.6rem; border-bottom:1px dashed #cbd5e1;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#64748b; margin-bottom:3px;">
+                  <div id="fin-s1-stage-summary-wrap" style="display:${initialPaymentStage !== 'standard' ? 'block' : 'none'}; padding-bottom:0.6rem; margin-bottom:0.6rem; border-bottom:1px dashed rgba(56,189,248,0.25);">
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#94a3b8; margin-bottom:3px;">
                       <span>Total Contract Items Value</span>
-                      <span id="fin-s1-contract-base" style="font-weight:600; font-family:monospace; color:#334155;">0.00</span>
+                      <span id="fin-s1-contract-base" style="font-weight:600; font-family:monospace; color:#cbd5e1;">0.00</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#2563eb; font-weight:600;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#38bdf8; font-weight:600;">
                       <span id="fin-s1-stage-badge">${initialClaimPct}% ${(initialPaymentStage || 'progressive').toUpperCase()} PAYMENT</span>
                       <span id="fin-s1-stage-rate-math" style="font-family:monospace;">(${initialClaimPct}% Claim)</span>
                     </div>
@@ -6072,22 +6071,22 @@ class FinanceApp {
                   <!-- Sub Total line -->
                   <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; font-size:0.9rem;">
                     <div>
-                      <div style="font-weight:600; color:#334155;">Sub Total</div>
+                      <div style="font-weight:600; color:#cbd5e1;">Sub Total</div>
                       <div style="font-size:0.68rem; color:#64748b;" id="fin-s1-tax-inc-label">(Tax Inclusive)</div>
                     </div>
-                    <span id="inv-calc-taxable" style="font-weight:700; font-family:monospace; font-size:1.02rem; color:#0f172a;">0.00</span>
+                    <span id="inv-calc-taxable" style="font-weight:700; font-family:monospace; font-size:1.02rem; color:#f8fafc;">0.00</span>
                   </div>
 
                   <!-- Tax line -->
-                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; font-size:0.88rem; border-top:1px solid #f1f5f9;">
-                    <span style="color:#475569;" id="fin-s1-tax-label">Standard Rate [5%]</span>
-                    <span id="inv-calc-vat" style="font-weight:600; font-family:monospace; color:#0f172a;">0.00</span>
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; font-size:0.88rem; border-top:1px solid rgba(255,255,255,0.08);">
+                    <span style="color:#94a3b8;" id="fin-s1-tax-label">Standard Rate [5%]</span>
+                    <span id="inv-calc-vat" style="font-weight:600; font-family:monospace; color:#38bdf8;">0.00</span>
                   </div>
 
                   <!-- Grand Total line -->
-                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0 0.25rem; border-top:2px solid #e2e8f0; margin-top:0.35rem;">
-                    <span style="font-weight:700; font-size:1.05rem; color:#0f172a;">Total ( <span id="fin-s1-curr-label">${currentCurrency}</span> )</span>
-                    <span id="inv-calc-grand" style="font-weight:800; font-size:1.25rem; font-family:monospace; color:#0f172a;">0.00</span>
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0 0.25rem; border-top:2px solid rgba(56,189,248,0.35); margin-top:0.35rem;">
+                    <span style="font-weight:700; font-size:1.05rem; color:#f8fafc;">Total ( <span id="fin-s1-curr-label">${currentCurrency}</span> )</span>
+                    <span id="inv-calc-grand" style="font-weight:800; font-size:1.25rem; font-family:monospace; color:#38bdf8; text-shadow:0 0 16px rgba(56,189,248,0.4);">0.00</span>
                   </div>
                 </div>
               </div>
@@ -8437,6 +8436,14 @@ class FinanceApp {
         const res = await this.syncApi('create_invoice', { invoice: newInvoice });
         if (res && res.data && typeof res.data === 'object') {
           this.db = this.mergeWithSeedData(res.data);
+          // Guarantee newly created/updated invoice is NEVER lost after merge
+          if (!this.db.invoices) this.db.invoices = [];
+          const postSyncIdx = this.db.invoices.findIndex(i => i.id === newInvoice.id || i.invoice_no === newInvoice.invoice_no);
+          if (postSyncIdx >= 0) {
+            this.db.invoices[postSyncIdx] = newInvoice;
+          } else {
+            this.db.invoices.unshift(newInvoice);
+          }
           try {
             localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
           } catch (e) {}
@@ -8450,11 +8457,11 @@ class FinanceApp {
       this.switchTab('invoices');
 
       if (status === 'draft') {
-        alert(`✓ Invoice ${invoiceNo} saved as DRAFT successfully!\n\nYou can review it in the Invoices table under the "Draft" filter, edit it at any time, or click "Issue" when ready.`);
+        this.showNotification(`✓ Invoice ${invoiceNo} saved as DRAFT successfully!`, 'success');
       } else {
-        alert(`✓ Invoice ${invoiceNo} issued and posted successfully!`);
-        // Immediately open the newly generated tax invoice receipt!
-        this.openInvoicePrintModal(newInvoice.id);
+        this.showNotification(`✓ Invoice ${invoiceNo} issued and posted successfully!`, 'success');
+        // Immediately open the newly generated tax invoice receipt passing the exact invoice object!
+        this.openInvoicePrintModal(newInvoice);
       }
     } catch (err) {
       console.error('Invoice save failed:', err);
@@ -13444,11 +13451,23 @@ class FinanceApp {
   openInvoicePrintModal(invoiceId, isVerifiedScan = false) {
     const list = this.db?.invoices || [];
     let inv = null;
-    if (invoiceId) {
-      inv = list.find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    if (invoiceId && typeof invoiceId === 'object') {
+      inv = invoiceId;
+    } else if (invoiceId) {
+      const searchKey = String(invoiceId).trim().toLowerCase();
+      inv = list.find(i => 
+        String(i.id || '').trim().toLowerCase() === searchKey || 
+        String(i.invoice_no || '').trim().toLowerCase() === searchKey
+      );
+      if (!inv) {
+        inv = (defaultSeedData.invoices || []).find(i => 
+          String(i.id || '').trim().toLowerCase() === searchKey || 
+          String(i.invoice_no || '').trim().toLowerCase() === searchKey
+        );
+      }
     }
     if (!inv) {
-      inv = list.find(i => i.invoice_no === 'REC-RG-INV-44049') || (defaultSeedData.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44049') || list[0] || (defaultSeedData.invoices || [])[0] || {};
+      inv = list[0] || (defaultSeedData.invoices || [])[0] || {};
     }
 
     const curr = inv.currency || 'AED';

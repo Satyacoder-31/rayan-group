@@ -507,9 +507,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     $dummyExpIds = ['exp-rg-001', 'exp-rg-002', 'exp-rg-003', 'exp-rg-2026-001', 'exp-rg-2026-002', 'exp-rg-2026-003'];
     $dummyPoIds = ['po-rec-11008'];
     $dummyDocIds = ['doc-001', 'doc-002', 'doc-003', 'doc-004'];
-    $dummyVendorIds = ['vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004'];
     $dummyCustIds = ['cust-004', 'cust-005', 'cust-kgc-alias'];
-    $dummyInvIds = ['inv-rec-rg-inv-44052', 'rec-rg-inv-44052'];
+    $dummyInvIds = [];
     $dummyRecIds = ['rec-mvdvmilf', 'rec-rv-44026'];
     $dummyProjIds = ['prj-dpa-01'];
     $dummyChequeIds = ['chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01'];
@@ -531,7 +530,6 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
             $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004')");
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004', 'cust-005', 'cust-kgc-alias')");
-            $pdo->exec("DELETE FROM finance_invoices WHERE id IN ('inv-rec-rg-inv-44052') OR invoice_no IN ('REC-RG-INV-44052')");
             $pdo->exec("DELETE FROM finance_customer_receipts WHERE id IN ('rec-mvdvmilf') OR receipt_no IN ('REC-RV-44026')");
             $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
             $pdo->exec("UPDATE finance_customers SET 
