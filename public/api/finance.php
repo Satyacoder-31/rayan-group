@@ -2426,6 +2426,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($cust['status'])) {
                     $cust['status'] = 'active';
                 }
+                if (empty($cust['accounts_receivable'])) {
+                    $cust['accounts_receivable'] = 'Accounts Receivable';
+                }
+                if (!isset($cust['opening_balance'])) {
+                    $cust['opening_balance'] = 0;
+                }
                 if (!isset($db['customers']) || !is_array($db['customers'])) {
                     $db['customers'] = [];
                 }

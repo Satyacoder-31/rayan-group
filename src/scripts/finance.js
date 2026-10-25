@@ -535,8 +535,9 @@ class FinanceApp {
         code: payload.customer.code || `CUST-${Math.floor(100 + Math.random() * 900)}`,
         company_id: payload.customer.company_id || this.activeCompanyId || 'rayan-corp-uae',
         status: 'active',
-        credit_limit: 10000000,
+        credit_limit: 15000000,
         opening_balance: 0,
+        accounts_receivable: 'Accounts Receivable',
         ...payload.customer
       };
       const idx = this.db.customers.findIndex(c => c.id === newCust.id || (c.name && c.name.toLowerCase() === newCust.name.toLowerCase()));
@@ -2883,7 +2884,14 @@ class FinanceApp {
     // Authoritative Calculations
     const totalSales = invoices.filter(i => i.status !== 'void').reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
     const totalPurchases = bills.filter(b => b.status !== 'void').reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-    const totalReceivables = invoices.filter(i => i.status !== 'void' && i.status !== 'paid').reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
+    const invoicesReceivable = invoices.filter(i => i.status !== 'void' && i.status !== 'paid').reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
+    const standaloneCustOpening = (this.db?.customers || [])
+      .filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId)
+      .reduce((sum, c) => {
+        const hasOpenInv = invoices.some(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && ((i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance')));
+        return sum + (hasOpenInv ? 0 : (Number(c.opening_balance) || 0));
+      }, 0);
+    const totalReceivables = invoicesReceivable + standaloneCustOpening;
     const totalPayables = bills.filter(b => b.status !== 'void' && b.status !== 'paid').reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
     const totalExpenses = expenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
 
@@ -3491,12 +3499,26 @@ class FinanceApp {
             <tbody>
               ${customers.map(c => {
                 const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
-                const totalInvoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-                const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
+                const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+                const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
+                const totalInvoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
+                const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
                 return `
                   <tr>
                     <td><strong>${c.code || c.id || 'CUST'}</strong></td>
-                    <td><strong>${c.name}</strong></td>
+                    <td>
+                      <strong>${c.name}</strong>
+                      <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">
+                        <span class="fin-badge" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.25); font-size:0.68rem; padding:1px 6px;">
+                          💼 ${c.accounts_receivable || 'Accounts Receivable'}
+                        </span>
+                        ${Number(c.opening_balance) > 0 ? `
+                          <span class="fin-badge" style="background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.25); font-size:0.68rem; padding:1px 6px;">
+                            Opening: ${this.formatCurrency(c.opening_balance)}
+                          </span>
+                        ` : ''}
+                      </div>
+                    </td>
                     <td>${c.contact_person || '—'}</td>
                     <td>
                       <div>${c.email || '—'}</div>
@@ -3509,9 +3531,12 @@ class FinanceApp {
                     <td>${c.place_of_supply || '—'}</td>
                     <td>${this.formatCurrency(totalInvoiced)}</td>
                     <td><strong style="color:${outstanding > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
-                    <td>${this.formatCurrency(c.credit_limit || 10000000)}</td>
+                    <td>${this.formatCurrency(c.credit_limit || 15000000)}</td>
                     <td>
-                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCustomerProfile('${c.id}')">360° Profile &amp; SOA</button>
+                      <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+                        <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCustomerProfile('${c.id}')">360° Profile</button>
+                        <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.3);" onclick="window.finApp.openEditCustomerModal('${c.id}')">✏️ Edit</button>
+                      </div>
                     </td>
                   </tr>
                 `;
@@ -8377,12 +8402,23 @@ class FinanceApp {
         }
       }
 
-      if (!unpaid.length) {
+      const hasOpenInv = unpaid.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+      const allocInvoices = [...unpaid];
+      if (cust && Number(cust.opening_balance) > 0 && !hasOpenInv) {
+        allocInvoices.unshift({
+          id: `open-bal-${cust.id}`,
+          invoice_no: `OPENING-BAL (${cust.accounts_receivable || 'Accounts Receivable'})`,
+          invoice_date: cust.created_at || new Date().toISOString().split('T')[0],
+          balance_due: Number(cust.opening_balance)
+        });
+      }
+
+      if (!allocInvoices.length) {
         invList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No outstanding invoices found for this client. Receipt can be logged as advance deposit.</div>`;
         return;
       }
 
-      invList.innerHTML = unpaid.map(inv => `
+      invList.innerHTML = allocInvoices.map(inv => `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid rgba(255,255,255,0.06);">
           <div>
             <strong style="color:#f8fafc; font-size:0.8rem;">${inv.invoice_no}</strong>
@@ -8554,6 +8590,13 @@ class FinanceApp {
         },
         saved_banks: this.db.saved_banks
       };
+
+      allocations.forEach(al => {
+        if (al.invoice_id && al.invoice_id.startsWith('open-bal-') && cust) {
+          cust.opening_balance = Math.max(0, (Number(cust.opening_balance) || 0) - al.amount_allocated);
+          this.syncApi('create_customer', { customer: cust }).catch(() => {});
+        }
+      });
 
       const res = await this.syncApi('record_receipt', payload);
       if (res && res.success) {
@@ -9608,16 +9651,25 @@ class FinanceApp {
     const invoices = (this.db?.invoices || []).filter(i => (i.customer_id === cust.id || (cust.name && i.customer_name === cust.name)) && i.status !== 'void');
     const receipts = (this.db?.customer_receipts || []).filter(r => (r.customer_id === cust.id || (cust.name && r.customer_name === cust.name)));
 
-    const totalInvoiced = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+    const hasOpeningInvoice = invoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+    const unbilledOpening = hasOpeningInvoice ? 0 : (Number(cust.opening_balance) || 0);
+
+    const totalInvoiced = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
     const totalReceived = invoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-    const totalOutstanding = invoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
+    const totalOutstanding = invoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-cust-profile">
         <div class="fin-modal-dialog" style="max-width:880px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">Customer Profile: ${cust.name}</h3>
-            <div style="display:flex; gap:0.5rem;">
+            <div>
+              <h3 class="fin-modal-title">Customer Profile: ${cust.name}</h3>
+              <div style="font-size:0.75rem; color:#38bdf8; margin-top:2px;">
+                Linked Account: <strong>${cust.accounts_receivable || 'Accounts Receivable'}</strong>
+              </div>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);" onclick="window.finApp.openEditCustomerModal('${cust.id}')">✏️ Edit Customer</button>
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Statement (SOA)</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cust-profile')">&times;</button>
             </div>
@@ -9626,7 +9678,7 @@ class FinanceApp {
             <!-- Summary Bar -->
             <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; margin-bottom:1.5rem;">
               <div style="background:rgba(0,153,230,0.1); border:1px solid rgba(0,153,230,0.3); border-radius:8px; padding:1rem;">
-                <span style="font-size:0.72rem; color:#94a3b8; display:block;">Total Billed to Date:</span>
+                <span style="font-size:0.72rem; color:#94a3b8; display:block;">Total Receivables Billed:</span>
                 <strong style="font-size:1.25rem; color:#f8fafc;">${this.formatCurrency(totalInvoiced)}</strong>
               </div>
               <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:1rem;">
@@ -9644,13 +9696,14 @@ class FinanceApp {
               <div>
                 <strong>Billing Address:</strong><br>
                 <span style="color:#cbd5e1;">${cust.billing_address || '—'}</span><br>
-                ${cust.trn ? `<strong>TRN:</strong> <code>${cust.trn}</code> • ` : ''}<strong>GSTIN:</strong> <code>${cust.gstin || 'EXEMPT'}</code> • <strong>Place of Supply:</strong> ${cust.place_of_supply}
+                ${cust.trn ? `<strong>TRN:</strong> <code>${cust.trn}</code> • ` : ''}<strong>GSTIN:</strong> <code>${cust.gstin || 'EXEMPT'}</code> • <strong>Place of Supply:</strong> ${cust.place_of_supply || '—'}
               </div>
               <div>
                 <strong>Primary Contact:</strong> ${cust.contact_person || '—'}<br>
                 <strong>Email:</strong> <a href="mailto:${cust.email}" style="color:#38bdf8;">${cust.email}</a><br>
                 <strong>Phone:</strong> ${cust.phone || '—'}<br>
-                <strong>Credit Limit:</strong> ${this.formatCurrency(cust.credit_limit)} • <strong>Terms:</strong> ${cust.payment_terms} Days
+                <strong>Accounts Receivable:</strong> <span style="color:#38bdf8; font-weight:700;">${cust.accounts_receivable || 'Accounts Receivable'}</span><br>
+                <strong>Opening Balance:</strong> ${this.formatCurrency(cust.opening_balance || 0)} • <strong>Credit Limit:</strong> ${this.formatCurrency(cust.credit_limit || 15000000)} • <strong>Terms:</strong> ${cust.payment_terms_label || (cust.payment_terms + ' Days')}
               </div>
             </div>
 
@@ -9670,6 +9723,17 @@ class FinanceApp {
                   </tr>
                 </thead>
                 <tbody>
+                  ${unbilledOpening > 0 ? `
+                    <tr style="background:rgba(56,189,248,0.06);">
+                      <td><strong style="color:#38bdf8;">OPENING-BALANCE</strong></td>
+                      <td>${this.formatDate(cust.created_at || new Date().toISOString().split('T')[0])}</td>
+                      <td>Due on Receipt</td>
+                      <td>${this.formatCurrency(unbilledOpening)}</td>
+                      <td style="color:#94a3b8;">${this.formatCurrency(0)}</td>
+                      <td><strong style="color:#ef4444;">${this.formatCurrency(unbilledOpening)}</strong></td>
+                      <td><span class="fin-badge fin-badge-issued">Opening A/R</span></td>
+                    </tr>
+                  ` : ''}
                   ${invoices.map(i => `
                     <tr>
                       <td><strong>${i.invoice_no}</strong></td>
@@ -9937,8 +10001,19 @@ class FinanceApp {
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Accounts Receivable</label>
-                  <input type="text" id="new-cust-ar" class="fin-form-input" value="Accounts Receivable" readonly style="opacity:0.8;">
+                  <label class="fin-form-label">Accounts Receivable <span style="color:#ef4444;">*</span></label>
+                  <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                    <select id="new-cust-ar" class="fin-form-select">
+                      <option value="Accounts Receivable" selected>Accounts Receivable (Trade Debtors)</option>
+                      <option value="Accounts Receivable - Trade Debtors">Accounts Receivable - Trade Debtors</option>
+                      <option value="Retention Receivable">Retention Receivable</option>
+                      <option value="Unbilled Revenue / Progress Billings">Unbilled Revenue / Progress Billings</option>
+                      <option value="Notes &amp; Cheques Receivable">Notes &amp; Cheques Receivable</option>
+                      <option value="Intercompany Receivables">Intercompany Receivables</option>
+                      <option value="__custom__">✎ Custom AR Account Name...</option>
+                    </select>
+                    <input type="text" id="new-cust-ar-custom" class="fin-form-input" placeholder="Enter custom Accounts Receivable account name" style="display:none; font-size:0.85rem;">
+                  </div>
                 </div>
               </div>
 
@@ -9979,6 +10054,20 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    // Toggle custom AR account input
+    const arSel = document.getElementById('new-cust-ar');
+    const arCustom = document.getElementById('new-cust-ar-custom');
+    if (arSel && arCustom) {
+      arSel.addEventListener('change', () => {
+        if (arSel.value === '__custom__') {
+          arCustom.style.display = 'block';
+          arCustom.focus();
+        } else {
+          arCustom.style.display = 'none';
+        }
+      });
+    }
+
     // Auto-sync company name to display name
     const compInp = document.getElementById('new-cust-company');
     const dispInp = document.getElementById('new-cust-display');
@@ -10011,6 +10100,16 @@ class FinanceApp {
 
       const termsDays = Number(document.getElementById('new-cust-terms').value) || 0;
       const termsLabel = termsDays === 0 ? 'Due on Receipt' : `${termsDays} Days`;
+      const arAccount = (document.getElementById('new-cust-ar')?.value === '__custom__'
+        ? document.getElementById('new-cust-ar-custom')?.value.trim()
+        : document.getElementById('new-cust-ar')?.value.trim()) || 'Accounts Receivable';
+      const openingBal = Number(document.getElementById('new-cust-opening-bal').value) || 0;
+      const curr = document.getElementById('new-cust-currency').value || 'AED';
+      const currSym = curr === 'INR' ? '₹' : (curr === 'USD' ? '$' : 'AED ');
+      const posVal = document.getElementById('new-cust-pos').value || 'Dubai, UAE';
+      const trnVal = document.getElementById('new-cust-trn').value.trim();
+      const emailVal = document.getElementById('new-cust-email').value.trim();
+      const addressVal = document.getElementById('new-cust-address').value.trim();
 
       const payload = {
         customer: {
@@ -10026,17 +10125,17 @@ class FinanceApp {
           salutation: salutation,
           first_name: firstName,
           last_name: lastName,
-          email: document.getElementById('new-cust-email').value.trim(),
+          email: emailVal,
           phone: fullPhone,
           tax_treatment: document.getElementById('new-cust-tax-treatment').value,
-          trn: document.getElementById('new-cust-trn').value.trim(),
+          trn: trnVal,
           country: 'UAE',
-          place_of_supply: document.getElementById('new-cust-pos').value,
-          currency: document.getElementById('new-cust-currency').value,
-          accounts_receivable: 'Accounts Receivable',
-          opening_balance: Number(document.getElementById('new-cust-opening-bal').value) || 0,
-          billing_address: document.getElementById('new-cust-address').value.trim(),
-          office_address: document.getElementById('new-cust-address').value.trim(),
+          place_of_supply: posVal,
+          currency: curr,
+          accounts_receivable: arAccount,
+          opening_balance: openingBal,
+          billing_address: addressVal,
+          office_address: addressVal,
           payment_terms: termsDays,
           payment_terms_label: termsLabel,
           credit_limit: 15000000
@@ -10045,9 +10144,291 @@ class FinanceApp {
 
       const res = await this.syncApi('create_customer', payload);
       if (res && res.success) {
+        if (openingBal > 0) {
+          const openInvNo = `REC-RG-OPEN-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
+          const openInv = {
+            id: `inv-${openInvNo.toLowerCase()}`,
+            invoice_no: openInvNo,
+            company_id: this.activeCompanyId || 'rayan-corp-uae',
+            customer_id: custId,
+            customer_name: compName,
+            customer_address: addressVal || 'Dubai, UAE',
+            contact_person: contactPerson,
+            email: emailVal,
+            customer_trn: trnVal,
+            tax_regime: 'trn',
+            tax_type: 'TRN',
+            tax_number: trnVal,
+            currency: curr,
+            currency_symbol: currSym,
+            place_of_supply: posVal,
+            project_id: null,
+            project_name: 'Opening Balance Ledger Receivable',
+            po_reference: 'OPENING-BALANCE',
+            invoice_date: new Date().toISOString().split('T')[0],
+            due_date: new Date().toISOString().split('T')[0],
+            payment_terms: termsDays,
+            payment_terms_label: termsLabel,
+            accounts_receivable: arAccount,
+            line_items: [{
+              sr: 1,
+              name: `Opening Balance — Accounts Receivable (${arAccount})`,
+              description: `Opening receivable balance brought forward under ${arAccount}`,
+              hsn_sac_code: '9954',
+              qty: 1,
+              uom: 'LSUM',
+              unit_price: openingBal,
+              invoice_amount: openingBal,
+              taxable_amount: openingBal,
+              vat_rate: 0,
+              vat_amount: 0,
+              total_amount: openingBal
+            }],
+            taxable_subtotal: openingBal,
+            vat_total: 0,
+            total_tax: 0,
+            grand_total: openingBal,
+            amount_paid: 0,
+            balance_due: openingBal,
+            status: 'issued',
+            notes: `Opening Balance Receivable brought forward under ${arAccount}.`,
+            amount_in_words: this.numberToEnglishWords(openingBal) + ` ${curr} Only.`,
+            created_by: this.currentUser?.name || 'Arshad Alam Shaikh',
+            created_at: new Date().toISOString()
+          };
+          this.db.invoices = this.db.invoices || [];
+          this.db.invoices.unshift(openInv);
+          await this.syncApi('create_invoice', { invoice: openInv });
+        }
+
         this.savePosRecommendation(payload.customer.place_of_supply, payload.customer.name);
-        alert(`Customer ${res.customer?.name || payload.customer.name} saved successfully.`);
+        alert(`Customer ${res.customer?.name || payload.customer.name} saved successfully with Accounts Receivable: ${arAccount}.`);
         this.closeModal('modal-add-cust');
+        this.switchTab('customers');
+      }
+    };
+  }
+
+  // 8B. EDIT CUSTOMER MODAL
+  openEditCustomerModal(custId) {
+    const cust = this.db?.customers?.find(c => c.id === custId || c.code === custId || (c.name && c.name.toLowerCase() === (custId || '').toLowerCase()));
+    if (!cust) return;
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-cust">
+        <div class="fin-modal-dialog" style="max-width:720px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Customer (${cust.code || cust.name})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-cust')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-cust-form">
+              <!-- Customer Type -->
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label" style="margin-bottom:0.4rem;">Customer Type</label>
+                <div style="display:flex; gap:1.5rem; align-items:center;">
+                  <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#f8fafc; font-size:0.88rem;">
+                    <input type="radio" name="edit-cust-type" value="Business" ${cust.customer_type !== 'Individual' ? 'checked' : ''}> Business
+                  </label>
+                  <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#94a3b8; font-size:0.88rem;">
+                    <input type="radio" name="edit-cust-type" value="Individual" ${cust.customer_type === 'Individual' ? 'checked' : ''}> Individual
+                  </label>
+                </div>
+              </div>
+
+              <!-- Primary Contact -->
+              <div class="fin-form-group">
+                <label class="fin-form-label">Primary Contact</label>
+                <div style="display:grid; grid-template-columns: 100px 1fr 1fr; gap:0.75rem;">
+                  <select id="edit-cust-salutation" class="fin-form-select">
+                    <option value="Mr." ${cust.salutation === 'Mr.' ? 'selected' : ''}>Mr.</option>
+                    <option value="Mrs." ${cust.salutation === 'Mrs.' ? 'selected' : ''}>Mrs.</option>
+                    <option value="Ms." ${cust.salutation === 'Ms.' ? 'selected' : ''}>Ms.</option>
+                    <option value="Miss" ${cust.salutation === 'Miss' ? 'selected' : ''}>Miss</option>
+                    <option value="Dr." ${cust.salutation === 'Dr.' ? 'selected' : ''}>Dr.</option>
+                    <option value="Eng." ${cust.salutation === 'Eng.' ? 'selected' : ''}>Eng.</option>
+                  </select>
+                  <input type="text" id="edit-cust-firstname" class="fin-form-input" placeholder="First Name" value="${cust.first_name || (cust.contact_person || '').split(' ')[0] || ''}">
+                  <input type="text" id="edit-cust-lastname" class="fin-form-input" placeholder="Last Name" value="${cust.last_name || (cust.contact_person || '').split(' ').slice(1).join(' ') || ''}">
+                </div>
+              </div>
+
+              <!-- Company Name & Display Name -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Company Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-cust-company" class="fin-form-input" required value="${cust.company_name || cust.name || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Display Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-cust-display" class="fin-form-input" required value="${cust.display_name || cust.name || ''}">
+                </div>
+              </div>
+
+              <!-- Email & Phone -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Email Address <span style="color:#ef4444;">*</span></label>
+                  <input type="email" id="edit-cust-email" class="fin-form-input" required value="${cust.email || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Phone</label>
+                  <input type="tel" id="edit-cust-phone" class="fin-form-input" value="${cust.phone || ''}">
+                </div>
+              </div>
+
+              <!-- Tax Treatment & TRN -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Tax Treatment <span style="color:#ef4444;">*</span></label>
+                  <select id="edit-cust-tax-treatment" class="fin-form-select">
+                    <option value="VAT Registered" ${cust.tax_treatment === 'VAT Registered' ? 'selected' : ''}>VAT Registered</option>
+                    <option value="Non-VAT Registered" ${cust.tax_treatment === 'Non-VAT Registered' ? 'selected' : ''}>Non-VAT Registered</option>
+                    <option value="Designated Zone" ${cust.tax_treatment === 'Designated Zone' ? 'selected' : ''}>Designated Zone (Tax Free)</option>
+                    <option value="GCC VAT Registered" ${cust.tax_treatment === 'GCC VAT Registered' ? 'selected' : ''}>GCC VAT Registered</option>
+                    <option value="Out of Scope" ${cust.tax_treatment === 'Out of Scope' ? 'selected' : ''}>Out of Scope</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Tax Registration Number (TRN) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-cust-trn" class="fin-form-input" value="${cust.trn || cust.gstin || ''}">
+                </div>
+              </div>
+
+              <!-- Place of Supply, Currency & Accounts Receivable -->
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Place of Supply <span style="color:#ef4444;">*</span></label>
+                  <select id="edit-cust-pos" class="fin-form-select">
+                    <option value="Dubai" ${(cust.place_of_supply || '').includes('Dubai') ? 'selected' : ''}>Dubai</option>
+                    <option value="Abu Dhabi" ${(cust.place_of_supply || '').includes('Abu Dhabi') ? 'selected' : ''}>Abu Dhabi</option>
+                    <option value="Sharjah" ${(cust.place_of_supply || '').includes('Sharjah') ? 'selected' : ''}>Sharjah</option>
+                    <option value="Ajman" ${(cust.place_of_supply || '').includes('Ajman') ? 'selected' : ''}>Ajman</option>
+                    <option value="Umm Al Quwain" ${(cust.place_of_supply || '').includes('Umm Al Quwain') ? 'selected' : ''}>Umm Al Quwain</option>
+                    <option value="Ras Al Khaimah" ${(cust.place_of_supply || '').includes('Ras Al Khaimah') ? 'selected' : ''}>Ras Al Khaimah</option>
+                    <option value="Fujairah" ${(cust.place_of_supply || '').includes('Fujairah') ? 'selected' : ''}>Fujairah</option>
+                    <option value="27-Maharashtra" ${(cust.place_of_supply || '').includes('Maharashtra') ? 'selected' : ''}>27-Maharashtra (India)</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Currency</label>
+                  <select id="edit-cust-currency" class="fin-form-select">
+                    <option value="AED" ${cust.currency === 'AED' ? 'selected' : ''}>AED - UAE Dirham</option>
+                    <option value="INR" ${cust.currency === 'INR' ? 'selected' : ''}>INR - Indian Rupee</option>
+                    <option value="USD" ${cust.currency === 'USD' ? 'selected' : ''}>USD - US Dollar</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Accounts Receivable <span style="color:#ef4444;">*</span></label>
+                  <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                    <select id="edit-cust-ar" class="fin-form-select">
+                      <option value="Accounts Receivable" ${cust.accounts_receivable === 'Accounts Receivable' ? 'selected' : ''}>Accounts Receivable (Trade Debtors)</option>
+                      <option value="Accounts Receivable - Trade Debtors" ${cust.accounts_receivable === 'Accounts Receivable - Trade Debtors' ? 'selected' : ''}>Accounts Receivable - Trade Debtors</option>
+                      <option value="Retention Receivable" ${cust.accounts_receivable === 'Retention Receivable' ? 'selected' : ''}>Retention Receivable</option>
+                      <option value="Unbilled Revenue / Progress Billings" ${cust.accounts_receivable === 'Unbilled Revenue / Progress Billings' ? 'selected' : ''}>Unbilled Revenue / Progress Billings</option>
+                      <option value="Notes &amp; Cheques Receivable" ${cust.accounts_receivable === 'Notes & Cheques Receivable' ? 'selected' : ''}>Notes &amp; Cheques Receivable</option>
+                      <option value="Intercompany Receivables" ${cust.accounts_receivable === 'Intercompany Receivables' ? 'selected' : ''}>Intercompany Receivables</option>
+                      <option value="__custom__" ${cust.accounts_receivable && !['Accounts Receivable', 'Accounts Receivable - Trade Debtors', 'Retention Receivable', 'Unbilled Revenue / Progress Billings', 'Notes & Cheques Receivable', 'Intercompany Receivables'].includes(cust.accounts_receivable) ? 'selected' : ''}>✎ Custom AR Account Name...</option>
+                    </select>
+                    <input type="text" id="edit-cust-ar-custom" class="fin-form-input" placeholder="Enter custom Accounts Receivable account name" value="${cust.accounts_receivable || ''}" style="${cust.accounts_receivable && !['Accounts Receivable', 'Accounts Receivable - Trade Debtors', 'Retention Receivable', 'Unbilled Revenue / Progress Billings', 'Notes & Cheques Receivable', 'Intercompany Receivables'].includes(cust.accounts_receivable) ? 'display:block;' : 'display:none;'} font-size:0.85rem;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Terms & Opening Balance -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Terms</label>
+                  <select id="edit-cust-terms" class="fin-form-select">
+                    <option value="0" ${Number(cust.payment_terms) === 0 ? 'selected' : ''}>Due on Receipt</option>
+                    <option value="15" ${Number(cust.payment_terms) === 15 ? 'selected' : ''}>Net 15 Days</option>
+                    <option value="30" ${Number(cust.payment_terms) === 30 ? 'selected' : ''}>Net 30 Days</option>
+                    <option value="45" ${Number(cust.payment_terms) === 45 ? 'selected' : ''}>Net 45 Days</option>
+                    <option value="60" ${Number(cust.payment_terms) === 60 ? 'selected' : ''}>Net 60 Days</option>
+                    <option value="90" ${Number(cust.payment_terms) === 90 ? 'selected' : ''}>Net 90 Days</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Opening Balance</label>
+                  <input type="number" id="edit-cust-opening-bal" class="fin-form-input" placeholder="0.00" value="${cust.opening_balance || 0}">
+                </div>
+              </div>
+
+              <!-- Office / Billing Address -->
+              <div class="fin-form-group">
+                <label class="fin-form-label">Office / Billing Address</label>
+                <textarea id="edit-cust-address" class="fin-form-textarea" rows="2">${cust.billing_address || cust.office_address || ''}</textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-cust')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Update Customer Record &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    const arSel = document.getElementById('edit-cust-ar');
+    const arCustom = document.getElementById('edit-cust-ar-custom');
+    if (arSel && arCustom) {
+      arSel.addEventListener('change', () => {
+        if (arSel.value === '__custom__') {
+          arCustom.style.display = 'block';
+          arCustom.focus();
+        } else {
+          arCustom.style.display = 'none';
+        }
+      });
+    }
+
+    document.getElementById('edit-cust-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const compName = document.getElementById('edit-cust-company').value.trim();
+      const dispName = document.getElementById('edit-cust-display').value.trim() || compName;
+      const salutation = document.getElementById('edit-cust-salutation').value;
+      const firstName = document.getElementById('edit-cust-firstname').value.trim();
+      const lastName = document.getElementById('edit-cust-lastname').value.trim();
+      const contactPerson = [salutation, firstName, lastName].filter(Boolean).join(' ').trim();
+      const termsDays = Number(document.getElementById('edit-cust-terms').value) || 0;
+      const termsLabel = termsDays === 0 ? 'Due on Receipt' : `${termsDays} Days`;
+      const arAccount = (document.getElementById('edit-cust-ar')?.value === '__custom__'
+        ? document.getElementById('edit-cust-ar-custom')?.value.trim()
+        : document.getElementById('edit-cust-ar')?.value.trim()) || 'Accounts Receivable';
+      const openingBal = Number(document.getElementById('edit-cust-opening-bal')?.value) || 0;
+
+      const updatedCust = {
+        ...cust,
+        name: compName,
+        company_name: compName,
+        display_name: dispName,
+        customer_type: document.querySelector('input[name="edit-cust-type"]:checked')?.value || 'Business',
+        contact_person: contactPerson,
+        salutation: salutation,
+        first_name: firstName,
+        last_name: lastName,
+        email: document.getElementById('edit-cust-email').value.trim(),
+        phone: document.getElementById('edit-cust-phone').value.trim(),
+        tax_treatment: document.getElementById('edit-cust-tax-treatment').value,
+        trn: document.getElementById('edit-cust-trn').value.trim(),
+        place_of_supply: document.getElementById('edit-cust-pos').value,
+        currency: document.getElementById('edit-cust-currency').value,
+        accounts_receivable: arAccount,
+        opening_balance: openingBal,
+        billing_address: document.getElementById('edit-cust-address').value.trim(),
+        office_address: document.getElementById('edit-cust-address').value.trim(),
+        payment_terms: termsDays,
+        payment_terms_label: termsLabel
+      };
+
+      const res = await this.syncApi('create_customer', { customer: updatedCust });
+      if (res && res.success) {
+        alert(`Customer ${updatedCust.name} updated successfully.`);
+        this.closeModal('modal-edit-cust');
+        this.closeModal('modal-cust-profile');
         this.switchTab('customers');
       }
     };
