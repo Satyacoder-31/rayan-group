@@ -2,9 +2,10 @@ import { execSync } from 'child_process';
 import { Configuration, HostingCacheApi } from '@hostinger/sdk';
 
 const HOSTINGER_TOKEN = 'g9EFoDsji8oMJ3dJjP7IpLkWfYSzJa0LB27lzVqi67233ccf';
+const eraseAllFlag = process.argv.includes('--erase-all') ? '&erase_all=1' : '';
 const SYNC_URLS = [
-  'https://rayan-group.com/api/sync.php?token=rayan_deploy_2026_secret_key&erase_all=1',
-  'https://rayan-group.com/site/dist/api/sync.php?token=rayan_deploy_2026_secret_key&erase_all=1'
+  `https://rayan-group.com/api/sync.php?token=rayan_deploy_2026_secret_key${eraseAllFlag}`,
+  `https://rayan-group.com/site/dist/api/sync.php?token=rayan_deploy_2026_secret_key${eraseAllFlag}`
 ];
 const WEBHOOK_URL = 'https://webhooks.hostinger.com/deploy/8b37bfc2d831afd52165c2a8f6fe1551';
 
