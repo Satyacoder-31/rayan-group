@@ -463,6 +463,14 @@ class FinanceApp {
   }
 
   async loadDatabase() {
+    // 0. Cache version check to clear stale localStorage
+    const DB_VERSION_KEY = 'rayan_fin_db_version';
+    const CURRENT_DB_VERSION = 'v2026_clean_v3';
+    if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
+      localStorage.removeItem('rayan_fin_db_cache');
+      localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
+    }
+
     // 1. Initial quick load from local cache if present
     const cached = localStorage.getItem('rayan_fin_db_cache');
     if (cached) {
@@ -2948,11 +2956,33 @@ class FinanceApp {
   // 1. DASHBOARD VIEW (8 Summary Cards & Zolvit Widgets)
   // --------------------------------------------------------------------------
   renderDashboardTab(root) {
-    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const receipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const vendorPayments = (this.db?.vendor_payments || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
+    const currentIsUae = isUaeEntity(this.activeCompanyId);
+    const invoices = (this.db?.invoices || []).filter(i => {
+      const compId = i.company_id || 'rayan-corp-uae';
+      if (currentIsUae && isUaeEntity(compId)) return true;
+      return compId === this.activeCompanyId;
+    });
+    const bills = (this.db?.purchase_bills || []).filter(b => {
+      const compId = b.company_id || 'rayan-corp-uae';
+      if (currentIsUae && isUaeEntity(compId)) return true;
+      return compId === this.activeCompanyId;
+    });
+    const expenses = (this.db?.expenses || []).filter(e => {
+      const compId = e.company_id || 'rayan-corp-uae';
+      if (currentIsUae && isUaeEntity(compId)) return true;
+      return compId === this.activeCompanyId;
+    });
+    const receipts = (this.db?.customer_receipts || []).filter(r => {
+      const compId = r.company_id || 'rayan-corp-uae';
+      if (currentIsUae && isUaeEntity(compId)) return true;
+      return compId === this.activeCompanyId;
+    });
+    const vendorPayments = (this.db?.vendor_payments || []).filter(p => {
+      const compId = p.company_id || 'rayan-corp-uae';
+      if (currentIsUae && isUaeEntity(compId)) return true;
+      return compId === this.activeCompanyId;
+    });
 
     // Authoritative Calculations
     const totalSales = invoices.filter(i => i.status !== 'void').reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
@@ -3311,7 +3341,7 @@ class FinanceApp {
   // 2. SALES & INVOICES MODULE
   // --------------------------------------------------------------------------
   renderInvoicesTab(root) {
-    const isUaeEntity = (id) => id === 'rayan-corp-uae' || id === 'rayan-group';
+    const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
     const currentIsUae = isUaeEntity(this.activeCompanyId);
     const rawInvoices = (this.db?.invoices || []).filter(i => {
       const compId = i.company_id || 'rayan-corp-uae';
@@ -5722,8 +5752,8 @@ class FinanceApp {
     const initialSalesperson = editInv ? (editInv.salesperson || '') : '';
     const initialDrc = editInv ? Boolean(editInv.drc_applicable) : false;
     const initialSubject = editInv ? (editInv.subject || '') : '';
-    const initialPaymentStage = editInv?.payment_stage || (editInv?.line_items?.[0]?.name?.includes('PROGRESSIVE') ? 'progressive' : (editInv?.line_items?.[0]?.name?.includes('ADVANCE') ? 'advance' : (editInv?.line_items?.[0]?.name?.includes('FINAL') ? 'final' : 'standard')));
-    const initialClaimPct = editInv?.claim_pct || 20;
+    const initialPaymentStage = editInv ? (editInv.payment_stage || 'standard') : 'standard';
+    const initialClaimPct = editInv ? (editInv.claim_pct || 100) : 100;
 
     this.currentBillingAddress = editInv?.billing_address_details || (editInv?.customer_address ? {
       street1: editInv.customer_address,
@@ -6062,12 +6092,12 @@ class FinanceApp {
                       Contract Base: AED 0.00 &times; ${initialClaimPct}% = <strong style="color:#ffffff;">AED 0.00</strong> Taxable
                     </div>
                   </div>
-                  <!-- Printed Invoice Headline Preview matching Screenshot 2 -->
+                  <!-- Printed Invoice Headline Preview -->
                   <div style="margin-top:0.6rem; padding:0.5rem 0.75rem; background:rgba(30,41,59,0.85); border-radius:6px; border:1px dashed rgba(56,189,248,0.3); font-size:0.78rem; color:#cbd5e1; display:flex; align-items:center; gap:0.5rem;">
                     <span style="color:#38bdf8; font-size:0.9rem;">📌</span>
                     <span style="font-weight:600; color:#94a3b8; white-space:nowrap;">Printed Headline:</span>
                     <span id="inv-stage-headline-preview" style="font-weight:700; color:#f8fafc; font-family:monospace;">
-                      ${initialClaimPct}% ${(initialPaymentStage || 'progressive').toUpperCase()} PAYMENT FOR PO NO. ${initialPoRef || 'LPO/BD/2026/12'} ${initialPrj || initialSubject || initialCustName || 'Civil & Interior Work at Yateem Optician, Khalidiyah Mall, Abu Dhabi'}
+                      ${initialClaimPct}% ${(initialPaymentStage || 'standard').toUpperCase()} PAYMENT${initialPoRef ? ` FOR PO NO. ${initialPoRef}` : ''}${initialPrj || initialSubject || initialCustName ? ` - ${initialPrj || initialSubject || initialCustName}` : ''}
                     </span>
                   </div>
                 </div>
@@ -6775,11 +6805,11 @@ class FinanceApp {
       const headlinePreview = document.getElementById('inv-stage-headline-preview');
       const mathHint = document.getElementById('inv-stage-math-hint');
 
-      const poRef = document.getElementById('inv-po-ref')?.value?.trim() || 'LPO/BD/2026/12';
+      const poRef = document.getElementById('inv-po-ref')?.value?.trim() || '';
       const prj = document.getElementById('inv-project-input')?.value?.trim() || '';
       const subj = document.getElementById('inv-subject')?.value?.trim() || '';
       const custName = document.getElementById('inv-cust-input')?.value?.trim() || '';
-      const scopeDesc = prj || subj || custName || 'Civil & Interior Work at Yateem Optician, Khalidiyah Mall, Abu Dhabi';
+      const scopeDesc = prj || subj || custName || '';
 
       if (currentStage === 'standard') {
         if (stageDrawer) stageDrawer.style.display = 'none';
@@ -6812,7 +6842,9 @@ class FinanceApp {
         }
 
         if (headlinePreview) {
-          headlinePreview.textContent = `${claimPct}% ${currentStage.toUpperCase()} PAYMENT FOR PO NO. ${poRef} ${scopeDesc}`;
+          const poPart = poRef ? ` FOR PO NO. ${poRef}` : '';
+          const scopePart = scopeDesc ? ` - ${scopeDesc}` : '';
+          headlinePreview.textContent = `${claimPct}% ${currentStage.toUpperCase()} PAYMENT${poPart}${scopePart}`;
         }
       }
 
@@ -8127,15 +8159,8 @@ class FinanceApp {
       setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
       recalculateInvoice();
     } else {
-      // Preload items matching Screenshot 1 exactly
-      const demoItems = [
-        { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
-        { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
-        { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, discount_val: 0, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
-        { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 }
-      ];
       tbody.innerHTML = '';
-      demoItems.forEach(it => addRow(it));
+      checkEmptyTbody();
       setTaxRegime('trn', { preserveRates: true, keepPos: true });
       recalculateInvoice();
     }

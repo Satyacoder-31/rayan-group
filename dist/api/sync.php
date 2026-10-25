@@ -111,6 +111,41 @@ if (file_exists(__DIR__ . '/db.php')) {
     } catch (Exception $e) {
         $response['database'] = ['status' => 'exception', 'message' => $e->getMessage()];
     }
+
+    if (isset($_GET['erase_all']) && !empty($pdo)) {
+        $tablesToEmpty = [
+            'finance_invoices',
+            'finance_customer_receipts',
+            'finance_receipts',
+            'finance_purchase_bills',
+            'finance_vendor_payments',
+            'finance_credit_notes',
+            'finance_debit_notes',
+            'finance_expenses',
+            'finance_purchase_orders',
+            'finance_cheques',
+            'finance_cash_vouchers',
+            'finance_bank_transfers',
+            'finance_loan_transactions',
+            'finance_audit_logs',
+            'finance_notifications',
+            'finance_documents',
+            'finance_state'
+        ];
+        $emptied = [];
+        foreach ($tablesToEmpty as $tbl) {
+            try {
+                $pdo->exec("TRUNCATE TABLE `$tbl`");
+                $emptied[] = $tbl;
+            } catch (Exception $e) {
+                try {
+                    $pdo->exec("DELETE FROM `$tbl`");
+                    $emptied[] = $tbl;
+                } catch (Exception $e2) {}
+            }
+        }
+        $response['erased_tables'] = $emptied;
+    }
 }
 
 // 3. Helper function to copy recursively
@@ -177,37 +212,42 @@ if (!$rootDir || !is_writable($rootDir)) {
 
     // Ensure data/ directory (finance-data.json) is safely merged & preserved at root
     if (file_exists($rootDir . '/data/finance-data.json')) {
-        $liveRaw = @file_get_contents($rootDir . '/data/finance-data.json');
-        $liveData = $liveRaw ? json_decode($liveRaw, true) : null;
         $srcFile = file_exists($sourceDir . '/data/finance-data.json') ? ($sourceDir . '/data/finance-data.json') : ($siteDir . '/data/finance-data.json');
-        if (file_exists($srcFile)) {
-            $srcRaw = @file_get_contents($srcFile);
-            $srcData = $srcRaw ? json_decode($srcRaw, true) : null;
-            if ($liveData && $srcData && is_array($liveData) && is_array($srcData)) {
-                // Merge all collections: live user entries must take priority!
-                foreach ($srcData as $col => $srcItems) {
-                    if ($col === 'companies' && is_array($srcItems)) {
-                        $liveData['companies'] = $srcItems;
-                        continue;
-                    }
-                    if (is_array($srcItems) && isset($liveData[$col]) && is_array($liveData[$col])) {
-                        $liveKeys = [];
-                        foreach ($liveData[$col] as $item) {
-                            $k = $item['id'] ?? $item['receipt_no'] ?? $item['invoice_no'] ?? $item['bill_no'] ?? $item['voucher_no'] ?? $item['code'] ?? $item['name'] ?? null;
-                            if ($k) $liveKeys[$k] = true;
+        if (isset($_GET['erase_all']) && file_exists($srcFile)) {
+            @file_put_contents($rootDir . '/data/finance-data.json', file_get_contents($srcFile));
+            $copiedSummary['data_sync'] = 'Erased and replaced root data/finance-data.json with clean seed';
+        } else {
+            $liveRaw = @file_get_contents($rootDir . '/data/finance-data.json');
+            $liveData = $liveRaw ? json_decode($liveRaw, true) : null;
+            if (file_exists($srcFile)) {
+                $srcRaw = @file_get_contents($srcFile);
+                $srcData = $srcRaw ? json_decode($srcRaw, true) : null;
+                if ($liveData && $srcData && is_array($liveData) && is_array($srcData)) {
+                    // Merge all collections: live user entries must take priority!
+                    foreach ($srcData as $col => $srcItems) {
+                        if ($col === 'companies' && is_array($srcItems)) {
+                            $liveData['companies'] = $srcItems;
+                            continue;
                         }
-                        foreach ($srcItems as $sItem) {
-                            $k = $sItem['id'] ?? $sItem['receipt_no'] ?? $sItem['invoice_no'] ?? $sItem['bill_no'] ?? $sItem['voucher_no'] ?? $sItem['code'] ?? $sItem['name'] ?? null;
-                            if ($k && !isset($liveKeys[$k])) {
-                                $liveData[$col][] = $sItem;
+                        if (is_array($srcItems) && isset($liveData[$col]) && is_array($liveData[$col])) {
+                            $liveKeys = [];
+                            foreach ($liveData[$col] as $item) {
+                                $k = $item['id'] ?? $item['receipt_no'] ?? $item['invoice_no'] ?? $item['bill_no'] ?? $item['voucher_no'] ?? $item['code'] ?? $item['name'] ?? null;
+                                if ($k) $liveKeys[$k] = true;
                             }
+                            foreach ($srcItems as $sItem) {
+                                $k = $sItem['id'] ?? $sItem['receipt_no'] ?? $sItem['invoice_no'] ?? $sItem['bill_no'] ?? $sItem['voucher_no'] ?? $sItem['code'] ?? $sItem['name'] ?? null;
+                                if ($k && !isset($liveKeys[$k])) {
+                                    $liveData[$col][] = $sItem;
+                                }
+                            }
+                        } elseif (!isset($liveData[$col])) {
+                            $liveData[$col] = $srcItems;
                         }
-                    } elseif (!isset($liveData[$col])) {
-                        $liveData[$col] = $srcItems;
                     }
+                    @file_put_contents($rootDir . '/data/finance-data.json', json_encode($liveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+                    $copiedSummary['data_sync'] = 'Preserved and merged live user finance-data.json';
                 }
-                @file_put_contents($rootDir . '/data/finance-data.json', json_encode($liveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-                $copiedSummary['data_sync'] = 'Preserved and merged live user finance-data.json';
             }
         }
     } else {
