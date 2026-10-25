@@ -5617,27 +5617,30 @@ class FinanceApp {
 
   // 1. CREATE TAX INVOICE MODAL
   openCreateInvoiceModal(editInvoiceId = null) {
-    const editInv = editInvoiceId ? (this.db?.invoices || []).find(i => i.id === editInvoiceId || i.invoice_no === editInvoiceId) : null;
-    const customers = this.db?.customers || [];
-    const items = this.db?.items || [];
-    const projects = this.db?.projects || [];
-    const nextInvoiceNo = editInv ? editInv.invoice_no : this.getNextInvoiceNumber();
+    try {
+      const editInv = editInvoiceId ? (this.db?.invoices || []).find(i => i.id === editInvoiceId || i.invoice_no === editInvoiceId) : null;
+      const customers = this.db?.customers || [];
+      const items = this.db?.items || [];
+      const projects = this.db?.projects || [];
+      const nextInvoiceNo = editInv ? editInv.invoice_no : this.getNextInvoiceNumber();
 
-    const isEditing = !!editInv;
-    const modalTitle = isEditing ? (editInv.status === 'draft' ? '✏️ Edit Draft Invoice' : '✏️ Edit Sales Tax Invoice') : '📄 Create Sales Tax Invoice';
-    const initialCustName = editInv ? (editInv.customer_name || '') : '';
-    const initialCustTrn = editInv ? (editInv.customer_trn || editInv.customer_gstin || editInv.tax_number || '') : '';
-    const initialPos = editInv ? (editInv.place_of_supply || 'Dubai') : 'Dubai';
-    const initialAddress = editInv ? (editInv.customer_address || '') : '';
-    const initialContact = editInv ? (editInv.contact_person || '') : '';
-    const initialEmail = editInv ? (editInv.email || '') : '';
-    const initialDate = editInv ? (editInv.invoice_date || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
-    const initialTerms = editInv ? (editInv.payment_terms !== undefined ? editInv.payment_terms : 0) : 0;
-    const initialDueDate = editInv ? (editInv.due_date || '') : '';
-    const initialPrj = editInv ? (editInv.project_name || '') : '';
-    const initialPoRef = editInv ? (editInv.po_reference || '') : '';
-    const initialNotes = editInv ? (editInv.notes || '') : '';
-    const initialRegime = editInv ? (editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst')) : 'trn';
+      const isEditing = !!editInv;
+      const modalTitle = isEditing ? (editInv.status === 'draft' ? '✏️ Edit Draft Invoice' : '✏️ Edit Sales Tax Invoice') : '📄 Create Sales Tax Invoice';
+      const initialCustName = editInv ? (editInv.customer_name || '') : '';
+      const initialCustTrn = editInv ? (editInv.customer_trn || editInv.customer_gstin || editInv.tax_number || '') : '';
+      const initialPos = editInv ? (editInv.place_of_supply || 'Dubai') : 'Dubai';
+      const initialAddress = editInv ? (editInv.customer_address || '') : '';
+      const initialContact = editInv ? (editInv.contact_person || '') : '';
+      const initialEmail = editInv ? (editInv.email || '') : '';
+      const initialDate = editInv ? (editInv.invoice_date || new Date().toISOString().split('T')[0]) : new Date().toISOString().split('T')[0];
+      const initialTerms = editInv ? (editInv.payment_terms !== undefined ? editInv.payment_terms : 0) : 0;
+      const initialDueDate = editInv ? (editInv.due_date || '') : '';
+      const initialPrj = editInv ? (editInv.project_name || '') : '';
+      const initialPoRef = editInv ? (editInv.po_reference || '') : '';
+      const initialNotes = editInv ? (editInv.notes || '') : '';
+      const initialRegime = editInv ? (editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst')) : 'trn';
+      let currentRegime = initialRegime || 'trn'; // 'trn' | 'gst'
+      let currentCurrency = initialRegime === 'gst' ? 'INR' : 'AED'; // 'AED' | 'INR'
 
     // Zoho Books Billing, Shipping & Invoice Accounting fields
     const initialOrderNo = editInv ? (editInv.order_no || editInv.order_number || '') : '';
@@ -6100,11 +6103,13 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
-
-    // Dual Tax Regime & Currency state (Default: UAE TRN VAT 5% in AED)
-    let currentRegime = 'trn'; // 'trn' | 'gst'
-    let currentCurrency = 'AED'; // 'AED' | 'INR'
+    let modalContainer = document.getElementById('fin-modal-container');
+    if (!modalContainer) {
+      modalContainer = document.createElement('div');
+      modalContainer.id = 'fin-modal-container';
+      document.body.appendChild(modalContainer);
+    }
+    modalContainer.innerHTML = modalHtml;
 
     const tbody = document.getElementById('inv-items-tbody');
 
@@ -6396,8 +6401,9 @@ class FinanceApp {
           if (gstSel) {
             const currVal = gstSel.value;
             gstSel.innerHTML = `
-              <option value="5" ${currVal === '5' || currVal === '18' || !options.preserveRates ? 'selected' : ''}>5%</option>
-              <option value="0" ${currVal === '0' ? 'selected' : ''}>0%</option>
+              <option value="5" ${currVal === '5' || currVal === '18' || !options.preserveRates ? 'selected' : ''}>Standard Rate [5%]</option>
+              <option value="0" ${currVal === '0' ? 'selected' : ''}>Zero Rate [0%]</option>
+              <option value="exempt" ${currVal === 'exempt' ? 'selected' : ''}>Exempt [0%]</option>
             `;
             if (currVal === '18' || !options.preserveRates) gstSel.value = '5';
           }
@@ -8068,11 +8074,18 @@ class FinanceApp {
     };
 
     // Save as draft
-    document.getElementById('inv-save-draft-btn').onclick = async (e) => {
-      e.preventDefault();
-      await this.saveInvoiceHandler('draft');
-    };
+    const saveDraftBtn = document.getElementById('inv-save-draft-btn');
+    if (saveDraftBtn) {
+      saveDraftBtn.onclick = async (e) => {
+        e.preventDefault();
+        await this.saveInvoiceHandler('draft');
+      };
+    }
+  } catch (err) {
+    console.error('Error opening Create Tax Invoice modal:', err);
+    alert('Unable to open invoice modal: ' + (err?.message || err));
   }
+}
 
   async saveInvoiceHandler(status = 'issued') {
     const submitBtn = document.querySelector('#create-invoice-form button[type="submit"]');
