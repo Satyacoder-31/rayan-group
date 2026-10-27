@@ -443,7 +443,7 @@
   "invoices": [
     {
       "id": "inv-rec-rg-inv-44015",
-      "invoice_no": "REC-RG-INV-44015",
+      "invoice_no": "REC-RG-INV-44035",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-1792414691494",
       "customer_name": "M/S TOP ROCK INTERIORS LLC.",
@@ -461,10 +461,10 @@
       "currency_symbol": "AED ",
       "place_of_supply": "Dubai, UAE",
       "project_id": "prj-toprock-police-01",
-      "project_name": "THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI, UAE",
+      "project_name": "THE NEW DUBAI POLICE ACADMY @ AL ROWAIYH, DUBAI,UAE FITOUT WORKS",
       "po_reference": "PODSUB-2026/0810 & 0858",
-      "invoice_date": "2026-10-19",
-      "due_date": "2026-10-19",
+      "invoice_date": "2026-06-19",
+      "due_date": "2026-06-19",
       "payment_terms": 0,
       "payment_terms_label": "Due on Receipt",
       "tax_inclusive": true,
@@ -540,19 +540,21 @@
       ],
       "sub_total": 25206.45,
       "taxable_subtotal": 25206.45,
-      "vat_total": 1260.32,
-      "total_tax": 1260.32,
-      "grand_total": 26466.77,
-      "amount_paid": 26466.77,
-      "balance_due": 0,
-      "status": "paid",
-      "notes": "Thanks for your business.",
+      "vat_total": 1260.323,
+      "total_tax": 1260.323,
+      "grand_total": 26466.773,
+      "amount_paid": 0,
+      "balance_due": 26466.773,
+      "status": "sent",
+      "notes": "Please keep a copy of this invoice for your records",
       "amount_in_words": "Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2026-10-19T12:58:11.497Z",
       "payment_stage": "progressive",
       "payment_stage_label": "Progressive Payment",
-      "adjustment": 0
+      "adjustment": 0,
+      "order_no": "PODSUB-2026/0810 & 0858",
+      "subject": "THE NEW DUBAI POLICE ACADMY @ AL ROWAIYH, DUBAI,UAE FITOUT WORKS"
     }
   ],
   "purchase_bills": [],
@@ -560,7 +562,7 @@
     {
       "id": "rec-rv-44025",
       "receipt_no": "REC-RV-44025",
-      "ref_invoice_no": "REC-RG-INV-44015",
+      "ref_invoice_no": "REC-RG-INV-44035",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-1792414691494",
       "customer_name": "M/S TOP ROCK INTERIORS LLC.",
@@ -582,7 +584,7 @@
       "allocations": [
         {
           "invoice_id": "inv-rec-rg-inv-44015",
-          "invoice_no": "REC-RG-INV-44015",
+          "invoice_no": "REC-RG-INV-44035",
           "amount_allocated": 26466.77
         }
       ],
