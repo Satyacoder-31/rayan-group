@@ -13936,7 +13936,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
 
             <!-- Header Section (Left: Logo & Company, Right: Tax Invoice Title & Metadata) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
@@ -14142,7 +14142,7 @@ class FinanceApp {
             </div>
 
             <!-- Clean Fixed System Generated Footer (Matching Screenshot 100%, No Stamp, No Signature) -->
-            <div style="margin-top:3.5rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+            <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
                 This is a system generated Tax Invoice and does not require any signatories
               </div>
@@ -14252,7 +14252,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
 
             <!-- Header Section (Left: Logo & Company, Right: Receipt Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
@@ -14411,7 +14411,7 @@ class FinanceApp {
             </div>
 
             <!-- System Generated Notice & Page Number Footer -->
-            <div style="margin-top:3.5rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+            <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <span style="min-width:20px;"></span>
               <span style="flex:1; text-align:center; letter-spacing:0.01em;">This is a system generated Receipt Voucher and does not require any signatories</span>
               <span style="font-size:0.75rem; color:#9ca3af; min-width:20px; text-align:right; font-weight:600;">1</span>
@@ -15930,7 +15930,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
 
             <!-- Header Section (Left: Logo & Company, Right: Expense Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
@@ -16212,7 +16212,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
 
             <!-- Header Section (Left: Logo & Company, Right: Payment Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem; flex-wrap:wrap;">
