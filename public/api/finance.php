@@ -882,43 +882,44 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         if (count($data['cash_vouchers']) !== $orig) $changed = true;
     }
 
-    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
-        $orig = count($data['bank_transfers']);
-        $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) use ($dummyWireIds) {
-            $id = strtolower(trim($bt['id'] ?? ''));
-            return !in_array($id, $dummyWireIds);
-        }));
-        $hasWire = false;
-        foreach ($data['bank_transfers'] as $bt) {
-            if (($bt['reference_no'] ?? '') === 'WIRE-ADCB-99210' || ($bt['receipt_id'] ?? '') === 'rec-rv-44035') {
-                $hasWire = true;
-                break;
-            }
-        }
-        if (!$hasWire) {
-            array_unshift($data['bank_transfers'], [
-                'id' => 'wire-adcb-44035',
-                'receipt_id' => 'rec-rv-44035',
-                'company_id' => 'rayan-corp-uae',
-                'reference_no' => 'WIRE-ADCB-99210',
-                'date' => '2026-10-19',
-                'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
-                'source_account_id' => 'bank-adcb-uae',
-                'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
-                'destination_account_id' => 'bank-adcb-uae',
-                'counterparty' => 'M/S TOP ROCK INTERIORS LLC.',
-                'amount' => 26466.77,
-                'currency' => 'AED',
-                'type' => 'inward',
-                'type_label' => 'Inward Client Collection (REC-RV-44035)',
-                'purpose' => 'Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)',
-                'status' => 'Cleared',
-                'created_at' => '2026-10-19T13:40:00Z'
-            ]);
-            $changed = true;
-        }
-        if (count($data['bank_transfers']) !== $orig) $changed = true;
+    if (!isset($data['bank_transfers']) || !is_array($data['bank_transfers'])) {
+        $data['bank_transfers'] = [];
     }
+    $orig = count($data['bank_transfers']);
+    $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) use ($dummyWireIds) {
+        $id = strtolower(trim($bt['id'] ?? ''));
+        return !in_array($id, $dummyWireIds);
+    }));
+    $hasWire = false;
+    foreach ($data['bank_transfers'] as $bt) {
+        if (($bt['reference_no'] ?? '') === 'WIRE-ADCB-99210' || ($bt['receipt_id'] ?? '') === 'rec-rv-44035') {
+            $hasWire = true;
+            break;
+        }
+    }
+    if (!$hasWire) {
+        array_unshift($data['bank_transfers'], [
+            'id' => 'wire-adcb-44035',
+            'receipt_id' => 'rec-rv-44035',
+            'company_id' => 'rayan-corp-uae',
+            'reference_no' => 'WIRE-ADCB-99210',
+            'date' => '2026-10-19',
+            'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+            'source_account_id' => 'bank-adcb-uae',
+            'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+            'destination_account_id' => 'bank-adcb-uae',
+            'counterparty' => 'M/S TOP ROCK INTERIORS LLC.',
+            'amount' => 26466.77,
+            'currency' => 'AED',
+            'type' => 'inward',
+            'type_label' => 'Inward Client Collection (REC-RV-44035)',
+            'purpose' => 'Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)',
+            'status' => 'Cleared',
+            'created_at' => '2026-10-19T13:40:00Z'
+        ]);
+        $changed = true;
+    }
+    if (count($data['bank_transfers']) !== $orig) $changed = true;
 
     if (!empty($data['loan_transactions']) && is_array($data['loan_transactions'])) {
         $orig = count($data['loan_transactions']);
@@ -977,9 +978,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     $b['currency'] = 'AED';
                     $b['signatory'] = 'Arshad Alam Shaikh';
                     $b['status'] = 'Active';
-                    if (empty($b['balance']) || floatval($b['balance']) == 1450000 || floatval($b['balance']) == 156625.95) {
-                        $b['balance'] = 183092.72;
-                    }
+                    $b['balance'] = 183092.72;
                     $hasAdcb = true;
                     break;
                 }
