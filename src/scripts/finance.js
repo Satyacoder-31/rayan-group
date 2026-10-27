@@ -290,8 +290,79 @@ class FinanceApp {
       }
 
       if (key === 'invoices') {
+        const topRock4Items = [
+          {
+            sr: 1,
+            name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
+            description: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
+            unit: 'Sqm',
+            uom: 'Sqm',
+            qty: 273.1,
+            unit_price: 56,
+            rate: 56,
+            wd_pct: 50,
+            discount_val: 50,
+            invoice_amount: 7646.8,
+            taxable_amount: 7646.8,
+            vat_rate: 5,
+            vat_amount: 382.34,
+            total_amount: 7646.8
+          },
+          {
+            sr: 2,
+            name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
+            description: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
+            unit: 'Sqm',
+            uom: 'Sqm',
+            qty: 293.9,
+            unit_price: 51,
+            rate: 51,
+            wd_pct: 50,
+            discount_val: 50,
+            invoice_amount: 7494.45,
+            taxable_amount: 7494.45,
+            vat_rate: 5,
+            vat_amount: 374.72,
+            total_amount: 7494.45
+          },
+          {
+            sr: 3,
+            name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
+            description: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
+            unit: 'Sqm',
+            uom: 'Sqm',
+            qty: 321.2,
+            unit_price: 11,
+            rate: 11,
+            wd_pct: 100,
+            discount_val: 0,
+            invoice_amount: 3533.2,
+            taxable_amount: 3533.2,
+            vat_rate: 5,
+            vat_amount: 176.66,
+            total_amount: 3533.2
+          },
+          {
+            sr: 4,
+            name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
+            description: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
+            unit: 'Sqm',
+            uom: 'Sqm',
+            qty: 326.6,
+            unit_price: 40,
+            rate: 40,
+            wd_pct: 50,
+            discount_val: 50,
+            invoice_amount: 6532,
+            taxable_amount: 6532,
+            vat_rate: 5,
+            vat_amount: 326.6,
+            total_amount: 6532
+          }
+        ];
+
         incomingArr.forEach(inv => {
-          if (inv && ((inv.customer_name || '').includes('TOP ROCK') || (inv.invoice_no || '').includes('44015') || (inv.invoice_no || '').includes('44035') || (inv.id || '').includes('44015') || (inv.id || '').includes('44035'))) {
+          if (inv && ((inv.customer_name || '').includes('TOP ROCK') || (inv.customer_trn === '100360644700003') || (inv.invoice_no || '').includes('44035') || (inv.id || '').includes('44035'))) {
             inv.id = 'inv-rec-rg-inv-44035';
             inv.invoice_no = 'REC-RG-INV-44035';
             inv.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
@@ -306,11 +377,21 @@ class FinanceApp {
             inv.customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
             inv.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
             inv.place_of_supply = 'Dubai, UAE';
-            if (!inv.po_reference) inv.po_reference = 'TR-PO-2026-551';
+            inv.po_reference = 'PODSUB-2026/0810 & 0858';
+            inv.order_no = 'PODSUB-2026/0810 & 0858';
+            inv.subject = 'THE NEW DUBAI POLICE ACADMY @ AL ROWAIYH, DUBAI,UAE FITOUT WORKS';
+            inv.sub_total = 25206.45;
+            inv.taxable_subtotal = 25206.45;
+            inv.vat_total = 1260.323;
+            inv.total_tax = 1260.323;
             inv.grand_total = 26466.773;
             inv.amount_paid = 26466.773;
             inv.balance_due = 0;
             inv.status = 'paid';
+            inv.amount_in_words = 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.';
+            if (!inv.line_items || inv.line_items.length < 4) {
+              inv.line_items = JSON.parse(JSON.stringify(topRock4Items));
+            }
           }
         });
       }
@@ -372,6 +453,11 @@ class FinanceApp {
         if (item && !isBlacklisted(item)) {
           const uniqueKey = getUniqueKey(item) || `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
           if (!item.id) item.id = uniqueKey;
+          const existing = map.get(uniqueKey);
+          if (existing && Array.isArray(existing.line_items) && existing.line_items.length > (item.line_items?.length || 0)) {
+            // Keep the one with more line items
+            return;
+          }
           map.set(uniqueKey, item);
         }
       });
@@ -380,8 +466,13 @@ class FinanceApp {
       seedArr.forEach(item => {
         if (item && !isBlacklisted(item)) {
           const uniqueKey = getUniqueKey(item);
-          if (uniqueKey && !map.has(uniqueKey)) {
-            map.set(uniqueKey, item);
+          if (uniqueKey) {
+            const existing = map.get(uniqueKey);
+            if (!existing) {
+              map.set(uniqueKey, item);
+            } else if ((!existing.line_items || existing.line_items.length < 4) && item.line_items && item.line_items.length >= 4) {
+              existing.line_items = JSON.parse(JSON.stringify(item.line_items));
+            }
           }
         }
       });
@@ -8205,17 +8296,27 @@ class FinanceApp {
     const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
     const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
     if (openBilledBtn1) openBilledBtn1.onclick = () => openBilledItemsModal();
-    if (editInv && Array.isArray(editInv.line_items) && editInv.line_items.length > 0) {
+    const isTopRockEdit = editInv && (((editInv.customer_name || '').toLowerCase().includes('top rock')) || editInv.customer_trn === '100360644700003' || editInv.invoice_no === 'REC-RG-INV-44035');
+    const itemsToLoad = (isTopRockEdit && (!editInv.line_items || editInv.line_items.length < 4)) ? [
+      { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+      { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+      { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
+      { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
+    ] : (editInv && Array.isArray(editInv.line_items) && editInv.line_items.length > 0 ? editInv.line_items : null);
+
+    if (itemsToLoad && itemsToLoad.length > 0) {
       tbody.innerHTML = '';
-      editInv.line_items.forEach(it => {
+      itemsToLoad.forEach(it => {
         const itemObj = {
           id: it.id || '',
           code: it.code || '',
           name: it.name || it.description || '',
           description: it.description || it.name || '',
-          uom: it.uom || it.unit || 'SQM',
+          uom: it.uom || it.unit || 'Sqm',
           sales_price: it.unit_price !== undefined ? it.unit_price : (it.rate || 0),
-          discount_val: it.discount_val !== undefined ? it.discount_val : (it.discount || 0),
+          rate: it.rate !== undefined ? it.rate : (it.unit_price || 0),
+          wd_pct: it.wd_pct !== undefined ? it.wd_pct : 100,
+          discount_val: it.discount_val !== undefined ? it.discount_val : (it.wd_pct ? (100 - it.wd_pct) : 0),
           discount_type: it.discount_type || 'pct',
           gst_rate: it.gst_rate !== undefined ? it.gst_rate : (it.vat_rate !== undefined ? it.vat_rate : 5)
         };
@@ -13677,7 +13778,7 @@ class FinanceApp {
     // Customer Lookup & Complete Hydration
     const custName = inv.customer_name || 'M/S TOP ROCK INTERIORS LLC.';
     const custClean = custName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
-    const isTopRock = custClean.includes('top rock') || (inv.customer_trn === '100360644700003');
+    const isTopRock = custClean.includes('top rock') || (inv.customer_trn === '100360644700003') || (inv.trn === '100360644700003') || (inv.tax_number === '100360644700003') || (inv.invoice_no === 'REC-RG-INV-44035') || (inv.id === 'inv-rec-rg-inv-44035');
 
     const customer = (this.db?.customers || []).find(c => 
       (inv.customer_id && c.id === inv.customer_id) || 
@@ -13724,8 +13825,9 @@ class FinanceApp {
     const formattedDueDate = inv.payment_terms === 0 || !inv.payment_terms || String(inv.payment_terms_label || '').toLowerCase().includes('receipt') ? formatDateDisplay(inv.due_date || inv.invoice_date || '2026-06-19') : (inv.due_date ? formatDateDisplay(inv.due_date) : formattedDate);
     const words = inv.amount_in_words || (this.numberToEnglishWords(grandTotal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
 
-    const lineItems = (inv.line_items && inv.line_items.length) ? inv.line_items : (isTopRock ? [
+    const lineItems = (inv.line_items && inv.line_items.length >= 4) ? inv.line_items : (isTopRock ? [
       {
+        sr: 1,
         name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
         description: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
         qty: 273.1,
@@ -13741,6 +13843,7 @@ class FinanceApp {
         total_amount: 7646.80
       },
       {
+        sr: 2,
         name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
         description: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
         qty: 293.9,
@@ -13756,6 +13859,7 @@ class FinanceApp {
         total_amount: 7494.45
       },
       {
+        sr: 3,
         name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
         description: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
         qty: 321.2,
@@ -13771,6 +13875,7 @@ class FinanceApp {
         total_amount: 3533.20
       },
       {
+        sr: 4,
         name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
         description: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
         qty: 326.6,
@@ -14087,7 +14192,10 @@ class FinanceApp {
   openReceiptPrintModal(receiptId, isVerifiedScan = false) {
     let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
     if (!rec) {
-      rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44026') || (this.db?.customer_receipts || [])[0] || (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44025') || (defaultSeedData.customer_receipts || [])[0] || {};
+      rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44035') || 
+            (this.db?.customer_receipts || []).find(r => (r.customer_name || '').includes('TOP ROCK')) ||
+            (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44026') || 
+            (this.db?.customer_receipts || [])[0] || (defaultSeedData.customer_receipts || [])[0] || {};
     }
 
     const curr = rec.currency || 'AED';
@@ -14096,6 +14204,23 @@ class FinanceApp {
     const formattedAmount = amountVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
     const formattedDate = rec.receipt_date ? this.formatDate(rec.receipt_date) : '19 Oct 2026';
     const amountInWords = rec.amount_in_words || (this.numberToEnglishWords(amountVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+
+    const isTopRock = (rec.customer_name || '').toLowerCase().includes('top rock') || 
+                      (rec.ref_invoice_no === 'REC-RG-INV-44035') || 
+                      (rec.receipt_no === 'REC-RV-44035');
+
+    const linkedInv = (this.db?.invoices || []).find(i => 
+      i.invoice_no === rec.ref_invoice_no || 
+      (rec.allocations && rec.allocations.some(a => a.invoice_no === i.invoice_no || a.invoice_id === i.id)) ||
+      (isTopRock && (i.invoice_no === 'REC-RG-INV-44035' || (i.customer_name || '').includes('TOP ROCK')))
+    );
+
+    const receiptLineItems = (isTopRock && (!linkedInv?.line_items || linkedInv.line_items.length < 4)) ? [
+      { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, unit: 'Sqm', rate: 56, wd_pct: 50, amount: 7646.80 },
+      { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, unit: 'Sqm', rate: 51, wd_pct: 50, amount: 7494.45 },
+      { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, unit: 'Sqm', rate: 11, wd_pct: 100, amount: 3533.20 },
+      { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, unit: 'Sqm', rate: 40, wd_pct: 50, amount: 6532.00 }
+    ] : (linkedInv && linkedInv.line_items && linkedInv.line_items.length > 1 ? linkedInv.line_items : null);
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -14203,27 +14328,55 @@ class FinanceApp {
                 </tr>
               </thead>
               <tbody>
-                <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                  <td style="padding:8px 10px;">
-                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
-                      ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
-                    </div>
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                      ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
-                    </div>
-                  </td>
-                  <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
-                    <div><strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
-                    <div style="color:#64748b; font-size:0.72rem;">
-                      ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
-                      ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
-                    </div>
-                  </td>
-                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
-                    ${formattedAmount}
-                  </td>
-                </tr>
+                ${receiptLineItems && receiptLineItems.length > 1 ? receiptLineItems.map((item, idx) => {
+                  const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
+                  const formattedItemAmt = itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  return `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">${idx + 1}</td>
+                      <td style="padding:8px 10px;">
+                        <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
+                          ${item.name || item.description}
+                        </div>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                          ${item.qty ? `Qty: ${item.qty} ${item.unit || item.uom || 'Sqm'}` : ''} ${item.rate ? `• Rate: ${Number(item.rate).toFixed(2)}` : ''} ${item.wd_pct ? `• WD: ${item.wd_pct}%` : ''}
+                        </div>
+                      </td>
+                      <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
+                        <div><strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
+                        <div style="color:#64748b; font-size:0.72rem;">
+                          ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
+                          ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
+                        </div>
+                      </td>
+                      <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                        ${formattedItemAmt}
+                      </td>
+                    </tr>
+                  `;
+                }).join('') : `
+                  <tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
+                    <td style="padding:8px 10px;">
+                      <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
+                        ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
+                      </div>
+                      <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                        ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
+                      </div>
+                    </td>
+                    <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
+                      <div><strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
+                      <div style="color:#64748b; font-size:0.72rem;">
+                        ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
+                        ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
+                      </div>
+                    </td>
+                    <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                      ${formattedAmount}
+                    </td>
+                  </tr>
+                `}
               </tbody>
             </table>
 

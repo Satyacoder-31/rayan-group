@@ -520,6 +520,124 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     $dummyNotifIds = ['notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee'];
     $dummyAudIds = ['aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7'];
 
+    $topRock4Items = [
+        [
+            'sr' => 1,
+            'name' => 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
+            'description' => 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
+            'unit' => 'Sqm',
+            'uom' => 'Sqm',
+            'qty' => 273.1,
+            'unit_price' => 56,
+            'rate' => 56,
+            'wd_pct' => 50,
+            'discount_val' => 50,
+            'invoice_amount' => 7646.8,
+            'taxable_amount' => 7646.8,
+            'vat_rate' => 5,
+            'vat_amount' => 382.34,
+            'total_amount' => 7646.8
+        ],
+        [
+            'sr' => 2,
+            'name' => 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
+            'description' => 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
+            'unit' => 'Sqm',
+            'uom' => 'Sqm',
+            'qty' => 293.9,
+            'unit_price' => 51,
+            'rate' => 51,
+            'wd_pct' => 50,
+            'discount_val' => 50,
+            'invoice_amount' => 7494.45,
+            'taxable_amount' => 7494.45,
+            'vat_rate' => 5,
+            'vat_amount' => 374.72,
+            'total_amount' => 7494.45
+        ],
+        [
+            'sr' => 3,
+            'name' => 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
+            'description' => 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
+            'unit' => 'Sqm',
+            'uom' => 'Sqm',
+            'qty' => 321.2,
+            'unit_price' => 11,
+            'rate' => 11,
+            'wd_pct' => 100,
+            'discount_val' => 0,
+            'invoice_amount' => 3533.2,
+            'taxable_amount' => 3533.2,
+            'vat_rate' => 5,
+            'vat_amount' => 176.66,
+            'total_amount' => 3533.2
+        ],
+        [
+            'sr' => 4,
+            'name' => 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
+            'description' => 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
+            'unit' => 'Sqm',
+            'uom' => 'Sqm',
+            'qty' => 326.6,
+            'unit_price' => 40,
+            'rate' => 40,
+            'wd_pct' => 50,
+            'discount_val' => 50,
+            'invoice_amount' => 6532,
+            'taxable_amount' => 6532,
+            'vat_rate' => 5,
+            'vat_amount' => 326.6,
+            'total_amount' => 6532
+        ]
+    ];
+
+    $topRockInvoice = [
+        'id' => 'inv-rec-rg-inv-44035',
+        'invoice_no' => 'REC-RG-INV-44035',
+        'company_id' => 'rayan-corp-uae',
+        'customer_id' => 'cust-1792414691494',
+        'customer_name' => 'M/S TOP ROCK INTERIORS LLC.',
+        'customer_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+        'billing_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+        'contact_person' => 'Mr. Shahil',
+        'email' => 'procurementofficer@toprockinteriors.com',
+        'phone' => '+971 502131834',
+        'customer_trn' => '100360644700003',
+        'trn' => '100360644700003',
+        'tax_regime' => 'trn',
+        'tax_type' => 'TRN',
+        'tax_number' => '100360644700003',
+        'currency' => 'AED',
+        'currency_symbol' => 'AED ',
+        'place_of_supply' => 'Dubai, UAE',
+        'project_id' => 'prj-toprock-police-01',
+        'project_name' => 'THE NEW DUBAI POLICE ACADMY @ AL ROWAIYH, DUBAI,UAE FITOUT WORKS',
+        'po_reference' => 'PODSUB-2026/0810 & 0858',
+        'invoice_date' => '2026-06-19',
+        'due_date' => '2026-06-19',
+        'payment_terms' => 0,
+        'payment_terms_label' => 'Due on Receipt',
+        'tax_inclusive' => true,
+        'line_items' => $topRock4Items,
+        'sub_total' => 25206.45,
+        'taxable_subtotal' => 25206.45,
+        'vat_total' => 1260.323,
+        'total_tax' => 1260.323,
+        'grand_total' => 26466.773,
+        'amount_paid' => 26466.773,
+        'balance_due' => 0,
+        'status' => 'paid',
+        'notes' => 'Please keep a copy of this invoice for your records',
+        'amount_in_words' => 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.',
+        'created_by' => 'Arshad Alam Shaikh',
+        'created_at' => '2026-10-19T12:58:11.497Z',
+        'payment_stage' => 'progressive',
+        'payment_stage_label' => 'Progressive Payment',
+        'adjustment' => 0,
+        'order_no' => 'PODSUB-2026/0810 & 0858',
+        'subject' => 'THE NEW DUBAI POLICE ACADMY @ AL ROWAIYH, DUBAI,UAE FITOUT WORKS'
+    ];
+
     $changed = false;
 
     if ($pdo) {
@@ -551,23 +669,27 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 payment_terms_label = 'Due on Receipt',
                 accounts_receivable = 'Accounts Receivable'
             WHERE name LIKE '%TOP ROCK%'");
-            $pdo->exec("UPDATE finance_invoices SET 
-                id = 'inv-rec-rg-inv-44035',
-                invoice_no = 'REC-RG-INV-44035',
-                customer_trn = '100360644700003', 
-                trn = '100360644700003', 
-                tax_number = '100360644700003', 
-                contact_person = 'Mr. Shahil', 
-                email = 'procurementofficer@toprockinteriors.com', 
-                payment_terms = 0, 
-                payment_terms_label = 'Due on Receipt', 
-                customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE', 
-                billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
-                grand_total = 26466.77,
-                amount_paid = 26466.77,
-                balance_due = 0,
-                status = 'paid'
-            WHERE customer_name LIKE '%TOP ROCK%' OR invoice_no LIKE '%44015%' OR invoice_no LIKE '%44035%'");
+            
+            $pdo->exec("DELETE FROM finance_invoices WHERE invoice_no IN ('REC-RG-INV-44035', 'REC-RG-INV-44015') OR id IN ('inv-rec-rg-inv-44035', 'inv-rec-rg-inv-44015') OR customer_name LIKE '%TOP ROCK%'");
+            $topRockJson = json_encode($topRockInvoice, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $stmt = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (
+                'inv-rec-rg-inv-44035',
+                'REC-RG-INV-44035',
+                'rayan-corp-uae',
+                'cust-1792414691494',
+                'M/S TOP ROCK INTERIORS LLC.',
+                '100360644700003',
+                '2026-06-19',
+                '2026-06-19',
+                26466.77,
+                26466.77,
+                0,
+                'AED',
+                'paid',
+                :data_json,
+                NOW()
+            )");
+            $stmt->execute([':data_json' => $topRockJson]);
 
             $pdo->exec("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (
                 'rec-rv-44035',
@@ -735,34 +857,33 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
     if (!empty($data['invoices']) && is_array($data['invoices'])) {
         $orig = count($data['invoices']);
-        $data['invoices'] = array_values(array_filter($data['invoices'], function($inv) use ($dummyInvIds) {
+        $filteredInvoices = [];
+        $hasTopRock = false;
+        foreach ($data['invoices'] as $inv) {
             $id = strtolower(trim($inv['id'] ?? ''));
             $no = strtolower(trim($inv['invoice_no'] ?? ''));
-            return !in_array($id, $dummyInvIds) && !in_array($no, $dummyInvIds);
-        }));
-        foreach ($data['invoices'] as &$inv) {
-            if (stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false || stripos($inv['invoice_no'] ?? '', '440') !== false || stripos($inv['id'] ?? '', '440') !== false) {
-                $inv['id'] = 'inv-rec-rg-inv-44035';
-                $inv['invoice_no'] = 'REC-RG-INV-44035';
-                $inv['customer_name'] = 'M/S TOP ROCK INTERIORS LLC.';
-                $inv['customer_trn'] = '100360644700003';
-                $inv['trn'] = '100360644700003';
-                $inv['tax_number'] = '100360644700003';
-                $inv['contact_person'] = 'Mr. Shahil';
-                $inv['email'] = 'procurementofficer@toprockinteriors.com';
-                $inv['phone'] = '+971 502131834';
-                $inv['payment_terms'] = 0;
-                $inv['payment_terms_label'] = 'Due on Receipt';
-                $inv['customer_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-                $inv['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-                $inv['grand_total'] = 26466.773;
-                $inv['amount_paid'] = 26466.773;
-                $inv['balance_due'] = 0;
-                $inv['status'] = 'paid';
-                $changed = true;
+            if (in_array($id, $dummyInvIds) || in_array($no, $dummyInvIds)) {
+                continue;
+            }
+            $isTR = (stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false || 
+                     ($inv['customer_trn'] ?? '') === '100360644700003' || 
+                     stripos($no, '44035') !== false || 
+                     stripos($id, '44035') !== false ||
+                     stripos($no, '44015') !== false || 
+                     stripos($id, '44015') !== false);
+            if ($isTR) {
+                if (!$hasTopRock) {
+                    $filteredInvoices[] = $topRockInvoice;
+                    $hasTopRock = true;
+                }
+            } else {
+                $filteredInvoices[] = $inv;
             }
         }
-        unset($inv);
+        if (!$hasTopRock) {
+            array_unshift($filteredInvoices, $topRockInvoice);
+        }
+        $data['invoices'] = $filteredInvoices;
         if (count($data['invoices']) !== $orig) $changed = true;
     }
 
