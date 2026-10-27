@@ -193,14 +193,9 @@ class FinanceApp {
 
     const dummyBlacklist = new Set([
       'bill-rg-001', 'bill-rg-002', 'bill-rg-003',
-      'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003',
       'pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681',
-      'pv-rg-2026-001', 'pv-rg-2026-002', 'pv-rg-2026-003',
-      'dn-rg-001', 'dn-rg-2026-001',
+      'dn-rg-001',
       'exp-rg-001', 'exp-rg-002', 'exp-rg-003',
-      'exp-rg-2026-001', 'exp-rg-2026-002', 'exp-rg-2026-003',
-      'po-rec-11008',
-      'vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae',
       'vend-001', 'vend-002', 'vend-003', 'vend-004',
       'cust-004', 'cust-005', 'cust-kgc-alias', 'prj-dpa-01',
       'rec-mvdvmilf', 'rec-rv-44026', 'rec-rv-44025',
@@ -834,6 +829,7 @@ class FinanceApp {
           }
         });
       }
+      this.routeVendorPaymentToCashAndBank(newPay, this.db);
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, payment: newPay };
     }
@@ -930,6 +926,61 @@ class FinanceApp {
       }
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'delete_bill') {
+      const bId = payload.bill_id || payload.id;
+      if (this.db.purchase_bills && bId) {
+        this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== bId && b.bill_no !== bId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'delete_payment') {
+      const pId = payload.payment_id || payload.id;
+      if (this.db.vendor_payments && pId) {
+        this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== pId && p.voucher_no !== pId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'delete_po') {
+      const pId = payload.po_id || payload.id;
+      if (this.db.purchase_orders && pId) {
+        this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== pId && p.po_no !== pId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'delete_debit_note') {
+      const dnId = payload.debit_note_id || payload.id;
+      if (this.db.debit_notes && dnId) {
+        this.db.debit_notes = this.db.debit_notes.filter(d => d.id !== dnId && d.debit_note_no !== dnId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'delete_vendor') {
+      const vId = payload.vendor_id || payload.id;
+      if (this.db.vendors && vId) {
+        this.db.vendors = this.db.vendors.filter(v => v.id !== vId && v.code !== vId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'update_vendor' && payload.vendor) {
+      if (!this.db.vendors) this.db.vendors = [];
+      const idx = this.db.vendors.findIndex(v => v.id === payload.vendor.id || v.code === payload.vendor.code);
+      if (idx >= 0) {
+        this.db.vendors[idx] = { ...this.db.vendors[idx], ...payload.vendor };
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, vendor: payload.vendor };
     }
 
     if (action === 'update_payment' && payload.payment) {
@@ -1321,6 +1372,81 @@ class FinanceApp {
           type: 'inward',
           type_label: `Inward Client Wire (${receipt.receipt_no})`,
           purpose: receipt.notes || `Client payment receipt for ${receipt.ref_invoice_no || receipt.receipt_no}`,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        });
+      }
+    }
+  }
+
+  routeVendorPaymentToCashAndBank(payment, db = this.db) {
+    if (!payment || !payment.amount_paid) return;
+    const amt = Number(payment.amount_paid) || 0;
+    if (amt <= 0) return;
+
+    if (!db.bank_transfers) db.bank_transfers = [];
+    if (!db.cash_vouchers) db.cash_vouchers = [];
+    if (!db.bank_accounts) db.bank_accounts = [];
+    if (!db.cash_in_hand) db.cash_in_hand = [];
+
+    const mode = String(payment.payment_mode || 'Online').trim();
+    const modeLower = mode.toLowerCase();
+    const companyId = payment.company_id || this.activeCompanyId || 'rayan-corp-uae';
+    const currency = payment.currency || (companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+
+    if (modeLower.includes('cash')) {
+      let reg = db.cash_in_hand.find(r => r.company_id === companyId);
+      if (!reg) {
+        reg = db.cash_in_hand.find(r => (currency === 'INR' ? r.id.includes('mumbai') : r.id.includes('dubai'))) || db.cash_in_hand[0];
+      }
+      if (reg) {
+        reg.balance = Math.max(0, (Number(reg.balance) || 0) - amt);
+      }
+      const existingCv = db.cash_vouchers.find(v => v.payment_id === payment.id || v.voucher_no === `CV-${payment.voucher_no}`);
+      if (!existingCv) {
+        db.cash_vouchers.unshift({
+          id: `cv-pay-${payment.id || Date.now()}`,
+          payment_id: payment.id,
+          voucher_no: `CV-${payment.voucher_no}`,
+          company_id: companyId,
+          register_id: reg?.id || 'cash-dubai-reg',
+          register_name: reg?.register_name || reg?.name || 'Main Cash Register',
+          custodian: reg?.custodian || 'Cashier',
+          date: payment.payment_date || new Date().toISOString().split('T')[0],
+          type: 'outflow',
+          category: 'Supplier Disbursement',
+          purpose: payment.notes || `Disbursement to ${payment.vendor_name || 'Vendor'} under ${payment.voucher_no}`,
+          payee: payment.vendor_name || 'Vendor',
+          amount: amt,
+          currency: currency,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        });
+      }
+    } else {
+      let bank = db.bank_accounts.find(b => b.company_id === companyId);
+      if (!bank) {
+        bank = db.bank_accounts.find(b => (currency === 'INR' ? b.id.includes('sbi') : (b.id.includes('adcb') || b.id.includes('fab')))) || db.bank_accounts[0];
+      }
+      if (bank) {
+        bank.balance = Math.max(0, (Number(bank.balance) || 0) - amt);
+      }
+      const existingWire = db.bank_transfers.find(w => w.payment_id === payment.id || w.reference_no === payment.reference_no);
+      if (!existingWire) {
+        db.bank_transfers.unshift({
+          id: `wire-pay-${payment.id || Date.now()}`,
+          payment_id: payment.id,
+          reference_no: payment.reference_no || `WIRE-${payment.voucher_no}`,
+          company_id: companyId,
+          date: payment.payment_date || new Date().toISOString().split('T')[0],
+          source_bank: bank?.bank_name || 'Corporate Bank',
+          source_account_id: bank?.id || 'bank-adcb-uae',
+          counterparty: payment.vendor_name || 'Vendor',
+          amount: amt,
+          currency: currency,
+          type: 'outward',
+          type_label: `Vendor Payment (${payment.voucher_no})`,
+          purpose: payment.notes || `Settlement to ${payment.vendor_name || 'Vendor'}`,
           status: 'Cleared',
           created_at: new Date().toISOString()
         });
@@ -1987,9 +2113,22 @@ class FinanceApp {
     return `REC-RV-${maxSeq + 1}`;
   }
 
+  isUaeEntity(companyId) {
+    return !companyId || companyId === 'rayan-corp-uae' || companyId === 'rayan-group' || companyId === 'rayan-energy-uae' || companyId === 'rayan-properties-uae';
+  }
+
+  matchesActiveCompany(itemCompanyId) {
+    const currentIsUae = this.isUaeEntity(this.activeCompanyId);
+    if (currentIsUae) {
+      return this.isUaeEntity(itemCompanyId);
+    }
+    return (itemCompanyId || 'rayan-corp-uae') === this.activeCompanyId;
+  }
+
   getNextBillNumber() {
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    let maxSeq = 0;
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    let maxSeq = 100;
     bills.forEach(b => {
       const bNo = b.bill_no || '';
       const m = bNo.match(/BILL-.*-(\d+)/i) || bNo.match(/(\d{3,})$/);
@@ -1998,13 +2137,14 @@ class FinanceApp {
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'BILL-ASH' : 'BILL-RG-2026';
+    const prefix = isIndia ? 'BILL-ASH-2026' : 'BILL-RG-2026';
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
   getNextExpenseNumber() {
-    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    let maxSeq = 0;
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const expenses = (this.db?.expenses || []).filter(e => this.matchesActiveCompany(e.company_id));
+    let maxSeq = 100;
     expenses.forEach(e => {
       const eNo = e.expense_no || '';
       const m = eNo.match(/EXP-.*-(\d+)/i) || eNo.match(/(\d{3,})$/);
@@ -2013,13 +2153,14 @@ class FinanceApp {
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'EXP-ASH' : 'EXP-RG-2026';
+    const prefix = isIndia ? 'EXP-ASH-2026' : 'EXP-RG-2026';
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
   getNextPaymentVoucherNumber() {
-    const payments = (this.db?.vendor_payments || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    let maxSeq = 0;
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const payments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id));
+    let maxSeq = 100;
     payments.forEach(p => {
       const pNo = p.voucher_no || '';
       const m = pNo.match(/PV-.*-(\d+)/i) || pNo.match(/(\d{3,})$/);
@@ -2028,22 +2169,39 @@ class FinanceApp {
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'PV-ASH' : 'PV-RG-2026';
+    const prefix = isIndia ? 'PV-ASH-2026' : 'PV-RG-2026';
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
-  getNextPONumber() {
-    const pos = (this.db?.purchase_orders || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    let maxSeq = 11008;
-    pos.forEach(p => {
-      const pNo = p.po_no || '';
-      const m = pNo.match(/PO-REC-(\d+)/i) || pNo.match(/(\d{4,})$/);
+  getNextDebitNoteNumber() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const notes = (this.db?.debit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    let maxSeq = 100;
+    notes.forEach(n => {
+      const nNo = n.debit_note_no || '';
+      const m = nNo.match(/DN-.*-(\d+)/i) || nNo.match(/(\d{3,})$/);
       if (m) {
         const num = parseInt(m[1], 10);
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = this.activeCompanyId === 'ashaz-eng-in' ? 'PO-ASH' : 'PO-REC';
+    const prefix = isIndia ? 'DN-ASH-2026' : 'DN-RG-2026';
+    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+  }
+
+  getNextPONumber() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const pos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id));
+    let maxSeq = 11010;
+    pos.forEach(p => {
+      const pNo = p.po_no || '';
+      const m = pNo.match(/PO-.*-(\d+)/i) || pNo.match(/(\d{4,})$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    });
+    const prefix = isIndia ? 'PO-ASH-2026' : 'PO-REC';
     return `${prefix}-${maxSeq + 1}`;
   }
 
@@ -3735,7 +3893,7 @@ class FinanceApp {
   // 3. PURCHASES & BILLS MODULE
   // --------------------------------------------------------------------------
   renderBillsTab(root) {
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -3786,7 +3944,7 @@ class FinanceApp {
               ` : bills.map(b => `
                 <tr>
                   <td><strong>${b.bill_no}</strong></td>
-                  <td>${b.vendor_invoice_no}</td>
+                  <td>${b.vendor_invoice_no || '—'}</td>
                   <td>${this.formatDate(b.bill_date)}</td>
                   <td><strong>${b.vendor_name}</strong></td>
                   <td><span style="font-size:0.75rem;">${b.project_name || 'General Supply'}</span></td>
@@ -3794,17 +3952,15 @@ class FinanceApp {
                   <td>${this.formatCurrency(b.tax_total)}</td>
                   <td><strong>${this.formatCurrency(b.grand_total)}</strong></td>
                   <td><strong style="color:${b.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(b.balance_due)}</strong></td>
-                  <td><span class="fin-badge fin-badge-${b.approval_status}">${b.approval_status}</span></td>
-                  <td><span class="fin-badge fin-badge-${b.status}">${b.status.replace('_', ' ')}</span></td>
+                  <td><span class="fin-badge fin-badge-${b.approval_status || 'approved'}">${b.approval_status || 'Approved'}</span></td>
+                  <td><span class="fin-badge fin-badge-${b.status}">${(b.status || 'unpaid').replace('_', ' ')}</span></td>
                   <td style="white-space:nowrap;">
                     <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')" title="Print &amp; View Purchase Bill">Print / View</button>
                     <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditBillModal('${b.id}')" title="Edit Purchase Bill">Edit</button>
-                    ${b.approval_status === 'pending' && this.hasPermission('approve_bill') ? `
-                      <button type="button" class="fin-btn-row-action" style="color:#10b981;" onclick="window.finApp.approveBill('${b.id}')">Approve</button>
+                    ${b.balance_due > 0 ? `
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openQuickPayBill('${b.id}')" title="Disburse Payment Out">Pay</button>
                     ` : ''}
-                    ${b.balance_due > 0 && b.approval_status === 'approved' && this.hasPermission('record_payment') ? `
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openQuickPayBill('${b.id}')">Pay</button>
-                    ` : ''}
+                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteBill('${b.id}')" title="Delete Purchase Bill">Delete</button>
                   </td>
                 </tr>
               `).join('')}
@@ -3910,8 +4066,8 @@ class FinanceApp {
   // 5. VENDORS MODULE
   // --------------------------------------------------------------------------
   renderVendorsTab(root) {
-    const vendors = this.db?.vendors || [];
-    const bills = this.db?.purchase_bills || [];
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -3945,17 +4101,25 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody>
-              ${vendors.map(v => {
-                const vendBills = bills.filter(b => b.vendor_id === v.id && b.status !== 'void');
+              ${vendors.length === 0 ? `
+                <tr>
+                  <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">🏢</div>
+                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No vendors or subcontractors found</div>
+                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Add Vendor" to register a new supplier profile.</div>
+                  </td>
+                </tr>
+              ` : vendors.map(v => {
+                const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === v.name.toLowerCase())) && b.status !== 'void');
                 const outstanding = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
                 return `
                   <tr>
-                    <td><strong>${v.code}</strong></td>
+                    <td><strong>${v.code || '—'}</strong></td>
                     <td><strong>${v.name}</strong></td>
-                    <td><span class="fin-badge fin-badge-issued">${v.category}</span></td>
+                    <td><span class="fin-badge fin-badge-issued">${v.category || 'General Supplier'}</span></td>
                     <td>
                       <div>${v.contact_person || '—'}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${v.email}</span>
+                      <span style="font-size:0.68rem; color:#94a3b8;">${v.email || '—'}</span>
                     </td>
                     <td>
                       ${v.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${v.trn}</code></div>` : ''}
@@ -3964,12 +4128,14 @@ class FinanceApp {
                     </td>
                     <td>
                       <span style="font-size:0.75rem;">${v.bank_name || 'Corporate Bank'}</span><br>
-                      <code style="font-size:0.68rem;">A/C: ${v.account_no ? '••••' + v.account_no.slice(-4) : '—'}</code>
+                      <code style="font-size:0.68rem;">A/C: ${v.account_no ? '••••' + String(v.account_no).slice(-4) : (v.iban ? '••••' + String(v.iban).slice(-4) : '—')}</code>
                     </td>
                     <td><strong style="color:${outstanding > 0 ? '#fb923c' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
-                    <td>${v.payment_terms} Days</td>
-                    <td>
+                    <td>${v.payment_terms || 30} Days</td>
+                    <td style="white-space:nowrap;">
                       <button type="button" class="fin-btn-row-action" onclick="window.finApp.openVendorProfile('${v.id}')">Profile &amp; Ledger</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditVendorModal('${v.id}')">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteVendor('${v.id}')">Delete</button>
                     </td>
                   </tr>
                 `;
@@ -4361,7 +4527,7 @@ class FinanceApp {
   }
 
   renderPaymentOutTab(root) {
-    const payments = (this.db?.vendor_payments || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const payments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id));
     const totalPaid = payments.reduce((acc, p) => acc + (Number(p.amount_paid) || 0), 0);
 
     root.innerHTML = `
@@ -4407,27 +4573,37 @@ class FinanceApp {
                   <th>Remittance Channel</th>
                   <th>Disbursed Amount</th>
                   <th>Allocated Bills</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                ${payments.map(p => `
+                ${payments.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                      <div style="font-size:1.6rem; margin-bottom:0.4rem;">💸</div>
+                      <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No payment vouchers recorded yet</div>
+                      <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Payment-Out" to disburse a supplier payment.</div>
+                    </td>
+                  </tr>
+                ` : payments.map(p => `
                   <tr>
                     <td><strong>${p.voucher_no}</strong></td>
                     <td>${this.formatDate(p.payment_date)}</td>
                     <td><strong>${p.vendor_name}</strong></td>
                     <td>
                       <div>${(p.payment_mode === 'Corporate RTGS' || p.payment_mode === 'RTGS') ? 'Online' : (p.payment_mode || 'Online')}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no}</span>
+                      <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no || '—'}</span>
                     </td>
                     <td><strong style="color:#fb923c;">${this.formatCurrency(p.amount_paid)}</strong></td>
                     <td>
-                      ${(p.allocations || []).map(a => `
+                      ${(p.allocations && p.allocations.length > 0) ? p.allocations.map(a => `
                         <span class="fin-badge fin-badge-pending" style="font-size:0.65rem;">${a.bill_no}: ${this.formatCurrency(a.amount_allocated)}</span>
-                      `).join(' ')}
+                      `).join(' ') : '<span style="font-size:0.75rem; color:#94a3b8;">On-Account Advance</span>'}
                     </td>
                     <td style="white-space:nowrap;">
                       <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print Official Payment Voucher">Receipt</button>
                       <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')">Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -4490,7 +4666,7 @@ class FinanceApp {
   }
 
   renderDebitNotesTab(root) {
-    const debitNotes = (this.db?.debit_notes || []).filter(n => (n.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const debitNotes = (this.db?.debit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -4527,13 +4703,15 @@ class FinanceApp {
               ` : debitNotes.map(dn => `
                 <tr>
                   <td><strong>${dn.debit_note_no}</strong></td>
-                  <td><code>${dn.bill_no}</code></td>
-                  <td>${dn.vendor_name}</td>
-                  <td><span style="font-size:0.75rem;">${dn.reason}</span></td>
+                  <td><code>${dn.bill_no || 'Direct Debit'}</code></td>
+                  <td>${dn.vendor_name || 'Vendor'}</td>
+                  <td><span style="font-size:0.75rem;">${dn.reason || 'Material adjustment'}</span></td>
                   <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
-                  <td><span class="fin-badge fin-badge-paid">${dn.status}</span></td>
+                  <td><span class="fin-badge fin-badge-paid">${dn.status || 'applied'}</span></td>
                   <td style="white-space:nowrap;">
+                    <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openDebitNotePrintModal('${dn.id}')" title="Print &amp; View Debit Note">Print / View</button>
                     <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditDebitNoteModal('${dn.id}')">Edit</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDebitNote('${dn.id}')">Delete</button>
                   </td>
                 </tr>
               `).join('')}
@@ -5059,7 +5237,7 @@ class FinanceApp {
   // 9. EXPENSES & CLAIMS MODULE
   // --------------------------------------------------------------------------
   renderExpensesTab(root) {
-    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const expenses = (this.db?.expenses || []).filter(e => this.matchesActiveCompany(e.company_id));
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -5107,7 +5285,7 @@ class FinanceApp {
                 <tr>
                   <td><strong>${exp.expense_no}</strong></td>
                   <td>${this.formatDate(exp.date)}</td>
-                  <td><span class="fin-badge fin-badge-issued">${exp.category}</span></td>
+                  <td><span class="fin-badge fin-badge-issued">${exp.category || 'General'}</span></td>
                   <td>${exp.description}</td>
                   <td><span style="font-size:0.75rem;">${exp.project_name || 'General HQ'}</span></td>
                   <td>${exp.submitted_by}</td>
@@ -5133,7 +5311,7 @@ class FinanceApp {
   // 10. PURCHASE ORDERS MODULE
   // --------------------------------------------------------------------------
   renderPOTab(root) {
-    const pos = (this.db?.purchase_orders || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const pos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id));
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -5171,20 +5349,29 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody>
-              ${pos.map(po => `
+              ${pos.length === 0 ? `
+                <tr>
+                  <td colspan="10" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">📑</div>
+                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No purchase orders issued yet</div>
+                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Purchase Order" to commit orders to registered suppliers.</div>
+                  </td>
+                </tr>
+              ` : pos.map(po => `
                 <tr>
                   <td><strong>${po.po_no}</strong></td>
                   <td>${this.formatDate(po.date)}</td>
-                  <td><strong>${po.vendor_name || po.supplier_name}</strong></td>
-                  <td>${po.project_name}</td>
+                  <td><strong>${po.vendor_name || po.supplier_name || 'Vendor'}</strong></td>
+                  <td>${po.project_name || 'General Operations'}</td>
                   <td>${this.formatDate(po.expected_delivery)}</td>
-                  <td><strong>${this.formatCurrency(po.total_value)}</strong></td>
+                  <td><strong>${this.formatCurrency(po.total_value || po.grand_total)}</strong></td>
                   <td>${this.formatCurrency(po.billed_value || 0)}</td>
-                  <td><span class="fin-badge fin-badge-paid">${po.status}</span></td>
+                  <td><span class="fin-badge fin-badge-paid">${po.status || 'approved'}</span></td>
                   <td>${po.approved_by || '—'}</td>
                   <td style="white-space:nowrap;">
                     <button type="button" class="fin-btn-row-action" onclick="window.finApp.openPOPrintModal('${po.id}')" title="Print Official Purchase Order">Print / View</button>
                     <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPOModal('${po.id}')" title="Edit Purchase Order">Edit</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePO('${po.id}')" title="Delete Purchase Order">Delete</button>
                   </td>
                 </tr>
               `).join('')}
@@ -9550,19 +9737,19 @@ class FinanceApp {
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
     const defaultRegime = isIndia ? 'gst' : 'trn';
-    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === this.activeCompanyId);
-    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || this.matchesActiveCompany(p.company_id));
     
     // Gather all purchase orders for the company (including any referenced in previous bills)
     const poMap = new Map();
     (this.db?.purchase_orders || [])
-      .filter(po => !po.company_id || po.company_id === this.activeCompanyId)
+      .filter(po => !po.company_id || this.matchesActiveCompany(po.company_id))
       .forEach(po => {
         const key = (po.po_no || po.id || '').trim().toLowerCase();
         if (key) poMap.set(key, po);
       });
     (this.db?.purchase_bills || [])
-      .filter(b => !b.company_id || b.company_id === this.activeCompanyId)
+      .filter(b => !b.company_id || this.matchesActiveCompany(b.company_id))
       .forEach(b => {
         const poRef = (b.po_no || b.po_reference || b.po_number || '').trim();
         if (poRef && !poMap.has(poRef.toLowerCase())) {
@@ -10346,8 +10533,8 @@ class FinanceApp {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
-    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === this.activeCompanyId);
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-payment">
@@ -10676,11 +10863,11 @@ class FinanceApp {
 
   // 7. VENDOR PROFILE & STATEMENT
   openVendorProfile(vendId) {
-    const vend = this.db?.vendors?.find(v => v.id === vendId);
+    const vend = this.db?.vendors?.find(v => v.id === vendId || v.code === vendId);
     if (!vend) return;
 
-    const bills = (this.db?.purchase_bills || []).filter(b => b.vendor_id === vend.id && b.status !== 'void');
-    const payments = (this.db?.vendor_payments || []).filter(p => p.vendor_id === vend.id);
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.vendor_id === vend.id || (vend.name && b.vendor_name && b.vendor_name.toLowerCase() === vend.name.toLowerCase())) && b.status !== 'void');
+    const payments = (this.db?.vendor_payments || []).filter(p => p.vendor_id === vend.id || (vend.name && p.vendor_name && p.vendor_name.toLowerCase() === vend.name.toLowerCase()));
 
     const totalBilled = bills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
     const totalPaid = bills.reduce((s, b) => s + (Number(b.amount_paid) || 0), 0);
@@ -10691,7 +10878,8 @@ class FinanceApp {
         <div class="fin-modal-dialog" style="max-width:880px;">
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">Vendor Profile: ${vend.name}</h3>
-            <div style="display:flex; gap:0.5rem;">
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button type="button" class="fin-btn-quick" style="border-color:#f59e0b; color:#f59e0b;" onclick="window.finApp.closeModal('modal-vend-profile'); window.finApp.openEditVendorModal('${vend.id}')">✏️ Edit Vendor</button>
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Vendor Statement</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-vend-profile')">&times;</button>
             </div>
@@ -11322,6 +11510,7 @@ class FinanceApp {
 
   // 9. ADD VENDOR MODAL
   openCreateVendorModal() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-add-vend">
         <div class="fin-modal-dialog" style="max-width:650px;">
@@ -11333,7 +11522,7 @@ class FinanceApp {
             <form id="add-vend-form">
               <div class="fin-form-group">
                 <label class="fin-form-label">Vendor Business Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="new-vend-name" class="fin-form-input" required placeholder="e.g. Jindal Steel &amp; Power Ltd">
+                <input type="text" id="new-vend-name" class="fin-form-input" required placeholder="${isIndia ? 'e.g. Jindal Steel & Power Ltd' : 'e.g. Danube Building Materials LLC'}">
               </div>
 
               <div class="fin-form-grid-2">
@@ -11350,7 +11539,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Contact Person</label>
-                  <input type="text" id="new-vend-contact" class="fin-form-input" placeholder="e.g. Alok Mukherjee">
+                  <input type="text" id="new-vend-contact" class="fin-form-input" placeholder="e.g. Procurement Manager">
                 </div>
               </div>
 
@@ -11361,7 +11550,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Phone Number</label>
-                  <input type="tel" id="new-vend-phone" class="fin-form-input" placeholder="+91 22 6600 0000 / +971 2 565 0000">
+                  <input type="tel" id="new-vend-phone" class="fin-form-input" placeholder="+971 2 565 0000 / +91 22 6600 0000">
                 </div>
               </div>
 
@@ -11369,8 +11558,8 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Country / Jurisdiction</label>
                   <select id="new-vend-country" class="fin-form-select">
-                    <option value="India" selected>🇮🇳 India</option>
-                    <option value="UAE">🇦🇪 United Arab Emirates (UAE)</option>
+                    <option value="UAE" ${!isIndia ? 'selected' : ''}>🇦🇪 United Arab Emirates (UAE)</option>
+                    <option value="India" ${isIndia ? 'selected' : ''}>🇮🇳 India</option>
                   </select>
                 </div>
                 <div class="fin-form-group">
@@ -11577,7 +11766,7 @@ class FinanceApp {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
-    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || this.matchesActiveCompany(p.company_id));
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-expense">
@@ -11831,9 +12020,9 @@ class FinanceApp {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
-    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === this.activeCompanyId);
-    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
-    const items = (this.db?.items || []).filter(it => !it.company_id || it.company_id === this.activeCompanyId);
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || this.matchesActiveCompany(p.company_id));
+    const items = (this.db?.items || []).filter(it => !it.company_id || this.matchesActiveCompany(it.company_id));
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-po">
@@ -13448,7 +13637,7 @@ class FinanceApp {
     const currSym = isIndia ? '₹' : 'AED ';
 
     if (type === 'credit_note') {
-      const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
+      const invoices = (this.db?.invoices || []).filter(i => this.matchesActiveCompany(i.company_id) && i.status !== 'void');
       if (invoices.length === 0) {
         alert(`No active invoices found for ${currLabel} to issue a credit note against.`);
         return;
@@ -13456,35 +13645,49 @@ class FinanceApp {
       const inv = invoices[0];
       this.openCreateCreditNoteModal(inv.id);
     } else {
-      const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId && b.status !== 'void');
-      if (bills.length === 0) {
-        alert(`No active purchase bills found for ${currLabel} to issue a debit note against.`);
-        return;
-      }
+      const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id) && b.status !== 'void');
+      const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+
       const modalHtml = `
         <div class="fin-modal-backdrop open" id="modal-dn">
           <div class="fin-modal-dialog" style="max-width:600px;">
             <div class="fin-modal-header">
-              <h3 class="fin-modal-title">🔄 Issue Purchase Debit Note (${currLabel})</h3>
+              <h3 class="fin-modal-title">🔄 Issue Purchase Return / Debit Note (${currLabel})</h3>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-dn')">&times;</button>
             </div>
             <div class="fin-modal-body">
               <form id="create-dn-form">
+                ${bills.length > 0 ? `
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Linked Purchase Bill Reference</label>
+                    <select id="dn-bill-select" class="fin-form-select">
+                      <option value="">-- Direct Supplier Debit / Return (No Bill) --</option>
+                      ${bills.map(b => `<option value="${b.id}" data-vendor="${b.vendor_name}" data-billno="${b.bill_no}">${b.bill_no} — ${b.vendor_name} (${this.formatCurrency(b.grand_total)})</option>`).join('')}
+                    </select>
+                  </div>
+                ` : ''}
+
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Select Purchase Bill Ref <span style="color:#ef4444;">*</span></label>
-                  <select id="dn-bill-select" class="fin-form-select" required>
-                    ${bills.map(b => `<option value="${b.id}" data-vendor="${b.vendor_name}" data-billno="${b.bill_no}">${b.bill_no} — ${b.vendor_name} (${this.formatCurrency(b.grand_total)})</option>`).join('')}
-                  </select>
+                  <label class="fin-form-label">Supplier / Vendor Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="dn-vendor-input" class="fin-form-input" list="dn-vend-list" required placeholder="Select or type supplier name..." value="${bills[0]?.vendor_name || vendors[0]?.name || ''}">
+                  <datalist id="dn-vend-list">
+                    ${vendors.map(v => `<option value="${v.name}">${v.name}</option>`).join('')}
+                  </datalist>
                 </div>
 
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Debit Reason <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="dn-reason" class="fin-form-input" required placeholder="e.g. Damage in transit / Rate differential on supplies">
+                  <label class="fin-form-label">Custom Bill / Invoice Reference <span style="font-size:0.75rem; color:#94a3b8;">(Optional)</span></label>
+                  <input type="text" id="dn-custom-billno" class="fin-form-input" placeholder="e.g. INV-SUPP-8821">
+                </div>
+
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Return / Debit Adjustment Reason <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="dn-reason" class="fin-form-input" required placeholder="e.g. Damage in transit / Rate differential on supplies / Quality rejection">
                 </div>
 
                 <div class="fin-form-group">
                   <label class="fin-form-label">Debit Adjustment Amount (${currLabel}) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="dn-amount" class="fin-form-input" required step="any" placeholder="0.00">
+                  <input type="number" id="dn-amount" class="fin-form-input" required min="1" step="any" placeholder="0.00">
                 </div>
 
                 <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -13497,28 +13700,54 @@ class FinanceApp {
         </div>
       `;
       document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+      const billSel = document.getElementById('dn-bill-select');
+      const vendInput = document.getElementById('dn-vendor-input');
+      const customBillInp = document.getElementById('dn-custom-billno');
+
+      if (billSel) {
+        billSel.onchange = () => {
+          if (billSel.value) {
+            const opt = billSel.options[billSel.selectedIndex];
+            vendInput.value = opt.getAttribute('data-vendor') || '';
+            customBillInp.value = opt.getAttribute('data-billno') || '';
+          }
+        };
+      }
+
       document.getElementById('create-dn-form').onsubmit = async (e) => {
         e.preventDefault();
-        const sel = document.getElementById('dn-bill-select');
-        const opt = sel.options[sel.selectedIndex];
+        let billId = billSel?.value || null;
+        let billNo = customBillInp.value.trim();
+        let vendorName = vendInput.value.trim();
+
+        if (billSel && billSel.value) {
+          const opt = billSel.options[billSel.selectedIndex];
+          billNo = opt.getAttribute('data-billno') || billNo;
+          vendorName = opt.getAttribute('data-vendor') || vendorName;
+        }
+
+        const debitNo = this.getNextDebitNoteNumber();
+        const debitAmt = Number(document.getElementById('dn-amount').value) || 0;
+
         const newDn = {
           id: 'dn-' + Date.now(),
-          debit_note_no: (isIndia ? 'DN-ASH-' : 'DN-RG-2026-') + String((this.db?.debit_notes?.length || 0) + 1).padStart(3, '0'),
+          debit_note_no: debitNo,
           company_id: this.activeCompanyId,
           currency: isIndia ? 'INR' : 'AED',
           currency_symbol: currSym,
-          bill_id: sel.value,
-          bill_no: opt.getAttribute('data-billno'),
-          vendor_name: opt.getAttribute('data-vendor'),
+          bill_id: billId,
+          bill_no: billNo || 'Direct Debit',
+          vendor_name: vendorName || 'Vendor',
           reason: document.getElementById('dn-reason').value.trim(),
-          total_debit_amount: Number(document.getElementById('dn-amount').value) || 0,
+          total_debit_amount: debitAmt,
           status: 'applied'
         };
-        await this.syncApi('create_debit_note', { debit_note: newDn });
-        alert(`Debit note ${newDn.debit_note_no} created and applied against bill ${newDn.bill_no} in ${currLabel}.`);
+
+        const res = await this.syncApi('create_debit_note', { debit_note: newDn });
+        alert(`Debit note ${res.debit_note?.debit_note_no || debitNo} created successfully in ${currLabel}.`);
         this.closeModal('modal-dn');
-        this.activeTab = 'debit_notes';
-        this.renderActiveTab();
+        this.switchTab('debit_notes');
       };
     }
   }
@@ -16845,6 +17074,418 @@ class FinanceApp {
     await this.syncApi('delete_document', { document_id: docId });
     alert('Document removed from vault.');
     this.renderActiveTab();
+  }
+
+  // 10. PROCUREMENT & DISBURSEMENT ACTION HANDLERS
+  async deleteBill(billId) {
+    const bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
+    const label = bill ? bill.bill_no : billId;
+    if (!confirm(`Are you sure you want to delete purchase bill ${label}?`)) return;
+    await this.syncApi('delete_bill', { bill_id: billId, id: billId });
+    if (this.db.purchase_bills) {
+      this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== billId && b.bill_no !== billId);
+    }
+    this.showNotification(`Purchase bill ${label} deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  async deletePayment(payId) {
+    const pay = (this.db?.vendor_payments || []).find(p => p.id === payId || p.voucher_no === payId);
+    const label = pay ? pay.voucher_no : payId;
+    if (!confirm(`Are you sure you want to delete payment voucher ${label}?`)) return;
+    await this.syncApi('delete_payment', { payment_id: payId, id: payId });
+    if (this.db.vendor_payments) {
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== payId && p.voucher_no !== payId);
+    }
+    this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  async deletePO(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    const label = po ? po.po_no : poId;
+    if (!confirm(`Are you sure you want to delete purchase order ${label}?`)) return;
+    await this.syncApi('delete_po', { po_id: poId, id: poId });
+    if (this.db.purchase_orders) {
+      this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== poId && p.po_no !== poId);
+    }
+    this.showNotification(`Purchase order ${label} deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  async deleteDebitNote(dnId) {
+    const dn = (this.db?.debit_notes || []).find(d => d.id === dnId || d.debit_note_no === dnId);
+    const label = dn ? dn.debit_note_no : dnId;
+    if (!confirm(`Are you sure you want to delete debit note ${label}?`)) return;
+    await this.syncApi('delete_debit_note', { debit_note_id: dnId, id: dnId });
+    if (this.db.debit_notes) {
+      this.db.debit_notes = this.db.debit_notes.filter(d => d.id !== dnId && d.debit_note_no !== dnId);
+    }
+    this.showNotification(`Debit note ${label} deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  async deleteVendor(vendId) {
+    const vend = (this.db?.vendors || []).find(v => v.id === vendId || v.code === vendId);
+    const label = vend ? vend.name : vendId;
+    if (!confirm(`Are you sure you want to delete supplier / vendor "${label}"?`)) return;
+    await this.syncApi('delete_vendor', { vendor_id: vendId, id: vendId });
+    if (this.db.vendors) {
+      this.db.vendors = this.db.vendors.filter(v => v.id !== vendId && v.code !== vendId);
+    }
+    this.showNotification(`Vendor "${label}" deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  openEditVendorModal(vendId) {
+    const vend = (this.db?.vendors || []).find(v => v.id === vendId || v.code === vendId);
+    if (!vend) {
+      alert('Supplier / Vendor record not found.');
+      return;
+    }
+    const isIndia = (vend.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-vend">
+        <div class="fin-modal-dialog" style="max-width:680px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Supplier / Vendor (${vend.code || vend.name})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-vend')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-vend-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Vendor Business Name <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-vend-name" class="fin-form-input" value="${vend.name || ''}" required>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Category</label>
+                  <select id="edit-vend-cat" class="fin-form-select">
+                    <option value="Structural Steel & TMT" ${vend.category === 'Structural Steel & TMT' ? 'selected' : ''}>Structural Steel &amp; TMT</option>
+                    <option value="Ready-Mix & Bulk Cement" ${vend.category === 'Ready-Mix & Bulk Cement' ? 'selected' : ''}>Ready-Mix &amp; Bulk Cement</option>
+                    <option value="Electrical & Automation" ${vend.category === 'Electrical & Automation' ? 'selected' : ''}>Electrical &amp; Automation</option>
+                    <option value="HVAC & Mechanical" ${vend.category === 'HVAC & Mechanical' ? 'selected' : ''}>HVAC &amp; Mechanical</option>
+                    <option value="Heavy Equipment & Cranes" ${vend.category === 'Heavy Equipment & Cranes' ? 'selected' : ''}>Heavy Equipment &amp; Cranes</option>
+                    <option value="Subcontracting & Labor" ${vend.category === 'Subcontracting & Labor' ? 'selected' : ''}>Subcontracting &amp; Labor</option>
+                    <option value="Building Materials & Fit-Out" ${vend.category === 'Building Materials & Fit-Out' ? 'selected' : ''}>Building Materials &amp; Fit-Out</option>
+                    <option value="General Supplies" ${(!vend.category || vend.category === 'General Supplies') ? 'selected' : ''}>General Supplies</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Contact Person</label>
+                  <input type="text" id="edit-vend-contact" class="fin-form-input" value="${vend.contact_person || ''}" placeholder="e.g. Procurement Officer">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Email Address <span style="color:#ef4444;">*</span></label>
+                  <input type="email" id="edit-vend-email" class="fin-form-input" value="${vend.email || ''}" required placeholder="sales@vendor.com">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Phone Number</label>
+                  <input type="tel" id="edit-vend-phone" class="fin-form-input" value="${vend.phone || ''}" placeholder="+971 2 565 0000 / +91 22 6600 0000">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Country / Jurisdiction</label>
+                  <select id="edit-vend-country" class="fin-form-select">
+                    <option value="UAE" ${(!vend.country || vend.country === 'UAE') ? 'selected' : ''}>🇦🇪 United Arab Emirates (UAE)</option>
+                    <option value="India" ${vend.country === 'India' ? 'selected' : ''}>🇮🇳 India</option>
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">TRN (UAE VAT)</label>
+                  <input type="text" id="edit-vend-trn" class="fin-form-input" value="${vend.trn || ''}" placeholder="100234567800003">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">GSTIN (India)</label>
+                  <input type="text" id="edit-vend-gstin" class="fin-form-input" value="${vend.gstin || ''}" placeholder="27AAACJ1234F1Z8">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">PAN (India) / Commercial License # (UAE)</label>
+                  <input type="text" id="edit-vend-pan" class="fin-form-input" value="${vend.pan || ''}" placeholder="AAACJ1234F or CN-1049281">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Terms (Days)</label>
+                  <input type="number" id="edit-vend-terms" class="fin-form-input" value="${vend.payment_terms || 30}" min="0">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Bank Name</label>
+                  <input type="text" id="edit-vend-bank" class="fin-form-input" value="${vend.bank_name || ''}" placeholder="FAB / ADCB / SBI">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Account No / IBAN</label>
+                  <input type="text" id="edit-vend-ac" class="fin-form-input" value="${vend.account_no || vend.iban || ''}" placeholder="AE07033... / 39485729103">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">IFSC / SWIFT Code</label>
+                  <input type="text" id="edit-vend-ifsc" class="fin-form-input" value="${vend.ifsc_code || vend.swift_code || ''}" placeholder="FABAAEAD / SBIN0000300">
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-vend')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Vendor &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.getElementById('edit-vend-form').onsubmit = async (e) => {
+      e.preventDefault();
+      vend.name = document.getElementById('edit-vend-name').value.trim();
+      vend.category = document.getElementById('edit-vend-cat').value;
+      vend.contact_person = document.getElementById('edit-vend-contact').value.trim();
+      vend.email = document.getElementById('edit-vend-email').value.trim();
+      vend.phone = document.getElementById('edit-vend-phone').value.trim();
+      vend.country = document.getElementById('edit-vend-country').value;
+      vend.trn = document.getElementById('edit-vend-trn').value.trim();
+      vend.gstin = document.getElementById('edit-vend-gstin').value.trim();
+      vend.pan = document.getElementById('edit-vend-pan').value.trim();
+      vend.payment_terms = Number(document.getElementById('edit-vend-terms').value) || 30;
+      vend.bank_name = document.getElementById('edit-vend-bank').value.trim();
+      vend.account_no = document.getElementById('edit-vend-ac').value.trim();
+      vend.ifsc_code = document.getElementById('edit-vend-ifsc').value.trim();
+
+      await this.syncApi('update_vendor', { vendor: vend });
+      this.showNotification(`Vendor "${vend.name}" updated successfully.`, 'success');
+      this.closeModal('modal-edit-vend');
+      this.renderActiveTab();
+    };
+  }
+
+  // 11. DEBIT NOTE / PURCHASE RETURN PRINT & VIEW MODAL
+  openDebitNotePrintModal(dnId, isVerifiedScan = false) {
+    let dn = (this.db?.debit_notes || []).find(d => d.id === dnId || d.debit_note_no === dnId);
+    if (!dn) {
+      dn = (this.db?.debit_notes || [])[0] || {
+        debit_note_no: 'DN-RG-2026-001',
+        bill_no: 'Direct Supplier Debit',
+        vendor_name: 'Danube Building Materials LLC',
+        reason: 'Material return & rate differential',
+        total_debit_amount: 0,
+        currency: 'AED',
+        status: 'applied'
+      };
+    }
+
+    const isIndia = (dn.company_id || this.activeCompanyId) === 'ashaz-eng-in' || dn.currency === 'INR';
+    const curr = dn.currency || (isIndia ? 'INR' : 'AED');
+    const currSym = dn.currency_symbol || (isIndia ? '₹' : 'AED ');
+    const debitAmount = Number(dn.total_debit_amount || dn.amount || 0);
+    const formattedAmount = debitAmount.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 });
+    const formattedDate = dn.date ? this.formatDate(dn.date) : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const amountInWords = dn.amount_in_words || (this.numberToEnglishWords(debitAmount) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+
+    const vendorObj = (this.db?.vendors || []).find(v => v.name === dn.vendor_name || (dn.vendor_name && v.name && v.name.toLowerCase().includes(dn.vendor_name.toLowerCase())));
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🔄</span>
+              <span>Rayan Engineering Official Debit Note / Purchase Return (إشعار مدين)</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openDebitNotePrintModal('${dn.id || ''}')">Debit Note</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadDebitNoteDocument('${dn.id || ''}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
+            <!-- Header Section -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem; flex-wrap:wrap;">
+              <div style="max-width:55%; min-width:280px;">
+                <div style="margin-bottom:0.4rem;">
+                  ${this.getRayanLogoImg(false)}
+                </div>
+                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                  RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C
+                </div>
+                <div style="font-size:0.75rem; color:#475569; line-height:1.4; margin-top:2px;">
+                  P.O. Box 43388, Industrial City ICAD-1, Musaffah, Abu Dhabi, United Arab Emirates<br>
+                  <strong>TRN:</strong> 104937380400003 | <strong>Commercial License:</strong> CN-2849102 | Tel: +971 2 565 4497
+                </div>
+              </div>
+
+              <div style="text-align:right; min-width:200px;">
+                <div style="display:inline-block; background:#0f172a; color:#ffffff; padding:4px 12px; border-radius:4px; font-weight:800; font-size:0.9rem; letter-spacing:0.04em; margin-bottom:0.35rem;">
+                  DEBIT NOTE / PURCHASE RETURN
+                </div>
+                <div style="font-size:1.1rem; font-weight:800; color:#0284c7;">
+                  ${dn.debit_note_no}
+                </div>
+                <div style="font-size:0.78rem; color:#475569; margin-top:2px;">
+                  Date: <strong>${formattedDate}</strong>
+                </div>
+                <div style="font-size:0.75rem; color:#475569;">
+                  Linked Bill Ref: <strong>${dn.bill_no || 'Direct Supplier Debit'}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vendor / Party Details -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin-bottom:0.75rem;">
+              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Debit Issued To (Supplier / Vendor)</div>
+                <div style="font-size:0.88rem; font-weight:800; color:#0f172a;">${dn.vendor_name || 'Vendor'}</div>
+                <div>${vendorObj?.address || 'Industrial Area, Abu Dhabi, UAE'}</div>
+                ${vendorObj?.trn ? `<div><strong>TRN:</strong> ${vendorObj.trn}</div>` : ''}
+                ${vendorObj?.gstin ? `<div><strong>GSTIN:</strong> ${vendorObj.gstin}</div>` : ''}
+              </div>
+
+              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Adjustment Particulars</div>
+                <div><strong>Reason:</strong> ${dn.reason || 'Material return & rate differential on supplies'}</div>
+                <div><strong>Bill Reference:</strong> <span style="color:#0284c7; font-weight:700;">${dn.bill_no || 'Direct Debit'}</span></div>
+                <div><strong>Status:</strong> <span style="display:inline-block; padding:1px 6px; border-radius:4px; background:#dcfce7; color:#15803d; font-weight:700; font-size:0.72rem;">APPLIED TO LEDGER ✓</span></div>
+              </div>
+            </div>
+
+            <!-- Particulars Table -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem; box-sizing:border-box;">
+              <thead>
+                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
+                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
+                  <th style="padding:7px 10px; width:55%;">Description of Debit / Return Adjustment</th>
+                  <th style="padding:7px 10px; width:20%;">Linked Reference</th>
+                  <th style="padding:7px 10px; width:20%; text-align:right;">Debit Amount (${curr})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
+                  <td style="padding:8px 10px;">
+                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
+                      ${dn.reason || 'Purchase Return & Rate Adjustment'}
+                    </div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
+                      Supplier: ${dn.vendor_name || 'Vendor'} • Adjustment applied against accounts payable
+                    </div>
+                  </td>
+                  <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
+                    <strong>${dn.bill_no || 'Direct Debit'}</strong>
+                  </td>
+                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
+                    ${formattedAmount}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Financials Summary & Amount in Words -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
+              <div style="flex:1;">
+                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Total Debit In Words:</div>
+                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
+                  ${amountInWords}
+                </div>
+                <div style="margin-top:0.6rem; font-size:0.75rem; color:#475569; line-height:1.35;">
+                  This official debit note constitutes an accredited reduction in accounts payable to the designated vendor under Group Procurement Governance.
+                </div>
+              </div>
+
+              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
+                  <span>Sub Total Debit</span>
+                  <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
+                  <span>Total Debit</span>
+                  <span style="font-variant-numeric:tabular-nums; color:#0284c7;">${curr} ${formattedAmount}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Signatures / System Notice -->
+            <div style="margin-top:auto; padding-top:2.5rem;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem; font-size:0.78rem;">
+                <div style="text-align:center; width:180px; border-top:1px solid #94a3b8; padding-top:4px;">
+                  <strong>Prepared By</strong><br><span style="color:#64748b;">Procurement Dept</span>
+                </div>
+                <div style="text-align:center; width:180px; border-top:1px solid #94a3b8; padding-top:4px;">
+                  <strong>Verified By</strong><br><span style="color:#64748b;">Financial Controller</span>
+                </div>
+                <div style="text-align:center; width:180px; border-top:1px solid #94a3b8; padding-top:4px;">
+                  <strong>Approved By</strong><br><span style="color:#64748b;">Managing Director</span>
+                </div>
+              </div>
+              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
+                <span style="min-width:24px;"></span>
+                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is an official Rayan Group Debit Note / Purchase Return Voucher</span>
+                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  downloadDebitNoteDocument(dnId) {
+    let dn = (this.db?.debit_notes || []).find(d => d.id === dnId || d.debit_note_no === dnId);
+    if (!dn) return;
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Debit Note - ${dn.debit_note_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 6mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${dn.debit_note_no}_Debit_Note.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${dn.debit_note_no} Debit Note.`, 'success');
+    }
   }
 
     bindGlobalEvents() {

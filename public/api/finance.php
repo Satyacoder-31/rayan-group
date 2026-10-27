@@ -502,13 +502,13 @@ if (!$dataFile) {
 function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if (!$data || !is_array($data)) return;
 
-    $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-rg-2026-001', 'bill-rg-2026-002', 'bill-rg-2026-003'];
-    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pv-rg-2026-001', 'pv-rg-2026-002', 'pv-rg-2026-003'];
-    $dummyDnIds = ['dn-rg-001', 'dn-rg-2026-001'];
-    $dummyExpIds = ['exp-rg-001', 'exp-rg-002', 'exp-rg-003', 'exp-rg-2026-001', 'exp-rg-2026-002', 'exp-rg-2026-003'];
-    $dummyPoIds = ['po-rec-11008'];
+    $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003'];
+    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681'];
+    $dummyDnIds = ['dn-rg-001'];
+    $dummyExpIds = ['exp-rg-001', 'exp-rg-002', 'exp-rg-003'];
+    $dummyPoIds = [];
     $dummyDocIds = ['doc-001', 'doc-002', 'doc-003', 'doc-004'];
-    $dummyVendorIds = ['vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004'];
+    $dummyVendorIds = ['vend-001', 'vend-002', 'vend-003', 'vend-004'];
     $dummyCustIds = ['cust-004', 'cust-005', 'cust-kgc-alias'];
     $dummyInvIds = [];
     $dummyRecIds = ['rec-mvdvmilf', 'rec-rv-44026'];
@@ -642,13 +642,12 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
     if ($pdo) {
         try {
-            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003') OR bill_no IN ('BILL-RG-2026-001', 'BILL-RG-2026-002', 'BILL-RG-2026-003')");
-            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681') OR voucher_no IN ('PV-RG-2026-001', 'PV-RG-2026-002', 'PV-RG-2026-003')");
-            $pdo->exec("DELETE FROM finance_debit_notes WHERE id IN ('dn-rg-001') OR debit_note_no IN ('DN-RG-2026-001')");
-            $pdo->exec("DELETE FROM finance_expenses WHERE id IN ('exp-rg-001', 'exp-rg-002', 'exp-rg-003') OR expense_no IN ('EXP-RG-2026-001', 'EXP-RG-2026-002', 'EXP-RG-2026-003')");
-            $pdo->exec("DELETE FROM finance_purchase_orders WHERE id = 'po-rec-11008' OR po_no = 'PO-REC-11008'");
+            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003')");
+            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681')");
+            $pdo->exec("DELETE FROM finance_debit_notes WHERE id IN ('dn-rg-001')");
+            $pdo->exec("DELETE FROM finance_expenses WHERE id IN ('exp-rg-001', 'exp-rg-002', 'exp-rg-003')");
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
-            $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae', 'vend-001', 'vend-002', 'vend-003', 'vend-004')");
+            $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-001', 'vend-002', 'vend-003', 'vend-004')");
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004', 'cust-005', 'cust-kgc-alias')");
             $pdo->exec("DELETE FROM finance_customer_receipts WHERE id IN ('rec-mvdvmilf') OR receipt_no IN ('REC-RV-44026')");
             $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
@@ -2838,6 +2837,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'create_vendor':
+        case 'update_vendor':
             $vnd = $body['vendor'] ?? [];
             if (!empty($vnd) && !empty($vnd['name'])) {
                 if (empty($vnd['id'])) {
