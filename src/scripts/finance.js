@@ -292,15 +292,19 @@ class FinanceApp {
       if (key === 'invoices') {
         incomingArr.forEach(inv => {
           if (inv && (inv.customer_name || '').includes('TOP ROCK')) {
+            inv.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
             inv.customer_trn = '100360644700003';
             inv.trn = '100360644700003';
             inv.tax_number = '100360644700003';
             inv.contact_person = 'Mr. Shahil';
             inv.email = 'procurementofficer@toprockinteriors.com';
+            inv.phone = '+971 502131834';
             inv.payment_terms = 0;
             inv.payment_terms_label = 'Due on Receipt';
             inv.customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
             inv.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+            inv.place_of_supply = 'Dubai, UAE';
+            if (!inv.po_reference) inv.po_reference = 'TR-PO-2026-551';
           }
         });
       }
@@ -308,8 +312,11 @@ class FinanceApp {
       if (key === 'customer_receipts') {
         incomingArr.forEach(r => {
           if (r && (r.customer_name || '').includes('TOP ROCK')) {
+            r.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
             r.contact_person = 'Mr. Shahil';
             r.email = 'procurementofficer@toprockinteriors.com';
+            r.phone = '+971 502131834';
+            r.customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
           }
         });
       }
@@ -2439,7 +2446,7 @@ class FinanceApp {
                   </svg>
                 </div>
                 <div class="fin-accordion-body">
-                  <div class="fin-nav-subitem" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-44049')">
+                  <div class="fin-nav-subitem" onclick="window.finApp.openInvoicePrintModal()">
                     <span class="fin-subitem-text">Tax Invoice (Sample)</span>
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
@@ -3135,8 +3142,8 @@ class FinanceApp {
           </p>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:0.6rem;">
-          <button type="button" class="fin-btn-quick primary" style="background:#00a699; border-color:#00a699;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-44049')">
-            📄 Tax Invoice (REC-RG-INV-44049)
+          <button type="button" class="fin-btn-quick primary" style="background:#00a699; border-color:#00a699;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44015')">
+            📄 Tax Invoice (REC-RG-INV-44015)
           </button>
           <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
             💳 Receipt Voucher (REC-RV-44025)
@@ -3363,7 +3370,7 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete billing register with GST breakup, payment allocation tracking, and PDF generation.</p>
           </div>
           <div class="fin-panel-actions">
-            <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-44049')">
+            <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44015')">
               📄 Sample Tax Invoice
             </button>
             ${this.hasPermission('create_invoice') ? `
@@ -6025,85 +6032,44 @@ class FinanceApp {
                 ${items.map(it => `<option value="${it.name}">Catalog: ${it.name} (${it.uom || 'SQM'})</option>`).join('')}
               </datalist>
 
-              <!-- Whole-Invoice Payment Stage Bar -->
-              <div class="fin-inv-stage-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
-                  <div>
-                    <div style="font-weight:700; font-size:0.88rem; color:#f8fafc; display:flex; align-items:center; gap:0.45rem;">
-                      <span>💳</span>
-                      <span>Payment Claim Stage (Whole Invoice)</span>
-                      <span style="font-size:0.68rem; font-weight:600; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(56,189,248,0.3);">Invoice-Level Claim</span>
-                    </div>
-                    <div style="font-size:0.73rem; color:#94a3b8; margin-top:2px;">
-                      Select payment milestone claim for the whole invoice (advance, progressive, final) or bill standard 100%
-                    </div>
-                  </div>
+              <!-- Payment Claim Option (Advance, Progressive, Complete) - No whole invoice 10%/20% buttons -->
+              <div class="fin-payment-claim-box" style="margin: 1.15rem 0 1.25rem 0; padding: 1rem 1.25rem; background: rgba(15,23,42,0.85); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                  <label style="font-size:0.85rem; font-weight:700; color:#f8fafc; display:flex; align-items:center; gap:0.5rem; margin:0;">
+                    <span>📋</span> Payment Claim Type
+                    <span style="font-size:0.75rem; color:#94a3b8; font-weight:normal;">(Displayed as headline banner on generated invoice)</span>
+                  </label>
+                  <span id="fin-claim-type-indicator" style="font-size:0.78rem; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); padding:3px 10px; border-radius:4px; border:1px solid rgba(56,189,248,0.25);">
+                    ${(initialPaymentStage === 'advance') ? 'Advance Payment Active' : ((initialPaymentStage === 'complete' || initialPaymentStage === 'final') ? 'Complete Payment Active' : 'Progressive Payment Active')}
+                  </span>
                 </div>
-
-                <div class="fin-stage-pill-group">
-                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'standard' ? 'active' : ''}" data-stage="standard" id="stage-opt-standard">
-                    <span class="stage-icon">📄</span>
-                    <div class="stage-text">
-                      <strong style="display:block; font-size:0.82rem;">Standard (100%)</strong>
-                      <span style="font-size:0.68rem; opacity:0.8;">Full BOQ Items</span>
+                <div class="fin-claim-type-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem;">
+                  <button type="button" class="fin-claim-btn ${initialPaymentStage === 'advance' ? 'active' : ''}" data-stage="advance">
+                    <span style="font-size:1.25rem;">⚡</span>
+                    <div>
+                      <div style="font-weight:700; font-size:0.88rem; color:#f8fafc;">Advance Payment</div>
+                      <div style="font-size:0.72rem; color:#94a3b8;">Mobilization Claim</div>
                     </div>
                   </button>
-                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'advance' ? 'active' : ''}" data-stage="advance" id="stage-opt-advance">
-                    <span class="stage-icon">⚡</span>
-                    <div class="stage-text">
-                      <strong style="display:block; font-size:0.82rem;">Advance Payment</strong>
-                      <span style="font-size:0.68rem; opacity:0.8;">Mobilization Claim</span>
+                  <button type="button" class="fin-claim-btn ${(!initialPaymentStage || initialPaymentStage === 'progressive' || initialPaymentStage === 'standard') ? 'active' : ''}" data-stage="progressive">
+                    <span style="font-size:1.25rem;">📊</span>
+                    <div>
+                      <div style="font-weight:700; font-size:0.88rem; color:#f8fafc;">Progressive Payment</div>
+                      <div style="font-size:0.72rem; color:#94a3b8;">Milestone / RA Bill</div>
                     </div>
                   </button>
-                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'progressive' ? 'active' : ''}" data-stage="progressive" id="stage-opt-progressive">
-                    <span class="stage-icon">📊</span>
-                    <div class="stage-text">
-                      <strong style="display:block; font-size:0.82rem;">Progressive Payment</strong>
-                      <span style="font-size:0.68rem; opacity:0.8;">Milestone / RA Bill</span>
-                    </div>
-                  </button>
-                  <button type="button" class="fin-stage-pill-opt ${initialPaymentStage === 'final' ? 'active' : ''}" data-stage="final" id="stage-opt-final">
-                    <span class="stage-icon">🏁</span>
-                    <div class="stage-text">
-                      <strong style="display:block; font-size:0.82rem;">Final Payment</strong>
-                      <span style="font-size:0.68rem; opacity:0.8;">Completion / Retention</span>
+                  <button type="button" class="fin-claim-btn ${initialPaymentStage === 'complete' || initialPaymentStage === 'final' ? 'active' : ''}" data-stage="complete">
+                    <span style="font-size:1.25rem;">🏁</span>
+                    <div>
+                      <div style="font-weight:700; font-size:0.88rem; color:#f8fafc;">Complete Payment</div>
+                      <div style="font-size:0.72rem; color:#94a3b8;">Final Completion / Retention</div>
                     </div>
                   </button>
                 </div>
-
-                <!-- Claim Settings Drawer -->
-                <div id="fin-stage-claim-drawer" style="display:${initialPaymentStage !== 'standard' ? 'block' : 'none'}; margin-top:0.85rem; background:rgba(11,17,30,0.65); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.85rem 1rem;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
-                    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-                      <label style="font-size:0.78rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.04em;">Claim Percentage:</label>
-                      <div style="display:flex; align-items:center; gap:0.35rem;">
-                        <input type="number" id="inv-stage-pct-input" value="${initialClaimPct || 20}" min="0.01" max="100" step="any" style="width:65px; padding:3px 6px; font-weight:800; font-size:0.95rem; text-align:center; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid #38bdf8; border-radius:5px;">
-                        <span style="font-weight:800; color:#38bdf8; font-size:1rem;">%</span>
-                      </div>
-                      <div class="fin-pct-quick-pills" style="display:flex; gap:0.35rem;">
-                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 10 ? 'active' : ''}" data-pct="10">10%</button>
-                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 20 ? 'active' : ''}" data-pct="20">20%</button>
-                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 30 ? 'active' : ''}" data-pct="30">30%</button>
-                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 50 ? 'active' : ''}" data-pct="50">50%</button>
-                        <button type="button" class="fin-pct-pill-btn ${initialClaimPct == 100 ? 'active' : ''}" data-pct="100">100%</button>
-                      </div>
-                    </div>
-                    <div style="font-size:0.74rem; color:#94a3b8; font-family:monospace;" id="inv-stage-math-hint">
-                      Contract Base: AED 0.00 &times; ${initialClaimPct}% = <strong style="color:#ffffff;">AED 0.00</strong> Taxable
-                    </div>
-                  </div>
-                  <!-- Printed Invoice Headline Preview -->
-                  <div style="margin-top:0.6rem; padding:0.5rem 0.75rem; background:rgba(30,41,59,0.85); border-radius:6px; border:1px dashed rgba(56,189,248,0.3); font-size:0.78rem; color:#cbd5e1; display:flex; align-items:center; gap:0.5rem;">
-                    <span style="color:#38bdf8; font-size:0.9rem;">📌</span>
-                    <span style="font-weight:600; color:#94a3b8; white-space:nowrap;">Printed Headline:</span>
-                    <span id="inv-stage-headline-preview" style="font-weight:700; color:#f8fafc; font-family:monospace;">
-                      ${initialClaimPct}% ${(initialPaymentStage || 'standard').toUpperCase()} PAYMENT${initialPoRef ? ` FOR PO NO. ${initialPoRef}` : ''}${initialPrj || initialSubject || initialCustName ? ` - ${initialPrj || initialSubject || initialCustName}` : ''}
-                    </span>
-                  </div>
-                </div>
+                <input type="hidden" id="inv-payment-claim-type" value="${initialPaymentStage || 'progressive'}">
               </div>
 
-              <!-- Item Table (Screenshot 1 Matching with Rayan Luxury Dark Theme) -->
+              <!-- Item Table (Screenshot 2 Matching with Rayan Luxury Dark Theme) -->
               <div class="fin-item-table-container">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1.25rem; background:rgba(15,23,42,0.95); border-bottom:1px solid rgba(56,189,248,0.22);">
                   <div style="font-size:1.05rem; font-weight:700; color:#f8fafc; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; display:flex; align-items:center; gap:0.5rem;">
@@ -6125,10 +6091,10 @@ class FinanceApp {
                       <tr>
                         <th style="padding:0.75rem 0.5rem; width:28px; text-align:center;"></th>
                         <th style="padding:0.75rem 0.75rem; text-align:left; min-width:280px;">ITEM DETAILS</th>
-                        <th style="padding:0.75rem 0.75rem; text-align:right; width:110px;">QUANTITY</th>
-                        <th style="padding:0.75rem 0.75rem; text-align:right; width:110px;">RATE ⊞</th>
-                        <th style="padding:0.75rem 0.75rem; text-align:center; width:125px;">DISCOUNT</th>
-                        <th style="padding:0.75rem 0.75rem; text-align:left; width:180px;">TAX</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:right; width:100px;">QUANTITY</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:right; width:120px;">PROJECT PRICE ⊞</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:center; width:95px;">WD %</th>
+                        <th style="padding:0.75rem 0.75rem; text-align:left; width:170px;">TAX</th>
                         <th style="padding:0.75rem 0.75rem; text-align:right; width:130px;">AMOUNT</th>
                         <th style="padding:0.75rem 0.5rem; width:36px; text-align:center;"></th>
                       </tr>
@@ -6158,25 +6124,13 @@ class FinanceApp {
                   <div style="font-size:0.72rem; color:#64748b; margin-top:0.3rem;">Will be displayed on the invoice</div>
                 </div>
 
-                <!-- Summary Box (Right) matching Screenshot 1 with Rayan Dark Executive Theme -->
+                <!-- Summary Box (Right) matching Screenshot 2 with Rayan Dark Executive Theme -->
                 <div class="fin-summary-card-s1">
-                  <!-- Contract Base breakdown when advance/progressive/final is active -->
-                  <div id="fin-s1-stage-summary-wrap" style="display:${initialPaymentStage !== 'standard' ? 'block' : 'none'}; padding-bottom:0.6rem; margin-bottom:0.6rem; border-bottom:1px dashed rgba(56,189,248,0.25);">
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#94a3b8; margin-bottom:3px;">
-                      <span>Total Contract Items Value</span>
-                      <span id="fin-s1-contract-base" style="font-weight:600; font-family:monospace; color:#cbd5e1;">0.00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#38bdf8; font-weight:600;">
-                      <span id="fin-s1-stage-badge">${initialClaimPct}% ${(initialPaymentStage || 'progressive').toUpperCase()} PAYMENT</span>
-                      <span id="fin-s1-stage-rate-math" style="font-family:monospace;">(${initialClaimPct}% Claim)</span>
-                    </div>
-                  </div>
-
                   <!-- Sub Total line -->
                   <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; font-size:0.9rem;">
                     <div>
                       <div style="font-weight:600; color:#cbd5e1;">Sub Total</div>
-                      <div style="font-size:0.68rem; color:#64748b;" id="fin-s1-tax-inc-label">(Tax Inclusive)</div>
+                      <div style="font-size:0.68rem; color:#38bdf8; cursor:pointer; user-select:none;" id="fin-s1-tax-inc-label" title="Click to toggle Tax Inclusive / Tax Exclusive">(Tax Inclusive)</div>
                     </div>
                     <span id="inv-calc-taxable" style="font-weight:700; font-family:monospace; font-size:1.02rem; color:#f8fafc;">0.00</span>
                   </div>
@@ -6634,11 +6588,15 @@ class FinanceApp {
       const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
 
       const itemName = defaultItem ? (defaultItem.name || defaultItem.description || '') : '';
-      const uom = defaultItem ? (defaultItem.uom || defaultItem.unit || 'SQM') : 'SQM';
+      const uom = defaultItem ? (defaultItem.uom || defaultItem.unit || 'Sqm') : 'Sqm';
       const qty = defaultItem && defaultItem.qty !== undefined ? defaultItem.qty : defaultQty;
       const rate = defaultItem ? (defaultItem.sales_price !== undefined ? defaultItem.sales_price : (defaultItem.rate || 0)) : 0;
-      const discountVal = defaultItem && defaultItem.discount_val !== undefined ? defaultItem.discount_val : (defaultItem?.discount || 0);
-      const discountType = defaultItem && defaultItem.discount_type ? defaultItem.discount_type : 'pct';
+      let wdPct = 100;
+      if (defaultItem) {
+        if (defaultItem.wd_pct !== undefined) wdPct = defaultItem.wd_pct;
+        else if (defaultItem.progress_pct !== undefined) wdPct = defaultItem.progress_pct;
+        else if (defaultItem.discount_val !== undefined) wdPct = defaultItem.discount_val === 0 ? 100 : (100 - defaultItem.discount_val);
+      }
       const gstRate = defaultItem && defaultItem.gst_rate !== undefined ? defaultItem.gst_rate : (isTrn ? 5 : 18);
 
       tr.innerHTML = `
@@ -6650,41 +6608,38 @@ class FinanceApp {
           <div class="fin-s1-unit-code-row">
             <span>Unit Code:</span>
             <select class="fin-s1-uom-select row-uom">
-              <option value="SQM" ${uom === 'SQM' ? 'selected' : ''}>SQM</option>
-              <option value="SQFT" ${uom === 'SQFT' ? 'selected' : ''}>SQFT</option>
-              <option value="MTR" ${uom === 'MTR' ? 'selected' : ''}>MTR</option>
-              <option value="RMT" ${uom === 'RMT' ? 'selected' : ''}>RMT</option>
-              <option value="PCS" ${uom === 'PCS' ? 'selected' : ''}>PCS</option>
-              <option value="NOS" ${uom === 'NOS' ? 'selected' : ''}>NOS</option>
-              <option value="LSUM" ${uom === 'LSUM' ? 'selected' : ''}>LSUM</option>
-              <option value="JOB" ${uom === 'JOB' ? 'selected' : ''}>JOB</option>
-              <option value="CUM" ${uom === 'CUM' ? 'selected' : ''}>CUM</option>
-              <option value="KG" ${uom === 'KG' ? 'selected' : ''}>KG</option>
-              <option value="MT" ${uom === 'MT' ? 'selected' : ''}>MT</option>
-              <option value="BAG" ${uom === 'BAG' ? 'selected' : ''}>BAG</option>
-              <option value="SET" ${uom === 'SET' ? 'selected' : ''}>SET</option>
-              <option value="DAY" ${uom === 'DAY' ? 'selected' : ''}>DAY</option>
-              <option value="MTH" ${uom === 'MTH' ? 'selected' : ''}>MTH</option>
+              <option value="Sqm" ${uom === 'Sqm' || uom === 'SQM' ? 'selected' : ''}>Sqm</option>
+              <option value="Sqft" ${uom === 'Sqft' || uom === 'SQFT' ? 'selected' : ''}>Sqft</option>
+              <option value="Mtr" ${uom === 'Mtr' || uom === 'MTR' ? 'selected' : ''}>Mtr</option>
+              <option value="Rmt" ${uom === 'Rmt' || uom === 'RMT' ? 'selected' : ''}>Rmt</option>
+              <option value="Pcs" ${uom === 'Pcs' || uom === 'PCS' ? 'selected' : ''}>Pcs</option>
+              <option value="Nos" ${uom === 'Nos' || uom === 'NOS' ? 'selected' : ''}>Nos</option>
+              <option value="Lsum" ${uom === 'Lsum' || uom === 'LSUM' ? 'selected' : ''}>Lsum</option>
+              <option value="Job" ${uom === 'Job' || uom === 'JOB' ? 'selected' : ''}>Job</option>
+              <option value="Cum" ${uom === 'Cum' || uom === 'CUM' ? 'selected' : ''}>Cum</option>
+              <option value="Kg" ${uom === 'Kg' || uom === 'KG' ? 'selected' : ''}>Kg</option>
+              <option value="Mt" ${uom === 'Mt' || uom === 'MT' ? 'selected' : ''}>Mt</option>
+              <option value="Bag" ${uom === 'Bag' || uom === 'BAG' ? 'selected' : ''}>Bag</option>
+              <option value="Set" ${uom === 'Set' || uom === 'SET' ? 'selected' : ''}>Set</option>
+              <option value="Day" ${uom === 'Day' || uom === 'DAY' ? 'selected' : ''}>Day</option>
+              <option value="Mth" ${uom === 'Mth' || uom === 'MTH' ? 'selected' : ''}>Mth</option>
             </select>
             <span style="color:#2563eb; font-size:0.75rem; cursor:pointer;" title="Click to update unit code">✎</span>
           </div>
         </td>
-        <td style="padding:0.75rem 0.65rem; width:110px; vertical-align:top; text-align:right;">
+        <td style="padding:0.75rem 0.65rem; width:100px; vertical-align:top; text-align:right;">
           <input type="number" class="fin-s1-qty row-qty" value="${qty}" min="0" step="any" placeholder="1.00">
         </td>
-        <td style="padding:0.75rem 0.65rem; width:110px; vertical-align:top; text-align:right;">
+        <td style="padding:0.75rem 0.65rem; width:120px; vertical-align:top; text-align:right;">
           <input type="number" class="fin-s1-rate row-rate" value="${rate > 0 ? rate : ''}" min="0" step="any" placeholder="0.00">
         </td>
-        <td style="padding:0.75rem 0.65rem; width:125px; vertical-align:top; text-align:center;">
-          <div style="display:flex; align-items:center; gap:3px; justify-content:center;">
-            <input type="number" class="fin-s1-discount-val row-discount-val" value="${discountVal !== undefined ? discountVal : 0}" min="0" step="any" placeholder="0">
-            <select class="fin-s1-discount-type row-discount-type">
-              <option value="pct" ${discountType === 'pct' ? 'selected' : ''}>% ▾</option>
-              <option value="curr" ${discountType === 'curr' ? 'selected' : ''}>${currentCurrency === 'AED' ? 'AED' : '₹'} ▾</option>
-            </select>
+        <td style="padding:0.75rem 0.65rem; width:95px; vertical-align:top; text-align:center;">
+          <div style="display:flex; align-items:center; gap:2px; justify-content:center;">
+            <input type="number" class="fin-s1-discount-val row-discount-val row-wd-pct" value="${wdPct !== undefined ? wdPct : 100}" min="0" max="100" step="any" placeholder="100" style="width:52px; text-align:center; padding:5px 4px;">
+            <span style="color:#38bdf8; font-weight:700; font-size:0.78rem;">%</span>
           </div>
         </td>
-        <td style="padding:0.75rem 0.65rem; width:180px; vertical-align:top;">
+        <td style="padding:0.75rem 0.65rem; width:170px; vertical-align:top;">
           <div style="display:flex; align-items:center; gap:4px;">
             <select class="fin-s1-tax-select row-gst">
               ${isTrn ? `
@@ -6727,10 +6682,10 @@ class FinanceApp {
         descInp.oninput = () => {
           const val = descInp.value.trim().toLowerCase();
           const demoCatalog = [
-            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', rate: 56, uom: 'SQM', discount: 50 },
-            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', rate: 51, uom: 'SQM', discount: 50 },
-            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', rate: 11, uom: 'SQM', discount: 0 },
-            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', rate: 40, uom: 'SQM', discount: 50 },
+            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', rate: 56, uom: 'Sqm', wd_pct: 50 },
+            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', rate: 51, uom: 'Sqm', wd_pct: 50 },
+            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', rate: 11, uom: 'Sqm', wd_pct: 100 },
+            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', rate: 40, uom: 'Sqm', wd_pct: 50 },
             ...(items || [])
           ];
           const found = demoCatalog.find(it => (it.name || '').toLowerCase() === val);
@@ -6738,13 +6693,13 @@ class FinanceApp {
             if (found.rate) tr.querySelector('.row-rate').value = found.rate;
             if (found.sales_price) tr.querySelector('.row-rate').value = found.sales_price;
             if (found.uom) tr.querySelector('.row-uom').value = found.uom;
-            if (found.discount !== undefined) tr.querySelector('.row-discount-val').value = found.discount;
+            if (found.wd_pct !== undefined) tr.querySelector('.row-wd-pct').value = found.wd_pct;
           }
           recalculateInvoice();
         };
       }
 
-      tr.querySelectorAll('.row-desc, .row-qty, .row-rate, .row-discount-val, .row-discount-type, .row-gst, .row-uom').forEach(inp => {
+      tr.querySelectorAll('.row-desc, .row-qty, .row-rate, .row-wd-pct, .row-gst, .row-uom').forEach(inp => {
         inp.oninput = () => recalculateInvoice();
         inp.onchange = () => recalculateInvoice();
       });
@@ -6764,7 +6719,6 @@ class FinanceApp {
 
       let totalContractBase = 0;
       let totalGross = 0;
-      let totalDiscount = 0;
       let totalRowTax = 0;
 
       tbody.querySelectorAll('tr:not(.inv-items-empty-row)').forEach(tr => {
@@ -6772,85 +6726,31 @@ class FinanceApp {
         const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
         const gross = qty * rate;
 
-        const discountVal = Number(tr.querySelector('.row-discount-val')?.value) || 0;
-        const discountType = tr.querySelector('.row-discount-type')?.value || 'pct';
-        const discountAmt = discountType === 'pct' ? (gross * (discountVal / 100)) : discountVal;
+        const wdInp = tr.querySelector('.row-wd-pct');
+        const wdPct = (wdInp && wdInp.value !== '') ? Number(wdInp.value) : 100;
+        const lineInvoiceAmount = qty * rate * (wdPct / 100);
 
-        const netTaxable = Math.max(0, gross - discountAmt);
         const taxRateVal = tr.querySelector('.row-gst')?.value;
         const taxRate = taxRateVal === 'exempt' ? 0 : (Number(taxRateVal) || 0);
-        const rowTax = netTaxable * (taxRate / 100);
+        const rowTax = lineInvoiceAmount * (taxRate / 100);
 
         const rowAmountEl = tr.querySelector('.row-total');
         if (rowAmountEl) {
-          rowAmountEl.textContent = netTaxable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          rowAmountEl.textContent = lineInvoiceAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         totalGross += gross;
-        totalDiscount += discountAmt;
-        totalContractBase += netTaxable;
+        totalContractBase += lineInvoiceAmount;
         totalRowTax += rowTax;
       });
 
-      const currentStage = window._currentInvoicePaymentStage || 'standard';
-      const stagePctInp = document.getElementById('inv-stage-pct-input');
-      const claimPct = Number(stagePctInp?.value) || 20;
+      const invoiceSubtotal = totalContractBase;
+      const invoiceVat = totalRowTax;
+      const invoiceGrandTotal = invoiceSubtotal + invoiceVat;
 
-      let invoiceTaxableSubtotal = 0;
-      let invoiceVat = 0;
-      let invoiceGrandTotal = 0;
-
-      const stageDrawer = document.getElementById('fin-stage-claim-drawer');
-      const stageSummaryWrap = document.getElementById('fin-s1-stage-summary-wrap');
-      const headlinePreview = document.getElementById('inv-stage-headline-preview');
-      const mathHint = document.getElementById('inv-stage-math-hint');
-
-      const poRef = document.getElementById('inv-po-ref')?.value?.trim() || '';
-      const prj = document.getElementById('inv-project-input')?.value?.trim() || '';
-      const subj = document.getElementById('inv-subject')?.value?.trim() || '';
-      const custName = document.getElementById('inv-cust-input')?.value?.trim() || '';
-      const scopeDesc = prj || subj || custName || '';
-
-      if (currentStage === 'standard') {
-        if (stageDrawer) stageDrawer.style.display = 'none';
-        if (stageSummaryWrap) stageSummaryWrap.style.display = 'none';
-
-        invoiceTaxableSubtotal = totalContractBase;
-        invoiceVat = totalRowTax;
-        invoiceGrandTotal = invoiceTaxableSubtotal + invoiceVat;
-      } else {
-        if (stageDrawer) stageDrawer.style.display = 'block';
-        if (stageSummaryWrap) stageSummaryWrap.style.display = 'block';
-
-        invoiceTaxableSubtotal = totalContractBase * (claimPct / 100);
-        invoiceVat = invoiceTaxableSubtotal * 0.05; // 5% UAE Standard VAT
-        invoiceGrandTotal = invoiceTaxableSubtotal + invoiceVat;
-
-        const stageLabel = currentStage === 'advance' ? 'Advance Payment' : (currentStage === 'final' ? 'Final Payment' : 'Progressive Payment');
-
-        if (stageSummaryWrap) {
-          const baseEl = document.getElementById('fin-s1-contract-base');
-          if (baseEl) baseEl.textContent = `${currSym}${totalContractBase.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-          const badgeEl = document.getElementById('fin-s1-stage-badge');
-          if (badgeEl) badgeEl.textContent = `${claimPct}% ${stageLabel.toUpperCase()}`;
-          const mathEl = document.getElementById('fin-s1-stage-rate-math');
-          if (mathEl) mathEl.textContent = `(${claimPct}% Claim)`;
-        }
-
-        if (mathHint) {
-          mathHint.innerHTML = `Contract Base: ${currSym}${totalContractBase.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &times; ${claimPct}% = <strong style="color:#ffffff;">${currSym}${invoiceTaxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> Taxable`;
-        }
-
-        if (headlinePreview) {
-          const poPart = poRef ? ` FOR PO NO. ${poRef}` : '';
-          const scopePart = scopeDesc ? ` - ${scopeDesc}` : '';
-          headlinePreview.textContent = `${claimPct}% ${currentStage.toUpperCase()} PAYMENT${poPart}${scopePart}`;
-        }
-      }
-
-      // Update Summary Box right card matching Screenshot 1
+      // Update Summary Box right card matching Screenshot
       const taxableEl = document.getElementById('inv-calc-taxable');
-      if (taxableEl) taxableEl.textContent = invoiceTaxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (taxableEl) taxableEl.textContent = invoiceSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       const vatEl = document.getElementById('inv-calc-vat');
       if (vatEl) vatEl.textContent = invoiceVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -6864,39 +6764,26 @@ class FinanceApp {
       checkEmptyTbody();
     };
 
-    // Setup Whole-Invoice Payment Stage Pills & Claim Drawer
-    const setupPaymentStageControls = () => {
-      const pillOpts = document.querySelectorAll('.fin-stage-pill-opt');
-      pillOpts.forEach(pill => {
-        pill.onclick = (e) => {
-          e.preventDefault();
-          pillOpts.forEach(p => p.classList.remove('active'));
-          pill.classList.add('active');
-          window._currentInvoicePaymentStage = pill.getAttribute('data-stage') || 'standard';
-          recalculateInvoice();
-        };
-      });
-
-      const pctBtns = document.querySelectorAll('.fin-pct-pill-btn');
-      pctBtns.forEach(btn => {
+    // Item Table Controls & Claim Type Selector
+    const setupItemTableControls = () => {
+      // Claim Type selector buttons (Advance, Progressive, Complete)
+      document.querySelectorAll('.fin-claim-btn').forEach(btn => {
         btn.onclick = (e) => {
           e.preventDefault();
-          pctBtns.forEach(b => b.classList.remove('active'));
+          const stage = btn.getAttribute('data-stage') || 'progressive';
+          document.querySelectorAll('.fin-claim-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          const pct = btn.getAttribute('data-pct');
-          const inp = document.getElementById('inv-stage-pct-input');
-          if (inp) {
-            inp.value = pct;
-            recalculateInvoice();
+          const hiddenInp = document.getElementById('inv-payment-claim-type');
+          if (hiddenInp) hiddenInp.value = stage;
+          window._currentInvoicePaymentStage = stage;
+          const indicator = document.getElementById('fin-claim-type-indicator');
+          if (indicator) {
+            if (stage === 'advance') indicator.textContent = 'Advance Payment Active';
+            else if (stage === 'complete') indicator.textContent = 'Complete Payment Active';
+            else indicator.textContent = 'Progressive Payment Active';
           }
         };
       });
-
-      const pctInp = document.getElementById('inv-stage-pct-input');
-      if (pctInp) {
-        pctInp.oninput = () => recalculateInvoice();
-        pctInp.onchange = () => recalculateInvoice();
-      }
 
       const poRefEl = document.getElementById('inv-po-ref');
       if (poRefEl) {
@@ -6917,16 +6804,16 @@ class FinanceApp {
         };
       }
 
-      // Add Items in Bulk button (loads Screenshot 1 sample items or bulk prompt)
+      // Add Items in Bulk button (loads Screenshot items)
       const bulkBtn = document.getElementById('inv-add-bulk-btn');
       if (bulkBtn) {
         bulkBtn.onclick = (e) => {
           e.preventDefault();
           const demoItems = [
-            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
-            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
-            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, discount_val: 0, discount_type: 'pct', uom: 'SQM', gst_rate: 5 },
-            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, discount_val: 50, discount_type: 'pct', uom: 'SQM', gst_rate: 5 }
+            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
+            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
           ];
           tbody.innerHTML = '';
           demoItems.forEach(it => addRow(it));
@@ -6963,7 +6850,7 @@ class FinanceApp {
       }
     };
 
-    setupPaymentStageControls();
+    setupItemTableControls();
 
     // Billed Item/s List Modal (Vyapar Style)
     const openBilledItemsModal = () => {
@@ -6982,8 +6869,8 @@ class FinanceApp {
 
       if (!existingItems.length) {
         existingItems.push(
-          { name: '50% PROGRESSIVE MILESTONE CLAIM - CIVIL & INTERIOR FIT-OUT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: '%' },
-          { name: '20% ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: '%' }
+          { name: 'PROGRESSIVE PAYMENT - CIVIL & INTERIOR FIT-OUT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' },
+          { name: 'ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' }
         );
       }
 
@@ -7782,7 +7669,35 @@ class FinanceApp {
       // Auto-fill PO Reference
       const poInp = document.getElementById('inv-po-ref');
       if (poInp) {
-        poInp.value = clientPoRef;
+        poInp.value = clientPoRef || (clientName.toLowerCase().includes('top rock') ? 'PODSUB-2026/0810 & 0858' : '');
+      }
+
+      // If Top Rock client is selected and table has no active items, auto-fill Dubai Police Academy items
+      const isTopRockClient = (clientName || '').toLowerCase().includes('top rock') || clientTrn === '100360644700003';
+      if (isTopRockClient) {
+        if (prjInput && (!prjInput.value || prjInput.value === 'General Corporate Billing')) {
+          prjInput.value = 'THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI, UAE';
+          prjInput.setAttribute('data-project-id', 'prj-toprock-police-01');
+        }
+        // Set claim type to Progressive Payment
+        const claimTypeInp = document.getElementById('inv-payment-claim-type');
+        if (claimTypeInp) claimTypeInp.value = 'progressive';
+        document.querySelectorAll('.fin-claim-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-stage') === 'progressive');
+        });
+        const claimInd = document.getElementById('fin-claim-type-indicator');
+        if (claimInd) claimInd.textContent = 'Progressive Payment Active';
+
+        if (!tbody.children.length || tbody.querySelector('.inv-items-empty-row')) {
+          tbody.innerHTML = '';
+          const topRockItems = [
+            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
+            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
+          ];
+          topRockItems.forEach(it => addRow(it));
+        }
       }
 
       if (custBadge) {
@@ -8376,13 +8291,11 @@ class FinanceApp {
       }
 
       // Collect line items
-      // Collect payment stage & line items
-      const paymentStage = window._currentInvoicePaymentStage || 'standard';
-      const claimPct = Number(document.getElementById('inv-stage-pct-input')?.value) || 20;
-      const claimHeadline = document.getElementById('inv-stage-headline-preview')?.textContent?.trim() || '';
-
+      const isTaxInc = window._currentInvoiceTaxInclusive !== false;
       const lineItems = [];
-      let totalContractBase = 0;
+      let totalGross = 0;
+      let totalDiscount = 0;
+      let totalNet = 0;
       let totalRowTax = 0;
       let cgstTotal = 0;
       let sgstTotal = 0;
@@ -8391,33 +8304,36 @@ class FinanceApp {
       const pos = (posVal || '').toLowerCase();
       const isInterState = !pos.includes('maharashtra') && !pos.includes('27');
 
+      const paymentStage = document.getElementById('inv-payment-claim-type')?.value || window._currentInvoicePaymentStage || 'progressive';
+      const paymentStageLabel = paymentStage === 'advance' ? 'Advance Payment' : (paymentStage === 'complete' || paymentStage === 'final' ? 'Complete Payment' : 'Progressive Payment');
+
       rows.forEach((tr, idx) => {
         const desc = tr.querySelector('.row-desc')?.value?.trim() || 'Work Item';
         const qty = Number(tr.querySelector('.row-qty')?.value) || 1;
-        const uom = (tr.querySelector('.row-uom')?.value || '').trim().toUpperCase() || 'SQM';
+        const uom = (tr.querySelector('.row-uom')?.value || '').trim() || 'Sqm';
         const unitPrice = Number(tr.querySelector('.row-rate')?.value) || 0;
-        const discountVal = Number(tr.querySelector('.row-discount-val')?.value) || 0;
-        const discountType = tr.querySelector('.row-discount-type')?.value || 'pct';
+        const wdInp = tr.querySelector('.row-wd-pct');
+        const wdPct = (wdInp && wdInp.value !== '') ? Number(wdInp.value) : 100;
         const taxRate = tr.querySelector('.row-gst')?.value === 'exempt' ? 0 : (Number(tr.querySelector('.row-gst')?.value) || (isTrn ? 5 : 18));
 
         const gross = qty * unitPrice;
-        const discountAmt = discountType === 'pct' ? (gross * (discountVal / 100)) : discountVal;
-        const taxable = Math.max(0, gross - discountAmt);
-        const tax = taxable * (taxRate / 100);
-        const total = taxable + tax;
+        const lineInvoiceAmount = qty * unitPrice * (wdPct / 100);
+        const rowTax = lineInvoiceAmount * (taxRate / 100);
+        const rowTotal = lineInvoiceAmount;
 
         let cgst = 0, sgst = 0, igst = 0;
         if (!isTrn) {
           if (isInterState) {
-            igst = tax;
+            igst = rowTax;
           } else {
-            cgst = tax / 2;
-            sgst = tax / 2;
+            cgst = rowTax / 2;
+            sgst = rowTax / 2;
           }
         }
 
-        totalContractBase += taxable;
-        totalRowTax += tax;
+        totalGross += gross;
+        totalNet += lineInvoiceAmount;
+        totalRowTax += rowTax;
         cgstTotal += cgst;
         sgstTotal += sgst;
         igstTotal += igst;
@@ -8432,45 +8348,35 @@ class FinanceApp {
           unit: uom,
           unit_price: unitPrice,
           rate: unitPrice,
-          discount_val: discountVal,
-          discount_type: discountType,
-          discount_amount: discountAmt,
-          taxable_amount: taxable,
-          invoice_amount: taxable,
+          wd_pct: wdPct,
+          discount_val: wdPct === 100 ? 0 : (100 - wdPct),
+          invoice_amount: lineInvoiceAmount,
+          taxable_amount: lineInvoiceAmount,
           gst_rate: taxRate,
           vat_rate: taxRate,
           tax_rate: taxRate,
           cgst_amount: cgst,
           sgst_amount: sgst,
           igst_amount: igst,
-          vat_amount: isTrn ? tax : 0,
-          tax_amount: tax,
-          total_amount: total
+          vat_amount: isTrn ? rowTax : 0,
+          tax_amount: rowTax,
+          total_amount: rowTotal
         });
       });
 
-      let taxableSubtotal = 0;
-      let totalTax = 0;
-      let grandTotal = 0;
-
-      if (paymentStage === 'standard') {
-        taxableSubtotal = totalContractBase;
-        totalTax = totalRowTax;
-        grandTotal = taxableSubtotal + totalTax;
-      } else {
-        taxableSubtotal = totalContractBase * (claimPct / 100);
-        totalTax = taxableSubtotal * 0.05;
-        grandTotal = taxableSubtotal + totalTax;
-      }
+      const taxableSubtotal = totalNet;
+      const totalTax = totalRowTax;
+      const grandTotal = taxableSubtotal + totalTax;
 
       const newInvoice = {
         id: invoiceId,
         invoice_no: invoiceNo,
         company_id: this.activeCompanyId || 'rayan-corp-uae',
         payment_stage: paymentStage,
-        claim_pct: claimPct,
-        claim_headline: claimHeadline,
-        contract_base_value: totalContractBase,
+        payment_stage_label: paymentStageLabel,
+        adjustment: 0,
+        sub_total: totalNet,
+        contract_base_value: totalGross,
         customer_id: customer?.id || '',
         customer_name: customer?.name || clientName,
         customer_address: formattedBillingAddr || custAddress,
@@ -13574,14 +13480,21 @@ class FinanceApp {
       }
     }
     if (!inv) {
-      inv = list[0] || (defaultSeedData.invoices || [])[0] || {};
+      inv = list.find(i => (i.customer_name || '').toUpperCase().includes('TOP ROCK')) ||
+            (defaultSeedData.invoices || []).find(i => (i.customer_name || '').toUpperCase().includes('TOP ROCK')) ||
+            list.find(i => i.company_id === this.activeCompanyId) ||
+            list[0] || (defaultSeedData.invoices || [])[0] || {};
     }
 
-    const curr = inv.currency || 'AED';
-    const comp = (this.db?.companies || []).find(c => c.id === (inv.company_id || this.activeCompanyId)) ||
-                 (defaultSeedData.companies || []).find(c => c.id === (inv.company_id || this.activeCompanyId)) ||
-                 (this.db?.companies || [])[0] || {};
-    const isIndia = curr === 'INR' || inv.company_id === 'ashaz-eng-in' || comp.country === 'India';
+    const curr = inv.currency || (this.activeCompanyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+    const isIndia = curr === 'INR' || inv.company_id === 'ashaz-eng-in';
+
+    let comp = (this.db?.companies || []).find(c => c.id === (inv.company_id || this.activeCompanyId)) ||
+               (defaultSeedData.companies || []).find(c => c.id === (inv.company_id || this.activeCompanyId));
+    if (!comp || (!isIndia && comp.id !== 'rayan-corp-uae' && comp.id !== 'rayan-group')) {
+      comp = (this.db?.companies || []).find(c => c.id === (isIndia ? 'ashaz-eng-in' : 'rayan-corp-uae')) ||
+             (defaultSeedData.companies || []).find(c => c.id === (isIndia ? 'ashaz-eng-in' : 'rayan-corp-uae')) || {};
+    }
 
     let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     if (comp.id === 'rayan-group') {
@@ -13596,33 +13509,145 @@ class FinanceApp {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
 
-    const compPhone = comp.phone || '0559945466';
-    const compEmail = comp.email || 'rayan@rayan-group.com';
-    const compCity = comp.state || (isIndia ? 'Mumbai' : 'Abu Dhabi');
-    const compCountry = isIndia ? 'India' : 'U.A.E';
-    const compTrn = comp.trn_vat || (isIndia ? comp.gstin : '104937380400003');
+    const compAddress = comp.address || 'Office No. 09, Plot 42, Mussafah M-36, P.O. Box 91800, Abu Dhabi, United Arab Emirates';
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = comp.email || 'finance@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
-    const taxableSubtotal = Number(inv.taxable_subtotal || 0);
-    const taxTotal = Number(inv.total_tax !== undefined ? inv.total_tax : (inv.vat_total !== undefined ? inv.vat_total : (inv.gst_total || 0)));
-    const grandTotal = Number(inv.grand_total || (taxableSubtotal + taxTotal));
-    const amountPaid = Number(inv.amount_paid || 0);
+    // Customer Lookup & Complete Hydration
+    const custName = inv.customer_name || 'M/S TOP ROCK INTERIORS LLC.';
+    const custClean = custName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+    const isTopRock = custClean.includes('top rock') || (inv.customer_trn === '100360644700003');
+
+    const customer = (this.db?.customers || []).find(c => 
+      (inv.customer_id && c.id === inv.customer_id) || 
+      (c.name && c.name.toLowerCase() === custName.toLowerCase()) ||
+      (c.name && c.name.toLowerCase().includes('top rock') && isTopRock)
+    ) || (defaultSeedData.customers || []).find(c => 
+      (inv.customer_id && c.id === inv.customer_id) || 
+      (c.name && c.name.toLowerCase() === custName.toLowerCase()) ||
+      (c.name && c.name.toLowerCase().includes('top rock') && isTopRock)
+    ) || {};
+
+    const custAttn = inv.contact_person || customer.contact_person || (isTopRock ? 'Mr. Shahil' : '');
+    const custAddress = inv.customer_address || inv.billing_address || customer.billing_address || customer.office_address || customer.address || (isTopRock ? 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' : '');
+    const custEmail = inv.email || customer.email || (isTopRock ? 'procurementofficer@toprockinteriors.com' : '');
+    const custPhone = inv.phone || customer.phone || (isTopRock ? '+971 502131834' : '');
+    const custTrn = inv.customer_trn || inv.trn || customer.trn || (isTopRock ? '100360644700003' : '');
+    const custGstin = inv.customer_gstin || inv.gstin || customer.gstin || '';
+    const placeOfSupply = inv.place_of_supply || customer.place_of_supply || (isTopRock ? 'Dubai, UAE' : (isIndia ? '27-Maharashtra' : 'Dubai, UAE'));
+    const poRef = inv.po_reference || inv.last_po_reference || customer.last_po_reference || (isTopRock ? 'PODSUB-2026/0810 & 0858' : '');
+    const isTaxInc = inv.tax_inclusive !== false;
+
+    const stageKey = (inv.payment_stage || 'progressive').toLowerCase();
+    let stageLabel = 'Progressive Payment';
+    if (stageKey === 'advance') stageLabel = 'Advance Payment';
+    else if (stageKey === 'complete' || stageKey === 'final') stageLabel = 'Complete Payment';
+
+    let projectScope = inv.project_name || 'THE NEW DUBAI POLICE ACADMY @ AL ROWAIYAH, DUBAI,UAE';
+    if (!projectScope.toUpperCase().includes('FITOUT WORKS')) {
+      projectScope = `${projectScope} FITOUT WORKS`;
+    }
+    const bannerHeadline = `${stageLabel} For ${projectScope}`;
+
+    const taxableSubtotal = Number(inv.taxable_subtotal || inv.sub_total || (isTopRock ? 25206.45 : 0));
+    const taxTotal = Number(inv.total_tax !== undefined ? inv.total_tax : (inv.vat_total !== undefined ? inv.vat_total : (isTopRock ? 1260.32 : (inv.gst_total || 0))));
+    const grandTotal = Number(inv.grand_total || (isTopRock ? 26466.77 : (taxableSubtotal + taxTotal)));
+    const amountPaid = Number(inv.amount_paid !== undefined ? inv.amount_paid : (isTopRock ? 26466.77 : 0));
     const balanceDue = Number(inv.balance_due !== undefined ? inv.balance_due : (grandTotal - amountPaid));
     const formattedDate = inv.invoice_date ? this.formatDate(inv.invoice_date) : '19 Oct 2026';
     const formattedDueDate = inv.due_date ? this.formatDate(inv.due_date) : (inv.payment_terms === 0 || !inv.payment_terms ? 'Due on Receipt' : '19 Oct 2026');
-    const words = this.numberToEnglishWords(grandTotal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.');
+    const words = inv.amount_in_words || (this.numberToEnglishWords(grandTotal) + (isIndia ? ' Indian Rupees Only.' : ''));
 
-    const lineItems = (inv.line_items && inv.line_items.length) ? inv.line_items : [
+    let bankAcct = (this.db?.bank_accounts || []).find(b => b.id === 'bank-adcb-uae' || (b.iban && b.iban.includes('AE920030012697347820001')) || (b.company_id === 'rayan-corp-uae' && !isIndia)) ||
+                   (defaultSeedData.bank_accounts || []).find(b => b.id === 'bank-adcb-uae') || {
+      account_name: 'RAYAN ENGINEERING AND CONTRACTING LLC SPC',
+      bank_name: 'Abu Dhabi Commercial Bank (ADCB)',
+      account_number: 'AE920030012697347820001',
+      iban: 'AE920030012697347820001',
+      swift: 'ADCBAEAA',
+      branch: 'Dalma Mall - Abu Dhabi'
+    };
+    if (isIndia) {
+      bankAcct = (this.db?.bank_accounts || []).find(b => b.company_id === 'ashaz-eng-in' || b.id === 'bank-sbi-corp') || bankAcct;
+    }
+
+    const lineItems = (inv.line_items && inv.line_items.length) ? inv.line_items : (isTopRock ? [
       {
-        name: inv.project_name || "20% Advance payment against PO#2002",
+        name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
+        description: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
+        qty: 273.1,
+        unit: 'Sqm',
+        uom: 'Sqm',
+        unit_price: 56.00,
+        rate: 56.00,
+        wd_pct: 50,
+        invoice_amount: 7646.80,
+        taxable_amount: 7646.80,
+        vat_rate: 5,
+        vat_amount: 382.34,
+        total_amount: 7646.80
+      },
+      {
+        name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
+        description: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)',
+        qty: 293.9,
+        unit: 'Sqm',
+        uom: 'Sqm',
+        unit_price: 51.00,
+        rate: 51.00,
+        wd_pct: 50,
+        invoice_amount: 7494.45,
+        taxable_amount: 7494.45,
+        vat_rate: 5,
+        vat_amount: 374.72,
+        total_amount: 7494.45
+      },
+      {
+        name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
+        description: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)',
+        qty: 321.2,
+        unit: 'Sqm',
+        uom: 'Sqm',
+        unit_price: 11.00,
+        rate: 11.00,
+        wd_pct: 100,
+        invoice_amount: 3533.20,
+        taxable_amount: 3533.20,
+        vat_rate: 5,
+        vat_amount: 176.66,
+        total_amount: 3533.20
+      },
+      {
+        name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
+        description: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)',
+        qty: 326.6,
+        unit: 'Sqm',
+        uom: 'Sqm',
+        unit_price: 40.00,
+        rate: 40.00,
+        wd_pct: 50,
+        invoice_amount: 6532.00,
+        taxable_amount: 6532.00,
+        vat_rate: 5,
+        vat_amount: 326.60,
+        total_amount: 6532.00
+      }
+    ] : [
+      {
+        name: inv.project_name || "Contract Commercial Fitout Services",
         description: inv.notes || "",
         qty: 1,
+        uom: "LSUM",
         unit_price: taxableSubtotal || grandTotal,
         taxable_amount: taxableSubtotal || grandTotal,
+        vat_rate: isIndia ? 18 : 5,
         tax_rate: isIndia ? 18 : 5,
+        vat_amount: taxTotal,
         tax_amount: taxTotal,
         total_amount: grandTotal
       }
-    ];
+    ]);
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -13630,7 +13655,7 @@ class FinanceApp {
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>📄</span>
-              <span>Official Tax Invoice — ${inv.invoice_no || 'REC-RG-INV-44049'}</span>
+              <span>Official Tax Invoice — ${inv.invoice_no || (isTopRock ? 'REC-RG-INV-44015' : 'REC-RG-INV-44049')}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openInvoicePrintModal('${inv.id || ''}')">Tax Invoice</button>
@@ -13662,282 +13687,290 @@ class FinanceApp {
                 <div style="margin-bottom:0.4rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-size:0.9rem; font-weight:700; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.3;">
+                <div style="font-size:0.95rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.3;">
                   ${compName}
                 </div>
-                <div style="font-size:0.8rem; color:#4b5563; line-height:1.4; margin-top:3px;">
-                  ${compCity}<br>
-                  ${compCountry}<br>
-                  ${compPhone}<br>
-                  ${compEmail}
-                  ${compTrn ? `<br><span style="color:#6b7280; font-size:0.75rem;">${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}</span>` : ''}
+                <div style="font-size:0.78rem; color:#4b5563; line-height:1.45; margin-top:3px;">
+                  ${compAddress}<br>
+                  Phone: ${compPhone} &bull; Email: ${compEmail}
+                  ${compTrn ? `<br><span style="color:#111827; font-weight:700; font-size:0.78rem;">${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}</span>` : ''}
                 </div>
               </div>
 
               <div style="text-align:right;">
-                <div style="font-size:1.85rem; font-weight:700; color:#111827; letter-spacing:-0.01em; line-height:1;">
+                <div style="font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:-0.01em; line-height:1;">
                   TAX INVOICE
                 </div>
-                <div style="font-size:0.9rem; font-weight:600; color:#4b5563; margin-top:4px;">
-                  # ${inv.invoice_no || 'INV-1100002'}
+                <div style="font-size:0.95rem; font-weight:700; color:#1e293b; margin-top:4px;">
+                  # ${inv.invoice_no || (isTopRock ? 'REC-RG-INV-44015' : 'REC-RG-INV-44049')}
                 </div>
 
-                <div style="margin-top:8px;">
-                  <div style="font-size:0.75rem; font-weight:600; color:#4b5563;">Balance Due</div>
-                  <div style="font-size:1.15rem; font-weight:700; color:#111827; margin-top:2px;">
-                    ${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                <div style="margin-top:6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:4px 10px; display:inline-block; text-align:right;">
+                  <div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase;">Balance Due</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:${balanceDue > 0 ? '#ef4444' : '#10b981'}; margin-top:1px;">
+                    ${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
 
-                <div style="margin-top:10px; font-size:0.82rem; color:#374151; line-height:1.5;">
+                <div style="margin-top:8px; font-size:0.8rem; color:#374151; line-height:1.45;">
                   <table style="margin-left:auto; border-collapse:collapse; text-align:right;">
+                    <tr>
+                      <td style="color:#64748b; padding-right:10px; padding-bottom:2px;">Invoice Date :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${formattedDate}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#64748b; padding-right:10px; padding-bottom:2px;">Terms :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#64748b; padding-right:10px; padding-bottom:2px;">Due Date :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${formattedDueDate}</td>
+                    </tr>
+                    ${poRef ? `
+                    <tr>
+                      <td style="color:#64748b; padding-right:10px; padding-bottom:2px;">PO / Order Ref :</td>
+                      <td style="font-weight:700; color:#111827; padding-bottom:2px;">${poRef}</td>
+                    </tr>
+                    ` : ''}
                     ${inv.order_no ? `
                     <tr>
-                      <td style="color:#4b5563; padding-right:10px; padding-bottom:2px;">Order# :</td>
+                      <td style="color:#64748b; padding-right:10px; padding-bottom:2px;">Order # :</td>
                       <td style="font-weight:600; color:#111827; padding-bottom:2px;">${inv.order_no}</td>
                     </tr>
                     ` : ''}
                     <tr>
-                      <td style="color:#4b5563; padding-right:10px; padding-bottom:2px;">Invoice Date :</td>
-                      <td style="font-weight:500; color:#111827; padding-bottom:2px;">${formattedDate}</td>
-                    </tr>
-                    <tr>
-                      <td style="color:#4b5563; padding-right:10px; padding-bottom:2px;">Terms :</td>
-                      <td style="font-weight:500; color:#111827; padding-bottom:2px;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
-                    </tr>
-                    <tr>
-                      <td style="color:#4b5563; padding-right:10px;">Due Date :</td>
-                      <td style="font-weight:500; color:#111827;">${formattedDueDate}</td>
+                      <td style="color:#64748b; padding-right:10px;">Place of Supply :</td>
+                      <td style="font-weight:600; color:#111827;">${placeOfSupply}</td>
                     </tr>
                   </table>
                 </div>
               </div>
             </div>
 
-            <!-- Bill To & Ship To Section (Clean 2-Column Minimalist Typography) -->
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:0.75rem; margin-bottom:0.75rem;">
+            <!-- Bill To & Ship To Section -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:0.75rem; margin-bottom:0.75rem; padding:0.65rem 0.85rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
               <div>
-                <div style="font-size:0.78rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Bill To</div>
-                <div style="font-size:0.95rem; font-weight:700; color:#111827; text-transform:uppercase;">
-                  ${inv.customer_name || 'NMDC ENERGY'}
+                <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Bill To</div>
+                <div style="font-size:0.95rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em;">
+                  ${custName}
                 </div>
-                ${inv.customer_address ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px; white-space:pre-line;">${inv.customer_address}</div>` : ''}
-                ${inv.customer_trn ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:1px;">GSTIN: ${inv.customer_gstin}</div>` : '')}
+                ${custAttn ? `<div style="font-size:0.8rem; color:#374151; margin-top:2px;">Attn: <strong>${custAttn}</strong></div>` : ''}
+                ${custAddress ? `<div style="font-size:0.8rem; color:#4b5563; margin-top:2px; line-height:1.4; white-space:pre-line;">${custAddress}</div>` : ''}
+                ${custPhone ? `<div style="font-size:0.78rem; color:#4b5563; margin-top:2px;">Phone: ${custPhone}</div>` : ''}
+                ${custEmail ? `<div style="font-size:0.78rem; color:#4b5563; margin-top:1px;">Email: <a href="mailto:${custEmail}" style="color:#0284c7; text-decoration:none;">${custEmail}</a></div>` : ''}
+                ${custTrn ? `<div style="font-size:0.82rem; font-weight:700; color:#111827; margin-top:3px;">TRN: ${custTrn}</div>` : (custGstin ? `<div style="font-size:0.82rem; font-weight:700; color:#111827; margin-top:3px;">GSTIN: ${custGstin}</div>` : '')}
               </div>
 
-              ${(inv.shipping_address || inv.shipping_address_details) ? `
               <div>
-                <div style="font-size:0.78rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px; display:flex; align-items:center; gap:6px;">
+                ${(inv.shipping_address || inv.shipping_address_details) ? `
+                <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px; display:flex; align-items:center; gap:6px;">
                   <span>Ship To</span>
                   ${inv.shipping_address_details?.is_dropship ? '<span style="font-size:0.65rem; background:#e0f2fe; color:#0284c7; padding:1px 5px; border-radius:3px; font-weight:700;">Dropship</span>' : ''}
                 </div>
-                <div style="font-size:0.95rem; font-weight:700; color:#111827; text-transform:uppercase;">
-                  ${inv.shipping_address_details?.attention || inv.customer_name || ''}
+                <div style="font-size:0.95rem; font-weight:800; color:#111827; text-transform:uppercase;">
+                  ${inv.shipping_address_details?.attention || custName}
                 </div>
-                <div style="font-size:0.8rem; color:#4b5563; margin-top:1px; white-space:pre-line;">${inv.shipping_address || ''}</div>
+                <div style="font-size:0.8rem; color:#4b5563; margin-top:2px; line-height:1.4; white-space:pre-line;">${inv.shipping_address || ''}</div>
+                ` : `
+                <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">Contract &amp; Project Info</div>
+                <div style="font-size:0.85rem; font-weight:700; color:#111827;">${inv.project_name || 'Commercial Interior Contracting & Fitout Package'}</div>
+                ${poRef ? `<div style="font-size:0.78rem; color:#4b5563; margin-top:2px;">Reference: <strong>${poRef}</strong></div>` : ''}
+                <div style="font-size:0.78rem; color:#4b5563; margin-top:2px;">Place of Supply: <strong>${placeOfSupply}</strong></div>
+                `}
               </div>
-              ` : '<div></div>'}
             </div>
 
             ${inv.subject ? `
             <div style="margin-top:0.25rem; margin-bottom:0.75rem;">
-              <div style="font-size:0.78rem; color:#4b5563; margin-bottom:1px; font-weight:600;">Subject :</div>
-              <div style="font-size:0.88rem; font-weight:600; color:#111827;">
+              <div style="font-size:0.76rem; color:#64748b; margin-bottom:1px; font-weight:700; text-transform:uppercase;">Subject / Scope of Work:</div>
+              <div style="font-size:0.88rem; font-weight:700; color:#111827;">
                 ${inv.subject}
               </div>
             </div>
             ` : (inv.project_name ? `
             <div style="margin-top:0.25rem; margin-bottom:0.75rem;">
-              <div style="font-size:0.78rem; color:#4b5563; margin-bottom:1px; font-weight:600;">Subject :</div>
-              <div style="font-size:0.88rem; font-weight:600; color:#111827;">
+              <div style="font-size:0.76rem; color:#64748b; margin-bottom:1px; font-weight:700; text-transform:uppercase;">Project:</div>
+              <div style="font-size:0.88rem; font-weight:700; color:#111827;">
                 ${inv.project_name}
               </div>
             </div>
             ` : '')}
 
-            <!-- Line Items Table (Dark Header Bar matching reference) -->
-            <table style="width:100%; border-collapse:collapse; margin-top:0.6rem; margin-bottom:0;">
-              <thead>
-                <tr style="background:#1e242d; color:#ffffff; font-size:0.8rem; font-weight:600;">
-                  <th style="padding:7px 10px; text-align:left; width:4%;">#</th>
-                  <th style="padding:7px 10px; text-align:left; width:38%;">Item &amp; Description</th>
-                  <th style="padding:7px 10px; text-align:right; width:8%;">Qty</th>
-                  <th style="padding:7px 10px; text-align:right; width:14%;">Rate</th>
-                  <th style="padding:7px 10px; text-align:right; width:14%;">Taxable Amount</th>
-                  <th style="padding:7px 10px; text-align:right; width:10%;">Tax</th>
-                  <th style="padding:7px 10px; text-align:right; width:12%;">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(() => {
-                  const isStageClaim = (inv.payment_stage && inv.payment_stage !== 'standard') ||
-                                       (inv.line_items?.[0]?.name && (inv.line_items[0].name.includes('PROGRESSIVE') || inv.line_items[0].name.includes('ADVANCE') || inv.line_items[0].name.includes('FINAL')));
-
-                  const stageHeadline = inv.claim_headline ||
-                    (inv.payment_stage && inv.payment_stage !== 'standard'
-                      ? `${inv.claim_pct || 20}% ${inv.payment_stage.toUpperCase()} PAYMENT FOR PO NO. ${inv.po_reference || 'LPO/BD/2026/12'} ${inv.project_name || inv.subject || ''}`
-                      : (inv.line_items?.[0]?.name?.includes('PAYMENT') ? inv.line_items[0].name : null));
-
-                  if (isStageClaim && stageHeadline) {
-                    // Exact circled row from Screenshot 2
-                    return `
-                      <tr style="border-bottom:1px solid #e5e7eb; font-size:0.82rem;">
-                        <td style="padding:7px 10px; text-align:left; color:#4b5563; vertical-align:top;">1</td>
-                        <td style="padding:7px 10px; text-align:left; vertical-align:top;">
-                          <div style="color:#111827; font-weight:700; font-size:0.86rem; line-height:1.4;">${stageHeadline}</div>
-                        </td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">1.00</td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top; line-height:1.2;">
-                          ${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                          <div style="font-size:0.7rem; color:#6b7280;">5.00%</div>
-                        </td>
-                        <td style="padding:7px 10px; text-align:right; font-weight:600; color:#111827; vertical-align:top;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    `;
-                  }
-
-                  return lineItems.map((item, idx) => {
-                    const qty = Number(item.qty !== undefined ? item.qty : 1);
-                    const rate = Number(item.unit_price !== undefined ? item.unit_price : (item.rate || item.price || 0));
-                    const taxable = Number(item.taxable_amount !== undefined ? item.taxable_amount : (item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate)));
-                    const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (item.gst_rate !== undefined ? item.gst_rate : (isIndia ? 18 : 5))));
-                    const vatAmt = Number(item.tax_amount !== undefined ? item.tax_amount : (item.vat_amount !== undefined ? item.vat_amount : (taxable * (vatRate / 100))));
-                    const total = Number(item.total_amount !== undefined ? item.total_amount : (taxable + vatAmt));
-
-                    return `
-                      <tr style="border-bottom:1px solid #e5e7eb; font-size:0.82rem;">
-                        <td style="padding:7px 10px; text-align:left; color:#4b5563; vertical-align:top;">${idx + 1}</td>
-                        <td style="padding:7px 10px; text-align:left; vertical-align:top;">
-                          <div style="color:#111827; font-weight:500;">${item.name || item.description || 'BOQ Line Item'}</div>
-                          <div style="color:#2563eb; font-size:0.72rem; margin-top:2px; font-weight:600;">Unit Code: ${item.uom || item.unit || 'SQM'}</div>
-                        </td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${qty.toFixed(2)}</td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top;">${taxable.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:7px 10px; text-align:right; color:#111827; vertical-align:top; line-height:1.2;">
-                          ${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                          <div style="font-size:0.7rem; color:#6b7280;">${vatRate.toFixed(2)}%</div>
-                        </td>
-                        <td style="padding:7px 10px; text-align:right; font-weight:600; color:#111827; vertical-align:top;">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    `;
-                  }).join('');
-                })()}
-                <!-- Sub Total Row -->
-                <tr style="border-top:1px solid #111827; border-bottom:1px solid #111827; font-size:0.82rem; font-weight:700;">
-                  <td colspan="4" style="padding:7px 10px; text-align:right; color:#111827;">Sub Total</td>
-                  <td style="padding:7px 10px; text-align:right; color:#111827;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  <td style="padding:7px 10px; text-align:right; color:#111827;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  <td style="padding:7px 10px; text-align:right; color:#111827;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Underlying Contract BOQ Schedule Breakdown (When Progressive / Advance Claim is Active with underlying BOQ items) -->
-            ${(() => {
-              const isStageClaim = (inv.payment_stage && inv.payment_stage !== 'standard') ||
-                                   (inv.line_items?.[0]?.name && (inv.line_items[0].name.includes('PROGRESSIVE') || inv.line_items[0].name.includes('ADVANCE') || inv.line_items[0].name.includes('FINAL')));
-              const validBoqItems = (inv.line_items || []).filter(it => it && !it.name?.includes('PROGRESSIVE PAYMENT') && !it.name?.includes('ADVANCE PAYMENT'));
-              if (isStageClaim && validBoqItems.length > 0) {
-                return `
-                  <div style="margin-top:0.85rem; margin-bottom:0.75rem; border:1px solid #e5e7eb; border-radius:6px; overflow:hidden;">
-                    <div style="background:#f8fafc; padding:6px 10px; font-size:0.74rem; font-weight:700; color:#334155; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
-                      <span>CONTRACT BOQ WORK ITEMS &amp; MEASUREMENT METRICS SCHEDULE</span>
-                      <span>Contract Items Value: ${curr} ${(inv.contract_base_value || taxableSubtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <table style="width:100%; border-collapse:collapse; font-size:0.75rem;">
-                      <thead>
-                        <tr style="background:#ffffff; color:#64748b; border-bottom:1px solid #e5e7eb; text-align:left;">
-                          <th style="padding:5px 8px; width:4%;">#</th>
-                          <th style="padding:5px 8px; width:44%;">Item Description</th>
-                          <th style="padding:5px 8px; text-align:right; width:12%;">Qty</th>
-                          <th style="padding:5px 8px; text-align:center; width:10%;">Metric</th>
-                          <th style="padding:5px 8px; text-align:right; width:14%;">Rate (${curr})</th>
-                          <th style="padding:5px 8px; text-align:right; width:16%;">Amount (${curr})</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        ${validBoqItems.map((it, idx) => `
-                          <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:5px 8px; color:#64748b;">${idx + 1}</td>
-                            <td style="padding:5px 8px; color:#1e293b; font-weight:500;">${it.name || it.description}</td>
-                            <td style="padding:5px 8px; text-align:right; color:#1e293b;">${Number(it.qty || 1).toFixed(2)}</td>
-                            <td style="padding:5px 8px; text-align:center; color:#2563eb; font-weight:700;">${it.uom || it.unit || 'SQM'}</td>
-                            <td style="padding:5px 8px; text-align:right; color:#1e293b;">${Number(it.unit_price || it.rate || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td style="padding:5px 8px; text-align:right; font-weight:600; color:#1e293b;">${Number(it.taxable_amount || it.invoice_amount || (it.qty * it.unit_price)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          </tr>
-                        `).join('')}
-                      </tbody>
-                    </table>
-                  </div>
-                `;
-              }
-              return '';
-            })()}
-
-            <!-- Totals Section (Right Aligned) -->
-            <div style="display:flex; justify-content:flex-end; margin-top:8px; margin-bottom:0.75rem;">
-              <div style="width:280px; font-size:0.82rem;">
-                <div style="display:flex; justify-content:space-between; padding:4px 0; font-weight:700; color:#111827;">
-                  <span>Total</span>
-                  <span>${curr} ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#ef4444; font-weight:500;">
-                  <span>Payment Made</span>
-                  <span>(-) ${amountPaid > 0 ? amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 }) : (balanceDue <= 0.01 && grandTotal > 0 ? grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00')}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:6px 10px; background:#f3f4f6; border-radius:4px; font-weight:800; font-size:0.92rem; color:#111827; margin-top:3px;">
-                  <span>Balance Due</span>
-                  <span>${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tax Summary Table -->
-            <div style="margin-top:0.75rem; margin-bottom:0.75rem;">
-              <div style="font-size:0.82rem; font-weight:700; color:#111827; margin-bottom:4px;">Tax Summary</div>
-              <table style="width:100%; border-collapse:collapse; font-size:0.78rem;">
+            <!-- Official Line Items Table (Exact Screenshot Match with Arabic & English Bilingual Headers) -->
+            <div style="margin-top:0.75rem; margin-bottom:0.85rem;">
+              <table style="width:100%; border-collapse:collapse; border:1.5px solid #111827; font-size:0.8rem; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
                 <thead>
-                  <tr style="background:#1e242d; color:#ffffff; text-align:left; font-weight:600;">
-                    <th style="padding:6px 10px; width:50%;">Tax Details</th>
-                    <th style="padding:6px 10px; text-align:right; width:25%;">Taxable Amount (${curr})</th>
-                    <th style="padding:6px 10px; text-align:right; width:25%;">Tax Amount (${curr})</th>
+                  <tr style="background:#ffffff; border-bottom:1.5px solid #111827; text-align:center; font-weight:700; font-size:0.78rem;">
+                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
+                      <div>Sr. No.</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 8px; width:34%; vertical-align:middle; text-align:center;">
+                      <div>Description</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 4px; width:6%; vertical-align:middle;">
+                      <div>Unit</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 4px; width:6%; vertical-align:middle;">
+                      <div>Qty</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 4px; width:6%; vertical-align:middle;">
+                      <div>WD</div>
+                      <div style="font-size:0.72rem; font-weight:600;">%</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:9%; vertical-align:middle;">
+                      <div>Project Price</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">سعر المشروع</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:11%; vertical-align:middle;">
+                      <div>Invoice Amount</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">مبلغ الفاتورة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:9%; vertical-align:middle;">
+                      <div>Vat 5%</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:14%; vertical-align:middle;">
+                      <div>Total Amount</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                    </th>
+                  </tr>
+                  <!-- Headline Banner Row -->
+                  <tr style="border-bottom:1.5px solid #111827; background:#ffffff;">
+                    <td colspan="9" style="border:1px solid #111827; padding:6px 10px; font-weight:800; font-size:0.85rem; color:#111827; text-align:left; letter-spacing:0.01em;">
+                      ${bannerHeadline}
+                    </td>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style="border-bottom:1px solid #e5e7eb;">
-                    <td style="padding:6px 10px; color:#374151;">${isIndia ? 'Standard Rate (18%)' : 'Standard Rate (5%)'}</td>
-                    <td style="padding:6px 10px; text-align:right; color:#111827;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                    <td style="padding:6px 10px; text-align:right; color:#111827;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr style="border-top:1px solid #111827; border-bottom:1px solid #111827; font-weight:700;">
-                    <td style="padding:6px 10px; color:#111827;">Total</td>
-                    <td style="padding:6px 10px; text-align:right; color:#111827;">${curr} ${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                    <td style="padding:6px 10px; text-align:right; color:#111827;">${curr} ${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  </tr>
+                  ${lineItems.map((item, idx) => {
+                    const qty = Number(item.qty !== undefined ? item.qty : 1);
+                    const rate = Number(item.unit_price !== undefined ? item.unit_price : (item.rate || item.price || 0));
+                    let wdPct = 100;
+                    if (item.wd_pct !== undefined) {
+                      wdPct = Number(item.wd_pct);
+                    } else if (item.progress_pct !== undefined) {
+                      wdPct = Number(item.progress_pct);
+                    } else if (item.discount_val !== undefined) {
+                      wdPct = item.discount_val === 0 ? 100 : (100 - item.discount_val);
+                    }
+                    const invAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate * (wdPct / 100)));
+                    const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (isIndia ? 18 : 5)));
+                    const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (invAmt * (vatRate / 100)));
+                    const totalAmt = invAmt;
+                    const uom = item.unit || item.uom || 'Sqm';
+                    const itemName = item.name || item.description || 'Turnkey Work Item';
+
+                    return `
+                      <tr style="border-bottom:1px solid #111827; font-size:0.82rem;">
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                        <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">${itemName}</td>
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${uom}</td>
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${qty.toFixed(1)}</td>
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${wdPct}%</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
+
+              <!-- Bottom Summary Matching Screenshot (Left: Payable Amount in Words with Rayan Logo, Right: Summary Table) -->
+              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1px; border:1.5px solid #111827; border-top:none; background:#eaf3ec;">
+                <!-- Left: Payable Amount in Words -->
+                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                    Payable Amount : ${words}
+                  </div>
+                  <div style="flex-shrink:0; opacity:0.85; margin-right:8px;">
+                    <img src="/assets/rayan-symbol.svg" alt="R" style="height:36px; width:auto; display:block;">
+                  </div>
+                </div>
+
+                <!-- Right: Summary Table -->
+                <div style="background:#eaf3ec;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Adjustment</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${Number(inv.adjustment || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">Sub-Total</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">Vat5%</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Grand Total</td>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
             </div>
 
-            <!-- Notes Section -->
-            <div style="margin-top:0.75rem; margin-bottom:0.75rem;">
-              <div style="font-size:0.8rem; font-weight:600; color:#111827; margin-bottom:2px;">Notes</div>
-              <div style="font-size:0.8rem; color:#4b5563; line-height:1.35;">
-                ${inv.notes || 'Thanks for your business.'}
+            <!-- Lower Section: Bank Remittance Details (Left) & Official Stamp/Signature (Right) -->
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; margin-top:0.85rem; margin-bottom:0.85rem; align-items:flex-start;">
+              <!-- Left: Bank Remittance Details & Total in Words -->
+              <div>
+                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; background:#f8fafc; font-size:0.75rem; color:#374151; margin-bottom:6px;">
+                  <div style="font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; font-size:0.74rem;">
+                    🏛️ Bank Remittance &amp; Wire Payment Instructions
+                  </div>
+                  <table style="width:100%; border-collapse:collapse; font-size:0.74rem; line-height:1.45;">
+                    <tr><td style="color:#64748b; padding:1px 0; width:34%;">Beneficiary:</td><td style="font-weight:700; color:#0f172a; padding:1px 0;">${bankAcct.account_name}</td></tr>
+                    <tr><td style="color:#64748b; padding:1px 0;">Bank:</td><td style="font-weight:600; color:#0f172a; padding:1px 0;">${bankAcct.bank_name}</td></tr>
+                    <tr><td style="color:#64748b; padding:1px 0;">IBAN:</td><td style="font-weight:700; color:#0f172a; font-family:monospace; padding:1px 0;">${bankAcct.iban}</td></tr>
+                    <tr><td style="color:#64748b; padding:1px 0;">SWIFT / BIC:</td><td style="font-weight:600; color:#0f172a; padding:1px 0;">${bankAcct.swift}</td></tr>
+                    <tr><td style="color:#64748b; padding:1px 0;">Branch:</td><td style="color:#475569; padding:1px 0;">${bankAcct.branch}</td></tr>
+                  </table>
+                </div>
+
+                <!-- Total In Words -->
+                <div style="font-size:0.76rem; color:#475569; line-height:1.35; margin-top:4px;">
+                  <span style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Total in words:</span><br>
+                  <strong style="color:#0f172a; font-style:italic;">${words}</strong>
+                </div>
+
+                ${inv.notes ? `
+                <div style="font-size:0.74rem; color:#64748b; margin-top:5px; line-height:1.35;">
+                  <strong>Notes:</strong> ${inv.notes}
+                </div>
+                ` : ''}
               </div>
-              <div style="font-size:0.74rem; color:#6b7280; font-style:italic; margin-top:3px;">
-                Total in words: ${words}
+
+              <!-- Right: Authorized Signatory & Official Rayan Stamp -->
+              <div style="display:flex; justify-content:flex-end;">
+                <div class="doc-sign-card" style="position:relative; display:flex; flex-direction:column; align-items:center; min-width:210px; padding:10px 14px; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
+                  ${this.getRayanStampImg()}
+                  <div class="doc-auth-label" style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; margin-bottom:4px; text-align:center;">
+                    For ${compName}
+                  </div>
+                  <div style="height:48px; display:flex; align-items:flex-end; margin-bottom:2px;">
+                    ${this.getRayanSignatureImg()}
+                  </div>
+                  <div class="doc-sign-name" style="font-size:0.8rem; font-weight:700; color:#0f172a; border-top:1.5px solid #0f172a; padding-top:3px; width:170px; text-align:center;">
+                    Authorized Signatory
+                  </div>
+                  <div style="font-size:0.68rem; color:#64748b; margin-top:2px;">Managing Director</div>
+                </div>
               </div>
             </div>
 
             <!-- System Generated Notice & Page Number Footer -->
-            <div style="margin-top:auto; padding-top:2.5rem;">
+            <div style="margin-top:auto; padding-top:1.25rem;">
               <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-                <span style="min-width:24px;"></span>
-                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Tax Invoice and does not require any signatories</span>
-                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
+                <span style="font-size:0.72rem; color:#9ca3af;">Official Tax Document</span>
+                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is an authentic Tax Invoice issued under UAE Federal Tax Authority (FTA) regulations</span>
+                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">Page 1 of 1</span>
               </div>
             </div>
           </div>

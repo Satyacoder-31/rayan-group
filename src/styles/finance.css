@@ -3714,6 +3714,20 @@ select option:focus,
     box-sizing: border-box !important;
   }
 
+  .doc-sign-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .rayan-real-stamp,
+  .rayan-real-signature,
+  .rayan-doc-logo-img,
+  .rayan-doc-logo-po-img {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    visibility: visible !important;
+  }
+
   /* 6. Purchase Bill & Statement Modals Reset (Purchase Bills, Customer SOA, Vendor SOA) */
   .fin-modal-backdrop.open,
   #modal-bill-detail.open,
@@ -4670,3 +4684,36 @@ select option:focus,
   height: 2px;
   background: linear-gradient(90deg, #38bdf8, #10b981, #0099e6);
 }
+
+/* Payment Claim Stage Options (Advance, Progressive, Complete) */
+.fin-claim-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.fin-claim-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-1px);
+}
+
+.fin-claim-btn.active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.28), rgba(0, 166, 153, 0.25)) !important;
+  border: 1.5px solid #00e5d2 !important;
+  box-shadow: 0 0 16px rgba(0, 229, 210, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.fin-claim-btn.active div > div:first-child {
+  color: #38bdf8 !important;
+}
+

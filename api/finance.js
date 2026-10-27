@@ -121,23 +121,28 @@ export default async function handler(req, res) {
       }
       
       const newInvoice = {
-        id: `inv-${Date.now().toString(36)}`,
+        ...invoiceData,
+        id: invoiceData.id || `inv-${Date.now().toString(36)}`,
         invoice_no: invoiceData.invoice_no || `INV-2026-${String(db.invoices.length + 1).padStart(3, '0')}`,
-        company_id: invoiceData.company_id || 'ashaz-eng-in',
+        company_id: invoiceData.company_id || (invoiceData.currency === 'INR' ? 'ashaz-eng-in' : 'rayan-corp-uae'),
         customer_id: invoiceData.customer_id,
         customer_name: invoiceData.customer_name,
-        customer_gstin: invoiceData.customer_gstin,
-        customer_trn: invoiceData.customer_trn || '',
-        tax_regime: invoiceData.tax_regime || 'trn',
+        customer_address: invoiceData.customer_address || invoiceData.billing_address || '',
+        contact_person: invoiceData.contact_person || '',
+        email: invoiceData.email || '',
+        phone: invoiceData.phone || '',
+        customer_gstin: invoiceData.customer_gstin || '',
+        customer_trn: invoiceData.customer_trn || invoiceData.trn || '',
+        tax_regime: invoiceData.tax_regime || (invoiceData.currency === 'INR' ? 'gst' : 'trn'),
         currency: invoiceData.currency || 'AED',
-        currency_symbol: invoiceData.currency_symbol || 'AED ',
-        place_of_supply: invoiceData.place_of_supply,
+        currency_symbol: invoiceData.currency_symbol || (invoiceData.currency === 'INR' ? '₹' : 'AED '),
+        place_of_supply: invoiceData.place_of_supply || (invoiceData.currency === 'INR' ? '27-Maharashtra' : 'Dubai, UAE'),
         project_id: invoiceData.project_id || null,
         project_name: invoiceData.project_name || '',
         po_reference: invoiceData.po_reference || '',
         invoice_date: invoiceData.invoice_date || new Date().toISOString().split('T')[0],
         due_date: invoiceData.due_date || null,
-        payment_terms: Number(invoiceData.payment_terms) || 30,
+        payment_terms: Number(invoiceData.payment_terms) || 0,
         line_items: invoiceData.line_items || [],
         taxable_subtotal: Number(invoiceData.taxable_subtotal) || 0,
         cgst_total: Number(invoiceData.cgst_total) || 0,
@@ -147,12 +152,12 @@ export default async function handler(req, res) {
         total_tax: Number(invoiceData.total_tax) || 0,
         additional_charges: Number(invoiceData.additional_charges) || 0,
         grand_total: Number(invoiceData.grand_total) || 0,
-        amount_paid: 0,
-        balance_due: Number(invoiceData.grand_total) || 0,
+        amount_paid: Number(invoiceData.amount_paid) || 0,
+        balance_due: Number(invoiceData.balance_due !== undefined ? invoiceData.balance_due : invoiceData.grand_total) || 0,
         status: invoiceData.status || 'issued',
         notes: invoiceData.notes || '',
-        created_by: body.user_name || 'Finance Staff',
-        created_at: new Date().toISOString()
+        created_by: body.user_name || invoiceData.created_by || 'Arshad Alam Shaikh',
+        created_at: invoiceData.created_at || new Date().toISOString()
       };
 
       db.invoices.unshift(newInvoice);
