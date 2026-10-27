@@ -552,6 +552,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 accounts_receivable = 'Accounts Receivable'
             WHERE name LIKE '%TOP ROCK%'");
             $pdo->exec("UPDATE finance_invoices SET 
+                id = 'inv-rec-rg-inv-44035',
+                invoice_no = 'REC-RG-INV-44035',
                 customer_trn = '100360644700003', 
                 trn = '100360644700003', 
                 tax_number = '100360644700003', 
@@ -560,8 +562,27 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 payment_terms = 0, 
                 payment_terms_label = 'Due on Receipt', 
                 customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE', 
-                billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' 
-            WHERE customer_name LIKE '%TOP ROCK%'");
+                billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+                grand_total = 26466.77,
+                amount_paid = 26466.77,
+                balance_due = 0,
+                status = 'paid'
+            WHERE customer_name LIKE '%TOP ROCK%' OR invoice_no LIKE '%44015%' OR invoice_no LIKE '%44035%'");
+
+            $pdo->exec("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (
+                'rec-rv-44035',
+                'REC-RV-44035',
+                'cust-toprock',
+                'M/S TOP ROCK INTERIORS LLC.',
+                '2026-10-19',
+                26466.77,
+                'AED',
+                'Online',
+                'WIRE-ADCB-99210',
+                '{\"id\":\"rec-rv-44035\",\"receipt_no\":\"REC-RV-44035\",\"ref_invoice_no\":\"REC-RG-INV-44035\",\"company_id\":\"rayan-corp-uae\",\"customer_name\":\"M/S TOP ROCK INTERIORS LLC.\",\"amount_received\":26466.77,\"currency\":\"AED\",\"payment_mode\":\"Online\",\"payment_type\":\"Online Bank Transfer / Corporate Wire\",\"reference_no\":\"WIRE-ADCB-99210\",\"bank_name\":\"Abu Dhabi Commercial Bank (ADCB)\",\"notes\":\"Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.\",\"allocations\":[{\"invoice_id\":\"inv-rec-rg-inv-44035\",\"invoice_no\":\"REC-RG-INV-44035\",\"amount_allocated\":26466.77}]}',
+                NOW()
+            )");
+
             $pdo->exec("UPDATE finance_customer_receipts SET 
                 contact_person = 'Mr. Shahil', 
                 email = 'procurementofficer@toprockinteriors.com' 
@@ -570,6 +591,22 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
             $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-01', 'wire-02', 'wire-04', 'wire-05')");
+            $pdo->exec("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (
+                'wire-adcb-44035',
+                'rayan-corp-uae',
+                'WIRE-ADCB-99210',
+                '2026-10-19',
+                'M/S TOP ROCK INTERIORS LLC.',
+                'bank-adcb-uae',
+                'Abu Dhabi Commercial Bank (ADCB)',
+                'inward',
+                26466.77,
+                'AED',
+                'Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)',
+                'Cleared',
+                '{\"id\":\"wire-adcb-44035\",\"receipt_id\":\"rec-rv-44035\",\"company_id\":\"rayan-corp-uae\",\"reference_no\":\"WIRE-ADCB-99210\",\"date\":\"2026-10-19\",\"source_bank\":\"Abu Dhabi Commercial Bank (ADCB)\",\"source_account_id\":\"bank-adcb-uae\",\"destination_bank\":\"Abu Dhabi Commercial Bank (ADCB)\",\"destination_account_id\":\"bank-adcb-uae\",\"counterparty\":\"M/S TOP ROCK INTERIORS LLC.\",\"amount\":26466.77,\"currency\":\"AED\",\"type\":\"inward\",\"type_label\":\"Inward Client Collection (REC-RV-44035)\",\"purpose\":\"Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)\",\"status\":\"Cleared\",\"created_at\":\"2026-10-19T13:40:00Z\"}',
+                NOW()
+            )");
             $pdo->exec("DELETE FROM finance_loan_transactions WHERE id IN ('lt-01', 'lt-02')");
             $pdo->exec("DELETE FROM finance_notifications WHERE id IN ('notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee')");
             $pdo->exec("DELETE FROM finance_audit_logs WHERE id IN ('aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7')");
@@ -584,10 +621,10 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 'ADCBAEAA',
                 'Dalma Mall - Abu Dhabi',
                 'AED',
-                156625.95,
+                183092.72,
                 'Arshad Alam Shaikh',
                 'Active',
-                '{\"id\":\"bank-adcb-uae\",\"company_id\":\"rayan-corp-uae\",\"account_name\":\"RAYAN ENGINEERING AND CONTRACTING LLC SPC\",\"bank_name\":\"Abu Dhabi Commercial Bank (ADCB)\",\"account_number\":\"AE920030012697347820001\",\"iban\":\"AE920030012697347820001\",\"swift\":\"ADCBAEAA\",\"branch\":\"Dalma Mall - Abu Dhabi\",\"currency\":\"AED\",\"balance\":156625.95,\"signatory\":\"Arshad Alam Shaikh\",\"status\":\"Active\"}',
+                '{\"id\":\"bank-adcb-uae\",\"company_id\":\"rayan-corp-uae\",\"account_name\":\"RAYAN ENGINEERING AND CONTRACTING LLC SPC\",\"bank_name\":\"Abu Dhabi Commercial Bank (ADCB)\",\"account_number\":\"AE920030012697347820001\",\"iban\":\"AE920030012697347820001\",\"swift\":\"ADCBAEAA\",\"branch\":\"Dalma Mall - Abu Dhabi\",\"currency\":\"AED\",\"balance\":183092.72,\"signatory\":\"Arshad Alam Shaikh\",\"status\":\"Active\"}',
                 NOW()
             )");
             $pdo->exec("DELETE FROM finance_bank_accounts WHERE id = 'bank-fab-uae'");
@@ -704,19 +741,25 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             return !in_array($id, $dummyInvIds) && !in_array($no, $dummyInvIds);
         }));
         foreach ($data['invoices'] as &$inv) {
-            if (stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false) {
-                if (($inv['customer_trn'] ?? '') !== '100360644700003' || ($inv['contact_person'] ?? '') !== 'Mr. Shahil') {
-                    $inv['customer_trn'] = '100360644700003';
-                    $inv['trn'] = '100360644700003';
-                    $inv['tax_number'] = '100360644700003';
-                    $inv['contact_person'] = 'Mr. Shahil';
-                    $inv['email'] = 'procurementofficer@toprockinteriors.com';
-                    $inv['payment_terms'] = 0;
-                    $inv['payment_terms_label'] = 'Due on Receipt';
-                    $inv['customer_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-                    $inv['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-                    $changed = true;
-                }
+            if (stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false || stripos($inv['invoice_no'] ?? '', '440') !== false || stripos($inv['id'] ?? '', '440') !== false) {
+                $inv['id'] = 'inv-rec-rg-inv-44035';
+                $inv['invoice_no'] = 'REC-RG-INV-44035';
+                $inv['customer_name'] = 'M/S TOP ROCK INTERIORS LLC.';
+                $inv['customer_trn'] = '100360644700003';
+                $inv['trn'] = '100360644700003';
+                $inv['tax_number'] = '100360644700003';
+                $inv['contact_person'] = 'Mr. Shahil';
+                $inv['email'] = 'procurementofficer@toprockinteriors.com';
+                $inv['phone'] = '+971 502131834';
+                $inv['payment_terms'] = 0;
+                $inv['payment_terms_label'] = 'Due on Receipt';
+                $inv['customer_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                $inv['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+                $inv['grand_total'] = 26466.773;
+                $inv['amount_paid'] = 26466.773;
+                $inv['balance_due'] = 0;
+                $inv['status'] = 'paid';
+                $changed = true;
             }
         }
         unset($inv);
@@ -730,16 +773,76 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $no = strtolower(trim($r['receipt_no'] ?? ''));
             return !in_array($id, $dummyRecIds) && !in_array($no, $dummyRecIds);
         }));
+        $hasRcp44035 = false;
         foreach ($data['customer_receipts'] as &$r) {
-            if (stripos($r['customer_name'] ?? '', 'TOP ROCK') !== false) {
-                if (($r['contact_person'] ?? '') !== 'Mr. Shahil') {
-                    $r['contact_person'] = 'Mr. Shahil';
-                    $r['email'] = 'procurementofficer@toprockinteriors.com';
-                    $changed = true;
-                }
+            if (stripos($r['customer_name'] ?? '', 'TOP ROCK') !== false || stripos($r['receipt_no'] ?? '', '440') !== false || stripos($r['ref_invoice_no'] ?? '', '440') !== false) {
+                $r['id'] = 'rec-rv-44035';
+                $r['receipt_no'] = 'REC-RV-44035';
+                $r['ref_invoice_no'] = 'REC-RG-INV-44035';
+                $r['company_id'] = 'rayan-corp-uae';
+                $r['customer_name'] = 'M/S TOP ROCK INTERIORS LLC.';
+                $r['contact_person'] = 'Mr. Shahil';
+                $r['email'] = 'procurementofficer@toprockinteriors.com';
+                $r['phone'] = '+971 502131834';
+                $r['amount_received'] = 26466.77;
+                $r['allocated_amount'] = 26466.77;
+                $r['currency'] = 'AED';
+                $r['payment_mode'] = 'Online';
+                $r['payment_type'] = 'Online Bank Transfer / Corporate Wire';
+                $r['reference_no'] = 'WIRE-ADCB-99210';
+                $r['bank_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
+                $r['notes'] = 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.';
+                $r['allocations'] = [
+                    [
+                        'invoice_id' => 'inv-rec-rg-inv-44035',
+                        'invoice_no' => 'REC-RG-INV-44035',
+                        'amount_allocated' => 26466.77
+                    ]
+                ];
+                $hasRcp44035 = true;
+                $changed = true;
             }
         }
         unset($r);
+
+        if (!$hasRcp44035) {
+            array_unshift($data['customer_receipts'], [
+                'id' => 'rec-rv-44035',
+                'receipt_no' => 'REC-RV-44035',
+                'ref_invoice_no' => 'REC-RG-INV-44035',
+                'company_id' => 'rayan-corp-uae',
+                'customer_id' => 'cust-toprock',
+                'customer_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                'contact_person' => 'Mr. Shahil',
+                'email' => 'procurementofficer@toprockinteriors.com',
+                'phone' => '+971 502131834',
+                'customer_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+                'receipt_date' => '2026-10-19',
+                'receipt_time' => '1:40 PM',
+                'payment_mode' => 'Online',
+                'payment_type' => 'Online Bank Transfer / Corporate Wire',
+                'cheque_no' => '',
+                'reference_no' => 'WIRE-ADCB-99210',
+                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'amount_received' => 26466.77,
+                'currency' => 'AED',
+                'amount_in_words' => 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.',
+                'allocated_amount' => 26466.77,
+                'allocations' => [
+                    [
+                        'invoice_id' => 'inv-rec-rg-inv-44035',
+                        'invoice_no' => 'REC-RG-INV-44035',
+                        'amount_allocated' => 26466.77
+                    ]
+                ],
+                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
+                'receiver_sign' => 'Arshad Alam Shaikh',
+                'notes' => 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.',
+                'recorded_by' => 'Arshad Alam Shaikh',
+                'recorded_at' => '2026-10-19T13:40:00Z'
+            ]);
+            $changed = true;
+        }
         if (count($data['customer_receipts']) !== $orig) $changed = true;
     }
 
@@ -785,6 +888,35 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $id = strtolower(trim($bt['id'] ?? ''));
             return !in_array($id, $dummyWireIds);
         }));
+        $hasWire = false;
+        foreach ($data['bank_transfers'] as $bt) {
+            if (($bt['reference_no'] ?? '') === 'WIRE-ADCB-99210' || ($bt['receipt_id'] ?? '') === 'rec-rv-44035') {
+                $hasWire = true;
+                break;
+            }
+        }
+        if (!$hasWire) {
+            array_unshift($data['bank_transfers'], [
+                'id' => 'wire-adcb-44035',
+                'receipt_id' => 'rec-rv-44035',
+                'company_id' => 'rayan-corp-uae',
+                'reference_no' => 'WIRE-ADCB-99210',
+                'date' => '2026-10-19',
+                'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'source_account_id' => 'bank-adcb-uae',
+                'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'destination_account_id' => 'bank-adcb-uae',
+                'counterparty' => 'M/S TOP ROCK INTERIORS LLC.',
+                'amount' => 26466.77,
+                'currency' => 'AED',
+                'type' => 'inward',
+                'type_label' => 'Inward Client Collection (REC-RV-44035)',
+                'purpose' => 'Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)',
+                'status' => 'Cleared',
+                'created_at' => '2026-10-19T13:40:00Z'
+            ]);
+            $changed = true;
+        }
         if (count($data['bank_transfers']) !== $orig) $changed = true;
     }
 
@@ -845,8 +977,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     $b['currency'] = 'AED';
                     $b['signatory'] = 'Arshad Alam Shaikh';
                     $b['status'] = 'Active';
-                    if (empty($b['balance']) || floatval($b['balance']) == 1450000) {
-                        $b['balance'] = 156625.95;
+                    if (empty($b['balance']) || floatval($b['balance']) == 1450000 || floatval($b['balance']) == 156625.95) {
+                        $b['balance'] = 183092.72;
                     }
                     $hasAdcb = true;
                     break;
@@ -866,7 +998,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 'swift' => 'ADCBAEAA',
                 'branch' => 'Dalma Mall - Abu Dhabi',
                 'currency' => 'AED',
-                'balance' => 156625.95,
+                'balance' => 183092.72,
                 'signatory' => 'Arshad Alam Shaikh',
                 'status' => 'Active'
             ]);
