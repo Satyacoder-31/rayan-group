@@ -2360,6 +2360,140 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unset($invRef);
                     }
                 }
+
+                // Route payment to Cash and Banks depending on payment mode
+                $amtReceived = floatval($rcp['amount_received'] ?? 0);
+                $payMode = strtolower(trim($rcp['payment_mode'] ?? 'online'));
+                $compRefId = $rcp['company_id'] ?? 'rayan-corp-uae';
+                $rcpCurr = $rcp['currency'] ?? ($compRefId === 'ashaz-eng-in' ? 'INR' : 'AED');
+
+                if (strpos($payMode, 'cash') !== false) {
+                    if (!isset($db['cash_in_hand']) || !is_array($db['cash_in_hand'])) $db['cash_in_hand'] = [];
+                    if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+                    
+                    $matchedReg = null;
+                    foreach ($db['cash_in_hand'] as &$cReg) {
+                        if (($cReg['company_id'] ?? '') === $compRefId) {
+                            $cReg['balance'] = floatval($cReg['balance'] ?? 0) + $amtReceived;
+                            $cReg['last_replenished'] = $rcp['receipt_date'] ?? date('Y-m-d');
+                            $matchedReg = $cReg;
+                            break;
+                        }
+                    }
+                    unset($cReg);
+
+                    $cvExists = false;
+                    foreach ($db['cash_vouchers'] as $cv) {
+                        if (($cv['receipt_id'] ?? '') === ($rcp['id'] ?? '') || ($cv['voucher_no'] ?? '') === ('CV-' . ($rcp['receipt_no'] ?? ''))) {
+                            $cvExists = true;
+                            break;
+                        }
+                    }
+                    if (!$cvExists) {
+                        array_unshift($db['cash_vouchers'], [
+                            'id' => 'cv-rcp-' . ($rcp['id'] ?? uniqid()),
+                            'receipt_id' => $rcp['id'] ?? '',
+                            'voucher_no' => 'CV-' . ($rcp['receipt_no'] ?? uniqid()),
+                            'company_id' => $compRefId,
+                            'register_id' => $matchedReg['id'] ?? 'cash-dubai-reg',
+                            'register_name' => $matchedReg['register_name'] ?? $matchedReg['name'] ?? 'Dubai Main Vault',
+                            'custodian' => $rcp['cashier'] ?? $matchedReg['custodian'] ?? 'Cashier',
+                            'date' => $rcp['receipt_date'] ?? date('Y-m-d'),
+                            'type' => 'inflow',
+                            'category' => 'Customer Cash Collection',
+                            'purpose' => $rcp['notes'] ?? ('Cash receipt from ' . ($rcp['customer_name'] ?? 'Customer') . ' for ' . ($rcp['ref_invoice_no'] ?? $rcp['receipt_no'] ?? '')),
+                            'payee' => $rcp['customer_name'] ?? 'Customer',
+                            'amount' => $amtReceived,
+                            'currency' => $rcpCurr,
+                            'status' => 'Approved',
+                            'created_at' => date('c')
+                        ]);
+                    }
+                } elseif (strpos($payMode, 'cheque') !== false || strpos($payMode, 'check') !== false) {
+                    if (!isset($db['cheques']) || !is_array($db['cheques'])) $db['cheques'] = [];
+                    $chqStatus = $rcp['cheque_status'] ?? 'Cleared';
+                    $isCleared = stripos($chqStatus, 'clear') !== false;
+
+                    $chqExists = false;
+                    foreach ($db['cheques'] as $cq) {
+                        if (($cq['receipt_id'] ?? '') === ($rcp['id'] ?? '') || (!empty($rcp['cheque_no']) && ($cq['cheque_no'] ?? '') === $rcp['cheque_no'])) {
+                            $chqExists = true;
+                            break;
+                        }
+                    }
+                    if (!$chqExists) {
+                        array_unshift($db['cheques'], [
+                            'id' => 'chq-rcp-' . ($rcp['id'] ?? uniqid()),
+                            'receipt_id' => $rcp['id'] ?? '',
+                            'company_id' => $compRefId,
+                            'type' => 'inward',
+                            'cheque_no' => $rcp['cheque_no'] ?? $rcp['reference_no'] ?? ('CHQ-' . ($rcp['receipt_no'] ?? '')),
+                            'bank_name' => $rcp['bank_name'] ?? 'Abu Dhabi Commercial Bank (ADCB)',
+                            'branch' => $rcp['bank_branch'] ?? '',
+                            'party_name' => $rcp['customer_name'] ?? 'Customer',
+                            'date' => $rcp['cheque_date'] ?? $rcp['receipt_date'] ?? date('Y-m-d'),
+                            'amount' => $amtReceived,
+                            'currency' => $rcpCurr,
+                            'status' => $isCleared ? 'Cleared' : ($chqStatus ?: 'Pending Clearance'),
+                            'notes' => $rcp['notes'] ?? ('Customer Receipt ' . ($rcp['receipt_no'] ?? '') . (!empty($rcp['ref_invoice_no']) ? ' against ' . $rcp['ref_invoice_no'] : '')),
+                            'created_at' => date('c')
+                        ]);
+                    }
+
+                    if ($isCleared && isset($db['bank_accounts']) && is_array($db['bank_accounts'])) {
+                        foreach ($db['bank_accounts'] as &$bAcc) {
+                            if (($bAcc['company_id'] ?? '') === $compRefId && ($bAcc['currency'] ?? '') === $rcpCurr) {
+                                $bAcc['balance'] = floatval($bAcc['balance'] ?? 0) + $amtReceived;
+                                break;
+                            }
+                        }
+                        unset($bAcc);
+                    }
+                } else {
+                    // Online / Wire Transfer / Corporate Remittance
+                    if (!isset($db['bank_accounts']) || !is_array($db['bank_accounts'])) $db['bank_accounts'] = [];
+                    if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) $db['bank_transfers'] = [];
+
+                    $targetBank = null;
+                    foreach ($db['bank_accounts'] as &$bAcc) {
+                        if (($bAcc['company_id'] ?? '') === $compRefId && ($bAcc['currency'] ?? '') === $rcpCurr) {
+                            $bAcc['balance'] = floatval($bAcc['balance'] ?? 0) + $amtReceived;
+                            $targetBank = $bAcc;
+                            break;
+                        }
+                    }
+                    unset($bAcc);
+
+                    $wireExists = false;
+                    foreach ($db['bank_transfers'] as $bt) {
+                        if (($bt['receipt_id'] ?? '') === ($rcp['id'] ?? '') || ($bt['reference_no'] ?? '') === ($rcp['reference_no'] ?? ('WIRE-' . ($rcp['receipt_no'] ?? '')))) {
+                            $wireExists = true;
+                            break;
+                        }
+                    }
+                    if (!$wireExists) {
+                        array_unshift($db['bank_transfers'], [
+                            'id' => 'wire-rcp-' . ($rcp['id'] ?? uniqid()),
+                            'receipt_id' => $rcp['id'] ?? '',
+                            'company_id' => $compRefId,
+                            'reference_no' => $rcp['reference_no'] ?? ('WIRE-' . ($rcp['receipt_no'] ?? uniqid())),
+                            'date' => $rcp['receipt_date'] ?? date('Y-m-d'),
+                            'source_bank' => $rcp['bank_name'] ?? $targetBank['bank_name'] ?? 'Abu Dhabi Commercial Bank (ADCB)',
+                            'source_account_id' => $targetBank['id'] ?? 'bank-adcb-uae',
+                            'destination_bank' => $targetBank['bank_name'] ?? 'Abu Dhabi Commercial Bank (ADCB)',
+                            'destination_account_id' => $targetBank['id'] ?? 'bank-adcb-uae',
+                            'counterparty' => $rcp['customer_name'] ?? 'Customer',
+                            'amount' => $amtReceived,
+                            'currency' => $rcpCurr,
+                            'type' => 'inward',
+                            'type_label' => 'Inward Client Wire (' . ($rcp['receipt_no'] ?? '') . ')',
+                            'purpose' => $rcp['notes'] ?? ('Client payment receipt for ' . ($rcp['ref_invoice_no'] ?? $rcp['receipt_no'] ?? '')),
+                            'status' => 'Cleared',
+                            'created_at' => date('c')
+                        ]);
+                    }
+                }
+
                 $addAuditLog('create', 'receipt', $rcp['receipt_no'] ?? '', 'Recorded customer receipt of ' . ($rcp['amount_received'] ?? 0));
             }
             break;

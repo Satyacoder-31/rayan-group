@@ -442,7 +442,7 @@
   ],
   "invoices": [
     {
-      "id": "inv-rec-rg-inv-44015",
+      "id": "inv-rec-rg-inv-44035",
       "invoice_no": "REC-RG-INV-44035",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-1792414691494",
@@ -543,9 +543,9 @@
       "vat_total": 1260.323,
       "total_tax": 1260.323,
       "grand_total": 26466.773,
-      "amount_paid": 0,
-      "balance_due": 26466.773,
-      "status": "sent",
+      "amount_paid": 26466.773,
+      "balance_due": 0,
+      "status": "paid",
       "notes": "Please keep a copy of this invoice for your records",
       "amount_in_words": "Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.",
       "created_by": "Arshad Alam Shaikh",
@@ -560,8 +560,8 @@
   "purchase_bills": [],
   "customer_receipts": [
     {
-      "id": "rec-rv-44025",
-      "receipt_no": "REC-RV-44025",
+      "id": "rec-rv-44035",
+      "receipt_no": "REC-RV-44035",
       "ref_invoice_no": "REC-RG-INV-44035",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-1792414691494",
@@ -573,7 +573,7 @@
       "receipt_date": "2026-10-19",
       "receipt_time": "1:40 PM",
       "payment_mode": "Online",
-      "payment_type": "Online",
+      "payment_type": "Online Bank Transfer / Corporate Wire",
       "cheque_no": "",
       "reference_no": "WIRE-ADCB-99210",
       "bank_name": "Abu Dhabi Commercial Bank (ADCB)",
@@ -583,14 +583,14 @@
       "allocated_amount": 26466.77,
       "allocations": [
         {
-          "invoice_id": "inv-rec-rg-inv-44015",
+          "invoice_id": "inv-rec-rg-inv-44035",
           "invoice_no": "REC-RG-INV-44035",
           "amount_allocated": 26466.77
         }
       ],
       "received_by": "RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C",
       "receiver_sign": "Arshad Alam Shaikh",
-      "notes": "Settlement towards Tax Invoice #REC-RG-INV-44015. Official client collection acknowledgement.",
+      "notes": "Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.",
       "recorded_by": "Arshad Alam Shaikh",
       "recorded_at": "2026-10-19T13:40:00Z"
     }
@@ -637,7 +637,7 @@
       "swift": "ADCBAEAA",
       "branch": "Dalma Mall - Abu Dhabi",
       "currency": "AED",
-      "balance": 156625.95,
+      "balance": 183092.72,
       "signatory": "Arshad Alam Shaikh",
       "status": "Active"
     },
@@ -745,7 +745,27 @@
       "security": "Komatsu Excavators & Zoomlion 100T Mobile Cranes"
     }
   ],
-  "bank_transfers": [],
+  "bank_transfers": [
+    {
+      "id": "wire-adcb-44035",
+      "receipt_id": "rec-rv-44035",
+      "company_id": "rayan-corp-uae",
+      "reference_no": "WIRE-ADCB-99210",
+      "date": "2026-10-19",
+      "source_bank": "Abu Dhabi Commercial Bank (ADCB)",
+      "source_account_id": "bank-adcb-uae",
+      "destination_bank": "Abu Dhabi Commercial Bank (ADCB)",
+      "destination_account_id": "bank-adcb-uae",
+      "counterparty": "M/S TOP ROCK INTERIORS LLC.",
+      "amount": 26466.77,
+      "currency": "AED",
+      "type": "inward",
+      "type_label": "Inward Client Collection (REC-RV-44035)",
+      "purpose": "Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)",
+      "status": "Cleared",
+      "created_at": "2026-10-19T13:40:00Z"
+    }
+  ],
   "cash_vouchers": [],
   "loan_transactions": []
 }

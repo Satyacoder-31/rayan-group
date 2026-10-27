@@ -203,7 +203,7 @@ class FinanceApp {
       'vend-ariba-uae', 'vend-danube-uae', 'vend-emsteel-uae', 'vend-alfuttaim-uae',
       'vend-001', 'vend-002', 'vend-003', 'vend-004',
       'cust-004', 'cust-005', 'cust-kgc-alias', 'prj-dpa-01',
-      'rec-mvdvmilf', 'rec-rv-44026',
+      'rec-mvdvmilf', 'rec-rv-44026', 'rec-rv-44025',
       'item-001', 'item-002', 'item-003', 'item-004', 'item-005', 'item-006', 'item-007', 'item-008',
       'doc-001', 'doc-002', 'doc-003', 'doc-004',
       'chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01',
@@ -291,7 +291,9 @@ class FinanceApp {
 
       if (key === 'invoices') {
         incomingArr.forEach(inv => {
-          if (inv && (inv.customer_name || '').includes('TOP ROCK')) {
+          if (inv && ((inv.customer_name || '').includes('TOP ROCK') || (inv.invoice_no || '').includes('44015') || (inv.invoice_no || '').includes('44035') || (inv.id || '').includes('44015') || (inv.id || '').includes('44035'))) {
+            inv.id = 'inv-rec-rg-inv-44035';
+            inv.invoice_no = 'REC-RG-INV-44035';
             inv.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
             inv.customer_trn = '100360644700003';
             inv.trn = '100360644700003';
@@ -305,18 +307,41 @@ class FinanceApp {
             inv.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
             inv.place_of_supply = 'Dubai, UAE';
             if (!inv.po_reference) inv.po_reference = 'TR-PO-2026-551';
+            inv.grand_total = 26466.773;
+            inv.amount_paid = 26466.773;
+            inv.balance_due = 0;
+            inv.status = 'paid';
           }
         });
       }
 
       if (key === 'customer_receipts') {
         incomingArr.forEach(r => {
-          if (r && (r.customer_name || '').includes('TOP ROCK')) {
+          if (r && ((r.customer_name || '').includes('TOP ROCK') || (r.receipt_no || '').includes('44025') || (r.receipt_no || '').includes('44035') || (r.ref_invoice_no || '').includes('44015') || (r.ref_invoice_no || '').includes('44035') || (r.id || '').includes('44025') || (r.id || '').includes('44035'))) {
+            r.id = 'rec-rv-44035';
+            r.receipt_no = 'REC-RV-44035';
+            r.ref_invoice_no = 'REC-RG-INV-44035';
+            r.company_id = 'rayan-corp-uae';
             r.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
             r.contact_person = 'Mr. Shahil';
             r.email = 'procurementofficer@toprockinteriors.com';
             r.phone = '+971 502131834';
             r.customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
+            r.amount_received = 26466.77;
+            r.allocated_amount = 26466.77;
+            r.currency = 'AED';
+            r.payment_mode = 'Online';
+            r.payment_type = 'Online Bank Transfer / Corporate Wire';
+            r.reference_no = 'WIRE-ADCB-99210';
+            r.bank_name = 'Abu Dhabi Commercial Bank (ADCB)';
+            r.notes = 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.';
+            r.allocations = [
+              {
+                invoice_id: 'inv-rec-rg-inv-44035',
+                invoice_no: 'REC-RG-INV-44035',
+                amount_allocated: 26466.77
+              }
+            ];
           }
         });
       }
@@ -324,7 +349,7 @@ class FinanceApp {
       if (key === 'bank_accounts') {
         incomingArr.forEach(b => {
           const bName = (b.bank_name || '').toLowerCase();
-          if (b.id === 'bank-fab-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
+          if (b.id === 'bank-fab-uae' || b.id === 'bank-adcb-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
             b.id = 'bank-adcb-uae';
             b.company_id = 'rayan-corp-uae';
             b.account_name = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
@@ -336,7 +361,7 @@ class FinanceApp {
             b.currency = 'AED';
             b.signatory = 'Arshad Alam Shaikh';
             b.status = 'Active';
-            if (!b.balance || b.balance === 1450000) b.balance = 156625.95;
+            if (!b.balance || b.balance === 1450000 || b.balance === 156625.95) b.balance = 183092.72;
           }
         });
       }
@@ -413,6 +438,13 @@ class FinanceApp {
       merged.settings = { ...merged.settings, ...sourceData.settings };
     }
 
+    // Ensure all customer receipts are routed into Cash & Bank (bank_transfers, cheques, cash_vouchers)
+    if (Array.isArray(merged.customer_receipts)) {
+      merged.customer_receipts.forEach(r => {
+        this.routeReceiptToCashAndBank(r, merged);
+      });
+    }
+
     return merged;
   }
 
@@ -430,7 +462,7 @@ class FinanceApp {
     let hasAdcb = false;
     this.db.bank_accounts.forEach(b => {
       const bName = (b.bank_name || '').toLowerCase();
-      if (b.id === 'bank-fab-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
+      if (b.id === 'bank-fab-uae' || b.id === 'bank-adcb-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
         b.id = 'bank-adcb-uae';
         b.company_id = 'rayan-corp-uae';
         b.account_name = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
@@ -442,7 +474,7 @@ class FinanceApp {
         b.currency = 'AED';
         b.signatory = 'Arshad Alam Shaikh';
         b.status = 'Active';
-        if (!b.balance || b.balance === 1450000) b.balance = 156625.95;
+        if (!b.balance || b.balance === 1450000 || b.balance === 156625.95) b.balance = 183092.72;
         hasAdcb = true;
       }
     });
@@ -458,7 +490,7 @@ class FinanceApp {
         swift: 'ADCBAEAA',
         branch: 'Dalma Mall - Abu Dhabi',
         currency: 'AED',
-        balance: 156625.95,
+        balance: 183092.72,
         signatory: 'Arshad Alam Shaikh',
         status: 'Active'
       });
@@ -472,7 +504,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v3';
+    const CURRENT_DB_VERSION = 'v2026_clean_v4';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -657,6 +689,10 @@ class FinanceApp {
           }
         });
       }
+
+      // Route payment into Cash & Banks depending on mode (bank_accounts, bank_transfers, cheques, cash_vouchers)
+      this.routeReceiptToCashAndBank(newRcp, this.db);
+
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, receipt: newRcp };
     }
@@ -781,6 +817,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.customer_receipts[idx] = { ...this.db.customer_receipts[idx], ...payload.receipt };
       }
+      this.routeReceiptToCashAndBank(payload.receipt, this.db);
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, receipt: payload.receipt };
     }
@@ -1078,6 +1115,126 @@ class FinanceApp {
 
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
+  }
+
+  // --------------------------------------------------------------------------
+  // ROUTE PAYMENTS INTO CASH & BANKING ARCHITECTURE
+  // Automatically routes payments (online wires, cheques, cash) to bank accounts,
+  // bank transfers ledger, cheque clearing register, or petty cash vaults.
+  // --------------------------------------------------------------------------
+  routeReceiptToCashAndBank(receipt, db = this.db) {
+    if (!receipt || !receipt.amount_received) return;
+    const amt = Number(receipt.amount_received) || 0;
+    if (amt <= 0) return;
+
+    if (!db.bank_transfers) db.bank_transfers = [];
+    if (!db.cheques) db.cheques = [];
+    if (!db.cash_vouchers) db.cash_vouchers = [];
+    if (!db.bank_accounts) db.bank_accounts = [];
+    if (!db.cash_in_hand) db.cash_in_hand = [];
+
+    const mode = String(receipt.payment_mode || 'Online').trim();
+    const modeLower = mode.toLowerCase();
+    const companyId = receipt.company_id || this.activeCompanyId || 'rayan-corp-uae';
+    const currency = receipt.currency || (companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+
+    if (modeLower.includes('cash')) {
+      let reg = db.cash_in_hand.find(r => r.company_id === companyId);
+      if (!reg) {
+        reg = db.cash_in_hand.find(r => (currency === 'INR' ? r.id.includes('mumbai') : r.id.includes('dubai'))) || db.cash_in_hand[0];
+      }
+
+      const existingCv = db.cash_vouchers.find(v => v.receipt_id === receipt.id || v.voucher_no === `CV-${receipt.receipt_no}`);
+      if (!existingCv) {
+        if (reg) {
+          reg.balance = (Number(reg.balance) || 0) + amt;
+          reg.last_replenished = receipt.receipt_date || new Date().toISOString().split('T')[0];
+        }
+        db.cash_vouchers.unshift({
+          id: `cv-rcp-${receipt.id || Date.now()}`,
+          receipt_id: receipt.id,
+          voucher_no: `CV-${receipt.receipt_no}`,
+          company_id: companyId,
+          register_id: reg?.id || 'cash-dubai-reg',
+          register_name: reg?.register_name || reg?.name || 'Dubai Main Vault',
+          custodian: receipt.cashier || reg?.custodian || 'Cashier',
+          date: receipt.receipt_date || new Date().toISOString().split('T')[0],
+          type: 'inflow',
+          category: 'Customer Cash Collection',
+          purpose: receipt.notes || `Cash receipt from ${receipt.customer_name || 'Customer'} for ${receipt.ref_invoice_no || receipt.receipt_no}`,
+          payee: receipt.customer_name || 'Customer',
+          amount: amt,
+          currency: currency,
+          status: 'Approved',
+          created_at: new Date().toISOString()
+        });
+      }
+    } else if (modeLower.includes('cheque') || modeLower.includes('check')) {
+      const chqStatus = receipt.cheque_status || 'Cleared';
+      const isCleared = chqStatus.toLowerCase().includes('clear');
+
+      const existingChq = db.cheques.find(c => c.receipt_id === receipt.id || (receipt.cheque_no && c.cheque_no === receipt.cheque_no));
+      if (!existingChq) {
+        db.cheques.unshift({
+          id: `chq-rcp-${receipt.id || Date.now()}`,
+          receipt_id: receipt.id,
+          company_id: companyId,
+          type: 'inward',
+          cheque_no: receipt.cheque_no || receipt.reference_no || `CHQ-${receipt.receipt_no}`,
+          bank_name: receipt.bank_name || 'Abu Dhabi Commercial Bank (ADCB)',
+          branch: receipt.bank_branch || '',
+          party_name: receipt.customer_name || 'Customer',
+          date: receipt.cheque_date || receipt.receipt_date || new Date().toISOString().split('T')[0],
+          amount: amt,
+          currency: currency,
+          status: isCleared ? 'Cleared' : (chqStatus || 'Pending Clearance'),
+          notes: receipt.notes || `Customer Receipt ${receipt.receipt_no}${receipt.ref_invoice_no ? ' against ' + receipt.ref_invoice_no : ''}`,
+          created_at: new Date().toISOString()
+        });
+
+        if (isCleared) {
+          let bank = db.bank_accounts.find(b => b.company_id === companyId && b.currency === currency);
+          if (!bank) {
+            bank = db.bank_accounts.find(b => (currency === 'INR' ? b.id === 'bank-sbi-corp' : b.id === 'bank-adcb-uae')) || db.bank_accounts[0];
+          }
+          if (bank) {
+            bank.balance = (Number(bank.balance) || 0) + amt;
+          }
+        }
+      }
+    } else {
+      // Online / Wire / Bank Transfer / Card
+      const existingTrf = db.bank_transfers.find(t => t.receipt_id === receipt.id || t.reference_no === (receipt.reference_no || `WIRE-${receipt.receipt_no}`));
+      if (!existingTrf) {
+        let bank = db.bank_accounts.find(b => b.company_id === companyId && b.currency === currency);
+        if (!bank) {
+          bank = db.bank_accounts.find(b => (currency === 'INR' ? b.id === 'bank-sbi-corp' : b.id === 'bank-adcb-uae')) || db.bank_accounts[0];
+        }
+        if (bank) {
+          bank.balance = (Number(bank.balance) || 0) + amt;
+        }
+
+        db.bank_transfers.unshift({
+          id: `wire-rcp-${receipt.id || Date.now()}`,
+          receipt_id: receipt.id,
+          company_id: companyId,
+          reference_no: receipt.reference_no || `WIRE-${receipt.receipt_no}`,
+          date: receipt.receipt_date || new Date().toISOString().split('T')[0],
+          source_bank: receipt.bank_name || bank?.bank_name || 'Abu Dhabi Commercial Bank (ADCB)',
+          source_account_id: bank?.id || 'bank-adcb-uae',
+          destination_bank: bank?.bank_name || 'Abu Dhabi Commercial Bank (ADCB)',
+          destination_account_id: bank?.id || 'bank-adcb-uae',
+          counterparty: receipt.customer_name || 'Customer',
+          amount: amt,
+          currency: currency,
+          type: 'inward',
+          type_label: `Inward Client Wire (${receipt.receipt_no})`,
+          purpose: receipt.notes || `Client payment receipt for ${receipt.ref_invoice_no || receipt.receipt_no}`,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        });
+      }
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -4030,7 +4187,7 @@ class FinanceApp {
     });
     const totalReceived = receipts.reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
     const fabReceipts = receipts.filter(r => (r.bank_name || '').toLowerCase().includes('abu dhabi') || (r.currency === 'AED')).reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
-    const latestReceiptId = receipts[0]?.id || 'rec-rv-44026';
+    const latestReceiptId = receipts[0]?.id || 'rec-rv-44035';
 
     root.innerHTML = `
       <div class="fin-dash-row-responsive">
