@@ -14206,11 +14206,11 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Tax Invoice Title & Metadata) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
-              <div style="max-width:55%;">
-                <div style="margin-bottom:0.45rem;">
+              <div style="max-width:60%;">
+                <div style="margin-bottom:0.75rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
-                <div style="font-size:0.92rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.3; margin-bottom:3px;">
+                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
@@ -14519,11 +14519,11 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Receipt Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
-              <div style="max-width:55%;">
-                <div style="margin-bottom:0.4rem;">
+              <div style="max-width:60%;">
+                <div style="margin-bottom:0.65rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.82rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; white-space:nowrap;">
                   ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
                 <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
@@ -16218,11 +16218,11 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Expense Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
-              <div style="max-width:55%;">
-                <div style="margin-bottom:0.4rem;">
+              <div style="max-width:60%;">
+                <div style="margin-bottom:0.65rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.82rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; white-space:nowrap;">
                   ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
                 <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
@@ -16500,11 +16500,11 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Payment Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem; flex-wrap:wrap;">
-              <div style="max-width:55%; min-width:280px;">
-                <div style="margin-bottom:0.4rem;">
+              <div style="max-width:60%; min-width:280px;">
+                <div style="margin-bottom:0.65rem;">
                   ${this.getRayanLogoImg(false)}
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.82rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; white-space:nowrap;">
                   ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
                 </div>
                 <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
