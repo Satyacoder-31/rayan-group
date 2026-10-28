@@ -14332,8 +14332,8 @@ class FinanceApp {
                   <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
                     Payable Amount : ${words}
                   </div>
-                  <div style="flex-shrink:0; opacity:0.95; margin-right:4px;">
-                    <img src="${isIndia ? '/assets/logos/ashaz-engineering.png' : '/assets/docs/rayan-doc-logo.png'}" alt="${isIndia ? 'ASHAZ ENGINEERING' : 'RAYAN ENGINEERING'}" style="height:32px; width:auto; display:block;">
+                  <div style="flex-shrink:0; opacity:0.9; margin-right:8px;">
+                    <img src="/assets/rayan-symbol-engineering.svg" alt="R" style="height:36px; width:auto; display:block;">
                   </div>
                 </div>
 
