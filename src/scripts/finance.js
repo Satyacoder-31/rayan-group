@@ -14051,7 +14051,17 @@ class FinanceApp {
     };
 
     const formattedDate = formatDateDisplay(inv.invoice_date || '2026-06-19');
-    const formattedDueDate = inv.payment_terms === 0 || !inv.payment_terms || String(inv.payment_terms_label || '').toLowerCase().includes('receipt') ? formatDateDisplay(inv.due_date || inv.invoice_date || '2026-06-19') : (inv.due_date ? formatDateDisplay(inv.due_date) : formattedDate);
+    let formattedDueDate = 'None';
+    const dueStr = inv.due_date ? String(inv.due_date).trim() : '';
+    const isDueEmptyOrNone = !dueStr || dueStr.toLowerCase() === 'none' || dueStr.toLowerCase() === 'null' || dueStr.toLowerCase() === 'n/a';
+    const isNoDueDate = Boolean(inv.no_due_date || String(inv.payment_terms_label || '').toLowerCase().includes('no due date'));
+    const isDueOnReceipt = inv.payment_terms === 0 || !inv.payment_terms || String(inv.payment_terms_label || '').toLowerCase().includes('receipt');
+
+    if (isDueEmptyOrNone || isNoDueDate || (isDueOnReceipt && (dueStr === String(inv.invoice_date || '').trim() || !dueStr))) {
+      formattedDueDate = 'None';
+    } else {
+      formattedDueDate = formatDateDisplay(inv.due_date);
+    }
     const words = inv.amount_in_words || (this.numberToEnglishWords(grandTotal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
 
     const lineItems = (inv.line_items && inv.line_items.length >= 4) ? inv.line_items : (isTopRock ? [
@@ -14170,8 +14180,8 @@ class FinanceApp {
             <!-- Header Section (Left: Logo & Company, Right: Tax Invoice Title & Metadata) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
               <div style="max-width:55%;">
-                <div style="margin-bottom:0.5rem;">
-                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:36px; width:auto; display:block;">
+                <div style="margin-bottom:0.45rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
                 <div style="font-size:0.92rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.3; margin-bottom:3px;">
                   ${compName}
@@ -14193,20 +14203,20 @@ class FinanceApp {
                 <div style="font-size:0.8rem; color:#374151; line-height:1.45;">
                   <table style="margin-left:auto; border-collapse:collapse; text-align:right;">
                     <tr>
-                      <td style="color:#6b7280; padding-right:10px; padding-bottom:2px;">Order# :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${poRef}</td>
+                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Order# :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:3px;">${poRef}</td>
                     </tr>
                     <tr>
-                      <td style="color:#6b7280; padding-right:10px; padding-bottom:2px;">Invoice Date :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${formattedDate}</td>
+                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Invoice Date :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">${formattedDate}</td>
                     </tr>
                     <tr>
-                      <td style="color:#6b7280; padding-right:10px; padding-bottom:2px;">Terms :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
+                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Terms :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
                     </tr>
                     <tr>
-                      <td style="color:#6b7280; padding-right:10px; padding-bottom:2px;">Due Date :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:2px;">${formattedDueDate}</td>
+                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Due Date :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">${formattedDueDate}</td>
                     </tr>
                   </table>
                 </div>
@@ -14225,7 +14235,7 @@ class FinanceApp {
               ${custTrn ? `<div style="font-size:0.82rem; color:#4b5563; margin-top:2px;">TRN: ${custTrn}</div>` : ''}
 
               <div style="margin-top:1.25rem;">
-                <div style="font-size:0.82rem; color:#4b5563; font-weight:600; margin-bottom:3px;">Subject :</div>
+                <div style="font-size:0.82rem; color:#4b5563; font-weight:600; margin-bottom:3px;">Project :</div>
                 <div style="font-size:0.95rem; font-weight:800; color:#111827; text-transform:uppercase; line-height:1.35;">
                   ${inv.subject || projectScope}
                 </div>
