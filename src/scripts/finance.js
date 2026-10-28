@@ -13869,17 +13869,17 @@ class FinanceApp {
     const barcodeSvg = this.generateBarcodeSVG(docId);
 
     return `
-      <div class="doc-qr-barcode-block">
-        <div class="doc-qr-inner-flex">
-          <a href="${verifyUrl}" target="_blank" title="Scan or Click to Verify Online" class="doc-qr-link">
-            <img src="${qrApiUrl}" alt="Scan QR Code to Verify" class="doc-qr-code-img" loading="eager" onerror="this.src='/assets/docs/rayan-barcode-trn.jpg'">
+      <div class="doc-qr-barcode-block" style="display:inline-flex; flex-direction:column; align-items:flex-start; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; margin-top:8px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+        <div class="doc-qr-inner-flex" style="display:flex; align-items:center; gap:9px;">
+          <a href="${verifyUrl}" target="_blank" title="Scan or Click to Verify Online" class="doc-qr-link" style="display:block; text-decoration:none; line-height:0;">
+            <img src="${qrApiUrl}" alt="Scan QR Code to Verify" class="doc-qr-code-img" style="width:58px; height:58px; object-fit:contain; border-radius:4px; border:1px solid #cbd5e1; background:#ffffff; display:block;" loading="eager" onerror="this.src='/assets/docs/rayan-barcode-trn.jpg'">
           </a>
-          <div class="doc-barcode-meta">
+          <div class="doc-barcode-meta" style="display:flex; flex-direction:column; align-items:center; gap:1px;">
             ${barcodeSvg}
-            <div class="doc-barcode-num">${docId}</div>
-            <div class="doc-qr-scan-hint">
+            <div class="doc-barcode-num" style="font-size:7.5px; font-weight:800; color:#0f172a; letter-spacing:0.04em; line-height:1.2;">${docId}</div>
+            <div class="doc-qr-scan-hint" style="font-size:6.5px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; display:flex; align-items:center; gap:3px; margin-top:1px;">
               <span>📷</span>
-              <span>Scan to view online</span>
+              <span>Scan to verify invoice</span>
             </div>
           </div>
         </div>
@@ -14179,21 +14179,15 @@ class FinanceApp {
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
                   ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
+                ${this.getRayanDynamicVerificationCode({ ...inv, invoice_no: inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : (inv.id || 'REC-RG-INV-44049')) }, 'invoice')}
               </div>
 
               <div style="text-align:right;">
                 <div style="font-size:1.9rem; font-weight:900; color:#111827; letter-spacing:-0.01em; line-height:1; margin-bottom:4px;">
                   TAX INVOICE
                 </div>
-                <div style="font-size:0.95rem; font-weight:700; color:#1f2937; margin-bottom:10px;">
+                <div style="font-size:0.95rem; font-weight:700; color:#1f2937; margin-bottom:12px;">
                   # ${inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : 'REC-RG-INV-44049')}
-                </div>
-
-                <div style="margin-bottom:10px;">
-                  <div style="font-size:0.75rem; color:#6b7280; font-weight:600; margin-bottom:1px;">Balance Due</div>
-                  <div style="font-size:1.35rem; font-weight:800; color:#111827; letter-spacing:-0.01em;">
-                    ${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 })}
-                  </div>
                 </div>
 
                 <div style="font-size:0.8rem; color:#374151; line-height:1.45;">
