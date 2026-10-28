@@ -7050,6 +7050,7 @@ class FinanceApp {
               <option value="Pcs" ${uom === 'Pcs' || uom === 'PCS' ? 'selected' : ''}>Pcs</option>
               <option value="Nos" ${uom === 'Nos' || uom === 'NOS' ? 'selected' : ''}>Nos</option>
               <option value="Lsum" ${uom === 'Lsum' || uom === 'LSUM' ? 'selected' : ''}>Lsum</option>
+              <option value="%" ${uom === '%' || uom === 'Pct' || uom === 'PCT' ? 'selected' : ''}>%</option>
               <option value="Job" ${uom === 'Job' || uom === 'JOB' ? 'selected' : ''}>Job</option>
               <option value="Cum" ${uom === 'Cum' || uom === 'CUM' ? 'selected' : ''}>Cum</option>
               <option value="Kg" ${uom === 'Kg' || uom === 'KG' ? 'selected' : ''}>Kg</option>
@@ -7138,6 +7139,28 @@ class FinanceApp {
         inp.oninput = () => recalculateInvoice();
         inp.onchange = () => recalculateInvoice();
       });
+
+      const editUnitIcon = tr.querySelector('.fin-s1-unit-code-row span[title="Click to update unit code"]');
+      if (editUnitIcon) {
+        editUnitIcon.onclick = () => {
+          const select = tr.querySelector('.row-uom');
+          const custom = prompt('Enter custom Unit Code (e.g. %, Sqm, Lsum, Nos):', select?.value || '%');
+          if (custom && custom.trim()) {
+            const val = custom.trim();
+            if (select) {
+              let opt = Array.from(select.options).find(o => o.value.toLowerCase() === val.toLowerCase());
+              if (!opt) {
+                opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+              }
+              select.value = opt.value;
+              recalculateInvoice();
+            }
+          }
+        };
+      }
 
       tr.querySelector('.row-del').onclick = () => {
         tr.remove();
@@ -11682,9 +11705,11 @@ class FinanceApp {
                   <label class="fin-form-label">Unit of Measure (UOM)</label>
                   <select id="new-item-uom" class="fin-form-select">
                     <option value="Sqm">Sqm (Square Meter)</option>
+                    <option value="Sqft">Sqft (Square Feet)</option>
                     <option value="MT">MT (Metric Ton)</option>
                     <option value="CUM">CUM (Cubic Meter)</option>
                     <option value="LSUM">LSUM (Lump Sum)</option>
+                    <option value="%">% (Percentage)</option>
                     <option value="HRS">HRS (Hours)</option>
                     <option value="UNITS">UNITS</option>
                   </select>
@@ -15132,6 +15157,7 @@ class FinanceApp {
                   <label class="fin-form-label">Unit of Measure (UOM)</label>
                   <select id="edit-inv-item-uom" class="fin-form-select">
                     <option value="LSUM" ${lineItems[0]?.uom === 'LSUM' ? 'selected' : ''}>LSUM (Lump Sum)</option>
+                    <option value="%" ${lineItems[0]?.uom === '%' ? 'selected' : ''}>% (Percentage)</option>
                     <option value="Sqm" ${lineItems[0]?.uom === 'Sqm' ? 'selected' : ''}>Sqm (Square Meter)</option>
                     <option value="MT" ${lineItems[0]?.uom === 'MT' ? 'selected' : ''}>MT (Metric Ton)</option>
                     <option value="CUM" ${lineItems[0]?.uom === 'CUM' ? 'selected' : ''}>CUM (Cubic Meter)</option>
