@@ -3645,17 +3645,23 @@ select option:focus,
   }
 
   /* 5. Official Document Print Modal Backdrop Reset (Invoices, Receipts, POs) */
-  .fin-doc-modal-backdrop {
+  .fin-doc-modal-backdrop,
+  #fin-doc-print-modal {
     position: static !important;
     display: block !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
     overflow: visible !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
     z-index: auto !important;
     animation: none !important;
     opacity: 1 !important;
@@ -3667,6 +3673,11 @@ select option:focus,
     position: static !important;
     padding: 0 !important;
     margin: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
     overflow: visible !important;
     overflow-x: visible !important;
     width: 100% !important;
@@ -3679,6 +3690,8 @@ select option:focus,
     position: relative !important;
     box-shadow: none !important;
     border: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
     margin: 0 auto !important;
     padding: 2mm 4mm !important;
     width: 100% !important;
@@ -3687,9 +3700,9 @@ select option:focus,
     min-height: auto !important;
     height: auto !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #0f172a !important;
-    overflow: visible !important;
-    overflow-x: visible !important;
+    overflow: hidden !important;
     page-break-after: auto !important;
     break-after: auto !important;
     page-break-inside: avoid !important;

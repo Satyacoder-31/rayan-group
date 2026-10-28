@@ -70,17 +70,39 @@
     @media print {
       html, body {
         background: #ffffff !important;
+        background-color: #ffffff !important;
         color: #0f172a !important;
         overflow: visible !important;
         height: auto !important;
         min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
       }
-      #main-content, #finance-portal-root {
+      #main-content, #finance-portal-root, #fin-modal-container, .fin-doc-modal-backdrop, #fin-doc-print-modal, .fin-doc-viewport {
         display: block !important;
         overflow: visible !important;
         height: auto !important;
         min-height: 0 !important;
         max-height: none !important;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      .fin-document-paper {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        border-radius: 0 !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
       }
     }
   </style>

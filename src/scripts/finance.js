@@ -12594,14 +12594,112 @@ class FinanceApp {
   }
 
   printDocument() {
-    document.body.classList.add('fin-doc-open');
-    document.body.classList.add('fin-printing-now');
-    setTimeout(() => {
+    const modalPaper = document.querySelector('#fin-doc-print-modal .fin-document-paper') ||
+                       document.querySelector('.fin-document-paper');
+
+    if (!modalPaper) {
       window.print();
+      return;
+    }
+
+    try {
+      let printFrame = document.getElementById('fin-clean-print-frame');
+      if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'fin-clean-print-frame';
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        printFrame.style.margin = '0';
+        printFrame.style.padding = '0';
+        printFrame.style.visibility = 'hidden';
+        document.body.appendChild(printFrame);
+      }
+
+      const frameDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+      frameDoc.open();
+      frameDoc.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${document.title || 'Official Document'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+    * {
+      box-sizing: border-box !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      color: #111827 !important;
+      width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .fin-document-paper {
+      margin: 0 auto !important;
+      box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      border-radius: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-height: 297mm !important;
+      padding: 10mm 14mm 8mm 14mm !important;
+      box-sizing: border-box !important;
+      background: #ffffff !important;
+      position: relative !important;
+      overflow: hidden !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    table {
+      border-collapse: collapse !important;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  ${modalPaper.outerHTML}
+</body>
+</html>`);
+      frameDoc.close();
+
       setTimeout(() => {
-        document.body.classList.remove('fin-printing-now');
-      }, 500);
-    }, 60);
+        try {
+          printFrame.contentWindow.focus();
+          printFrame.contentWindow.print();
+        } catch (e) {
+          window.print();
+        }
+      }, 250);
+    } catch (e) {
+      document.body.classList.add('fin-doc-open');
+      document.body.classList.add('fin-printing-now');
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+          document.body.classList.remove('fin-printing-now');
+        }, 500);
+      }, 60);
+    }
   }
 
   openInvoiceDetail(id) {
@@ -13933,7 +14031,11 @@ class FinanceApp {
   }
 
   getRayanWatermark() {
-    return `<div class="rayan-doc-watermark"><img src="/assets/docs/rayan-watermark.png" alt="" style="width:135px; opacity:0.15;"></div>`;
+    return `
+      <div class="rayan-doc-watermark" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:0; opacity:0.07; display:flex; justify-content:center; align-items:center; width:100%; height:100%; user-select:none;">
+        <img src="/assets/rayan-symbol-engineering.svg" alt="" style="width:300px; max-width:50%; height:auto; display:block;">
+      </div>
+    `;
   }
 
   numberToEnglishWords(num) {
@@ -14202,7 +14304,13 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
 
             <!-- Header Section (Left: Logo & Company, Right: Tax Invoice Title & Metadata) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
@@ -14355,12 +14463,9 @@ class FinanceApp {
               <!-- Bottom Summary Matching Screenshot (Left: Payable Amount in Words with Rayan Engineering Logo, Right: Summary Table) -->
               <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
                 <!-- Left: Payable Amount in Words -->
-                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
                   <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
                     Payable Amount : ${words}
-                  </div>
-                  <div style="flex-shrink:0; opacity:0.9; margin-right:8px;">
-                    <img src="/assets/rayan-symbol-engineering.svg" alt="R" style="height:36px; width:auto; display:block;">
                   </div>
                 </div>
 
@@ -14412,6 +14517,7 @@ class FinanceApp {
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
             </div>
 
+            </div> <!-- End Main Document Content Layer -->
           </div>
         </div>
       </div>
