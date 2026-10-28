@@ -383,7 +383,7 @@ class FinanceApp {
             inv.amount_paid = 26466.773;
             inv.balance_due = 0;
             inv.status = 'paid';
-            inv.amount_in_words = 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.';
+            inv.amount_in_words = 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils AED Only.';
             if (!inv.line_items || inv.line_items.length < 4) {
               inv.line_items = JSON.parse(JSON.stringify(topRock4Items));
             }
@@ -581,6 +581,20 @@ class FinanceApp {
         balance: 183092.72,
         signatory: 'Arshad Alam Shaikh',
         status: 'Active'
+      });
+    }
+
+    // Sanitize any existing invoice / voucher amount_in_words in memory
+    if (this.db) {
+      ['invoices', 'customer_receipts', 'purchase_orders', 'expenses', 'vendor_payments', 'debit_notes'].forEach(key => {
+        if (Array.isArray(this.db[key])) {
+          this.db[key].forEach(doc => {
+            if (doc && doc.amount_in_words) {
+              const c = doc.currency || 'AED';
+              doc.amount_in_words = this.formatAmountInWords(doc.amount_in_words, c);
+            }
+          });
+        }
       });
     }
 
@@ -8889,7 +8903,7 @@ class FinanceApp {
         balance_due: grandTotal,
         status, // 'draft' or 'issued'
         notes: notesVal,
-        amount_in_words: this.numberToEnglishWords(grandTotal) + ` ${currency} Only.`,
+        amount_in_words: this.numberToEnglishWords(grandTotal, currency),
         created_by: this.currentUser?.name || 'Arshad Alam Shaikh',
         created_at: new Date().toISOString()
       };
@@ -9682,7 +9696,7 @@ class FinanceApp {
           received_by: document.getElementById('rec-received-by').value.trim() || 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
           receiver_sign: document.getElementById('rec-receiver-sign').value.trim() || 'Arshad Alam Shaikh',
           notes: document.getElementById('rec-notes').value.trim(),
-          amount_in_words: this.numberToEnglishWords(amountReceived) + (currency === 'INR' ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'),
+          amount_in_words: this.numberToEnglishWords(amountReceived, currency),
           recorded_by: this.currentUser?.name || 'Accounts Staff',
           recorded_at: new Date().toISOString()
         },
@@ -11291,7 +11305,7 @@ class FinanceApp {
             balance_due: openingBal,
             status: 'issued',
             notes: `Opening Balance Receivable brought forward under ${arAccount}.`,
-            amount_in_words: this.numberToEnglishWords(openingBal) + ` ${curr} Only.`,
+            amount_in_words: this.numberToEnglishWords(openingBal, curr),
             created_by: this.currentUser?.name || 'Arshad Alam Shaikh',
             created_at: new Date().toISOString()
           };
@@ -14058,13 +14072,34 @@ class FinanceApp {
     `;
   }
 
-  numberToEnglishWords(num) {
-    if (!num || num === 0) return 'Zero Only.';
+  formatAmountInWords(wordsOrNum, currency = 'AED') {
+    if (typeof wordsOrNum === 'number') {
+      return this.numberToEnglishWords(wordsOrNum, currency);
+    }
+    if (!wordsOrNum || typeof wordsOrNum !== 'string') {
+      return `Zero ${currency} Only.`;
+    }
+    let s = wordsOrNum.trim();
+    // Normalize currencies
+    s = s.replace(/\bUAE Dirhams\b/gi, '')
+         .replace(/\bDirhams\b/gi, '')
+         .replace(/\bIndian Rupees\b/gi, '')
+         .replace(/\bRupees\b/gi, '');
+    // Strip out existing currency code (like AED or INR) and 'Only.' or 'Only'
+    s = s.replace(new RegExp('\\b' + currency + '\\b', 'gi'), '');
+    s = s.replace(/Only\.?/gi, '');
+    // Clean extra whitespace
+    s = s.replace(/\s+/g, ' ').trim();
+    return s ? `${s} ${currency} Only.` : `Zero ${currency} Only.`;
+  }
+
+  numberToEnglishWords(num, currency = 'AED') {
+    if (!num || num === 0) return `Zero ${currency} Only.`;
     const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
     const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
-    const numInt = Math.floor(num);
-    const numDec = Math.round((num - numInt) * 100);
+    const numInt = Math.floor(Math.abs(num));
+    const numDec = Math.round((Math.abs(num) - numInt) * 100);
 
     function inWords(n) {
       let str = '';
@@ -14091,9 +14126,10 @@ class FinanceApp {
 
     words = words.trim();
     if (numDec > 0) {
-      words += ' and ' + inWords(numDec).trim() + ' Fils';
+      const decUnit = currency === 'INR' ? 'Paise' : 'Fils';
+      words += ' and ' + inWords(numDec).trim() + ` ${decUnit}`;
     }
-    return words ? words + ' Only.' : 'Zero Only.';
+    return words ? `${words} ${currency} Only.` : `Zero ${currency} Only.`;
   }
 
   // 1. TAX INVOICE PRINT MODAL (Clean, Professional, Matching PDF Reference, No Stamp & Signature)
@@ -14209,7 +14245,8 @@ class FinanceApp {
     } else {
       formattedDueDate = formatDateDisplay(inv.due_date);
     }
-    const words = inv.amount_in_words || (this.numberToEnglishWords(grandTotal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+    const words = this.formatAmountInWords(inv.amount_in_words || grandTotal, curr);
+    if (inv.amount_in_words) inv.amount_in_words = words;
 
     const lineItems = (inv.line_items && inv.line_items.length > 0) ? inv.line_items : (isTopRock ? [
       {
@@ -14591,7 +14628,8 @@ class FinanceApp {
     const amountVal = Number(rec.amount_received || 0);
     const formattedAmount = amountVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
     const formattedDate = rec.receipt_date ? this.formatDate(rec.receipt_date) : '19 Oct 2026';
-    const amountInWords = rec.amount_in_words || (this.numberToEnglishWords(amountVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+    const amountInWords = this.formatAmountInWords(rec.amount_in_words || amountVal, curr);
+    if (rec.amount_in_words) rec.amount_in_words = amountInWords;
 
     const isTopRock = (rec.customer_name || '').toLowerCase().includes('top rock') || 
                       (rec.ref_invoice_no === 'REC-RG-INV-44035') || 
@@ -14903,7 +14941,8 @@ class FinanceApp {
     const vatVal = Number(po.vat_total || po.tax_total || 480);
     const miscVal = Number(po.misc_charges || 0);
     const formattedDate = po.date ? this.formatDate(po.date) : '23 Jun 2026';
-    const amountInWords = po.amount_in_words || (this.numberToEnglishWords(totalVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+    const amountInWords = this.formatAmountInWords(po.amount_in_words || totalVal, curr);
+    if (po.amount_in_words) po.amount_in_words = amountInWords;
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -16389,7 +16428,8 @@ class FinanceApp {
     const formattedTax = taxVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
     const formattedTotal = totalVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
     const formattedDate = exp.date ? this.formatDate(exp.date) : '18 Oct 2026';
-    const amountInWords = exp.amount_in_words || (this.numberToEnglishWords(totalVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+    const amountInWords = this.formatAmountInWords(exp.amount_in_words || totalVal, curr);
+    if (exp.amount_in_words) exp.amount_in_words = amountInWords;
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -16680,7 +16720,8 @@ class FinanceApp {
     const amountVal = Number(pay.amount_paid || 0);
     const formattedAmount = amountVal.toLocaleString('en-US', { minimumFractionDigits: 2 });
     const formattedDate = pay.payment_date ? this.formatDate(pay.payment_date) : '18 Oct 2026';
-    const amountInWords = pay.amount_in_words || (this.numberToEnglishWords(amountVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+    const amountInWords = this.formatAmountInWords(pay.amount_in_words || amountVal, curr);
+    if (pay.amount_in_words) pay.amount_in_words = amountInWords;
 
     // Vendor details lookup
     const vendorObj = (this.db?.vendors || []).find(v => v.id === pay.vendor_id || v.name === pay.vendor_name || (pay.vendor_name && v.name && v.name.toLowerCase().includes(pay.vendor_name.toLowerCase())));
@@ -17562,7 +17603,8 @@ class FinanceApp {
     const debitAmount = Number(dn.total_debit_amount || dn.amount || 0);
     const formattedAmount = debitAmount.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 });
     const formattedDate = dn.date ? this.formatDate(dn.date) : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    const amountInWords = dn.amount_in_words || (this.numberToEnglishWords(debitAmount) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+    const amountInWords = this.formatAmountInWords(dn.amount_in_words || debitAmount, curr);
+    if (dn.amount_in_words) dn.amount_in_words = amountInWords;
 
     const vendorObj = (this.db?.vendors || []).find(v => v.name === dn.vendor_name || (dn.vendor_name && v.name && v.name.toLowerCase().includes(dn.vendor_name.toLowerCase())));
 

@@ -547,7 +547,7 @@
       "balance_due": 0,
       "status": "paid",
       "notes": "Please keep a copy of this invoice for your records",
-      "amount_in_words": "Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.",
+      "amount_in_words": "Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils AED Only.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2026-10-19T12:58:11.497Z",
       "payment_stage": "progressive",
@@ -579,7 +579,7 @@
       "bank_name": "Abu Dhabi Commercial Bank (ADCB)",
       "amount_received": 26466.77,
       "currency": "AED",
-      "amount_in_words": "Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.",
+      "amount_in_words": "Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils AED Only.",
       "allocated_amount": 26466.77,
       "allocations": [
         {
