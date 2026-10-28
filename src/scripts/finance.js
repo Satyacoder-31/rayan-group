@@ -14177,11 +14177,7 @@ class FinanceApp {
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
-                  Abu Dhabi<br>
-                  U.A.E<br>
-                  +971 2 565 4497<br>
-                  finance@rayan-group.com<br>
-                  TRN: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
               </div>
 
@@ -14370,8 +14366,18 @@ class FinanceApp {
               </div>
             </div>
 
+            <!-- Contact & Company Details Below Notes (Address, Number, Email) -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+            </div>
+
             <!-- Clean Fixed System Generated Footer (Matching Screenshot 100%, No Stamp, No Signature) -->
-            <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
                 This is a system generated Tax Invoice and does not require any signatories
               </div>
