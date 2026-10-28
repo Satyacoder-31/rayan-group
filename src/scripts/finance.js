@@ -14325,15 +14325,15 @@ class FinanceApp {
                 </tbody>
               </table>
 
-              <!-- Bottom Summary Matching Screenshot (Left: Payable Amount in Words with Rayan Logo, Right: Summary Table) -->
-              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1px; border:1.5px solid #111827; border-top:none; background:#eaf3ec;">
+              <!-- Bottom Summary Matching Screenshot (Left: Payable Amount in Words with Rayan Engineering Logo, Right: Summary Table) -->
+              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
                 <!-- Left: Payable Amount in Words -->
                 <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
                   <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
                     Payable Amount : ${words}
                   </div>
-                  <div style="flex-shrink:0; opacity:0.85; margin-right:8px;">
-                    <img src="/assets/rayan-symbol.svg" alt="R" style="height:36px; width:auto; display:block;">
+                  <div style="flex-shrink:0; opacity:0.95; margin-right:4px;">
+                    <img src="${isIndia ? '/assets/logos/ashaz-engineering.png' : '/assets/docs/rayan-doc-logo.png'}" alt="${isIndia ? 'ASHAZ ENGINEERING' : 'RAYAN ENGINEERING'}" style="height:32px; width:auto; display:block;">
                   </div>
                 </div>
 
@@ -14364,10 +14364,7 @@ class FinanceApp {
             <!-- Notes Section Below Items (Matching PDF Screenshot) -->
             <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
               <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
-              <div style="color:#4b5563; margin-bottom:4px;">Please keep a copy of this invoice for your records</div>
-              <div style="color:#111827;">
-                <span style="color:#6b7280;">Total in words:</span> <strong style="font-weight:600;">${words} ${isIndia ? 'Indian Rupees Only.' : 'UAE Dirhams Only.'}</strong>
-              </div>
+              <div style="color:#4b5563;">Please keep a copy of this invoice for your records</div>
             </div>
 
             <!-- Contact & Company Details Below Notes (Address, Number, Email) -->
