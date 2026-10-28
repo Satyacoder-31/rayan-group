@@ -14307,6 +14307,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -14603,6 +14604,24 @@ class FinanceApp {
       (isTopRock && (i.invoice_no === 'REC-RG-INV-44035' || (i.customer_name || '').includes('TOP ROCK')))
     );
 
+    const comp = (this.db?.companies || []).find(c => c.id === (rec.company_id || this.activeCompanyId)) ||
+                 (defaultSeedData.companies || []).find(c => c.id === (rec.company_id || this.activeCompanyId)) ||
+                 (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
+    if (comp.id === 'rayan-group') {
+      compName = 'RAYAN ENGINEERING';
+    } else if (comp.id === 'rayan-properties-uae') {
+      compName = 'RAYAN PROPERTIES';
+    } else if (comp.id === 'ashaz-eng-in') {
+      compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.name) {
+      compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+    }
+
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+
     const receiptLineItems = (isTopRock && (!linkedInv?.line_items || linkedInv.line_items.length < 4)) ? [
       { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, unit: 'Sqm', rate: 56, wd_pct: 50, amount: 7646.80 },
       { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, unit: 'Sqm', rate: 51, wd_pct: 50, amount: 7494.45 },
@@ -14624,6 +14643,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -14640,170 +14660,179 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
 
-            <!-- Header Section (Left: Logo & Company, Right: Receipt Title & Meta) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+            <!-- Header Section (Left: Logo & Company, Right: Receipt Voucher Title & Metadata) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
               <div style="max-width:60%;">
-                <div style="margin-bottom:0.65rem;">
-                  ${this.getRayanLogoImg(false)}
+                <div style="margin-bottom:0.75rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.82rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; white-space:nowrap;">
-                  ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
+                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                  ${compName}
                 </div>
-                <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
-                  ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
+                <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
+                ${this.getRayanDynamicVerificationCode(rec, 'receipt')}
               </div>
 
               <div style="text-align:right;">
-                <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                   RECEIPT VOUCHER
                 </div>
-                <div style="font-size:0.82rem; color:#64748b; font-weight:700; margin-top:2px;">
-                  سند قبض
-                </div>
-                <div style="font-size:0.9rem; font-weight:700; color:#0284c7; margin-top:4px;">
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
                   # ${rec.receipt_no || 'REC-RV-44025'}
                 </div>
 
-                <!-- Highlight Box: Amount Received -->
-                <div style="margin-top:6px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:4px 12px; display:inline-block; text-align:right;">
-                  <div style="font-size:0.65rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Received</div>
-                  <div style="font-size:1.2rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
-                    ${curr} ${formattedAmount}
-                  </div>
-                </div>
-
-                <!-- Meta Details -->
-                <div style="font-size:0.78rem; color:#475569; line-height:1.45; margin-top:6px;">
-                  <div>Receipt Date : <strong>${formattedDate}</strong></div>
-                  <div>Payment Mode : <strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
-                  ${rec.reference_no || rec.cheque_no ? `<div>Ref / Instrument # : <strong>${rec.reference_no || rec.cheque_no}</strong></div>` : ''}
-                </div>
-              </div>
-            </div>
-
-            <!-- Bill To (Received From) & Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; margin-bottom:0.75rem; padding:0.65rem 0.9rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
-              <div>
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Received From (Bill To)</div>
-                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
-                  ${rec.customer_name || 'Client / Entity'}
-                </div>
-                ${rec.contact_person ? `<div style="font-size:0.78rem; color:#475569;">Attn: <strong>${rec.contact_person}</strong></div>` : ''}
-                ${rec.email ? `<div style="font-size:0.78rem; color:#475569;">Email: <a href="mailto:${rec.email}" style="color:#0284c7; text-decoration:none;">${rec.email}</a></div>` : ''}
-                ${rec.customer_address ? `<div style="font-size:0.78rem; color:#475569;">${rec.customer_address}</div>` : ''}
-              </div>
-
-              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Settlement Details</div>
-                <div><strong>Subject / Towards:</strong> ${rec.notes || 'Tax Invoice Settlement'}</div>
-                <div><strong>Against Invoice:</strong> <span style="color:#0284c7; font-weight:700;">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Advance on Account')}</span></div>
-                ${rec.project_name ? `<div><strong>Project:</strong> ${rec.project_name}</div>` : ''}
-                ${rec.bank_name ? `<div><strong>Drawee Bank:</strong> ${rec.bank_name}</div>` : ''}
-              </div>
-            </div>
-
-            <!-- Simple Clean Items Table (Matching Reference Format) -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem;">
-              <thead>
-                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
-                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
-                  <th style="padding:7px 10px; width:45%;">Item &amp; Description</th>
-                  <th style="padding:7px 10px; width:25%;">Payment Mode &amp; Instrument</th>
-                  <th style="padding:7px 10px; width:25%; text-align:right;">Amount Received (${curr})</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${receiptLineItems && receiptLineItems.length > 1 ? receiptLineItems.map((item, idx) => {
-                  const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
-                  const formattedItemAmt = itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                  return `
-                    <tr style="border-bottom:1px solid #e2e8f0;">
-                      <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">${idx + 1}</td>
-                      <td style="padding:8px 10px;">
-                        <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
-                          ${item.name || item.description}
-                        </div>
-                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                          ${item.qty ? `Qty: ${item.qty} ${item.unit || item.uom || 'Sqm'}` : ''} ${item.rate ? `• Rate: ${Number(item.rate).toFixed(2)}` : ''} ${item.wd_pct ? `• WD: ${item.wd_pct}%` : ''}
-                        </div>
-                      </td>
-                      <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
-                        <div><strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
-                        <div style="color:#64748b; font-size:0.72rem;">
-                          ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
-                          ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
-                        </div>
-                      </td>
-                      <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
-                        ${formattedItemAmt}
-                      </td>
-                    </tr>
-                  `;
-                }).join('') : `
-                  <tr style="border-bottom:1px solid #e2e8f0;">
-                    <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                    <td style="padding:8px 10px;">
-                      <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
-                        ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
-                      </div>
-                      <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                        ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
-                      </div>
-                    </td>
-                    <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
-                      <div><strong>${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</strong></div>
-                      <div style="color:#64748b; font-size:0.72rem;">
-                        ${rec.reference_no || rec.cheque_no ? `Ref: ${rec.reference_no || rec.cheque_no}` : ''}
-                        ${rec.bank_name ? ` • ${rec.bank_name}` : ''}
-                      </div>
-                    </td>
-                    <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
-                      ${formattedAmount}
-                    </td>
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Against Invoice :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Advance on Account')}</td>
                   </tr>
-                `}
-              </tbody>
-            </table>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Receipt Date :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Payment Mode :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Ref / Instrument # :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${rec.reference_no || rec.cheque_no || 'Direct Settlement'}</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
 
-            <!-- Financials Summary & Amount in Words -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
-              <!-- Left: Total in Words & Notes -->
-              <div style="flex:1;">
-                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Total In Words:</div>
-                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
-                  ${amountInWords}
-                </div>
+            <!-- Received From Block -->
+            <div style="margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
+              <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">RECEIVED FROM</div>
+              <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+                ${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}
+              </div>
+              ${rec.contact_person ? `<div style="color:#4b5563;">Attn: ${rec.contact_person}</div>` : ''}
+              ${rec.customer_address ? `<div style="color:#4b5563;">${rec.customer_address}</div>` : ''}
+              ${rec.customer_trn ? `<div style="color:#4b5563;">TRN: ${rec.customer_trn}</div>` : ''}
+              <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-top:10px; text-transform:uppercase;">
+                Project : ${rec.project_name || 'CIVIL CONTRACTING & SPECIALIZED WORKS'}
+              </div>
+            </div>
 
-                <div style="margin-top:0.6rem;">
-                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:1px;">Notes:</div>
-                  <div style="font-size:0.78rem; color:#475569; line-height:1.35;">
-                    Thanks for your business. Please keep a copy of this official receipt voucher for your records.
+            <!-- Table of Line Items (Exact Invoice Theme) -->
+            <div style="margin-bottom:0; overflow:hidden;">
+              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                <thead>
+                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
+                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
+                      <div>Sr. No.</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 8px; width:45%; vertical-align:middle; text-align:center;">
+                      <div>Description</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:25%; vertical-align:middle;">
+                      <div>Payment Mode &amp; Ref</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">طريقة الدفع</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:25%; vertical-align:middle;">
+                      <div>Amount Received</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المستلم</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${receiptLineItems && receiptLineItems.length > 1 ? receiptLineItems.map((item, idx) => {
+                    const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
+                    return `
+                      <tr style="border:1px solid #111827; background:#ffffff;">
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                        <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                          ${item.name || item.description}
+                          ${item.qty ? `<div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">Qty: ${item.qty} ${item.unit || item.uom || 'Sqm'} • Rate: ${Number(item.rate || 0).toFixed(2)}</div>` : ''}
+                        </td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600;">
+                          ${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}
+                          ${rec.reference_no ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no}</div>` : ''}
+                        </td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    `;
+                  }).join('') : `
+                    <tr style="border:1px solid #111827; background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
+                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                        ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
+                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                          ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
+                        </div>
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600;">
+                        ${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}
+                        ${rec.reference_no ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no}</div>` : ''}
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+
+              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                    Amount Received : ${amountInWords}
                   </div>
                 </div>
-              </div>
 
-              <!-- Right: Subtotal & Total Box -->
-              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
-                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
-                  <span>Sub Total</span>
-                  <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
-                  <span>Total Received</span>
-                  <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedAmount}</span>
+                <div style="background:#eaf3ec;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub-Total</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Received</td>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  </table>
                 </div>
               </div>
             </div>
 
-            <!-- System Generated Notice & Page Number Footer -->
-            <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
-              <span style="min-width:20px;"></span>
-              <span style="flex:1; text-align:center; letter-spacing:0.01em;">This is a system generated Receipt Voucher and does not require any signatories</span>
-              <span style="font-size:0.75rem; color:#9ca3af; min-width:20px; text-align:right; font-weight:600;">1</span>
+            <!-- Notes Section Below Items -->
+            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
+              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
+              <div style="color:#4b5563;">Please keep a copy of this official receipt voucher for your records</div>
             </div>
+
+            <!-- Contact & Company Details Below Notes -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Fixed System Generated Footer -->
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                This is a system generated Receipt Voucher and does not require any signatories
+              </div>
+              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer -->
           </div>
         </div>
       </div>
@@ -14850,6 +14879,33 @@ class FinanceApp {
       po = (this.db?.purchase_orders || []).find(p => p.po_no === 'LPO/BD/2026/12') || (this.db?.purchase_orders || [])[0] || {};
     }
 
+    const curr = po.currency || 'AED';
+    const isIndia = curr === 'INR' || po.company_id === 'ashaz-eng-in';
+    const comp = (this.db?.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
+                 (defaultSeedData.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
+                 (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
+    if (comp.id === 'rayan-group') {
+      compName = 'RAYAN ENGINEERING';
+    } else if (comp.id === 'rayan-properties-uae') {
+      compName = 'RAYAN PROPERTIES';
+    } else if (comp.id === 'ashaz-eng-in') {
+      compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.name) {
+      compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+    }
+
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+
+    const totalVal = Number(po.total_value || po.grand_total || 10080);
+    const subtotalVal = Number(po.subtotal_ex_vat || po.subtotal || 9600);
+    const vatVal = Number(po.vat_total || po.tax_total || 480);
+    const miscVal = Number(po.misc_charges || 0);
+    const formattedDate = po.date ? this.formatDate(po.date) : '23 Jun 2026';
+    const amountInWords = po.amount_in_words || (this.numberToEnglishWords(totalVal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
+
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
         <div class="fin-doc-toolbar">
@@ -14864,6 +14920,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPOPrintModal('${po.id || ''}')">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -14878,118 +14935,117 @@ class FinanceApp {
 
         <div class="fin-doc-viewport">
           <!-- PAGE 1 OF PURCHASE ORDER -->
-          <div class="fin-document-paper">
-            <div class="doc-top-accent-bar"></div>
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
 
-            <div class="fin-doc-inner-padding">
-              ${this.getRayanWatermark()}
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
 
-              ${isVerifiedScan ? `
-                <div class="doc-verification-live-banner">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:16px;">📑</span>
-                    <div>
-                      <div style="font-size:9px; font-weight:800; letter-spacing:0.04em;">OFFICIAL PURCHASE ORDER — PROCUREMENT AUDIT VERIFIED</div>
-                      <div style="font-size:7px; opacity:0.9; margin-top:1px;">Accredited procurement commitment issued under Rayan Group Contracts &amp; Subcontract Management.</div>
-                    </div>
-                  </div>
-                  <div style="font-size:7.5px; background:rgba(255,255,255,0.22); padding:3px 8px; border-radius:4px; font-weight:800;">
-                    AUDITED PROCUREMENT ✓
-                  </div>
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+            <!-- Header Section (Left: Logo & Company, Right: PO Title & Metadata) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
+              <div style="max-width:60%;">
+                <div style="margin-bottom:0.75rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
-              ` : ''}
-
-              <!-- Modern Executive Brand Header -->
-              <div class="doc-header-modern">
-                <div class="doc-brand-block">
-                  ${this.getRayanLogoImg(true)}
-                  <div class="doc-brand-text">
-                    <div class="doc-company-title">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</div>
-                    <div class="doc-company-sub">General Contracting • Industrial Construction • MEP Fit-Out</div>
-                    <div class="doc-company-badges">
-                      <span class="doc-badge-pill">TRN: 104937380400003</span>
-                      <span class="doc-badge-pill">Lic: CN-2849102</span>
-                      <span class="doc-badge-pill">Abu Dhabi, UAE</span>
-                    </div>
-                  </div>
+                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                  ${compName}
                 </div>
-
-                <div class="doc-header-center">
-                  <div class="doc-title-en">PURCHASE ORDER</div>
-                  <div class="doc-number-bold">${po.po_no || 'LPO/BD/2026/12'}</div>
+                <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
-
-                <div class="doc-id-card">
-                  <div class="doc-status-badge status-issued">● OFFICIAL PROCUREMENT</div>
-                  ${this.getRayanDynamicVerificationCode(po, 'po')}
-                </div>
+                ${this.getRayanDynamicVerificationCode(po, 'po')}
               </div>
 
-              <!-- Supplier & Ship-To Details Grid -->
-              <div class="doc-grid-cards">
-                <div class="doc-info-card">
-                  <div class="doc-info-card-header">
-                    <span>SUPPLIER / VENDOR (بيانات المورد)</span>
-                    <span>PROCUREMENT VENDOR</span>
-                  </div>
-                  <div class="doc-info-entity-name">${po.supplier_name || po.vendor_name || 'ARIBA GM INTERIOR DÉCOR LLC'}</div>
-                  <div class="doc-info-line">
-                    ${po.supplier_address || 'Abu Dhabi, P.O. Box -'}<br>
-                    <strong>Attn:</strong> ${po.supplier_attn || 'Mr. Mohammad Gulam'} &nbsp;•&nbsp; <strong>TRN#:</strong> ${po.supplier_trn || '104755857000003'}<br>
-                    <strong>Mobile:</strong> ${po.supplier_mobile || '+971559314189'}<br>
-                    <strong>Email:</strong> <a href="mailto:${po.supplier_email || 'aribadecoration@gmail.com'}" class="rayan-link-blue">${po.supplier_email || 'aribadecoration@gmail.com'}</a>
-                    ${po.quote_ref && po.quote_ref !== '-' ? `<br><strong>Quote Ref:</strong> ${po.quote_ref}` : ''}
-                  </div>
+              <div style="text-align:right;">
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
+                  PURCHASE ORDER
+                </div>
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
+                  # ${po.po_no || 'LPO/BD/2026/12'}
                 </div>
 
-                <div class="doc-info-card">
-                  <div class="doc-info-card-header">
-                    <span>SHIP TO &amp; SPECIFICATIONS (جهة الاستلام والطلب)</span>
-                    <span>PO METRICS</span>
-                  </div>
-                  <div class="doc-key-value-list">
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">PO Date:</span>
-                      <span class="doc-val">${po.date ? this.formatDate(po.date) : '23/Jun/2026'}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Payment Terms:</span>
-                      <span class="doc-val" style="color:#0284c7;">${po.payment_terms || 'PDC30'}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Currency / PO Type:</span>
-                      <span class="doc-val">${po.currency || 'AED'} • ${po.po_type || 'Supply/Application'}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Internal Ref (iRef):</span>
-                      <span class="doc-val">${po.iref || '2026-KGN-SUB'}</span>
-                    </div>
-                    <div class="doc-key-value-row">
-                      <span class="doc-label">Responsible Person:</span>
-                      <span class="doc-val">${po.responsible_person || 'Mohammad Suhel'} (${po.ship_to_phone || '+971 25 654497'})</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Project Ribbon -->
-              <div class="doc-project-ribbon">
-                <span>🏗️ <strong style="font-size:8.5px; color:#0f172a;">${po.project_name || 'Al Foah Mall Screeding Work'}</strong></span>
-                <span style="font-size:7.5px; color:#0284c7; background:rgba(2,132,199,0.08); padding:2px 8px; border-radius:4px; font-weight:800;">OFFICIAL PROCUREMENT CONTRACT</span>
-              </div>
-
-              <!-- Modern Line Items Table -->
-              <table class="doc-table-modern">
-                <thead>
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
                   <tr>
-                    <th style="width:4%; text-align:center;">#</th>
-                    <th style="width:38%;">DESCRIPTION &amp; TECHNICAL SCOPE</th>
-                    <th style="width:8%; text-align:center;">UNIT</th>
-                    <th style="width:7%; text-align:center;">QTY</th>
-                    <th style="width:13%; text-align:right;">UNIT PRICE</th>
-                    <th style="width:14%; text-align:right;">INVOICE AMT</th>
-                    <th style="width:8%; text-align:center;">VAT 5%</th>
-                    <th style="width:14%; text-align:right;">TOTAL (AED)</th>
+                    <td style="padding:1px 8px; color:#6b7280;">PO Date :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Payment Terms :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${po.payment_terms || 'PDC30'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Internal Ref (iRef) :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${po.iref || '2026-KGN-SUB'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Responsible Person :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${po.responsible_person || 'Mohammad Suhel'}</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Supplier & Ship-To Details Grid -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
+              <div>
+                <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">SUPPLIER / VENDOR</div>
+                <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+                  ${po.supplier_name || po.vendor_name || 'ARIBA GM INTERIOR DÉCOR LLC'}
+                </div>
+                ${po.supplier_attn ? `<div style="color:#4b5563;">Attn: ${po.supplier_attn}</div>` : ''}
+                ${po.supplier_address ? `<div style="color:#4b5563;">${po.supplier_address}</div>` : ''}
+                ${po.supplier_trn ? `<div style="color:#4b5563;">TRN: ${po.supplier_trn}</div>` : ''}
+                ${po.supplier_mobile ? `<div style="color:#4b5563;">Mobile: ${po.supplier_mobile}</div>` : ''}
+              </div>
+
+              <div>
+                <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">SHIP TO &amp; SCOPE</div>
+                <div style="font-size:0.95rem; font-weight:800; color:#111827; margin-bottom:3px;">
+                  ${compName}
+                </div>
+                <div style="color:#4b5563;">Site Office: ${po.ship_to_address || 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi'}</div>
+                <div style="color:#4b5563;">Contact: ${po.responsible_person || 'Mohammad Suhel'} (${po.ship_to_phone || '+971 25 654497'})</div>
+                <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-top:10px; text-transform:uppercase;">
+                  Project : ${po.project_name || 'Al Foah Mall Screeding Work'}
+                </div>
+              </div>
+            </div>
+
+            <!-- Modern Line Items Table (Matching Invoice Theme) -->
+            <div style="margin-bottom:0; overflow:hidden;">
+              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                <thead>
+                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
+                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
+                      <div>Sr. No.</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 8px; width:45%; vertical-align:middle; text-align:center;">
+                      <div>Description &amp; Scope</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 4px; width:7%; vertical-align:middle;">
+                      <div>Unit</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 4px; width:7%; vertical-align:middle;">
+                      <div>Qty</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:12%; vertical-align:middle;">
+                      <div>Unit Price</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">السعر</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:10%; vertical-align:middle;">
+                      <div>VAT 5%</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:14%; vertical-align:middle;">
+                      <div>Total Amount</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -15006,139 +15062,150 @@ class FinanceApp {
                       total_amount: 9600
                     }
                   ]).map((item, idx) => `
-                    <tr>
-                      <td style="text-align:center; font-weight:700; color:#64748b;">${item.sr || (idx + 1)}</td>
-                      <td>
-                        <div class="doc-item-title">${item.name || item.description}</div>
-                        ${item.description && item.description !== item.name ? `<div class="doc-item-desc">${item.description}</div>` : ''}
+                    <tr style="border:1px solid #111827; background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${item.sr || (idx + 1)}</td>
+                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                        ${item.name || item.description}
                       </td>
-                      <td style="text-align:center; font-weight:700;">${item.unit || item.uom || 'Sqm'}</td>
-                      <td style="text-align:center; font-weight:800;">${item.qty || 160}</td>
-                      <td style="text-align:right; font-variant-numeric:tabular-nums;">${Number(item.unit_price || 60).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">${Number(item.invoice_amount || item.taxable_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:center; font-weight:700; color:#059669; font-variant-numeric:tabular-nums;">${Number(item.vat_amount || item.tax_amount || 480).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                      <td style="text-align:right; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums;">AED ${Number(item.total_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${item.unit || item.uom || 'Sqm'}</td>
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${item.qty || 160}</td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${Number(item.unit_price || 60).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${Number(item.vat_amount || item.tax_amount || 480).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${Number(item.total_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
 
-              <!-- Financials & Breakdown -->
-              <div class="doc-financials-container">
-                <div class="doc-left-financials">
-                  <div class="doc-words-box">
-                    <div class="doc-words-label">Total Amount in Words / المبلغ الإجمالي بالأحرف:</div>
-                    <div class="doc-words-text">💵 ${po.amount_in_words || ('AED ' + this.numberToEnglishWords(po.total_value || po.grand_total || 10080))}</div>
+              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; flex-direction:column; justify-content:center;">
+                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                    Total In Words : ${amountInWords}
                   </div>
-
-                  <div class="po-terms-card-modern">
-                    <div class="po-terms-heading-modern">
-                      <span>Notes to Supplier / ملاحظات للمورد</span>
-                      <span>Site Protocol</span>
-                    </div>
-                    1. <strong>Location / Site:</strong> Al Foah Mall - Alain • Working hours: 8:00 AM to 6:00 PM (lunch break included).<br>
-                    2. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, and equipment.<br>
-                    3. All HSE documents and operator/flagman competency certifications must be approved before commencement.
+                  <div style="font-size:0.75rem; color:#4b5563; margin-top:4px;">
+                    <strong>Site Location:</strong> Al Foah Mall - Alain • Working Hours: 8:00 AM – 6:00 PM
                   </div>
                 </div>
 
-                <div class="doc-totals-card">
-                  <div class="doc-totals-row">
-                    <span>Misc. Charges Subtotal:</span>
-                    <span class="doc-num">${Number(po.misc_charges || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
-                  </div>
-                  <div class="doc-totals-row">
-                    <span>Total Amount EX-VAT (المجموع):</span>
-                    <span class="doc-num">${Number(po.subtotal_ex_vat || po.subtotal || 9600).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
-                  </div>
-                  <div class="doc-totals-row">
-                    <span>VAT 5% (ضريبة القيمة المضافة):</span>
-                    <span class="doc-num" style="color:#059669;">+ ${Number(po.vat_total || po.tax_total || 480).toLocaleString('en-US', { minimumFractionDigits: 2 })} AED</span>
-                  </div>
-                  <div class="doc-totals-row grand-total">
-                    <span>Total Incl. VAT (الإجمالي)</span>
-                    <span style="color:#38bdf8;">AED ${Number(po.total_value || po.grand_total || 10080).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- General Terms & Conditions (Page 1) -->
-              <div class="po-terms-card-modern" style="margin-top:2px;">
-                <div class="po-terms-heading-modern">
-                  <span>GENERAL TERMS AND CONDITIONS FOR SUPPLIES (الشروط العامة)</span>
-                  <span>Articles 1 – 7</span>
-                </div>
-                <strong>1. The Order:</strong> Entered into with RAYAN Engineering and Contracting LLC-SPC for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing.<br>
-                <strong>2. Prices:</strong> Final and not subject to escalation under any circumstances.<br>
-                <strong>3. Identification of Material:</strong> All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities &amp; descriptions.<br>
-                <strong>4. Packing &amp; Protection:</strong> Materials must be protected individually against damage, transit shock, and environmental degradation.<br>
-                <strong>5. Delivery of Goods/Services:</strong> As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization. Delivery date as stated in PO.<br>
-                <strong>6. Performance Guarantee:</strong> Supplier shall submit within 10 days of receipt of PO a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise.<br>
-                <strong>7. Receipt &amp; Acceptance:</strong> Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense.
-              </div>
-
-              <!-- System Generated Notice & Page Number Footer (Page 1) -->
-              <div style="margin-top:auto; padding-top:2rem;">
-                <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-                  <span style="min-width:24px;"></span>
-                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated PO and does not require any signatories</span>
-                  <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
+                <div style="background:#eaf3ec;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub-Total EX-VAT</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">VAT 5%</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Incl. VAT</td>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  </table>
                 </div>
               </div>
             </div>
+
+            <!-- Notes Section Below Items -->
+            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
+              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
+              <div style="color:#4b5563;">Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.</div>
+            </div>
+
+            <!-- Contact & Company Details Below Notes -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Fixed System Generated Footer (Page 1) -->
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                This is a system generated Purchase Order and does not require any signatories
+              </div>
+              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1 / 2</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer Page 1 -->
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
-          <div class="fin-document-paper fin-doc-page-2">
-            <div class="doc-top-accent-bar"></div>
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
 
-            <div class="fin-doc-inner-padding">
-              <!-- Mini Header for Page 2 -->
-              <div class="doc-header-modern" style="padding-bottom:6px; margin-bottom:8px;">
-                <div class="doc-brand-block">
-                  ${this.getRayanLogoImg(true)}
-                  <div class="doc-brand-text">
-                    <div class="doc-company-title">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</div>
-                    <div class="doc-company-sub">Official Procurement Terms &amp; Conditions Specification • Page 2 of 2</div>
-                  </div>
-                </div>
-                <div class="doc-id-card">
-                  <div class="doc-title-en">PURCHASE ORDER</div>
-                  <div class="doc-number-pill">${po.po_no || 'LPO/BD/2026/12'}</div>
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer Page 2 -->
+            <div style="position:relative; z-index:1;">
+
+            <!-- Header Section Page 2 -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem; border-bottom:1.5px solid #111827; padding-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:38px; width:auto; display:block;">
+                <div>
+                  <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
+                  <div style="font-size:0.75rem; color:#4b5563;">General Terms &amp; Conditions of Procurement Specification</div>
                 </div>
               </div>
-
-              <!-- Structured Modern Terms Grid (Clauses 8 to 20 + Invoicing) -->
-              <div class="po-terms-grid-modern">
-                <div class="po-terms-col">
-                  <strong>8. Rejection of Goods/Services:</strong> RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties.<br><br>
-                  <strong>9. Cancellation of Order:</strong> Right reserved to cancel for non-delivery by stipulated date without liability.<br><br>
-                  <strong>10. Invoicing Regulations:</strong> Tax invoices must be submitted within 14 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details.<br><br>
-                  <strong>11. Delay Penalties:</strong> 1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%.<br><br>
-                  <strong>12. Risk Purchase:</strong> Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier.<br><br>
-                  <strong>13. Warranty:</strong> Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges.
-                </div>
-
-                <div class="po-terms-col">
-                  <strong>14. Termination:</strong> Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items.<br><br>
-                  <strong>15. Force Majeure:</strong> Relieves obligations during duration of qualifying events with prompt written notification.<br><br>
-                  <strong>16. Taxes &amp; Banking:</strong> All taxes, duties, and banking charges borne by Seller unless expressly exempted.<br><br>
-                  <strong>17. Indemnity:</strong> Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches.<br><br>
-                  <strong>18. Governing Law:</strong> Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts.<br><br>
-                  <strong>19. Payment Term:</strong> 50% advance upon order confirmation; remaining 50% upon client inspection and certification.<br><br>
-                  <strong>20. Invoice Requirements:</strong> Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO.
-                </div>
-              </div>
-
-              <!-- System Generated Notice & Page Number Footer (Page 2) -->
-              <div style="margin-top:auto; padding-top:2.5rem;">
-                <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-                  <span style="min-width:24px;"></span>
-                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated PO and does not require any signatories</span>
-                  <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">2</span>
-                </div>
+              <div style="text-align:right;">
+                <div style="font-family:'Outfit', sans-serif; font-size:1.1rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
+                <div style="font-size:0.82rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'LPO/BD/2026/12'}</div>
               </div>
             </div>
+
+            <!-- Structured Modern Terms Grid (Articles 1 to 20) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; font-size:0.75rem; color:#374151; line-height:1.55;">
+              <div>
+                <p style="margin:0 0 8px 0;"><strong>1. The Order:</strong> Entered into with ${compName} for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing.</p>
+                <p style="margin:0 0 8px 0;"><strong>2. Prices:</strong> Final and not subject to escalation under any circumstances.</p>
+                <p style="margin:0 0 8px 0;"><strong>3. Identification of Material:</strong> All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities &amp; descriptions.</p>
+                <p style="margin:0 0 8px 0;"><strong>4. Packing &amp; Protection:</strong> Materials must be protected individually against damage, transit shock, and environmental degradation.</p>
+                <p style="margin:0 0 8px 0;"><strong>5. Delivery of Goods/Services:</strong> As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization.</p>
+                <p style="margin:0 0 8px 0;"><strong>6. Performance Guarantee:</strong> Supplier shall submit a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise.</p>
+                <p style="margin:0 0 8px 0;"><strong>7. Receipt &amp; Acceptance:</strong> Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense.</p>
+                <p style="margin:0 0 8px 0;"><strong>8. Rejection of Goods/Services:</strong> RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties.</p>
+                <p style="margin:0 0 8px 0;"><strong>9. Cancellation of Order:</strong> Right reserved to cancel for non-delivery by stipulated date without liability.</p>
+                <p style="margin:0 0 8px 0;"><strong>10. Invoicing Regulations:</strong> Tax invoices must be submitted within 14 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details.</p>
+              </div>
+
+              <div>
+                <p style="margin:0 0 8px 0;"><strong>11. Delay Penalties:</strong> 1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%.</p>
+                <p style="margin:0 0 8px 0;"><strong>12. Risk Purchase:</strong> Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier.</p>
+                <p style="margin:0 0 8px 0;"><strong>13. Warranty:</strong> Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges.</p>
+                <p style="margin:0 0 8px 0;"><strong>14. Termination:</strong> Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items.</p>
+                <p style="margin:0 0 8px 0;"><strong>15. Force Majeure:</strong> Relieves obligations during duration of qualifying events with prompt written notification.</p>
+                <p style="margin:0 0 8px 0;"><strong>16. Taxes &amp; Banking:</strong> All taxes, duties, and banking charges borne by Seller unless expressly exempted.</p>
+                <p style="margin:0 0 8px 0;"><strong>17. Indemnity:</strong> Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches.</p>
+                <p style="margin:0 0 8px 0;"><strong>18. Governing Law:</strong> Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts.</p>
+                <p style="margin:0 0 8px 0;"><strong>19. Payment Term:</strong> 50% advance upon order confirmation; remaining 50% upon client inspection and certification.</p>
+                <p style="margin:0 0 8px 0;"><strong>20. Invoice Requirements:</strong> Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO.</p>
+              </div>
+            </div>
+
+            <!-- Contact & Company Details Below Terms (Page 2) -->
+            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Fixed System Generated Footer (Page 2) -->
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                This is a system generated Purchase Order and does not require any signatories
+              </div>
+              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">2 / 2</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer Page 2 -->
           </div>
         </div>
       </div>
@@ -16296,10 +16363,26 @@ class FinanceApp {
       };
     }
 
-    const comp = (this.db?.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) || this.db?.companies?.[0];
-    const isIndia = (exp.company_id || this.activeCompanyId) === 'ashaz-eng-in' || exp.currency === 'INR';
-    const curr = exp.currency || (isIndia ? 'INR' : 'AED');
-    const currSym = exp.currency_symbol || (isIndia ? '₹' : 'AED ');
+    const curr = exp.currency || 'AED';
+    const isIndia = (exp.company_id || this.activeCompanyId) === 'ashaz-eng-in' || curr === 'INR';
+    const comp = (this.db?.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) ||
+                 (defaultSeedData.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) ||
+                 (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
+    if (comp.id === 'rayan-group') {
+      compName = 'RAYAN ENGINEERING';
+    } else if (comp.id === 'rayan-properties-uae') {
+      compName = 'RAYAN PROPERTIES';
+    } else if (comp.id === 'ashaz-eng-in') {
+      compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.name) {
+      compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+    }
+
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+
     const amountVal = Number(exp.amount || 0);
     const taxVal = Number(exp.tax_amount || 0);
     const totalVal = Number(exp.total_amount || (amountVal + taxVal));
@@ -16323,6 +16406,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openExpensePrintModal('${exp.id || ''}')">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -16339,164 +16423,163 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
 
-            <!-- Header Section (Left: Logo & Company, Right: Expense Title & Meta) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem;">
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+            <!-- Header Section (Left: Logo & Company, Right: Expense Title & Metadata) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
               <div style="max-width:60%;">
-                <div style="margin-bottom:0.65rem;">
-                  ${this.getRayanLogoImg(false)}
+                <div style="margin-bottom:0.75rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.82rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; white-space:nowrap;">
-                  ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
+                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                  ${compName}
                 </div>
-                <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
-                  ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
+                <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
+                ${this.getRayanDynamicVerificationCode(exp, 'expense')}
               </div>
 
               <div style="text-align:right;">
-                <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                   EXPENSE RECEIPT
                 </div>
-                <div style="font-size:0.82rem; color:#64748b; font-weight:700; margin-top:2px;">
-                  سند صرف ومطالبة مصروفات
-                </div>
-                <div style="font-size:0.9rem; font-weight:700; color:#0284c7; margin-top:4px;">
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
                   # ${exp.expense_no || 'EXP-RG-2026-004'}
                 </div>
 
-                <!-- Highlight Box: Total Amount Reimbursed -->
-                <div style="margin-top:6px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:4px 12px; display:inline-block; text-align:right;">
-                  <div style="font-size:0.65rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Total Disbursed</div>
-                  <div style="font-size:1.2rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
-                    ${curr} ${formattedTotal}
-                  </div>
-                </div>
-
-                <!-- Meta Details -->
-                <div style="font-size:0.78rem; color:#475569; line-height:1.45; margin-top:6px;">
-                  <div>Claim Date : <strong>${formattedDate}</strong></div>
-                  <div>Payment Channel : <strong>${exp.payment_method || 'Corporate Debit Card'}</strong></div>
-                  <div>Audit Status : <strong style="color:#16a34a;">${(exp.status || 'APPROVED').toUpperCase()}</strong></div>
-                  ${exp.receipt_filename ? `<div>Ref Proof : <strong>${exp.receipt_filename}</strong></div>` : ''}
-                </div>
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Claim Date :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Payment Channel :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${exp.payment_method || 'Corporate Debit Card'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Audit Status :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a;">${(exp.status || 'APPROVED').toUpperCase()}</td>
+                  </tr>
+                  ${exp.receipt_filename ? `<tr><td style="padding:1px 8px; color:#6b7280;">Proof Ref :</td><td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${exp.receipt_filename}</td></tr>` : ''}
+                </table>
               </div>
             </div>
 
-            <!-- Claimant & Cost Center / Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; margin-bottom:0.75rem; padding:0.65rem 0.9rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
-              <div>
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Claimant (Submitted By)</div>
-                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
-                  ${exp.submitted_by || 'Authorized Personnel'}
-                </div>
-                <div style="font-size:0.78rem; color:#475569;">Designation / Dept: <strong>Project Field &amp; Civil Operations</strong></div>
-                <div style="font-size:0.78rem; color:#475569;">Entity: <strong>${comp ? comp.name : 'Rayan Engineering & Contracting LLC - SPC'}</strong></div>
+            <!-- Claimant & Cost Center Block -->
+            <div style="margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
+              <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">CLAIMANT / SUBMITTED BY</div>
+              <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+                ${exp.submitted_by || 'Authorized Personnel'}
               </div>
-
-              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Cost Center &amp; Allocation</div>
-                <div><strong>Subject / Nature:</strong> ${exp.description || 'Operational Site Expense'}</div>
-                <div><strong>Linked Project:</strong> <span style="color:#0284c7; font-weight:700;">${exp.project_name || 'General Corporate Overhead'}</span></div>
-                <div><strong>Category:</strong> ${exp.category || 'Equipment & Fuel'}</div>
+              <div style="color:#4b5563;">Dept / Role: Project Field &amp; Civil Operations</div>
+              <div style="color:#4b5563;">Category: ${exp.category || 'Equipment & Fuel'}</div>
+              <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-top:10px; text-transform:uppercase;">
+                Project : ${exp.project_name || 'General Corporate Overhead'}
               </div>
             </div>
 
-            <!-- Simple Clean Items Table (Matching Reference Format) -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem;">
-              <thead>
-                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
-                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
-                  <th style="padding:7px 10px; width:45%;">Item / Expense Particulars</th>
-                  <th style="padding:7px 10px; width:20%; text-align:right;">Taxable Subtotal (${curr})</th>
-                  <th style="padding:7px 10px; width:15%; text-align:right;">VAT (5%) (${curr})</th>
-                  <th style="padding:7px 10px; width:15%; text-align:right;">Total (${curr})</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                  <td style="padding:8px 10px;">
-                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
+            <!-- Items Table (Matching Invoice Theme) -->
+            <div style="margin-bottom:0; overflow:hidden;">
+              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                <thead>
+                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
+                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
+                      <div>Sr. No.</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 8px; width:50%; vertical-align:middle; text-align:center;">
+                      <div>Expense Particulars &amp; Purpose</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان المصروف</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:15%; vertical-align:middle;">
+                      <div>Taxable Subtotal</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الأساسي</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:15%; vertical-align:middle;">
+                      <div>VAT 5%</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:15%; vertical-align:middle;">
+                      <div>Total Disbursed</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border:1px solid #111827; background:#ffffff;">
+                    <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
+                    <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
                       ${exp.description}
-                    </div>
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                      ${exp.project_name ? `Project: ${exp.project_name} • ` : ''}Category: ${exp.category}
-                    </div>
-                  </td>
-                  <td style="padding:8px 10px; text-align:right; font-weight:600; color:#334155; font-variant-numeric:tabular-nums;">
-                    ${formattedAmount}
-                  </td>
-                  <td style="padding:8px 10px; text-align:right; font-weight:600; color:#334155; font-variant-numeric:tabular-nums;">
-                    ${formattedTax}
-                  </td>
-                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
-                    ${formattedTotal}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                      <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                        ${exp.project_name ? `Project: ${exp.project_name} • ` : ''}Category: ${exp.category}
+                      </div>
+                    </td>
+                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${formattedAmount}</td>
+                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${formattedTax}</td>
+                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${formattedTotal}</td>
+                  </tr>
+                </tbody>
+              </table>
 
-            <!-- Financials Summary & Amount in Words -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
-              <!-- Left: Total in Words & Notes -->
-              <div style="flex:1;">
-                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Total In Words:</div>
-                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
-                  ${amountInWords}
-                </div>
-
-                <div style="margin-top:0.6rem;">
-                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:1px;">Internal Audit &amp; Tax Compliance:</div>
-                  <div style="font-size:0.78rem; color:#475569; line-height:1.35;">
-                    This operational disbursement has been audited and approved in compliance with UAE Federal Tax Authority (FTA) input VAT recovery guidelines.
+              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                    Total In Words : ${amountInWords}
                   </div>
                 </div>
-              </div>
 
-              <!-- Right: Subtotal & Total Box -->
-              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
-                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
-                  <span>Taxable Subtotal</span>
-                  <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
-                  <span>${isIndia ? 'GST (18%)' : 'UAE VAT (5%)'}</span>
-                  <span style="font-variant-numeric:tabular-nums;">${formattedTax}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
-                  <span>Total Disbursed</span>
-                  <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedTotal}</span>
+                <div style="background:#eaf3ec;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Taxable Subtotal</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedAmount}</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">VAT 5%</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedTax}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Disbursed</td>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${formattedTotal}</td>
+                    </tr>
+                  </table>
                 </div>
               </div>
             </div>
 
-            <!-- If user has an attached raw receipt image/PDF, show an embedded preview section -->
-            ${exp.receipt_data ? `
-              <div style="margin-bottom:0.75rem; padding:8px 12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; font-size:0.78rem;">
-                <div style="font-weight:700; color:#0369a1; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
-                  <span>📎 Attached Verification Slip: <strong>${exp.receipt_filename}</strong></span>
-                  <button type="button" class="fin-btn-quick" style="padding:2px 8px; font-size:0.72rem; border-color:#0284c7; color:#0284c7;" onclick="window.finApp.downloadRawReceiptProof('${exp.id}')">
-                    📥 Download Original Slip &rarr;
-                  </button>
-                </div>
-                ${exp.receipt_data.startsWith('data:image/') ? `
-                  <div style="text-align:center; padding:6px; background:#ffffff; border-radius:4px;">
-                    <img src="${exp.receipt_data}" alt="Receipt Slip" style="max-height:120px; max-width:100%; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
-                  </div>
-                ` : ''}
-              </div>
-            ` : ''}
-
-            <!-- System Generated Notice & Page Number Footer -->
-            <div style="margin-top:auto; padding-top:2.5rem;">
-              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-                <span style="min-width:24px;"></span>
-                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Expense Voucher and does not require any signatories</span>
-                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
-              </div>
+            <!-- Notes Section Below Items -->
+            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
+              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
+              <div style="color:#4b5563;">This operational disbursement has been audited and approved in compliance with UAE Federal Tax Authority (FTA) input VAT recovery guidelines.</div>
             </div>
+
+            <!-- Contact & Company Details Below Notes -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Fixed System Generated Footer -->
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                This is a system generated Expense Voucher and does not require any signatories
+              </div>
+              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer -->
           </div>
         </div>
       </div>
@@ -16575,8 +16658,24 @@ class FinanceApp {
       };
     }
 
-    const comp = (this.db?.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) || this.db?.companies?.[0];
+    const comp = (this.db?.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) ||
+                 (defaultSeedData.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) ||
+                 (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
+    if (comp.id === 'rayan-group') {
+      compName = 'RAYAN ENGINEERING';
+    } else if (comp.id === 'rayan-properties-uae') {
+      compName = 'RAYAN PROPERTIES';
+    } else if (comp.id === 'ashaz-eng-in') {
+      compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.name) {
+      compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+    }
     const isIndia = (pay.company_id || this.activeCompanyId) === 'ashaz-eng-in' || pay.currency === 'INR';
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+
     const curr = pay.currency || (isIndia ? 'INR' : 'AED');
     const currSym = pay.currency_symbol || (isIndia ? '₹' : 'AED ');
     const amountVal = Number(pay.amount_paid || 0);
@@ -16605,6 +16704,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPaymentPrintModal('${pay.id || ''}')">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -16621,203 +16721,180 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
 
             <!-- Header Section (Left: Logo & Company, Right: Payment Title & Meta) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem; flex-wrap:wrap;">
-              <div style="max-width:60%; min-width:280px;">
-                <div style="margin-bottom:0.65rem;">
-                  ${this.getRayanLogoImg(false)}
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
+              <div style="max-width:60%;">
+                <div style="margin-bottom:0.75rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.82rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; white-space:nowrap;">
-                  ${isIndia ? 'ASHAZ ENGINEERING PRIVATE LIMITED' : 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC'}
+                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                  ${compName}
                 </div>
-                <div style="font-size:0.78rem; color:#475569; line-height:1.4; margin-top:0.25rem;">
-                  ${isIndia ? 'Mumbai, Maharashtra, India<br>GSTIN: 27AABCA1234F1Z5 • CIN: U45200MH2020PTC342819<br>Tel: +91 22 2839 0100 • Email: info@ashaz-eng.com' : 'Plot 42, Mussafah M-36, Abu Dhabi, United Arab Emirates • P.O. Box 91800<br>TRN: <strong>104937380400003</strong> • Commercial Licence: CN-2894710<br>Tel: +971-25654497 / 0559945466 • Email: rayan@rayan-group.com'}
+                <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
+                ${this.getRayanDynamicVerificationCode(pay, 'payment')}
               </div>
 
-              <div style="text-align:right; min-width:240px; margin-left:auto;">
-                <div style="font-family:'Outfit', sans-serif; font-size:1.85rem; font-weight:800; color:#0f172a; letter-spacing:-0.02em; line-height:1;">
+              <div style="text-align:right;">
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                   PAYMENT VOUCHER
                 </div>
-                <div style="font-size:0.82rem; color:#64748b; font-weight:700; margin-top:2px;">
-                  سند صرف
-                </div>
-                <div style="font-size:0.9rem; font-weight:700; color:#0284c7; margin-top:4px;">
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
                   # ${pay.voucher_no || 'PV-RG-2026-001'}
                 </div>
 
-                <!-- Highlight Box: Amount Disbursed -->
-                <div style="margin-top:6px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:4px 12px; display:inline-block; text-align:right;">
-                  <div style="font-size:0.65rem; color:#15803d; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Amount Disbursed</div>
-                  <div style="font-size:1.2rem; font-weight:800; color:#16a34a; font-variant-numeric:tabular-nums;">
-                    ${curr} ${formattedAmount}
-                  </div>
-                </div>
-
                 <!-- Meta Details -->
-                <div style="font-size:0.78rem; color:#475569; line-height:1.45; margin-top:6px;">
-                  <div>Payment Date : <strong>${formattedDate}</strong></div>
-                  <div>Disbursement Mode : <strong>${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</strong></div>
-                  ${pay.reference_no ? `<div>Payment UTR / CMS Ref # : <strong>${pay.reference_no}</strong></div>` : ''}
-                </div>
-              </div>
-            </div>
-
-            <!-- Payee (Vendor / Subcontractor) & Settlement Details -->
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; margin-bottom:0.75rem; padding:0.65rem 0.9rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
-              <div>
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Disbursed To (Vendor / Subcontractor)</div>
-                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:2px;">
-                  ${pay.vendor_name || 'Vendor / Subcontractor'}
-                </div>
-                ${vendorObj?.trn ? `<div style="font-size:0.78rem; color:#0284c7; font-weight:700;">TRN: ${vendorObj.trn}</div>` : (vendorObj?.gstin ? `<div style="font-size:0.78rem; color:#0284c7; font-weight:700;">GSTIN: ${vendorObj.gstin}</div>` : '')}
-                ${vendorObj?.code ? `<div style="font-size:0.78rem; color:#64748b; font-weight:600;">Vendor Code: ${vendorObj.code}</div>` : ''}
-                ${vendorObj?.contact_person ? `<div style="font-size:0.78rem; color:#475569;">Attn: <strong>${vendorObj.contact_person}</strong></div>` : ''}
-                ${vendorObj?.email ? `<div style="font-size:0.78rem; color:#475569;">Email: <a href="mailto:${vendorObj.email}" style="color:#0284c7; text-decoration:none;">${vendorObj.email}</a></div>` : ''}
-                ${vendorObj?.address ? `<div style="font-size:0.78rem; color:#475569;">${vendorObj.address}</div>` : ''}
-              </div>
-
-              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Disbursement &amp; Approval Details</div>
-                <div><strong>Disbursement Mode:</strong> ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</div>
-                <div><strong>Payment UTR / CMS Ref #:</strong> <span style="color:#0284c7; font-weight:700;">${pay.reference_no || 'Direct Transfer'}</span></div>
-                <div><strong>Notes &amp; Approver Sign-off:</strong> ${pay.notes || 'Approved by CFO for immediate release'}</div>
-                <div><strong>Status:</strong> <span style="display:inline-block; padding:1px 6px; border-radius:4px; background:#dcfce7; color:#15803d; font-weight:700; font-size:0.72rem;">RELEASED &amp; RECONCILED ✓</span></div>
-              </div>
-            </div>
-
-            <!-- Allocate Against Approved Bills Section -->
-            <div style="margin-bottom:0.75rem; border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; box-sizing:border-box;">
-              <div style="background:#f1f5f9; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0;">
-                <span style="font-size:0.75rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.04em;">
-                  📋 Allocate Against Approved Bills (${curr})
-                </span>
-                <span style="font-size:0.7rem; color:#64748b; font-weight:600;">
-                  ${hasAllocations ? `${allocations.length} Bill(s) Linked` : 'Direct Vendor Settlement / Advance'}
-                </span>
-              </div>
-
-              ${hasAllocations ? `
-                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; box-sizing:border-box;">
-                  <thead>
-                    <tr style="background:#f8fafc; color:#475569; text-align:left; border-bottom:1px solid #e2e8f0;">
-                      <th style="padding:6px 10px; width:5%; text-align:center;">#</th>
-                      <th style="padding:6px 10px; width:45%;">Approved Purchase Bill Ref</th>
-                      <th style="padding:6px 10px; width:25%;">Project / Scope</th>
-                      <th style="padding:6px 10px; width:25%; text-align:right;">Allocated Amount (${curr})</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${allocations.map((a, idx) => `
-                      <tr style="border-bottom:1px solid #e2e8f0;">
-                        <td style="padding:6px 10px; text-align:center; color:#64748b;">${idx + 1}</td>
-                        <td style="padding:6px 10px;">
-                          <strong style="color:#0f172a;">${a.bill_no || 'Approved Bill'}</strong>
-                          ${a.vendor_invoice_no ? `<span style="font-size:0.72rem; color:#64748b;"> (Inv: ${a.vendor_invoice_no})</span>` : ''}
-                        </td>
-                        <td style="padding:6px 10px; color:#475569;">${a.project_name || 'Civil / Architectural Procurement'}</td>
-                        <td style="padding:6px 10px; text-align:right; font-weight:700; color:#0f172a; font-variant-numeric:tabular-nums;">
-                          ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Payment Date :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Disbursement Mode :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</td>
+                  </tr>
+                  ${pay.reference_no ? `<tr><td style="padding:1px 8px; color:#6b7280;">Payment Ref # :</td><td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${pay.reference_no}</td></tr>` : ''}
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Disbursement Status :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a;">RELEASED &amp; RECONCILED ✓</td>
+                  </tr>
                 </table>
-              ` : `
-                <div style="padding:8px 12px; background:#f0fdf4; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="color:#16a34a; font-size:1rem; font-weight:bold;">✓</span>
-                    <div>
-                      <div style="font-size:0.8rem; font-weight:700; color:#15803d;">
+              </div>
+            </div>
+
+            <!-- Payee (Vendor / Subcontractor) Details -->
+            <div style="margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
+              <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">DISBURSED TO (PAYEE / VENDOR)</div>
+              <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+                ${pay.vendor_name || 'Vendor / Subcontractor'}
+              </div>
+              ${vendorObj?.trn ? `<div style="color:#4b5563;">TRN: ${vendorObj.trn}</div>` : (vendorObj?.gstin ? `<div style="color:#4b5563;">GSTIN: ${vendorObj.gstin}</div>` : '')}
+              ${vendorObj?.contact_person ? `<div style="color:#4b5563;">Attn: ${vendorObj.contact_person}</div>` : ''}
+              ${vendorObj?.email ? `<div style="color:#4b5563;">Email: <a href="mailto:${vendorObj.email}" style="color:#0284c7; text-decoration:none;">${vendorObj.email}</a></div>` : ''}
+              ${vendorObj?.address ? `<div style="color:#4b5563;">Address: ${vendorObj.address}</div>` : ''}
+              ${pay.notes ? `<div style="font-size:0.85rem; font-weight:700; color:#111827; margin-top:8px;">Purpose / Notes: ${pay.notes}</div>` : ''}
+            </div>
+
+            <!-- Table of Allocations / Particulars -->
+            <div style="margin-bottom:0; overflow:hidden;">
+              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                <thead>
+                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
+                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
+                      <div>Sr. No.</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 8px; width:50%; vertical-align:middle; text-align:center;">
+                      <div>Disbursement Particulars &amp; Purpose</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان الصرف وتفاصيل السداد</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:22%; vertical-align:middle;">
+                      <div>Payment Channel / Ref</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">قناة السداد والمرجع</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:23%; vertical-align:middle;">
+                      <div>Amount Disbursed (${curr})</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المصروف</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${hasAllocations ? allocations.map((a, idx) => `
+                    <tr style="border:1px solid #111827; background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                        Settlement against Bill: ${a.bill_no || 'Approved Purchase Bill'}
+                        ${a.vendor_invoice_no ? `<span style="font-size:0.72rem; color:#6b7280; font-weight:500;"> (Vendor Invoice: ${a.vendor_invoice_no})</span>` : ''}
+                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                          Scope: ${a.project_name || 'Civil / Architectural Procurement'}
+                        </div>
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
+                        ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}
+                        ${pay.reference_no ? `<div style="color:#6b7280; font-size:0.7rem;">Ref: ${pay.reference_no}</div>` : ''}
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums;">
+                        ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  `).join('') : `
+                    <tr style="border:1px solid #111827; background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
+                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
                         Direct Vendor Settlement / Advance Disbursement on Account
-                      </div>
-                      <div style="font-size:0.72rem; color:#166534; margin-top:1px;">
-                        No unpaid approved bills found for this vendor in ${curr}. Disbursed directly against vendor account and signed off for release.
-                      </div>
-                    </div>
-                  </div>
-                  <div style="text-align:right; font-size:0.82rem; font-weight:800; color:#15803d; font-variant-numeric:tabular-nums; white-space:nowrap;">
-                    ${curr} ${formattedAmount}
-                  </div>
-                </div>
-              `}
-            </div>
+                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                          Direct settlement on vendor ledger against corporate procurement orders. ${pay.notes ? `• ${pay.notes}` : ''}
+                        </div>
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
+                        ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}
+                        ${pay.reference_no ? `<div style="color:#6b7280; font-size:0.7rem;">Ref: ${pay.reference_no}</div>` : ''}
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums;">
+                        ${formattedAmount}
+                      </td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
 
-            <!-- Simple Clean Particulars Table -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem; box-sizing:border-box;">
-              <thead>
-                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
-                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
-                  <th style="padding:7px 10px; width:45%;">Disbursement Particulars &amp; Purpose</th>
-                  <th style="padding:7px 10px; width:25%;">Payment Channel &amp; Reference</th>
-                  <th style="padding:7px 10px; width:25%; text-align:right;">Amount Disbursed (${curr})</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                  <td style="padding:8px 10px;">
-                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
-                      Disbursement to ${pay.vendor_name || 'Vendor / Subcontractor'}
-                    </div>
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                      ${hasAllocations ? `Settlement against ${allocations.length} approved purchase bill(s)` : 'Direct Vendor Settlement / Advance on Account (No prior bill linked)'} • Notes: ${pay.notes || 'Approved by CFO for immediate release'}
-                    </div>
-                  </td>
-                  <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
-                    <div><strong>${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}</strong></div>
-                    <div style="color:#64748b; font-size:0.72rem;">
-                      ${pay.reference_no ? `Ref #: ${pay.reference_no}` : ''}
-                    </div>
-                  </td>
-                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
-                    ${formattedAmount}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Financials Summary & Amount in Words -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
-              <!-- Left: Total in Words & Notes -->
-              <div style="flex:1;">
-                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Amount Disbursed In Words:</div>
-                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
-                  ${amountInWords}
-                </div>
-
-                <div style="margin-top:0.6rem;">
-                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:1px;">Disbursement Authorization &amp; Compliance:</div>
-                  <div style="font-size:0.78rem; color:#475569; line-height:1.35;">
-                    ${pay.notes ? `Sign-Off: <strong>${pay.notes}</strong><br>` : ''}
-                    This official vendor payment voucher has been authorized by Group Finance &amp; Corporate Treasury in full compliance with Rayan Group Financial Governance.
+              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                    Total In Words : ${amountInWords}
                   </div>
                 </div>
-              </div>
 
-              <!-- Right: Subtotal & Total Box -->
-              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
-                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
-                  <span>Sub Total</span>
-                  <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
-                  <span>Total Disbursed</span>
-                  <span style="font-variant-numeric:tabular-nums; color:#16a34a;">${curr} ${formattedAmount}</span>
+                <div style="background:#eaf3ec;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub Total</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedAmount}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Disbursed</td>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${formattedAmount}</td>
+                    </tr>
+                  </table>
                 </div>
               </div>
             </div>
 
-            <!-- System Generated Notice & Page Number Footer -->
-            <div style="margin-top:auto; padding-top:2.5rem;">
-              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-                <span style="min-width:24px;"></span>
-                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Payment Voucher and does not require any signatories</span>
-                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
-              </div>
+            <!-- Notes Section Below Items -->
+            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
+              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Disbursement Authorization &amp; Compliance</div>
+              <div style="color:#4b5563;">This official vendor payment voucher has been authorized by Group Finance &amp; Corporate Treasury in full compliance with Rayan Group Financial Governance.</div>
             </div>
+
+            <!-- Contact & Company Details Below Notes -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Fixed System Generated Footer -->
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                This is a system generated Payment Voucher and does not require any signatories
+              </div>
+              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer -->
           </div>
         </div>
       </div>
@@ -17464,6 +17541,23 @@ class FinanceApp {
     }
 
     const isIndia = (dn.company_id || this.activeCompanyId) === 'ashaz-eng-in' || dn.currency === 'INR';
+    const comp = (this.db?.companies || []).find(c => c.id === (dn.company_id || this.activeCompanyId)) ||
+                 (defaultSeedData.companies || []).find(c => c.id === (dn.company_id || this.activeCompanyId)) ||
+                 (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
+    if (comp.id === 'rayan-group') {
+      compName = 'RAYAN ENGINEERING';
+    } else if (comp.id === 'rayan-properties-uae') {
+      compName = 'RAYAN PROPERTIES';
+    } else if (comp.id === 'ashaz-eng-in') {
+      compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.name) {
+      compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+    }
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+
     const curr = dn.currency || (isIndia ? 'INR' : 'AED');
     const currSym = dn.currency_symbol || (isIndia ? '₹' : 'AED ');
     const debitAmount = Number(dn.total_debit_amount || dn.amount || 0);
@@ -17504,130 +17598,157 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto;">
-            <!-- Header Section -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.85rem; gap:1.25rem; flex-wrap:wrap;">
-              <div style="max-width:55%; min-width:280px;">
-                <div style="margin-bottom:0.4rem;">
-                  ${this.getRayanLogoImg(false)}
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+            <!-- Header Section (Left: Logo & Company, Right: Debit Note Title & Meta) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
+              <div style="max-width:60%;">
+                <div style="margin-bottom:0.75rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
-                <div style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase;">
-                  RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C
+                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                  ${compName}
                 </div>
-                <div style="font-size:0.75rem; color:#475569; line-height:1.4; margin-top:2px;">
-                  P.O. Box 43388, Industrial City ICAD-1, Musaffah, Abu Dhabi, United Arab Emirates<br>
-                  <strong>TRN:</strong> 104937380400003 | <strong>Commercial License:</strong> CN-2849102 | Tel: +971 2 565 4497
+                <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
+                ${this.getRayanDynamicVerificationCode(dn, 'debit_note')}
               </div>
 
-              <div style="text-align:right; min-width:200px;">
-                <div style="display:inline-block; background:#0f172a; color:#ffffff; padding:4px 12px; border-radius:4px; font-weight:800; font-size:0.9rem; letter-spacing:0.04em; margin-bottom:0.35rem;">
-                  DEBIT NOTE / PURCHASE RETURN
+              <div style="text-align:right;">
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
+                  DEBIT NOTE
                 </div>
-                <div style="font-size:1.1rem; font-weight:800; color:#0284c7;">
-                  ${dn.debit_note_no}
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
+                  # ${dn.debit_note_no || 'DN-RG-2026-001'}
                 </div>
-                <div style="font-size:0.78rem; color:#475569; margin-top:2px;">
-                  Date: <strong>${formattedDate}</strong>
-                </div>
-                <div style="font-size:0.75rem; color:#475569;">
-                  Linked Bill Ref: <strong>${dn.bill_no || 'Direct Supplier Debit'}</strong>
-                </div>
+
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Date :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Linked Bill Ref :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${dn.bill_no || 'Direct Supplier Debit'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Adjustment Status :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a;">APPLIED TO LEDGER ✓</td>
+                  </tr>
+                </table>
               </div>
             </div>
 
             <!-- Vendor / Party Details -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin-bottom:0.75rem;">
-              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Debit Issued To (Supplier / Vendor)</div>
-                <div style="font-size:0.88rem; font-weight:800; color:#0f172a;">${dn.vendor_name || 'Vendor'}</div>
-                <div>${vendorObj?.address || 'Industrial Area, Abu Dhabi, UAE'}</div>
-                ${vendorObj?.trn ? `<div><strong>TRN:</strong> ${vendorObj.trn}</div>` : ''}
-                ${vendorObj?.gstin ? `<div><strong>GSTIN:</strong> ${vendorObj.gstin}</div>` : ''}
+            <div style="margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
+              <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">DEBIT ISSUED TO (SUPPLIER / VENDOR)</div>
+              <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+                ${dn.vendor_name || 'Vendor'}
               </div>
+              ${vendorObj?.trn ? `<div style="color:#4b5563;">TRN: ${vendorObj.trn}</div>` : (vendorObj?.gstin ? `<div style="color:#4b5563;">GSTIN: ${vendorObj.gstin}</div>` : '')}
+              ${vendorObj?.contact_person ? `<div style="color:#4b5563;">Attn: ${vendorObj.contact_person}</div>` : ''}
+              ${vendorObj?.email ? `<div style="color:#4b5563;">Email: <a href="mailto:${vendorObj.email}" style="color:#0284c7; text-decoration:none;">${vendorObj.email}</a></div>` : ''}
+              ${vendorObj?.address ? `<div style="color:#4b5563;">Address: ${vendorObj.address}</div>` : ''}
+              ${dn.reason ? `<div style="font-size:0.85rem; font-weight:700; color:#111827; margin-top:8px;">Reason / Basis: ${dn.reason}</div>` : ''}
+            </div>
 
-              <div style="font-size:0.78rem; color:#475569; line-height:1.45;">
-                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:0.04em; margin-bottom:2px;">Adjustment Particulars</div>
-                <div><strong>Reason:</strong> ${dn.reason || 'Material return & rate differential on supplies'}</div>
-                <div><strong>Bill Reference:</strong> <span style="color:#0284c7; font-weight:700;">${dn.bill_no || 'Direct Debit'}</span></div>
-                <div><strong>Status:</strong> <span style="display:inline-block; padding:1px 6px; border-radius:4px; background:#dcfce7; color:#15803d; font-weight:700; font-size:0.72rem;">APPLIED TO LEDGER ✓</span></div>
+            <!-- Particulars Table Matching Invoice Theme -->
+            <div style="margin-bottom:0; overflow:hidden;">
+              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                <thead>
+                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
+                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
+                      <div>Sr. No.</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 8px; width:52%; vertical-align:middle; text-align:center;">
+                      <div>Description of Debit / Return Adjustment</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان الإشعار المدين وتفاصيل الإرجاع</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:20%; vertical-align:middle;">
+                      <div>Linked Reference</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المرجع المرتبط</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:23%; vertical-align:middle;">
+                      <div>Debit Amount (${curr})</div>
+                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المدين</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border:1px solid #111827; background:#ffffff;">
+                    <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
+                    <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                      ${dn.reason || 'Material return & rate differential on supplies'}
+                      <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                        Supplier: ${dn.vendor_name || 'Vendor'} • Adjustment applied against accounts payable
+                      </div>
+                    </td>
+                    <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
+                      ${dn.bill_no || 'Direct Debit'}
+                    </td>
+                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums;">
+                      ${formattedAmount}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                    Total In Words : ${amountInWords}
+                  </div>
+                </div>
+
+                <div style="background:#eaf3ec;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                    <tr style="border-bottom:1px solid #111827;">
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub Total Debit</td>
+                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedAmount}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Debit</td>
+                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${formattedAmount}</td>
+                    </tr>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <!-- Particulars Table -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:0.75rem; font-size:0.8rem; box-sizing:border-box;">
-              <thead>
-                <tr style="background:#1e242d; color:#ffffff; text-align:left;">
-                  <th style="padding:7px 10px; width:5%; text-align:center;">#</th>
-                  <th style="padding:7px 10px; width:55%;">Description of Debit / Return Adjustment</th>
-                  <th style="padding:7px 10px; width:20%;">Linked Reference</th>
-                  <th style="padding:7px 10px; width:20%; text-align:right;">Debit Amount (${curr})</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:8px 10px; text-align:center; color:#64748b; font-weight:600;">1</td>
-                  <td style="padding:8px 10px;">
-                    <div style="font-weight:700; color:#0f172a; font-size:0.85rem;">
-                      ${dn.reason || 'Purchase Return & Rate Adjustment'}
-                    </div>
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">
-                      Supplier: ${dn.vendor_name || 'Vendor'} • Adjustment applied against accounts payable
-                    </div>
-                  </td>
-                  <td style="padding:8px 10px; font-size:0.78rem; color:#334155;">
-                    <strong>${dn.bill_no || 'Direct Debit'}</strong>
-                  </td>
-                  <td style="padding:8px 10px; text-align:right; font-weight:800; font-size:0.9rem; color:#0f172a; font-variant-numeric:tabular-nums;">
-                    ${formattedAmount}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Financials Summary & Amount in Words -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
-              <div style="flex:1;">
-                <div style="font-size:0.7rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Total Debit In Words:</div>
-                <div style="font-size:0.82rem; font-weight:700; color:#0f172a; font-style:italic; line-height:1.35;">
-                  ${amountInWords}
-                </div>
-                <div style="margin-top:0.6rem; font-size:0.75rem; color:#475569; line-height:1.35;">
-                  This official debit note constitutes an accredited reduction in accounts payable to the designated vendor under Group Procurement Governance.
-                </div>
-              </div>
-
-              <div style="width:240px; border-top:1px solid #e2e8f0; padding-top:4px;">
-                <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.82rem; color:#475569;">
-                  <span>Sub Total Debit</span>
-                  <span style="font-variant-numeric:tabular-nums;">${formattedAmount}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:1rem; font-weight:800; color:#0f172a; border-top:2px solid #1e242d; margin-top:2px;">
-                  <span>Total Debit</span>
-                  <span style="font-variant-numeric:tabular-nums; color:#0284c7;">${curr} ${formattedAmount}</span>
-                </div>
-              </div>
+            <!-- Notes Section Below Items -->
+            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
+              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Adjustment Authorization &amp; Compliance</div>
+              <div style="color:#4b5563;">This official debit note constitutes an accredited reduction in accounts payable to the designated vendor under Group Procurement Governance.</div>
             </div>
 
-            <!-- Signatures / System Notice -->
-            <div style="margin-top:auto; padding-top:2.5rem;">
-              <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem; font-size:0.78rem;">
-                <div style="text-align:center; width:180px; border-top:1px solid #94a3b8; padding-top:4px;">
-                  <strong>Prepared By</strong><br><span style="color:#64748b;">Procurement Dept</span>
-                </div>
-                <div style="text-align:center; width:180px; border-top:1px solid #94a3b8; padding-top:4px;">
-                  <strong>Verified By</strong><br><span style="color:#64748b;">Financial Controller</span>
-                </div>
-                <div style="text-align:center; width:180px; border-top:1px solid #94a3b8; padding-top:4px;">
-                  <strong>Approved By</strong><br><span style="color:#64748b;">Managing Director</span>
-                </div>
-              </div>
-              <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-                <span style="min-width:24px;"></span>
-                <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is an official Rayan Group Debit Note / Purchase Return Voucher</span>
-                <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
-              </div>
+            <!-- Contact & Company Details Below Notes -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
             </div>
+
+            <!-- Fixed System Generated Footer -->
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                This is a system generated Debit Note and does not require any signatories
+              </div>
+              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer -->
           </div>
         </div>
       </div>
