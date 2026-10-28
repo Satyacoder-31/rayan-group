@@ -3554,11 +3554,9 @@ select option:focus,
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0.12;
+  opacity: 0.16;
   pointer-events: none;
   z-index: 10;
-  width: 480px;
-  max-width: 68%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -3566,7 +3564,8 @@ select option:focus,
 }
 
 .rayan-doc-watermark img {
-  width: 100%;
+  width: 138px;
+  max-width: 138px;
   height: auto;
   object-fit: contain;
   display: block;

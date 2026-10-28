@@ -12675,18 +12675,17 @@ class FinanceApp {
       top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
-      opacity: 0.12 !important;
+      opacity: 0.16 !important;
       pointer-events: none !important;
       z-index: 10 !important;
-      width: 100% !important;
       display: flex !important;
       justify-content: center !important;
       align-items: center !important;
       user-select: none !important;
     }
     .rayan-doc-watermark img {
-      width: 480px !important;
-      max-width: 68% !important;
+      width: 138px !important;
+      max-width: 138px !important;
       height: auto !important;
       display: block !important;
       object-fit: contain !important;
@@ -14053,8 +14052,8 @@ class FinanceApp {
 
   getRayanWatermark() {
     return `
-      <div class="rayan-doc-watermark" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:10; opacity:0.12; display:flex; justify-content:center; align-items:center; width:100%; user-select:none;">
-        <img src="/assets/rayan-symbol-engineering.svg" alt="" style="width:480px; max-width:68%; height:auto; display:block; object-fit:contain;">
+      <div class="rayan-doc-watermark" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:10; opacity:0.16; display:flex; justify-content:center; align-items:center; user-select:none;">
+        <img src="/assets/rayan-symbol-engineering.svg" alt="" style="width:138px; max-width:138px; height:auto; display:block; object-fit:contain;">
       </div>
     `;
   }
