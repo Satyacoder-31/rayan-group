@@ -2476,7 +2476,7 @@ class FinanceApp {
               <div class="fin-select-wrapper fin-entity-wrapper">
                 <svg class="fin-select-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
                 <select id="fin-entity-select" class="fin-select-modern" title="Switch Operating Legal Entity">
-                  ${(this.db?.companies || []).map(c => {
+                  ${(this.db?.companies || defaultSeedData.companies || []).filter(c => c.id !== 'rayan-energy-uae').map(c => {
                     const shortName = c.name.replace('Private Limited', 'Ltd').replace('Corporate HQ', 'HQ').replace('Division', 'Div');
                     return `<option value="${c.id}" ${c.id === this.activeCompanyId ? 'selected' : ''}>${shortName}</option>`;
                   }).join('')}
@@ -12670,6 +12670,20 @@ class FinanceApp {
     table {
       border-collapse: collapse !important;
     }
+    .rayan-doc-watermark {
+      position: absolute !important;
+      top: 38% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      opacity: 0.14 !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      width: 100% !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      user-select: none !important;
+    }
     a {
       text-decoration: none;
       color: inherit;
@@ -14032,8 +14046,8 @@ class FinanceApp {
 
   getRayanWatermark() {
     return `
-      <div class="rayan-doc-watermark" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:0; opacity:0.07; display:flex; justify-content:center; align-items:center; width:100%; height:100%; user-select:none;">
-        <img src="/assets/rayan-symbol-engineering.svg" alt="" style="width:300px; max-width:50%; height:auto; display:block;">
+      <div class="rayan-doc-watermark" style="position:absolute; top:38%; left:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:0; opacity:0.14; display:flex; justify-content:center; align-items:center; width:100%; user-select:none;">
+        <img src="/assets/rayan-symbol-engineering.svg" alt="" style="width:340px; max-width:55%; height:auto; display:block;">
       </div>
     `;
   }
@@ -14118,11 +14132,9 @@ class FinanceApp {
 
     let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
     if (comp.id === 'rayan-group') {
-      compName = 'RAYAN GROUP';
-    } else if (comp.id === 'rayan-energy-uae') {
-      compName = 'RAYAN ENERGY PROCESS FACILITIES LLC';
+      compName = 'RAYAN ENGINEERING';
     } else if (comp.id === 'rayan-properties-uae') {
-      compName = 'RAYAN PROPERTIES REAL ESTATE LLC';
+      compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
     } else if (comp.name) {

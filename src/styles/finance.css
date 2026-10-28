@@ -450,7 +450,8 @@
 }
 
 .fin-entity-wrapper {
-  max-width: 250px;
+  max-width: 320px;
+  min-width: 260px;
 }
 
 .fin-period-wrapper {
@@ -3550,13 +3551,14 @@ select option:focus,
 
 .rayan-doc-watermark {
   position: absolute;
-  top: 50%;
+  top: 38%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0.08;
+  opacity: 0.14;
   pointer-events: none;
   z-index: 0;
-  width: 160px;
+  width: 330px;
+  max-width: 55%;
 }
 
 .rayan-copy-notice {
