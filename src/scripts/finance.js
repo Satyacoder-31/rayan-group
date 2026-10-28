@@ -465,8 +465,10 @@ class FinanceApp {
             const existing = map.get(uniqueKey);
             if (!existing) {
               map.set(uniqueKey, item);
-            } else if ((!existing.line_items || existing.line_items.length < 4) && item.line_items && item.line_items.length >= 4) {
-              existing.line_items = JSON.parse(JSON.stringify(item.line_items));
+            } else if (!existing.line_items || !existing.line_items.length) {
+              if (item.line_items && item.line_items.length) {
+                existing.line_items = JSON.parse(JSON.stringify(item.line_items));
+              }
             }
           }
         }
@@ -14089,7 +14091,7 @@ class FinanceApp {
     }
     const words = inv.amount_in_words || (this.numberToEnglishWords(grandTotal) + (isIndia ? ' Indian Rupees Only.' : ' UAE Dirhams Only.'));
 
-    const lineItems = (inv.line_items && inv.line_items.length >= 4) ? inv.line_items : (isTopRock ? [
+    const lineItems = (inv.line_items && inv.line_items.length > 0) ? inv.line_items : (isTopRock ? [
       {
         sr: 1,
         name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)',
@@ -14156,10 +14158,10 @@ class FinanceApp {
       }
     ] : [
       {
-        name: inv.project_name || 'Contract Commercial Fitout Services',
+        name: inv.item_description || inv.item_name || inv.description || (inv.notes && !inv.notes.toLowerCase().includes('keep a copy') ? inv.notes : null) || inv.project_name || 'Contract Commercial Fitout Services',
         description: inv.notes || '',
         qty: 1,
-        uom: 'LSUM',
+        uom: inv.uom || 'LSUM',
         unit_price: taxableSubtotal || grandTotal,
         taxable_amount: taxableSubtotal || grandTotal,
         vat_rate: isIndia ? 18 : 5,
@@ -15254,21 +15256,41 @@ class FinanceApp {
       inv.status = balanceDue <= 0.01 ? 'paid' : (paid > 0 ? 'partially_paid' : 'sent');
       inv.notes = document.getElementById('edit-inv-notes').value.trim();
 
+      const descVal = document.getElementById('edit-inv-item-desc').value.trim();
+      const uomVal = document.getElementById('edit-inv-item-uom').value;
       inv.line_items = [
         {
-          name: document.getElementById('edit-inv-item-desc').value.trim(),
+          sr: 1,
+          name: descVal,
+          description: descVal,
+          item_name: descVal,
           qty: 1,
-          uom: document.getElementById('edit-inv-item-uom').value,
+          uom: uomVal,
+          unit: uomVal,
           unit_price: taxable,
+          rate: taxable,
+          wd_pct: 100,
+          invoice_amount: taxable,
           taxable_amount: taxable,
           vat_rate: isIndia ? 0 : rate,
+          tax_rate: rate,
           gst_rate: isIndia ? rate : 0,
+          vat_amount: isIndia ? 0 : tax,
           tax_amount: tax,
           total_amount: grand
         }
       ];
+      inv.item_description = descVal;
+      inv.item_name = descVal;
+      inv.description = descVal;
 
       await this.syncApi('update_invoice', { invoice: inv });
+      if (this.db?.invoices) {
+        const idx = this.db.invoices.findIndex(i => i.id === inv.id || i.invoice_no === inv.invoice_no);
+        if (idx >= 0) this.db.invoices[idx] = inv;
+        else this.db.invoices.push(inv);
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      }
       alert(`Invoice ${inv.invoice_no} updated successfully.`);
       this.closeModal('modal-edit-invoice');
       this.renderActiveTab();
