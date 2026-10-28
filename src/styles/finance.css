@@ -3551,14 +3551,25 @@ select option:focus,
 
 .rayan-doc-watermark {
   position: absolute;
-  top: 38%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0.14;
+  opacity: 0.12;
   pointer-events: none;
-  z-index: 0;
-  width: 330px;
-  max-width: 55%;
+  z-index: 10;
+  width: 480px;
+  max-width: 68%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.rayan-doc-watermark img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .rayan-copy-notice {

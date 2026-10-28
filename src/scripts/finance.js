@@ -12672,17 +12672,24 @@ class FinanceApp {
     }
     .rayan-doc-watermark {
       position: absolute !important;
-      top: 38% !important;
+      top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
-      opacity: 0.14 !important;
+      opacity: 0.12 !important;
       pointer-events: none !important;
-      z-index: 0 !important;
+      z-index: 10 !important;
       width: 100% !important;
       display: flex !important;
       justify-content: center !important;
       align-items: center !important;
       user-select: none !important;
+    }
+    .rayan-doc-watermark img {
+      width: 480px !important;
+      max-width: 68% !important;
+      height: auto !important;
+      display: block !important;
+      object-fit: contain !important;
     }
     a {
       text-decoration: none;
@@ -14046,8 +14053,8 @@ class FinanceApp {
 
   getRayanWatermark() {
     return `
-      <div class="rayan-doc-watermark" style="position:absolute; top:38%; left:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:0; opacity:0.14; display:flex; justify-content:center; align-items:center; width:100%; user-select:none;">
-        <img src="/assets/rayan-symbol-engineering.svg" alt="" style="width:340px; max-width:55%; height:auto; display:block;">
+      <div class="rayan-doc-watermark" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:10; opacity:0.12; display:flex; justify-content:center; align-items:center; width:100%; user-select:none;">
+        <img src="/assets/rayan-symbol-engineering.svg" alt="" style="width:480px; max-width:68%; height:auto; display:block; object-fit:contain;">
       </div>
     `;
   }
@@ -14142,7 +14149,7 @@ class FinanceApp {
     }
 
     const compPhone = comp.phone || '+971 2 565 4497';
-    const compEmail = comp.email || 'finance@rayan-group.com';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
     // Customer Lookup & Complete Hydration
