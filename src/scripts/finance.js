@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v9';
+    const CURRENT_DB_VERSION = 'v2026_clean_v10';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2830,6 +2830,9 @@ class FinanceApp {
                     <span class="fin-subitem-text">Sales Return / Cr. Note</span>
                     <button type="button" class="fin-subitem-plus" title="Create Credit Note" data-action="new-credit-note">+</button>
                   </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openConsolidatedCustomerSOA()" title="Open Consolidated Statement of Account for all clients">
+                    <span class="fin-subitem-text" style="color:#38bdf8; font-weight:600;">📑 Master Client SOA</span>
+                  </div>
                 </div>
               </div>
 
@@ -2994,6 +2997,9 @@ class FinanceApp {
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-lpo-bd-2026-12')">
                     <span class="fin-subitem-text">Purchase Order (2p)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openConsolidatedCustomerSOA()">
+                    <span class="fin-subitem-text" style="color:#38bdf8; font-weight:600;">📑 Master Statement (All Clients)</span>
                   </div>
                 </div>
               </div>
@@ -4116,7 +4122,11 @@ class FinanceApp {
             <h2 class="fin-panel-title">👥 Customers &amp; Debtors Directory</h2>
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete client profiles, ${this.activeCompanyId === 'ashaz-eng-in' ? 'GSTIN' : 'TRN'} details, credit limits, and Statement of Account (SOA) ledgers.</p>
           </div>
-          <div class="fin-panel-actions">
+          <div class="fin-panel-actions" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.45); font-weight:700; display:inline-flex; align-items:center; gap:0.45rem; padding:0.48rem 0.95rem; box-shadow:0 2px 10px rgba(56,189,248,0.12); cursor:pointer;" onclick="window.finApp.openConsolidatedCustomerSOA()">
+              <span>📑</span>
+              <span>Master Client SOA (All Clients)</span>
+            </button>
             ${this.hasPermission('create_customer') ? `
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateCustomerModal()">
                 + Add Customer
@@ -5647,6 +5657,9 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Audited reports, ${isIndia ? 'GSTR-1 Tax Summary' : 'UAE VAT 201 Summary'}, Profit &amp; Loss Statement, and Cash Flows.</p>
           </div>
           <div class="fin-panel-actions">
+            <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.15); color:#38bdf8; border-color:rgba(56,189,248,0.4);" onclick="window.finApp.openConsolidatedCustomerSOA()">
+              📑 Master Client SOA
+            </button>
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">
               🖨️ Print Statement
             </button>
@@ -10983,7 +10996,8 @@ class FinanceApp {
             </div>
             <div style="display:flex; gap:0.5rem; align-items:center;">
               <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);" onclick="window.finApp.openEditCustomerModal('${cust.id}')">✏️ Edit Customer</button>
-              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Statement (SOA)</button>
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">🖨️ Official Statement (SOA)</button>
+              <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);" onclick="window.finApp.openConsolidatedCustomerSOA()">📑 Master SOA (All)</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cust-profile')">&times;</button>
             </div>
           </div>
@@ -11091,6 +11105,876 @@ class FinanceApp {
 
             <div class="rayan-computer-generated-notice" style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.08); color:#94a3b8;">
               This is a Computer Generated Statement of Account
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  // 6A. CONSOLIDATED MASTER STATEMENT OF ACCOUNT (ALL CLIENTS & DEBTORS)
+  openConsolidatedCustomerSOA(filter = 'all') {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) || {};
+    let compName = 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C';
+    if (this.activeCompanyId === 'rayan-prop-uae') compName = 'RAYAN PROPERTIES';
+    else if (this.activeCompanyId === 'ashaz-eng-in') compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    else if (comp.name) compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Al Wahda Commercial Tower, Abu Dhabi, United Arab Emirates');
+
+    const allCustomers = (this.db?.customers || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const allInvoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
+    const allReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId && r.status !== 'void');
+    const allCreditNotes = (this.db?.credit_notes || []).filter(cn => (cn.company_id || 'rayan-corp-uae') === this.activeCompanyId && cn.status !== 'void');
+
+    // Deduplicate customer entries
+    const seen = new Set();
+    const uniqueCusts = [];
+    for (const c of allCustomers) {
+      const k = (c.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      uniqueCusts.push(c);
+    }
+
+    // Auto-discover any clients in invoices not explicitly listed in customers
+    for (const inv of allInvoices) {
+      const invNorm = (inv.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (invNorm && !seen.has(invNorm)) {
+        seen.add(invNorm);
+        uniqueCusts.push({
+          id: inv.customer_id || ('cust-' + invNorm.slice(0, 10)),
+          name: inv.customer_name,
+          trn: inv.customer_trn || '',
+          place_of_supply: inv.place_of_supply || 'Abu Dhabi, UAE',
+          opening_balance: 0
+        });
+      }
+    }
+
+    const customerData = uniqueCusts.map(c => {
+      const norm = (c.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cInvs = allInvoices.filter(i => {
+        const invNorm = (i.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        return (i.customer_id && (i.customer_id === c.id || i.customer_id === c.code)) || invNorm === norm || (invNorm && norm && (invNorm.includes(norm) || norm.includes(invNorm)));
+      });
+      const cCNs = allCreditNotes.filter(cn => {
+        const cnNorm = (cn.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        return (cn.customer_id && (cn.customer_id === c.id || cn.customer_id === c.code)) || cnNorm === norm || (cnNorm && norm && (cnNorm.includes(norm) || norm.includes(cnNorm)));
+      });
+      const cReceipts = allReceipts.filter(r => {
+        const rNorm = (r.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        return (r.customer_id && (r.customer_id === c.id || r.customer_id === c.code)) || rNorm === norm || (rNorm && norm && (rNorm.includes(norm) || norm.includes(rNorm)));
+      });
+
+      const hasOpeningInvoice = cInvs.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+      const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
+
+      const billed = cInvs.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
+      const paid = cInvs.reduce((s, i) => s + ((i.amount_paid && i.amount_paid > 0.02) ? Number(i.amount_paid) : 0), 0);
+      const due = cInvs.reduce((s, i) => s + ((i.balance_due && i.balance_due > 0.02) ? Number(i.balance_due) : 0), 0) + unbilledOpening;
+      const cnTotal = cCNs.reduce((s, cn) => s + (Number(cn.total_credit_amount || cn.amount || 0)), 0);
+
+      let status = 'Settled';
+      let statusColor = '#059669';
+      let statusBg = '#ecfdf5';
+      let statusBorder = '#a7f3d0';
+
+      if (due > 0.02 && paid > 0.02) {
+        status = 'Partially Paid';
+        statusColor = '#0284c7';
+        statusBg = '#f0f9ff';
+        statusBorder = '#bae6fd';
+      } else if (due > 0.02 && paid <= 0.02) {
+        status = 'Pending / Due';
+        statusColor = '#dc2626';
+        statusBg = '#fef2f2';
+        statusBorder = '#fecaca';
+      } else if (billed === 0 && due === 0) {
+        status = 'Active';
+        statusColor = '#475569';
+        statusBg = '#f8fafc';
+        statusBorder = '#e2e8f0';
+      }
+
+      const recoveryPct = billed > 0 ? Math.min(100, Math.round(((paid + cnTotal) / billed) * 100)) : 100;
+
+      return {
+        customer: c,
+        invoices: cInvs,
+        receipts: cReceipts,
+        creditNotes: cCNs,
+        unbilledOpening,
+        billed,
+        paid,
+        due,
+        cnTotal,
+        recoveryPct,
+        status,
+        statusColor,
+        statusBg,
+        statusBorder
+      };
+    });
+
+    // Default sorting: Pending dues highest first, then billed highest
+    customerData.sort((a, b) => b.due - a.due || b.billed - a.billed);
+
+    const allCount = customerData.length;
+    const outstandingCount = customerData.filter(c => c.due > 0.02).length;
+    const settledCount = customerData.filter(c => c.due <= 0.02 && c.billed > 0).length;
+
+    const filteredList = customerData.filter(c => {
+      if (filter === 'outstanding') return c.due > 0.02;
+      if (filter === 'settled') return c.due <= 0.02 && c.billed > 0;
+      return true;
+    });
+
+    const totalBilled = customerData.reduce((s, c) => s + c.billed, 0);
+    const totalPaid = customerData.reduce((s, c) => s + c.paid, 0);
+    const totalCN = customerData.reduce((s, c) => s + c.cnTotal, 0);
+    const totalDue = customerData.reduce((s, c) => s + c.due, 0);
+    const overallRecoveryPct = totalBilled > 0 ? Math.min(100, Math.round(((totalPaid + totalCN) / totalBilled) * 100)) : 100;
+
+    const formattedToday = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const soaRef = `SOA-RG-CONSOL-${new Date().getFullYear()}-${Math.floor(Date.now() / 1000).toString().slice(-4)}`;
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left" style="flex-wrap:wrap; gap:0.5rem;">
+            <div class="fin-doc-title-badge">
+              <span>📑</span>
+              <span>Consolidated Statement of Account (All Clients) — كشف حساب موحد</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+            </div>
+            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
+              <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Filter:</span>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'all' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('all')">All Clients (${allCount})</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'outstanding' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('outstanding')">Pending Dues (${outstandingCount})</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'settled' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('settled')">Fully Settled (${settledCount})</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.exportConsolidatedSOACSV()">
+              📊 Export CSV / Excel
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadMasterSOADocument()">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:880px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+
+            <!-- Watermark -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+              <!-- Header Section -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem; border-bottom:2px solid #0f172a; padding-bottom:1rem;">
+                <div style="max-width:58%;">
+                  <div style="margin-bottom:0.5rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN GROUP" style="height:48px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.85rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.25; margin-bottom:4px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.75rem; color:#475569; line-height:1.45;">
+                    <div>${isIndia ? 'GSTIN' : 'TRN'}: <strong>${compTrn}</strong> • License: <strong>CN-1038493</strong></div>
+                    <div>${compAddress}</div>
+                    <div>Tel: ${compPhone} • Email: ${compEmail}</div>
+                  </div>
+                </div>
+
+                <div style="text-align:right; max-width:42%;">
+                  <div style="font-family:'Outfit', sans-serif; font-size:1.45rem; font-weight:800; color:#0f172a; letter-spacing:0.01em; line-height:1.15;">
+                    CONSOLIDATED STATEMENT OF ACCOUNT
+                  </div>
+                  <div style="font-family:'Amiri', serif; font-size:0.95rem; font-weight:700; color:#475569; margin-top:2px; margin-bottom:8px;">
+                    كشف حساب موحد وشامل لجميع العملاء
+                  </div>
+
+                  <table style="margin-left:auto; font-size:0.75rem; color:#334155; border-collapse:collapse; text-align:right;">
+                    <tr>
+                      <td style="padding:2px 6px; color:#64748b;">Statement Ref:</td>
+                      <td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a;">${soaRef}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:2px 6px; color:#64748b;">As-of Date:</td>
+                      <td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a;">${formattedToday}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:2px 6px; color:#64748b;">Functional Currency:</td>
+                      <td style="padding:2px 0 2px 6px; font-weight:700; color:#0284c7;">${curr} (${isIndia ? 'INR' : 'UAE Dirham'})</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:2px 6px; color:#64748b;">Reporting Scope:</td>
+                      <td style="padding:2px 0 2px 6px; font-weight:600; color:#0f172a;">All Commercial Debtors (${filter === 'outstanding' ? 'Pending Dues' : (filter === 'settled' ? 'Settled' : 'All')})</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Executive KPI Summary Bar (4 Cards) -->
+              <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
+                <!-- Total Invoiced -->
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:6px; padding:0.65rem 0.75rem;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.02em;">Total Receivables Billed</div>
+                  <div style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-top:3px;">${currSym}${totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.65rem; color:#64748b; margin-top:2px;">Across ${allCount} client accounts</div>
+                </div>
+
+                <!-- Total Paid -->
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-top:3px solid #16a34a; border-radius:6px; padding:0.65rem 0.75rem;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.02em;">Total Collections Paid</div>
+                  <div style="font-size:1.1rem; font-weight:800; color:#16a34a; margin-top:3px;">${currSym}${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.65rem; color:#15803d; margin-top:2px;">Cleared into bank &amp; cash</div>
+                </div>
+
+                <!-- Total Credit Notes -->
+                <div style="background:#fefce8; border:1px solid #fde047; border-top:3px solid #ca8a04; border-radius:6px; padding:0.65rem 0.75rem;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#a16207; text-transform:uppercase; letter-spacing:0.02em;">Credit Notes &amp; Offsets</div>
+                  <div style="font-size:1.1rem; font-weight:800; color:#ca8a04; margin-top:3px;">${currSym}${totalCN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.65rem; color:#a16207; margin-top:2px;">Approved tax credit adjustments</div>
+                </div>
+
+                <!-- Outstanding Dues -->
+                <div style="background:#fef2f2; border:1px solid #fca5a5; border-top:3px solid #dc2626; border-radius:6px; padding:0.65rem 0.75rem;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#b91c1c; text-transform:uppercase; letter-spacing:0.02em;">Net Outstanding Dues</div>
+                  <div style="font-size:1.15rem; font-weight:900; color:#dc2626; margin-top:3px;">${currSym}${totalDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.65rem; color:#b91c1c; margin-top:2px; font-weight:600;">Recovery: ${overallRecoveryPct}%</div>
+                </div>
+              </div>
+
+              <!-- Executive Narrative Callout -->
+              <div style="background:#f1f5f9; border-left:3px solid #0284c7; padding:0.5rem 0.75rem; margin-bottom:1.25rem; font-size:0.73rem; color:#334155; line-height:1.45; border-radius:0 4px 4px 0;">
+                <strong>Executive Audit Summary:</strong> This Consolidated Statement of Account presents the certified receivables status for executive leadership. Reflecting all invoices issued, official payment receipts cleared, authorized sales credit notes, and current recoverable balances across all registered debtors.
+              </div>
+
+              <!-- SECTION 1: Master Debtors & Receivables Summary Table -->
+              <div style="margin-bottom:1.75rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                  <h3 style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase; letter-spacing:0.01em;">
+                    Section 1: Master Debtors &amp; Receivables Directory
+                  </h3>
+                  <span style="font-size:0.7rem; color:#64748b;">Showing ${filteredList.length} of ${allCount} Clients</span>
+                </div>
+
+                <div class="fin-doc-table-wrapper" style="margin:0;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.74rem; table-layout:fixed;">
+                    <thead>
+                      <tr style="background:#0f172a; color:#ffffff;">
+                        <th style="padding:6px 6px; text-align:center; width:4%; border:1px solid #0f172a;">#</th>
+                        <th style="padding:6px 8px; text-align:left; width:31%; border:1px solid #0f172a;">Client / Debtor Name</th>
+                        <th style="padding:6px 6px; text-align:left; width:15%; border:1px solid #0f172a;">Tax ID (TRN / GSTIN)</th>
+                        <th style="padding:6px 6px; text-align:left; width:11%; border:1px solid #0f172a;">Supply Place</th>
+                        <th style="padding:6px 6px; text-align:right; width:10%; border:1px solid #0f172a;">Billed (${curr})</th>
+                        <th style="padding:6px 6px; text-align:right; width:10%; border:1px solid #0f172a;">Paid (${curr})</th>
+                        <th style="padding:6px 6px; text-align:right; width:7%; border:1px solid #0f172a;">CN (${curr})</th>
+                        <th style="padding:6px 6px; text-align:right; width:12%; border:1px solid #0f172a;">Outstanding Due</th>
+                        <th style="padding:6px 6px; text-align:center; width:10%; border:1px solid #0f172a;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${filteredList.map((item, idx) => `
+                        <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:6px 4px; text-align:center; color:#64748b; font-weight:600; border:1px solid #e2e8f0;">${idx + 1}</td>
+                          <td style="padding:6px 8px; font-weight:700; color:#0f172a; border:1px solid #e2e8f0; word-break:break-word;">
+                            ${item.customer.name}
+                            ${item.customer.contact_person ? `<div style="font-size:0.65rem; color:#64748b; font-weight:400;">Attn: ${item.customer.contact_person} ${item.customer.phone ? `(${item.customer.phone})` : ''}</div>` : ''}
+                          </td>
+                          <td style="padding:6px 6px; color:#475569; font-family:monospace; font-size:0.7rem; border:1px solid #e2e8f0;">
+                            ${item.customer.trn || item.customer.gstin || '—'}
+                          </td>
+                          <td style="padding:6px 6px; color:#475569; border:1px solid #e2e8f0; word-break:break-word;">
+                            ${item.customer.place_of_supply || 'Abu Dhabi, UAE'}
+                          </td>
+                          <td style="padding:6px 6px; text-align:right; color:#0f172a; font-weight:600; border:1px solid #e2e8f0;">
+                            ${item.billed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td style="padding:6px 6px; text-align:right; color:#16a34a; font-weight:700; border:1px solid #e2e8f0;">
+                            ${item.paid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td style="padding:6px 6px; text-align:right; color:#ca8a04; font-weight:600; border:1px solid #e2e8f0;">
+                            ${item.cnTotal > 0 ? item.cnTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
+                          </td>
+                          <td style="padding:6px 6px; text-align:right; font-weight:800; color:${item.due > 0.02 ? '#dc2626' : '#16a34a'}; border:1px solid #e2e8f0;">
+                            ${item.due.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td style="padding:6px 4px; text-align:center; border:1px solid #e2e8f0;">
+                            <span style="display:inline-block; padding:2px 6px; font-size:0.65rem; font-weight:700; border-radius:4px; background:${item.statusBg}; color:${item.statusColor}; border:1px solid ${item.statusBorder}; white-space:nowrap;">
+                              ${item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                    <tfoot>
+                      <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:3px double #0f172a;">
+                        <td colspan="4" style="padding:8px 8px; text-align:right; text-transform:uppercase; font-size:0.75rem; color:#0f172a; border:1px solid #cbd5e1;">
+                          Grand Total (All Clients):
+                        </td>
+                        <td style="padding:8px 6px; text-align:right; font-size:0.78rem; color:#0f172a; border:1px solid #cbd5e1;">
+                          ${totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td style="padding:8px 6px; text-align:right; font-size:0.78rem; color:#16a34a; border:1px solid #cbd5e1;">
+                          ${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td style="padding:8px 6px; text-align:right; font-size:0.78rem; color:#ca8a04; border:1px solid #cbd5e1;">
+                          ${totalCN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td style="padding:8px 6px; text-align:right; font-size:0.85rem; color:#dc2626; border:1px solid #cbd5e1;">
+                          ${totalDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td style="padding:8px 4px; text-align:center; font-size:0.7rem; color:#0f172a; border:1px solid #cbd5e1;">
+                          ${overallRecoveryPct}% Rec.
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              <!-- SECTION 2: Itemized Invoices & Transactions Schedule Per Client -->
+              <div style="margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; border-top:1px dashed #cbd5e1; padding-top:1rem;">
+                  <h3 style="font-family:'Outfit', sans-serif; font-size:0.95rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase; letter-spacing:0.01em;">
+                    Section 2: Itemized Client Invoices &amp; Receipts Schedule
+                  </h3>
+                  <span style="font-size:0.7rem; color:#64748b;">Comprehensive transaction audit breakdown</span>
+                </div>
+
+                ${filteredList.filter(item => item.invoices.length > 0 || item.receipts.length > 0 || item.creditNotes.length > 0).map((item, cIdx) => `
+                  <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:1rem; overflow:hidden; page-break-inside:avoid; break-inside:avoid;">
+                    <!-- Client Header Bar -->
+                    <div style="background:#0f172a; color:#ffffff; padding:0.5rem 0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                      <div>
+                        <span style="font-weight:800; font-size:0.82rem; letter-spacing:0.01em;">${item.customer.name}</span>
+                        <span style="font-size:0.7rem; color:#94a3b8; margin-left:0.5rem;">TRN: <strong>${item.customer.trn || '—'}</strong> • ${item.customer.place_of_supply || 'Abu Dhabi'}</span>
+                      </div>
+                      <div style="font-size:0.72rem; display:flex; gap:0.75rem; align-items:center;">
+                        <span>Billed: <strong>${currSym}${item.billed.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+                        <span style="color:#86efac;">Paid: <strong>${currSym}${item.paid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+                        <span style="color:#fca5a5;">Due: <strong>${currSym}${item.due.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+                      </div>
+                    </div>
+
+                    <!-- Client Invoices Table -->
+                    <div class="fin-doc-table-wrapper" style="margin:0;">
+                      <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                        <thead>
+                          <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
+                            <th style="padding:4px 6px; text-align:left; width:11%;">Date</th>
+                            <th style="padding:4px 6px; text-align:left; width:17%;">Invoice #</th>
+                            <th style="padding:4px 6px; text-align:left; width:34%;">Project / Scope Narration</th>
+                            <th style="padding:4px 6px; text-align:right; width:12%;">Billed (${curr})</th>
+                            <th style="padding:4px 6px; text-align:right; width:12%;">Paid (${curr})</th>
+                            <th style="padding:4px 6px; text-align:right; width:14%;">Balance Due</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${item.unbilledOpening > 0 ? `
+                            <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.04);">
+                              <td style="padding:4px 6px; color:#64748b;">${this.formatDate(item.customer.created_at || '2025-04-01')}</td>
+                              <td style="padding:4px 6px; font-weight:700; color:#0284c7;">OPENING-BALANCE</td>
+                              <td style="padding:4px 6px; color:#475569;">Brought-forward verified accounts receivable balance</td>
+                              <td style="padding:4px 6px; text-align:right; font-weight:600;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td style="padding:4px 6px; text-align:right; color:#64748b;">0.00</td>
+                              <td style="padding:4px 6px; text-align:right; font-weight:800; color:#dc2626;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            </tr>
+                          ` : ''}
+                          ${item.invoices.map(inv => {
+                            const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
+                            const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
+                            return `
+                              <tr style="border-bottom:1px solid #e2e8f0;">
+                                <td style="padding:4px 6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                                <td style="padding:4px 6px; font-weight:700; color:#0f172a;">
+                                  ${inv.invoice_no}
+                                  <span style="font-size:0.62rem; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:2px; ${inv.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : (inv.status === 'partially_paid' ? 'background:#f0f9ff; color:#0284c7;' : 'background:#fef2f2; color:#dc2626;')}">${inv.status}</span>
+                                </td>
+                                <td style="padding:4px 6px; color:#334155; word-break:break-word;">
+                                  ${inv.project_name || inv.notes || 'Commercial Contracting &amp; Fit-Out Services'}
+                                </td>
+                                <td style="padding:4px 6px; text-align:right; font-weight:600; color:#0f172a;">
+                                  ${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </td>
+                                <td style="padding:4px 6px; text-align:right; font-weight:700; color:#16a34a;">
+                                  ${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </td>
+                                <td style="padding:4px 6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">
+                                  ${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </td>
+                              </tr>
+                            `;
+                          }).join('')}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Client Receipts Summary (If Any) -->
+                    ${item.receipts.length > 0 ? `
+                      <div style="background:#f8fafc; padding:0.4rem 0.75rem; border-top:1px solid #e2e8f0; font-size:0.68rem; color:#475569;">
+                        <strong style="color:#0f172a;">Official Receipts Cleared (${item.receipts.length}):</strong>
+                        ${item.receipts.map(r => `
+                          <span style="display:inline-block; margin-left:6px; background:#ffffff; padding:1px 6px; border-radius:3px; border:1px solid #cbd5e1;">
+                            <strong>${r.receipt_no}</strong>: ${currSym}${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${this.formatDate(r.receipt_date)})
+                          </span>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+
+                    <!-- Client Credit Notes (If Any) -->
+                    ${item.creditNotes.length > 0 ? `
+                      <div style="background:#fffbeb; padding:0.4rem 0.75rem; border-top:1px solid #fef3c7; font-size:0.68rem; color:#92400e;">
+                        <strong>Credit Notes / Adjustments (${item.creditNotes.length}):</strong>
+                        ${item.creditNotes.map(cn => `
+                          <span style="display:inline-block; margin-left:6px; background:#ffffff; padding:1px 6px; border-radius:3px; border:1px solid #fde68a;">
+                            <strong>${cn.credit_note_no}</strong>: ${currSym}${Number(cn.total_credit_amount || cn.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${cn.reason || 'Price adjustment'})
+                          </span>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Executive Attestation & Signatory Block -->
+              <div style="margin-top:2rem; padding-top:1.25rem; border-top:2px solid #0f172a; display:grid; grid-template-columns:repeat(3, 1fr); gap:1.5rem; page-break-inside:avoid; break-inside:avoid;">
+                <!-- Prepared By -->
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Prepared By</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Senior Accounts Controller</div>
+                  <div style="font-size:0.68rem; color:#475569;">Finance &amp; Billing Desk</div>
+                </div>
+
+                <!-- Certified By -->
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Audited &amp; Reconciled</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Head of Internal Audit</div>
+                  <div style="font-size:0.68rem; color:#475569;">Financial Compliance Division</div>
+                </div>
+
+                <!-- Approved By -->
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Approved &amp; Certified</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Executive Managing Director</div>
+                  <div style="font-size:0.68rem; color:#475569;">Rayan Group Corporate Management</div>
+                </div>
+              </div>
+
+              <!-- Official Computer Generated Notice -->
+              <div style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b;">
+                <div style="flex:1; text-align:center;">
+                  This is an Official Computer-Generated Master Statement of Account certified by Rayan Group Enterprise Financial System. Valid for executive review, banking submission, and audit compliance.
+                </div>
+                <div style="min-width:30px; text-align:right; font-weight:700; color:#94a3b8;">1 / 1</div>
+              </div>
+
+            </div> <!-- End Main Content Layer -->
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  // 6B. EXPORT CONSOLIDATED SOA TO CSV / EXCEL
+  exportConsolidatedSOACSV() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = isIndia ? 'INR' : 'AED';
+
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) || {};
+    const compName = comp.name || 'RAYAN ENGINEERING & CONTRACTING L.L.C';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
+
+    const allCustomers = (this.db?.customers || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const allInvoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
+    const allReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId && r.status !== 'void');
+    const allCreditNotes = (this.db?.credit_notes || []).filter(cn => (cn.company_id || 'rayan-corp-uae') === this.activeCompanyId && cn.status !== 'void');
+
+    const seen = new Set();
+    const uniqueCusts = [];
+    for (const c of allCustomers) {
+      const k = (c.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      uniqueCusts.push(c);
+    }
+    for (const inv of allInvoices) {
+      const invNorm = (inv.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (invNorm && !seen.has(invNorm)) {
+        seen.add(invNorm);
+        uniqueCusts.push({ id: inv.customer_id || 'cust-' + invNorm.slice(0, 10), name: inv.customer_name, trn: inv.customer_trn || '', place_of_supply: inv.place_of_supply || 'Abu Dhabi, UAE', opening_balance: 0 });
+      }
+    }
+
+    const rows = uniqueCusts.map((c, idx) => {
+      const norm = (c.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cInvs = allInvoices.filter(i => {
+        const invNorm = (i.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        return (i.customer_id && (i.customer_id === c.id || i.customer_id === c.code)) || invNorm === norm || (invNorm && norm && (invNorm.includes(norm) || norm.includes(invNorm)));
+      });
+      const cCNs = allCreditNotes.filter(cn => {
+        const cnNorm = (cn.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        return (cn.customer_id && (cn.customer_id === c.id || cn.customer_id === c.code)) || cnNorm === norm || (cnNorm && norm && (cnNorm.includes(norm) || norm.includes(cnNorm)));
+      });
+      const hasOpeningInvoice = cInvs.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+      const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
+
+      const billed = cInvs.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
+      const paid = cInvs.reduce((s, i) => s + ((i.amount_paid && i.amount_paid > 0.02) ? Number(i.amount_paid) : 0), 0);
+      const due = cInvs.reduce((s, i) => s + ((i.balance_due && i.balance_due > 0.02) ? Number(i.balance_due) : 0), 0) + unbilledOpening;
+      const cnTotal = cCNs.reduce((s, cn) => s + (Number(cn.total_credit_amount || cn.amount || 0)), 0);
+
+      let status = due <= 0.02 && billed > 0 ? 'Settled' : (due > 0.02 && paid > 0.02 ? 'Partially Paid' : (due > 0.02 ? 'Pending / Due' : 'Active'));
+      const recoveryPct = billed > 0 ? Math.min(100, Math.round(((paid + cnTotal) / billed) * 100)) : 100;
+
+      return { customer: c, billed, paid, cnTotal, due, recoveryPct, status, invoices: cInvs };
+    });
+
+    rows.sort((a, b) => b.due - a.due || b.billed - a.billed);
+
+    const totalBilled = rows.reduce((s, r) => s + r.billed, 0);
+    const totalPaid = rows.reduce((s, r) => s + r.paid, 0);
+    const totalCN = rows.reduce((s, r) => s + r.cnTotal, 0);
+    const totalDue = rows.reduce((s, r) => s + r.due, 0);
+
+    let csv = `RAYAN GROUP - CONSOLIDATED STATEMENT OF ACCOUNT (ALL CLIENTS)\n`;
+    csv += `Company,${compName.replace(/,/g, '')},TRN,${compTrn},Generated,${new Date().toLocaleDateString('en-GB')},Currency,${curr}\n\n`;
+
+    csv += `SECTION 1: MASTER CLIENTS & DEBTORS SUMMARY\n`;
+    csv += `#,Client Name,TRN,Place of Supply,Total Invoiced (${curr}),Total Paid (${curr}),Credit Notes (${curr}),Outstanding Due (${curr}),Recovery %,Status\n`;
+
+    rows.forEach((r, idx) => {
+      csv += `${idx + 1},"${r.customer.name.replace(/"/g, '""')}","${r.customer.trn || ''}","${r.customer.place_of_supply || 'Abu Dhabi'}","${r.billed.toFixed(2)}","${r.paid.toFixed(2)}","${r.cnTotal.toFixed(2)}","${r.due.toFixed(2)}","${r.recoveryPct}%","${r.status}"\n`;
+    });
+
+    csv += `TOTAL,"GRAND TOTAL (ALL CLIENTS)",,,${totalBilled.toFixed(2)},${totalPaid.toFixed(2)},${totalCN.toFixed(2)},${totalDue.toFixed(2)},,\n\n`;
+
+    csv += `SECTION 2: ITEMIZED INVOICES SCHEDULE\n`;
+    csv += `Client Name,Invoice No,Date,Project / Description,Grand Total (${curr}),Amount Paid (${curr}),Balance Due (${curr}),Status\n`;
+
+    rows.forEach(r => {
+      r.invoices.forEach(inv => {
+        csv += `"${r.customer.name.replace(/"/g, '""')}","${inv.invoice_no}","${inv.invoice_date || inv.date || ''}","${(inv.project_name || inv.notes || '').replace(/"/g, '""')}","${Number(inv.grand_total || 0).toFixed(2)}","${Number(inv.amount_paid || 0).toFixed(2)}","${Number(inv.balance_due || 0).toFixed(2)}","${inv.status}"\n`;
+      });
+    });
+
+    this.downloadFile(`Rayan_Group_Consolidated_Client_SOA_${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+    this.showNotification('Master Statement of Account exported to CSV successfully.', 'success');
+  }
+
+  // 6C. DOWNLOAD MASTER SOA AS STANDALONE HTML
+  downloadMasterSOADocument() {
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Rayan Group - Consolidated Statement of Account (All Clients)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 880px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 6mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`Rayan_Group_Consolidated_Client_SOA_${new Date().toISOString().slice(0, 10)}.html`, fullDoc, 'text/html');
+      this.showNotification('Master Statement of Account document downloaded successfully.', 'success');
+    }
+  }
+
+  // 6D. SINGLE CUSTOMER OFFICIAL SOA PRINT DOCUMENT
+  openCustomerSOADocument(custId) {
+    const cust = this.db?.customers?.find(c => c.id === custId || c.code === custId || (c.name && c.name.toLowerCase() === (custId || '').toLowerCase()));
+    if (!cust) return;
+
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) || {};
+    let compName = 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C';
+    if (this.activeCompanyId === 'rayan-prop-uae') compName = 'RAYAN PROPERTIES';
+    else if (this.activeCompanyId === 'ashaz-eng-in') compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    else if (comp.name) compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Al Wahda Commercial Tower, Abu Dhabi, United Arab Emirates');
+
+    const norm = (cust.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const invoices = (this.db?.invoices || []).filter(i => {
+      if (i.status === 'void') return false;
+      const invNorm = (i.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      return (i.customer_id && (i.customer_id === cust.id || i.customer_id === cust.code)) || invNorm === norm || (invNorm && norm && (invNorm.includes(norm) || norm.includes(invNorm)));
+    });
+    const receipts = (this.db?.customer_receipts || []).filter(r => {
+      if (r.status === 'void') return false;
+      const rNorm = (r.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      return (r.customer_id && (r.customer_id === cust.id || r.customer_id === cust.code)) || rNorm === norm || (rNorm && norm && (rNorm.includes(norm) || norm.includes(rNorm)));
+    });
+    const creditNotes = (this.db?.credit_notes || []).filter(cn => {
+      if (cn.status === 'void') return false;
+      const cnNorm = (cn.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      return (cn.customer_id && (cn.customer_id === cust.id || cn.customer_id === cust.code)) || cnNorm === norm || (cnNorm && norm && (cnNorm.includes(norm) || norm.includes(cnNorm)));
+    });
+
+    const hasOpeningInvoice = invoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+    const unbilledOpening = hasOpeningInvoice ? 0 : (Number(cust.opening_balance) || 0);
+
+    const totalInvoiced = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
+    const totalReceived = invoices.reduce((s, i) => s + ((i.amount_paid && i.amount_paid > 0.02) ? Number(i.amount_paid) : 0), 0);
+    const totalOutstanding = invoices.reduce((s, i) => s + ((i.balance_due && i.balance_due > 0.02) ? Number(i.balance_due) : 0), 0) + unbilledOpening;
+    const totalCN = creditNotes.reduce((s, cn) => s + (Number(cn.total_credit_amount || cn.amount || 0)), 0);
+
+    const formattedToday = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const soaRef = `SOA-${cust.code || 'CUST'}-${new Date().getFullYear()}-${Math.floor(Date.now() / 1000).toString().slice(-4)}`;
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📋</span>
+              <span>Statement of Account — ${cust.name}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">Customer SOA</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:860px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+
+            ${this.getRayanWatermark()}
+
+            <div style="position:relative; z-index:1;">
+              <!-- Header -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem; border-bottom:2px solid #0f172a; padding-bottom:1rem;">
+                <div style="max-width:58%;">
+                  <div style="margin-bottom:0.5rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN GROUP" style="height:48px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.85rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.25; margin-bottom:4px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.75rem; color:#475569; line-height:1.45;">
+                    <div>${isIndia ? 'GSTIN' : 'TRN'}: <strong>${compTrn}</strong></div>
+                    <div>${compAddress}</div>
+                    <div>Tel: ${compPhone} • Email: ${compEmail}</div>
+                  </div>
+                </div>
+
+                <div style="text-align:right; max-width:42%;">
+                  <div style="font-family:'Outfit', sans-serif; font-size:1.45rem; font-weight:800; color:#0f172a; letter-spacing:0.01em; line-height:1.15;">
+                    STATEMENT OF ACCOUNT
+                  </div>
+                  <div style="font-family:'Amiri', serif; font-size:0.95rem; font-weight:700; color:#475569; margin-top:2px; margin-bottom:8px;">
+                    كشف حساب العميل
+                  </div>
+                  <table style="margin-left:auto; font-size:0.75rem; color:#334155; border-collapse:collapse; text-align:right;">
+                    <tr><td style="padding:2px 6px; color:#64748b;">Statement Ref:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a;">${soaRef}</td></tr>
+                    <tr><td style="padding:2px 6px; color:#64748b;">Statement Date:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a;">${formattedToday}</td></tr>
+                    <tr><td style="padding:2px 6px; color:#64748b;">Currency:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0284c7;">${curr} (${isIndia ? 'INR' : 'UAE Dirham'})</td></tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Customer Detail Card -->
+              <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:0.85rem 1rem; margin-bottom:1.25rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.78rem;">
+                <div>
+                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase;">Statement Issued To:</div>
+                  <strong style="font-size:0.92rem; color:#0f172a;">${cust.name}</strong>
+                  <div style="color:#475569; margin-top:3px;">${cust.billing_address || 'Abu Dhabi, United Arab Emirates'}</div>
+                  ${cust.trn ? `<div style="margin-top:2px;">TRN: <strong>${cust.trn}</strong></div>` : ''}
+                  <div>Place of Supply: <strong>${cust.place_of_supply || 'Abu Dhabi, UAE'}</strong></div>
+                </div>
+                <div>
+                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase;">Account Details:</div>
+                  <div>Attn: <strong>${cust.contact_person || '—'}</strong></div>
+                  <div>Phone: ${cust.phone || '—'} • Email: ${cust.email || '—'}</div>
+                  <div>A/R Ledger: <strong>${cust.accounts_receivable || 'Accounts Receivable'}</strong></div>
+                  <div>Credit Limit: <strong>${currSym}${Number(cust.credit_limit || 15000000).toLocaleString('en-US')}</strong></div>
+                </div>
+              </div>
+
+              <!-- KPI Metrics -->
+              <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:6px; padding:0.65rem 0.75rem;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#475569; text-transform:uppercase;">Total Invoiced</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:#0f172a; margin-top:3px;">${currSym}${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-top:3px solid #16a34a; border-radius:6px; padding:0.65rem 0.75rem;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#15803d; text-transform:uppercase;">Total Collections Received</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:#16a34a; margin-top:3px;">${currSym}${totalReceived.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                </div>
+                <div style="background:#fef2f2; border:1px solid #fca5a5; border-top:3px solid #dc2626; border-radius:6px; padding:0.65rem 0.75rem;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#b91c1c; text-transform:uppercase;">Net Outstanding Balance</div>
+                  <div style="font-size:1.2rem; font-weight:900; color:#dc2626; margin-top:3px;">${currSym}${totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                </div>
+              </div>
+
+              <!-- Invoices Table -->
+              <h4 style="font-family:'Outfit', sans-serif; font-size:0.9rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem 0; text-transform:uppercase;">
+                Sales Invoices Ledger
+              </h4>
+              <div class="fin-doc-table-wrapper" style="margin:0 0 1.25rem 0;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.74rem; table-layout:fixed;">
+                  <thead>
+                    <tr style="background:#0f172a; color:#ffffff;">
+                      <th style="padding:6px; text-align:left; width:12%;">Date</th>
+                      <th style="padding:6px; text-align:left; width:17%;">Invoice #</th>
+                      <th style="padding:6px; text-align:left; width:33%;">Project Narration</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Billed (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:12%;">Paid (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Balance Due</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${unbilledOpening > 0 ? `
+                      <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.04);">
+                        <td style="padding:6px; color:#64748b;">${this.formatDate(cust.created_at || '2025-04-01')}</td>
+                        <td style="padding:6px; font-weight:700; color:#0284c7;">OPENING-BALANCE</td>
+                        <td style="padding:6px; color:#475569;">Brought-forward verified accounts receivable balance</td>
+                        <td style="padding:6px; text-align:right; font-weight:600;">${unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; color:#64748b;">0.00</td>
+                        <td style="padding:6px; text-align:right; font-weight:800; color:#dc2626;">${unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ` : ''}
+                    ${invoices.map(inv => {
+                      const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
+                      const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
+                      return `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                          <td style="padding:6px; font-weight:700; color:#0f172a;">
+                            ${inv.invoice_no}
+                            <span style="font-size:0.62rem; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:2px; ${inv.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : (inv.status === 'partially_paid' ? 'background:#f0f9ff; color:#0284c7;' : 'background:#fef2f2; color:#dc2626;')}">${inv.status}</span>
+                          </td>
+                          <td style="padding:6px; color:#334155; word-break:break-word;">${inv.project_name || inv.notes || 'Contracting Services'}</td>
+                          <td style="padding:6px; text-align:right; font-weight:600; color:#0f172a;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:3px double #0f172a;">
+                      <td colspan="3" style="padding:7px 6px; text-align:right; text-transform:uppercase;">Ledger Total:</td>
+                      <td style="padding:7px 6px; text-align:right; color:#0f172a;">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 6px; text-align:right; color:#16a34a;">${totalReceived.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 6px; text-align:right; color:#dc2626; font-size:0.82rem;">${totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Receipts Table -->
+              ${receipts.length > 0 ? `
+                <h4 style="font-family:'Outfit', sans-serif; font-size:0.9rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem 0; text-transform:uppercase;">
+                  Payment Receipts History
+                </h4>
+                <div class="fin-doc-table-wrapper" style="margin:0 0 1.25rem 0;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.74rem; table-layout:fixed;">
+                    <thead>
+                      <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
+                        <th style="padding:5px 6px; text-align:left; width:18%;">Receipt #</th>
+                        <th style="padding:5px 6px; text-align:left; width:15%;">Date</th>
+                        <th style="padding:5px 6px; text-align:left; width:17%;">Mode</th>
+                        <th style="padding:5px 6px; text-align:left; width:30%;">Bank / Ref #</th>
+                        <th style="padding:5px 6px; text-align:right; width:20%;">Amount Received</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${receipts.map(r => `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:5px 6px; font-weight:700; color:#0f172a;">${r.receipt_no}</td>
+                          <td style="padding:5px 6px; color:#64748b;">${this.formatDate(r.receipt_date)}</td>
+                          <td style="padding:5px 6px; color:#334155;">${r.payment_mode}</td>
+                          <td style="padding:5px 6px; font-family:monospace; color:#475569;">${r.reference_no || '—'}</td>
+                          <td style="padding:5px 6px; text-align:right; font-weight:700; color:#16a34a;">${currSym}${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              ` : ''}
+
+              <!-- Signatures & Disclaimer -->
+              <div style="margin-top:2rem; padding-top:1.25rem; border-top:2px solid #0f172a; display:grid; grid-template-columns:repeat(2, 1fr); gap:2rem; page-break-inside:avoid;">
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Prepared &amp; Verified By</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Finance &amp; Accounts Desk</div>
+                  <div style="font-size:0.68rem; color:#475569;">Rayan Group Financial Department</div>
+                </div>
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Client Acknowledgment / Sign &amp; Stamp</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Authorized Signatory</div>
+                  <div style="font-size:0.68rem; color:#475569;">${cust.name}</div>
+                </div>
+              </div>
+
+              <div style="margin-top:1.25rem; padding-top:0.75rem; border-top:1px solid #e2e8f0; text-align:center; font-size:0.68rem; color:#64748b;">
+                This is a Computer Generated Statement of Account. Certified correct by Rayan Group Enterprise Financial Portal.
+              </div>
+
             </div>
           </div>
         </div>
@@ -14653,6 +15537,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -15000,6 +15885,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -16779,6 +17665,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openExpensePrintModal('${exp.id || ''}')">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -17081,6 +17968,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
