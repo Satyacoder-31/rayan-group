@@ -14442,117 +14442,122 @@ class FinanceApp {
             </div>
 
             <!-- Official Line Items Table (Contracting Format with Bilingual Headers & Dynamic Headline Banner) -->
-            <div style="margin-top:1rem; margin-bottom:1rem;">
-              <table style="width:100%; border-collapse:collapse; border:1.5px solid #111827; font-size:0.8rem; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
-                <thead>
-                  <tr style="background:#ffffff; border-bottom:1.5px solid #111827; text-align:center; font-weight:700; font-size:0.78rem;">
-                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
-                      <div>Sr. No.</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 8px; width:34%; vertical-align:middle; text-align:center;">
-                      <div>Description</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 4px; width:6%; vertical-align:middle;">
-                      <div>Unit</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 4px; width:6%; vertical-align:middle;">
-                      <div>Qty</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 4px; width:6%; vertical-align:middle;">
-                      <div>WD</div>
-                      <div style="font-size:0.72rem; font-weight:600;">%</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:9%; vertical-align:middle;">
-                      <div>Project Price</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">سعر المشروع</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:11%; vertical-align:middle;">
-                      <div>Invoice Amount</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">مبلغ الفاتورة</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:9%; vertical-align:middle;">
-                      <div>Vat 5%</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:14%; vertical-align:middle;">
-                      <div>Total Amount</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
-                    </th>
-                  </tr>
-                  <!-- Headline Banner Row -->
-                  <tr style="border-bottom:1.5px solid #111827; background:#ffffff;">
-                    <td colspan="9" style="border:1px solid #111827; padding:6px 10px; font-weight:800; font-size:0.85rem; color:#111827; text-align:left; letter-spacing:0.01em;">
-                      ${bannerHeadline}
-                    </td>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${lineItems.map((item, idx) => {
-                    const qty = Number(item.qty !== undefined ? item.qty : 1);
-                    const rate = Number(item.rate !== undefined ? item.rate : (item.unit_price !== undefined ? item.unit_price : 0));
-                    let wdPct = 100;
-                    if (item.wd_pct !== undefined && item.wd_pct !== null && item.wd_pct !== '') {
-                      wdPct = Number(item.wd_pct);
-                    } else if (item.discount_val !== undefined) {
-                      wdPct = item.discount_val === 0 ? 100 : (100 - item.discount_val);
-                    }
-                    const invAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate * (wdPct / 100)));
-                    const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (isIndia ? 18 : 5)));
-                    const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (invAmt * (vatRate / 100)));
-                    const totalAmt = invAmt;
-                    const uom = item.unit || item.uom || 'Sqm';
-                    const itemName = item.name || item.description || 'Turnkey Work Item';
+            <div class="fin-doc-table-scroll-hint">
+              <span>↔</span> Swipe table horizontally to view full columns
+            </div>
+            <div class="fin-doc-table-wrapper">
+              <div style="min-width:640px;">
+                <table style="width:100%; border-collapse:collapse; border:1.5px solid #111827; font-size:0.8rem; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+                  <thead>
+                    <tr style="background:#ffffff; border-bottom:1.5px solid #111827; font-weight:700; font-size:0.78rem;">
+                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center; vertical-align:middle;">
+                        <div>Sr. No.</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 10px; width:33%; text-align:left; vertical-align:middle;">
+                        <div>Description</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 4px; width:6%; text-align:center; vertical-align:middle;">
+                        <div>Unit</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 4px; width:6%; text-align:center; vertical-align:middle;">
+                        <div>Qty</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 4px; width:6%; text-align:center; vertical-align:middle;">
+                        <div>WD</div>
+                        <div style="font-size:0.72rem; font-weight:600;">%</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:11%; text-align:right; vertical-align:middle;">
+                        <div>Project Price</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">سعر المشروع</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:11%; text-align:right; vertical-align:middle;">
+                        <div>Invoice Amount</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">مبلغ الفاتورة</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:10%; text-align:right; vertical-align:middle;">
+                        <div>VAT 5%</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:12%; text-align:right; vertical-align:middle;">
+                        <div>Total Amount</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                      </th>
+                    </tr>
+                    <!-- Headline Banner Row -->
+                    <tr style="border-bottom:1.5px solid #111827; background:#ffffff;">
+                      <td colspan="9" style="border:1px solid #111827; padding:6px 10px; font-weight:800; font-size:0.85rem; color:#111827; text-align:left; letter-spacing:0.01em;">
+                        ${bannerHeadline}
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${lineItems.map((item, idx) => {
+                      const qty = Number(item.qty !== undefined ? item.qty : 1);
+                      const rate = Number(item.rate !== undefined ? item.rate : (item.unit_price !== undefined ? item.unit_price : 0));
+                      let wdPct = 100;
+                      if (item.wd_pct !== undefined && item.wd_pct !== null && item.wd_pct !== '') {
+                        wdPct = Number(item.wd_pct);
+                      } else if (item.discount_val !== undefined) {
+                        wdPct = item.discount_val === 0 ? 100 : (100 - item.discount_val);
+                      }
+                      const invAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate * (wdPct / 100)));
+                      const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (isIndia ? 18 : 5)));
+                      const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (invAmt * (vatRate / 100)));
+                      const totalAmt = Number(item.total_amount && item.total_amount > invAmt ? item.total_amount : (invAmt + vatAmt));
+                      const uom = item.unit || item.uom || 'Sqm';
+                      const itemName = item.name || item.description || 'Turnkey Work Item';
 
-                    return `
-                      <tr style="border-bottom:1px solid #111827; font-size:0.82rem;">
-                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
-                        <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">${itemName}</td>
-                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${uom}</td>
-                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${qty.toFixed(1)}</td>
-                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${wdPct}%</td>
-                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
+                      return `
+                        <tr style="border-bottom:1px solid #111827; font-size:0.82rem;">
+                          <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                          <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">${itemName}</td>
+                          <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${uom}</td>
+                          <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${qty.toFixed(1)}</td>
+                          <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${wdPct}%</td>
+                          <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600; white-space:nowrap;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600; white-space:nowrap;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
 
-              <!-- Bottom Summary Matching Screenshot (Left: Payable Amount in Words with Rayan Engineering Logo, Right: Summary Table) -->
-              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
-                <!-- Left: Payable Amount in Words -->
-                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
-                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
-                    Payable Amount : ${words}
+                <!-- Bottom Summary Matching Screenshot (Left: Payable Amount in Words with Rayan Engineering Logo, Right: Summary Table) -->
+                <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                  <!-- Left: Payable Amount in Words -->
+                  <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                    <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                      Payable Amount : ${words}
+                    </div>
                   </div>
-                </div>
 
-                <!-- Right: Summary Table -->
-                <div style="background:#eaf3ec;">
-                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Adjustment</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${Number(inv.adjustment || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">Sub-Total</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">Vat5%</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 })}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Grand Total</td>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 })}</td>
-                    </tr>
-                  </table>
+                  <!-- Right: Summary Table -->
+                  <div style="background:#eaf3ec;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Adjustment</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${Number(inv.adjustment || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">Sub-Total</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">VAT 5%</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.88rem;">Grand Total</td>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.88rem; white-space:nowrap;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -14772,83 +14777,88 @@ class FinanceApp {
             </div>
 
             <!-- Table of Line Items (Exact Invoice Theme) -->
-            <div style="margin-bottom:0; overflow:hidden;">
-              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
-                <thead>
-                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
-                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
-                      <div>Sr. No.</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 8px; width:45%; vertical-align:middle; text-align:center;">
-                      <div>Description</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:25%; vertical-align:middle;">
-                      <div>Payment Mode &amp; Ref</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">طريقة الدفع</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:25%; vertical-align:middle;">
-                      <div>Amount Received</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المستلم</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${receiptLineItems && receiptLineItems.length > 1 ? receiptLineItems.map((item, idx) => {
-                    const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
-                    return `
+            <div class="fin-doc-table-scroll-hint">
+              <span>↔</span> Swipe table horizontally to view full columns
+            </div>
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0;">
+              <div style="min-width:580px;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                  <thead>
+                    <tr style="background:#ffffff; color:#111827; border:1px solid #111827;">
+                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center; vertical-align:middle;">
+                        <div>Sr. No.</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:45%; vertical-align:middle; text-align:left;">
+                        <div>Description</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:25%; text-align:center; vertical-align:middle;">
+                        <div>Payment Mode &amp; Ref</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">طريقة الدفع</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:25%; text-align:right; vertical-align:middle;">
+                        <div>Amount Received</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المستلم</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${receiptLineItems && receiptLineItems.length > 1 ? receiptLineItems.map((item, idx) => {
+                      const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
+                      return `
+                        <tr style="border:1px solid #111827; background:#ffffff;">
+                          <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                          <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                            ${item.name || item.description}
+                            ${item.qty ? `<div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">Qty: ${item.qty} ${item.unit || item.uom || 'Sqm'} • Rate: ${Number(item.rate || 0).toFixed(2)}</div>` : ''}
+                          </td>
+                          <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600;">
+                            ${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}
+                            ${rec.reference_no ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no}</div>` : ''}
+                          </td>
+                          <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap;">${curr} ${itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>
+                      `;
+                    }).join('') : `
                       <tr style="border:1px solid #111827; background:#ffffff;">
-                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
                         <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
-                          ${item.name || item.description}
-                          ${item.qty ? `<div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">Qty: ${item.qty} ${item.unit || item.uom || 'Sqm'} • Rate: ${Number(item.rate || 0).toFixed(2)}</div>` : ''}
+                          ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
+                          <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                            ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
+                          </div>
                         </td>
                         <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600;">
                           ${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}
                           ${rec.reference_no ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no}</div>` : ''}
                         </td>
-                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap;">${curr} ${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
-                    `;
-                  }).join('') : `
-                    <tr style="border:1px solid #111827; background:#ffffff;">
-                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
-                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
-                        ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
-                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
-                          ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
-                        </div>
-                      </td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600;">
-                        ${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}
-                        ${rec.reference_no ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no}</div>` : ''}
-                      </td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  `}
-                </tbody>
-              </table>
+                    `}
+                  </tbody>
+                </table>
 
-              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
-              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
-                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
-                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
-                    Amount Received : ${amountInWords}
+                <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+                <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                  <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                    <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                      Amount Received : ${amountInWords}
+                    </div>
                   </div>
-                </div>
 
-                <div style="background:#eaf3ec;">
-                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub-Total</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Received</td>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  </table>
+                  <div style="background:#eaf3ec;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub-Total</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.88rem;">Total Received</td>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.88rem; white-space:nowrap;">${curr} ${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -15060,95 +15070,107 @@ class FinanceApp {
             </div>
 
             <!-- Modern Line Items Table (Matching Invoice Theme) -->
-            <div style="margin-bottom:0; overflow:hidden;">
-              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
-                <thead>
-                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
-                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
-                      <div>Sr. No.</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 8px; width:45%; vertical-align:middle; text-align:center;">
-                      <div>Description &amp; Scope</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 4px; width:7%; vertical-align:middle;">
-                      <div>Unit</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 4px; width:7%; vertical-align:middle;">
-                      <div>Qty</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:12%; vertical-align:middle;">
-                      <div>Unit Price</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">السعر</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:10%; vertical-align:middle;">
-                      <div>VAT 5%</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:14%; vertical-align:middle;">
-                      <div>Total Amount</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(po.line_items && po.line_items.length ? po.line_items : [
-                    {
-                      sr: 1,
-                      name: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
-                      description: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
-                      unit: "Sqm",
-                      qty: 160,
-                      unit_price: 60,
-                      invoice_amount: 9600,
-                      vat_amount: 480,
-                      total_amount: 9600
-                    }
-                  ]).map((item, idx) => `
-                    <tr style="border:1px solid #111827; background:#ffffff;">
-                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${item.sr || (idx + 1)}</td>
-                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
-                        ${item.name || item.description}
-                      </td>
-                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${item.unit || item.uom || 'Sqm'}</td>
-                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${item.qty || 160}</td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${Number(item.unit_price || 60).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${Number(item.vat_amount || item.tax_amount || 480).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${Number(item.total_amount || 9600).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <div class="fin-doc-table-scroll-hint">
+              <span>↔</span> Swipe table horizontally to view full columns
+            </div>
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0;">
+              <div style="min-width:620px;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                  <thead>
+                    <tr style="background:#ffffff; color:#111827; border:1px solid #111827;">
+                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center; vertical-align:middle;">
+                        <div>Sr. No.</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:45%; vertical-align:middle; text-align:left;">
+                        <div>Description &amp; Scope</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 4px; width:7%; text-align:center; vertical-align:middle;">
+                        <div>Unit</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 4px; width:7%; text-align:center; vertical-align:middle;">
+                        <div>Qty</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:12%; text-align:right; vertical-align:middle;">
+                        <div>Unit Price</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">السعر</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:10%; text-align:right; vertical-align:middle;">
+                        <div>VAT 5%</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:14%; text-align:right; vertical-align:middle;">
+                        <div>Total Amount</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                      </th>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${(po.line_items && po.line_items.length ? po.line_items : [
+                      {
+                        sr: 1,
+                        name: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
+                        description: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
+                        unit: "Sqm",
+                        qty: 160,
+                        unit_price: 60,
+                        invoice_amount: 9600,
+                        vat_amount: 480,
+                        total_amount: 10080
+                      }
+                    ]).map((item, idx) => {
+                      const itemUnitPrice = Number(item.unit_price || 60);
+                      const itemQty = Number(item.qty || 160);
+                      const itemInvAmt = Number(item.invoice_amount || (itemUnitPrice * itemQty));
+                      const itemVat = Number(item.vat_amount || item.tax_amount || (itemInvAmt * 0.05));
+                      const itemTotal = Number(item.total_amount && item.total_amount > itemInvAmt ? item.total_amount : (itemInvAmt + itemVat));
+                      return `
+                      <tr style="border:1px solid #111827; background:#ffffff;">
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${item.sr || (idx + 1)}</td>
+                        <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                          ${item.name || item.description}
+                        </td>
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${item.unit || item.uom || 'Sqm'}</td>
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; color:#111827; font-weight:600;">${itemQty}</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600; white-space:nowrap;">${itemUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600; white-space:nowrap;">${itemVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap;">${curr} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    `;
+                    }).join('')}
+                  </tbody>
+                </table>
 
-              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
-              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
-                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; flex-direction:column; justify-content:center;">
-                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
-                    Total In Words : ${amountInWords}
+                <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+                <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                  <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; flex-direction:column; justify-content:center;">
+                    <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                      Total In Words : ${amountInWords}
+                    </div>
+                    <div style="font-size:0.75rem; color:#4b5563; margin-top:4px;">
+                      <strong>Site Location:</strong> Al Foah Mall - Alain • Working Hours: 8:00 AM – 6:00 PM
+                    </div>
                   </div>
-                  <div style="font-size:0.75rem; color:#4b5563; margin-top:4px;">
-                    <strong>Site Location:</strong> Al Foah Mall - Alain • Working Hours: 8:00 AM – 6:00 PM
-                  </div>
-                </div>
 
-                <div style="background:#eaf3ec;">
-                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub-Total EX-VAT</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">VAT 5%</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Incl. VAT</td>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  </table>
+                  <div style="background:#eaf3ec;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub-Total EX-VAT</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">VAT 5%</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.88rem;">Total Incl. VAT</td>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.88rem; white-space:nowrap;">${curr} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -16533,71 +16555,76 @@ class FinanceApp {
             </div>
 
             <!-- Items Table (Matching Invoice Theme) -->
-            <div style="margin-bottom:0; overflow:hidden;">
-              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
-                <thead>
-                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
-                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
-                      <div>Sr. No.</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 8px; width:50%; vertical-align:middle; text-align:center;">
-                      <div>Expense Particulars &amp; Purpose</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان المصروف</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:15%; vertical-align:middle;">
-                      <div>Taxable Subtotal</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الأساسي</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:15%; vertical-align:middle;">
-                      <div>VAT 5%</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:15%; vertical-align:middle;">
-                      <div>Total Disbursed</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style="border:1px solid #111827; background:#ffffff;">
-                    <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
-                    <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
-                      ${exp.description}
-                      <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
-                        ${exp.project_name ? `Project: ${exp.project_name} • ` : ''}Category: ${exp.category}
-                      </div>
-                    </td>
-                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${formattedAmount}</td>
-                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600;">${formattedTax}</td>
-                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700;">${curr} ${formattedTotal}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="fin-doc-table-scroll-hint">
+              <span>↔</span> Swipe table horizontally to view full columns
+            </div>
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0;">
+              <div style="min-width:600px;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                  <thead>
+                    <tr style="background:#ffffff; color:#111827; border:1px solid #111827;">
+                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center; vertical-align:middle;">
+                        <div>Sr. No.</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:50%; vertical-align:middle; text-align:left;">
+                        <div>Expense Particulars &amp; Purpose</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان المصروف</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:15%; text-align:right; vertical-align:middle;">
+                        <div>Taxable Subtotal</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الأساسي</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:15%; text-align:right; vertical-align:middle;">
+                        <div>VAT 5%</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:15%; text-align:right; vertical-align:middle;">
+                        <div>Total Disbursed</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border:1px solid #111827; background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
+                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                        ${exp.description}
+                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                          ${exp.project_name ? `Project: ${exp.project_name} • ` : ''}Category: ${exp.category}
+                        </div>
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600; white-space:nowrap;">${formattedAmount}</td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:600; white-space:nowrap;">${formattedTax}</td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap;">${curr} ${formattedTotal}</td>
+                    </tr>
+                  </tbody>
+                </table>
 
-              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
-              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
-                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
-                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
-                    Total In Words : ${amountInWords}
+                <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+                <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                  <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                    <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                      Total In Words : ${amountInWords}
+                    </div>
                   </div>
-                </div>
 
-                <div style="background:#eaf3ec;">
-                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Taxable Subtotal</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedAmount}</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">VAT 5%</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedTax}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Disbursed</td>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${formattedTotal}</td>
-                    </tr>
-                  </table>
+                  <div style="background:#eaf3ec;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Taxable Subtotal</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${formattedAmount}</td>
+                      </tr>
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827;">VAT 5%</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${formattedTax}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.88rem;">Total Disbursed</td>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.88rem; white-space:nowrap;">${curr} ${formattedTotal}</td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -16833,87 +16860,92 @@ class FinanceApp {
             </div>
 
             <!-- Table of Allocations / Particulars -->
-            <div style="margin-bottom:0; overflow:hidden;">
-              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
-                <thead>
-                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
-                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
-                      <div>Sr. No.</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 8px; width:50%; vertical-align:middle; text-align:center;">
-                      <div>Disbursement Particulars &amp; Purpose</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان الصرف وتفاصيل السداد</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:22%; vertical-align:middle;">
-                      <div>Payment Channel / Ref</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">قناة السداد والمرجع</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:23%; vertical-align:middle;">
-                      <div>Amount Disbursed (${curr})</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المصروف</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${hasAllocations ? allocations.map((a, idx) => `
-                    <tr style="border:1px solid #111827; background:#ffffff;">
-                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
-                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
-                        Settlement against Bill: ${a.bill_no || 'Approved Purchase Bill'}
-                        ${a.vendor_invoice_no ? `<span style="font-size:0.72rem; color:#6b7280; font-weight:500;"> (Vendor Invoice: ${a.vendor_invoice_no})</span>` : ''}
-                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
-                          Scope: ${a.project_name || 'Civil / Architectural Procurement'}
-                        </div>
-                      </td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
-                        ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}
-                        ${pay.reference_no ? `<div style="color:#6b7280; font-size:0.7rem;">Ref: ${pay.reference_no}</div>` : ''}
-                      </td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums;">
-                        ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </td>
+            <div class="fin-doc-table-scroll-hint">
+              <span>↔</span> Swipe table horizontally to view full columns
+            </div>
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0;">
+              <div style="min-width:600px;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                  <thead>
+                    <tr style="background:#ffffff; color:#111827; border:1px solid #111827;">
+                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center; vertical-align:middle;">
+                        <div>Sr. No.</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:50%; vertical-align:middle; text-align:left;">
+                        <div>Disbursement Particulars &amp; Purpose</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان الصرف وتفاصيل السداد</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:22%; text-align:center; vertical-align:middle;">
+                        <div>Payment Channel / Ref</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">قناة السداد والمرجع</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:23%; text-align:right; vertical-align:middle;">
+                        <div>Amount Disbursed (${curr})</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المصروف</div>
+                      </th>
                     </tr>
-                  `).join('') : `
-                    <tr style="border:1px solid #111827; background:#ffffff;">
-                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
-                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
-                        Direct Vendor Settlement / Advance Disbursement on Account
-                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
-                          Direct settlement on vendor ledger against corporate procurement orders. ${pay.notes ? `• ${pay.notes}` : ''}
-                        </div>
-                      </td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
-                        ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}
-                        ${pay.reference_no ? `<div style="color:#6b7280; font-size:0.7rem;">Ref: ${pay.reference_no}</div>` : ''}
-                      </td>
-                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums;">
-                        ${formattedAmount}
-                      </td>
-                    </tr>
-                  `}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${hasAllocations ? allocations.map((a, idx) => `
+                      <tr style="border:1px solid #111827; background:#ffffff;">
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                        <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                          Settlement against Bill: ${a.bill_no || 'Approved Purchase Bill'}
+                          ${a.vendor_invoice_no ? `<span style="font-size:0.72rem; color:#6b7280; font-weight:500;"> (Vendor Invoice: ${a.vendor_invoice_no})</span>` : ''}
+                          <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                            Scope: ${a.project_name || 'Civil / Architectural Procurement'}
+                          </div>
+                        </td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
+                          ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}
+                          ${pay.reference_no ? `<div style="color:#6b7280; font-size:0.7rem;">Ref: ${pay.reference_no}</div>` : ''}
+                        </td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap;">
+                          ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr style="border:1px solid #111827; background:#ffffff;">
+                        <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
+                        <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                          Direct Vendor Settlement / Advance Disbursement on Account
+                          <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                            Direct settlement on vendor ledger against corporate procurement orders. ${pay.notes ? `• ${pay.notes}` : ''}
+                          </div>
+                        </td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
+                          ${(pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS') ? 'Online' : (pay.payment_mode || 'Online / Bank Wire')}
+                          ${pay.reference_no ? `<div style="color:#6b7280; font-size:0.7rem;">Ref: ${pay.reference_no}</div>` : ''}
+                        </td>
+                        <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap;">
+                          ${formattedAmount}
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
 
-              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
-              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
-                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
-                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
-                    Total In Words : ${amountInWords}
+                <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+                <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                  <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                    <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                      Total In Words : ${amountInWords}
+                    </div>
                   </div>
-                </div>
 
-                <div style="background:#eaf3ec;">
-                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub Total</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedAmount}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Disbursed</td>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${formattedAmount}</td>
-                    </tr>
-                  </table>
+                  <div style="background:#eaf3ec;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub Total</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${formattedAmount}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.88rem;">Total Disbursed</td>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.88rem; white-space:nowrap;">${curr} ${formattedAmount}</td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -17709,66 +17741,71 @@ class FinanceApp {
             </div>
 
             <!-- Particulars Table Matching Invoice Theme -->
-            <div style="margin-bottom:0; overflow:hidden;">
-              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
-                <thead>
-                  <tr style="background:#ffffff; color:#111827; text-align:center; border:1px solid #111827;">
-                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; vertical-align:middle;">
-                      <div>Sr. No.</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 8px; width:52%; vertical-align:middle; text-align:center;">
-                      <div>Description of Debit / Return Adjustment</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان الإشعار المدين وتفاصيل الإرجاع</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:20%; vertical-align:middle;">
-                      <div>Linked Reference</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المرجع المرتبط</div>
-                    </th>
-                    <th style="border:1px solid #111827; padding:6px 6px; width:23%; vertical-align:middle;">
-                      <div>Debit Amount (${curr})</div>
-                      <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المدين</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style="border:1px solid #111827; background:#ffffff;">
-                    <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
-                    <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
-                      ${dn.reason || 'Material return & rate differential on supplies'}
-                      <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
-                        Supplier: ${dn.vendor_name || 'Vendor'} • Adjustment applied against accounts payable
-                      </div>
-                    </td>
-                    <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
-                      ${dn.bill_no || 'Direct Debit'}
-                    </td>
-                    <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums;">
-                      ${formattedAmount}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="fin-doc-table-scroll-hint">
+              <span>↔</span> Swipe table horizontally to view full columns
+            </div>
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0;">
+              <div style="min-width:600px;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                  <thead>
+                    <tr style="background:#ffffff; color:#111827; border:1px solid #111827;">
+                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center; vertical-align:middle;">
+                        <div>Sr. No.</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:52%; vertical-align:middle; text-align:left;">
+                        <div>Description of Debit / Return Adjustment</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">بيان الإشعار المدين وتفاصيل الإرجاع</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:20%; text-align:center; vertical-align:middle;">
+                        <div>Linked Reference</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المرجع المرتبط</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:23%; text-align:right; vertical-align:middle;">
+                        <div>Debit Amount (${curr})</div>
+                        <div style="font-size:0.72rem; font-weight:600; font-family:'Amiri', serif;">المبلغ المدين</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border:1px solid #111827; background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:7px 5px; text-align:center; font-weight:700; color:#111827;">1</td>
+                      <td style="border:1px solid #111827; padding:7px 10px; text-align:left; font-weight:700; color:#111827;">
+                        ${dn.reason || 'Material return & rate differential on supplies'}
+                        <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
+                          Supplier: ${dn.vendor_name || 'Vendor'} • Adjustment applied against accounts payable
+                        </div>
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:center; color:#111827; font-weight:600; font-size:0.76rem;">
+                        ${dn.bill_no || 'Direct Debit'}
+                      </td>
+                      <td style="border:1px solid #111827; padding:7px 8px; text-align:right; color:#111827; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap;">
+                        ${formattedAmount}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
 
-              <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
-              <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
-                <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
-                  <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
-                    Total In Words : ${amountInWords}
+                <!-- Bottom Summary Matching Invoice (Left: Amount in Words, Right: Summary Table) -->
+                <div style="display:grid; grid-template-columns:1fr 280px; margin-top:-1.5px; border:1.5px solid #111827; border-top:1.5px solid #111827; background:#eaf3ec;">
+                  <div style="border-right:1.5px solid #111827; padding:12px 16px; display:flex; align-items:center;">
+                    <div style="font-size:0.83rem; font-weight:700; color:#111827; line-height:1.45;">
+                      Total In Words : ${amountInWords}
+                    </div>
                   </div>
-                </div>
 
-                <div style="background:#eaf3ec;">
-                  <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                    <tr style="border-bottom:1px solid #111827;">
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub Total Debit</td>
-                      <td style="padding:4px 10px; font-weight:700; color:#111827; text-align:right;">${formattedAmount}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.86rem;">Total Debit</td>
-                      <td style="padding:5px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem;">${curr} ${formattedAmount}</td>
-                    </tr>
-                  </table>
+                  <div style="background:#eaf3ec;">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; border-right:1px solid #111827; width:48%;">Sub Total Debit</td>
+                        <td style="padding:5px 10px; font-weight:700; color:#111827; text-align:right; white-space:nowrap;">${formattedAmount}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; border-right:1px solid #111827; font-size:0.88rem;">Total Debit</td>
+                        <td style="padding:6px 10px; font-weight:800; color:#111827; text-align:right; font-size:0.88rem; white-space:nowrap;">${curr} ${formattedAmount}</td>
+                      </tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>

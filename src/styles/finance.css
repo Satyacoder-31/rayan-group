@@ -2553,14 +2553,20 @@ select option:focus,
 .fin-doc-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(3, 7, 18, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: #090e1a;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: finDocFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.fin-doc-open {
+  overflow: hidden !important;
+}
+
+body.fin-doc-open .fin-app-wrapper {
+  visibility: hidden !important;
 }
 
 @keyframes finDocFadeIn {
@@ -2715,6 +2721,82 @@ select option:focus,
   flex-direction: column;
   position: relative;
   z-index: 1;
+}
+
+/* Responsive Table Wrapper for Official Documents (Prevents Screen Overflow) */
+.fin-doc-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.fin-doc-table-scroll-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px dashed rgba(2, 132, 199, 0.3);
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin-bottom: 0.6rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .fin-doc-toolbar {
+    padding: 0.5rem 0.75rem !important;
+    height: auto !important;
+    min-height: 52px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .fin-doc-toolbar-left {
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+  .fin-doc-type-pills {
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px;
+  }
+  .fin-doc-type-pills::-webkit-scrollbar {
+    display: none;
+  }
+  .fin-doc-toolbar-right {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .fin-btn-print-action {
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.73rem !important;
+  }
+  .fin-doc-viewport {
+    padding: 0.75rem 0.4rem 3rem 0.4rem !important;
+  }
+  .fin-document-paper {
+    padding: 1.25rem 0.85rem !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    margin: 0 auto 1.5rem auto !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+    border-radius: 6px;
+  }
+  .fin-doc-table-scroll-hint {
+    display: flex !important;
+  }
 }
 
 /* Elegant Top Gradient Accent Ribbon */
