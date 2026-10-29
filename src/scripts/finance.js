@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v10';
+    const CURRENT_DB_VERSION = 'v2026_clean_v11';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4475,8 +4475,9 @@ class FinanceApp {
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print Official Payment Voucher">Receipt</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print &amp; View Official Payment Voucher">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')" title="Edit Payment Voucher">✏️ Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -4753,9 +4754,9 @@ class FinanceApp {
                       `).join(' ') : '<span style="font-size:0.75rem; color:#94a3b8;">On-Account Advance</span>'}
                     </td>
                     <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print Official Payment Voucher">Receipt</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')">Edit</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')">Delete</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print &amp; View Official Payment Voucher">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')" title="Edit Payment Voucher">✏️ Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -9141,8 +9142,8 @@ class FinanceApp {
     this.openInvoicePrintModal(invoiceId);
   }
 
-  // 2A. EDIT INVOICE MODAL
-  openEditInvoiceModal(invoiceId) {
+  // 2A. OPEN INVOICE IN CREATION WIZARD (ALTERNATIVE)
+  openInvoiceWizard(invoiceId) {
     this.openCreateInvoiceModal(invoiceId);
   }
 
@@ -15547,6 +15548,9 @@ class FinanceApp {
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadInvoiceDocument('${inv.id || ''}')">
               📥 Download Document
             </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditInvoiceModal('${inv.id || ''}')" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);">
+              ✏️ Edit Invoice
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
               ✕ Close
             </button>
@@ -15894,6 +15898,9 @@ class FinanceApp {
             </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadReceiptDocument('${rec.id || ''}')">
               📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditReceiptModal('${rec.id || ''}')" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);">
+              ✏️ Edit Receipt Voucher
             </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
               ✕ Close
@@ -16533,7 +16540,7 @@ class FinanceApp {
   // COMPREHENSIVE DOCUMENT EDITING WORKFLOWS (INVOICES, BILLS, RECEIPTS, EXPENSES, POs)
   // ==========================================================================
 
-  // 1. EDIT TAX INVOICE MODAL
+  // 1. EDIT TAX INVOICE MODAL (MULTI-ITEM LINE EDITOR)
   openEditInvoiceModal(invoiceId) {
     const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
     if (!inv) {
@@ -16546,12 +16553,18 @@ class FinanceApp {
     const customers = (this.db?.customers || []).filter(c => !c.company_id || c.company_id === (inv.company_id || this.activeCompanyId));
     const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === (inv.company_id || this.activeCompanyId));
 
-    const lineItems = (inv.line_items && inv.line_items.length) ? inv.line_items : [
+    const lineItems = (inv.line_items && Array.isArray(inv.line_items) && inv.line_items.length > 0) ? inv.line_items : [
       {
-        name: 'General Contracting Services',
+        sr: 1,
+        name: inv.item_name || inv.item_description || inv.description || 'General Contracting Services',
+        description: inv.item_name || inv.item_description || inv.description || 'General Contracting Services',
         qty: 1,
         uom: 'LSUM',
+        unit: 'LSUM',
         unit_price: Number(inv.taxable_subtotal) || 1000,
+        rate: Number(inv.taxable_subtotal) || 1000,
+        wd_pct: 100,
+        invoice_amount: Number(inv.taxable_subtotal) || 1000,
         taxable_amount: Number(inv.taxable_subtotal) || 1000,
         vat_rate: isIndia ? 0 : 5,
         gst_rate: isIndia ? 18 : 0,
@@ -16560,19 +16573,32 @@ class FinanceApp {
       }
     ];
 
+    // Determine initial tax rate
+    let initialTaxRate = isIndia ? 18 : 5;
+    if (Number(inv.taxable_subtotal) > 0 && Number(inv.total_tax) !== undefined) {
+      const calcRate = Math.round((Number(inv.total_tax) / Number(inv.taxable_subtotal)) * 100);
+      if ([0, 5, 12, 18, 28].includes(calcRate)) {
+        initialTaxRate = calcRate;
+      }
+    }
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-invoice">
-        <div class="fin-modal-dialog" style="max-width:850px;">
-          <div class="fin-modal-header">
+        <div class="fin-modal-dialog" style="max-width:1050px; width:95vw; max-height:92vh; display:flex; flex-direction:column;">
+          <div class="fin-modal-header" style="flex-shrink:0;">
             <h3 class="fin-modal-title">✏️ Edit Sales Tax Invoice (${inv.invoice_no})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-invoice')">&times;</button>
           </div>
-          <div class="fin-modal-body">
+          <div class="fin-modal-body" style="overflow-y:auto; flex-grow:1; padding-right:8px;">
             <form id="edit-invoice-form">
+              <!-- Client & Registration Details -->
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Customer / Client <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="edit-inv-cust-name" class="fin-form-input" value="${inv.customer_name || ''}" required>
+                  <input type="text" id="edit-inv-cust-name" class="fin-form-input" value="${inv.customer_name || ''}" list="edit-inv-customers-list" required>
+                  <datalist id="edit-inv-customers-list">
+                    ${customers.map(c => `<option value="${c.name}">${c.name} (${c.code || ''})</option>`).join('')}
+                  </datalist>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">${isIndia ? 'Customer GSTIN' : 'Customer TRN'}</label>
@@ -16584,9 +16610,10 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-grid-3">
+              <!-- Dates, Terms & Project -->
+              <div class="fin-form-grid-4" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Invoice Date</label>
+                  <label class="fin-form-label">Invoice Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="edit-inv-date" class="fin-form-input" value="${inv.invoice_date || ''}" required>
                 </div>
                 <div class="fin-form-group">
@@ -16594,62 +16621,108 @@ class FinanceApp {
                   <input type="number" id="edit-inv-terms" class="fin-form-input" value="${inv.payment_terms || 30}" required>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Due Date</label>
+                  <label class="fin-form-label">Due Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="edit-inv-due-date" class="fin-form-input" value="${inv.due_date || ''}" required>
                 </div>
-              </div>
-
-              <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Item / Service Scope Description <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="edit-inv-item-desc" class="fin-form-input" value="${lineItems[0]?.name || ''}" required>
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Unit of Measure (UOM)</label>
-                  <select id="edit-inv-item-uom" class="fin-form-select">
-                    <option value="LSUM" ${lineItems[0]?.uom === 'LSUM' ? 'selected' : ''}>LSUM (Lump Sum)</option>
-                    <option value="%" ${lineItems[0]?.uom === '%' ? 'selected' : ''}>% (Percentage)</option>
-                    <option value="Sqm" ${lineItems[0]?.uom === 'Sqm' ? 'selected' : ''}>Sqm (Square Meter)</option>
-                    <option value="MT" ${lineItems[0]?.uom === 'MT' ? 'selected' : ''}>MT (Metric Ton)</option>
-                    <option value="CUM" ${lineItems[0]?.uom === 'CUM' ? 'selected' : ''}>CUM (Cubic Meter)</option>
-                    <option value="HRS" ${lineItems[0]?.uom === 'HRS' ? 'selected' : ''}>HRS (Hours)</option>
-                    <option value="UNITS" ${lineItems[0]?.uom === 'UNITS' ? 'selected' : ''}>UNITS</option>
-                  </select>
+                  <label class="fin-form-label">Linked Project / Cost Center</label>
+                  <input type="text" id="edit-inv-project" class="fin-form-input" value="${inv.project_name || ''}" placeholder="e.g. PROJECT-CIVIL WORKS" list="edit-inv-projects-list">
+                  <datalist id="edit-inv-projects-list">
+                    ${projects.map(p => `<option value="${p.name}">${p.name} (${p.code || ''})</option>`).join('')}
+                  </datalist>
                 </div>
               </div>
 
-              <div class="fin-form-grid-3">
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Taxable Subtotal (${currLabel}) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="edit-inv-taxable" class="fin-form-input" value="${inv.taxable_subtotal || 0}" min="1" step="any" required>
+              <!-- LINE ITEMS SECTION HEADER -->
+              <div style="margin-top:1.25rem; margin-bottom:0.6rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <h4 style="font-family:var(--fin-font-heading); font-size:0.95rem; font-weight:700; color:#f8fafc; margin:0; display:flex; align-items:center; gap:8px;">
+                    <span>📦 Line Items &amp; Scope of Work</span>
+                    <span id="edit-inv-items-badge" class="fin-badge fin-badge-issued" style="font-size:0.7rem; padding:2px 8px;">${lineItems.length} Items</span>
+                  </h4>
+                  <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                    Edit all item descriptions, quantities, UOM, and unit prices. Amounts update automatically.
+                  </div>
                 </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Tax Rate %</label>
-                  <select id="edit-inv-tax-rate" class="fin-form-select">
-                    ${!isIndia ? `
-                      <option value="5" selected>5% UAE VAT</option>
-                      <option value="0">0% (Zero-rated / Exempt)</option>
-                    ` : `
-                      <option value="18" selected>18% GST</option>
-                      <option value="12">12% GST</option>
-                      <option value="28">28% GST</option>
-                      <option value="5">5% GST</option>
-                      <option value="0">0% (Exempt)</option>
-                    `}
-                  </select>
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Grand Total (${currLabel})</label>
-                  <input type="text" id="edit-inv-grand" class="fin-form-input" readonly value="${currSym}${Number(inv.grand_total || 0).toFixed(2)}" style="font-weight:700; color:#38bdf8;">
+                <button type="button" id="btn-add-edit-item" class="fin-btn-quick" style="background:rgba(56,189,248,0.14); border-color:#38bdf8; color:#38bdf8; font-weight:700; font-size:0.8rem; padding:6px 14px; cursor:pointer;">
+                  ➕ Add Item Line
+                </button>
+              </div>
+
+              <!-- LINE ITEMS TABLE -->
+              <div style="border:1px solid rgba(255,255,255,0.08); border-radius:8px; overflow:hidden; background:rgba(15,23,42,0.65); margin-bottom:1.25rem;">
+                <div style="overflow-x:auto;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.84rem;" id="edit-inv-items-table">
+                    <thead>
+                      <tr style="background:rgba(30,41,59,0.7); border-bottom:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em;">
+                        <th style="padding:10px 8px; width:36px; text-align:center;">#</th>
+                        <th style="padding:10px 10px; text-align:left;">Item / Milestone Description *</th>
+                        <th style="padding:10px 6px; width:85px; text-align:center;">Qty</th>
+                        <th style="padding:10px 6px; width:95px; text-align:center;">UOM</th>
+                        <th style="padding:10px 6px; width:110px; text-align:right;">Rate (${currLabel})</th>
+                        <th style="padding:10px 6px; width:80px; text-align:center;" title="Work Done % (default 100%)">% W.D.</th>
+                        <th style="padding:10px 12px; width:125px; text-align:right;">Taxable (${currLabel})</th>
+                        <th style="padding:10px 6px; width:45px; text-align:center;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="edit-inv-items-tbody">
+                      <!-- Rendered dynamically -->
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
+              <!-- TOTALS & TAX SECTION -->
+              <div style="background:rgba(30,41,59,0.4); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:1rem; margin-bottom:1.25rem;">
+                <div class="fin-form-grid-4" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Taxable Subtotal (${currLabel})</label>
+                    <input type="text" id="edit-inv-taxable-display" class="fin-form-input" readonly value="${currSym}0.00" style="font-weight:700; color:#f1f5f9; background:rgba(0,0,0,0.3);">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Tax Rate %</label>
+                    <select id="edit-inv-tax-rate" class="fin-form-select">
+                      ${!isIndia ? `
+                        <option value="5" ${initialTaxRate === 5 ? 'selected' : ''}>5% UAE VAT</option>
+                        <option value="0" ${initialTaxRate === 0 ? 'selected' : ''}>0% (Zero-rated / Exempt)</option>
+                      ` : `
+                        <option value="18" ${initialTaxRate === 18 ? 'selected' : ''}>18% GST</option>
+                        <option value="12" ${initialTaxRate === 12 ? 'selected' : ''}>12% GST</option>
+                        <option value="28" ${initialTaxRate === 28 ? 'selected' : ''}>28% GST</option>
+                        <option value="5" ${initialTaxRate === 5 ? 'selected' : ''}>5% GST</option>
+                        <option value="0" ${initialTaxRate === 0 ? 'selected' : ''}>0% (Exempt)</option>
+                      `}
+                    </select>
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Total Tax (${currLabel})</label>
+                    <input type="text" id="edit-inv-tax-display" class="fin-form-input" readonly value="${currSym}0.00" style="font-weight:700; color:#10b981; background:rgba(0,0,0,0.3);">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label">Grand Total (${currLabel})</label>
+                    <input type="text" id="edit-inv-grand" class="fin-form-input" readonly value="${currSym}0.00" style="font-weight:800; font-size:1.05rem; color:#38bdf8; background:rgba(0,0,0,0.3);">
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:1.5rem; margin-top:0.75rem; padding-top:0.75rem; border-top:1px dashed rgba(255,255,255,0.08); font-size:0.86rem; flex-wrap:wrap;">
+                  <div>
+                    <span style="color:#94a3b8;">Amount Paid to Date:</span>
+                    <strong style="color:#10b981; margin-left:6px;">${currSym}${Number(inv.amount_paid || 0).toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}</strong>
+                  </div>
+                  <div>
+                    <span style="color:#94a3b8;">Balance Due:</span>
+                    <strong id="edit-inv-balance-label" style="color:#fb923c; margin-left:6px; font-weight:800;">${currSym}0.00</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notes & Instructions -->
               <div class="fin-form-group">
                 <label class="fin-form-label">Notes &amp; Payment Instructions</label>
                 <textarea id="edit-inv-notes" class="fin-form-textarea" rows="2">${inv.notes || ''}</textarea>
               </div>
 
-              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:flex-end; gap:0.75rem;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-invoice')">Cancel</button>
                 <button type="submit" class="fin-btn-quick primary">Save &amp; Update Invoice (${currLabel}) &rarr;</button>
               </div>
@@ -16661,29 +16734,199 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
-    const taxableInp = document.getElementById('edit-inv-taxable');
+    const tbody = document.getElementById('edit-inv-items-tbody');
+    const badge = document.getElementById('edit-inv-items-badge');
     const taxRateSel = document.getElementById('edit-inv-tax-rate');
-    const grandInp = document.getElementById('edit-inv-grand');
 
-    const updateTotals = () => {
-      const taxable = Number(taxableInp.value) || 0;
-      const rate = Number(taxRateSel.value) || 0;
-      const tax = taxable * (rate / 100);
-      const grand = taxable + tax;
-      grandInp.value = `${currSym}${grand.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+    const renderRowHtml = (it, idx) => {
+      const rowQty = Number(it.qty !== undefined ? it.qty : 1);
+      const rowRate = Number(it.rate !== undefined ? it.rate : (it.unit_price !== undefined ? it.unit_price : 0));
+      const rowUom = it.uom || it.unit || 'Sqm';
+      let rowWd = 100;
+      if (it.wd_pct !== undefined && it.wd_pct !== null && it.wd_pct !== '') {
+        rowWd = Number(it.wd_pct);
+      } else if (it.discount_val !== undefined && it.discount_val !== 0) {
+        rowWd = 100 - Number(it.discount_val);
+      }
+      const rowTaxable = Math.round((rowQty * rowRate * (rowWd / 100)) * 100) / 100;
+
+      return `
+        <tr class="edit-item-tr" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+          <td class="edit-row-idx" style="text-align:center; color:#94a3b8; font-weight:600; padding:8px 4px;">${idx + 1}</td>
+          <td style="padding:6px 8px;">
+            <input type="text" class="fin-form-input edit-row-name" value="${(it.name || it.description || '').replace(/"/g, '&quot;')}" placeholder="e.g. Wall Lining with Stud 50mm" required style="width:100%; font-size:0.83rem;">
+          </td>
+          <td style="padding:6px 6px;">
+            <input type="number" class="fin-form-input edit-row-qty" value="${rowQty}" min="0.001" step="any" required style="text-align:center; font-size:0.83rem; width:100%;">
+          </td>
+          <td style="padding:6px 6px;">
+            <select class="fin-form-select edit-row-uom" style="font-size:0.83rem; width:100%;">
+              <option value="Sqm" ${rowUom === 'Sqm' ? 'selected' : ''}>Sqm</option>
+              <option value="LSUM" ${rowUom === 'LSUM' ? 'selected' : ''}>LSUM</option>
+              <option value="%" ${rowUom === '%' ? 'selected' : ''}>%</option>
+              <option value="MT" ${rowUom === 'MT' ? 'selected' : ''}>MT</option>
+              <option value="CUM" ${rowUom === 'CUM' ? 'selected' : ''}>CUM</option>
+              <option value="HRS" ${rowUom === 'HRS' ? 'selected' : ''}>HRS</option>
+              <option value="UNITS" ${rowUom === 'UNITS' ? 'selected' : ''}>UNITS</option>
+              <option value="NOS" ${rowUom === 'NOS' ? 'selected' : ''}>NOS</option>
+              <option value="PCS" ${rowUom === 'PCS' ? 'selected' : ''}>PCS</option>
+              <option value="KG" ${rowUom === 'KG' ? 'selected' : ''}>KG</option>
+              <option value="LOT" ${rowUom === 'LOT' ? 'selected' : ''}>LOT</option>
+              <option value="MTR" ${rowUom === 'MTR' ? 'selected' : ''}>MTR</option>
+            </select>
+          </td>
+          <td style="padding:6px 6px;">
+            <input type="number" class="fin-form-input edit-row-rate" value="${rowRate}" min="0" step="any" required style="text-align:right; font-size:0.83rem; width:100%;">
+          </td>
+          <td style="padding:6px 6px;">
+            <input type="number" class="fin-form-input edit-row-wd" value="${rowWd}" min="0" max="100" step="any" style="text-align:center; font-size:0.83rem; width:100%;" title="Work Done %">
+          </td>
+          <td style="padding:6px 12px; text-align:right;">
+            <span class="edit-row-taxable-val" style="font-weight:700; color:#38bdf8; font-family:monospace; font-size:0.88rem;">${rowTaxable.toFixed(2)}</span>
+          </td>
+          <td style="padding:6px 4px; text-align:center;">
+            <button type="button" class="btn-del-edit-row" title="Delete Line" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.05rem; padding:2px 4px;">🗑️</button>
+          </td>
+        </tr>
+      `;
     };
 
-    taxableInp.oninput = updateTotals;
+    const reindexRows = () => {
+      const rows = tbody.querySelectorAll('.edit-item-tr');
+      rows.forEach((tr, i) => {
+        const idxEl = tr.querySelector('.edit-row-idx');
+        if (idxEl) idxEl.textContent = i + 1;
+      });
+      if (badge) badge.textContent = `${rows.length} Item${rows.length === 1 ? '' : 's'}`;
+    };
+
+    const updateTotals = () => {
+      let subtotal = 0;
+      tbody.querySelectorAll('.edit-item-tr').forEach(tr => {
+        const qty = Number(tr.querySelector('.edit-row-qty')?.value) || 0;
+        const rate = Number(tr.querySelector('.edit-row-rate')?.value) || 0;
+        let wd = tr.querySelector('.edit-row-wd')?.value;
+        const wdNum = (wd !== '' && wd !== undefined) ? Number(wd) : 100;
+        const rowTaxable = Math.round((qty * rate * (wdNum / 100)) * 100) / 100;
+        const valSpan = tr.querySelector('.edit-row-taxable-val');
+        if (valSpan) valSpan.textContent = rowTaxable.toFixed(2);
+        subtotal += rowTaxable;
+      });
+      subtotal = Math.round(subtotal * 100) / 100;
+
+      const rate = Number(taxRateSel.value) || 0;
+      const tax = Math.round((subtotal * (rate / 100)) * 100) / 100;
+      const grand = Math.round((subtotal + tax) * 100) / 100;
+      const paid = Number(inv.amount_paid) || 0;
+      const balanceDue = Math.max(0, Math.round((grand - paid) * 100) / 100);
+
+      document.getElementById('edit-inv-taxable-display').value = `${currSym}${subtotal.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+      document.getElementById('edit-inv-tax-display').value = `${currSym}${tax.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+      document.getElementById('edit-inv-grand').value = `${currSym}${grand.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+
+      const balEl = document.getElementById('edit-inv-balance-label');
+      if (balEl) {
+        balEl.textContent = `${currSym}${balanceDue.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2 })}`;
+        balEl.style.color = balanceDue <= 0.01 ? '#10b981' : '#fb923c';
+      }
+    };
+
+    const attachRowListeners = (tr) => {
+      tr.querySelectorAll('.edit-row-qty, .edit-row-rate, .edit-row-wd').forEach(inp => {
+        inp.oninput = updateTotals;
+        inp.onchange = updateTotals;
+      });
+      tr.querySelector('.btn-del-edit-row').onclick = () => {
+        if (tbody.children.length <= 1) {
+          alert('An invoice must contain at least one line item.');
+          return;
+        }
+        tr.remove();
+        reindexRows();
+        updateTotals();
+      };
+    };
+
+    // Render initial line items
+    tbody.innerHTML = lineItems.map((it, idx) => renderRowHtml(it, idx)).join('');
+    tbody.querySelectorAll('.edit-item-tr').forEach(tr => attachRowListeners(tr));
+    reindexRows();
+    updateTotals();
+
+    // Add row button
+    document.getElementById('btn-add-edit-item').onclick = () => {
+      const tempDiv = document.createElement('tbody');
+      tempDiv.innerHTML = renderRowHtml({ name: '', qty: 1, uom: 'Sqm', rate: 0, wd_pct: 100 }, tbody.children.length);
+      const newTr = tempDiv.firstElementChild;
+      tbody.appendChild(newTr);
+      attachRowListeners(newTr);
+      reindexRows();
+      updateTotals();
+      newTr.querySelector('.edit-row-name')?.focus();
+    };
+
     taxRateSel.onchange = updateTotals;
 
+    // Form submit
     document.getElementById('edit-invoice-form').onsubmit = async (e) => {
       e.preventDefault();
-      const taxable = Number(taxableInp.value) || 0;
-      const rate = Number(taxRateSel.value) || 0;
-      const tax = taxable * (rate / 100);
-      const grand = taxable + tax;
+      const rows = tbody.querySelectorAll('.edit-item-tr');
+      if (rows.length === 0) {
+        alert('Please add at least one line item.');
+        return;
+      }
+
+      let subtotal = 0;
+      let totalGross = 0;
+      const updatedLineItems = [];
+      const taxRate = Number(taxRateSel.value) || 0;
+
+      rows.forEach((tr, idx) => {
+        const name = tr.querySelector('.edit-row-name').value.trim() || `Item ${idx + 1}`;
+        const qty = Number(tr.querySelector('.edit-row-qty').value) || 1;
+        const uom = tr.querySelector('.edit-row-uom').value || 'LSUM';
+        const rate = Number(tr.querySelector('.edit-row-rate').value) || 0;
+        let wd = tr.querySelector('.edit-row-wd').value;
+        const wdNum = (wd !== '' && wd !== undefined) ? Number(wd) : 100;
+        const rowTaxable = Math.round((qty * rate * (wdNum / 100)) * 100) / 100;
+        const rowTax = Math.round((rowTaxable * (taxRate / 100)) * 100) / 100;
+        const rowTotal = Math.round((rowTaxable + rowTax) * 100) / 100;
+
+        subtotal += rowTaxable;
+        totalGross += (qty * rate);
+
+        updatedLineItems.push({
+          sr: idx + 1,
+          name: name,
+          description: name,
+          item_name: name,
+          hsn_sac_code: isIndia ? '9954' : '',
+          qty: qty,
+          uom: uom,
+          unit: rowUomToUnit(uom),
+          unit_price: rate,
+          rate: rate,
+          wd_pct: wdNum,
+          discount_val: (100 - wdNum) > 0 ? (100 - wdNum) : 0,
+          discount_type: 'pct',
+          invoice_amount: rowTaxable,
+          taxable_amount: rowTaxable,
+          vat_rate: isIndia ? 0 : taxRate,
+          tax_rate: taxRate,
+          gst_rate: isIndia ? taxRate : 0,
+          vat_amount: isIndia ? 0 : rowTax,
+          tax_amount: rowTax,
+          total_amount: rowTotal
+        });
+      });
+
+      function rowUomToUnit(u) { return u; }
+
+      subtotal = Math.round(subtotal * 100) / 100;
+      const totalTax = Math.round((subtotal * (taxRate / 100)) * 100) / 100;
+      const grandTotal = Math.round((subtotal + totalTax) * 100) / 100;
       const paid = Number(inv.amount_paid) || 0;
-      const balanceDue = Math.max(0, grand - paid);
+      const balanceDue = Math.max(0, Math.round((grandTotal - paid) * 100) / 100);
 
       inv.customer_name = document.getElementById('edit-inv-cust-name').value.trim();
       if (isIndia) {
@@ -16698,40 +16941,25 @@ class FinanceApp {
       inv.invoice_date = document.getElementById('edit-inv-date').value;
       inv.due_date = document.getElementById('edit-inv-due-date').value;
       inv.payment_terms = Number(document.getElementById('edit-inv-terms').value);
-      inv.taxable_subtotal = taxable;
-      inv.total_tax = tax;
-      inv.grand_total = grand;
+      inv.project_name = document.getElementById('edit-inv-project')?.value.trim() || inv.project_name || '';
+
+      inv.taxable_subtotal = subtotal;
+      inv.sub_total = subtotal;
+      inv.contract_base_value = totalGross;
+      inv.total_tax = totalTax;
+      inv.vat_total = isIndia ? 0 : totalTax;
+      inv.grand_total = grandTotal;
       inv.balance_due = balanceDue;
-      inv.status = balanceDue <= 0.01 ? 'paid' : (paid > 0 ? 'partially_paid' : 'sent');
+      inv.status = balanceDue <= 0.01 ? 'paid' : (paid > 0 ? 'partially_paid' : (inv.status === 'draft' ? 'draft' : 'issued'));
       inv.notes = document.getElementById('edit-inv-notes').value.trim();
 
-      const descVal = document.getElementById('edit-inv-item-desc').value.trim();
-      const uomVal = document.getElementById('edit-inv-item-uom').value;
-      inv.line_items = [
-        {
-          sr: 1,
-          name: descVal,
-          description: descVal,
-          item_name: descVal,
-          qty: 1,
-          uom: uomVal,
-          unit: uomVal,
-          unit_price: taxable,
-          rate: taxable,
-          wd_pct: 100,
-          invoice_amount: taxable,
-          taxable_amount: taxable,
-          vat_rate: isIndia ? 0 : rate,
-          tax_rate: rate,
-          gst_rate: isIndia ? rate : 0,
-          vat_amount: isIndia ? 0 : tax,
-          tax_amount: tax,
-          total_amount: grand
-        }
-      ];
-      inv.item_description = descVal;
-      inv.item_name = descVal;
-      inv.description = descVal;
+      inv.line_items = updatedLineItems;
+      inv.item_description = updatedLineItems.map(it => it.name).join(' | ');
+      inv.item_name = updatedLineItems[0]?.name || '';
+      inv.description = updatedLineItems[0]?.name || '';
+      try {
+        inv.amount_in_words = this.numberToEnglishWords(grandTotal, inv.currency || (isIndia ? 'INR' : 'AED'));
+      } catch (e) {}
 
       await this.syncApi('update_invoice', { invoice: inv });
       if (this.db?.invoices) {
@@ -16740,7 +16968,7 @@ class FinanceApp {
         else this.db.invoices.push(inv);
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       }
-      alert(`Invoice ${inv.invoice_no} updated successfully.`);
+      this.showNotification(`Invoice ${inv.invoice_no} updated successfully with ${updatedLineItems.length} items.`, 'success');
       this.closeModal('modal-edit-invoice');
       this.renderActiveTab();
     };
@@ -17435,7 +17663,13 @@ class FinanceApp {
       rcp.notes = document.getElementById('edit-rcp-notes').value.trim();
 
       await this.syncApi('update_receipt', { receipt: rcp, saved_banks: this.db.saved_banks });
-      alert(`Receipt voucher ${rcp.receipt_no} updated successfully.`);
+      if (this.db?.customer_receipts) {
+        const idx = this.db.customer_receipts.findIndex(r => r.id === rcp.id || r.receipt_no === rcp.receipt_no);
+        if (idx >= 0) this.db.customer_receipts[idx] = rcp;
+        else this.db.customer_receipts.push(rcp);
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      }
+      this.showNotification(`Receipt voucher ${rcp.receipt_no} updated successfully.`, 'success');
       this.closeModal('modal-edit-receipt');
       this.renderActiveTab();
     };
@@ -17978,6 +18212,9 @@ class FinanceApp {
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadPaymentVoucherDocument('${pay.id || ''}')">
               📥 Download Document
             </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditPaymentModal('${pay.id || ''}')" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);">
+              ✏️ Edit Payment Voucher
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
               ✕ Close
             </button>
@@ -18211,10 +18448,12 @@ class FinanceApp {
     const isIndia = (pay.company_id || this.activeCompanyId) === 'ashaz-eng-in';
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
+    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === (pay.company_id || this.activeCompanyId));
+    const allocations = Array.isArray(pay.allocations) ? pay.allocations : [];
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-pay">
-        <div class="fin-modal-dialog" style="max-width:600px;">
+        <div class="fin-modal-dialog" style="max-width:640px;">
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">✏️ Edit Payment Voucher (${pay.voucher_no})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-pay')">&times;</button>
@@ -18223,22 +18462,25 @@ class FinanceApp {
             <form id="edit-pay-form">
               <div class="fin-form-group">
                 <label class="fin-form-label">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="edit-pay-vend" class="fin-form-input" value="${pay.vendor_name || ''}" required>
+                <input type="text" id="edit-pay-vend" class="fin-form-input" value="${pay.vendor_name || ''}" list="edit-pay-vendors-list" required>
+                <datalist id="edit-pay-vendors-list">
+                  ${vendors.map(v => `<option value="${v.name}">${v.name} (${v.code || ''})</option>`).join('')}
+                </datalist>
               </div>
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Payment Date</label>
+                  <label class="fin-form-label">Payment Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="edit-pay-date" class="fin-form-input" value="${pay.payment_date || ''}" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Disbursement Channel</label>
                   <select id="edit-pay-mode" class="fin-form-select">
-                    <option value="Online" ${(!pay.payment_mode || pay.payment_mode === 'Online' || pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS' || pay.payment_mode === 'Corporate Online' || pay.payment_mode === 'ADCB / FAB Bank Wire') ? 'selected' : ''}>Online</option>
+                    <option value="Online" ${(!pay.payment_mode || pay.payment_mode === 'Online' || pay.payment_mode === 'Corporate RTGS' || pay.payment_mode === 'RTGS' || pay.payment_mode === 'Corporate Online' || pay.payment_mode === 'ADCB / FAB Bank Wire') ? 'selected' : ''}>Online / Wire Transfer</option>
                     <option value="Corporate Cheque" ${pay.payment_mode === 'Corporate Cheque' || pay.payment_mode === 'Cheque' ? 'selected' : ''}>Corporate Cheque</option>
                     <option value="Security Cheque" ${pay.payment_mode === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
                     <option value="International Wire" ${pay.payment_mode === 'International Wire' ? 'selected' : ''}>International Wire</option>
-                    <option value="Petty Cash" ${pay.payment_mode === 'Petty Cash' ? 'selected' : ''}>Petty Cash</option>
+                    <option value="Petty Cash" ${pay.payment_mode === 'Petty Cash' || pay.payment_mode === 'Cash' ? 'selected' : ''}>Petty Cash</option>
                   </select>
                 </div>
               </div>
@@ -18246,13 +18488,32 @@ class FinanceApp {
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Amount Disbursed (${currLabel}) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="edit-pay-amount" class="fin-form-input" value="${pay.amount_paid || 0}" min="1" step="any" required>
+                  <input type="number" id="edit-pay-amount" class="fin-form-input" value="${pay.amount_paid || 0}" min="0.01" step="any" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Bank UTR / Cheque Ref #</label>
                   <input type="text" id="edit-pay-ref" class="fin-form-input" value="${pay.reference_no || ''}" required>
                 </div>
               </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Disbursing Account / Source Bank</label>
+                <select id="edit-pay-account" class="fin-form-select">
+                  <option value="ADCB Corporate Account (AED 1092847291)" ${(!pay.source_account || pay.source_account.includes('ADCB')) ? 'selected' : ''}>ADCB Corporate Account (AED 1092847291)</option>
+                  <option value="First Abu Dhabi Bank (FAB) Ops (AED 8829104821)" ${pay.source_account && pay.source_account.includes('FAB') ? 'selected' : ''}>FAB Operations Account (AED 8829104821)</option>
+                  <option value="Emirates NBD Corporate (AED 472910385)" ${pay.source_account && pay.source_account.includes('NBD') ? 'selected' : ''}>Emirates NBD Corporate (AED 472910385)</option>
+                  <option value="Corporate Petty Cash / Treasury" ${pay.source_account && pay.source_account.includes('Petty') ? 'selected' : ''}>Corporate Petty Cash / Treasury</option>
+                </select>
+              </div>
+
+              ${allocations.length > 0 ? `
+                <div style="background:rgba(30,41,59,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:0.6rem 0.8rem; margin-bottom:1rem; font-size:0.8rem;">
+                  <span style="color:#94a3b8;">Linked Purchase Bills:</span>
+                  <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:6px;">
+                    ${allocations.map(a => `<span class="fin-badge fin-badge-issued" style="font-size:0.72rem;">${a.bill_no}: ${currSym}${Number(a.amount_allocated || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>`).join('')}
+                  </div>
+                </div>
+              ` : ''}
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Notes &amp; Approver Verification</label>
@@ -18276,12 +18537,19 @@ class FinanceApp {
       pay.vendor_name = document.getElementById('edit-pay-vend').value.trim();
       pay.payment_date = document.getElementById('edit-pay-date').value;
       pay.payment_mode = document.getElementById('edit-pay-mode').value;
+      pay.source_account = document.getElementById('edit-pay-account')?.value || pay.source_account;
       pay.amount_paid = Number(document.getElementById('edit-pay-amount').value) || 0;
       pay.reference_no = document.getElementById('edit-pay-ref').value.trim();
       pay.notes = document.getElementById('edit-pay-notes').value.trim();
 
       await this.syncApi('update_payment', { payment: pay });
-      alert(`Payment voucher ${pay.voucher_no} updated successfully.`);
+      if (this.db?.vendor_payments) {
+        const idx = this.db.vendor_payments.findIndex(p => p.id === pay.id || p.voucher_no === pay.voucher_no);
+        if (idx >= 0) this.db.vendor_payments[idx] = pay;
+        else this.db.vendor_payments.push(pay);
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      }
+      this.showNotification(`Payment voucher ${pay.voucher_no} updated successfully.`, 'success');
       this.closeModal('modal-edit-pay');
       this.renderActiveTab();
     };
