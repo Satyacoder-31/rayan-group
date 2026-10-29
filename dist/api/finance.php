@@ -946,9 +946,73 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     $hasRcp44035 = true;
                 }
             } else {
-                if ($rcpNo === 'REC-RV-44037' || $rcpId === 'rec-rv-44037') {
-                    $hasRcp44037 = true;
+                // Ignore failed duplicate attempt 44036
+                if ($rcpNo === 'REC-RV-44036' || $rcpId === 'rec-rv-44036') {
+                    $changed = true;
+                    continue;
                 }
+
+                // REC-RV-44037 is the receipt voucher for REC-RG-INV-44002
+                if ($rcpNo === 'REC-RV-44037' || $rcpId === 'rec-rv-44037') {
+                    $dedupedReceipts['REC-RV-44037'] = [
+                        'id' => 'rec-rv-44037',
+                        'receipt_no' => 'REC-RV-44037',
+                        'ref_invoice_no' => 'REC-RG-INV-44002',
+                        'company_id' => 'rayan-corp-uae',
+                        'customer_id' => 'cust-1792415585310',
+                        'customer_name' => 'M/S HLN TECHNICAL SERVICES LLC',
+                        'contact_person' => 'Mr. Linto Linto',
+                        'email' => 'info@hlnaue.com',
+                        'phone' => '+971 502131834',
+                        'customer_address' => "Attn: Mr. Linto Linto\nW/H 125, AL Habtoor ware house Al Qusais , Dubai\nUnited Arab Emirates",
+                        'receipt_date' => '2025-08-09',
+                        'receipt_time' => '04:37 PM',
+                        'payment_mode' => 'Online',
+                        'payment_type' => 'Online Bank Transfer / Corporate Wire',
+                        'cheque_no' => '',
+                        'reference_no' => 'WIRE-ADCB-99210',
+                        'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+                        'amount_received' => 18559.74,
+                        'currency' => 'AED',
+                        'amount_in_words' => 'Eighteen Thousand Five Hundred Fifty Nine and Seventy Four Fils AED Only.',
+                        'allocated_amount' => 18559.74,
+                        'allocations' => [
+                            [
+                                'invoice_id' => 'inv-rec-rg-inv-44002',
+                                'invoice_no' => 'REC-RG-INV-44002',
+                                'amount_allocated' => 18559.74
+                            ]
+                        ],
+                        'project_name' => 'PROJECT-CIVIL WORKS-MAX-AL WAHDA-ABU DHABI',
+                        'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
+                        'receiver_sign' => 'Arshad Alam Shaikh',
+                        'notes' => 'Settlement towards Advance Tax Invoice #REC-RG-INV-44002. Official client collection acknowledgement.',
+                        'recorded_by' => 'Arshad Alam Shaikh',
+                        'recorded_at' => '2026-10-29T04:37:06.310Z'
+                    ];
+                    $hasRcp44037 = true;
+                    $changed = true;
+                    continue;
+                }
+
+                // REC-RV-44038 is settlement for REC-RG-INV-44005 (AED 74,238.94)
+                if ($rcpNo === 'REC-RV-44038' || $rcpId === 'rec-mvt22ul5') {
+                    $r['ref_invoice_no'] = 'REC-RG-INV-44005';
+                    $r['amount_received'] = 74238.94;
+                    $r['allocated_amount'] = 74238.94;
+                    $r['notes'] = 'Settlement towards Tax Invoice #REC-RG-INV-44005. Official client collection acknowledgement.';
+                    $r['allocations'] = [
+                        [
+                            'invoice_id' => 'inv-rec-rg-inv-44005',
+                            'invoice_no' => 'REC-RG-INV-44005',
+                            'amount_allocated' => 74238.94
+                        ]
+                    ];
+                    $dedupedReceipts['REC-RV-44038'] = $r;
+                    $changed = true;
+                    continue;
+                }
+
                 $key = $rcpNo ?: $rcpId;
                 if ($key && !isset($dedupedReceipts[$key])) {
                     $dedupedReceipts[$key] = $r;
