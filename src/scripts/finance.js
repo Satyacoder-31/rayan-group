@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v11';
+    const CURRENT_DB_VERSION = 'v2026_clean_v12';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4414,8 +4414,9 @@ class FinanceApp {
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Receipt Voucher">Print / View</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Receipt Voucher">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Receipt Voucher">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Receipt">✏️ Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Receipt Voucher">🗑️ Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -4667,7 +4668,9 @@ class FinanceApp {
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Customer Receipt">✏️ Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -17566,40 +17569,45 @@ class FinanceApp {
     };
   }
 
-  // 3. EDIT CUSTOMER RECEIPT MODAL
+  // 3. EDIT CUSTOMER RECEIPT / PAYMENT-IN MODAL
   openEditReceiptModal(receiptId) {
     const rcp = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
     if (!rcp) {
-      alert('Receipt voucher not found.');
+      alert('Payment-In voucher not found.');
       return;
     }
     const isIndia = (rcp.company_id || this.activeCompanyId) === 'ashaz-eng-in';
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
+    const customers = (this.db?.customers || []).filter(c => !c.company_id || c.company_id === (rcp.company_id || this.activeCompanyId));
+    const allocations = Array.isArray(rcp.allocations) ? rcp.allocations : [];
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-receipt">
-        <div class="fin-modal-dialog" style="max-width:600px;">
+        <div class="fin-modal-dialog" style="max-width:640px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">✏️ Edit Customer Receipt (${rcp.receipt_no})</h3>
+            <h3 class="fin-modal-title">✏️ Edit Payment-In Voucher (${rcp.receipt_no})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-receipt')">&times;</button>
           </div>
           <div class="fin-modal-body">
             <form id="edit-receipt-form">
               <div class="fin-form-group">
                 <label class="fin-form-label">Customer / Client Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="edit-rcp-cust" class="fin-form-input" value="${rcp.customer_name || ''}" required>
+                <input type="text" id="edit-rcp-cust" class="fin-form-input" value="${rcp.customer_name || ''}" list="edit-rcp-customers-list" required>
+                <datalist id="edit-rcp-customers-list">
+                  ${customers.map(c => `<option value="${c.name}">${c.name} (${c.code || ''})</option>`).join('')}
+                </datalist>
               </div>
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Receipt Date</label>
+                  <label class="fin-form-label">Receipt Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="edit-rcp-date" class="fin-form-input" value="${rcp.receipt_date || ''}" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment Mode</label>
                   <select id="edit-rcp-mode" class="fin-form-select" required>
-                    <option value="Online" ${rcp.payment_mode === 'Online' || rcp.payment_mode === 'RTGS' || rcp.payment_mode === 'Corporate RTGS' || rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Online</option>
+                    <option value="Online" ${rcp.payment_mode === 'Online' || rcp.payment_mode === 'RTGS' || rcp.payment_mode === 'Corporate RTGS' || rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Online / Wire Transfer</option>
                     <option value="Cheque" ${rcp.payment_mode === 'Cheque' ? 'selected' : ''}>Cheque</option>
                     <option value="Security Cheque" ${rcp.payment_mode === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
                     <option value="Bank Wire" ${rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Direct Bank Wire</option>
@@ -17611,7 +17619,7 @@ class FinanceApp {
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Amount Received (${currLabel}) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="edit-rcp-amount" class="fin-form-input" value="${rcp.amount_received || 0}" min="1" step="any" required>
+                  <input type="number" id="edit-rcp-amount" class="fin-form-input" value="${rcp.amount_received || 0}" min="0.01" step="any" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Reference / UTR / Cheque #</label>
@@ -17623,6 +17631,15 @@ class FinanceApp {
                 <label class="fin-form-label">Remitting / Drawee Bank Name</label>
                 <input type="text" id="edit-rcp-bank" class="fin-form-input" list="rec-banks-list" value="${rcp.bank_name || ''}" placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)">
               </div>
+
+              ${allocations.length > 0 ? `
+                <div style="background:rgba(30,41,59,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:0.6rem 0.8rem; margin-bottom:1rem; font-size:0.8rem;">
+                  <span style="color:#94a3b8;">Allocated Invoices:</span>
+                  <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:6px;">
+                    ${allocations.map(a => `<span class="fin-badge fin-badge-paid" style="font-size:0.72rem;">${a.invoice_no}: ${currSym}${Number(a.amount_allocated || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>`).join('')}
+                  </div>
+                </div>
+              ` : ''}
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Notes &amp; Clearance Verification</label>
@@ -17636,7 +17653,7 @@ class FinanceApp {
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-receipt')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Receipt &rarr;</button>
+                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Voucher (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -17669,7 +17686,7 @@ class FinanceApp {
         else this.db.customer_receipts.push(rcp);
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       }
-      this.showNotification(`Receipt voucher ${rcp.receipt_no} updated successfully.`, 'success');
+      this.showNotification(`Payment-In voucher ${rcp.receipt_no} updated successfully.`, 'success');
       this.closeModal('modal-edit-receipt');
       this.renderActiveTab();
     };
@@ -18918,6 +18935,19 @@ class FinanceApp {
       this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== payId && p.voucher_no !== payId);
     }
     this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  async deleteReceipt(receiptId) {
+    const rcp = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
+    const label = rcp ? rcp.receipt_no : receiptId;
+    if (!confirm(`Are you sure you want to delete Payment-In voucher ${label}?`)) return;
+    await this.syncApi('delete_receipt', { receipt_id: receiptId, id: receiptId });
+    if (this.db.customer_receipts) {
+      this.db.customer_receipts = this.db.customer_receipts.filter(r => r.id !== receiptId && r.receipt_no !== receiptId);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    }
+    this.showNotification(`Payment-In voucher ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
   }
 
