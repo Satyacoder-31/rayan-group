@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v12';
+    const CURRENT_DB_VERSION = 'v2026_clean_v13';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3625,7 +3625,7 @@ class FinanceApp {
           </div>
           <div class="fin-metric-value">${this.formatCurrency(cashBankBalance)}</div>
           <div class="fin-metric-subtext">
-            <span>SBI &amp; FAB Accounts</span>
+            <span>Bank Accounts</span>
             <span style="color:#10b981;">Reconciled Live</span>
           </div>
         </div>
@@ -4659,7 +4659,7 @@ class FinanceApp {
                     <td><strong>${r.customer_name}</strong></td>
                     <td>
                       <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no} • ${r.bank_name || 'State Bank of India'}</span>
+                      <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}${r.bank_name ? ` • ${r.bank_name}` : ''}</span>
                     </td>
                     <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
                     <td>
@@ -9461,7 +9461,7 @@ class FinanceApp {
                 <div class="fin-form-grid-2">
                   <div class="fin-form-group">
                     <label class="fin-form-label">Bank Reference / UTR / Transaction No. <span style="color:#ef4444;">*</span></label>
-                    <input type="text" id="rec-ref" class="fin-form-input" required placeholder="e.g. SBIN260314981 or FAB-WIRE-44910">
+                    <input type="text" id="rec-ref" class="fin-form-input" required placeholder="e.g. ADCB-WIRE-44910 or FAB-FT-99214">
                   </div>
                   <div class="fin-form-group">
                     <label class="fin-form-label">Remitting / Drawee Bank Name <span style="color:#ef4444;">*</span></label>
@@ -12037,8 +12037,8 @@ class FinanceApp {
               </div>
               <div>
                 <strong>Bank Account (Restricted View):</strong><br>
-                Bank: <strong>${vend.bank_name || 'State Bank of India'}</strong><br>
-                A/C: <code>${vend.account_no || '••••••••••••'}</code> • IFSC: <code>${vend.ifsc_code || 'SBIN0001234'}</code><br>
+                Bank: <strong>${vend.bank_name || 'Abu Dhabi Commercial Bank (ADCB)'}</strong><br>
+                A/C: <code>${vend.account_no || '••••••••••••'}</code>${vend.ifsc_code ? ` • IFSC: <code>${vend.ifsc_code}</code>` : (vend.iban ? ` • IBAN: <code>${vend.iban}</code>` : '')}<br>
                 Payment Terms: ${vend.payment_terms || 30} Days
               </div>
             </div>
@@ -12708,15 +12708,15 @@ class FinanceApp {
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Bank Name</label>
-                  <input type="text" id="new-vend-bank" class="fin-form-input" placeholder="State Bank of India / FAB">
+                  <input type="text" id="new-vend-bank" class="fin-form-input" placeholder="Abu Dhabi Commercial Bank (ADCB) / FAB">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Account No / IBAN</label>
-                  <input type="text" id="new-vend-ac" class="fin-form-input" placeholder="39485729103 / AE07033...">
+                  <input type="text" id="new-vend-ac" class="fin-form-input" placeholder="AE07033... / 39485729103">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">IFSC / SWIFT Code</label>
-                  <input type="text" id="new-vend-ifsc" class="fin-form-input" placeholder="SBIN0000300 / FABAAEAD">
+                  <label class="fin-form-label">SWIFT / IFSC Code</label>
+                  <input type="text" id="new-vend-ifsc" class="fin-form-input" placeholder="ADCBAEAA / FABAAEAD">
                 </div>
               </div>
 
@@ -14568,7 +14568,7 @@ class FinanceApp {
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">${isInward ? 'Drawee Bank Name' : 'Issuing Bank Account'} <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="cq-bank" class="fin-form-input" required placeholder="e.g. First Abu Dhabi Bank / State Bank of India">
+                  <input type="text" id="cq-bank" class="fin-form-input" required placeholder="e.g. Abu Dhabi Commercial Bank (ADCB) / First Abu Dhabi Bank (FAB)">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">${isInward ? 'Customer / Issuer' : 'Payee Vendor'} <span style="color:#ef4444;">*</span></label>
@@ -19084,15 +19084,15 @@ class FinanceApp {
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Bank Name</label>
-                  <input type="text" id="edit-vend-bank" class="fin-form-input" value="${vend.bank_name || ''}" placeholder="FAB / ADCB / SBI">
+                  <input type="text" id="edit-vend-bank" class="fin-form-input" value="${vend.bank_name || ''}" placeholder="FAB / ADCB">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Account No / IBAN</label>
                   <input type="text" id="edit-vend-ac" class="fin-form-input" value="${vend.account_no || vend.iban || ''}" placeholder="AE07033... / 39485729103">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">IFSC / SWIFT Code</label>
-                  <input type="text" id="edit-vend-ifsc" class="fin-form-input" value="${vend.ifsc_code || vend.swift_code || ''}" placeholder="FABAAEAD / SBIN0000300">
+                  <label class="fin-form-label">SWIFT / IFSC Code</label>
+                  <input type="text" id="edit-vend-ifsc" class="fin-form-input" value="${vend.ifsc_code || vend.swift_code || ''}" placeholder="FABAAEAD / ADCBAEAA">
                 </div>
               </div>
 
