@@ -1152,9 +1152,13 @@ function recalculateAllFinanceBalances(&$data) {
                     }
                 }
             }
-            if ($paid == 0.0 && !empty($inv['amount_paid'])) {
+            if ($paid == 0.0 && floatval($inv['amount_paid'] ?? 0) > 0.02) {
                 $paid = round(floatval($inv['amount_paid']), 2);
             }
+            if ($paid <= 0.02) {
+                $paid = 0.0;
+            }
+            $inv['amount_paid'] = $paid;
 
             // Sum credit notes
             $credited = 0.0;
@@ -1202,9 +1206,13 @@ function recalculateAllFinanceBalances(&$data) {
                     }
                 }
             }
-            if ($paid == 0.0 && !empty($b['amount_paid'])) {
+            if ($paid == 0.0 && floatval($b['amount_paid'] ?? 0) > 0.02) {
                 $paid = round(floatval($b['amount_paid']), 2);
             }
+            if ($paid <= 0.02) {
+                $paid = 0.0;
+            }
+            $b['amount_paid'] = $paid;
 
             $debited = 0.0;
             foreach ($debitNotes as $dn) {

@@ -621,10 +621,14 @@ class FinanceApp {
         }
       });
     });
-    if (paid === 0 && Number(inv.amount_paid) > 0) {
+    if (paid === 0 && Number(inv.amount_paid) > 0.02) {
       paid = Number(inv.amount_paid);
     }
     paid = Math.round(paid * 100) / 100;
+    if (paid <= 0.02) {
+      paid = 0;
+    }
+    inv.amount_paid = paid;
 
     // Sum credit notes linked to this invoice
     let credited = 0;
@@ -668,10 +672,14 @@ class FinanceApp {
         }
       });
     });
-    if (paid === 0 && Number(bill.amount_paid) > 0) {
+    if (paid === 0 && Number(bill.amount_paid) > 0.02) {
       paid = Number(bill.amount_paid);
     }
     paid = Math.round(paid * 100) / 100;
+    if (paid <= 0.02) {
+      paid = 0;
+    }
+    bill.amount_paid = paid;
 
     let debited = 0;
     const debitNotes = this.db?.debit_notes || [];
@@ -706,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v5';
+    const CURRENT_DB_VERSION = 'v2026_clean_v6';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3991,8 +3999,8 @@ class FinanceApp {
           ${inv.tax_regime === 'trn' || inv.vat_total > 0 ? `<div style="font-size:0.65rem; color:#10b981; font-weight:700;">UAE VAT 5%</div>` : (inv.igst_total > 0 ? `<div style="font-size:0.65rem; color:#94a3b8;">IGST 18%</div>` : `<div style="font-size:0.65rem; color:#94a3b8;">CGST 9% + SGST 9%</div>`)}
         </td>
         <td><strong>${this.formatCurrency(inv.grand_total || 0)}</strong></td>
-        <td><span style="color:#10b981;">${this.formatCurrency(inv.amount_paid || 0)}</span></td>
-        <td><strong style="color:${inv.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(inv.balance_due)}</strong></td>
+        <td><span style="color:#10b981;">${this.formatCurrency((inv.amount_paid && inv.amount_paid > 0.02) ? inv.amount_paid : 0)}</span></td>
+        <td><strong style="color:${(inv.balance_due && inv.balance_due > 0.02) ? '#ef4444' : '#10b981'};">${this.formatCurrency((inv.balance_due && inv.balance_due > 0.02) ? inv.balance_due : 0)}</strong></td>
         <td><span class="fin-badge fin-badge-${inv.status}">${inv.status.replace('_', ' ')}</span></td>
         <td style="white-space:nowrap;">
           <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="Print &amp; View Official Tax Invoice">Print / View</button>
@@ -10978,8 +10986,8 @@ class FinanceApp {
                       <td>${this.formatDate(i.invoice_date)}</td>
                       <td>${this.formatDate(i.due_date)}</td>
                       <td>${this.formatCurrency(i.grand_total)}</td>
-                      <td style="color:#10b981;">${this.formatCurrency(i.amount_paid || 0)}</td>
-                      <td><strong style="color:${i.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(i.balance_due)}</strong></td>
+                      <td style="color:#10b981;">${this.formatCurrency((i.amount_paid && i.amount_paid > 0.02) ? i.amount_paid : 0)}</td>
+                      <td><strong style="color:${(i.balance_due && i.balance_due > 0.02) ? '#ef4444' : '#10b981'};">${this.formatCurrency((i.balance_due && i.balance_due > 0.02) ? i.balance_due : 0)}</strong></td>
                       <td><span class="fin-badge fin-badge-${i.status}">${i.status}</span></td>
                     </tr>
                   `).join('')}
