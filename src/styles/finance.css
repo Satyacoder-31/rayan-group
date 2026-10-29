@@ -2733,6 +2733,18 @@ body.fin-doc-open .fin-app-wrapper {
   margin-bottom: 1rem;
 }
 
+.fin-doc-table-wrapper table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  box-sizing: border-box;
+}
+
+@media (max-width: 680px) {
+  .fin-doc-table-wrapper table {
+    min-width: 600px !important;
+  }
+}
+
 .fin-doc-table-scroll-hint {
   display: none;
   align-items: center;
