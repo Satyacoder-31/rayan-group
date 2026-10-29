@@ -971,6 +971,15 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db };
     }
 
+    if (action === 'delete_credit_note') {
+      const cnId = payload.credit_note_id || payload.id;
+      if (this.db.credit_notes && cnId) {
+        this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cnId && c.credit_note_no !== cnId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
     if (action === 'delete_debit_note') {
       const dnId = payload.debit_note_id || payload.id;
       if (this.db.debit_notes && dnId) {
@@ -4391,6 +4400,7 @@ class FinanceApp {
                   <th>Reason</th>
                   <th>Adjustment Amount</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -4402,6 +4412,10 @@ class FinanceApp {
                     <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
                     <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
                     <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
+                    <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCreditNote('${cn.id}')">Delete</button>
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -4427,6 +4441,7 @@ class FinanceApp {
                   <th>Reason</th>
                   <th>Adjustment Amount</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -4438,6 +4453,11 @@ class FinanceApp {
                     <td><span style="font-size:0.75rem;">${dn.reason}</span></td>
                     <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
                     <td><span class="fin-badge fin-badge-paid">${dn.status}</span></td>
+                    <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openDebitNotePrintModal('${dn.id}')" title="Print &amp; View Debit Note">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditDebitNoteModal('${dn.id}')">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDebitNote('${dn.id}')">Delete</button>
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -4671,7 +4691,8 @@ class FinanceApp {
                   <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
                   <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
+                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCreditNote('${cn.id}')">Delete</button>
                   </td>
                 </tr>
               `).join('')}
@@ -17439,6 +17460,18 @@ class FinanceApp {
       this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== poId && p.po_no !== poId);
     }
     this.showNotification(`Purchase order ${label} deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  async deleteCreditNote(cnId) {
+    const cn = (this.db?.credit_notes || []).find(c => c.id === cnId || c.credit_note_no === cnId);
+    const label = cn ? cn.credit_note_no : cnId;
+    if (!confirm(`Are you sure you want to delete credit note ${label}?`)) return;
+    await this.syncApi('delete_credit_note', { credit_note_id: cnId, id: cnId });
+    if (this.db.credit_notes) {
+      this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cnId && c.credit_note_no !== cnId);
+    }
+    this.showNotification(`Credit note ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
   }
 
