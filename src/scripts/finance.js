@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v6';
+    const CURRENT_DB_VERSION = 'v2026_clean_v7';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -12801,20 +12801,55 @@ class FinanceApp {
       return;
     }
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+
+    if (isMobile) {
+      // On mobile devices, mobile browsers often block or squeeze iframe prints to device-width.
+      // Temporarily expand the viewport to 1024px so mobile browser prints with PC-scale desktop layout!
+      const metaViewport = document.querySelector('meta[name="viewport"]');
+      const originalViewport = metaViewport ? metaViewport.getAttribute('content') : '';
+
+      if (metaViewport) {
+        metaViewport.setAttribute('content', 'width=1024, initial-scale=0.75');
+      }
+
+      document.body.classList.add('fin-doc-open');
+      document.body.classList.add('fin-printing-now');
+
+      const cleanupMobilePrint = () => {
+        document.body.classList.remove('fin-printing-now');
+        if (metaViewport && originalViewport) {
+          metaViewport.setAttribute('content', originalViewport);
+        }
+      };
+
+      window.addEventListener('afterprint', cleanupMobilePrint, { once: true });
+      setTimeout(() => {
+        try {
+          window.print();
+        } catch (e) {
+          console.error('Print failed:', e);
+        } finally {
+          setTimeout(cleanupMobilePrint, 2500);
+        }
+      }, 150);
+      return;
+    }
+
+    // On desktop, use a clean isolated iframe with full desktop A4 styling
     try {
       let printFrame = document.getElementById('fin-clean-print-frame');
       if (!printFrame) {
         printFrame = document.createElement('iframe');
         printFrame.id = 'fin-clean-print-frame';
         printFrame.style.position = 'fixed';
-        printFrame.style.right = '0';
-        printFrame.style.bottom = '0';
-        printFrame.style.width = '0';
-        printFrame.style.height = '0';
+        printFrame.style.top = '-9999px';
+        printFrame.style.left = '-9999px';
+        printFrame.style.width = '1024px';
+        printFrame.style.height = '1448px';
         printFrame.style.border = '0';
-        printFrame.style.margin = '0';
-        printFrame.style.padding = '0';
-        printFrame.style.visibility = 'hidden';
+        printFrame.style.opacity = '0';
+        printFrame.style.pointerEvents = 'none';
         document.body.appendChild(printFrame);
       }
 
@@ -12824,14 +12859,15 @@ class FinanceApp {
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
   <title>${document.title || 'Official Document'}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
     @page {
       size: A4 portrait;
-      margin: 0;
+      margin: 5mm 8mm 5mm 8mm;
     }
     * {
       box-sizing: border-box !important;
@@ -12847,6 +12883,7 @@ class FinanceApp {
       width: 100% !important;
       height: auto !important;
       overflow: visible !important;
+      font-size: 11px !important;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     .fin-document-paper {
@@ -12857,8 +12894,8 @@ class FinanceApp {
       border-radius: 0 !important;
       width: 100% !important;
       max-width: 100% !important;
-      min-height: 297mm !important;
-      padding: 10mm 14mm 8mm 14mm !important;
+      min-height: auto !important;
+      padding: 6mm 10mm 4mm 10mm !important;
       box-sizing: border-box !important;
       background: #ffffff !important;
       position: relative !important;
@@ -12866,8 +12903,28 @@ class FinanceApp {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
     }
+    .fin-doc-table-scroll-hint {
+      display: none !important;
+    }
+    .fin-doc-table-wrapper {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0.5rem 0 !important;
+    }
     table {
+      width: 100% !important;
       border-collapse: collapse !important;
+      table-layout: fixed !important;
+    }
+    thead, tbody, tfoot, tr, td, th {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    tfoot, tfoot tr {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .rayan-doc-watermark {
       position: absolute !important;
@@ -14545,7 +14602,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -14554,9 +14611,9 @@ class FinanceApp {
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section (Left: Logo & Company, Right: Tax Invoice Title & Metadata) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
               <div style="max-width:60%;">
-                <div style="margin-bottom:0.75rem;">
+                <div style="margin-bottom:0.4rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
                 <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
@@ -14569,10 +14626,10 @@ class FinanceApp {
               </div>
 
               <div style="text-align:right;">
-                <div style="font-size:1.9rem; font-weight:900; color:#111827; letter-spacing:-0.01em; line-height:1; margin-bottom:4px;">
+                <div style="font-size:1.85rem; font-weight:900; color:#111827; letter-spacing:-0.01em; line-height:1; margin-bottom:4px;">
                   TAX INVOICE
                 </div>
-                <div style="font-size:0.95rem; font-weight:700; color:#1f2937; margin-bottom:12px;">
+                <div style="font-size:0.95rem; font-weight:700; color:#1f2937; margin-bottom:8px;">
                   # ${inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : 'REC-RG-INV-44049')}
                 </div>
 
@@ -14600,9 +14657,9 @@ class FinanceApp {
             </div>
 
             <!-- Bill To & Subject Section (Clean White Background Matching Screenshot) -->
-            <div style="margin-top:1.5rem; margin-bottom:1.25rem;">
+            <div style="margin-top:0.75rem; margin-bottom:0.6rem;">
               <div style="font-size:0.75rem; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">BILL TO</div>
-              <div style="font-size:1.05rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; letter-spacing:0.01em;">
+              <div style="font-size:1.02rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; letter-spacing:0.01em;">
                 ${custName}
               </div>
               <div style="font-size:0.82rem; color:#4b5563; line-height:1.45;">
@@ -14610,9 +14667,9 @@ class FinanceApp {
               </div>
               ${custTrn ? `<div style="font-size:0.82rem; color:#4b5563; margin-top:2px;">TRN: ${custTrn}</div>` : ''}
 
-              <div style="margin-top:1.25rem;">
+              <div style="margin-top:0.5rem;">
                 <div style="font-size:0.82rem; color:#4b5563; font-weight:600; margin-bottom:3px;">Project :</div>
-                <div style="font-size:0.95rem; font-weight:800; color:#111827; text-transform:uppercase; line-height:1.35;">
+                <div style="font-size:0.92rem; font-weight:800; color:#111827; text-transform:uppercase; line-height:1.35;">
                   ${inv.subject || projectScope}
                 </div>
               </div>
@@ -14622,7 +14679,7 @@ class FinanceApp {
             <div class="fin-doc-table-scroll-hint">
               <span>↔</span> Swipe table horizontally to view full columns
             </div>
-            <div class="fin-doc-table-wrapper" style="margin-top:1rem; margin-bottom:1rem;">
+            <div class="fin-doc-table-wrapper" style="margin-top:0.6rem; margin-bottom:0.6rem;">
               <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.78rem; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
                 <colgroup>
                   <col style="width:5%;">   <!-- Sr. No -->
@@ -14699,54 +14756,54 @@ class FinanceApp {
                     const itemName = item.name || item.description || 'Turnkey Work Item';
 
                     return `
-                      <tr style="border-bottom:1px solid #111827; font-size:0.78rem; background:#ffffff;">
-                        <td style="border:1px solid #111827; padding:6px 3px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
-                        <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word; line-height:1.35;">${itemName}</td>
-                        <td style="border:1px solid #111827; padding:6px 3px; text-align:center; color:#111827; font-weight:600;">${uom}</td>
-                        <td style="border:1px solid #111827; padding:6px 3px; text-align:center; color:#111827; font-weight:600;">${qty.toFixed(1)}</td>
-                        <td style="border:1px solid #111827; padding:6px 3px; text-align:center; color:#111827; font-weight:600;">${wdPct}%</td>
-                        <td style="border:1px solid #111827; padding:6px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:6px 4px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:6px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <tr style="border-bottom:1px solid #111827; font-size:0.78rem; background:#ffffff; page-break-inside:avoid; break-inside:avoid;">
+                        <td style="border:1px solid #111827; padding:5px 3px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
+                        <td style="border:1px solid #111827; padding:5px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word; line-height:1.35;">${itemName}</td>
+                        <td style="border:1px solid #111827; padding:5px 3px; text-align:center; color:#111827; font-weight:600;">${uom}</td>
+                        <td style="border:1px solid #111827; padding:5px 3px; text-align:center; color:#111827; font-weight:600;">${qty.toFixed(1)}</td>
+                        <td style="border:1px solid #111827; padding:5px 3px; text-align:center; color:#111827; font-weight:600;">${wdPct}%</td>
+                        <td style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:5px 6px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     `;
                   }).join('')}
                 </tbody>
-                <tfoot>
-                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827;">
-                    <td colspan="5" rowspan="4" style="border:1px solid #111827; padding:10px 14px; vertical-align:middle; background:#eaf3ec;">
-                      <div style="font-size:0.82rem; font-weight:700; color:#111827; line-height:1.45;">
+                <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
+                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="5" rowspan="4" style="border:1px solid #111827; padding:8px 12px; vertical-align:middle; background:#eaf3ec;">
+                      <div style="font-size:0.80rem; font-weight:700; color:#111827; line-height:1.4;">
                         Payable Amount : ${words}
                       </div>
                     </td>
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">Adjustment</td>
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${Number(inv.adjustment || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#eaf3ec;">
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">Sub-Total</td>
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#eaf3ec;">
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">VAT 5%</td>
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#eaf3ec;">
-                    <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Grand Total</td>
-                    <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Grand Total</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
             <!-- Notes Section Below Items (Matching PDF Screenshot) -->
-            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
+            <div style="margin-top:0.75rem; font-size:0.8rem; color:#4b5563; line-height:1.4;">
               <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
               <div style="color:#4b5563;">Please keep a copy of this invoice for your records</div>
             </div>
 
             <!-- Contact & Company Details Below Notes (Address, Number, Email) -->
-            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+            <div style="margin-top:0.6rem; font-size:0.8rem; color:#4b5563; line-height:1.45;">
               <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
               <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
               <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
@@ -14756,7 +14813,7 @@ class FinanceApp {
             </div>
 
             <!-- Clean Fixed System Generated Footer (Matching Screenshot 100%, No Stamp, No Signature) -->
-            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+            <div style="margin-top:0.75rem; padding-top:0.5rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
                 This is a system-generated tax invoice and does not require a signature or stamp.
               </div>
@@ -14781,16 +14838,21 @@ class FinanceApp {
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
   <title>Tax Invoice - ${inv?.invoice_no || 'Document'}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    .fin-doc-table-scroll-hint { display: none !important; }
+    .fin-doc-table-wrapper { overflow: visible !important; width: 100% !important; }
+    table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
     @media print {
-      @page { size: A4 portrait; margin: 6mm 8mm; }
+      @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 10mm 4mm 10mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      tfoot, tfoot tr { page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>
@@ -14887,7 +14949,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -15165,7 +15227,7 @@ class FinanceApp {
 
         <div class="fin-doc-viewport">
           <!-- PAGE 1 OF PURCHASE ORDER -->
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -15324,8 +15386,8 @@ class FinanceApp {
                   `;
                   }).join('')}
                 </tbody>
-                <tfoot>
-                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827;">
+                <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
+                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:10px 14px; vertical-align:middle; background:#eaf3ec;">
                       <div style="font-size:0.82rem; font-weight:700; color:#111827; line-height:1.45;">
                         Total In Words : ${amountInWords}
@@ -15337,11 +15399,11 @@ class FinanceApp {
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">Sub-Total EX-VAT</td>
                     <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#eaf3ec;">
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">VAT 5%</td>
                     <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#eaf3ec;">
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Total Incl. VAT</td>
                     <td colspan="1" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
@@ -15377,7 +15439,7 @@ class FinanceApp {
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
-          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -16666,7 +16728,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -16968,7 +17030,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -17889,7 +17951,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:297mm; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -17999,8 +18061,8 @@ class FinanceApp {
                     </td>
                   </tr>
                 </tbody>
-                <tfoot>
-                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827;">
+                <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
+                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td colspan="2" rowspan="2" style="border:1px solid #111827; padding:10px 14px; vertical-align:middle; background:#eaf3ec;">
                       <div style="font-size:0.82rem; font-weight:700; color:#111827; line-height:1.45;">
                         Total In Words : ${amountInWords}
@@ -18009,7 +18071,7 @@ class FinanceApp {
                     <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">Sub Total Debit</td>
                     <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${formattedAmount}</td>
                   </tr>
-                  <tr style="background:#eaf3ec;">
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Total Debit</td>
                     <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr} ${formattedAmount}</td>
                   </tr>
