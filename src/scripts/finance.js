@@ -598,15 +598,115 @@ class FinanceApp {
       });
     }
 
+    this.normalizeAllBalances();
+
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     } catch (e) {}
   }
 
+  recalculateInvoiceBalance(inv) {
+    if (!inv) return 0;
+    const invId = inv.id;
+    const invNo = inv.invoice_no;
+    const grand = Math.round((Number(inv.grand_total) || 0) * 100) / 100;
+
+    // Sum receipts allocated to this invoice
+    let paid = 0;
+    const receipts = this.db?.customer_receipts || [];
+    receipts.forEach(rcp => {
+      (rcp.allocations || []).forEach(alloc => {
+        if (alloc.invoice_id === invId || alloc.invoice_no === invNo) {
+          paid += Number(alloc.amount_allocated) || 0;
+        }
+      });
+    });
+    if (paid === 0 && Number(inv.amount_paid) > 0) {
+      paid = Number(inv.amount_paid);
+    }
+    paid = Math.round(paid * 100) / 100;
+
+    // Sum credit notes linked to this invoice
+    let credited = 0;
+    const creditNotes = this.db?.credit_notes || [];
+    creditNotes.forEach(cn => {
+      if (cn.status === 'void') return;
+      if (cn.invoice_id === invId || cn.invoice_no === invNo) {
+        const cnAmt = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
+        credited += cnAmt;
+      }
+    });
+    credited = Math.round(credited * 100) / 100;
+
+    let bal = Math.max(0, Math.round((grand - paid - credited) * 100) / 100);
+    // Tolerate up to 0.02 (2 fils) difference due to fractional line item/VAT rounding
+    if (bal <= 0.02) {
+      bal = 0;
+    }
+    inv.amount_paid = paid;
+    inv.balance_due = bal;
+    if (bal === 0 && (paid > 0 || credited > 0)) {
+      inv.status = 'paid';
+    } else if (paid > 0 || credited > 0) {
+      inv.status = 'partially_paid';
+    }
+    return bal;
+  }
+
+  recalculateBillBalance(bill) {
+    if (!bill) return 0;
+    const billId = bill.id;
+    const billNo = bill.bill_no;
+    const grand = Math.round((Number(bill.grand_total) || 0) * 100) / 100;
+
+    let paid = 0;
+    const payments = this.db?.vendor_payments || [];
+    payments.forEach(pay => {
+      (pay.allocations || []).forEach(alloc => {
+        if (alloc.bill_id === billId || alloc.bill_no === billNo) {
+          paid += Number(alloc.amount_allocated) || 0;
+        }
+      });
+    });
+    if (paid === 0 && Number(bill.amount_paid) > 0) {
+      paid = Number(bill.amount_paid);
+    }
+    paid = Math.round(paid * 100) / 100;
+
+    let debited = 0;
+    const debitNotes = this.db?.debit_notes || [];
+    debitNotes.forEach(dn => {
+      if (dn.status === 'void') return;
+      if (dn.bill_id === billId || dn.bill_no === billNo) {
+        debited += Number(dn.total_debit_amount) || 0;
+      }
+    });
+    debited = Math.round(debited * 100) / 100;
+
+    let bal = Math.max(0, Math.round((grand - paid - debited) * 100) / 100);
+    if (bal <= 0.02) {
+      bal = 0;
+    }
+    bill.amount_paid = paid;
+    bill.balance_due = bal;
+    if (bal === 0 && (paid > 0 || debited > 0)) {
+      bill.status = 'paid';
+    } else if (paid > 0 || debited > 0) {
+      bill.status = 'partially_paid';
+    }
+    return bal;
+  }
+
+  normalizeAllBalances() {
+    if (!this.db) return;
+    (this.db.invoices || []).forEach(inv => this.recalculateInvoiceBalance(inv));
+    (this.db.purchase_bills || []).forEach(bill => this.recalculateBillBalance(bill));
+  }
+
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v4';
+    const CURRENT_DB_VERSION = 'v2026_clean_v5';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -623,6 +723,7 @@ class FinanceApp {
       this.db = this.mergeWithSeedData(this.db);
     }
     this.sanitizeBankAccounts();
+    this.normalizeAllBalances();
 
     // 2. Fetch authoritative state directly from Hostinger MySQL Database API
     const endpoints = ['/api/finance.php?action=get_state', '/api/finance?action=get_state'];
@@ -634,6 +735,7 @@ class FinanceApp {
           if (json.data && typeof json.data === 'object' && json.data.companies && json.data.companies.length > 0) {
             this.db = this.mergeWithSeedData(json.data);
             this.sanitizeBankAccounts();
+            this.normalizeAllBalances();
             return;
           }
         }
@@ -664,6 +766,7 @@ class FinanceApp {
           const json = await res.json();
           if (json.data && typeof json.data === 'object') {
             this.db = this.mergeWithSeedData(json.data);
+            this.normalizeAllBalances();
             try {
               localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
             } catch (e) {}
@@ -867,13 +970,7 @@ class FinanceApp {
       if (!this.db.credit_notes) this.db.credit_notes = [];
       const newCn = payload.credit_note;
       this.db.credit_notes.unshift(newCn);
-      if (newCn.invoice_id && this.db.invoices) {
-        const inv = this.db.invoices.find(i => i.id === newCn.invoice_id || i.invoice_no === newCn.invoice_no);
-        if (inv) {
-          const adj = (Number(newCn.taxable_amount) || 0) + (Number(newCn.tax_amount) || 0);
-          inv.balance_due = Math.max(0, (Number(inv.balance_due) || 0) - adj);
-        }
-      }
+      this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, credit_note: newCn };
     }
@@ -882,13 +979,7 @@ class FinanceApp {
       if (!this.db.debit_notes) this.db.debit_notes = [];
       const newDn = payload.debit_note;
       this.db.debit_notes.unshift(newDn);
-      if (newDn.bill_id && this.db.purchase_bills) {
-        const bill = this.db.purchase_bills.find(b => b.id === newDn.bill_id || b.bill_no === newDn.bill_no);
-        if (bill) {
-          const adj = Number(newDn.total_debit_amount) || 0;
-          bill.balance_due = Math.max(0, (Number(bill.balance_due) || 0) - adj);
-        }
-      }
+      this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, debit_note: newDn };
     }
@@ -976,6 +1067,7 @@ class FinanceApp {
       if (this.db.credit_notes && cnId) {
         this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cnId && c.credit_note_no !== cnId);
       }
+      this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db };
     }
@@ -985,6 +1077,7 @@ class FinanceApp {
       if (this.db.debit_notes && dnId) {
         this.db.debit_notes = this.db.debit_notes.filter(d => d.id !== dnId && d.debit_note_no !== dnId);
       }
+      this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db };
     }
@@ -1034,6 +1127,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.credit_notes[idx] = { ...this.db.credit_notes[idx], ...payload.credit_note };
       }
+      this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, credit_note: payload.credit_note };
     }
@@ -1044,6 +1138,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.debit_notes[idx] = { ...this.db.debit_notes[idx], ...payload.debit_note };
       }
+      this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, debit_note: payload.debit_note };
     }
@@ -3780,6 +3875,7 @@ class FinanceApp {
   // 2. SALES & INVOICES MODULE
   // --------------------------------------------------------------------------
   renderInvoicesTab(root) {
+    this.normalizeAllBalances();
     const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
     const currentIsUae = isUaeEntity(this.activeCompanyId);
     const rawInvoices = (this.db?.invoices || []).filter(i => {
@@ -3919,6 +4015,7 @@ class FinanceApp {
   // 3. PURCHASES & BILLS MODULE
   // --------------------------------------------------------------------------
   renderBillsTab(root) {
+    this.normalizeAllBalances();
     const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
 
     root.innerHTML = `
@@ -12234,9 +12331,15 @@ class FinanceApp {
   openCreateCreditNoteModal(invoiceId) {
     const inv = this.db?.invoices?.find(i => i.id === invoiceId);
     if (!inv) return;
+    this.recalculateInvoiceBalance(inv);
     const isIndia = (inv.company_id || this.activeCompanyId) === 'ashaz-eng-in';
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
+    const taxRate = isIndia ? 0.18 : 0.05;
+
+    const currentBal = Math.max(0, Math.round((Number(inv.balance_due) || 0) * 100) / 100);
+    const defTaxable = inv.taxable_subtotal || Math.round((currentBal / (1 + taxRate)) * 100) / 100;
+    const defTax = Math.round((currentBal - defTaxable) * 100) / 100;
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-cn">
@@ -12252,20 +12355,32 @@ class FinanceApp {
                 Current Invoice Total: <strong>${this.formatCurrency(inv.grand_total)}</strong> • Balance: <strong style="color:#ef4444;">${this.formatCurrency(inv.balance_due)}</strong>
               </div>
 
+              ${currentBal > 0 ? `
+                <div style="margin-bottom:1rem;">
+                  <button type="button" class="fin-btn-quick" id="btn-fill-full-cn" style="font-size:0.75rem; border-color:#38bdf8; color:#38bdf8;">
+                    ⚡ Auto-Fill Full Remaining Balance (${this.formatCurrency(currentBal)})
+                  </button>
+                </div>
+              ` : ''}
+
               <div class="fin-form-group">
                 <label class="fin-form-label">Credit Adjustment Reason <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="cn-reason" class="fin-form-input" required placeholder="e.g. Rate revision or quantity over-measurement">
+                <input type="text" id="cn-reason" class="fin-form-input" required placeholder="e.g. Rate revision or quantity over-measurement" value="${inv.invoice_no} cancelled for accounting purposes">
               </div>
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Taxable Adjustment Value (${currLabel}) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="cn-taxable" class="fin-form-input" max="${inv.balance_due}" step="any" required placeholder="0.00">
+                  <input type="number" id="cn-taxable" class="fin-form-input" max="${inv.balance_due || inv.grand_total}" step="any" required placeholder="0.00" value="${defTaxable}">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Tax Adjustment (${currLabel})</label>
-                  <input type="number" id="cn-tax" class="fin-form-input" step="any" placeholder="0.00">
+                  <input type="number" id="cn-tax" class="fin-form-input" step="any" placeholder="0.00" value="${defTax}">
                 </div>
+              </div>
+
+              <div style="margin-top:0.5rem; margin-bottom:1rem; font-size:0.85rem; color:#94a3b8;">
+                Total Credit Note Value: <strong id="cn-calc-total-preview" style="color:#38bdf8;">${this.formatCurrency(currentBal)}</strong>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -12280,11 +12395,43 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const updatePreview = () => {
+      const taxable = Number(document.getElementById('cn-taxable')?.value) || 0;
+      const taxInput = document.getElementById('cn-tax')?.value;
+      const tax = (taxInput !== '' && !isNaN(Number(taxInput))) ? Number(taxInput) : Math.round(taxable * taxRate * 100) / 100;
+      const total = Math.round((taxable + tax) * 100) / 100;
+      const preview = document.getElementById('cn-calc-total-preview');
+      if (preview) preview.textContent = this.formatCurrency(total);
+    };
+
+    document.getElementById('cn-taxable')?.addEventListener('input', () => {
+      const taxable = Number(document.getElementById('cn-taxable')?.value) || 0;
+      const taxField = document.getElementById('cn-tax');
+      if (taxField) taxField.value = (Math.round(taxable * taxRate * 100) / 100).toFixed(2);
+      updatePreview();
+    });
+    document.getElementById('cn-tax')?.addEventListener('input', updatePreview);
+
+    document.getElementById('btn-fill-full-cn')?.addEventListener('click', () => {
+      const taxableEl = document.getElementById('cn-taxable');
+      const taxEl = document.getElementById('cn-tax');
+      if (taxableEl) taxableEl.value = defTaxable;
+      if (taxEl) taxEl.value = defTax;
+      updatePreview();
+    });
+
     document.getElementById('create-cn-form').onsubmit = async (e) => {
       e.preventDefault();
-      const taxable = Number(document.getElementById('cn-taxable').value) || 0;
-      const taxRate = isIndia ? 0.18 : 0.05;
-      const tax = Number(document.getElementById('cn-tax').value) || (taxable * taxRate);
+      let taxable = Number(document.getElementById('cn-taxable').value) || 0;
+      let taxInput = document.getElementById('cn-tax').value.trim();
+      let tax = taxInput !== '' ? Number(taxInput) : Math.round(taxable * taxRate * 100) / 100;
+      let totalCredit = Math.round((taxable + tax) * 100) / 100;
+
+      // 01-fils tolerance check: if total credit is within 0.02 of current invoice balance due, snap exactly to balance due
+      if (Math.abs(inv.balance_due - totalCredit) <= 0.02) {
+        totalCredit = inv.balance_due;
+        tax = Math.round((totalCredit - taxable) * 100) / 100;
+      }
 
       const payload = {
         credit_note: {
@@ -12299,14 +12446,15 @@ class FinanceApp {
           reason: document.getElementById('cn-reason').value.trim(),
           taxable_amount: taxable,
           tax_amount: tax,
-          total_credit_amount: taxable + tax,
+          total_credit_amount: totalCredit,
           status: 'applied'
         }
       };
 
       const res = await this.syncApi('create_credit_note', payload);
       if (res && res.success) {
-        alert(`Credit note ${res.credit_note?.credit_note_no || 'posted'} posted in ${currLabel}. Invoice balance reduced.`);
+        this.recalculateInvoiceBalance(inv);
+        alert(`Credit note ${res.credit_note?.credit_note_no || 'posted'} posted in ${currLabel}. Invoice balance updated.`);
         this.closeModal('modal-cn');
         this.switchTab('notes');
       }
@@ -17300,8 +17448,24 @@ class FinanceApp {
       e.preventDefault();
       cn.customer_name = document.getElementById('edit-cn-cust').value.trim();
       cn.reason = document.getElementById('edit-cn-reason').value.trim();
-      cn.total_credit_amount = Number(document.getElementById('edit-cn-amount').value) || 0;
+      let totalCredit = Number(document.getElementById('edit-cn-amount').value) || 0;
+      totalCredit = Math.round(totalCredit * 100) / 100;
+
+      const linkedInv = (this.db?.invoices || []).find(i => i.id === cn.invoice_id || i.invoice_no === cn.invoice_no);
+      if (linkedInv && Math.abs(linkedInv.grand_total - totalCredit) <= 0.02) {
+        totalCredit = Math.round(linkedInv.grand_total * 100) / 100;
+      }
+      cn.total_credit_amount = totalCredit;
+      const taxRate = isIndia ? 0.18 : 0.05;
+      cn.taxable_amount = Math.round((totalCredit / (1 + taxRate)) * 100) / 100;
+      cn.tax_amount = Math.round((totalCredit - cn.taxable_amount) * 100) / 100;
+
       await this.syncApi('update_credit_note', { credit_note: cn });
+      if (linkedInv) {
+        this.recalculateInvoiceBalance(linkedInv);
+        await this.syncApi('update_invoice', { invoice: linkedInv });
+      }
+      this.normalizeAllBalances();
       alert(`Credit Note ${cn.credit_note_no} updated successfully.`);
       this.closeModal('modal-edit-cn');
       this.renderActiveTab();
@@ -17354,8 +17518,21 @@ class FinanceApp {
       e.preventDefault();
       dn.vendor_name = document.getElementById('edit-dn-vend').value.trim();
       dn.reason = document.getElementById('edit-dn-reason').value.trim();
-      dn.total_debit_amount = Number(document.getElementById('edit-dn-amount').value) || 0;
+      let totalDebit = Number(document.getElementById('edit-dn-amount').value) || 0;
+      totalDebit = Math.round(totalDebit * 100) / 100;
+
+      const linkedBill = (this.db?.purchase_bills || []).find(b => b.id === dn.bill_id || b.bill_no === dn.bill_no);
+      if (linkedBill && Math.abs(linkedBill.grand_total - totalDebit) <= 0.02) {
+        totalDebit = Math.round(linkedBill.grand_total * 100) / 100;
+      }
+      dn.total_debit_amount = totalDebit;
+
       await this.syncApi('update_debit_note', { debit_note: dn });
+      if (linkedBill) {
+        this.recalculateBillBalance(linkedBill);
+        await this.syncApi('update_bill', { bill: linkedBill });
+      }
+      this.normalizeAllBalances();
       alert(`Debit Note ${dn.debit_note_no} updated successfully.`);
       this.closeModal('modal-edit-dn');
       this.renderActiveTab();

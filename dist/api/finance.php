@@ -1130,6 +1130,106 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     }
 }
 
+function recalculateAllFinanceBalances(&$data) {
+    if (!$data || !is_array($data)) return;
+
+    $creditNotes = $data['credit_notes'] ?? [];
+    $receipts = $data['customer_receipts'] ?? [];
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        foreach ($data['invoices'] as &$inv) {
+            $invId = $inv['id'] ?? '';
+            $invNo = $inv['invoice_no'] ?? '';
+            $grand = round(floatval($inv['grand_total'] ?? 0), 2);
+
+            // Sum receipts
+            $paid = 0.0;
+            foreach ($receipts as $rcp) {
+                if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
+                    foreach ($rcp['allocations'] as $alloc) {
+                        if (($alloc['invoice_id'] ?? '') === $invId || ($alloc['invoice_no'] ?? '') === $invNo) {
+                            $paid += floatval($alloc['amount_allocated'] ?? 0);
+                        }
+                    }
+                }
+            }
+            if ($paid == 0.0 && !empty($inv['amount_paid'])) {
+                $paid = round(floatval($inv['amount_paid']), 2);
+            }
+
+            // Sum credit notes
+            $credited = 0.0;
+            foreach ($creditNotes as $cn) {
+                if (($cn['status'] ?? '') === 'void') continue;
+                if (($cn['invoice_id'] ?? '') === $invId || ($cn['invoice_no'] ?? '') === $invNo) {
+                    $cnAmt = floatval($cn['total_credit_amount'] ?? 0);
+                    if ($cnAmt <= 0) {
+                        $cnAmt = floatval($cn['taxable_amount'] ?? 0) + floatval($cn['tax_amount'] ?? 0);
+                    }
+                    $credited += $cnAmt;
+                }
+            }
+
+            $rem = max(0.0, round($grand - $paid - $credited, 2));
+            // Tolerate up to 0.02 fils floating point mismatch so 0.01 fils never shows in red
+            if ($rem <= 0.02) {
+                $rem = 0.0;
+            }
+            $inv['balance_due'] = $rem;
+            if ($rem == 0.0 && ($paid > 0 || $credited > 0)) {
+                $inv['status'] = 'paid';
+            } elseif ($paid > 0 || $credited > 0) {
+                $inv['status'] = 'partially_paid';
+            }
+        }
+        unset($inv);
+    }
+
+    $debitNotes = $data['debit_notes'] ?? [];
+    $payments = $data['vendor_payments'] ?? [];
+    if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+        foreach ($data['purchase_bills'] as &$b) {
+            $bId = $b['id'] ?? '';
+            $bNo = $b['bill_no'] ?? '';
+            $grand = round(floatval($b['grand_total'] ?? 0), 2);
+
+            $paid = 0.0;
+            foreach ($payments as $pay) {
+                if (!empty($pay['allocations']) && is_array($pay['allocations'])) {
+                    foreach ($pay['allocations'] as $alloc) {
+                        if (($alloc['bill_id'] ?? '') === $bId || ($alloc['bill_no'] ?? '') === $bNo) {
+                            $paid += floatval($alloc['amount_allocated'] ?? 0);
+                        }
+                    }
+                }
+            }
+            if ($paid == 0.0 && !empty($b['amount_paid'])) {
+                $paid = round(floatval($b['amount_paid']), 2);
+            }
+
+            $debited = 0.0;
+            foreach ($debitNotes as $dn) {
+                if (($dn['status'] ?? '') === 'void') continue;
+                if (($dn['bill_id'] ?? '') === $bId || ($dn['bill_no'] ?? '') === $bNo) {
+                    $dnAmt = floatval($dn['total_debit_amount'] ?? 0);
+                    $debited += $dnAmt;
+                }
+            }
+
+            $rem = max(0.0, round($grand - $paid - $debited, 2));
+            if ($rem <= 0.02) {
+                $rem = 0.0;
+            }
+            $b['balance_due'] = $rem;
+            if ($rem == 0.0 && ($paid > 0 || $debited > 0)) {
+                $b['status'] = 'paid';
+            } elseif ($paid > 0 || $debited > 0) {
+                $b['status'] = 'partially_paid';
+            }
+        }
+        unset($b);
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -1158,6 +1258,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     // Purge dummy entries if any exist
                     purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
                     // Keep relational tables populated
+                    recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     return $data;
                 }
@@ -1174,6 +1275,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
             $data = json_decode($raw, true);
             if ($data && is_array($data) && !empty($data['companies'])) {
                 purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
+                recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
                     saveFinanceDb($pdo, null, $data, $candidates);
@@ -1308,6 +1410,9 @@ function saveFinanceDb($pdo, $dataFile, &$data, $candidates = []) {
             }
         }
     }
+
+    // Recalculate and synchronize all invoice and bill balances
+    recalculateAllFinanceBalances($data);
 
     $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
@@ -2215,6 +2320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$cnId, $cnId]);
                     } catch (Exception $e) {}
                 }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('delete', 'credit_note', $cnId, 'Deleted credit note ' . $cnId);
             }
             break;
@@ -2231,6 +2337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$dnId, $dnId]);
                     } catch (Exception $e) {}
                 }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('delete', 'debit_note', $dnId, 'Deleted debit note ' . $dnId);
             }
             break;
@@ -2307,6 +2414,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 unset($existingCN);
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'credit_note', $cn['credit_note_no'] ?? '', 'Updated credit note ' . ($cn['credit_note_no'] ?? ''));
             }
             break;
@@ -2322,6 +2430,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 unset($existingDN);
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'debit_note', $dn['debit_note_no'] ?? '', 'Updated debit note ' . ($dn['debit_note_no'] ?? ''));
             }
             break;
@@ -2519,15 +2628,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($cn['status'])) $cn['status'] = 'applied';
                 if (!isset($db['credit_notes']) || !is_array($db['credit_notes'])) $db['credit_notes'] = [];
                 array_unshift($db['credit_notes'], $cn);
-                if (!empty($cn['invoice_id']) && isset($db['invoices'])) {
-                    $adjAmt = floatval($cn['taxable_amount'] ?? 0) + floatval($cn['tax_amount'] ?? 0);
-                    foreach ($db['invoices'] as &$invRef) {
-                        if (($invRef['id'] ?? '') === $cn['invoice_id'] || ($invRef['invoice_no'] ?? '') === ($cn['invoice_no'] ?? '')) {
-                            $invRef['balance_due'] = max(0, floatval($invRef['balance_due'] ?? 0) - $adjAmt);
-                        }
-                    }
-                    unset($invRef);
-                }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('create', 'credit_note', $cn['credit_note_no'] ?? '', 'Issued credit note for ' . ($cn['customer_name'] ?? ''));
             }
             break;
@@ -2545,17 +2646,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($dn['status'])) $dn['status'] = 'applied';
                 if (!isset($db['debit_notes']) || !is_array($db['debit_notes'])) $db['debit_notes'] = [];
                 array_unshift($db['debit_notes'], $dn);
-                if (!empty($dn['bill_id']) || !empty($dn['bill_no'])) {
-                    $adjAmt = floatval($dn['total_debit_amount'] ?? 0);
-                    if (isset($db['purchase_bills'])) {
-                        foreach ($db['purchase_bills'] as &$bRef) {
-                            if (($bRef['id'] ?? '') === ($dn['bill_id'] ?? '') || ($bRef['bill_no'] ?? '') === ($dn['bill_no'] ?? '')) {
-                                $bRef['balance_due'] = max(0, floatval($bRef['balance_due'] ?? 0) - $adjAmt);
-                            }
-                        }
-                        unset($bRef);
-                    }
-                }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('create', 'debit_note', $dn['debit_note_no'] ?? '', 'Issued debit note for ' . ($dn['vendor_name'] ?? ''));
             }
             break;
