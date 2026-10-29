@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v7';
+    const CURRENT_DB_VERSION = 'v2026_clean_v8';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -9649,7 +9649,7 @@ class FinanceApp {
       }
 
       const hasOpenInv = unpaid.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
-      const allocInvoices = [...unpaid];
+      let allocInvoices = [...unpaid];
       if (cust && Number(cust.opening_balance) > 0 && !hasOpenInv) {
         allocInvoices.unshift({
           id: `open-bal-${cust.id}`,
@@ -9659,34 +9659,74 @@ class FinanceApp {
         });
       }
 
+      // If opening modal for a specific invoice, sort it to the top so it gets priority
+      if (preselectInvoiceId) {
+        allocInvoices.sort((a, b) => {
+          const aMatch = (a.id === preselectInvoiceId || a.invoice_no === preselectInvoiceId);
+          const bMatch = (b.id === preselectInvoiceId || b.invoice_no === preselectInvoiceId);
+          return (bMatch ? 1 : 0) - (aMatch ? 1 : 0);
+        });
+      }
+
       if (!allocInvoices.length) {
         invList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No outstanding invoices found for this client. Receipt can be logged as advance deposit.</div>`;
         return;
       }
 
-      invList.innerHTML = allocInvoices.map(inv => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+      invList.innerHTML = allocInvoices.map(inv => {
+        const isTarget = preselectInvoiceId && (inv.id === preselectInvoiceId || inv.invoice_no === preselectInvoiceId);
+        return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0.6rem; border-bottom:1px solid rgba(255,255,255,0.06); ${isTarget ? 'background:rgba(16,185,129,0.08); border-radius:6px; margin-bottom:4px;' : ''}">
           <div>
             <strong style="color:#f8fafc; font-size:0.8rem;">${inv.invoice_no}</strong>
+            ${isTarget ? '<span style="background:#10b981; color:#fff; font-size:0.65rem; padding:1px 6px; border-radius:4px; margin-left:6px; font-weight:700;">Target Invoice</span>' : ''}
             <span style="font-size:0.72rem; color:#94a3b8;"> (${this.formatDate(inv.invoice_date)})</span>
             <div style="font-size:0.7rem; color:#38bdf8;">Balance Due: ${curr} ${Number(inv.balance_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
           </div>
           <div style="display:flex; align-items:center; gap:0.5rem;">
-            <input type="number" class="fin-form-input rec-alloc-input" data-inv-id="${inv.id}" data-inv-no="${inv.invoice_no}" data-max="${inv.balance_due}" placeholder="Allocated (${curr})" style="width:145px; padding:0.3rem 0.5rem; font-size:0.75rem;" step="any">
+            <input type="number" class="fin-form-input rec-alloc-input" data-inv-id="${inv.id}" data-inv-no="${inv.invoice_no}" data-max="${inv.balance_due}" placeholder="Allocated (${curr})" style="width:145px; padding:0.3rem 0.5rem; font-size:0.75rem; ${isTarget ? 'border-color:#10b981; background:rgba(16,185,129,0.1);' : ''}" step="any">
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
-      // Auto distribute if amount is already entered
-      if (amountInp.value) {
-        let remaining = Number(amountInp.value) || 0;
-        document.querySelectorAll('.rec-alloc-input').forEach(inp => {
+      // Distribute amount: if target invoice specified, apply directly to it; otherwise FIFO across open invoices
+      const distributeAllocations = () => {
+        const amt = Number(amountInp.value) || 0;
+        const inputs = Array.from(document.querySelectorAll('.rec-alloc-input'));
+        if (preselectInvoiceId) {
+          const targetInp = inputs.find(inp => 
+            inp.getAttribute('data-inv-id') === preselectInvoiceId || 
+            inp.getAttribute('data-inv-no') === preselectInvoiceId
+          );
+          if (targetInp) {
+            inputs.forEach(inp => {
+              if (inp === targetInp) {
+                const max = Number(inp.getAttribute('data-max')) || amt;
+                const toAlloc = Math.min(amt, max);
+                inp.value = toAlloc > 0 ? toAlloc : '';
+                inp.style.borderColor = '#10b981';
+                inp.style.background = 'rgba(16, 185, 129, 0.1)';
+              } else {
+                inp.value = '';
+                inp.style.borderColor = '';
+                inp.style.background = '';
+              }
+            });
+            return;
+          }
+        }
+
+        let remaining = amt;
+        inputs.forEach(inp => {
           const max = Number(inp.getAttribute('data-max')) || 0;
           const toAlloc = Math.min(remaining, max);
           inp.value = toAlloc > 0 ? toAlloc : '';
           remaining -= toAlloc;
         });
-      }
+      };
+
+      distributeAllocations();
     };
 
     this.updateCustomerReceiptInvoices = updateCustomerInvoices;
@@ -9694,8 +9734,32 @@ class FinanceApp {
     custSel.onchange = updateCustomerInvoices;
 
     amountInp.oninput = () => {
-      let remaining = Number(amountInp.value) || 0;
-      document.querySelectorAll('.rec-alloc-input').forEach(inp => {
+      const amt = Number(amountInp.value) || 0;
+      const inputs = Array.from(document.querySelectorAll('.rec-alloc-input'));
+      if (preselectInvoiceId) {
+        const targetInp = inputs.find(inp => 
+          inp.getAttribute('data-inv-id') === preselectInvoiceId || 
+          inp.getAttribute('data-inv-no') === preselectInvoiceId
+        );
+        if (targetInp) {
+          inputs.forEach(inp => {
+            if (inp === targetInp) {
+              const max = Number(inp.getAttribute('data-max')) || amt;
+              const toAlloc = Math.min(amt, max);
+              inp.value = toAlloc > 0 ? toAlloc : '';
+              inp.style.borderColor = '#10b981';
+              inp.style.background = 'rgba(16, 185, 129, 0.1)';
+            } else {
+              inp.value = '';
+              inp.style.borderColor = '';
+              inp.style.background = '';
+            }
+          });
+          return;
+        }
+      }
+      let remaining = amt;
+      inputs.forEach(inp => {
         const max = Number(inp.getAttribute('data-max')) || 0;
         const toAlloc = Math.min(remaining, max);
         inp.value = toAlloc > 0 ? toAlloc : '';
@@ -9849,7 +9913,10 @@ class FinanceApp {
         const rcpObj = res.receipt || payload.receipt;
         this.closeModal('modal-receipt');
         this.switchTab('payment_in');
-        if (confirm(`Payment Receipt ${rcpObj.receipt_no} recorded successfully.\n\nInvoice balances updated automatically.\nWould you like to view & print the official Receipt Voucher now?`)) {
+        const invSummary = allocations.length > 0 
+          ? `\nAllocated against: ${allocations.map(a => `${a.invoice_no} (${currency} ${Number(a.amount_allocated).toLocaleString('en-US', {minimumFractionDigits: 2})})`).join(', ')}`
+          : '';
+        if (confirm(`✅ Official Receipt Voucher #${rcpObj.receipt_no} generated successfully!${invSummary}\n\nInvoice balance(s) updated automatically.\nWould you like to view & print the official Receipt Voucher now?`)) {
           this.openReceiptPrintModal(rcpObj.id);
         }
       }

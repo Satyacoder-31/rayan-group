@@ -888,45 +888,76 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
     if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
         $orig = count($data['customer_receipts']);
-        $data['customer_receipts'] = array_values(array_filter($data['customer_receipts'], function($r) use ($dummyRecIds) {
+        // 1. Filter out dummy receipt IDs
+        $filtered = array_values(array_filter($data['customer_receipts'], function($r) use ($dummyRecIds) {
             $id = strtolower(trim($r['id'] ?? ''));
             $no = strtolower(trim($r['receipt_no'] ?? ''));
             return !in_array($id, $dummyRecIds) && !in_array($no, $dummyRecIds);
         }));
+
+        // 2. Deduplicate receipts and cleanly handle TOP ROCK REC-RV-44035
+        $dedupedReceipts = [];
         $hasRcp44035 = false;
-        foreach ($data['customer_receipts'] as &$r) {
-            if (stripos($r['customer_name'] ?? '', 'TOP ROCK') !== false || stripos($r['receipt_no'] ?? '', '440') !== false || stripos($r['ref_invoice_no'] ?? '', '440') !== false) {
-                $r['id'] = 'rec-rv-44035';
-                $r['receipt_no'] = 'REC-RV-44035';
-                $r['ref_invoice_no'] = 'REC-RG-INV-44035';
-                $r['company_id'] = 'rayan-corp-uae';
-                $r['customer_name'] = 'M/S TOP ROCK INTERIORS LLC.';
-                $r['contact_person'] = 'Mr. Shahil';
-                $r['email'] = 'procurementofficer@toprockinteriors.com';
-                $r['phone'] = '+971 502131834';
-                $r['amount_received'] = 26466.77;
-                $r['allocated_amount'] = 26466.77;
-                $r['currency'] = 'AED';
-                $r['payment_mode'] = 'Online';
-                $r['payment_type'] = 'Online Bank Transfer / Corporate Wire';
-                $r['reference_no'] = 'WIRE-ADCB-99210';
-                $r['bank_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
-                $r['notes'] = 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.';
-                $r['allocations'] = [
-                    [
-                        'invoice_id' => 'inv-rec-rg-inv-44035',
-                        'invoice_no' => 'REC-RG-INV-44035',
-                        'amount_allocated' => 26466.77
-                    ]
-                ];
-                $hasRcp44035 = true;
-                $changed = true;
+        $hasRcp44037 = false;
+
+        foreach ($filtered as $r) {
+            $rcpId = strtolower(trim($r['id'] ?? ''));
+            $rcpNo = strtoupper(trim($r['receipt_no'] ?? ''));
+            $custName = strtoupper(trim($r['customer_name'] ?? ''));
+
+            // Match strictly TOP ROCK or specifically REC-RV-44035 (never broad 440 substring)
+            if (stripos($custName, 'TOP ROCK') !== false || $rcpId === 'rec-rv-44035' || $rcpNo === 'REC-RV-44035') {
+                if (!$hasRcp44035) {
+                    $dedupedReceipts['REC-RV-44035'] = [
+                        'id' => 'rec-rv-44035',
+                        'receipt_no' => 'REC-RV-44035',
+                        'ref_invoice_no' => 'REC-RG-INV-44035',
+                        'company_id' => 'rayan-corp-uae',
+                        'customer_id' => 'cust-toprock',
+                        'customer_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                        'contact_person' => 'Mr. Shahil',
+                        'email' => 'procurementofficer@toprockinteriors.com',
+                        'phone' => '+971 502131834',
+                        'customer_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+                        'receipt_date' => '2026-10-19',
+                        'receipt_time' => '1:40 PM',
+                        'payment_mode' => 'Online',
+                        'payment_type' => 'Online Bank Transfer / Corporate Wire',
+                        'cheque_no' => '',
+                        'reference_no' => 'WIRE-ADCB-99210',
+                        'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+                        'amount_received' => 26466.77,
+                        'currency' => 'AED',
+                        'amount_in_words' => 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.',
+                        'allocated_amount' => 26466.77,
+                        'allocations' => [
+                            [
+                                'invoice_id' => 'inv-rec-rg-inv-44035',
+                                'invoice_no' => 'REC-RG-INV-44035',
+                                'amount_allocated' => 26466.77
+                            ]
+                        ],
+                        'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
+                        'receiver_sign' => 'Arshad Alam Shaikh',
+                        'notes' => 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.',
+                        'recorded_by' => 'Arshad Alam Shaikh',
+                        'recorded_at' => '2026-10-19T13:40:00Z'
+                    ];
+                    $hasRcp44035 = true;
+                }
+            } else {
+                if ($rcpNo === 'REC-RV-44037' || $rcpId === 'rec-rv-44037') {
+                    $hasRcp44037 = true;
+                }
+                $key = $rcpNo ?: $rcpId;
+                if ($key && !isset($dedupedReceipts[$key])) {
+                    $dedupedReceipts[$key] = $r;
+                }
             }
         }
-        unset($r);
 
         if (!$hasRcp44035) {
-            array_unshift($data['customer_receipts'], [
+            $dedupedReceipts['REC-RV-44035'] = [
                 'id' => 'rec-rv-44035',
                 'receipt_no' => 'REC-RV-44035',
                 'ref_invoice_no' => 'REC-RG-INV-44035',
@@ -960,10 +991,72 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 'notes' => 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.',
                 'recorded_by' => 'Arshad Alam Shaikh',
                 'recorded_at' => '2026-10-19T13:40:00Z'
-            ]);
+            ];
             $changed = true;
         }
+
+        // Ensure official receipt voucher REC-RV-44037 for REC-RG-INV-44002 is recorded
+        if (!$hasRcp44037) {
+            $dedupedReceipts['REC-RV-44037'] = [
+                'id' => 'rec-rv-44037',
+                'receipt_no' => 'REC-RV-44037',
+                'ref_invoice_no' => 'REC-RG-INV-44002',
+                'company_id' => 'rayan-corp-uae',
+                'customer_id' => 'cust-1792415585310',
+                'customer_name' => 'M/S HLN TECHNICAL SERVICES LLC',
+                'contact_person' => 'Mr. Linto Linto',
+                'email' => 'info@hlnaue.com',
+                'phone' => '+971 502131834',
+                'customer_address' => "Attn: Mr. Linto Linto\nW/H 125, AL Habtoor ware house Al Qusais , Dubai\nUnited Arab Emirates",
+                'receipt_date' => '2025-08-09',
+                'receipt_time' => '04:37 PM',
+                'payment_mode' => 'Online',
+                'payment_type' => 'Online Bank Transfer / Corporate Wire',
+                'cheque_no' => '',
+                'reference_no' => 'WIRE-ADCB-99210',
+                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'amount_received' => 18559.74,
+                'currency' => 'AED',
+                'amount_in_words' => 'Eighteen Thousand Five Hundred Fifty Nine and Seventy Four Fils AED Only.',
+                'allocated_amount' => 18559.74,
+                'allocations' => [
+                    [
+                        'invoice_id' => 'inv-rec-rg-inv-44002',
+                        'invoice_no' => 'REC-RG-INV-44002',
+                        'amount_allocated' => 18559.74
+                    ]
+                ],
+                'project_name' => 'PROJECT-CIVIL WORKS-MAX-AL WAHDA-ABU DHABI',
+                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
+                'receiver_sign' => 'Arshad Alam Shaikh',
+                'notes' => 'Settlement towards Advance Tax Invoice #REC-RG-INV-44002. Official client collection acknowledgement.',
+                'recorded_by' => 'Arshad Alam Shaikh',
+                'recorded_at' => '2026-10-29T04:37:06.310Z'
+            ];
+            $changed = true;
+        }
+
+        $data['customer_receipts'] = array_values($dedupedReceipts);
         if (count($data['customer_receipts']) !== $orig) $changed = true;
+    }
+
+    // Reconcile invoices: REC-RG-INV-44002 is fully settled by REC-RV-44037, REC-RG-INV-44016 balance restored
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        foreach ($data['invoices'] as &$inv) {
+            $invNo = strtoupper(trim($inv['invoice_no'] ?? ''));
+            if ($invNo === 'REC-RG-INV-44002') {
+                $inv['amount_paid'] = 18559.74;
+                $inv['balance_due'] = 0.00;
+                $inv['status'] = 'paid';
+                $changed = true;
+            } else if ($invNo === 'REC-RG-INV-44016') {
+                $inv['amount_paid'] = 0.00;
+                $inv['balance_due'] = round(floatval($inv['grand_total'] ?? 70300.00), 2);
+                $inv['status'] = 'issued';
+                $changed = true;
+            }
+        }
+        unset($inv);
     }
 
     if (!empty($data['items']) && is_array($data['items'])) {
