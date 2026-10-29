@@ -2594,7 +2594,7 @@ class FinanceApp {
                     <span class="fin-qc-badge-icon" style="background:rgba(56,189,248,0.15); color:#38bdf8;">📄</span>
                     <div class="fin-qc-text">
                       <span class="fin-qc-name">Tax Invoice</span>
-                      <span class="fin-qc-desc">Bill client with GST/VAT</span>
+                      <span class="fin-qc-desc">Bill client with ${this.activeCompanyId === 'ashaz-eng-in' ? 'GST' : 'VAT 5%'}</span>
                     </div>
                   </button>
                 ` : ''}
@@ -3442,6 +3442,7 @@ class FinanceApp {
     // Overdue Invoices
     const overdueInvoices = invoices.filter(i => i.status === 'overdue');
     const overdueTotal = overdueInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
 
     root.innerHTML = `
       <!-- 8 Key Financial Metric Summary Cards -->
@@ -3455,7 +3456,7 @@ class FinanceApp {
           <div class="fin-metric-value">${this.formatCurrency(totalSales)}</div>
           <div class="fin-metric-subtext">
             <span>${invoices.length} Invoices Posted</span>
-            <span style="color:#10b981;">GST / Tax break-up applied</span>
+            <span style="color:#10b981;">${isIndia ? 'GST break-up applied' : 'VAT 5% applied'}</span>
           </div>
         </div>
 
@@ -3468,7 +3469,7 @@ class FinanceApp {
           <div class="fin-metric-value">${this.formatCurrency(totalPurchases)}</div>
           <div class="fin-metric-subtext">
             <span>${bills.length} Vendor Bills</span>
-            <span style="color:#f59e0b;">ITC Eligible</span>
+            <span style="color:#f59e0b;">${isIndia ? 'ITC Eligible' : 'Input VAT Recoverable'}</span>
           </div>
         </div>
 
@@ -3727,7 +3728,7 @@ class FinanceApp {
             </div>
           </div>
           <p style="font-size:0.75rem; color:#94a3b8; line-height:1.5;">
-            * Aging buckets are automatically categorized by payment milestone due dates. Click <strong>Financial Reports</strong> to export GSTR-1 and Receivables Aging registers.
+            * Aging buckets are automatically categorized by payment milestone due dates. Click <strong>Financial Reports</strong> to export ${this.activeCompanyId === 'ashaz-eng-in' ? 'GSTR-1' : 'VAT 201'} and Receivables Aging registers.
           </p>
         </div>
       </div>
@@ -3789,7 +3790,7 @@ class FinanceApp {
         <div class="fin-panel-header">
           <div>
             <h2 class="fin-panel-title">📄 Sales &amp; Tax Invoices</h2>
-            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete billing register with GST breakup, payment allocation tracking, and PDF generation.</p>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete billing register with ${this.activeCompanyId === 'ashaz-eng-in' ? 'GST' : 'VAT'} breakup, payment allocation tracking, and PDF generation.</p>
           </div>
           <div class="fin-panel-actions">
             <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44015')">
@@ -3999,7 +4000,7 @@ class FinanceApp {
         <div class="fin-panel-header">
           <div>
             <h2 class="fin-panel-title">👥 Customers &amp; Debtors Directory</h2>
-            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete client profiles, GSTIN details, credit limits, and Statement of Account (SOA) ledgers.</p>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete client profiles, ${this.activeCompanyId === 'ashaz-eng-in' ? 'GSTIN' : 'TRN'} details, credit limits, and Statement of Account (SOA) ledgers.</p>
           </div>
           <div class="fin-panel-actions">
             ${this.hasPermission('create_customer') ? `
@@ -4090,7 +4091,7 @@ class FinanceApp {
         <div class="fin-panel-header">
           <div>
             <h2 class="fin-panel-title">🏢 Vendors &amp; Subcontractors Directory</h2>
-            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Supplier registries, PAN/GSTIN compliance, bank account details for wire release, and payable balances.</p>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Supplier registries, ${this.activeCompanyId === 'ashaz-eng-in' ? 'PAN/GSTIN' : 'TRN / Corporate'} compliance, bank account details for wire release, and payable balances.</p>
           </div>
           <div class="fin-panel-actions">
             ${this.hasPermission('create_vendor') ? `
@@ -4574,8 +4575,8 @@ class FinanceApp {
             </div>
             <div class="fin-metric-card">
               <span class="fin-metric-label">Compliance Status</span>
-              <div class="fin-metric-value" style="color:#10b981;">100% Tax Deducted (TDS/WHT)</div>
-              <span class="fin-metric-sub">Compliant with GST &amp; UAE Corporate Tax</span>
+              <div class="fin-metric-value" style="color:#10b981;">${this.activeCompanyId === 'ashaz-eng-in' ? '100% Tax Deducted (TDS)' : '100% Tax Compliant (FTA VAT)'}</div>
+              <span class="fin-metric-sub">${this.activeCompanyId === 'ashaz-eng-in' ? 'Compliant with Indian GST &amp; TDS' : 'Compliant with UAE VAT &amp; Corporate Tax'}</span>
             </div>
           </div>
 
@@ -5510,13 +5511,14 @@ class FinanceApp {
     const grossProfit = totalSales - totalCostMaterials;
     const netProfit = grossProfit - totalOperatingExpenses;
     const netGstPayable = Math.max(0, totalTaxOutput - totalTaxInput);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
 
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
           <div>
-            <h2 class="fin-panel-title">📈 Official Financial Statements &amp; GST Registers</h2>
-            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Audited reports, GSTR-1 Tax Summary, Profit &amp; Loss Statement, and Cash Flows.</p>
+            <h2 class="fin-panel-title">📈 Official Financial Statements &amp; ${isIndia ? 'GST Registers' : 'VAT Statements'}</h2>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Audited reports, ${isIndia ? 'GSTR-1 Tax Summary' : 'UAE VAT 201 Summary'}, Profit &amp; Loss Statement, and Cash Flows.</p>
           </div>
           <div class="fin-panel-actions">
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">
@@ -5558,27 +5560,27 @@ class FinanceApp {
             </div>
           </div>
 
-          <!-- GST / Tax Reconciliation (GSTR-1 Format) -->
+          <!-- Tax Reconciliation (VAT 201 for UAE / GSTR for India) -->
           <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:12px; padding:1.5rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--fin-border); padding-bottom:0.75rem; margin-bottom:1rem;">
-              <h3 style="font-family:var(--fin-font-heading); font-size:1.1rem; color:#f8fafc;">GST Reconciliation (GSTR-1 / GSTR-3B)</h3>
-              <span style="font-size:0.72rem; color:#0099e6; font-weight:700;">GSTIN: 27AAACA9921M1Z5</span>
+              <h3 style="font-family:var(--fin-font-heading); font-size:1.1rem; color:#f8fafc;">${isIndia ? 'GST Reconciliation (GSTR-1 / GSTR-3B)' : 'UAE VAT Reconciliation (VAT 201)'}</h3>
+              <span style="font-size:0.72rem; color:#0099e6; font-weight:700;">${isIndia ? 'GSTIN: 27AAACA9921M1Z5' : 'TRN: 100234567800003'}</span>
             </div>
 
             <div class="fin-calc-row">
-              <span>Output Tax Collected (Sales CGST + SGST + IGST)</span>
+              <span>${isIndia ? 'Output Tax Collected (Sales CGST + SGST + IGST)' : 'Output VAT Collected (Standard 5% Rate)'}</span>
               <strong style="color:#0099e6;">${this.formatCurrency(totalTaxOutput)}</strong>
             </div>
             <div class="fin-calc-row">
-              <span>Input Tax Credit (ITC Available from Purchase Bills)</span>
+              <span>${isIndia ? 'Input Tax Credit (ITC Available from Purchase Bills)' : 'Input VAT Recoverable (Purchase Bills)'}</span>
               <strong style="color:#10b981;">${this.formatCurrency(totalTaxInput)}</strong>
             </div>
             <div class="fin-calc-row grand-total" style="border-top:2px solid #0099e6; color:#38bdf8;">
-              <span>Net GST Cash Liability</span>
+              <span>${isIndia ? 'Net GST Cash Liability' : 'Net VAT Payable to FTA'}</span>
               <strong>${this.formatCurrency(netGstPayable)}</strong>
             </div>
             <p style="font-size:0.72rem; color:#94a3b8; margin-top:1rem; line-height:1.5;">
-              * Reconciliation accounts for reverse charge mechanism (RCM) on crane rentals and LUT export exemption for UAE cross-border civil contracts.
+              ${isIndia ? '* Reconciliation accounts for reverse charge mechanism (RCM) on crane rentals and LUT export exemption for UAE cross-border civil contracts.' : '* Reconciled according to UAE Federal Tax Authority (FTA) Executive Regulations for Value Added Tax (VAT 5%).'}
             </p>
           </div>
         </div>
@@ -5623,9 +5625,15 @@ class FinanceApp {
 
           <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:1.25rem;">
             <span style="font-size:0.7rem; color:#f59e0b; font-weight:700; text-transform:uppercase;">Statutory Compliance</span>
-            <h4 style="color:#fff; margin:0.35rem 0;">Monthly GSTR-3B Return Filing</h4>
-            <div style="font-size:0.8rem; color:#cbd5e1;">Portal: GSTN India</div>
-            <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.4rem;">Due: April 20, 2026 • Prepared by CFO Desk</div>
+            ${this.activeCompanyId === 'ashaz-eng-in' ? `
+              <h4 style="color:#fff; margin:0.35rem 0;">Monthly GSTR-3B Return Filing</h4>
+              <div style="font-size:0.8rem; color:#cbd5e1;">Portal: GSTN India</div>
+              <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.4rem;">Due: April 20, 2026 • Prepared by CFO Desk</div>
+            ` : `
+              <h4 style="color:#fff; margin:0.35rem 0;">Quarterly VAT 201 Return Filing</h4>
+              <div style="font-size:0.8rem; color:#cbd5e1;">Portal: EmaraTax (FTA UAE)</div>
+              <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.4rem;">Due: April 28, 2026 • Prepared by CFO Desk</div>
+            `}
           </div>
 
           <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:1.25rem;">
@@ -9124,7 +9132,7 @@ class FinanceApp {
               <div style="margin-top:auto; padding-top:2.5rem;">
                 <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
                   <span style="min-width:24px;"></span>
-                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Purchase bill and does not require any signatories</span>
+                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system-generated purchase bill and does not require a signature or stamp.</span>
                   <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
                 </div>
               </div>
@@ -10808,7 +10816,7 @@ class FinanceApp {
               <div>
                 <strong>Billing Address:</strong><br>
                 <span style="color:#cbd5e1;">${cust.billing_address || '—'}</span><br>
-                ${cust.trn ? `<strong>TRN:</strong> <code>${cust.trn}</code> • ` : ''}<strong>GSTIN:</strong> <code>${cust.gstin || 'EXEMPT'}</code> • <strong>Place of Supply:</strong> ${cust.place_of_supply || '—'}
+                ${cust.trn ? `<strong>TRN:</strong> <code>${cust.trn}</code> • ` : ''}${cust.gstin ? `<strong>GSTIN:</strong> <code>${cust.gstin}</code> • ` : ''}<strong>Place of Supply:</strong> ${cust.place_of_supply || (cust.trn ? 'Abu Dhabi, UAE' : '—')}
               </div>
               <div>
                 <strong>Primary Contact:</strong> ${cust.contact_person || '—'}<br>
@@ -10944,7 +10952,7 @@ class FinanceApp {
               <div>
                 <strong>Registered Address:</strong><br>
                 <span style="color:#cbd5e1;">${vend.address || '—'}</span><br>
-                ${vend.trn ? `<strong>TRN:</strong> <code>${vend.trn}</code> • ` : ''}<strong>GSTIN:</strong> <code>${vend.gstin || '—'}</code> • <strong>PAN / License:</strong> <code>${vend.pan || '—'}</code>
+                ${vend.trn ? `<strong>TRN:</strong> <code>${vend.trn}</code> • ` : ''}${vend.gstin ? `<strong>GSTIN:</strong> <code>${vend.gstin}</code> • ` : ''}<strong>${vend.pan ? 'PAN / License:' : 'Trade License:'}</strong> <code>${vend.pan || vend.trade_license || '—'}</code>
               </div>
               <div>
                 <strong>Bank Account (Restricted View):</strong><br>
@@ -13051,7 +13059,7 @@ class FinanceApp {
           <div style="margin-top:auto; padding-top:2.5rem;">
             <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
               <span style="min-width:24px;"></span>
-              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Wire Advice and does not require any signatories</span>
+              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system-generated wire advice and does not require a signature or stamp.</span>
               <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
             </div>
           </div>
@@ -13327,7 +13335,7 @@ class FinanceApp {
           <div style="margin-top:auto; padding-top:2.5rem;">
             <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
               <span style="min-width:24px;"></span>
-              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system generated Petty Cash Voucher and does not require any signatories</span>
+              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system-generated petty cash voucher and does not require a signature or stamp.</span>
               <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
             </div>
           </div>
@@ -14568,7 +14576,7 @@ class FinanceApp {
             <!-- Clean Fixed System Generated Footer (Matching Screenshot 100%, No Stamp, No Signature) -->
             <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system generated Tax Invoice and does not require any signatories
+                This is a system-generated tax invoice and does not require a signature or stamp.
               </div>
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
             </div>
@@ -14864,7 +14872,7 @@ class FinanceApp {
             <!-- Fixed System Generated Footer -->
             <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system generated Receipt Voucher and does not require any signatories
+                This is a system-generated receipt voucher and does not require a signature or stamp.
               </div>
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
             </div>
@@ -15164,7 +15172,7 @@ class FinanceApp {
             <!-- Fixed System Generated Footer (Page 1) -->
             <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system generated Purchase Order and does not require any signatories
+                This is a system-generated purchase order and does not require a signature or stamp.
               </div>
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1 / 2</div>
             </div>
@@ -15238,7 +15246,7 @@ class FinanceApp {
             <!-- Fixed System Generated Footer (Page 2) -->
             <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system generated Purchase Order and does not require any signatories
+                This is a system-generated purchase order and does not require a signature or stamp.
               </div>
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">2 / 2</div>
             </div>
@@ -15258,9 +15266,9 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   exportInvoicesCSV() {
     const invoices = this.db?.invoices || [];
-    let csv = 'Invoice Number,Date,Customer,GSTIN,Place of Supply,Taxable Value,Tax Total,Grand Total,Amount Paid,Balance Due,Status\n';
+    let csv = 'Invoice Number,Date,Customer,TRN / GSTIN,Place of Supply,Taxable Value,Tax Total,Grand Total,Amount Paid,Balance Due,Status\n';
     invoices.forEach(i => {
-      csv += `"${i.invoice_no}","${i.invoice_date}","${i.customer_name}","${i.customer_gstin || ''}","${i.place_of_supply || ''}",${i.taxable_subtotal},${i.total_tax},${i.grand_total},${i.amount_paid || 0},${i.balance_due},"${i.status}"\n`;
+      csv += `"${i.invoice_no}","${i.invoice_date}","${i.customer_name}","${i.customer_trn || i.customer_gstin || ''}","${i.place_of_supply || ''}",${i.taxable_subtotal},${i.total_tax},${i.grand_total},${i.amount_paid || 0},${i.balance_due},"${i.status}"\n`;
     });
     this.downloadFile('Rayan_Group_Sales_Invoices_Register.csv', csv, 'text/csv');
   }
@@ -16613,7 +16621,7 @@ class FinanceApp {
             <!-- Fixed System Generated Footer -->
             <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system generated Expense Voucher and does not require any signatories
+                This is a system-generated expense voucher and does not require a signature or stamp.
               </div>
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
             </div>
@@ -16929,7 +16937,7 @@ class FinanceApp {
             <!-- Fixed System Generated Footer -->
             <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system generated Payment Voucher and does not require any signatories
+                This is a system-generated payment voucher and does not require a signature or stamp.
               </div>
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
             </div>
@@ -17784,7 +17792,7 @@ class FinanceApp {
             <!-- Fixed System Generated Footer -->
             <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system generated Debit Note and does not require any signatories
+                This is a system-generated debit note and does not require a signature or stamp.
               </div>
               <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
             </div>
