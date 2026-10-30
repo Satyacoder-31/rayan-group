@@ -674,7 +674,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             
             // v2026_clean_v21: Clear all synthetic customer receipts and reset invoices to unpaid
             try {
-                $chkMig21 = $pdo->query("SELECT value FROM finance_settings WHERE id = 'sales_migration_v21'")->fetchColumn();
+                $chkMig21 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'sales_migration_v21'")->fetchColumn();
             } catch (Exception $e) { $chkMig21 = false; }
             if (!$chkMig21) {
                 $pdo->exec("DELETE FROM finance_receipts");
@@ -693,18 +693,17 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     unset($inv);
                 }
                 try {
-                    $pdo->exec("REPLACE INTO finance_settings (id, value, updated_at) VALUES ('sales_migration_v21', 'completed', NOW())");
+                    $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('sales_migration_v21', 'completed', NOW())");
                 } catch (Exception $e) {}
             }
 
             // v2026_clean_v17: Refresh MySQL tables with the verified RGC Sales dataset
             try {
-                $chkMig = $pdo->query("SELECT value FROM finance_settings WHERE id = 'sales_migration_v17'")->fetchColumn();
+                $chkMig = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'sales_migration_v17'")->fetchColumn();
             } catch (Exception $e) { $chkMig = false; }
             if (!$chkMig) {
                 $pdo->exec("DELETE FROM finance_invoices WHERE company_id = 'rayan-corp-uae'");
                 $pdo->exec("DELETE FROM finance_receipts WHERE data_json LIKE '%rayan-corp-uae%'");
-                $pdo->exec("DELETE FROM finance_credit_notes");
                 $pdo->exec("DELETE FROM finance_customers WHERE company_id = 'rayan-corp-uae'");
 
                 if (!empty($data['invoices']) && is_array($data['invoices'])) {
@@ -743,7 +742,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     }
                 }
                 try {
-                    $pdo->exec("REPLACE INTO finance_settings (id, value, updated_at) VALUES ('sales_migration_v17', 'completed', NOW())");
+                    $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('sales_migration_v17', 'completed', NOW())");
                 } catch (Exception $e) {}
             }
             $pdo->exec("UPDATE finance_customer_receipts SET 
@@ -1253,7 +1252,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             $data['invoices'] = $masterSeed['invoices'];
                             $data['customer_receipts'] = $masterSeed['customer_receipts'] ?? [];
                             $data['customers'] = $masterSeed['customers'] ?? [];
-                            $data['credit_notes'] = [];
+                            $data['credit_notes'] = $masterSeed['credit_notes'] ?? [];
                         }
                     }
                     $companyOrder = ['rayan-group', 'rayan-corp-uae', 'rayan-energy-uae', 'rayan-properties-uae', 'ashaz-eng-in'];
@@ -1269,11 +1268,18 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     // Purge dummy entries if any exist
                     purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
                     // Keep relational tables populated
-                    // Force empty credit notes as requested by user
-                    $data['credit_notes'] = [];
-                    if ($pdo) {
-                        try { $pdo->exec("DELETE FROM finance_credit_notes"); } catch (Exception $e) {}
-                    }
+                    // Migration v23: Restore credit notes if missing in database
+                    try {
+                        $chkCn23 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'credit_notes_fix_v23'")->fetchColumn();
+                        if (!$chkCn23) {
+                            $masterSeed = getMasterSeed($candidates);
+                            if (!empty($masterSeed['credit_notes']) && empty($data['credit_notes'])) {
+                                $data['credit_notes'] = $masterSeed['credit_notes'];
+                            }
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('credit_notes_fix_v23', 'completed', NOW())");
+                        }
+                    } catch (Exception $e) {}
+
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     try {

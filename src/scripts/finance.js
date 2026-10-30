@@ -255,7 +255,7 @@ class FinanceApp {
       });
 
       if (!incomingArr.length) {
-        if (key === 'customer_receipts' || key === 'credit_notes') {
+        if (key === 'customer_receipts') {
           merged[key] = [];
         } else {
           merged[key] = seedArr;
@@ -689,7 +689,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v22';
+    const CURRENT_DB_VERSION = 'v2026_clean_v23';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4802,7 +4802,7 @@ class FinanceApp {
   // SALES CREDIT NOTES & PURCHASE DEBIT NOTES MODULES
   // --------------------------------------------------------------------------
   renderCreditNotesTab(root) {
-    const creditNotes = (this.db?.credit_notes || []).filter(n => (n.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const creditNotes = (this.db?.credit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -4828,7 +4828,15 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody>
-              ${creditNotes.map(cn => `
+              ${creditNotes.length === 0 ? `
+                <tr>
+                  <td colspan="7" style="text-align:center; padding:3rem 1rem; color:#64748b;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">📄</div>
+                    <div style="font-size:0.95rem; font-weight:600; color:#cbd5e1;">No credit notes found</div>
+                    <div style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Click "+ Create Credit Note" or click "Cr. Note" next to any invoice to issue a credit note.</div>
+                  </td>
+                </tr>
+              ` : creditNotes.map(cn => `
                 <tr>
                   <td><strong>${cn.credit_note_no}</strong></td>
                   <td><code>${cn.invoice_no}</code></td>
@@ -13323,13 +13331,15 @@ class FinanceApp {
 
   // 13. ISSUE CREDIT NOTE MODAL
   openCreateCreditNoteModal(invoiceId) {
-    const inv = this.db?.invoices?.find(i => i.id === invoiceId);
+    const inv = this.db?.invoices?.find(i => i.id === invoiceId) || (this.db?.invoices || []).find(i => this.matchesActiveCompany(i.company_id));
     if (!inv) return;
     this.recalculateInvoiceBalance(inv);
     const isIndia = (inv.company_id || this.activeCompanyId) === 'ashaz-eng-in';
     const currLabel = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
     const taxRate = isIndia ? 0.18 : 0.05;
+
+    const availableInvoices = (this.db?.invoices || []).filter(i => this.matchesActiveCompany(i.company_id) && i.status !== 'void');
 
     const currentBal = Math.max(0, Math.round((Number(inv.balance_due) || 0) * 100) / 100);
     const defTaxable = inv.taxable_subtotal || Math.round((currentBal / (1 + taxRate)) * 100) / 100;
@@ -13339,14 +13349,21 @@ class FinanceApp {
       <div class="fin-modal-backdrop open" id="modal-cn">
         <div class="fin-modal-dialog" style="max-width:600px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">🔄 Issue Sales Credit Note against ${inv.invoice_no} (${currLabel})</h3>
+            <h3 class="fin-modal-title">🔄 Issue Sales Credit Note (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cn')">&times;</button>
           </div>
           <div class="fin-modal-body">
             <form id="create-cn-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Target Sales Invoice <span style="color:#ef4444;">*</span></label>
+                <select id="cn-invoice-select" class="fin-form-select">
+                  ${availableInvoices.map(i => `<option value="${i.id}" ${i.id === inv.id ? 'selected' : ''}>${i.invoice_no} — ${i.customer_name} (Bal: ${this.formatCurrency(i.balance_due)})${i.id === inv.id ? ' [Selected]' : ''}</option>`).join('')}
+                </select>
+              </div>
+
               <div style="background:rgba(0,153,230,0.1); border-radius:8px; padding:1rem; margin-bottom:1.25rem; font-size:0.82rem;">
                 Client: <strong>${inv.customer_name}</strong><br>
-                Current Invoice Total: <strong>${this.formatCurrency(inv.grand_total)}</strong> • Balance: <strong style="color:#ef4444;">${this.formatCurrency(inv.balance_due)}</strong>
+                Current Invoice Total: <strong>${this.formatCurrency(inv.grand_total)}</strong> • Balance Due: <strong style="color:#ef4444;">${this.formatCurrency(inv.balance_due)}</strong>
               </div>
 
               ${currentBal > 0 ? `
@@ -13388,6 +13405,10 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('cn-invoice-select')?.addEventListener('change', (e) => {
+      this.openCreateCreditNoteModal(e.target.value);
+    });
 
     const updatePreview = () => {
       const taxable = Number(document.getElementById('cn-taxable')?.value) || 0;
@@ -13448,9 +13469,11 @@ class FinanceApp {
       const res = await this.syncApi('create_credit_note', payload);
       if (res && res.success) {
         this.recalculateInvoiceBalance(inv);
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
         alert(`Credit note ${res.credit_note?.credit_note_no || 'posted'} posted in ${currLabel}. Invoice balance updated.`);
         this.closeModal('modal-cn');
-        this.switchTab('notes');
+        this.switchTab(this.activeTab === 'notes' ? 'notes' : 'credit_notes');
       }
     };
   }
@@ -19198,6 +19221,8 @@ class FinanceApp {
     if (this.db.credit_notes) {
       this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cnId && c.credit_note_no !== cnId);
     }
+    this.normalizeAllBalances();
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
     this.showNotification(`Credit note ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
   }
