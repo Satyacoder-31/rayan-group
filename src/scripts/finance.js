@@ -11,7 +11,7 @@ class FinanceApp {
     this.db = JSON.parse(JSON.stringify(defaultSeedData));
     this.currentUser = null;
     this.activeCompanyId = 'rayan-corp-uae';
-    this.activePeriod = 'fy-2025-26';
+    this.activePeriod = 'all';
     this.activeCurrency = 'AED';
     this.activeTab = 'dashboard';
     this.currencyRates = { INR: 1, AED: 1, USD: 1 };
@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v15';
+    const CURRENT_DB_VERSION = 'v2026_clean_v16';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2246,16 +2246,54 @@ class FinanceApp {
   }
 
   matchesActiveCompany(itemCompanyId) {
-    const currentIsUae = this.isUaeEntity(this.activeCompanyId);
-    if (currentIsUae) {
+    if (this.activeCompanyId === 'rayan-group') {
       return this.isUaeEntity(itemCompanyId);
+    }
+    if (this.activeCompanyId === 'rayan-corp-uae') {
+      return (itemCompanyId === 'rayan-corp-uae' || itemCompanyId === 'rayan-group' || !itemCompanyId);
+    }
+    if (this.activeCompanyId === 'rayan-properties-uae') {
+      return itemCompanyId === 'rayan-properties-uae';
+    }
+    if (this.activeCompanyId === 'ashaz-eng-in') {
+      return itemCompanyId === 'ashaz-eng-in';
     }
     return (itemCompanyId || 'rayan-corp-uae') === this.activeCompanyId;
   }
 
+  matchesActivePeriod(dateStr) {
+    if (!this.activePeriod || this.activePeriod === 'all' || this.activePeriod === 'fy-2025-26') {
+      return true;
+    }
+    if (!dateStr) return true;
+
+    const raw = String(dateStr).trim();
+    const yearMatch = raw.match(/\b(202\d)\b/);
+    const parsedYear = yearMatch ? parseInt(yearMatch[1], 10) : (new Date(raw).getFullYear());
+
+    if (this.activePeriod === '2024') return parsedYear === 2024;
+    if (this.activePeriod === '2025') return parsedYear === 2025;
+    if (this.activePeriod === '2026') return parsedYear === 2026;
+
+    const d = new Date(raw);
+    if (!isNaN(d.getTime())) {
+      const refTime = Math.max(Date.now(), new Date('2026-10-30T00:00:00Z').getTime());
+      const diffDays = (refTime - d.getTime()) / (1000 * 60 * 60 * 24);
+
+      if (this.activePeriod === 'last-7-days') {
+        return diffDays >= -1 && diffDays <= 7;
+      }
+      if (this.activePeriod === 'last-30-days') {
+        return diffDays >= -1 && diffDays <= 30;
+      }
+    }
+
+    return true;
+  }
+
   getNextBillNumber() {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
-    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id) && this.matchesActivePeriod(b.bill_date));
     let maxSeq = 100;
     bills.forEach(b => {
       const bNo = b.bill_no || '';
@@ -2287,7 +2325,7 @@ class FinanceApp {
 
   getNextPaymentVoucherNumber() {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
-    const payments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id));
+    const payments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id) && this.matchesActivePeriod(p.payment_date));
     let maxSeq = 100;
     payments.forEach(p => {
       const pNo = p.voucher_no || '';
@@ -2603,7 +2641,7 @@ class FinanceApp {
                 <svg class="fin-select-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
                 <select id="fin-entity-select" class="fin-select-modern" title="Switch Operating Legal Entity">
                   ${(this.db?.companies || defaultSeedData.companies || []).filter(c => c.id !== 'rayan-energy-uae').map(c => {
-                    const shortName = c.name.replace('Private Limited', 'Ltd').replace('Corporate HQ', 'HQ').replace('Division', 'Div');
+                    const shortName = c.short_name || c.name.replace('Private Limited', 'Ltd').replace('Corporate HQ', 'HQ').replace('Division', 'Div');
                     return `<option value="${c.id}" ${c.id === this.activeCompanyId ? 'selected' : ''}>${shortName}</option>`;
                   }).join('')}
                 </select>
@@ -2626,9 +2664,11 @@ class FinanceApp {
               <div class="fin-select-wrapper fin-period-wrapper">
                 <svg class="fin-select-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 <select id="fin-period-select" class="fin-select-modern" title="Filter Accounting Period">
-                  <option value="fy-2025-26" ${this.activePeriod === 'fy-2025-26' ? 'selected' : ''}>FY 2025–26</option>
-                  <option value="q4-2026" ${this.activePeriod === 'q4-2026' ? 'selected' : ''}>Q4 (Jan–Mar)</option>
-                  <option value="current-month" ${this.activePeriod === 'current-month' ? 'selected' : ''}>March 2026</option>
+                  <option value="all" ${(!this.activePeriod || this.activePeriod === 'all') ? 'selected' : ''}>All (2024–2026)</option>
+                  <option value="2024" ${this.activePeriod === '2024' ? 'selected' : ''}>2024</option>
+                  <option value="2025" ${this.activePeriod === '2025' ? 'selected' : ''}>2025</option>
+                  <option value="2026" ${this.activePeriod === '2026' ? 'selected' : ''}>2026</option>
+                  <option value="last-7-days" ${this.activePeriod === 'last-7-days' ? 'selected' : ''}>Last 7 Days</option>
                   <option value="last-30-days" ${this.activePeriod === 'last-30-days' ? 'selected' : ''}>Last 30 Days</option>
                 </select>
                 <svg class="fin-select-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
@@ -3507,28 +3547,28 @@ class FinanceApp {
     const currentIsUae = isUaeEntity(this.activeCompanyId);
     const invoices = (this.db?.invoices || []).filter(i => {
       const compId = i.company_id || 'rayan-corp-uae';
-      if (currentIsUae && isUaeEntity(compId)) return true;
-      return compId === this.activeCompanyId;
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && this.matchesActivePeriod(i.invoice_date);
     });
     const bills = (this.db?.purchase_bills || []).filter(b => {
       const compId = b.company_id || 'rayan-corp-uae';
-      if (currentIsUae && isUaeEntity(compId)) return true;
-      return compId === this.activeCompanyId;
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && this.matchesActivePeriod(b.bill_date);
     });
     const expenses = (this.db?.expenses || []).filter(e => {
       const compId = e.company_id || 'rayan-corp-uae';
-      if (currentIsUae && isUaeEntity(compId)) return true;
-      return compId === this.activeCompanyId;
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && this.matchesActivePeriod(e.expense_date || e.date);
     });
     const receipts = (this.db?.customer_receipts || []).filter(r => {
       const compId = r.company_id || 'rayan-corp-uae';
-      if (currentIsUae && isUaeEntity(compId)) return true;
-      return compId === this.activeCompanyId;
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && this.matchesActivePeriod(r.receipt_date);
     });
     const vendorPayments = (this.db?.vendor_payments || []).filter(p => {
       const compId = p.company_id || 'rayan-corp-uae';
-      if (currentIsUae && isUaeEntity(compId)) return true;
-      return compId === this.activeCompanyId;
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && this.matchesActivePeriod(p.payment_date);
     });
 
     // Authoritative Calculations
@@ -3894,8 +3934,8 @@ class FinanceApp {
     const currentIsUae = isUaeEntity(this.activeCompanyId);
     const rawInvoices = (this.db?.invoices || []).filter(i => {
       const compId = i.company_id || 'rayan-corp-uae';
-      if (currentIsUae && isUaeEntity(compId)) return true;
-      return compId === this.activeCompanyId;
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && this.matchesActivePeriod(i.invoice_date);
     });
     const invoices = [...rawInvoices].sort((a, b) => {
       const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
@@ -4353,7 +4393,7 @@ class FinanceApp {
   // 7. PAYMENTS & RECEIPTS MODULE
   // --------------------------------------------------------------------------
   renderPaymentsTab(root) {
-    const rawReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const rawReceipts = (this.db?.customer_receipts || []).filter(r => ((r.company_id || 'rayan-corp-uae') === this.activeCompanyId || this.matchesActiveCompany(r.company_id)) && this.matchesActivePeriod(r.receipt_date));
     const receipts = [...rawReceipts].sort((a, b) => {
       const dateA = new Date(a.receipt_date || 0).getTime();
       const dateB = new Date(b.receipt_date || 0).getTime();
