@@ -689,7 +689,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v23';
+    const CURRENT_DB_VERSION = 'v2026_clean_v24';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5309,8 +5309,8 @@ class FinanceApp {
   }
 
   renderLoanAccountsTab(root) {
-    const loans = (this.db?.loan_accounts || []).filter(l => (l.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const transactions = (this.db?.loan_transactions || []).filter(t => (t.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const loans = (this.db?.loan_accounts || []).filter(l => this.matchesActiveCompany(l.company_id));
+    const transactions = (this.db?.loan_transactions || []).filter(t => this.matchesActiveCompany(t.company_id));
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
     const totalDebt = loans.reduce((sum, l) => sum + (Number(l.outstanding_balance) || 0), 0);
     const totalLimit = loans.reduce((sum, l) => sum + (Number(l.sanctioned_limit) || 0), 0);
@@ -5345,33 +5345,40 @@ class FinanceApp {
           </div>
         ` : `
           <div class="fin-bank-grid">
-            ${loans.map(l => `
-              <div class="fin-bank-card">
+            ${loans.map(l => {
+              const isDirector = (l.facility_type || '').includes('Director') || l.id === 'loan-dir-current-act';
+              const badgeBg = isDirector ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)';
+              const badgeColor = isDirector ? '#34d399' : '#60a5fa';
+              const badgeBorder = isDirector ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.3)';
+              const badgeText = isDirector ? "Director's Current Account" : 'Sanctioned Facility';
+              const balanceLabel = isDirector ? 'Payable by Company to Director' : 'Outstanding Debt / Utilization';
+              return `
+              <div class="fin-bank-card" style="${isDirector ? 'border-color:rgba(16,185,129,0.35); background:linear-gradient(145deg, rgba(15,23,42,0.9), rgba(16,185,129,0.06));' : ''}">
                 <div class="fin-bank-card-header">
                   <div>
                     <strong style="font-size:0.95rem; color:#ffffff;">${l.facility_name}</strong>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Lender: ${l.lender}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Account Holder: ${l.lender}</div>
                   </div>
-                  <span class="fin-bank-badge" style="background:rgba(59,130,246,0.15); color:#60a5fa; border-color:rgba(59,130,246,0.3);">Sanctioned</span>
+                  <span class="fin-bank-badge" style="background:${badgeBg}; color:${badgeColor}; border-color:${badgeBorder};">${badgeText}</span>
                 </div>
-                <div class="fin-bank-balance" style="color:#f59e0b;">
+                <div class="fin-bank-balance" style="color:${isDirector ? '#34d399' : '#f59e0b'};">
                   ${this.formatCurrency(l.outstanding_balance)}
-                  <span style="font-size:0.72rem; color:#94a3b8; font-weight:500; display:block; margin-top:2px;">Outstanding Debt / Utilization</span>
+                  <span style="font-size:0.72rem; color:#94a3b8; font-weight:500; display:block; margin-top:2px;">${balanceLabel}</span>
                 </div>
                 <div class="fin-bank-meta">
-                  <div><strong>Sanctioned Limit:</strong> ${this.formatCurrency(l.sanctioned_limit)}</div>
-                  <div><strong>Available Headroom:</strong> <span style="color:#34d399; font-weight:700;">${this.formatCurrency(l.available_limit)}</span></div>
-                  <div><strong>Rate / Commission:</strong> ${l.interest_rate || l.commission_rate || 'Standard Rate'}</div>
-                  <div><strong>Tenure:</strong> ${l.tenure || '36 Months'}</div>
-                  <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;"><strong>Security:</strong> ${l.security || 'Corporate Guarantee'}</div>
+                  <div><strong>${isDirector ? 'Approved Facility Cap:' : 'Sanctioned Limit:'}</strong> ${this.formatCurrency(l.sanctioned_limit)}</div>
+                  <div><strong>${isDirector ? 'Available Headroom:' : 'Available Headroom:'}</strong> <span style="color:#34d399; font-weight:700;">${this.formatCurrency(l.available_limit)}</span></div>
+                  <div><strong>Interest Terms:</strong> ${l.interest_rate || l.commission_rate || 'Interest-Free (0%)'}</div>
+                  <div><strong>Repayment Terms:</strong> ${l.tenure || 'On Demand / As Cash Flow Permits'}</div>
+                  <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;"><strong>Security / Status:</strong> ${l.security || 'Unsecured Shareholder Loan'}</div>
                 </div>
                 <div class="fin-bank-card-actions">
                   <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddLoanFacilityModal('${l.id}')">✏️ Edit</button>
-                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openLoanEntryModal('${l.id}')">+ Transaction</button>
+                  <button type="button" class="fin-btn-card-action" style="${isDirector ? 'color:#34d399; font-weight:700;' : ''}" onclick="window.finApp.openLoanEntryModal('${l.id}')">${isDirector ? '+ Record Contribution / Repayment' : '+ Transaction'}</button>
                   <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteLoanAccount('${l.id}')">🗑️ Remove</button>
                 </div>
               </div>
-            `).join('')}
+            `;}).join('')}
           </div>
         `}
 
@@ -10854,6 +10861,7 @@ class FinanceApp {
                   <label class="fin-form-label">Disbursement Mode</label>
                   <select id="pay-mode" class="fin-form-select" required>
                     <option value="Online" selected>Online</option>
+                    <option value="Director's Current Account (Personal Funds)">Director's Current Account (Personal Funds)</option>
                     <option value="Corporate Cheque">Corporate Cheque</option>
                     <option value="Security Cheque">Security Cheque</option>
                     <option value="International Wire">International Wire</option>
@@ -13018,6 +13026,7 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment Method</label>
                   <select id="exp-pay-mode" class="fin-form-select">
+                    <option value="Director's Current Account (Personal Funds)">Director's Current Account (Personal Funds)</option>
                     <option value="Corporate Debit Card">Corporate Debit Card</option>
                     <option value="Direct Bank Wire">Direct Bank Wire</option>
                     <option value="Petty Cash">Petty Cash</option>
@@ -14842,6 +14851,7 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Facility Type</label>
                   <select id="lf-type" class="fin-form-select">
+                    <option value="Director's Current Account / Shareholder Advance">Director's Current Account / Shareholder Advance (Interest-Free)</option>
                     <option value="Non-Fund Based (LC / BG Guarantees)">Non-Fund Based (LC / BG Guarantees)</option>
                     <option value="Working Capital Consortium Line">Working Capital Consortium Line</option>
                     <option value="Heavy Machinery Hypothecation">Heavy Machinery Hypothecation</option>
@@ -14930,7 +14940,7 @@ class FinanceApp {
 
   // 7. RECORD LOAN DRAWDOWN / REPAYMENT MODAL
   openLoanEntryModal(preselectedFacilityId = null) {
-    const loans = (this.db?.loan_accounts || []).filter(l => (l.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const loans = (this.db?.loan_accounts || []).filter(l => this.matchesActiveCompany(l.company_id));
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const autoRef = `LF-TRN-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -14960,8 +14970,8 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Transaction Type <span style="color:#ef4444;">*</span></label>
                   <select id="le-type" class="fin-form-select" required>
-                    <option value="repayment">Principal / EMI Repayment (Decreases Debt)</option>
-                    <option value="drawdown">Facility Drawdown / LC Issuance (Increases Debt)</option>
+                    <option value="drawdown">Personal Funds Contribution / Expense Paid (Increases Payable to Director)</option>
+                    <option value="repayment">Company Reimbursement / Withdrawal (Decreases Payable to Director)</option>
                     <option value="interest">Monthly Interest / Bank Commission Service</option>
                   </select>
                 </div>
@@ -15005,9 +15015,10 @@ class FinanceApp {
       const fac = loans.find(l => l.id === facId);
       const type = document.getElementById('le-type').value;
 
+      const isDirector = (fac?.facility_type || '').includes('Director') || fac?.id === 'loan-dir-current-act';
       const typeLabels = {
-        drawdown: 'Facility Drawdown / LC Issuance',
-        repayment: 'Principal / EMI Repayment',
+        drawdown: isDirector ? 'Personal Funds Contribution' : 'Facility Drawdown / LC Issuance',
+        repayment: isDirector ? 'Company Reimbursement to Director' : 'Principal / EMI Repayment',
         interest: 'Monthly Interest Service'
       };
 

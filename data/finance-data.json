@@ -5664,6 +5664,20 @@
   "cheques": [],
   "loan_accounts": [
     {
+      "id": "loan-dir-current-act",
+      "company_id": "rayan-corp-uae",
+      "facility_name": "Director's Current Account — Arshad Alam Shaikh",
+      "lender": "Arshad Alam Shaikh (Executive Managing Director)",
+      "facility_type": "Director's Current Account / Shareholder Advance",
+      "sanctioned_limit": 5000000,
+      "outstanding_balance": 0,
+      "available_limit": 5000000,
+      "currency": "AED",
+      "interest_rate": "0% (Interest-Free Shareholder Advance)",
+      "tenure": "Repayable on demand / As cash flow permits",
+      "security": "Unsecured Director Advance"
+    },
+    {
       "id": "loan-fab-lc-bg",
       "company_id": "rayan-corp-uae",
       "facility_name": "FAB Bank Guarantee & Letter of Credit Facility",

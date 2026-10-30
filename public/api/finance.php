@@ -1280,7 +1280,35 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                     } catch (Exception $e) {}
 
-                    recalculateAllFinanceBalances($data);
+                    // Ensure Director's Current Account is configured
+                    $hasDirLoan = false;
+                    if (!empty($data['loan_accounts']) && is_array($data['loan_accounts'])) {
+                        foreach ($data['loan_accounts'] as $la) {
+                            if (($la['id'] ?? '') === 'loan-dir-current-act') {
+                                $hasDirLoan = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        $data['loan_accounts'] = [];
+                    }
+                    if (!$hasDirLoan) {
+                        array_unshift($data['loan_accounts'], [
+                            'id' => 'loan-dir-current-act',
+                            'company_id' => 'rayan-corp-uae',
+                            'facility_name' => "Director's Current Account — Arshad Alam Shaikh",
+                            'lender' => 'Arshad Alam Shaikh (Executive Managing Director)',
+                            'facility_type' => "Director's Current Account / Shareholder Advance",
+                            'sanctioned_limit' => 5000000,
+                            'outstanding_balance' => 0,
+                            'available_limit' => 5000000,
+                            'currency' => 'AED',
+                            'interest_rate' => '0% (Interest-Free Shareholder Advance)',
+                            'tenure' => 'Repayable on demand / As cash flow permits',
+                            'security' => 'Unsecured Director Advance'
+                        ]);
+                    }
+                                        recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     try {
                         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -2724,6 +2752,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db['expenses'] = [];
                 }
                 array_unshift($db['expenses'], $exp);
+                // Check if expense was paid from Director's Current Account (Personal Funds)
+                $expMode = $exp['payment_method'] ?? $exp['payment_mode'] ?? '';
+                if (stripos($expMode, 'Director') !== false || stripos($expMode, 'Personal') !== false) {
+                    $dirLoanId = 'loan-dir-current-act';
+                    $expAmt = floatval($exp['total_amount'] ?? $exp['amount'] ?? 0);
+                    if ($expAmt > 0 && !empty($db['loan_accounts'])) {
+                        foreach ($db['loan_accounts'] as &$lf) {
+                            if (($lf['id'] ?? '') === $dirLoanId) {
+                                $lf['outstanding_balance'] = floatval($lf['outstanding_balance'] ?? 0) + $expAmt;
+                                $lf['available_limit'] = max(0, floatval($lf['sanctioned_limit'] ?? 0) - floatval($lf['outstanding_balance'] ?? 0));
+                                break;
+                            }
+                        }
+                        unset($lf);
+                        if (!isset($db['loan_transactions']) || !is_array($db['loan_transactions'])) {
+                            $db['loan_transactions'] = [];
+                        }
+                        array_unshift($db['loan_transactions'], [
+                            'id' => 'lt-' . round(microtime(true) * 1000),
+                            'company_id' => $exp['company_id'] ?? 'rayan-corp-uae',
+                            'facility_id' => $dirLoanId,
+                            'facility_name' => "Director's Current Account — Arshad Alam Shaikh",
+                            'type' => 'drawdown',
+                            'type_label' => 'Personal Contribution (Business Expense Claim)',
+                            'amount' => $expAmt,
+                            'reference_no' => $exp['expense_no'] ?? ('EXP-' . rand(1000, 9999)),
+                            'date' => $exp['date'] ?? $exp['expense_date'] ?? date('Y-m-d'),
+                            'notes' => 'Business expense: ' . ($exp['description'] ?? 'Expense') . ' paid from personal funds'
+                        ]);
+                    }
+                }
                 $addAuditLog('create', 'expense', $exp['expense_no'] ?? '', 'Recorded operational expense of ' . ($exp['total_amount'] ?? 0));
             }
             break;
@@ -3016,6 +3075,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                         }
                         unset($b);
+                    }
+                }
+                // Check if payment was made from Director's Current Account (Personal Funds)
+                $payMode = $pay['payment_mode'] ?? '';
+                if (stripos($payMode, 'Director') !== false || stripos($payMode, 'Personal') !== false) {
+                    $dirLoanId = 'loan-dir-current-act';
+                    $amtPaid = floatval($pay['amount_paid'] ?? 0);
+                    if ($amtPaid > 0 && !empty($db['loan_accounts'])) {
+                        foreach ($db['loan_accounts'] as &$lf) {
+                            if (($lf['id'] ?? '') === $dirLoanId) {
+                                $lf['outstanding_balance'] = floatval($lf['outstanding_balance'] ?? 0) + $amtPaid;
+                                $lf['available_limit'] = max(0, floatval($lf['sanctioned_limit'] ?? 0) - floatval($lf['outstanding_balance'] ?? 0));
+                                break;
+                            }
+                        }
+                        unset($lf);
+                        if (!isset($db['loan_transactions']) || !is_array($db['loan_transactions'])) {
+                            $db['loan_transactions'] = [];
+                        }
+                        array_unshift($db['loan_transactions'], [
+                            'id' => 'lt-' . round(microtime(true) * 1000),
+                            'company_id' => $pay['company_id'] ?? 'rayan-corp-uae',
+                            'facility_id' => $dirLoanId,
+                            'facility_name' => "Director's Current Account — Arshad Alam Shaikh",
+                            'type' => 'drawdown',
+                            'type_label' => 'Personal Contribution (Vendor Bill Payment)',
+                            'amount' => $amtPaid,
+                            'reference_no' => $pay['voucher_no'] ?? ('PV-' . rand(1000, 9999)),
+                            'date' => $pay['payment_date'] ?? date('Y-m-d'),
+                            'notes' => 'Settled supplier bill for ' . ($pay['vendor_name'] ?? 'Vendor') . ' from personal funds'
+                        ]);
                     }
                 }
                 $addAuditLog('create', 'payment', $pay['voucher_no'] ?? '', 'Disbursed vendor payment of ' . ($pay['amount_paid'] ?? 0));
