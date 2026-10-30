@@ -669,41 +669,55 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 accounts_receivable = 'Accounts Receivable'
             WHERE name LIKE '%TOP ROCK%'");
             
-            $pdo->exec("DELETE FROM finance_invoices WHERE invoice_no IN ('REC-RG-INV-44035', 'REC-RG-INV-44015') OR id IN ('inv-rec-rg-inv-44035', 'inv-rec-rg-inv-44015') OR customer_name LIKE '%TOP ROCK%'");
-            $topRockJson = json_encode($topRockInvoice, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            $stmt = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (
-                'inv-rec-rg-inv-44035',
-                'REC-RG-INV-44035',
-                'rayan-corp-uae',
-                'cust-1792414691494',
-                'M/S TOP ROCK INTERIORS LLC.',
-                '100360644700003',
-                '2026-06-19',
-                '2026-06-19',
-                26466.77,
-                26466.77,
-                0,
-                'AED',
-                'paid',
-                :data_json,
-                NOW()
-            )");
-            $stmt->execute([':data_json' => $topRockJson]);
+            // v2026_clean_v17: Refresh MySQL tables with the verified RGC Sales dataset
+            try {
+                $chkMig = $pdo->query("SELECT value FROM finance_settings WHERE id = 'sales_migration_v17'")->fetchColumn();
+            } catch (Exception $e) { $chkMig = false; }
+            if (!$chkMig) {
+                $pdo->exec("DELETE FROM finance_invoices WHERE company_id = 'rayan-corp-uae'");
+                $pdo->exec("DELETE FROM finance_receipts WHERE data_json LIKE '%rayan-corp-uae%'");
+                $pdo->exec("DELETE FROM finance_credit_notes WHERE data_json LIKE '%rayan-corp-uae%'");
+                $pdo->exec("DELETE FROM finance_customers WHERE company_id = 'rayan-corp-uae'");
 
-            $pdo->exec("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (
-                'rec-rv-44035',
-                'REC-RV-44035',
-                'cust-toprock',
-                'M/S TOP ROCK INTERIORS LLC.',
-                '2026-10-19',
-                26466.77,
-                'AED',
-                'Online',
-                'WIRE-ADCB-99210',
-                '{\"id\":\"rec-rv-44035\",\"receipt_no\":\"REC-RV-44035\",\"ref_invoice_no\":\"REC-RG-INV-44035\",\"company_id\":\"rayan-corp-uae\",\"customer_name\":\"M/S TOP ROCK INTERIORS LLC.\",\"amount_received\":26466.77,\"currency\":\"AED\",\"payment_mode\":\"Online\",\"payment_type\":\"Online Bank Transfer / Corporate Wire\",\"reference_no\":\"WIRE-ADCB-99210\",\"bank_name\":\"Abu Dhabi Commercial Bank (ADCB)\",\"notes\":\"Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.\",\"allocations\":[{\"invoice_id\":\"inv-rec-rg-inv-44035\",\"invoice_no\":\"REC-RG-INV-44035\",\"amount_allocated\":26466.77}]}',
-                NOW()
-            )");
-
+                if (!empty($data['invoices']) && is_array($data['invoices'])) {
+                    $stmtInv = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                    foreach ($data['invoices'] as $inv) {
+                        $stmtInv->execute([
+                            $inv['id'], $inv['invoice_no'], $inv['company_id'] ?? 'rayan-corp-uae',
+                            $inv['customer_id'] ?? '', $inv['customer_name'] ?? '', $inv['customer_trn'] ?? '',
+                            $inv['invoice_date'] ?? date('Y-m-d'), $inv['due_date'] ?? date('Y-m-d'),
+                            floatval($inv['grand_total'] ?? 0), floatval($inv['amount_paid'] ?? 0),
+                            floatval($inv['balance_due'] ?? 0), $inv['currency'] ?? 'AED',
+                            $inv['status'] ?? 'unpaid', json_encode($inv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    }
+                }
+                if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+                    $stmtRcp = $pdo->prepare("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                    foreach ($data['customer_receipts'] as $rcp) {
+                        $stmtRcp->execute([
+                            $rcp['id'], $rcp['receipt_no'], $rcp['customer_id'] ?? '', $rcp['customer_name'] ?? '',
+                            $rcp['receipt_date'] ?? date('Y-m-d'), floatval($rcp['amount_received'] ?? 0),
+                            $rcp['currency'] ?? 'AED', $rcp['payment_mode'] ?? 'Online',
+                            $rcp['reference_no'] ?? '', json_encode($rcp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    }
+                }
+                if (!empty($data['customers']) && is_array($data['customers'])) {
+                    $stmtCust = $pdo->prepare("REPLACE INTO finance_customers (id, code, name, contact_person, email, phone, trn, gstin, credit_limit, opening_balance, balance, currency, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                    foreach ($data['customers'] as $c) {
+                        $stmtCust->execute([
+                            $c['id'], $c['code'] ?? '', $c['name'] ?? '', $c['contact_person'] ?? '',
+                            $c['email'] ?? '', $c['phone'] ?? '', $c['trn'] ?? '', $c['gstin'] ?? '',
+                            floatval($c['credit_limit'] ?? 0), 0, floatval($c['outstanding_dues'] ?? 0),
+                            'AED', json_encode($c, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    }
+                }
+                try {
+                    $pdo->exec("REPLACE INTO finance_settings (id, value, updated_at) VALUES ('sales_migration_v17', 'completed', NOW())");
+                } catch (Exception $e) {}
+            }
             $pdo->exec("UPDATE finance_customer_receipts SET 
                 contact_person = 'Mr. Shahil', 
                 email = 'procurementofficer@toprockinteriors.com' 
@@ -895,373 +909,14 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             return !in_array($id, $dummyRecIds) && !in_array($no, $dummyRecIds);
         }));
 
-        // 2. Deduplicate receipts and cleanly handle TOP ROCK REC-RV-44035
+        // 2. Deduplicate receipts by receipt_no / id
         $dedupedReceipts = [];
-        $hasRcp44035 = false;
-        $hasRcp44037 = false;
-
         foreach ($filtered as $r) {
             $rcpId = strtolower(trim($r['id'] ?? ''));
             $rcpNo = strtoupper(trim($r['receipt_no'] ?? ''));
-            $custName = strtoupper(trim($r['customer_name'] ?? ''));
-
-            // Match strictly TOP ROCK or specifically REC-RV-44035 (never broad 440 substring)
-            if (stripos($custName, 'TOP ROCK') !== false || $rcpId === 'rec-rv-44035' || $rcpNo === 'REC-RV-44035') {
-                if (!$hasRcp44035) {
-                    $dedupedReceipts['REC-RV-44035'] = [
-                        'id' => 'rec-rv-44035',
-                        'receipt_no' => 'REC-RV-44035',
-                        'ref_invoice_no' => 'REC-RG-INV-44035',
-                        'company_id' => 'rayan-corp-uae',
-                        'customer_id' => 'cust-toprock',
-                        'customer_name' => 'M/S TOP ROCK INTERIORS LLC.',
-                        'contact_person' => 'Mr. Shahil',
-                        'email' => 'procurementofficer@toprockinteriors.com',
-                        'phone' => '+971 502131834',
-                        'customer_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
-                        'receipt_date' => '2026-10-19',
-                        'receipt_time' => '1:40 PM',
-                        'payment_mode' => 'Online',
-                        'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                        'cheque_no' => '',
-                        'reference_no' => 'WIRE-ADCB-99210',
-                        'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                        'amount_received' => 26466.77,
-                        'currency' => 'AED',
-                        'amount_in_words' => 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.',
-                        'allocated_amount' => 26466.77,
-                        'allocations' => [
-                            [
-                                'invoice_id' => 'inv-rec-rg-inv-44035',
-                                'invoice_no' => 'REC-RG-INV-44035',
-                                'amount_allocated' => 26466.77
-                            ]
-                        ],
-                        'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                        'receiver_sign' => 'Arshad Alam Shaikh',
-                        'notes' => 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.',
-                        'recorded_by' => 'Arshad Alam Shaikh',
-                        'recorded_at' => '2026-10-19T13:40:00Z'
-                    ];
-                    $hasRcp44035 = true;
-                }
-            } else {
-                // Ignore failed duplicate attempt 44036
-                if ($rcpNo === 'REC-RV-44036' || $rcpId === 'rec-rv-44036') {
-                    $changed = true;
-                    continue;
-                }
-
-                // REC-RV-44037 is the receipt voucher for REC-RG-INV-44002
-                if ($rcpNo === 'REC-RV-44037' || $rcpId === 'rec-rv-44037') {
-                    $dedupedReceipts['REC-RV-44037'] = [
-                        'id' => 'rec-rv-44037',
-                        'receipt_no' => 'REC-RV-44037',
-                        'ref_invoice_no' => 'REC-RG-INV-44002',
-                        'company_id' => 'rayan-corp-uae',
-                        'customer_id' => 'cust-1792415585310',
-                        'customer_name' => 'M/S HLN TECHNICAL SERVICES LLC',
-                        'contact_person' => 'Mr. Linto Linto',
-                        'email' => 'info@hlnaue.com',
-                        'phone' => '+971 502131834',
-                        'customer_address' => "Attn: Mr. Linto Linto\nW/H 125, AL Habtoor ware house Al Qusais , Dubai\nUnited Arab Emirates",
-                        'receipt_date' => '2025-08-09',
-                        'receipt_time' => '04:37 PM',
-                        'payment_mode' => 'Online',
-                        'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                        'cheque_no' => '',
-                        'reference_no' => 'WIRE-ADCB-99210',
-                        'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                        'amount_received' => 18559.74,
-                        'currency' => 'AED',
-                        'amount_in_words' => 'Eighteen Thousand Five Hundred Fifty Nine and Seventy Four Fils AED Only.',
-                        'allocated_amount' => 18559.74,
-                        'allocations' => [
-                            [
-                                'invoice_id' => 'inv-rec-rg-inv-44002',
-                                'invoice_no' => 'REC-RG-INV-44002',
-                                'amount_allocated' => 18559.74
-                            ]
-                        ],
-                        'project_name' => 'PROJECT-CIVIL WORKS-MAX-AL WAHDA-ABU DHABI',
-                        'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                        'receiver_sign' => 'Arshad Alam Shaikh',
-                        'notes' => 'Settlement towards Advance Tax Invoice #REC-RG-INV-44002. Official client collection acknowledgement.',
-                        'recorded_by' => 'Arshad Alam Shaikh',
-                        'recorded_at' => '2026-10-29T04:37:06.310Z'
-                    ];
-                    $hasRcp44037 = true;
-                    $changed = true;
-                    continue;
-                }
-
-                // REC-RV-44038 is settlement for REC-RG-INV-44005 (AED 74,238.94)
-                if ($rcpNo === 'REC-RV-44038' || $rcpId === 'rec-mvt22ul5') {
-                    $r['ref_invoice_no'] = 'REC-RG-INV-44005';
-                    $r['amount_received'] = 74238.94;
-                    $r['allocated_amount'] = 74238.94;
-                    $r['notes'] = 'Settlement towards Tax Invoice #REC-RG-INV-44005. Official client collection acknowledgement.';
-                    $r['allocations'] = [
-                        [
-                            'invoice_id' => 'inv-rec-rg-inv-44005',
-                            'invoice_no' => 'REC-RG-INV-44005',
-                            'amount_allocated' => 74238.94
-                        ]
-                    ];
-                    $dedupedReceipts['REC-RV-44038'] = $r;
-                    $changed = true;
-                    continue;
-                }
-
-                $key = $rcpNo ?: $rcpId;
-                if ($key && !isset($dedupedReceipts[$key])) {
-                    $dedupedReceipts[$key] = $r;
-                }
-            }
-        }
-
-        if (!$hasRcp44035) {
-            $dedupedReceipts['REC-RV-44035'] = [
-                'id' => 'rec-rv-44035',
-                'receipt_no' => 'REC-RV-44035',
-                'ref_invoice_no' => 'REC-RG-INV-44035',
-                'company_id' => 'rayan-corp-uae',
-                'customer_id' => 'cust-toprock',
-                'customer_name' => 'M/S TOP ROCK INTERIORS LLC.',
-                'contact_person' => 'Mr. Shahil',
-                'email' => 'procurementofficer@toprockinteriors.com',
-                'phone' => '+971 502131834',
-                'customer_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
-                'receipt_date' => '2026-10-19',
-                'receipt_time' => '1:40 PM',
-                'payment_mode' => 'Online',
-                'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                'cheque_no' => '',
-                'reference_no' => 'WIRE-ADCB-99210',
-                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                'amount_received' => 26466.77,
-                'currency' => 'AED',
-                'amount_in_words' => 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.',
-                'allocated_amount' => 26466.77,
-                'allocations' => [
-                    [
-                        'invoice_id' => 'inv-rec-rg-inv-44035',
-                        'invoice_no' => 'REC-RG-INV-44035',
-                        'amount_allocated' => 26466.77
-                    ]
-                ],
-                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                'receiver_sign' => 'Arshad Alam Shaikh',
-                'notes' => 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.',
-                'recorded_by' => 'Arshad Alam Shaikh',
-                'recorded_at' => '2026-10-19T13:40:00Z'
-            ];
-            $changed = true;
-        }
-
-        // Ensure official receipt voucher REC-RV-44037 for REC-RG-INV-44002 is recorded
-        if (!$hasRcp44037) {
-            $dedupedReceipts['REC-RV-44037'] = [
-                'id' => 'rec-rv-44037',
-                'receipt_no' => 'REC-RV-44037',
-                'ref_invoice_no' => 'REC-RG-INV-44002',
-                'company_id' => 'rayan-corp-uae',
-                'customer_id' => 'cust-1792415585310',
-                'customer_name' => 'M/S HLN TECHNICAL SERVICES LLC',
-                'contact_person' => 'Mr. Linto Linto',
-                'email' => 'info@hlnaue.com',
-                'phone' => '+971 502131834',
-                'customer_address' => "Attn: Mr. Linto Linto\nW/H 125, AL Habtoor ware house Al Qusais , Dubai\nUnited Arab Emirates",
-                'receipt_date' => '2025-08-09',
-                'receipt_time' => '04:37 PM',
-                'payment_mode' => 'Online',
-                'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                'cheque_no' => '',
-                'reference_no' => 'WIRE-ADCB-99210',
-                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                'amount_received' => 18559.74,
-                'currency' => 'AED',
-                'amount_in_words' => 'Eighteen Thousand Five Hundred Fifty Nine and Seventy Four Fils AED Only.',
-                'allocated_amount' => 18559.74,
-                'allocations' => [
-                    [
-                        'invoice_id' => 'inv-rec-rg-inv-44002',
-                        'invoice_no' => 'REC-RG-INV-44002',
-                        'amount_allocated' => 18559.74
-                    ]
-                ],
-                'project_name' => 'PROJECT-CIVIL WORKS-MAX-AL WAHDA-ABU DHABI',
-                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                'receiver_sign' => 'Arshad Alam Shaikh',
-                'notes' => 'Settlement towards Advance Tax Invoice #REC-RG-INV-44002. Official client collection acknowledgement.',
-                'recorded_by' => 'Arshad Alam Shaikh',
-                'recorded_at' => '2026-10-29T04:37:06.310Z'
-            ];
-            $changed = true;
-        }
-
-        // 1. Ensure receipt voucher for REC-RG-INV-44044 (M/s. BUILDARA GENERAL CONTRACTING - L.L.C)
-        if (!isset($dedupedReceipts['REC-RV-44044'])) {
-            $dedupedReceipts['REC-RV-44044'] = [
-                'id' => 'rec-mvqz9pna',
-                'receipt_no' => 'REC-RV-44044',
-                'ref_invoice_no' => 'REC-RG-INV-44044',
-                'company_id' => 'rayan-corp-uae',
-                'customer_id' => 'cust-1792320284603',
-                'customer_name' => 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C',
-                'customer_address' => "Attn: Mr.Sooraj Kumar\nYateem Optician, Khalidiyah Mall\nAbu Dhabi, Abu Dhabi\nUnited Arab Emirates",
-                'contact_person' => 'Mr.Sooraj Kumar',
-                'email' => '',
-                'phone' => '+971 541315748',
-                'receipt_date' => '2026-10-14',
-                'receipt_time' => '05:47 PM',
-                'payment_mode' => 'Online',
-                'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                'cheque_no' => '',
-                'reference_no' => '194651191',
-                'bank_name' => 'RAKBANK (National Bank of Ras Al Khaimah)',
-                'amount_received' => 11970.00,
-                'currency' => 'AED',
-                'amount_in_words' => 'Eleven Thousand Nine Hundred Seventy AED Only.',
-                'allocated_amount' => 11970.00,
-                'allocations' => [
-                    [
-                        'invoice_id' => 'inv-rec-rg-inv-44044',
-                        'invoice_no' => 'REC-RG-INV-44044',
-                        'amount_allocated' => 11970.00
-                    ]
-                ],
-                'project_name' => 'Yateem Optician Khalidiyah Mall Fitout',
-                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                'receiver_sign' => 'Arshad Alam Shaikh',
-                'notes' => 'Advance milestone settlement towards Fitout at Yateem Optician, Khalidiyah Mall. Wire Ref: 194651191.',
-                'recorded_by' => 'Arshad Alam Shaikh',
-                'recorded_at' => '2026-10-27T17:47:03Z'
-            ];
-            $changed = true;
-        }
-
-        // 2. Ensure receipt voucher for REC-RG-INV-44050 (M/S REMAYA INTERNATIONAL COMPANY L.L.C)
-        if (!isset($dedupedReceipts['REC-RV-44050'])) {
-            $dedupedReceipts['REC-RV-44050'] = [
-                'id' => 'rec-mvqt47yt',
-                'receipt_no' => 'REC-RV-44050',
-                'ref_invoice_no' => 'REC-RG-INV-44050',
-                'company_id' => 'rayan-corp-uae',
-                'customer_id' => 'cust-remaya',
-                'customer_name' => 'M/S REMAYA INTERNATIONAL COMPANY L.L.C',
-                'customer_address' => "Attn: Procurement Director\nTawazun Industrial Park, Abu Dhabi, UAE",
-                'contact_person' => 'Procurement Director',
-                'email' => 'procurement@remaya.ae',
-                'phone' => '',
-                'receipt_date' => '2026-10-27',
-                'receipt_time' => '02:54 PM',
-                'payment_mode' => 'Online',
-                'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                'cheque_no' => '',
-                'reference_no' => 'SBIN3409394',
-                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                'amount_received' => 1000.00,
-                'currency' => 'AED',
-                'amount_in_words' => 'One Thousand AED Only.',
-                'allocated_amount' => 1000.00,
-                'allocations' => [
-                    [
-                        'invoice_id' => 'inv-rec-rg-inv-44050',
-                        'invoice_no' => 'REC-RG-INV-44050',
-                        'amount_allocated' => 1000.00
-                    ]
-                ],
-                'project_name' => 'Yateem Optician Khalidiyah Mall Fitout',
-                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                'receiver_sign' => 'Arshad Alam Shaikh',
-                'notes' => 'Part settlement towards Progressive Tax Invoice #REC-RG-INV-44050. Wire Ref: SBIN3409394.',
-                'recorded_by' => 'Arshad Alam Shaikh',
-                'recorded_at' => '2026-10-27T14:54:48Z'
-            ];
-            $changed = true;
-        }
-
-        // 3. Ensure receipt voucher for REC-RG-INV-44007 (M/S HLN TECHNICAL SERVICES LLC)
-        if (!isset($dedupedReceipts['REC-RV-44007'])) {
-            $dedupedReceipts['REC-RV-44007'] = [
-                'id' => 'rec-rv-44007',
-                'receipt_no' => 'REC-RV-44007',
-                'ref_invoice_no' => 'REC-RG-INV-44007',
-                'company_id' => 'rayan-corp-uae',
-                'customer_id' => 'cust-1792415585310',
-                'customer_name' => 'M/S HLN TECHNICAL SERVICES LLC',
-                'customer_address' => "Attn: Mr. Linto Linto\nW/H 125, AL Habtoor ware house Al Qusais , Dubai\nUnited Arab Emirates",
-                'contact_person' => 'Mr. Linto Linto',
-                'email' => 'info@hlnaue.com',
-                'phone' => '+971 502131834',
-                'receipt_date' => '2025-11-26',
-                'receipt_time' => '01:47 PM',
-                'payment_mode' => 'Online',
-                'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                'cheque_no' => '',
-                'reference_no' => 'HLN/PO/0542/2025',
-                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                'amount_received' => 32402.64,
-                'currency' => 'AED',
-                'amount_in_words' => 'Thirty Two Thousand Four Hundred Two and Sixty Four Fils AED Only.',
-                'allocated_amount' => 32402.64,
-                'allocations' => [
-                    [
-                        'invoice_id' => 'inv-rec-rg-inv-44007',
-                        'invoice_no' => 'REC-RG-INV-44007',
-                        'amount_allocated' => 32402.64
-                    ]
-                ],
-                'project_name' => 'PROJECT-CIVIL WORKS-MAX-AL WAHDA-ABU DHABI',
-                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                'receiver_sign' => 'Arshad Alam Shaikh',
-                'notes' => 'Settlement towards Reconciliation Tax Invoice #REC-RG-INV-44007 (excess collection adjusted against PO No. HLN/PO/0542/2025).',
-                'recorded_by' => 'Arshad Alam Shaikh',
-                'recorded_at' => '2026-10-28T19:47:54Z'
-            ];
-            $changed = true;
-        }
-
-        // 4. Ensure receipt voucher for REC-RG-INV-44006 part payment (M/S HLN TECHNICAL SERVICES LLC)
-        if (!isset($dedupedReceipts['REC-RV-44006'])) {
-            $dedupedReceipts['REC-RV-44006'] = [
-                'id' => 'rec-rv-44006',
-                'receipt_no' => 'REC-RV-44006',
-                'ref_invoice_no' => 'REC-RG-INV-44006',
-                'company_id' => 'rayan-corp-uae',
-                'customer_id' => 'cust-1792415585310',
-                'customer_name' => 'M/S HLN TECHNICAL SERVICES LLC',
-                'customer_address' => "Attn: Mr. Linto Linto\nW/H 125, AL Habtoor ware house Al Qusais , Dubai\nUnited Arab Emirates",
-                'contact_person' => 'Mr. Linto Linto',
-                'email' => 'info@hlnaue.com',
-                'phone' => '+971 502131834',
-                'receipt_date' => '2025-09-12',
-                'receipt_time' => '11:20 AM',
-                'payment_mode' => 'Online',
-                'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                'cheque_no' => '',
-                'reference_no' => 'WIRE-ADCB-44006',
-                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                'amount_received' => 8655.77,
-                'currency' => 'AED',
-                'amount_in_words' => 'Eight Thousand Six Hundred Fifty Five and Seventy Seven Fils AED Only.',
-                'allocated_amount' => 8655.77,
-                'allocations' => [
-                    [
-                        'invoice_id' => 'inv-rec-rg-inv-44006',
-                        'invoice_no' => 'REC-RG-INV-44006',
-                        'amount_allocated' => 8655.77
-                    ]
-                ],
-                'project_name' => 'PROJECT-CIVIL WORKS-MAX-AL WAHDA-ABU DHABI',
-                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                'receiver_sign' => 'Arshad Alam Shaikh',
-                'notes' => 'Part payment settlement towards Tax Invoice #REC-RG-INV-44006.',
-                'recorded_by' => 'Arshad Alam Shaikh',
-                'recorded_at' => '2026-10-29T04:41:14Z'
-            ];
-            $changed = true;
+            $key = $rcpNo ?: $rcpId;
+            if (!$key) continue;
+            $dedupedReceipts[$key] = $r;
         }
 
         // 5. Automatic self-healing guarantee:

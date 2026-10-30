@@ -357,7 +357,7 @@ class FinanceApp {
         ];
 
         incomingArr.forEach(inv => {
-          if (inv && ((inv.customer_name || '').includes('TOP ROCK') || (inv.customer_trn === '100360644700003') || (inv.invoice_no || '').includes('44035') || (inv.id || '').includes('44035'))) {
+          if (inv && ((inv.invoice_no || '').includes('44035') || (inv.id || '').includes('44035'))) {
             inv.id = 'inv-rec-rg-inv-44035';
             inv.invoice_no = 'REC-RG-INV-44035';
             inv.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
@@ -393,7 +393,7 @@ class FinanceApp {
 
       if (key === 'customer_receipts') {
         incomingArr.forEach(r => {
-          if (r && ((r.customer_name || '').includes('TOP ROCK') || (r.receipt_no || '').includes('44025') || (r.receipt_no || '').includes('44035') || (r.ref_invoice_no || '').includes('44015') || (r.ref_invoice_no || '').includes('44035') || (r.id || '').includes('44025') || (r.id || '').includes('44035'))) {
+          if (r && ((r.receipt_no || '').includes('44035') || (r.ref_invoice_no || '').includes('44035') || (r.id || '').includes('44035'))) {
             r.id = 'rec-rv-44035';
             r.receipt_no = 'REC-RV-44035';
             r.ref_invoice_no = 'REC-RG-INV-44035';
@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v16';
+    const CURRENT_DB_VERSION = 'v2026_clean_v17';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -15427,7 +15427,7 @@ class FinanceApp {
     // Customer Lookup & Complete Hydration
     const custName = inv.customer_name || 'M/S TOP ROCK INTERIORS LLC.';
     const custClean = custName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
-    const isTopRock = custClean.includes('top rock') || (inv.customer_trn === '100360644700003') || (inv.trn === '100360644700003') || (inv.tax_number === '100360644700003') || (inv.invoice_no === 'REC-RG-INV-44035') || (inv.id === 'inv-rec-rg-inv-44035');
+    const isTopRock = (inv.invoice_no === 'REC-RG-INV-44035') || (inv.id === 'inv-rec-rg-inv-44035') || (inv.invoice_no === 'REC-INV-44035');
 
     const customer = (this.db?.customers || []).find(c => 
       (inv.customer_id && c.id === inv.customer_id) || 
