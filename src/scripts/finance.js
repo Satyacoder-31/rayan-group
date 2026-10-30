@@ -255,7 +255,11 @@ class FinanceApp {
       });
 
       if (!incomingArr.length) {
-        merged[key] = seedArr;
+        if (key === 'customer_receipts' || key === 'credit_notes') {
+          merged[key] = [];
+        } else {
+          merged[key] = seedArr;
+        }
         continue;
       }
 
@@ -380,9 +384,9 @@ class FinanceApp {
             inv.vat_total = 1260.323;
             inv.total_tax = 1260.323;
             inv.grand_total = 26466.773;
-            inv.amount_paid = 26466.773;
-            inv.balance_due = 0;
-            inv.status = 'paid';
+            inv.amount_paid = 0;
+            inv.balance_due = 26466.773;
+            inv.status = 'unpaid';
             inv.amount_in_words = 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils AED Only.';
             if (!inv.line_items || inv.line_items.length < 4) {
               inv.line_items = JSON.parse(JSON.stringify(topRock4Items));
@@ -392,34 +396,7 @@ class FinanceApp {
       }
 
       if (key === 'customer_receipts') {
-        incomingArr.forEach(r => {
-          if (r && ((r.receipt_no || '').includes('44035') || (r.ref_invoice_no || '').includes('44035') || (r.id || '').includes('44035'))) {
-            r.id = 'rec-rv-44035';
-            r.receipt_no = 'REC-RV-44035';
-            r.ref_invoice_no = 'REC-RG-INV-44035';
-            r.company_id = 'rayan-corp-uae';
-            r.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
-            r.contact_person = 'Mr. Shahil';
-            r.email = 'procurementofficer@toprockinteriors.com';
-            r.phone = '+971 502131834';
-            r.customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-            r.amount_received = 26466.77;
-            r.allocated_amount = 26466.77;
-            r.currency = 'AED';
-            r.payment_mode = 'Online';
-            r.payment_type = 'Online Bank Transfer / Corporate Wire';
-            r.reference_no = 'WIRE-ADCB-99210';
-            r.bank_name = 'Abu Dhabi Commercial Bank (ADCB)';
-            r.notes = 'Settlement towards Tax Invoice #REC-RG-INV-44035. Official client collection acknowledgement.';
-            r.allocations = [
-              {
-                invoice_id: 'inv-rec-rg-inv-44035',
-                invoice_no: 'REC-RG-INV-44035',
-                amount_allocated: 26466.77
-              }
-            ];
-          }
-        });
+        // Customer receipts empty by default as per verified company records
       }
 
       if (key === 'bank_accounts') {
@@ -651,6 +628,8 @@ class FinanceApp {
       inv.status = 'paid';
     } else if (paid > 0 || credited > 0) {
       inv.status = 'partially_paid';
+    } else if (inv.status !== 'draft') {
+      inv.status = 'unpaid';
     }
     return bal;
   }
@@ -712,7 +691,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v20';
+    const CURRENT_DB_VERSION = 'v2026_clean_v21';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4230,6 +4209,7 @@ class FinanceApp {
                       <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
                         <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCustomerProfile('${c.id}')">360° Profile</button>
                         <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.3);" onclick="window.finApp.openEditCustomerModal('${c.id}')">✏️ Edit</button>
+                        <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.12); color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="window.finApp.deleteCustomer('${c.id}')">🗑️ Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -4436,7 +4416,17 @@ class FinanceApp {
                 </tr>
               </thead>
               <tbody>
-                ${receipts.map(r => `
+                ${receipts.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align:center; padding:3.5rem 1rem; color:#94a3b8;">
+                      <div style="font-size:2.2rem; margin-bottom:0.6rem;">💳</div>
+                      <div style="font-weight:700; font-size:1.05rem; color:#f1f5f9; margin-bottom:0.3rem;">No Payment-In Receipts Recorded</div>
+                      <div style="font-size:0.82rem; color:#64748b; max-width:480px; margin:0 auto;">
+                        No inward customer receipts or collection vouchers are currently on record for this company. Click <strong>+ Record Payment-In</strong> above to record incoming bank transfers or cheque collections.
+                      </div>
+                    </td>
+                  </tr>
+                ` : receipts.map(r => `
                   <tr>
                     <td><strong>${r.receipt_no}</strong></td>
                     <td>${this.formatDate(r.receipt_date)}</td>
@@ -11039,6 +11029,7 @@ class FinanceApp {
             </div>
             <div style="display:flex; gap:0.5rem; align-items:center;">
               <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);" onclick="window.finApp.openEditCustomerModal('${cust.id}')">✏️ Edit Customer</button>
+              <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.35);" onclick="window.finApp.deleteCustomer('${cust.id}')">🗑️ Delete Customer</button>
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">🖨️ Official Statement (SOA)</button>
               <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);" onclick="window.finApp.openConsolidatedCustomerSOA()">📑 Master SOA (All)</button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cust-profile')">&times;</button>
@@ -12601,9 +12592,12 @@ class FinanceApp {
                 <textarea id="edit-cust-address" class="fin-form-textarea" rows="2">${cust.billing_address || cust.office_address || ''}</textarea>
               </div>
 
-              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
-                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-cust')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Update Customer Record &rarr;</button>
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.35);" onclick="window.finApp.deleteCustomer('${cust.id}')">🗑️ Delete Customer</button>
+                <div style="display:flex; gap:0.5rem;">
+                  <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-cust')">Cancel</button>
+                  <button type="submit" class="fin-btn-quick primary">Update Customer Record &rarr;</button>
+                </div>
               </div>
             </form>
           </div>
@@ -19110,6 +19104,41 @@ class FinanceApp {
     } catch (e) {}
 
     this.showNotification(`Tax Invoice ${label} deleted successfully.`, 'info');
+    this.renderActiveTab();
+  }
+
+  // 9C. CUSTOMER DELETE ACTION HANDLER
+  async deleteCustomer(customerId) {
+    const cust = (this.db?.customers || []).find(c => c.id === customerId || c.code === customerId || c.name === customerId);
+    const label = cust ? (cust.name || cust.code) : customerId;
+    const custId = cust ? cust.id : customerId;
+    const custCode = cust ? (cust.code || '') : '';
+    const custName = cust ? (cust.name || '') : '';
+
+    if (!confirm(`Are you sure you want to delete customer/client "${label}"? This action cannot be undone.`)) return;
+
+    try {
+      await this.syncApi('delete_customer', { customer_id: custId, code: custCode, name: custName, id: custId });
+    } catch (err) {
+      console.warn('API sync warning for delete_customer:', err);
+    }
+
+    if (this.db.customers) {
+      this.db.customers = this.db.customers.filter(c => 
+        c.id !== custId && 
+        c.id !== customerId && 
+        (custCode ? c.code !== custCode : true) && 
+        (custName ? (c.name || '').toLowerCase() !== custName.toLowerCase() : true)
+      );
+    }
+
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) {}
+
+    this.closeModal('modal-edit-cust');
+    this.closeModal('modal-cust-profile');
+    this.showNotification(`Customer "${label}" deleted successfully.`, 'info');
     this.renderActiveTab();
   }
 

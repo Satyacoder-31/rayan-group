@@ -669,6 +669,31 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 accounts_receivable = 'Accounts Receivable'
             WHERE name LIKE '%TOP ROCK%'");
             
+            // v2026_clean_v21: Clear all synthetic customer receipts and reset invoices to unpaid
+            try {
+                $chkMig21 = $pdo->query("SELECT value FROM finance_settings WHERE id = 'sales_migration_v21'")->fetchColumn();
+            } catch (Exception $e) { $chkMig21 = false; }
+            if (!$chkMig21) {
+                $pdo->exec("DELETE FROM finance_receipts");
+                $pdo->exec("DELETE FROM finance_customer_receipts");
+                $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-adcb-44035'");
+                $pdo->exec("UPDATE finance_invoices SET amount_paid = 0.00, balance_due = grand_total, status = 'unpaid' WHERE status != 'draft'");
+                $data['customer_receipts'] = [];
+                if (!empty($data['invoices']) && is_array($data['invoices'])) {
+                    foreach ($data['invoices'] as &$inv) {
+                        $inv['amount_paid'] = 0.00;
+                        $inv['balance_due'] = round(floatval($inv['grand_total'] ?? 0), 2);
+                        if (($inv['status'] ?? '') !== 'draft') {
+                            $inv['status'] = 'unpaid';
+                        }
+                    }
+                    unset($inv);
+                }
+                try {
+                    $pdo->exec("REPLACE INTO finance_settings (id, value, updated_at) VALUES ('sales_migration_v21', 'completed', NOW())");
+                } catch (Exception $e) {}
+            }
+
             // v2026_clean_v17: Refresh MySQL tables with the verified RGC Sales dataset
             try {
                 $chkMig = $pdo->query("SELECT value FROM finance_settings WHERE id = 'sales_migration_v17'")->fetchColumn();
@@ -919,76 +944,6 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $dedupedReceipts[$key] = $r;
         }
 
-        // 5. Automatic self-healing guarantee:
-        // Ensure every invoice with amount_paid > 0 ALWAYS has a matching receipt voucher in customer_receipts
-        if (!empty($data['invoices']) && is_array($data['invoices'])) {
-            foreach ($data['invoices'] as $inv) {
-                $paidAmt = floatval($inv['amount_paid'] ?? 0);
-                if ($paidAmt <= 0.02) continue;
-                $invNo = trim($inv['invoice_no'] ?? '');
-                $invId = trim($inv['id'] ?? '');
-
-                $hasReceipt = false;
-                foreach ($dedupedReceipts as $dr) {
-                    if (($dr['ref_invoice_no'] ?? '') === $invNo) {
-                        $hasReceipt = true;
-                        break;
-                    }
-                    foreach ($dr['allocations'] ?? [] as $al) {
-                        if (($al['invoice_no'] ?? '') === $invNo || ($al['invoice_id'] ?? '') === $invId) {
-                            $hasReceipt = true;
-                            break 2;
-                        }
-                    }
-                }
-
-                if (!$hasReceipt) {
-                    preg_match('/\d+/', $invNo, $matches);
-                    $numDigits = !empty($matches[0]) ? $matches[0] : substr(md5($invNo), 0, 5);
-                    $autoRcpNo = 'REC-RV-' . $numDigits;
-                    $autoRcpId = 'rec-rv-' . strtolower($numDigits);
-
-                    $dedupedReceipts[$autoRcpNo] = [
-                        'id' => $autoRcpId,
-                        'receipt_no' => $autoRcpNo,
-                        'ref_invoice_no' => $invNo,
-                        'company_id' => $inv['company_id'] ?? 'rayan-corp-uae',
-                        'customer_id' => $inv['customer_id'] ?? '',
-                        'customer_name' => $inv['customer_name'] ?? '',
-                        'contact_person' => $inv['contact_person'] ?? '',
-                        'email' => $inv['email'] ?? '',
-                        'phone' => $inv['phone'] ?? '',
-                        'customer_address' => $inv['customer_address'] ?? '',
-                        'receipt_date' => $inv['invoice_date'] ?? date('Y-m-d'),
-                        'receipt_time' => '12:00 PM',
-                        'payment_mode' => 'Online',
-                        'payment_type' => 'Online Bank Transfer / Corporate Wire',
-                        'cheque_no' => '',
-                        'reference_no' => 'WIRE-SETTLEMENT-' . $numDigits,
-                        'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
-                        'amount_received' => $paidAmt,
-                        'currency' => $inv['currency'] ?? 'AED',
-                        'amount_in_words' => number_format($paidAmt, 2) . ' ' . ($inv['currency'] ?? 'AED') . ' Only.',
-                        'allocated_amount' => $paidAmt,
-                        'allocations' => [
-                            [
-                                'invoice_id' => $invId,
-                                'invoice_no' => $invNo,
-                                'amount_allocated' => $paidAmt
-                            ]
-                        ],
-                        'project_name' => $inv['project_name'] ?? '',
-                        'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-                        'receiver_sign' => 'Arshad Alam Shaikh',
-                        'notes' => 'Official settlement payment voucher for Tax Invoice #' . $invNo . '.',
-                        'recorded_by' => 'Arshad Alam Shaikh',
-                        'recorded_at' => $inv['created_at'] ?? date('c')
-                    ];
-                    $changed = true;
-                }
-            }
-        }
-
         $data['customer_receipts'] = array_values($dedupedReceipts);
         if (count($data['customer_receipts']) !== $orig) $changed = true;
     }
@@ -997,37 +952,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if (!empty($data['invoices']) && is_array($data['invoices'])) {
         foreach ($data['invoices'] as &$inv) {
             $invNo = strtoupper(trim($inv['invoice_no'] ?? ''));
-            if ($invNo === 'REC-RG-INV-44002') {
-                $inv['amount_paid'] = 18559.74;
-                $inv['balance_due'] = 0.00;
-                $inv['status'] = 'paid';
-                $changed = true;
-            } else if ($invNo === 'REC-RG-INV-44016') {
-                $inv['amount_paid'] = 0.00;
-                $inv['balance_due'] = round(floatval($inv['grand_total'] ?? 70300.00), 2);
-                $inv['status'] = 'issued';
-                $changed = true;
-            } else if ($invNo === 'REC-RG-INV-44044') {
-                $inv['amount_paid'] = 11970.00;
-                $inv['balance_due'] = 0.00;
-                $inv['status'] = 'paid';
-                $changed = true;
-            } else if ($invNo === 'REC-RG-INV-44050') {
-                $inv['amount_paid'] = 1000.00;
-                $inv['balance_due'] = max(0.00, round(floatval($inv['grand_total'] ?? 1575.00) - 1000.00, 2));
-                $inv['status'] = 'partially_paid';
-                $changed = true;
-            } else if ($invNo === 'REC-RG-INV-44007') {
-                $inv['amount_paid'] = 32402.64;
-                $inv['balance_due'] = 0.00;
-                $inv['status'] = 'paid';
-                $changed = true;
-            } else if ($invNo === 'REC-RG-INV-44005') {
-                $inv['amount_paid'] = 74238.94;
-                $inv['balance_due'] = 0.00;
-                $inv['status'] = 'paid';
-                $changed = true;
-            }
+// Invoices reconciled: all statuses and balances preserved as per company records
         }
         unset($inv);
     }
@@ -1249,6 +1174,8 @@ function recalculateAllFinanceBalances(&$data) {
                 $inv['status'] = 'paid';
             } elseif ($paid > 0 || $credited > 0) {
                 $inv['status'] = 'partially_paid';
+            } elseif (($inv['status'] ?? '') !== 'draft') {
+                $inv['status'] = 'unpaid';
             }
         }
         unset($inv);
@@ -2410,17 +2337,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'delete_customer':
             $custId = $body['customer_id'] ?? $body['id'] ?? '';
-            if (!empty($custId) && isset($db['customers'])) {
-                $db['customers'] = array_values(array_filter($db['customers'], function($item) use ($custId) {
-                    return ($item['id'] ?? '') !== $custId && ($item['code'] ?? '') !== $custId;
+            $custCode = $body['code'] ?? '';
+            $custName = $body['name'] ?? '';
+            if ((!empty($custId) || !empty($custName)) && isset($db['customers'])) {
+                $db['customers'] = array_values(array_filter($db['customers'], function($item) use ($custId, $custCode, $custName) {
+                    if (!empty($custId) && (($item['id'] ?? '') === $custId || ($item['code'] ?? '') === $custId)) return false;
+                    if (!empty($custCode) && ($item['code'] ?? '') === $custCode) return false;
+                    if (!empty($custName) && strcasecmp(trim($item['name'] ?? ''), trim($custName)) === 0) return false;
+                    return true;
                 }));
                 if ($pdo) {
                     try {
-                        $stmt = $pdo->prepare("DELETE FROM finance_customers WHERE id = ? OR code = ?");
-                        $stmt->execute([$custId, $custId]);
+                        $stmt = $pdo->prepare("DELETE FROM finance_customers WHERE id = ? OR code = ? OR name = ?");
+                        $stmt->execute([$custId, $custCode ?: $custId, $custName ?: $custId]);
                     } catch (Exception $e) {}
                 }
-                $addAuditLog('delete', 'customer', $custId, 'Deleted customer ' . $custId);
+                $addAuditLog('delete', 'customer', $custId, 'Deleted customer ' . ($custName ?: $custId));
             }
             break;
 
