@@ -676,7 +676,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             if (!$chkMig) {
                 $pdo->exec("DELETE FROM finance_invoices WHERE company_id = 'rayan-corp-uae'");
                 $pdo->exec("DELETE FROM finance_receipts WHERE data_json LIKE '%rayan-corp-uae%'");
-                $pdo->exec("DELETE FROM finance_credit_notes WHERE data_json LIKE '%rayan-corp-uae%'");
+                $pdo->exec("DELETE FROM finance_credit_notes");
                 $pdo->exec("DELETE FROM finance_customers WHERE company_id = 'rayan-corp-uae'");
 
                 if (!empty($data['invoices']) && is_array($data['invoices'])) {
@@ -1341,6 +1341,11 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     // Purge dummy entries if any exist
                     purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
                     // Keep relational tables populated
+                    // Force empty credit notes as requested by user
+                    $data['credit_notes'] = [];
+                    if ($pdo) {
+                        try { $pdo->exec("DELETE FROM finance_credit_notes"); } catch (Exception $e) {}
+                    }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     return $data;
