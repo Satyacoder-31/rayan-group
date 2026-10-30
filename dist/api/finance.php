@@ -1319,6 +1319,15 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     if ($masterSeed && !empty($masterSeed['companies'])) {
                         $data['companies'] = $masterSeed['companies'];
                     }
+                    // Auto-hydrate verified RGC sales dataset if invoices are missing
+                    if (empty($data['invoices']) || count($data['invoices']) < 50) {
+                        if ($masterSeed && !empty($masterSeed['invoices']) && count($masterSeed['invoices']) >= 50) {
+                            $data['invoices'] = $masterSeed['invoices'];
+                            $data['customer_receipts'] = $masterSeed['customer_receipts'] ?? [];
+                            $data['customers'] = $masterSeed['customers'] ?? [];
+                            $data['credit_notes'] = [];
+                        }
+                    }
                     $companyOrder = ['rayan-group', 'rayan-corp-uae', 'rayan-energy-uae', 'rayan-properties-uae', 'ashaz-eng-in'];
                     usort($data['companies'], function($a, $b) use ($companyOrder) {
                         $posA = array_search($a['id'] ?? '', $companyOrder);
