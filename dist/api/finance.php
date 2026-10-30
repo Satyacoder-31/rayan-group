@@ -2119,6 +2119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'create_invoice':
         case 'update_invoice':
             $inv = $body['invoice'] ?? [];
+            $oldInvNo = trim($body['old_invoice_no'] ?? '');
             if (!empty($inv)) {
                 if (!isset($db['invoices']) || !is_array($db['invoices'])) {
                     $db['invoices'] = [];
@@ -2126,7 +2127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Check if invoice already exists
                 $foundIdx = -1;
                 foreach ($db['invoices'] as $idx => $exI) {
-                    if (($exI['id'] ?? '') === ($inv['id'] ?? '') || ($exI['invoice_no'] ?? '') === ($inv['invoice_no'] ?? '')) {
+                    if (($exI['id'] ?? '') === ($inv['id'] ?? '') || 
+                        (!empty($oldInvNo) && ($exI['invoice_no'] ?? '') === $oldInvNo) || 
+                        ($exI['invoice_no'] ?? '') === ($inv['invoice_no'] ?? '')) {
                         $foundIdx = $idx;
                         break;
                     }
@@ -2137,6 +2140,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     array_unshift($db['invoices'], $inv);
                     $addAuditLog('create', 'invoice', $inv['invoice_no'] ?? '', 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
+                }
+
+                // If invoice number changed, cascade to customer receipts and credit notes
+                if (!empty($oldInvNo) && !empty($inv['invoice_no']) && $oldInvNo !== $inv['invoice_no']) {
+                    if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
+                        foreach ($db['customer_receipts'] as &$rcp) {
+                            if (($rcp['ref_invoice_no'] ?? '') === $oldInvNo) {
+                                $rcp['ref_invoice_no'] = $inv['invoice_no'];
+                            }
+                            if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
+                                foreach ($rcp['allocations'] as &$alloc) {
+                                    if (($alloc['invoice_no'] ?? '') === $oldInvNo || ($alloc['invoice_id'] ?? '') === ($inv['id'] ?? '')) {
+                                        $alloc['invoice_no'] = $inv['invoice_no'];
+                                    }
+                                }
+                                unset($alloc);
+                            }
+                        }
+                        unset($rcp);
+                    }
+                    if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
+                        foreach ($db['credit_notes'] as &$cn) {
+                            if (($cn['ref_invoice_no'] ?? '') === $oldInvNo) {
+                                $cn['ref_invoice_no'] = $inv['invoice_no'];
+                            }
+                        }
+                        unset($cn);
+                    }
+                    if ($pdo) {
+                        try {
+                            $stmtDelOld = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no = ? AND id != ?");
+                            $stmtDelOld->execute([$oldInvNo, $inv['id'] ?? '']);
+                        } catch (Exception $e) {}
+                    }
                 }
             }
             break;
@@ -2448,10 +2485,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'update_receipt':
             $rcp = $body['receipt'] ?? [];
+            $oldRcpNo = trim($body['old_receipt_no'] ?? '');
             if (!empty($rcp) && isset($db['customer_receipts'])) {
-                $targetId = $rcp['id'] ?? $rcp['receipt_no'] ?? '';
+                $targetId = $rcp['id'] ?? '';
                 foreach ($db['customer_receipts'] as &$existingR) {
-                    if (($existingR['id'] ?? '') === $targetId || ($existingR['receipt_no'] ?? '') === $targetId) {
+                    if (($existingR['id'] ?? '') === $targetId || 
+                        (!empty($oldRcpNo) && ($existingR['receipt_no'] ?? '') === $oldRcpNo) || 
+                        ($existingR['receipt_no'] ?? '') === ($rcp['receipt_no'] ?? '')) {
                         $existingR = array_merge($existingR, $rcp);
                         break;
                     }

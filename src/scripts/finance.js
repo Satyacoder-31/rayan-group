@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v18';
+    const CURRENT_DB_VERSION = 'v2026_clean_v19';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -16633,13 +16633,17 @@ class FinanceApp {
       <div class="fin-modal-backdrop open" id="modal-edit-invoice">
         <div class="fin-modal-dialog" style="max-width:1050px; width:95vw; max-height:92vh; display:flex; flex-direction:column;">
           <div class="fin-modal-header" style="flex-shrink:0;">
-            <h3 class="fin-modal-title">✏️ Edit Sales Tax Invoice (${inv.invoice_no})</h3>
+            <h3 class="fin-modal-title">✏️ Edit Sales Tax Invoice (<span id="edit-inv-title-no">${inv.invoice_no}</span>)</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-invoice')">&times;</button>
           </div>
           <div class="fin-modal-body" style="overflow-y:auto; flex-grow:1; padding-right:8px;">
             <form id="edit-invoice-form">
               <!-- Client & Registration Details -->
-              <div class="fin-form-grid-3">
+              <div class="fin-form-grid-4" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Invoice Number # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-inv-number" class="fin-form-input" value="${inv.invoice_no || ''}" placeholder="e.g. REC-INVOICE-1001" style="font-weight:700; color:#38bdf8; font-family:monospace;" required>
+                </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Customer / Client <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="edit-inv-cust-name" class="fin-form-input" value="${inv.customer_name || ''}" list="edit-inv-customers-list" required>
@@ -16917,6 +16921,14 @@ class FinanceApp {
 
     taxRateSel.onchange = updateTotals;
 
+    const invNoInput = document.getElementById('edit-inv-number');
+    if (invNoInput) {
+      invNoInput.addEventListener('input', (e) => {
+        const titleSpan = document.getElementById('edit-inv-title-no');
+        if (titleSpan) titleSpan.textContent = e.target.value.trim() || inv.invoice_no;
+      });
+    }
+
     // Form submit
     document.getElementById('edit-invoice-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -16978,6 +16990,44 @@ class FinanceApp {
       const paid = Number(inv.amount_paid) || 0;
       const balanceDue = Math.max(0, Math.round((grandTotal - paid) * 100) / 100);
 
+      const oldInvNo = (inv.invoice_no || '').trim();
+      const newInvNo = (document.getElementById('edit-inv-number')?.value || '').trim();
+      if (!newInvNo) {
+        alert('Please enter a valid invoice number.');
+        return;
+      }
+
+      // Check for duplicate invoice number across other invoices
+      const isDupInv = (this.db?.invoices || []).some(i => i.id !== inv.id && (i.invoice_no || '').trim().toLowerCase() === newInvNo.toLowerCase());
+      if (isDupInv) {
+        alert(`Invoice number "${newInvNo}" is already in use by another invoice. Please choose a unique invoice number.`);
+        return;
+      }
+
+      inv.invoice_no = newInvNo;
+
+      // If invoice number changed, cascade update to linked customer receipts and credit notes
+      if (oldInvNo && newInvNo !== oldInvNo) {
+        (this.db?.customer_receipts || []).forEach(rcp => {
+          if (rcp.ref_invoice_no === oldInvNo) {
+            rcp.ref_invoice_no = newInvNo;
+          }
+          if (Array.isArray(rcp.allocations)) {
+            rcp.allocations.forEach(alloc => {
+              if (alloc.invoice_no === oldInvNo || alloc.invoice_id === inv.id) {
+                alloc.invoice_no = newInvNo;
+              }
+            });
+          }
+        });
+
+        (this.db?.credit_notes || []).forEach(cn => {
+          if (cn.ref_invoice_no === oldInvNo || cn.invoice_id === inv.id) {
+            cn.ref_invoice_no = newInvNo;
+          }
+        });
+      }
+
       inv.customer_name = document.getElementById('edit-inv-cust-name').value.trim();
       if (isIndia) {
         inv.customer_gstin = document.getElementById('edit-inv-cust-tax').value.trim();
@@ -17011,9 +17061,9 @@ class FinanceApp {
         inv.amount_in_words = this.numberToEnglishWords(grandTotal, inv.currency || (isIndia ? 'INR' : 'AED'));
       } catch (e) {}
 
-      await this.syncApi('update_invoice', { invoice: inv });
+      await this.syncApi('update_invoice', { invoice: inv, old_invoice_no: oldInvNo });
       if (this.db?.invoices) {
-        const idx = this.db.invoices.findIndex(i => i.id === inv.id || i.invoice_no === inv.invoice_no);
+        const idx = this.db.invoices.findIndex(i => i.id === inv.id || i.invoice_no === oldInvNo || i.invoice_no === inv.invoice_no);
         if (idx >= 0) this.db.invoices[idx] = inv;
         else this.db.invoices.push(inv);
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
@@ -17633,17 +17683,23 @@ class FinanceApp {
       <div class="fin-modal-backdrop open" id="modal-edit-receipt">
         <div class="fin-modal-dialog" style="max-width:640px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">✏️ Edit Payment-In Voucher (${rcp.receipt_no})</h3>
+            <h3 class="fin-modal-title">✏️ Edit Payment-In Voucher (<span id="edit-rcp-title-no">${rcp.receipt_no}</span>)</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-receipt')">&times;</button>
           </div>
           <div class="fin-modal-body">
             <form id="edit-receipt-form">
-              <div class="fin-form-group">
-                <label class="fin-form-label">Customer / Client Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="edit-rcp-cust" class="fin-form-input" value="${rcp.customer_name || ''}" list="edit-rcp-customers-list" required>
-                <datalist id="edit-rcp-customers-list">
-                  ${customers.map(c => `<option value="${c.name}">${c.name} (${c.code || ''})</option>`).join('')}
-                </datalist>
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Receipt Voucher # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-rcp-no" class="fin-form-input" value="${rcp.receipt_no || ''}" style="font-weight:700; color:#38bdf8; font-family:monospace;" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Customer / Client Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-rcp-cust" class="fin-form-input" value="${rcp.customer_name || ''}" list="edit-rcp-customers-list" required>
+                  <datalist id="edit-rcp-customers-list">
+                    ${customers.map(c => `<option value="${c.name}">${c.name} (${c.code || ''})</option>`).join('')}
+                  </datalist>
+                </div>
               </div>
 
               <div class="fin-form-grid-2">
@@ -17698,9 +17754,12 @@ class FinanceApp {
                 ${this.getKnownBanksList().map(b => `<option value="${b}">`).join('')}
               </datalist>
 
-              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
-                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-receipt')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Voucher (${currLabel}) &rarr;</button>
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:space-between; align-items:center; gap:0.75rem;">
+                <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.4); cursor:pointer;" onclick="window.finApp.closeModal('modal-edit-receipt'); window.finApp.deleteReceipt('${rcp.id || ''}')">🗑️ Delete Voucher</button>
+                <div style="display:flex; gap:0.75rem;">
+                  <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-receipt')">Cancel</button>
+                  <button type="submit" class="fin-btn-quick primary">Save &amp; Update Voucher (${currLabel}) &rarr;</button>
+                </div>
               </div>
             </form>
           </div>
@@ -17710,8 +17769,28 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const rcpNoInput = document.getElementById('edit-rcp-no');
+    if (rcpNoInput) {
+      rcpNoInput.addEventListener('input', (e) => {
+        const titleSpan = document.getElementById('edit-rcp-title-no');
+        if (titleSpan) titleSpan.textContent = e.target.value.trim() || rcp.receipt_no;
+      });
+    }
+
     document.getElementById('edit-receipt-form').onsubmit = async (e) => {
       e.preventDefault();
+      const oldRcpNo = (rcp.receipt_no || '').trim();
+      const newRcpNo = (document.getElementById('edit-rcp-no')?.value || '').trim();
+      if (!newRcpNo) {
+        alert('Please enter a valid receipt voucher number.');
+        return;
+      }
+      const isDupRcp = (this.db?.customer_receipts || []).some(r => r.id !== rcp.id && (r.receipt_no || '').trim().toLowerCase() === newRcpNo.toLowerCase());
+      if (isDupRcp) {
+        alert(`Receipt voucher number "${newRcpNo}" is already in use. Please enter a unique number.`);
+        return;
+      }
+      rcp.receipt_no = newRcpNo;
       rcp.customer_name = document.getElementById('edit-rcp-cust').value.trim();
       rcp.receipt_date = document.getElementById('edit-rcp-date').value;
       rcp.payment_mode = document.getElementById('edit-rcp-mode').value;
@@ -17726,9 +17805,9 @@ class FinanceApp {
       }
       rcp.notes = document.getElementById('edit-rcp-notes').value.trim();
 
-      await this.syncApi('update_receipt', { receipt: rcp, saved_banks: this.db.saved_banks });
+      await this.syncApi('update_receipt', { receipt: rcp, old_receipt_no: oldRcpNo, saved_banks: this.db.saved_banks });
       if (this.db?.customer_receipts) {
-        const idx = this.db.customer_receipts.findIndex(r => r.id === rcp.id || r.receipt_no === rcp.receipt_no);
+        const idx = this.db.customer_receipts.findIndex(r => r.id === rcp.id || r.receipt_no === oldRcpNo || r.receipt_no === rcp.receipt_no);
         if (idx >= 0) this.db.customer_receipts[idx] = rcp;
         else this.db.customer_receipts.push(rcp);
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
