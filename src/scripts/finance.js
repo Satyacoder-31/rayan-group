@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v13';
+    const CURRENT_DB_VERSION = 'v2026_clean_v14';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3723,7 +3723,7 @@ class FinanceApp {
                 ${invoices.slice(0, 5).map(inv => `
                   <tr>
                     <td><strong>${inv.invoice_no}</strong></td>
-                    <td>${inv.customer_name}</td>
+                    <td style="white-space:nowrap;"><span class="fin-customer-cell">${inv.customer_name}</span></td>
                     <td>${this.formatDate(inv.due_date)}</td>
                     <td><strong>${this.formatCurrency(inv.grand_total)}</strong></td>
                     <td>${this.formatCurrency(inv.balance_due)}</td>
@@ -3994,8 +3994,8 @@ class FinanceApp {
       <tr>
         <td><strong>${inv.invoice_no || '—'}</strong></td>
         <td>${this.formatDate(inv.invoice_date)}</td>
-        <td>
-          <strong>${inv.customer_name || 'Valued Client'}</strong>
+        <td style="white-space:nowrap; min-width:200px;">
+          <span class="fin-customer-cell">${inv.customer_name || 'Valued Client'}</span>
           ${inv.customer_trn ? `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${inv.customer_gstin}</div>` : '')}
         </td>
         <td><span style="font-size:0.75rem;">${inv.place_of_supply || '—'}</span></td>
@@ -4161,8 +4161,8 @@ class FinanceApp {
                 return `
                   <tr>
                     <td><strong>${c.code || c.id || 'CUST'}</strong></td>
-                    <td>
-                      <strong>${c.name}</strong>
+                    <td style="white-space:nowrap;">
+                      <span class="fin-customer-cell">${c.name}</span>
                       <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">
                         <span class="fin-badge" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.25); font-size:0.68rem; padding:1px 6px;">
                           💼 ${c.accounts_receivable || 'Accounts Receivable'}
@@ -4389,7 +4389,7 @@ class FinanceApp {
                 <tr>
                   <th>Receipt #</th>
                   <th>Date</th>
-                  <th>Customer</th>
+                  <th style="min-width:220px; white-space:nowrap;">Customer / Client</th>
                   <th>Mode / Ref</th>
                   <th>Amount</th>
                   <th>Allocated Invoices</th>
@@ -4401,7 +4401,7 @@ class FinanceApp {
                   <tr>
                     <td><strong>${r.receipt_no}</strong></td>
                     <td>${this.formatDate(r.receipt_date)}</td>
-                    <td><strong>${r.customer_name}</strong></td>
+                    <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${r.customer_name}</span></td>
                     <td>
                       <div style="font-weight:600;">${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
                       ${r.bank_name ? `<div style="font-size:0.7rem; color:#38bdf8; font-weight:600;">🏦 ${r.bank_name}</div>` : ''}
@@ -4525,7 +4525,7 @@ class FinanceApp {
                   <tr>
                     <td><strong>${cn.credit_note_no}</strong></td>
                     <td><code>${cn.invoice_no}</code></td>
-                    <td>${cn.customer_name}</td>
+                    <td style="white-space:nowrap;"><span class="fin-customer-cell">${cn.customer_name}</span></td>
                     <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
                     <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
                     <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
@@ -4644,7 +4644,7 @@ class FinanceApp {
                 <tr>
                   <th>Receipt Voucher #</th>
                   <th>Date</th>
-                  <th>Customer / Client</th>
+                  <th style="min-width:220px; white-space:nowrap;">Customer / Client</th>
                   <th>Mode / Bank Wire</th>
                   <th>Amount Received</th>
                   <th>Allocated Invoices</th>
@@ -4656,7 +4656,7 @@ class FinanceApp {
                   <tr>
                     <td><strong>${r.receipt_no}</strong></td>
                     <td>${this.formatDate(r.receipt_date)}</td>
-                    <td><strong>${r.customer_name}</strong></td>
+                    <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${r.customer_name}</span></td>
                     <td>
                       <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}${r.bank_name ? ` • ${r.bank_name}` : ''}</span>
@@ -4725,7 +4725,7 @@ class FinanceApp {
                 <tr>
                   <th>Voucher #</th>
                   <th>Date</th>
-                  <th>Vendor / Contractor</th>
+                  <th style="min-width:220px; white-space:nowrap;">Vendor / Contractor</th>
                   <th>Remittance Channel</th>
                   <th>Disbursed Amount</th>
                   <th>Allocated Bills</th>
@@ -4745,7 +4745,7 @@ class FinanceApp {
                   <tr>
                     <td><strong>${p.voucher_no}</strong></td>
                     <td>${this.formatDate(p.payment_date)}</td>
-                    <td><strong>${p.vendor_name}</strong></td>
+                    <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${p.vendor_name}</span></td>
                     <td>
                       <div>${(p.payment_mode === 'Corporate RTGS' || p.payment_mode === 'RTGS') ? 'Online' : (p.payment_mode || 'Online')}</div>
                       <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no || '—'}</span>
@@ -4805,7 +4805,7 @@ class FinanceApp {
                 <tr>
                   <td><strong>${cn.credit_note_no}</strong></td>
                   <td><code>${cn.invoice_no}</code></td>
-                  <td>${cn.customer_name}</td>
+                  <td style="white-space:nowrap;"><span class="fin-customer-cell">${cn.customer_name}</span></td>
                   <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
                   <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
