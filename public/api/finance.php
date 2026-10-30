@@ -1535,8 +1535,10 @@ function syncToRelationalTables($pdo, &$data) {
         // 1. Invoices
         if (!empty($data['invoices']) && is_array($data['invoices'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, customer_gstin, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (:id, :invoice_no, :company_id, :customer_id, :customer_name, :customer_trn, :customer_gstin, :invoice_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :data_json, NOW())");
+            $validInvNos = [];
             foreach ($data['invoices'] as $inv) {
                 if (empty($inv['invoice_no'])) continue;
+                $validInvNos[] = $inv['invoice_no'];
                 $stmt->execute([
                     ':id' => $inv['id'] ?? ('inv-' . $inv['invoice_no']),
                     ':invoice_no' => $inv['invoice_no'],
@@ -1554,6 +1556,12 @@ function syncToRelationalTables($pdo, &$data) {
                     ':status' => $inv['status'] ?? 'unpaid',
                     ':data_json' => json_encode($inv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
+            }
+            // Automatically purge any rows in finance_invoices that no longer exist in $data['invoices']
+            if (!empty($validInvNos)) {
+                $inClause = implode(',', array_fill(0, count($validInvNos), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no NOT IN ($inClause)");
+                $stmtClean->execute($validInvNos);
             }
         }
 
@@ -2120,39 +2128,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'update_invoice':
             $inv = $body['invoice'] ?? [];
             $oldInvNo = trim($body['old_invoice_no'] ?? '');
+            $oldId = trim($body['old_id'] ?? '');
             if (!empty($inv)) {
                 if (!isset($db['invoices']) || !is_array($db['invoices'])) {
                     $db['invoices'] = [];
                 }
-                // Check if invoice already exists
+
+                $targetInvNo = !empty($oldInvNo) ? $oldInvNo : ($inv['invoice_no'] ?? '');
+                $targetId = !empty($oldId) ? $oldId : ($inv['id'] ?? '');
+
+                // Find existing invoice by old_id, old_invoice_no, id, or invoice_no
                 $foundIdx = -1;
                 foreach ($db['invoices'] as $idx => $exI) {
-                    if (($exI['id'] ?? '') === ($inv['id'] ?? '') || 
-                        (!empty($oldInvNo) && ($exI['invoice_no'] ?? '') === $oldInvNo) || 
-                        ($exI['invoice_no'] ?? '') === ($inv['invoice_no'] ?? '')) {
+                    $matchOldId = (!empty($oldId) && ($exI['id'] ?? '') === $oldId);
+                    $matchOldNo = (!empty($oldInvNo) && strcasecmp($exI['invoice_no'] ?? '', $oldInvNo) === 0);
+                    $matchId = (!empty($inv['id']) && ($exI['id'] ?? '') === $inv['id']);
+                    $matchNo = (!empty($inv['invoice_no']) && strcasecmp($exI['invoice_no'] ?? '', $inv['invoice_no']) === 0);
+                    if ($matchOldId || $matchOldNo || $matchId || $matchNo) {
                         $foundIdx = $idx;
                         break;
                     }
                 }
+
                 if ($foundIdx >= 0) {
+                    // Update the existing record in-place!
                     $db['invoices'][$foundIdx] = array_merge($db['invoices'][$foundIdx], $inv);
                     $addAuditLog('update', 'invoice', $inv['invoice_no'] ?? '', 'Updated tax invoice for ' . ($inv['customer_name'] ?? ''));
                 } else {
+                    // Only insert if completely new
                     array_unshift($db['invoices'], $inv);
                     $addAuditLog('create', 'invoice', $inv['invoice_no'] ?? '', 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
                 }
 
-                // If invoice number changed, cascade to customer receipts and credit notes
-                if (!empty($oldInvNo) && !empty($inv['invoice_no']) && $oldInvNo !== $inv['invoice_no']) {
+                // Deduplicate $db['invoices'] so no two invoices share the same invoice_no or ID
+                $deduped = [];
+                $seenNos = [];
+                $seenIds = [];
+                foreach ($db['invoices'] as $item) {
+                    $noKey = strtolower(trim($item['invoice_no'] ?? ''));
+                    $idKey = strtolower(trim($item['id'] ?? ''));
+                    if ((!empty($noKey) && isset($seenNos[$noKey])) || (!empty($idKey) && isset($seenIds[$idKey]))) {
+                        continue;
+                    }
+                    if (!empty($noKey)) $seenNos[$noKey] = true;
+                    if (!empty($idKey)) $seenIds[$idKey] = true;
+                    $deduped[] = $item;
+                }
+                $db['invoices'] = $deduped;
+
+                // If invoice number or ID changed, delete old record from MySQL finance_invoices so no orphaned row exists
+                if ($pdo) {
+                    try {
+                        if (!empty($oldInvNo) && strcasecmp($oldInvNo, $inv['invoice_no'] ?? '') !== 0) {
+                            $stmtDel = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no = ?");
+                            $stmtDel->execute([$oldInvNo]);
+                        }
+                        if (!empty($oldId) && $oldId !== ($inv['id'] ?? '')) {
+                            $stmtDel = $pdo->prepare("DELETE FROM finance_invoices WHERE id = ?");
+                            $stmtDel->execute([$oldId]);
+                        }
+                    } catch (Exception $e) {}
+                }
+
+                // If invoice number changed, cascade update to linked customer receipts and credit notes
+                if (!empty($oldInvNo) && !empty($inv['invoice_no']) && strcasecmp($oldInvNo, $inv['invoice_no']) !== 0) {
                     if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
                         foreach ($db['customer_receipts'] as &$rcp) {
-                            if (($rcp['ref_invoice_no'] ?? '') === $oldInvNo) {
+                            if (strcasecmp($rcp['ref_invoice_no'] ?? '', $oldInvNo) === 0) {
                                 $rcp['ref_invoice_no'] = $inv['invoice_no'];
                             }
                             if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
                                 foreach ($rcp['allocations'] as &$alloc) {
-                                    if (($alloc['invoice_no'] ?? '') === $oldInvNo || ($alloc['invoice_id'] ?? '') === ($inv['id'] ?? '')) {
+                                    $matchAllocNo = strcasecmp($alloc['invoice_no'] ?? '', $oldInvNo) === 0;
+                                    $matchAllocId = (!empty($oldId) && ($alloc['invoice_id'] ?? '') === $oldId);
+                                    if ($matchAllocNo || $matchAllocId) {
                                         $alloc['invoice_no'] = $inv['invoice_no'];
+                                        if (!empty($inv['id'])) $alloc['invoice_id'] = $inv['id'];
                                     }
                                 }
                                 unset($alloc);
@@ -2162,17 +2213,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
                         foreach ($db['credit_notes'] as &$cn) {
-                            if (($cn['ref_invoice_no'] ?? '') === $oldInvNo) {
+                            if (strcasecmp($cn['ref_invoice_no'] ?? '', $oldInvNo) === 0) {
                                 $cn['ref_invoice_no'] = $inv['invoice_no'];
                             }
                         }
                         unset($cn);
-                    }
-                    if ($pdo) {
-                        try {
-                            $stmtDelOld = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no = ? AND id != ?");
-                            $stmtDelOld->execute([$oldInvNo, $inv['id'] ?? '']);
-                        } catch (Exception $e) {}
                     }
                 }
             }
@@ -2290,18 +2335,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'delete_invoice':
-            $invId = $body['invoice_id'] ?? $body['id'] ?? '';
-            if (!empty($invId) && isset($db['invoices'])) {
-                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($invId) {
-                    return ($item['id'] ?? '') !== $invId && ($item['invoice_no'] ?? '') !== $invId;
+            $invId = trim($body['invoice_id'] ?? $body['id'] ?? '');
+            $invNo = trim($body['invoice_no'] ?? '');
+            if ((!empty($invId) || !empty($invNo)) && isset($db['invoices'])) {
+                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($invId, $invNo) {
+                    $matchId = (!empty($invId) && ($item['id'] ?? '') === $invId);
+                    $matchNo = (!empty($invNo) && strcasecmp($item['invoice_no'] ?? '', $invNo) === 0);
+                    $matchDirect = (!empty($invId) && strcasecmp($item['invoice_no'] ?? '', $invId) === 0);
+                    return !($matchId || $matchNo || $matchDirect);
                 }));
                 if ($pdo) {
                     try {
-                        $stmt = $pdo->prepare("DELETE FROM finance_invoices WHERE id = ? OR invoice_no = ?");
-                        $stmt->execute([$invId, $invId]);
+                        if (!empty($invId)) {
+                            $stmt = $pdo->prepare("DELETE FROM finance_invoices WHERE id = ? OR invoice_no = ?");
+                            $stmt->execute([$invId, $invId]);
+                        }
+                        if (!empty($invNo)) {
+                            $stmt = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no = ? OR id = ?");
+                            $stmt->execute([$invNo, $invNo]);
+                        }
                     } catch (Exception $e) {}
                 }
-                $addAuditLog('delete', 'invoice', $invId, 'Deleted invoice ' . $invId);
+                $addAuditLog('delete', 'invoice', $invNo ?: $invId, 'Deleted invoice ' . ($invNo ?: $invId));
             }
             break;
 

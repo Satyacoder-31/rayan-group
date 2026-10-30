@@ -457,15 +457,13 @@ class FinanceApp {
         }
       });
 
-      // Overlay / append missing seed items without duplicating
+      // Enrich existing items with detailed line_items from seed if missing, but NEVER resurrect deleted or edited items!
       seedArr.forEach(item => {
         if (item && !isBlacklisted(item)) {
           const uniqueKey = getUniqueKey(item);
           if (uniqueKey) {
             const existing = map.get(uniqueKey);
-            if (!existing) {
-              map.set(uniqueKey, item);
-            } else if (!existing.line_items || !existing.line_items.length) {
+            if (existing && (!existing.line_items || !existing.line_items.length)) {
               if (item.line_items && item.line_items.length) {
                 existing.line_items = JSON.parse(JSON.stringify(item.line_items));
               }
@@ -714,7 +712,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v19';
+    const CURRENT_DB_VERSION = 'v2026_clean_v20';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -16991,6 +16989,7 @@ class FinanceApp {
       const balanceDue = Math.max(0, Math.round((grandTotal - paid) * 100) / 100);
 
       const oldInvNo = (inv.invoice_no || '').trim();
+      const oldId = (inv.id || '').trim();
       const newInvNo = (document.getElementById('edit-inv-number')?.value || '').trim();
       if (!newInvNo) {
         alert('Please enter a valid invoice number.');
@@ -16998,13 +16997,21 @@ class FinanceApp {
       }
 
       // Check for duplicate invoice number across other invoices
-      const isDupInv = (this.db?.invoices || []).some(i => i.id !== inv.id && (i.invoice_no || '').trim().toLowerCase() === newInvNo.toLowerCase());
+      const isDupInv = (this.db?.invoices || []).some(i => {
+        if (i === inv) return false;
+        if (oldId && i.id === oldId) return false;
+        if (oldInvNo && (i.invoice_no || '').trim().toLowerCase() === oldInvNo.toLowerCase()) return false;
+        return (i.invoice_no || '').trim().toLowerCase() === newInvNo.toLowerCase();
+      });
       if (isDupInv) {
         alert(`Invoice number "${newInvNo}" is already in use by another invoice. Please choose a unique invoice number.`);
         return;
       }
 
+      // Update invoice_no and id on the existing invoice object
       inv.invoice_no = newInvNo;
+      const newId = 'inv-' + newInvNo.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      inv.id = newId;
 
       // If invoice number changed, cascade update to linked customer receipts and credit notes
       if (oldInvNo && newInvNo !== oldInvNo) {
@@ -17014,16 +17021,18 @@ class FinanceApp {
           }
           if (Array.isArray(rcp.allocations)) {
             rcp.allocations.forEach(alloc => {
-              if (alloc.invoice_no === oldInvNo || alloc.invoice_id === inv.id) {
+              if (alloc.invoice_no === oldInvNo || (oldId && alloc.invoice_id === oldId) || alloc.invoice_id === newId) {
                 alloc.invoice_no = newInvNo;
+                alloc.invoice_id = newId;
               }
             });
           }
         });
 
         (this.db?.credit_notes || []).forEach(cn => {
-          if (cn.ref_invoice_no === oldInvNo || cn.invoice_id === inv.id) {
+          if (cn.ref_invoice_no === oldInvNo || (oldId && cn.invoice_id === oldId) || cn.invoice_id === newId) {
             cn.ref_invoice_no = newInvNo;
+            cn.invoice_id = newId;
           }
         });
       }
@@ -17061,12 +17070,35 @@ class FinanceApp {
         inv.amount_in_words = this.numberToEnglishWords(grandTotal, inv.currency || (isIndia ? 'INR' : 'AED'));
       } catch (e) {}
 
-      await this.syncApi('update_invoice', { invoice: inv, old_invoice_no: oldInvNo });
+      // 1. Immediately replace in memory so UI reflects update without duplicate
       if (this.db?.invoices) {
-        const idx = this.db.invoices.findIndex(i => i.id === inv.id || i.invoice_no === oldInvNo || i.invoice_no === inv.invoice_no);
+        const idx = this.db.invoices.findIndex(i => (oldId && i.id === oldId) || (oldInvNo && (i.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase()) || i.id === newId || (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase());
         if (idx >= 0) this.db.invoices[idx] = inv;
-        else this.db.invoices.push(inv);
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        else this.db.invoices.unshift(inv);
+        // Clean out any stale copy
+        this.db.invoices = this.db.invoices.filter((item, index, self) =>
+          (item.id !== oldId || item.id === newId) &&
+          (oldInvNo ? (item.invoice_no || '').toLowerCase() !== oldInvNo.toLowerCase() || item.invoice_no === newInvNo : true) &&
+          index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()))
+        );
+      }
+
+      // 2. Synchronize with backend API
+      await this.syncApi('update_invoice', { invoice: inv, old_invoice_no: oldInvNo, old_id: oldId });
+
+      // 3. Reconcile after sync returns
+      if (this.db?.invoices) {
+        const idx = this.db.invoices.findIndex(i => i.id === newId || (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase());
+        if (idx >= 0) this.db.invoices[idx] = inv;
+        else this.db.invoices.unshift(inv);
+        this.db.invoices = this.db.invoices.filter((item, index, self) =>
+          (item.id !== oldId || item.id === newId) &&
+          (oldInvNo ? (item.invoice_no || '').toLowerCase() !== oldInvNo.toLowerCase() || item.invoice_no === newInvNo : true) &&
+          index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()))
+        );
+        try {
+          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        } catch (e) {}
       }
       this.showNotification(`Invoice ${inv.invoice_no} updated successfully with ${updatedLineItems.length} items.`, 'success');
       this.closeModal('modal-edit-invoice');
@@ -19043,16 +19075,24 @@ class FinanceApp {
   async deleteInvoice(invoiceId) {
     const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
     const label = inv ? inv.invoice_no : invoiceId;
+    const invId = inv ? inv.id : invoiceId;
+    const invNo = inv ? inv.invoice_no : invoiceId;
     if (!confirm(`Are you sure you want to delete Tax Invoice ${label}?`)) return;
 
     try {
-      await this.syncApi('delete_invoice', { invoice_id: invoiceId, id: invoiceId });
+      await this.syncApi('delete_invoice', { invoice_id: invId, invoice_no: invNo, id: invId });
     } catch (err) {
       console.warn('API sync warning for delete_invoice:', err);
     }
 
     if (this.db.invoices) {
-      this.db.invoices = this.db.invoices.filter(i => i.id !== invoiceId && i.invoice_no !== invoiceId);
+      this.db.invoices = this.db.invoices.filter(i => 
+        i.id !== invId && 
+        i.invoice_no !== invNo && 
+        i.id !== invoiceId && 
+        i.invoice_no !== invoiceId &&
+        (invNo ? (i.invoice_no || '').toLowerCase() !== invNo.toLowerCase() : true)
+      );
     }
 
     // Also remove any allocations in customer receipts pointing to this invoice
