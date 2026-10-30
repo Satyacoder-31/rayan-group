@@ -624,9 +624,9 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         'vat_total' => 1260.323,
         'total_tax' => 1260.323,
         'grand_total' => 26466.773,
-        'amount_paid' => 26466.773,
-        'balance_due' => 0,
-        'status' => 'paid',
+        'amount_paid' => 0.00,
+        'balance_due' => 26466.773,
+        'status' => 'unpaid',
         'notes' => 'Please keep a copy of this invoice for your records',
         'amount_in_words' => 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils Only.',
         'created_by' => 'Arshad Alam Shaikh',
@@ -649,7 +649,10 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
             $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-001', 'vend-002', 'vend-003', 'vend-004')");
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004', 'cust-005', 'cust-kgc-alias')");
-            $pdo->exec("DELETE FROM finance_customer_receipts WHERE id IN ('rec-mvdvmilf') OR receipt_no IN ('REC-RV-44026')");
+            $pdo->exec("DELETE FROM finance_receipts");
+            $pdo->exec("DELETE FROM finance_customer_receipts");
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-adcb-44035'");
+            $data['customer_receipts'] = [];
             $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
             $pdo->exec("UPDATE finance_customers SET 
                 trn = '100360644700003', 
@@ -1143,9 +1146,7 @@ function recalculateAllFinanceBalances(&$data) {
                     }
                 }
             }
-            if ($paid == 0.0 && floatval($inv['amount_paid'] ?? 0) > 0.02) {
-                $paid = round(floatval($inv['amount_paid']), 2);
-            }
+// No phantom paid fallback: only explicit receipts dictate amount_paid
             if ($paid <= 0.02) {
                 $paid = 0.0;
             }
@@ -1275,6 +1276,11 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
+                    try {
+                        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                        $stmtSt = $pdo->prepare("UPDATE finance_state SET state_json = ?, updated_at = NOW() WHERE id = 1");
+                        $stmtSt->execute([$json]);
+                    } catch (Exception $e) {}
                     return $data;
                 }
             }
@@ -1336,6 +1342,9 @@ function syncFromRelationalTables($pdo, &$data) {
 
         foreach ($syncMapping as $m) {
             try {
+                if ($m['key'] === 'customer_receipts' && empty($data['customer_receipts'])) {
+                    continue;
+                }
                 $rows = $pdo->query("SELECT data_json FROM {$m['table']} ORDER BY {$m['order']}")->fetchAll(PDO::FETCH_ASSOC);
                 if ($rows && count($rows) > 0) {
                     $k = $m['key'];
@@ -1515,8 +1524,10 @@ function syncToRelationalTables($pdo, &$data) {
         // 3. Customer Receipts
         if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (:id, :receipt_no, :customer_id, :customer_name, :receipt_date, :amount_received, :currency, :payment_mode, :reference_no, :data_json, NOW())");
+            $validRcpNos = [];
             foreach ($data['customer_receipts'] as $r) {
                 if (empty($r['receipt_no'])) continue;
+                $validRcpNos[] = $r['receipt_no'];
                 $stmt->execute([
                     ':id' => $r['id'] ?? ('rec-' . $r['receipt_no']),
                     ':receipt_no' => $r['receipt_no'],
@@ -1530,6 +1541,14 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($r, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
+            if (!empty($validRcpNos)) {
+                $inClause = implode(',', array_fill(0, count($validRcpNos), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_receipts WHERE receipt_no NOT IN ($inClause)");
+                $stmtClean->execute($validRcpNos);
+            }
+        } else {
+            $pdo->exec("DELETE FROM finance_receipts");
+            $pdo->exec("DELETE FROM finance_customer_receipts");
         }
 
         // 4. Purchase Bills

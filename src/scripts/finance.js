@@ -596,9 +596,7 @@ class FinanceApp {
         }
       });
     });
-    if (paid === 0 && Number(inv.amount_paid) > 0.02) {
-      paid = Number(inv.amount_paid);
-    }
+// No phantom paid fallback: only explicit receipts in customer_receipts dictate amount_paid
     paid = Math.round(paid * 100) / 100;
     if (paid <= 0.02) {
       paid = 0;
@@ -691,7 +689,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v21';
+    const CURRENT_DB_VERSION = 'v2026_clean_v22';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
