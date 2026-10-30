@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v14';
+    const CURRENT_DB_VERSION = 'v2026_clean_v15';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3751,25 +3751,25 @@ class FinanceApp {
             <table class="fin-data-table">
               <thead>
                 <tr>
-                  <th>Bill #</th>
-                  <th>Vendor</th>
-                  <th>Due Date</th>
-                  <th>Total Amount</th>
-                  <th>Balance Due</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th style="white-space:nowrap;">Bill #</th>
+                  <th style="white-space:nowrap; min-width:200px;">Vendor</th>
+                  <th style="white-space:nowrap;">Due Date</th>
+                  <th style="white-space:nowrap;">Total Amount</th>
+                  <th style="white-space:nowrap;">Balance Due</th>
+                  <th style="white-space:nowrap;">Status</th>
+                  <th style="white-space:nowrap;">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 ${bills.slice(0, 5).map(b => `
                   <tr>
-                    <td><strong>${b.bill_no}</strong></td>
-                    <td>${b.vendor_name}</td>
-                    <td>${this.formatDate(b.due_date)}</td>
-                    <td><strong>${this.formatCurrency(b.grand_total)}</strong></td>
-                    <td>${this.formatCurrency(b.balance_due)}</td>
-                    <td><span class="fin-badge fin-badge-${b.status}">${b.status.replace('_', ' ')}</span></td>
-                    <td>
+                    <td style="white-space:nowrap;"><strong>${b.bill_no}</strong></td>
+                    <td style="white-space:nowrap; min-width:200px;"><span class="fin-customer-cell">${b.vendor_name}</span></td>
+                    <td style="white-space:nowrap;">${this.formatDate(b.due_date)}</td>
+                    <td style="white-space:nowrap;"><strong>${this.formatCurrency(b.grand_total)}</strong></td>
+                    <td style="white-space:nowrap;">${this.formatCurrency(b.balance_due)}</td>
+                    <td style="white-space:nowrap;"><span class="fin-badge fin-badge-${b.status}">${b.status.replace('_', ' ')}</span></td>
+                    <td style="white-space:nowrap;">
                       <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')" title="Print &amp; View Purchase Bill">Print / View</button>
                     </td>
                   </tr>
@@ -4055,18 +4055,18 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th>Bill #</th>
-                <th>Supplier Invoice #</th>
-                <th>Bill Date</th>
-                <th>Vendor Name</th>
-                <th>Linked Project</th>
-                <th>Taxable Subtotal</th>
-                <th>Tax</th>
-                <th>Grand Total</th>
-                <th>Balance Due</th>
-                <th>Approval</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style="white-space:nowrap; min-width:130px;">Bill #</th>
+                <th style="white-space:nowrap; min-width:140px;">Supplier Invoice #</th>
+                <th style="white-space:nowrap; min-width:110px;">Bill Date</th>
+                <th style="white-space:nowrap; min-width:220px;">Vendor Name</th>
+                <th style="white-space:nowrap; min-width:180px;">Linked Project</th>
+                <th style="white-space:nowrap;">Taxable Subtotal</th>
+                <th style="white-space:nowrap;">Tax</th>
+                <th style="white-space:nowrap;">Grand Total</th>
+                <th style="white-space:nowrap;">Balance Due</th>
+                <th style="white-space:nowrap;">Approval</th>
+                <th style="white-space:nowrap;">Status</th>
+                <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -4080,17 +4080,17 @@ class FinanceApp {
                 </tr>
               ` : bills.map(b => `
                 <tr>
-                  <td><strong>${b.bill_no}</strong></td>
-                  <td>${b.vendor_invoice_no || '—'}</td>
-                  <td>${this.formatDate(b.bill_date)}</td>
-                  <td><strong>${b.vendor_name}</strong></td>
-                  <td><span style="font-size:0.75rem;">${b.project_name || 'General Supply'}</span></td>
-                  <td>${this.formatCurrency(b.taxable_subtotal)}</td>
-                  <td>${this.formatCurrency(b.tax_total)}</td>
-                  <td><strong>${this.formatCurrency(b.grand_total)}</strong></td>
-                  <td><strong style="color:${b.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(b.balance_due)}</strong></td>
-                  <td><span class="fin-badge fin-badge-${b.approval_status || 'approved'}">${b.approval_status || 'Approved'}</span></td>
-                  <td><span class="fin-badge fin-badge-${b.status}">${(b.status || 'unpaid').replace('_', ' ')}</span></td>
+                  <td style="white-space:nowrap;"><strong>${b.bill_no}</strong></td>
+                  <td style="white-space:nowrap;">${b.vendor_invoice_no || '—'}</td>
+                  <td style="white-space:nowrap;">${this.formatDate(b.bill_date)}</td>
+                  <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${b.vendor_name}</span></td>
+                  <td style="white-space:nowrap; min-width:180px;"><span style="font-size:0.75rem; color:#94a3b8;">${b.project_name || 'General Supply'}</span></td>
+                  <td style="white-space:nowrap;">${this.formatCurrency(b.taxable_subtotal)}</td>
+                  <td style="white-space:nowrap;">${this.formatCurrency(b.tax_total)}</td>
+                  <td style="white-space:nowrap;"><strong>${this.formatCurrency(b.grand_total)}</strong></td>
+                  <td style="white-space:nowrap;"><strong style="color:${b.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(b.balance_due)}</strong></td>
+                  <td style="white-space:nowrap;"><span class="fin-badge fin-badge-${b.approval_status || 'approved'}">${b.approval_status || 'Approved'}</span></td>
+                  <td style="white-space:nowrap;"><span class="fin-badge fin-badge-${b.status}">${(b.status || 'unpaid').replace('_', ' ')}</span></td>
                   <td style="white-space:nowrap;">
                     <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')" title="Print &amp; View Purchase Bill">Print / View</button>
                     <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditBillModal('${b.id}')" title="Edit Purchase Bill">Edit</button>
@@ -4230,15 +4230,15 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th>Vendor Code</th>
-                <th>Supplier / Subcontractor</th>
-                <th>Category</th>
-                <th>Contact</th>
-                <th>Tax ID (TRN / GSTIN / PAN)</th>
-                <th>Bank Account (Wire)</th>
-                <th>Outstanding Payables</th>
-                <th>Payment Terms</th>
-                <th>Actions</th>
+                <th style="white-space:nowrap;">Vendor Code</th>
+                <th style="white-space:nowrap; min-width:220px;">Supplier / Subcontractor</th>
+                <th style="white-space:nowrap;">Category</th>
+                <th style="white-space:nowrap;">Contact</th>
+                <th style="white-space:nowrap;">Tax ID (TRN / GSTIN / PAN)</th>
+                <th style="white-space:nowrap;">Bank Account (Wire)</th>
+                <th style="white-space:nowrap;">Outstanding Payables</th>
+                <th style="white-space:nowrap;">Payment Terms</th>
+                <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -4255,8 +4255,8 @@ class FinanceApp {
                 const outstanding = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
                 return `
                   <tr>
-                    <td><strong>${v.code || '—'}</strong></td>
-                    <td><strong>${v.name}</strong></td>
+                    <td style="white-space:nowrap;"><strong>${v.code || '—'}</strong></td>
+                    <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${v.name}</span></td>
                     <td><span class="fin-badge fin-badge-issued">${v.category || 'General Supplier'}</span></td>
                     <td>
                       <div>${v.contact_person || '—'}</div>
@@ -4566,7 +4566,7 @@ class FinanceApp {
                   <tr>
                     <td><strong>${dn.debit_note_no}</strong></td>
                     <td><code>${dn.bill_no}</code></td>
-                    <td>${dn.vendor_name}</td>
+                    <td style="white-space:nowrap; min-width:200px;"><span class="fin-customer-cell">${dn.vendor_name}</span></td>
                     <td><span style="font-size:0.75rem;">${dn.reason}</span></td>
                     <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
                     <td><span class="fin-badge fin-badge-paid">${dn.status}</span></td>
@@ -4861,7 +4861,7 @@ class FinanceApp {
                 <tr>
                   <td><strong>${dn.debit_note_no}</strong></td>
                   <td><code>${dn.bill_no || 'Direct Debit'}</code></td>
-                  <td>${dn.vendor_name || 'Vendor'}</td>
+                  <td style="white-space:nowrap; min-width:200px;"><span class="fin-customer-cell">${dn.vendor_name || 'Vendor'}</span></td>
                   <td><span style="font-size:0.75rem;">${dn.reason || 'Material adjustment'}</span></td>
                   <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-paid">${dn.status || 'applied'}</span></td>
@@ -5493,16 +5493,16 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th>PO #</th>
-                <th>Date</th>
-                <th>Vendor / Supplier</th>
-                <th>Project</th>
-                <th>Expected Delivery</th>
-                <th>Total PO Value</th>
-                <th>Billed to Date</th>
-                <th>Status</th>
-                <th>Approved By</th>
-                <th>Actions</th>
+                <th style="white-space:nowrap;">PO #</th>
+                <th style="white-space:nowrap;">Date</th>
+                <th style="white-space:nowrap; min-width:220px;">Vendor / Supplier</th>
+                <th style="white-space:nowrap; min-width:180px;">Project</th>
+                <th style="white-space:nowrap;">Expected Delivery</th>
+                <th style="white-space:nowrap;">Total PO Value</th>
+                <th style="white-space:nowrap;">Billed to Date</th>
+                <th style="white-space:nowrap;">Status</th>
+                <th style="white-space:nowrap;">Approved By</th>
+                <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -5516,9 +5516,9 @@ class FinanceApp {
                 </tr>
               ` : pos.map(po => `
                 <tr>
-                  <td><strong>${po.po_no}</strong></td>
-                  <td>${this.formatDate(po.date)}</td>
-                  <td><strong>${po.vendor_name || po.supplier_name || 'Vendor'}</strong></td>
+                  <td style="white-space:nowrap;"><strong>${po.po_no}</strong></td>
+                  <td style="white-space:nowrap;">${this.formatDate(po.date)}</td>
+                  <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${po.vendor_name || po.supplier_name || 'Vendor'}</span></td>
                   <td>${po.project_name || 'General Operations'}</td>
                   <td>${this.formatDate(po.expected_delivery)}</td>
                   <td><strong>${this.formatCurrency(po.total_value || po.grand_total)}</strong></td>
