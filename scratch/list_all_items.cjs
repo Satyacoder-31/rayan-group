@@ -18,3 +18,4 @@ for (const yr of ['2024', '2025', '2026']) {
     console.log(`${idx + 1}. [${it.mime}] ${it.name} (id: ${it.id})`);
   });
 }
+

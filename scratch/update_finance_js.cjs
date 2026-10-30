@@ -24,3 +24,4 @@ js = js.replace(
 
 fs.writeFileSync('src/scripts/finance.js', js, 'utf8');
 console.log('src/scripts/finance.js successfully updated!');
+

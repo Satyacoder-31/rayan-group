@@ -1320,7 +1320,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         $data['companies'] = $masterSeed['companies'];
                     }
                     // Auto-hydrate verified RGC sales dataset if invoices are missing
-                    if (empty($data['invoices']) || count($data['invoices']) < 50) {
+                    if (empty($data['invoices'])) {
                         if ($masterSeed && !empty($masterSeed['invoices']) && count($masterSeed['invoices']) >= 50) {
                             $data['invoices'] = $masterSeed['invoices'];
                             $data['customer_receipts'] = $masterSeed['customer_receipts'] ?? [];

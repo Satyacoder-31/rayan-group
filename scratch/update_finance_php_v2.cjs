@@ -66,3 +66,4 @@ if (startIdx !== -1 && endIdx !== -1) {
 
 fs.writeFileSync('public/api/finance.php', php, 'utf8');
 console.log('finance.php updated successfully!');
+

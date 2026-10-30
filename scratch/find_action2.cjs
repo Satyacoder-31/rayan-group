@@ -5,3 +5,4 @@ lines.forEach((l, i) => {
     console.log('L' + (i + 1) + ': ' + l.trim());
   }
 });
+

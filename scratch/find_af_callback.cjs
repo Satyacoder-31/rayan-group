@@ -16,3 +16,4 @@ while ((pos = html.indexOf('RGC', pos)) !== -1) {
   console.log(html.slice(Math.max(0, pos - 100), Math.min(html.length, pos + 200)));
   pos += 3;
 }
+

@@ -18,3 +18,4 @@ for (const p of ['data/finance-data.json', 'public/data/finance-data.json']) {
     console.log(`Successfully updated ${p}`);
   }
 }
+

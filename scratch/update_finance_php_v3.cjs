@@ -70,3 +70,4 @@ if (startIdx !== -1 && endIdx !== -1) {
 } else {
   console.error('Markers not found!');
 }
+

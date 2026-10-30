@@ -714,7 +714,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v17';
+    const CURRENT_DB_VERSION = 'v2026_clean_v18';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4060,6 +4060,7 @@ class FinanceApp {
           ${inv.status !== 'void' && inv.status !== 'draft' && this.hasPermission('create_credit_note') ? `
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCreateCreditNoteModal('${inv.id}')" title="Issue Credit Note">Cr. Note</button>
           ` : ''}
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteInvoice('${inv.id}')" title="Delete Tax Invoice">Delete</button>
         </td>
       </tr>
     `).join('');
@@ -15594,6 +15595,9 @@ class FinanceApp {
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditInvoiceModal('${inv.id || ''}')" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);">
               ✏️ Edit Invoice
             </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.deleteInvoice('${inv.id || ''}')" style="color:#ef4444; border-color:rgba(239,68,68,0.4);">
+              🗑️ Delete
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
               ✕ Close
             </button>
@@ -16765,9 +16769,12 @@ class FinanceApp {
                 <textarea id="edit-inv-notes" class="fin-form-textarea" rows="2">${inv.notes || ''}</textarea>
               </div>
 
-              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:flex-end; gap:0.75rem;">
-                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-invoice')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Invoice (${currLabel}) &rarr;</button>
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:space-between; align-items:center; gap:0.75rem;">
+                <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.4); cursor:pointer;" onclick="window.finApp.closeModal('modal-edit-invoice'); window.finApp.deleteInvoice('${inv.id || ''}')">🗑️ Delete Invoice</button>
+                <div style="display:flex; gap:0.75rem;">
+                  <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-invoice')">Cancel</button>
+                  <button type="submit" class="fin-btn-quick primary">Save &amp; Update Invoice (${currLabel}) &rarr;</button>
+                </div>
               </div>
             </form>
           </div>
@@ -18950,6 +18957,40 @@ class FinanceApp {
     if (!confirm('Are you sure you wish to delete this document from the vault?')) return;
     await this.syncApi('delete_document', { document_id: docId });
     alert('Document removed from vault.');
+    this.renderActiveTab();
+  }
+
+  // 9B. INVOICE DELETE ACTION HANDLER
+  async deleteInvoice(invoiceId) {
+    const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    const label = inv ? inv.invoice_no : invoiceId;
+    if (!confirm(`Are you sure you want to delete Tax Invoice ${label}?`)) return;
+
+    try {
+      await this.syncApi('delete_invoice', { invoice_id: invoiceId, id: invoiceId });
+    } catch (err) {
+      console.warn('API sync warning for delete_invoice:', err);
+    }
+
+    if (this.db.invoices) {
+      this.db.invoices = this.db.invoices.filter(i => i.id !== invoiceId && i.invoice_no !== invoiceId);
+    }
+
+    // Also remove any allocations in customer receipts pointing to this invoice
+    if (this.db.customer_receipts) {
+      this.db.customer_receipts.forEach(rcp => {
+        if (rcp.allocations && Array.isArray(rcp.allocations)) {
+          rcp.allocations = rcp.allocations.filter(a => a.invoice_id !== invoiceId && a.invoice_no !== invoiceId && a.invoice_no !== label);
+        }
+      });
+    }
+
+    this.normalizeAllBalances();
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) {}
+
+    this.showNotification(`Tax Invoice ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
   }
 

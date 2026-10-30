@@ -56,3 +56,4 @@ const sorted = [...custMap.values()].sort((a, b) => b.totalInvoiced - a.totalInv
 sorted.forEach((v, idx) => {
   console.log(`${idx + 1}. ${v.name} | TRN: ${v.trn || 'N/A'} | Invoices: ${v.invoiceCount} | Total: AED ${v.totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
 });
+

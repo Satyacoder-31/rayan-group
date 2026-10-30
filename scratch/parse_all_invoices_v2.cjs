@@ -330,3 +330,4 @@ async function runAll() {
 }
 
 runAll();
+

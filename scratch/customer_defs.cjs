@@ -311,3 +311,4 @@ function resolveCustomer(fileName, custNameText) {
 }
 
 console.log('Customer definitions ready.');
+

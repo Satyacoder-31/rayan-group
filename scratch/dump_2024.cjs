@@ -13,3 +13,4 @@ async function dump(file) {
 
 const f2024 = 'scratch/pdfs/2024/' + fs.readdirSync('scratch/pdfs/2024')[0];
 dump(f2024);
+

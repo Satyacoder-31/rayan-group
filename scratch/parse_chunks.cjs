@@ -10,3 +10,4 @@ while ((m = regex.exec(html)) !== null) {
   fs.writeFileSync(`scratch/chunk_${m[1]}.txt`, m[2], 'utf8');
 }
 console.log('Total chunks found:', count);
+

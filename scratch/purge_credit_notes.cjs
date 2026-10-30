@@ -26,3 +26,4 @@ php = php.replace(targetReturn, replacementReturn);
 
 fs.writeFileSync('public/api/finance.php', php, 'utf8');
 console.log('Successfully updated credit note purge in finance.php');
+
