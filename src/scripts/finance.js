@@ -399,25 +399,7 @@ class FinanceApp {
         // Customer receipts empty by default as per verified company records
       }
 
-      if (key === 'bank_accounts') {
-        incomingArr.forEach(b => {
-          const bName = (b.bank_name || '').toLowerCase();
-          if (b.id === 'bank-fab-uae' || b.id === 'bank-adcb-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
-            b.id = 'bank-adcb-uae';
-            b.company_id = 'rayan-corp-uae';
-            b.account_name = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
-            b.bank_name = 'Abu Dhabi Commercial Bank (ADCB)';
-            b.account_number = 'AE920030012697347820001';
-            b.iban = 'AE920030012697347820001';
-            b.swift = 'ADCBAEAA';
-            b.branch = 'Dalma Mall - Abu Dhabi';
-            b.currency = 'AED';
-            b.signatory = 'Arshad Alam Shaikh';
-            b.status = 'Active';
-            if (!b.balance || b.balance === 1450000 || b.balance === 156625.95) b.balance = 183092.72;
-          }
-        });
-      }
+// Preserve user-edited bank accounts without overwriting
 
       // Add incoming user items first so newest submissions stay at top
       const map = new Map();
@@ -522,27 +504,8 @@ class FinanceApp {
       return true;
     });
 
-    let hasAdcb = false;
-    this.db.bank_accounts.forEach(b => {
-      const bName = (b.bank_name || '').toLowerCase();
-      if (b.id === 'bank-fab-uae' || b.id === 'bank-adcb-uae' || bName.includes('adcb') || bName.includes('commercial') || (b.iban || '').includes('AE920030012697347820001')) {
-        b.id = 'bank-adcb-uae';
-        b.company_id = 'rayan-corp-uae';
-        b.account_name = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
-        b.bank_name = 'Abu Dhabi Commercial Bank (ADCB)';
-        b.account_number = 'AE920030012697347820001';
-        b.iban = 'AE920030012697347820001';
-        b.swift = 'ADCBAEAA';
-        b.branch = 'Dalma Mall - Abu Dhabi';
-        b.currency = 'AED';
-        b.signatory = 'Arshad Alam Shaikh';
-        b.status = 'Active';
-        if (!b.balance || b.balance === 1450000 || b.balance === 156625.95) b.balance = 183092.72;
-        hasAdcb = true;
-      }
-    });
-
-    if (!hasAdcb) {
+    const hasAccount = this.db.bank_accounts.some(b => (b.company_id || 'rayan-corp-uae') === 'rayan-corp-uae');
+    if (!hasAccount) {
       this.db.bank_accounts.unshift({
         id: 'bank-adcb-uae',
         company_id: 'rayan-corp-uae',
@@ -689,7 +652,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v24';
+    const CURRENT_DB_VERSION = 'v2026_clean_v25';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -14129,6 +14092,15 @@ class FinanceApp {
         signatory: document.getElementById('ba-signatory').value.trim(),
         status: document.getElementById('ba-status').value
       };
+
+      if (!this.db.bank_accounts) this.db.bank_accounts = [];
+      const idx = this.db.bank_accounts.findIndex(x => x.id === bankData.id);
+      if (idx >= 0) {
+        this.db.bank_accounts[idx] = { ...this.db.bank_accounts[idx], ...bankData };
+      } else {
+        this.db.bank_accounts.unshift(bankData);
+      }
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
       await this.syncApi(b ? 'update_bank_account' : 'create_bank_account', {
         bank_account: bankData,
