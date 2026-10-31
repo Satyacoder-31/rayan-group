@@ -609,13 +609,24 @@ class FinanceApp {
       bal = 0;
     }
     inv.amount_paid = paid;
+    inv.amount_credited = credited;
     inv.balance_due = bal;
-    if (bal === 0 && (paid > 0 || credited > 0)) {
-      inv.status = 'paid';
-    } else if (paid > 0 || credited > 0) {
-      inv.status = 'partially_paid';
-    } else if (inv.status !== 'draft') {
-      inv.status = 'unpaid';
+    if (bal === 0) {
+      if (paid > 0) {
+        inv.status = 'paid';
+      } else if (credited > 0) {
+        inv.status = 'credited';
+      } else {
+        inv.status = 'unpaid';
+      }
+    } else {
+      if (paid > 0) {
+        inv.status = 'partially_paid';
+      } else if (credited > 0) {
+        inv.status = 'partially_credited';
+      } else if (inv.status !== 'draft') {
+        inv.status = 'unpaid';
+      }
     }
     return bal;
   }
@@ -659,11 +670,22 @@ class FinanceApp {
       bal = 0;
     }
     bill.amount_paid = paid;
+    bill.amount_debited = debited;
     bill.balance_due = bal;
-    if (bal === 0 && (paid > 0 || debited > 0)) {
-      bill.status = 'paid';
-    } else if (paid > 0 || debited > 0) {
-      bill.status = 'partially_paid';
+    if (bal === 0) {
+      if (paid > 0) {
+        bill.status = 'paid';
+      } else if (debited > 0) {
+        bill.status = 'debited';
+      } else {
+        bill.status = 'unpaid';
+      }
+    } else {
+      if (paid > 0) {
+        bill.status = 'partially_paid';
+      } else if (debited > 0) {
+        bill.status = 'partially_debited';
+      }
     }
     return bal;
   }
@@ -677,7 +699,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v27';
+    const CURRENT_DB_VERSION = 'v2026_clean_v28';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4010,9 +4032,16 @@ class FinanceApp {
           ${inv.tax_regime === 'trn' || inv.vat_total > 0 ? `<div style="font-size:0.65rem; color:#10b981; font-weight:700;">UAE VAT 5%</div>` : (inv.igst_total > 0 ? `<div style="font-size:0.65rem; color:#94a3b8;">IGST 18%</div>` : `<div style="font-size:0.65rem; color:#94a3b8;">CGST 9% + SGST 9%</div>`)}
         </td>
         <td><strong>${this.formatCurrency(inv.grand_total || 0)}</strong></td>
-        <td><span style="color:#10b981;">${this.formatCurrency((inv.amount_paid && inv.amount_paid > 0.02) ? inv.amount_paid : 0)}</span></td>
+        <td>
+          <span style="color:#10b981;">${this.formatCurrency((inv.amount_paid && inv.amount_paid > 0.02) ? inv.amount_paid : 0)}</span>
+          ${(inv.amount_credited && inv.amount_credited > 0.02) ? `
+            <div style="font-size:0.68rem; color:#c084fc; font-weight:700;" title="Adjusted via Credit Note">
+              Cr. Note: ${this.formatCurrency(inv.amount_credited)}
+            </div>
+          ` : ''}
+        </td>
         <td><strong style="color:${(inv.balance_due && inv.balance_due > 0.02) ? '#ef4444' : '#10b981'};">${this.formatCurrency((inv.balance_due && inv.balance_due > 0.02) ? inv.balance_due : 0)}</strong></td>
-        <td><span class="fin-badge fin-badge-${inv.status}">${inv.status.replace('_', ' ')}</span></td>
+        <td><span class="fin-badge fin-badge-${inv.status}">${(inv.status || 'unpaid').replace(/_/g, ' ')}</span></td>
         <td class="fin-col-actions-sticky">
           <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="Print &amp; View Official Tax Invoice">Print / View</button>
           <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditInvoiceModal('${inv.id}')" title="Edit Tax Invoice">Edit</button>

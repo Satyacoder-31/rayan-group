@@ -1158,12 +1158,23 @@ function recalculateAllFinanceBalances(&$data) {
                 $rem = 0.0;
             }
             $inv['balance_due'] = $rem;
-            if ($rem == 0.0 && ($paid > 0 || $credited > 0)) {
-                $inv['status'] = 'paid';
-            } elseif ($paid > 0 || $credited > 0) {
-                $inv['status'] = 'partially_paid';
-            } elseif (($inv['status'] ?? '') !== 'draft') {
-                $inv['status'] = 'unpaid';
+            $inv['amount_credited'] = $credited;
+            if ($rem == 0.0) {
+                if ($paid > 0) {
+                    $inv['status'] = 'paid';
+                } elseif ($credited > 0) {
+                    $inv['status'] = 'credited';
+                } else {
+                    $inv['status'] = 'unpaid';
+                }
+            } else {
+                if ($paid > 0) {
+                    $inv['status'] = 'partially_paid';
+                } elseif ($credited > 0) {
+                    $inv['status'] = 'partially_credited';
+                } elseif (($inv['status'] ?? '') !== 'draft') {
+                    $inv['status'] = 'unpaid';
+                }
             }
         }
         unset($inv);
@@ -1209,10 +1220,21 @@ function recalculateAllFinanceBalances(&$data) {
                 $rem = 0.0;
             }
             $b['balance_due'] = $rem;
-            if ($rem == 0.0 && ($paid > 0 || $debited > 0)) {
-                $b['status'] = 'paid';
-            } elseif ($paid > 0 || $debited > 0) {
-                $b['status'] = 'partially_paid';
+            $b['amount_debited'] = $debited;
+            if ($rem == 0.0) {
+                if ($paid > 0) {
+                    $b['status'] = 'paid';
+                } elseif ($debited > 0) {
+                    $b['status'] = 'debited';
+                } else {
+                    $b['status'] = 'unpaid';
+                }
+            } else {
+                if ($paid > 0) {
+                    $b['status'] = 'partially_paid';
+                } elseif ($debited > 0) {
+                    $b['status'] = 'partially_debited';
+                }
             }
         }
         unset($b);
