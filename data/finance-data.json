@@ -2168,9 +2168,9 @@
       "vat_total": 2300,
       "total_tax": 2300,
       "grand_total": 48300,
-      "amount_paid": 0,
-      "balance_due": 48300,
-      "status": "unpaid",
+      "amount_paid": 48300,
+      "balance_due": 0,
+      "status": "paid",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2024-05-08T10:00:00Z"
@@ -5313,7 +5313,40 @@
     }
   ],
   "purchase_bills": [],
-  "customer_receipts": [],
+  "customer_receipts": [
+    {
+      "id": "rec-rv-44026",
+      "receipt_no": "REC-RV-44026",
+      "company_id": "rayan-corp-uae",
+      "customer_id": "cust-hiprofile",
+      "customer_name": "M/S HI PROFILE GENERAL MAINTENANCE LLC",
+      "customer_trn": "100532333000003",
+      "customer_address": "Mussafah, Abu Dhabi, UAE",
+      "receipt_date": "2023-05-08",
+      "payment_mode": "Bank Transfer",
+      "bank_name": "Abu Dhabi Commercial Bank (ADCB)",
+      "reference_no": "TRN-HIPROFILE-1005",
+      "amount_received": 48300,
+      "currency": "AED",
+      "ref_invoice_no": "REC-RG-1005",
+      "project_name": "LPO NO. PO NO.701102 - MINA PALACE LAUNDRY REFURBISHMENT WORK",
+      "received_by": "RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C",
+      "receiver_sign": "Arshad Alam Shaikh",
+      "allocations": [
+        {
+          "invoice_id": "inv-rec-rg-1005",
+          "invoice_no": "REC-RG-1005",
+          "amount_allocated": 48300,
+          "total_amount": 48300
+        }
+      ],
+      "amount_in_words": "Forty Eight Thousand Three Hundred AED Only.",
+      "notes": "Full settlement towards Tax Invoice #REC-RG-1005 for PO No. 701102 Mina Palace Laundry Refurbishment Work",
+      "status": "Cleared",
+      "recorded_by": "Arshad Alam Shaikh",
+      "recorded_at": "2026-10-30T19:42:23Z"
+    }
+  ],
   "vendor_payments": [],
   "credit_notes": [
     {
@@ -5429,7 +5462,7 @@
       "swift": "ADCBAEAA",
       "branch": "Dalma Mall - Abu Dhabi",
       "currency": "AED",
-      "balance": 0.00,
+      "balance": 0,
       "signatory": "Arshad Alam Shaikh",
       "status": "Active"
     },

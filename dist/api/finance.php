@@ -511,7 +511,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     $dummyVendorIds = ['vend-001', 'vend-002', 'vend-003', 'vend-004'];
     $dummyCustIds = ['cust-004', 'cust-005', 'cust-kgc-alias'];
     $dummyInvIds = [];
-    $dummyRecIds = ['rec-mvdvmilf', 'rec-rv-44026'];
+    $dummyRecIds = ['rec-mvdvmilf'];
     $dummyProjIds = ['prj-dpa-01'];
     $dummyChequeIds = ['chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01'];
     $dummyCvIds = ['cv-01', 'cv-02', 'cv-03'];
@@ -649,10 +649,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
             $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-001', 'vend-002', 'vend-003', 'vend-004')");
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004', 'cust-005', 'cust-kgc-alias')");
-            $pdo->exec("DELETE FROM finance_receipts");
-            $pdo->exec("DELETE FROM finance_customer_receipts");
+            $pdo->exec("DELETE FROM finance_receipts WHERE id = 'rec-mvdvmilf'");
             $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-adcb-44035'");
-            $data['customer_receipts'] = [];
             $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
             $pdo->exec("UPDATE finance_customers SET 
                 trn = '100360644700003', 
@@ -1318,6 +1316,75 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                     } catch (Exception $e) {}
 
+                    // Migration v31: Restore user Receipt Voucher for REC-RG-1005 (M/S HI PROFILE GENERAL MAINTENANCE LLC)
+                    try {
+                        $chkRec31 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'receipt_restore_v31'")->fetchColumn();
+                        if (!$chkRec31) {
+                            $hiReceipt = [
+                                'id' => 'rec-rv-44026',
+                                'receipt_no' => 'REC-RV-44026',
+                                'company_id' => 'rayan-corp-uae',
+                                'customer_id' => 'cust-hiprofile',
+                                'customer_name' => 'M/S HI PROFILE GENERAL MAINTENANCE LLC',
+                                'customer_trn' => '100532333000003',
+                                'customer_address' => 'Mussafah, Abu Dhabi, UAE',
+                                'receipt_date' => '2023-05-08',
+                                'payment_mode' => 'Bank Transfer',
+                                'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+                                'reference_no' => 'TRN-HIPROFILE-1005',
+                                'amount_received' => 48300.00,
+                                'currency' => 'AED',
+                                'ref_invoice_no' => 'REC-RG-1005',
+                                'project_name' => 'LPO NO. PO NO.701102 - MINA PALACE LAUNDRY REFURBISHMENT WORK',
+                                'received_by' => 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
+                                'receiver_sign' => 'Arshad Alam Shaikh',
+                                'allocations' => [
+                                    [
+                                        'invoice_id' => 'inv-rec-rg-1005',
+                                        'invoice_no' => 'REC-RG-1005',
+                                        'amount_allocated' => 48300.00,
+                                        'total_amount' => 48300.00
+                                    ]
+                                ],
+                                'amount_in_words' => 'Forty Eight Thousand Three Hundred AED Only.',
+                                'notes' => 'Full settlement towards Tax Invoice #REC-RG-1005 for PO No. 701102 Mina Palace Laundry Refurbishment Work',
+                                'status' => 'Cleared',
+                                'recorded_by' => 'Arshad Alam Shaikh',
+                                'recorded_at' => '2026-10-30T19:42:23Z'
+                            ];
+
+                            if (!isset($data['customer_receipts']) || !is_array($data['customer_receipts'])) {
+                                $data['customer_receipts'] = [];
+                            }
+                            $hasHi = false;
+                            foreach ($data['customer_receipts'] as $cr) {
+                                if (($cr['id'] ?? '') === 'rec-rv-44026' || ($cr['receipt_no'] ?? '') === 'REC-RV-44026') {
+                                    $hasHi = true;
+                                    break;
+                                }
+                            }
+                            if (!$hasHi) {
+                                array_unshift($data['customer_receipts'], $hiReceipt);
+                            }
+
+                            $stmtHi = $pdo->prepare("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                            $stmtHi->execute([
+                                'rec-rv-44026',
+                                'REC-RV-44026',
+                                'cust-hiprofile',
+                                'M/S HI PROFILE GENERAL MAINTENANCE LLC',
+                                '2023-05-08',
+                                48300.00,
+                                'AED',
+                                'Bank Transfer',
+                                'TRN-HIPROFILE-1005',
+                                json_encode($hiReceipt, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                            ]);
+
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('receipt_restore_v31', 'completed', NOW())");
+                        }
+                    } catch (Exception $e) {}
+
                     // Ensure Director's Current Account is configured
                     $hasDirLoan = false;
                     if (!empty($data['loan_accounts']) && is_array($data['loan_accounts'])) {
@@ -1414,9 +1481,6 @@ function syncFromRelationalTables($pdo, &$data) {
 
         foreach ($syncMapping as $m) {
             try {
-                if ($m['key'] === 'customer_receipts' && empty($data['customer_receipts'])) {
-                    continue;
-                }
                 $rows = $pdo->query("SELECT data_json FROM {$m['table']} ORDER BY {$m['order']}")->fetchAll(PDO::FETCH_ASSOC);
                 if ($rows && count($rows) > 0) {
                     $k = $m['key'];
@@ -1618,9 +1682,6 @@ function syncToRelationalTables($pdo, &$data) {
                 $stmtClean = $pdo->prepare("DELETE FROM finance_receipts WHERE receipt_no NOT IN ($inClause)");
                 $stmtClean->execute($validRcpNos);
             }
-        } else {
-            $pdo->exec("DELETE FROM finance_receipts");
-            $pdo->exec("DELETE FROM finance_customer_receipts");
         }
 
         // 4. Purchase Bills

@@ -198,7 +198,7 @@ class FinanceApp {
       'exp-rg-001', 'exp-rg-002', 'exp-rg-003',
       'vend-001', 'vend-002', 'vend-003', 'vend-004',
       'cust-004', 'cust-005', 'cust-kgc-alias', 'prj-dpa-01',
-      'rec-mvdvmilf', 'rec-rv-44026', 'rec-rv-44025',
+      'rec-mvdvmilf',
       'item-001', 'item-002', 'item-003', 'item-004', 'item-005', 'item-006', 'item-007', 'item-008',
       'doc-001', 'doc-002', 'doc-003', 'doc-004',
       'chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01',
@@ -720,7 +720,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v30';
+    const CURRENT_DB_VERSION = 'v2026_clean_v31';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3036,7 +3036,7 @@ class FinanceApp {
                   <div class="fin-nav-subitem" onclick="window.finApp.openInvoicePrintModal()">
                     <span class="fin-subitem-text">Tax Invoice (Sample)</span>
                   </div>
-                  <div class="fin-nav-subitem" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
+                  <div class="fin-nav-subitem" onclick="window.finApp.openReceiptPrintModal()">
                     <span class="fin-subitem-text">Receipt Voucher (Sample)</span>
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openPaymentPrintModal()">
@@ -3736,8 +3736,8 @@ class FinanceApp {
           <button type="button" class="fin-btn-quick primary" style="background:#00a699; border-color:#00a699;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44015')">
             📄 Tax Invoice (REC-RG-INV-44035)
           </button>
-          <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('rec-rv-44025')">
-            💳 Receipt Voucher (REC-RV-44025)
+          <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal()">
+            💳 Official Receipt Voucher
           </button>
           <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openPOPrintModal('po-lpo-bd-2026-12')">
             📑 Purchase Order (LPO/BD/2026/12)
@@ -16021,12 +16021,44 @@ class FinanceApp {
 
   // 2. RECEIPT VOUCHER PRINT MODAL (Simple, Clean, Official with Logo, Stamp & Signature)
   openReceiptPrintModal(receiptId, isVerifiedScan = false) {
-    let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
+    let rec = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId || r.ref_invoice_no === receiptId);
+    if (!rec && receiptId) {
+      rec = (this.db?.customer_receipts || []).find(r => (r.allocations || []).some(a => a.invoice_id === receiptId || a.invoice_no === receiptId));
+    }
     if (!rec) {
-      rec = (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44035') || 
-            (this.db?.customer_receipts || []).find(r => (r.customer_name || '').includes('TOP ROCK')) ||
-            (this.db?.customer_receipts || []).find(r => r.receipt_no === 'REC-RV-44026') || 
-            (this.db?.customer_receipts || [])[0] || (defaultSeedData.customer_receipts || [])[0] || {};
+      rec = (this.db?.customer_receipts || [])[0];
+    }
+    if (!rec) {
+      const targetInv = (this.db?.invoices || []).find(i => i.id === receiptId || i.invoice_no === receiptId) || (this.db?.invoices || [])[0];
+      if (targetInv) {
+        rec = {
+          id: `rec-rv-${targetInv.invoice_no}`,
+          receipt_no: `REC-RV-${String(targetInv.invoice_no).replace(/[^0-9]/g, '') || '1001'}`,
+          company_id: targetInv.company_id || 'rayan-corp-uae',
+          customer_id: targetInv.customer_id,
+          customer_name: targetInv.customer_name,
+          customer_trn: targetInv.customer_trn || targetInv.trn,
+          customer_address: targetInv.customer_address || targetInv.billing_address,
+          receipt_date: targetInv.invoice_date || new Date().toISOString().split('T')[0],
+          payment_mode: 'Bank Transfer',
+          bank_name: 'Abu Dhabi Commercial Bank (ADCB)',
+          reference_no: `SETTLE-${targetInv.invoice_no}`,
+          amount_received: Number(targetInv.grand_total) || 0,
+          currency: targetInv.currency || 'AED',
+          ref_invoice_no: targetInv.invoice_no,
+          project_name: targetInv.project_name || '',
+          allocations: [{
+            invoice_id: targetInv.id,
+            invoice_no: targetInv.invoice_no,
+            amount_allocated: Number(targetInv.grand_total) || 0,
+            total_amount: Number(targetInv.grand_total) || 0
+          }],
+          amount_in_words: this.formatAmountInWords(targetInv.grand_total, targetInv.currency || 'AED'),
+          notes: `Settlement towards Tax Invoice #${targetInv.invoice_no}`
+        };
+      } else {
+        rec = {};
+      }
     }
 
     const curr = rec.currency || 'AED';
@@ -16135,7 +16167,7 @@ class FinanceApp {
                   RECEIPT VOUCHER
                 </div>
                 <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
-                  # ${rec.receipt_no || 'REC-RV-44025'}
+                  # ${rec.receipt_no || 'REC-RV-1001'}
                 </div>
 
                 <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
@@ -16163,7 +16195,7 @@ class FinanceApp {
             <div style="margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
               <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">RECEIVED FROM</div>
               <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
-                ${rec.customer_name || 'M/S TOP ROCK INTERIORS LLC.'}
+                ${rec.customer_name || 'Client Name'}
               </div>
               ${rec.contact_person ? `<div style="color:#4b5563;">Attn: ${rec.contact_person}</div>` : ''}
               ${rec.customer_address ? `<div style="color:#4b5563;">${rec.customer_address}</div>` : ''}
@@ -16226,7 +16258,7 @@ class FinanceApp {
                     <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                       <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700; color:#111827;">1</td>
                       <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word;">
-                        ${rec.notes || `Settlement towards Tax Invoice #${rec.ref_invoice_no || 'REC-RG-INV-44043'}`}
+                        ${rec.notes || (rec.ref_invoice_no ? `Settlement towards Tax Invoice #${rec.ref_invoice_no}` : 'Payment Settlement')}
                         <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
                           ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
                         </div>
