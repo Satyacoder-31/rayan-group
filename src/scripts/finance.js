@@ -203,7 +203,7 @@ class FinanceApp {
       'doc-001', 'doc-002', 'doc-003', 'doc-004',
       'chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01',
       'cv-01', 'cv-02', 'cv-03',
-      'wire-01', 'wire-02', 'wire-04', 'wire-05',
+      'wire-01', 'wire-02', 'wire-04', 'wire-05', 'wire-adcb-44035', 'wire-adcb-99210', '194651191', 'sbin3409394',
       'lt-01', 'lt-02',
       'notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee',
       'aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7'
@@ -221,6 +221,7 @@ class FinanceApp {
       const chequeNo = String(item.cheque_no || '').trim().toLowerCase();
       const invNo = String(item.invoice_no || '').trim().toLowerCase();
       const recNo = String(item.receipt_no || '').trim().toLowerCase();
+      const refNo = String(item.reference_no || '').trim().toLowerCase();
 
       if (name.includes('krishna general')) return true;
       if (id.startsWith('item-00')) return true;
@@ -235,7 +236,7 @@ class FinanceApp {
         return true;
       }
 
-      return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo) || dummyBlacklist.has(expNo) || dummyBlacklist.has(poNo) || dummyBlacklist.has(chequeNo) || dummyBlacklist.has(invNo) || dummyBlacklist.has(recNo);
+      return dummyBlacklist.has(id) || dummyBlacklist.has(billNo) || dummyBlacklist.has(vouchNo) || dummyBlacklist.has(dnNo) || dummyBlacklist.has(expNo) || dummyBlacklist.has(poNo) || dummyBlacklist.has(chequeNo) || dummyBlacklist.has(invNo) || dummyBlacklist.has(recNo) || dummyBlacklist.has(refNo);
     };
 
     for (const key of collections) {
@@ -437,7 +438,11 @@ class FinanceApp {
         merged.bank_accounts = merged.bank_accounts.filter(b => {
           if (!b) return false;
           if ((b.company_id || 'rayan-corp-uae') === 'rayan-corp-uae') {
-            return b.id === 'bank-adcb-uae' || (b.bank_name || '').includes('Abu Dhabi Commercial');
+            const bId = String(b.id || '').toLowerCase();
+            const bName = String(b.bank_name || '').toLowerCase();
+            if (bId === 'bank-nbad-uae' || bId === 'bank-enbd-escrow') return false;
+            if (bName.includes('nbad') || bName.includes('national bank of abu dhabi') || bName.includes('emirates nbd')) return false;
+            return true;
           }
           return true;
         });
@@ -541,9 +546,25 @@ class FinanceApp {
         swift: 'ADCBAEAA',
         branch: 'Dalma Mall - Abu Dhabi',
         currency: 'AED',
-        balance: 183092.72,
+        balance: 0.00,
         signatory: 'Arshad Alam Shaikh',
         status: 'Active'
+      });
+    }
+
+    this.db.bank_accounts.forEach(b => {
+      if (b.id === 'bank-adcb-uae' && Number(b.balance) === 183092.72) {
+        b.balance = 0.00;
+      }
+    });
+
+    if (Array.isArray(this.db.bank_transfers)) {
+      const dummyRefs = new Set(['wire-adcb-99210', '194651191', 'sbin3409394', 'wire-adcb-44035', 'wire-01', 'wire-02', 'wire-04', 'wire-05']);
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => {
+        if (!t) return false;
+        const id = String(t.id || '').toLowerCase();
+        const ref = String(t.reference_no || '').toLowerCase();
+        return !dummyRefs.has(id) && !dummyRefs.has(ref);
       });
     }
 
@@ -699,7 +720,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v29';
+    const CURRENT_DB_VERSION = 'v2026_clean_v30';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -14097,7 +14118,7 @@ class FinanceApp {
   // 1. ADD / EDIT BANK ACCOUNT MODAL
   openAddBankAccountModal(bankId = null) {
     const banks = this.db?.bank_accounts || [];
-    const b = bankId ? banks.find(x => x.id === bankId) : null;
+    const b = bankId ? banks.find(x => x.id === bankId || String(x.id).toLowerCase() === String(bankId).toLowerCase()) : null;
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
     const curr = b?.currency || (isIndia ? 'INR' : 'AED');
@@ -14242,6 +14263,10 @@ class FinanceApp {
 
   async deleteBankAccount(bankId) {
     if (!confirm('Are you sure you want to delete this bank account from records?')) return;
+    if (this.db?.bank_accounts) {
+      this.db.bank_accounts = this.db.bank_accounts.filter(b => b.id !== bankId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
     await this.syncApi('delete_bank_account', { id: bankId });
     this.renderActiveTab();
     this.showNotification('Bank account removed.', 'info');
@@ -14366,7 +14391,11 @@ class FinanceApp {
 
   async deleteBankTransfer(transferId) {
     if (!confirm('Are you sure you want to delete this bank wire record?')) return;
-    await this.syncApi('delete_bank_transfer', { id: transferId });
+    if (this.db?.bank_transfers) {
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== transferId && t.reference_no !== transferId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    await this.syncApi('delete_bank_transfer', { id: transferId, transfer_id: transferId });
     this.renderActiveTab();
     this.showNotification('Bank wire record deleted.', 'info');
   }

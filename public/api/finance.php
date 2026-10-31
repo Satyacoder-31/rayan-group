@@ -752,23 +752,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01')");
             $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
-            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-01', 'wire-02', 'wire-04', 'wire-05')");
-            $pdo->exec("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (
-                'wire-adcb-44035',
-                'rayan-corp-uae',
-                'WIRE-ADCB-99210',
-                '2026-10-19',
-                'M/S TOP ROCK INTERIORS LLC.',
-                'bank-adcb-uae',
-                'Abu Dhabi Commercial Bank (ADCB)',
-                'inward',
-                26466.77,
-                'AED',
-                'Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)',
-                'Cleared',
-                '{\"id\":\"wire-adcb-44035\",\"receipt_id\":\"rec-rv-44035\",\"company_id\":\"rayan-corp-uae\",\"reference_no\":\"WIRE-ADCB-99210\",\"date\":\"2026-10-19\",\"source_bank\":\"Abu Dhabi Commercial Bank (ADCB)\",\"source_account_id\":\"bank-adcb-uae\",\"destination_bank\":\"Abu Dhabi Commercial Bank (ADCB)\",\"destination_account_id\":\"bank-adcb-uae\",\"counterparty\":\"M/S TOP ROCK INTERIORS LLC.\",\"amount\":26466.77,\"currency\":\"AED\",\"type\":\"inward\",\"type_label\":\"Inward Client Collection (REC-RV-44035)\",\"purpose\":\"Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)\",\"status\":\"Cleared\",\"created_at\":\"2026-10-19T13:40:00Z\"}',
-                NOW()
-            )");
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-01', 'wire-02', 'wire-04', 'wire-05', 'wire-adcb-44035') OR reference_no IN ('WIRE-ADCB-99210', '194651191', 'SBIN3409394') OR type = 'inward' OR id LIKE 'wire-%'");
             $pdo->exec("DELETE FROM finance_loan_transactions WHERE id IN ('lt-01', 'lt-02')");
             $pdo->exec("DELETE FROM finance_notifications WHERE id IN ('notif-001', 'notif-002', 'notif-003', 'notif-mvare1wh', 'notif-mvarduee')");
             $pdo->exec("DELETE FROM finance_audit_logs WHERE id IN ('aud-001', 'aud-002', 'aud-003', 'aud-004', 'aud-005', 'aud-mvare1wh', 'aud-mvarduee', 'aud-mvhirxz4', 'aud-mvhirxz0', 'aud-mvhirxyp', 'aud-1a14f414ad7')");
@@ -785,13 +769,14 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     'ADCBAEAA',
                     'Dalma Mall - Abu Dhabi',
                     'AED',
-                    183092.72,
+                    0.00,
                     'Arshad Alam Shaikh',
                     'Active',
-                    '{\"id\":\"bank-adcb-uae\",\"company_id\":\"rayan-corp-uae\",\"account_name\":\"RAYAN ENGINEERING AND CONTRACTING LLC SPC\",\"bank_name\":\"Abu Dhabi Commercial Bank (ADCB)\",\"account_number\":\"AE920030012697347820001\",\"iban\":\"AE920030012697347820001\",\"swift\":\"ADCBAEAA\",\"branch\":\"Dalma Mall - Abu Dhabi\",\"currency\":\"AED\",\"balance\":183092.72,\"signatory\":\"Arshad Alam Shaikh\",\"status\":\"Active\"}',
+                    '{\"id\":\"bank-adcb-uae\",\"company_id\":\"rayan-corp-uae\",\"account_name\":\"RAYAN ENGINEERING AND CONTRACTING LLC SPC\",\"bank_name\":\"Abu Dhabi Commercial Bank (ADCB)\",\"account_number\":\"AE920030012697347820001\",\"iban\":\"AE920030012697347820001\",\"swift\":\"ADCBAEAA\",\"branch\":\"Dalma Mall - Abu Dhabi\",\"currency\":\"AED\",\"balance\":0.00,\"signatory\":\"Arshad Alam Shaikh\",\"status\":\"Active\"}',
                     NOW()
                 )");
             }
+            $pdo->exec("UPDATE finance_bank_accounts SET balance = 0.00, data_json = JSON_SET(data_json, '$.balance', 0) WHERE id = 'bank-adcb-uae' AND balance = 183092.72");
             $pdo->exec("DELETE FROM finance_bank_accounts WHERE id = 'bank-fab-uae'");
         } catch (Exception $e) {}
     }
@@ -1002,39 +987,12 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         $data['bank_transfers'] = [];
     }
     $orig = count($data['bank_transfers']);
-    $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) use ($dummyWireIds) {
+    $dummyWireRefs = ['wire-adcb-99210', '194651191', 'sbin3409394', 'wire-adcb-44035'];
+    $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) use ($dummyWireIds, $dummyWireRefs) {
         $id = strtolower(trim($bt['id'] ?? ''));
-        return !in_array($id, $dummyWireIds);
+        $ref = strtolower(trim($bt['reference_no'] ?? ''));
+        return !in_array($id, $dummyWireIds) && !in_array($id, $dummyWireRefs) && !in_array($ref, $dummyWireRefs);
     }));
-    $hasWire = false;
-    foreach ($data['bank_transfers'] as $bt) {
-        if (($bt['reference_no'] ?? '') === 'WIRE-ADCB-99210' || ($bt['receipt_id'] ?? '') === 'rec-rv-44035') {
-            $hasWire = true;
-            break;
-        }
-    }
-    if (!$hasWire) {
-        array_unshift($data['bank_transfers'], [
-            'id' => 'wire-adcb-44035',
-            'receipt_id' => 'rec-rv-44035',
-            'company_id' => 'rayan-corp-uae',
-            'reference_no' => 'WIRE-ADCB-99210',
-            'date' => '2026-10-19',
-            'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
-            'source_account_id' => 'bank-adcb-uae',
-            'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
-            'destination_account_id' => 'bank-adcb-uae',
-            'counterparty' => 'M/S TOP ROCK INTERIORS LLC.',
-            'amount' => 26466.77,
-            'currency' => 'AED',
-            'type' => 'inward',
-            'type_label' => 'Inward Client Collection (REC-RV-44035)',
-            'purpose' => 'Client settlement for Invoice REC-RG-INV-44035 (Fitout Work)',
-            'status' => 'Cleared',
-            'created_at' => '2026-10-19T13:40:00Z'
-        ]);
-        $changed = true;
-    }
     if (count($data['bank_transfers']) !== $orig) $changed = true;
 
     if (!empty($data['loan_transactions']) && is_array($data['loan_transactions'])) {
@@ -1079,12 +1037,16 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         }));
 
         $hasAdcb = false;
-        foreach ($data['bank_accounts'] as $b) {
+        foreach ($data['bank_accounts'] as &$b) {
+            if (($b['id'] ?? '') === 'bank-adcb-uae' && floatval($b['balance'] ?? 0) == 183092.72) {
+                $b['balance'] = 0.00;
+                $changed = true;
+            }
             if (($b['company_id'] ?? '') === 'rayan-corp-uae') {
                 $hasAdcb = true;
-                break;
             }
         }
+        unset($b);
 
         if (!$hasAdcb) {
             array_unshift($data['bank_accounts'], [
@@ -1097,7 +1059,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 'swift' => 'ADCBAEAA',
                 'branch' => 'Dalma Mall - Abu Dhabi',
                 'currency' => 'AED',
-                'balance' => 183092.72,
+                'balance' => 0.00,
                 'signatory' => 'Arshad Alam Shaikh',
                 'status' => 'Active'
             ]);
@@ -1334,6 +1296,25 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             $pdo->exec("DELETE f1 FROM finance_invoices f1 INNER JOIN finance_invoices f2 WHERE f1.id < f2.id AND f1.invoice_no = f2.invoice_no");
 
                             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('invoice_cleanup_v26', 'completed', NOW())");
+                        }
+                    } catch (Exception $e) {}
+
+                    // Migration v30: Clear lingering dummy bank wires and reset ADCB opening balance to 0.00
+                    try {
+                        $chkBank30 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'banking_cleanup_v30'")->fetchColumn();
+                        if (!$chkBank30) {
+                            $pdo->exec("DELETE FROM finance_bank_transfers WHERE reference_no IN ('WIRE-ADCB-99210', '194651191', 'SBIN3409394') OR id IN ('wire-adcb-44035') OR type = 'inward' OR id LIKE 'wire-%'");
+                            $pdo->exec("UPDATE finance_bank_accounts SET balance = 0.00, data_json = JSON_SET(data_json, '$.balance', 0) WHERE id = 'bank-adcb-uae' OR balance = 183092.72");
+                            if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+                                foreach ($data['bank_accounts'] as &$baItem) {
+                                    if (($baItem['id'] ?? '') === 'bank-adcb-uae' || floatval($baItem['balance'] ?? 0) == 183092.72) {
+                                        $baItem['balance'] = 0.00;
+                                    }
+                                }
+                                unset($baItem);
+                            }
+                            $data['bank_transfers'] = [];
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('banking_cleanup_v30', 'completed', NOW())");
                         }
                     } catch (Exception $e) {}
 
@@ -3384,38 +3365,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'update_bank_account':
             $bank = $body['bank_account'] ?? $body['bank'] ?? [];
             $targetId = $body['id'] ?? $bank['id'] ?? '';
-            if (!empty($targetId) && !empty($db['bank_accounts'])) {
-                $updatedBank = null;
-                foreach ($db['bank_accounts'] as &$exB) {
-                    if (($exB['id'] ?? '') === $targetId) {
-                        $exB = array_merge($exB, $bank);
-                        $updatedBank = $exB;
-                        break;
-                    }
-                }
-                unset($exB);
-                if ($updatedBank && $pdo) {
-                    try {
-                        $stmt = $pdo->prepare("REPLACE INTO finance_bank_accounts (id, company_id, account_name, bank_name, account_number, iban, swift, branch, currency, balance, signatory, status, data_json, updated_at) VALUES (:id, :company_id, :account_name, :bank_name, :account_number, :iban, :swift, :branch, :currency, :balance, :signatory, :status, :data_json, NOW())");
-                        $stmt->execute([
-                            ':id' => $updatedBank['id'] ?? $targetId,
-                            ':company_id' => $updatedBank['company_id'] ?? 'rayan-corp-uae',
-                            ':account_name' => $updatedBank['account_name'] ?? $updatedBank['bank_name'] ?? '',
-                            ':bank_name' => $updatedBank['bank_name'] ?? '',
-                            ':account_number' => $updatedBank['account_number'] ?? $updatedBank['iban'] ?? '',
-                            ':iban' => $updatedBank['iban'] ?? $updatedBank['account_number'] ?? '',
-                            ':swift' => $updatedBank['swift'] ?? '',
-                            ':branch' => $updatedBank['branch'] ?? '',
-                            ':currency' => $updatedBank['currency'] ?? 'AED',
-                            ':balance' => floatval($updatedBank['balance'] ?? 0),
-                            ':signatory' => $updatedBank['signatory'] ?? '',
-                            ':status' => $updatedBank['status'] ?? 'Active',
-                            ':data_json' => json_encode($updatedBank, JSON_UNESCAPED_UNICODE)
-                        ]);
-                    } catch (Exception $e) {}
-                }
-                $addAuditLog('update', 'bank_account', $targetId, 'Updated bank account ' . $targetId);
+            if (!isset($db['bank_accounts']) || !is_array($db['bank_accounts'])) {
+                $db['bank_accounts'] = [];
             }
+            $updatedBank = null;
+            foreach ($db['bank_accounts'] as &$exB) {
+                if (strcasecmp($exB['id'] ?? '', $targetId) === 0) {
+                    $exB = array_merge($exB, $bank);
+                    $updatedBank = $exB;
+                    break;
+                }
+            }
+            unset($exB);
+            if (!$updatedBank && !empty($bank)) {
+                $db['bank_accounts'][] = $bank;
+                $updatedBank = $bank;
+            }
+            if ($updatedBank && $pdo) {
+                try {
+                    $stmt = $pdo->prepare("REPLACE INTO finance_bank_accounts (id, company_id, account_name, bank_name, account_number, iban, swift, branch, currency, balance, signatory, status, data_json, updated_at) VALUES (:id, :company_id, :account_name, :bank_name, :account_number, :iban, :swift, :branch, :currency, :balance, :signatory, :status, :data_json, NOW())");
+                    $stmt->execute([
+                        ':id' => $updatedBank['id'] ?? $targetId,
+                        ':company_id' => $updatedBank['company_id'] ?? 'rayan-corp-uae',
+                        ':account_name' => $updatedBank['account_name'] ?? $updatedBank['bank_name'] ?? '',
+                        ':bank_name' => $updatedBank['bank_name'] ?? '',
+                        ':account_number' => $updatedBank['account_number'] ?? $updatedBank['iban'] ?? '',
+                        ':iban' => $updatedBank['iban'] ?? $updatedBank['account_number'] ?? '',
+                        ':swift' => $updatedBank['swift'] ?? '',
+                        ':branch' => $updatedBank['branch'] ?? '',
+                        ':currency' => $updatedBank['currency'] ?? 'AED',
+                        ':balance' => floatval($updatedBank['balance'] ?? 0),
+                        ':signatory' => $updatedBank['signatory'] ?? '',
+                        ':status' => $updatedBank['status'] ?? 'Active',
+                        ':data_json' => json_encode($updatedBank, JSON_UNESCAPED_UNICODE)
+                    ]);
+                } catch (Exception $e) {}
+            }
+            $addAuditLog('update', 'bank_account', $targetId, 'Updated bank account ' . $targetId);
             break;
 
         case 'delete_bank_account':
