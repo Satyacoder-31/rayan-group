@@ -699,7 +699,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v28';
+    const CURRENT_DB_VERSION = 'v2026_clean_v29';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2258,6 +2258,7 @@ class FinanceApp {
     const yearMatch = raw.match(/\b(202\d)\b/);
     const parsedYear = yearMatch ? parseInt(yearMatch[1], 10) : (new Date(raw).getFullYear());
 
+    if (this.activePeriod === '2023') return parsedYear === 2023;
     if (this.activePeriod === '2024') return parsedYear === 2024;
     if (this.activePeriod === '2025') return parsedYear === 2025;
     if (this.activePeriod === '2026') return parsedYear === 2026;
@@ -2651,7 +2652,8 @@ class FinanceApp {
               <div class="fin-select-wrapper fin-period-wrapper">
                 <svg class="fin-select-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 <select id="fin-period-select" class="fin-select-modern" title="Filter Accounting Period">
-                  <option value="all" ${(!this.activePeriod || this.activePeriod === 'all') ? 'selected' : ''}>All (2024–2026)</option>
+                  <option value="all" ${(!this.activePeriod || this.activePeriod === 'all') ? 'selected' : ''}>All (2023–2026)</option>
+                  <option value="2023" ${this.activePeriod === '2023' ? 'selected' : ''}>2023</option>
                   <option value="2024" ${this.activePeriod === '2024' ? 'selected' : ''}>2024</option>
                   <option value="2025" ${this.activePeriod === '2025' ? 'selected' : ''}>2025</option>
                   <option value="2026" ${this.activePeriod === '2026' ? 'selected' : ''}>2026</option>
@@ -3915,6 +3917,47 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // 2. SALES & INVOICES MODULE
   // --------------------------------------------------------------------------
+  extractSerialNum(invNo) {
+    if (!invNo) return 0;
+    const m = String(invNo).match(/(\d{4,5})/);
+    if (m) return parseInt(m[1], 10);
+    const m2 = String(invNo).match(/(\d+)/);
+    return m2 ? parseInt(m2[1], 10) : 0;
+  }
+
+  sortInvoices(list, sortMode = 'serial-desc') {
+    return [...list].sort((a, b) => {
+      if (sortMode === 'serial-desc') {
+        const numA = this.extractSerialNum(a.invoice_no);
+        const numB = this.extractSerialNum(b.invoice_no);
+        if (numB !== numA) return numB - numA;
+        return (b.invoice_no || '').localeCompare(a.invoice_no || '');
+      }
+      if (sortMode === 'serial-asc') {
+        const numA = this.extractSerialNum(a.invoice_no);
+        const numB = this.extractSerialNum(b.invoice_no);
+        if (numA !== numB) return numA - numB;
+        return (a.invoice_no || '').localeCompare(b.invoice_no || '');
+      }
+      if (sortMode === 'date-desc') {
+        const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
+        const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
+        if (dateB !== dateA) return dateB - dateA;
+        return this.extractSerialNum(b.invoice_no) - this.extractSerialNum(a.invoice_no);
+      }
+      if (sortMode === 'date-asc') {
+        const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
+        const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
+        if (dateA !== dateB) return dateA - dateB;
+        return this.extractSerialNum(a.invoice_no) - this.extractSerialNum(b.invoice_no);
+      }
+      if (sortMode === 'amount-desc') {
+        return (Number(b.grand_total) || 0) - (Number(a.grand_total) || 0);
+      }
+      return 0;
+    });
+  }
+
   renderInvoicesTab(root) {
     this.normalizeAllBalances();
     const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
@@ -3924,12 +3967,8 @@ class FinanceApp {
       const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
       return compMatch && this.matchesActivePeriod(i.invoice_date);
     });
-    const invoices = [...rawInvoices].sort((a, b) => {
-      const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
-      const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
-      if (dateB !== dateA) return dateB - dateA;
-      return (b.invoice_no || '').localeCompare(a.invoice_no || '');
-    });
+    this.invSort = this.invSort || 'serial-desc';
+    const sortedInvoices = this.sortInvoices(rawInvoices, this.invSort);
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -3954,16 +3993,26 @@ class FinanceApp {
         </div>
 
         <!-- Filter Bar -->
-        <div class="fin-table-filter-bar">
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
           <input type="text" id="inv-filter-search" class="fin-filter-input" placeholder="Filter by invoice # or customer..." style="min-width:240px;">
           <select id="inv-filter-status" class="fin-select-pill">
             <option value="all">All Statuses</option>
-            <option value="draft">Draft</option>
-            <option value="issued">Issued</option>
-            <option value="partially_paid">Partially Paid</option>
+            <option value="unpaid">Unpaid</option>
             <option value="paid">Paid</option>
+            <option value="partially_paid">Partially Paid</option>
+            <option value="credited">Credited (Cr Note)</option>
+            <option value="partially_credited">Partially Credited</option>
+            <option value="issued">Issued</option>
+            <option value="draft">Draft</option>
             <option value="overdue">Overdue</option>
             <option value="void">Void</option>
+          </select>
+          <select id="inv-filter-sort" class="fin-select-pill" title="Order Invoices">
+            <option value="serial-desc" ${this.invSort === 'serial-desc' ? 'selected' : ''}>🔢 Serial # (High to Low)</option>
+            <option value="serial-asc" ${this.invSort === 'serial-asc' ? 'selected' : ''}>🔢 Serial # (Low to High)</option>
+            <option value="date-desc" ${this.invSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+            <option value="date-asc" ${this.invSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+            <option value="amount-desc" ${this.invSort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
           </select>
         </div>
 
@@ -3972,21 +4021,23 @@ class FinanceApp {
           <table class="fin-data-table" id="invoices-table">
             <thead>
               <tr>
-                <th>Invoice #</th>
-                <th>Date</th>
+                <th id="th-inv-serial" style="white-space:nowrap !important; min-width:180px; cursor:pointer; user-select:none;" title="Click to toggle serial order">
+                  Invoice # <span id="inv-sort-icon" style="color:#38bdf8; font-size:0.75rem;">${this.invSort === 'serial-asc' ? '▲ (Asc)' : '▼ (Desc)'}</span>
+                </th>
+                <th style="white-space:nowrap;">Date</th>
                 <th>Customer Name</th>
                 <th>Place of Supply</th>
-                <th>Taxable Value</th>
-                <th>Tax (${this.activeCompanyId === 'ashaz-eng-in' ? 'CGST/SGST/IGST' : 'VAT 5%'})</th>
-                <th>Grand Total</th>
-                <th>Paid</th>
-                <th>Balance Due</th>
+                <th style="white-space:nowrap;">Taxable Value</th>
+                <th style="white-space:nowrap;">Tax (${this.activeCompanyId === 'ashaz-eng-in' ? 'CGST/SGST/IGST' : 'VAT 5%'})</th>
+                <th style="white-space:nowrap;">Grand Total</th>
+                <th style="white-space:nowrap;">Paid</th>
+                <th style="white-space:nowrap;">Balance Due</th>
                 <th>Status</th>
                 <th class="fin-col-actions-sticky" style="text-align:center;">Actions</th>
               </tr>
             </thead>
             <tbody id="invoices-tbody">
-              ${this.renderInvoiceRows(invoices)}
+              ${this.renderInvoiceRows(sortedInvoices)}
             </tbody>
           </table>
         </div>
@@ -3996,20 +4047,37 @@ class FinanceApp {
     // Filter bindings
     const searchInput = document.getElementById('inv-filter-search');
     const statusSelect = document.getElementById('inv-filter-status');
+    const sortSelect = document.getElementById('inv-filter-sort');
+    const thInvSerial = document.getElementById('th-inv-serial');
 
     const updateFilter = () => {
       const q = searchInput.value.toLowerCase().trim();
       const st = statusSelect.value;
-      const filtered = invoices.filter(inv => {
+      const sMode = sortSelect ? sortSelect.value : (this.invSort || 'serial-desc');
+      this.invSort = sMode;
+      const filtered = rawInvoices.filter(inv => {
         const matchQ = (inv.invoice_no || '').toLowerCase().includes(q) || (inv.customer_name || '').toLowerCase().includes(q);
         const matchSt = st === 'all' || inv.status === st;
         return matchQ && matchSt;
       });
-      document.getElementById('invoices-tbody').innerHTML = this.renderInvoiceRows(filtered);
+      const sorted = this.sortInvoices(filtered, sMode);
+      document.getElementById('invoices-tbody').innerHTML = this.renderInvoiceRows(sorted);
+      const icon = document.getElementById('inv-sort-icon');
+      if (icon) {
+        icon.textContent = sMode === 'serial-asc' ? '▲ (Asc)' : (sMode === 'serial-desc' ? '▼ (Desc)' : '↕');
+      }
     };
 
     if (searchInput) searchInput.oninput = updateFilter;
     if (statusSelect) statusSelect.onchange = updateFilter;
+    if (sortSelect) sortSelect.onchange = updateFilter;
+    if (thInvSerial) {
+      thInvSerial.onclick = () => {
+        this.invSort = (this.invSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (sortSelect) sortSelect.value = this.invSort;
+        updateFilter();
+      };
+    }
   }
 
   renderInvoiceRows(invoices) {
@@ -4019,20 +4087,22 @@ class FinanceApp {
 
     return invoices.map(inv => `
       <tr>
-        <td><strong>${inv.invoice_no || '—'}</strong></td>
-        <td>${this.formatDate(inv.invoice_date)}</td>
+        <td style="white-space:nowrap !important; font-family:monospace; font-size:0.86rem; font-weight:700; color:#38bdf8; min-width:180px;">
+          ${inv.invoice_no || '—'}
+        </td>
+        <td style="white-space:nowrap;">${this.formatDate(inv.invoice_date)}</td>
         <td style="white-space:nowrap; min-width:200px;">
           <span class="fin-customer-cell">${inv.customer_name || 'Valued Client'}</span>
           ${inv.customer_trn ? `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${inv.customer_gstin}</div>` : '')}
         </td>
         <td><span style="font-size:0.75rem;">${inv.place_of_supply || '—'}</span></td>
-        <td>${inv.currency_symbol || ''}${Number(inv.taxable_subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-        <td>
+        <td style="white-space:nowrap;">${inv.currency_symbol || ''}${Number(inv.taxable_subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+        <td style="white-space:nowrap;">
           <span style="font-size:0.75rem; color:#38bdf8;">${inv.currency_symbol || ''}${Number(inv.total_tax || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           ${inv.tax_regime === 'trn' || inv.vat_total > 0 ? `<div style="font-size:0.65rem; color:#10b981; font-weight:700;">UAE VAT 5%</div>` : (inv.igst_total > 0 ? `<div style="font-size:0.65rem; color:#94a3b8;">IGST 18%</div>` : `<div style="font-size:0.65rem; color:#94a3b8;">CGST 9% + SGST 9%</div>`)}
         </td>
-        <td><strong>${this.formatCurrency(inv.grand_total || 0)}</strong></td>
-        <td>
+        <td style="white-space:nowrap;"><strong>${this.formatCurrency(inv.grand_total || 0)}</strong></td>
+        <td style="white-space:nowrap;">
           <span style="color:#10b981;">${this.formatCurrency((inv.amount_paid && inv.amount_paid > 0.02) ? inv.amount_paid : 0)}</span>
           ${(inv.amount_credited && inv.amount_credited > 0.02) ? `
             <div style="font-size:0.68rem; color:#c084fc; font-weight:700;" title="Adjusted via Credit Note">
@@ -4040,7 +4110,7 @@ class FinanceApp {
             </div>
           ` : ''}
         </td>
-        <td><strong style="color:${(inv.balance_due && inv.balance_due > 0.02) ? '#ef4444' : '#10b981'};">${this.formatCurrency((inv.balance_due && inv.balance_due > 0.02) ? inv.balance_due : 0)}</strong></td>
+        <td style="white-space:nowrap;"><strong style="color:${(inv.balance_due && inv.balance_due > 0.02) ? '#ef4444' : '#10b981'};">${this.formatCurrency((inv.balance_due && inv.balance_due > 0.02) ? inv.balance_due : 0)}</strong></td>
         <td><span class="fin-badge fin-badge-${inv.status}">${(inv.status || 'unpaid').replace(/_/g, ' ')}</span></td>
         <td class="fin-col-actions-sticky">
           <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="Print &amp; View Official Tax Invoice">Print / View</button>
