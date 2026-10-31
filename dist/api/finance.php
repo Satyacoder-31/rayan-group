@@ -1268,6 +1268,53 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                     } catch (Exception $e) {}
 
+                    // Migration v26: Standardize invoice numbers to clean REC-RG-#### format and remove duplicates
+                    try {
+                        $chkInv26 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'invoice_cleanup_v26'")->fetchColumn();
+                        if (!$chkInv26) {
+                            $cleanInvFn = function($no) {
+                                if (empty($no)) return $no;
+                                if (preg_match('/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3})(?:_|$|[^0-9A-Z])/i', $no, $m)) {
+                                    return 'REC-RG-' . $m[1];
+                                }
+                                if (preg_match('/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(?:2025-)?(44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i', $no, $m)) {
+                                    return 'REC-RG-INV-' . $m[1];
+                                }
+                                return $no;
+                            };
+
+                            if (!empty($data['invoices']) && is_array($data['invoices'])) {
+                                $migratedInvs = [];
+                                $seenMigKeys = [];
+                                foreach ($data['invoices'] as $invItem) {
+                                    $newNo = $cleanInvFn($invItem['invoice_no'] ?? '');
+                                    $newId = 'inv-' . strtolower($newNo);
+                                    $key = strtolower($newNo);
+                                    if (isset($seenMigKeys[$key])) continue;
+                                    $seenMigKeys[$key] = true;
+                                    $invItem['invoice_no'] = $newNo;
+                                    $invItem['id'] = $newId;
+                                    $migratedInvs[] = $invItem;
+                                }
+                                $data['invoices'] = $migratedInvs;
+                            }
+
+                            // Clean MySQL finance_invoices table
+                            $pdo->exec("DELETE FROM finance_invoices WHERE invoice_no LIKE '%_Focus%' OR invoice_no LIKE '%_HLN%' OR invoice_no LIKE '%_PROFESSIONAL%' OR invoice_no LIKE '%_Al%' OR invoice_no LIKE '%_Ali%' OR invoice_no LIKE '%_Hayat%' OR invoice_no LIKE '%_HI%' OR invoice_no LIKE '%_MURGANTI%' OR invoice_no LIKE '%_Top%' OR invoice_no LIKE '%_Alex%'");
+                            // Replace 1000-series REC-RG-INV- with REC-RG-
+                            for ($seq = 1001; $seq <= 1027; $seq++) {
+                                $oldInvPattern = "REC-RG-INV-$seq";
+                                $newInvNum = "REC-RG-$seq";
+                                $newInvId = "inv-rec-rg-$seq";
+                                $pdo->exec("UPDATE finance_invoices SET invoice_no = '$newInvNum', id = '$newInvId', data_json = REPLACE(REPLACE(data_json, '\"$oldInvPattern\"', '\"$newInvNum\"'), '\"inv-rec-rg-inv-$seq\"', '\"$newInvId\"') WHERE invoice_no = '$oldInvPattern'");
+                            }
+                            // Delete any orphaned duplicates
+                            $pdo->exec("DELETE f1 FROM finance_invoices f1 INNER JOIN finance_invoices f2 WHERE f1.id < f2.id AND f1.invoice_no = f2.invoice_no");
+
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('invoice_cleanup_v26', 'completed', NOW())");
+                        }
+                    } catch (Exception $e) {}
+
                     // Ensure Director's Current Account is configured
                     $hasDirLoan = false;
                     if (!empty($data['loan_accounts']) && is_array($data['loan_accounts'])) {
@@ -2102,17 +2149,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db['invoices'] = [];
                 }
 
+                $getSeqNum = function($str) {
+                    if (empty($str)) return null;
+                    if (preg_match('/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3}|44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i', $str, $m)) {
+                        return strtoupper($m[1]);
+                    }
+                    return null;
+                };
+
+                $oldSeq = $getSeqNum($oldInvNo) ?: $getSeqNum($oldId);
+                $newSeq = $getSeqNum($inv['invoice_no'] ?? '') ?: $getSeqNum($inv['id'] ?? '');
+                $targetSeq = $oldSeq ?: $newSeq;
+
                 $targetInvNo = !empty($oldInvNo) ? $oldInvNo : ($inv['invoice_no'] ?? '');
                 $targetId = !empty($oldId) ? $oldId : ($inv['id'] ?? '');
 
-                // Find existing invoice by old_id, old_invoice_no, id, or invoice_no
+                // Find existing invoice by old_id, old_invoice_no, id, invoice_no, or sequence number
                 $foundIdx = -1;
                 foreach ($db['invoices'] as $idx => $exI) {
                     $matchOldId = (!empty($oldId) && ($exI['id'] ?? '') === $oldId);
                     $matchOldNo = (!empty($oldInvNo) && strcasecmp($exI['invoice_no'] ?? '', $oldInvNo) === 0);
                     $matchId = (!empty($inv['id']) && ($exI['id'] ?? '') === $inv['id']);
                     $matchNo = (!empty($inv['invoice_no']) && strcasecmp($exI['invoice_no'] ?? '', $inv['invoice_no']) === 0);
-                    if ($matchOldId || $matchOldNo || $matchId || $matchNo) {
+                    $matchSeq = false;
+                    if ($targetSeq) {
+                        $exSeq = $getSeqNum($exI['invoice_no'] ?? '') ?: $getSeqNum($exI['id'] ?? '');
+                        if ($exSeq && $exSeq === $targetSeq) {
+                            $matchSeq = true;
+                        }
+                    }
+                    if ($matchOldId || $matchOldNo || $matchId || $matchNo || $matchSeq) {
                         $foundIdx = $idx;
                         break;
                     }
@@ -2128,23 +2194,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $addAuditLog('create', 'invoice', $inv['invoice_no'] ?? '', 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
                 }
 
-                // Deduplicate $db['invoices'] so no two invoices share the same invoice_no or ID
+                // Clean out any duplicate / legacy copies in $db['invoices']
+                $currInvNo = strtolower(trim($inv['invoice_no'] ?? ''));
+                $currId = strtolower(trim($inv['id'] ?? ''));
+                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($inv, $currInvNo, $currId, $oldInvNo, $oldId, $targetSeq, $getSeqNum) {
+                    $iNo = strtolower(trim($item['invoice_no'] ?? ''));
+                    $iId = strtolower(trim($item['id'] ?? ''));
+                    if ($iNo === $currInvNo && $iId === $currId) return true;
+                    if (!empty($oldInvNo) && $iNo === strtolower($oldInvNo)) return false;
+                    if (!empty($oldId) && $iId === strtolower($oldId)) return false;
+                    if ($targetSeq) {
+                        $itemSeq = $getSeqNum($item['invoice_no'] ?? '') ?: $getSeqNum($item['id'] ?? '');
+                        if ($itemSeq && $itemSeq === $targetSeq) {
+                            return false; // drop old format / duplicate
+                        }
+                    }
+                    return true;
+                }));
+
+                // Deduplicate $db['invoices'] so no two invoices share the same invoice_no, ID, or sequence
                 $deduped = [];
                 $seenNos = [];
                 $seenIds = [];
+                $seenSeqs = [];
                 foreach ($db['invoices'] as $item) {
                     $noKey = strtolower(trim($item['invoice_no'] ?? ''));
                     $idKey = strtolower(trim($item['id'] ?? ''));
-                    if ((!empty($noKey) && isset($seenNos[$noKey])) || (!empty($idKey) && isset($seenIds[$idKey]))) {
+                    $itemSeq = $getSeqNum($item['invoice_no'] ?? '') ?: $getSeqNum($item['id'] ?? '');
+                    if ((!empty($noKey) && isset($seenNos[$noKey])) || 
+                        (!empty($idKey) && isset($seenIds[$idKey])) ||
+                        (!empty($itemSeq) && isset($seenSeqs[$itemSeq]))) {
                         continue;
                     }
                     if (!empty($noKey)) $seenNos[$noKey] = true;
                     if (!empty($idKey)) $seenIds[$idKey] = true;
+                    if (!empty($itemSeq)) $seenSeqs[$itemSeq] = true;
                     $deduped[] = $item;
                 }
                 $db['invoices'] = $deduped;
 
-                // If invoice number or ID changed, delete old record from MySQL finance_invoices so no orphaned row exists
+                // Delete any old/legacy or orphaned row from MySQL finance_invoices
                 if ($pdo) {
                     try {
                         if (!empty($oldInvNo) && strcasecmp($oldInvNo, $inv['invoice_no'] ?? '') !== 0) {
@@ -2154,6 +2243,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (!empty($oldId) && $oldId !== ($inv['id'] ?? '')) {
                             $stmtDel = $pdo->prepare("DELETE FROM finance_invoices WHERE id = ?");
                             $stmtDel->execute([$oldId]);
+                        }
+                        if ($targetSeq) {
+                            $stmtDelSeq = $pdo->prepare("DELETE FROM finance_invoices WHERE (invoice_no LIKE ? OR id LIKE ?) AND invoice_no != ? AND id != ?");
+                            $likePattern = "%$targetSeq%";
+                            $stmtDelSeq->execute([$likePattern, $likePattern, $inv['invoice_no'] ?? '', $inv['id'] ?? '']);
                         }
                     } catch (Exception $e) {}
                 }
@@ -2306,11 +2400,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $invId = trim($body['invoice_id'] ?? $body['id'] ?? '');
             $invNo = trim($body['invoice_no'] ?? '');
             if ((!empty($invId) || !empty($invNo)) && isset($db['invoices'])) {
-                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($invId, $invNo) {
+                $getSeqNum = function($str) {
+                    if (empty($str)) return null;
+                    if (preg_match('/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3}|44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i', $str, $m)) {
+                        return strtoupper($m[1]);
+                    }
+                    return null;
+                };
+                $delSeq = $getSeqNum($invNo) ?: $getSeqNum($invId);
+
+                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($invId, $invNo, $delSeq, $getSeqNum) {
                     $matchId = (!empty($invId) && ($item['id'] ?? '') === $invId);
                     $matchNo = (!empty($invNo) && strcasecmp($item['invoice_no'] ?? '', $invNo) === 0);
                     $matchDirect = (!empty($invId) && strcasecmp($item['invoice_no'] ?? '', $invId) === 0);
-                    return !($matchId || $matchNo || $matchDirect);
+                    $matchSeq = false;
+                    if ($delSeq) {
+                        $itemSeq = $getSeqNum($item['invoice_no'] ?? '') ?: $getSeqNum($item['id'] ?? '');
+                        if ($itemSeq && $itemSeq === $delSeq) {
+                            $matchSeq = true;
+                        }
+                    }
+                    return !($matchId || $matchNo || $matchDirect || $matchSeq);
                 }));
                 if ($pdo) {
                     try {
@@ -2321,6 +2431,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (!empty($invNo)) {
                             $stmt = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no = ? OR id = ?");
                             $stmt->execute([$invNo, $invNo]);
+                        }
+                        if ($delSeq) {
+                            $stmtSeq = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no LIKE ? OR id LIKE ?");
+                            $likePattern = "%$delSeq%";
+                            $stmtSeq->execute([$likePattern, $likePattern]);
                         }
                     } catch (Exception $e) {}
                 }
@@ -3220,6 +3335,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($bank['currency'])) $bank['currency'] = ($bank['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
                 if (!isset($db['bank_accounts']) || !is_array($db['bank_accounts'])) $db['bank_accounts'] = [];
                 array_unshift($db['bank_accounts'], $bank);
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_bank_accounts (id, company_id, account_name, bank_name, account_number, iban, swift, branch, currency, balance, signatory, status, data_json, updated_at) VALUES (:id, :company_id, :account_name, :bank_name, :account_number, :iban, :swift, :branch, :currency, :balance, :signatory, :status, :data_json, NOW())");
+                        $stmt->execute([
+                            ':id' => $bank['id'],
+                            ':company_id' => $bank['company_id'],
+                            ':account_name' => $bank['account_name'] ?? $bank['bank_name'],
+                            ':bank_name' => $bank['bank_name'] ?? '',
+                            ':account_number' => $bank['account_number'] ?? $bank['iban'] ?? '',
+                            ':iban' => $bank['iban'] ?? $bank['account_number'] ?? '',
+                            ':swift' => $bank['swift'] ?? '',
+                            ':branch' => $bank['branch'] ?? '',
+                            ':currency' => $bank['currency'] ?? 'AED',
+                            ':balance' => floatval($bank['balance'] ?? 0),
+                            ':signatory' => $bank['signatory'] ?? '',
+                            ':status' => $bank['status'] ?? 'Active',
+                            ':data_json' => json_encode($bank, JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('create', 'bank_account', $bank['bank_name'] ?? '', 'Added corporate bank account ' . ($bank['bank_name'] ?? ''));
             }
             break;
@@ -3228,13 +3363,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bank = $body['bank_account'] ?? $body['bank'] ?? [];
             $targetId = $body['id'] ?? $bank['id'] ?? '';
             if (!empty($targetId) && !empty($db['bank_accounts'])) {
+                $updatedBank = null;
                 foreach ($db['bank_accounts'] as &$exB) {
                     if (($exB['id'] ?? '') === $targetId) {
                         $exB = array_merge($exB, $bank);
+                        $updatedBank = $exB;
                         break;
                     }
                 }
                 unset($exB);
+                if ($updatedBank && $pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_bank_accounts (id, company_id, account_name, bank_name, account_number, iban, swift, branch, currency, balance, signatory, status, data_json, updated_at) VALUES (:id, :company_id, :account_name, :bank_name, :account_number, :iban, :swift, :branch, :currency, :balance, :signatory, :status, :data_json, NOW())");
+                        $stmt->execute([
+                            ':id' => $updatedBank['id'] ?? $targetId,
+                            ':company_id' => $updatedBank['company_id'] ?? 'rayan-corp-uae',
+                            ':account_name' => $updatedBank['account_name'] ?? $updatedBank['bank_name'] ?? '',
+                            ':bank_name' => $updatedBank['bank_name'] ?? '',
+                            ':account_number' => $updatedBank['account_number'] ?? $updatedBank['iban'] ?? '',
+                            ':iban' => $updatedBank['iban'] ?? $updatedBank['account_number'] ?? '',
+                            ':swift' => $updatedBank['swift'] ?? '',
+                            ':branch' => $updatedBank['branch'] ?? '',
+                            ':currency' => $updatedBank['currency'] ?? 'AED',
+                            ':balance' => floatval($updatedBank['balance'] ?? 0),
+                            ':signatory' => $updatedBank['signatory'] ?? '',
+                            ':status' => $updatedBank['status'] ?? 'Active',
+                            ':data_json' => json_encode($updatedBank, JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('update', 'bank_account', $targetId, 'Updated bank account ' . $targetId);
             }
             break;

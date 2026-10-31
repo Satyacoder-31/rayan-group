@@ -1854,6 +1854,21 @@
   color: #38bdf8;
 }
 
+/* Sticky Action Column so Edit/Delete are always visible and never cut off */
+.fin-col-actions-sticky {
+  position: sticky !important;
+  right: 0 !important;
+  background: #0b1329 !important;
+  z-index: 5 !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: -8px 0 16px rgba(0, 0, 0, 0.55);
+  white-space: nowrap !important;
+}
+
+.fin-data-table tr:hover .fin-col-actions-sticky {
+  background: #111e3f !important;
+}
+
 /* ==========================================================================
    8. MODALS & FORMS
    ========================================================================== */

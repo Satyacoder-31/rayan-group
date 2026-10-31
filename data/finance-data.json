@@ -832,8 +832,8 @@
   ],
   "invoices": [
     {
-      "id": "inv-rec-invoice-1008_murganti",
-      "invoice_no": "REC-INVOICE-1008_MURGANTI",
+      "id": "inv-rec-rg-1008",
+      "invoice_no": "REC-RG-1008",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-morganti",
       "customer_name": "MORGANTI GCC l UAE",
@@ -888,8 +888,8 @@
       "created_at": "2024-08-07T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1010_hayat",
-      "invoice_no": "REC-INVOICE-1010_Hayat",
+      "id": "inv-rec-rg-1010",
+      "invoice_no": "REC-RG-1010",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -944,8 +944,8 @@
       "created_at": "2024-01-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1011_hayat",
-      "invoice_no": "REC-INVOICE-1011_Hayat",
+      "id": "inv-rec-rg-1011",
+      "invoice_no": "REC-RG-1011",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -1000,8 +1000,8 @@
       "created_at": "2024-12-30T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1012_focus",
-      "invoice_no": "REC-INVOICE-1012_Focus",
+      "id": "inv-rec-rg-1012",
+      "invoice_no": "REC-RG-1012",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-focustech",
       "customer_name": "FOCUS TECH LLC",
@@ -1056,8 +1056,8 @@
       "created_at": "2024-03-19T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1013_ali",
-      "invoice_no": "REC-INVOICE-1013_Ali",
+      "id": "inv-rec-rg-1013",
+      "invoice_no": "REC-RG-1013",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-alisons",
       "customer_name": "ALI & SONS CO. LLC",
@@ -1112,8 +1112,8 @@
       "created_at": "2024-03-22T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1014_al",
-      "invoice_no": "REC-INVOICE-1014_Al",
+      "id": "inv-rec-rg-1014",
+      "invoice_no": "REC-RG-1014",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1168,8 +1168,8 @@
       "created_at": "2024-04-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1015_al",
-      "invoice_no": "REC-INVOICE-1015_Al",
+      "id": "inv-rec-rg-1015",
+      "invoice_no": "REC-RG-1015",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1224,8 +1224,8 @@
       "created_at": "2024-04-19T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1016_hln",
-      "invoice_no": "REC-INVOICE-1016_HLN",
+      "id": "inv-rec-rg-1016",
+      "invoice_no": "REC-RG-1016",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -1280,8 +1280,8 @@
       "created_at": "2024-05-01T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1017_hln",
-      "invoice_no": "REC-INVOICE-1017_HLN",
+      "id": "inv-rec-rg-1017",
+      "invoice_no": "REC-RG-1017",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -1336,8 +1336,8 @@
       "created_at": "2024-05-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1018_focus",
-      "invoice_no": "REC-INVOICE-1018_Focus",
+      "id": "inv-rec-rg-1018",
+      "invoice_no": "REC-RG-1018",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-focustech",
       "customer_name": "FOCUS TECH LLC",
@@ -1392,8 +1392,8 @@
       "created_at": "2024-05-06T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1019_al",
-      "invoice_no": "REC-INVOICE-1019_Al",
+      "id": "inv-rec-rg-1019",
+      "invoice_no": "REC-RG-1019",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1448,8 +1448,8 @@
       "created_at": "2024-05-09T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1020_hln",
-      "invoice_no": "REC-INVOICE-1020_HLN",
+      "id": "inv-rec-rg-1020",
+      "invoice_no": "REC-RG-1020",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -1504,8 +1504,8 @@
       "created_at": "2024-05-11T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1021_focus",
-      "invoice_no": "REC-INVOICE-1021_Focus",
+      "id": "inv-rec-rg-1021",
+      "invoice_no": "REC-RG-1021",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-focustech",
       "customer_name": "FOCUS TECH LLC",
@@ -1560,8 +1560,8 @@
       "created_at": "2024-06-06T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1022_top",
-      "invoice_no": "REC-INVOICE-1022_Top",
+      "id": "inv-rec-rg-1022",
+      "invoice_no": "REC-RG-1022",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -1616,8 +1616,8 @@
       "created_at": "2024-06-21T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1023_al",
-      "invoice_no": "REC-INVOICE-1023_Al",
+      "id": "inv-rec-rg-1023",
+      "invoice_no": "REC-RG-1023",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1672,8 +1672,8 @@
       "created_at": "2024-06-07T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1024_al",
-      "invoice_no": "REC-INVOICE-1024_Al",
+      "id": "inv-rec-rg-1024",
+      "invoice_no": "REC-RG-1024",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1728,8 +1728,8 @@
       "created_at": "2024-07-06T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1025_alex",
-      "invoice_no": "REC-INVOICE-1025_Alex",
+      "id": "inv-rec-rg-1025",
+      "invoice_no": "REC-RG-1025",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-alex",
       "customer_name": "MR. ALEX (PRIVATE RESIDENCE / VILLA)",
@@ -1784,8 +1784,8 @@
       "created_at": "2024-07-22T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1026_alex",
-      "invoice_no": "REC-INVOICE-1026_Alex",
+      "id": "inv-rec-rg-1026",
+      "invoice_no": "REC-RG-1026",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-alex",
       "customer_name": "MR. ALEX (PRIVATE RESIDENCE / VILLA)",
@@ -1840,8 +1840,8 @@
       "created_at": "2024-10-10T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1027_hayat",
-      "invoice_no": "REC-INVOICE-1027_Hayat",
+      "id": "inv-rec-rg-1027",
+      "invoice_no": "REC-RG-1027",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -1896,8 +1896,8 @@
       "created_at": "2024-11-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1001_professional",
-      "invoice_no": "REC-INVOICE-1001_PROFESSIONAL",
+      "id": "inv-rec-rg-1001",
+      "invoice_no": "REC-RG-1001",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -1952,8 +1952,8 @@
       "created_at": "2024-02-26T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1002_professional",
-      "invoice_no": "REC-INVOICE-1002_PROFESSIONAL",
+      "id": "inv-rec-rg-1002",
+      "invoice_no": "REC-RG-1002",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -2008,8 +2008,8 @@
       "created_at": "2024-03-12T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1003_professional",
-      "invoice_no": "REC-INVOICE-1003_PROFESSIONAL",
+      "id": "inv-rec-rg-1003",
+      "invoice_no": "REC-RG-1003",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -2064,8 +2064,8 @@
       "created_at": "2024-03-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1004_professional",
-      "invoice_no": "REC-INVOICE-1004_PROFESSIONAL",
+      "id": "inv-rec-rg-1004",
+      "invoice_no": "REC-RG-1004",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -2120,8 +2120,8 @@
       "created_at": "2024-03-30T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1005_hi",
-      "invoice_no": "REC-INVOICE-1005_HI",
+      "id": "inv-rec-rg-1005",
+      "invoice_no": "REC-RG-1005",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hiprofile",
       "customer_name": "HI PROFILE GENERAL MAINTENANCE LLC",
@@ -2176,8 +2176,8 @@
       "created_at": "2024-05-08T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1006_hi",
-      "invoice_no": "REC-INVOICE-1006_HI",
+      "id": "inv-rec-rg-1006",
+      "invoice_no": "REC-RG-1006",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hiprofile",
       "customer_name": "HI PROFILE GENERAL MAINTENANCE LLC",
@@ -2232,8 +2232,8 @@
       "created_at": "2024-08-08T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1007_murganti",
-      "invoice_no": "REC-INVOICE-1007_MURGANTI",
+      "id": "inv-rec-rg-1007",
+      "invoice_no": "REC-RG-1007",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-morganti",
       "customer_name": "MORGANTI GCC l UAE",
@@ -2288,8 +2288,8 @@
       "created_at": "2024-07-17T10:00:00Z"
     },
     {
-      "id": "inv-rec-invoice-1009_hi",
-      "invoice_no": "REC-INVOICE-1009_HI",
+      "id": "inv-rec-rg-1009",
+      "invoice_no": "REC-RG-1009",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hiprofile",
       "customer_name": "HI PROFILE GENERAL MAINTENANCE LLC",
@@ -2344,8 +2344,8 @@
       "created_at": "2024-09-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44014_top",
-      "invoice_no": "REC-INV-44014_TOP",
+      "id": "inv-rec-rg-inv-44014",
+      "invoice_no": "REC-RG-INV-44014",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -2400,8 +2400,8 @@
       "created_at": "2025-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44010r_top",
-      "invoice_no": "REC-INV-44010R_TOP",
+      "id": "inv-rec-rg-inv-44010r",
+      "invoice_no": "REC-RG-INV-44010R",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -2456,8 +2456,8 @@
       "created_at": "2025-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44001_hayat",
-      "invoice_no": "REC-INV-44001_HAYAT",
+      "id": "inv-rec-rg-inv-44001",
+      "invoice_no": "REC-RG-INV-44001",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -2512,8 +2512,8 @@
       "created_at": "2025-06-16T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-2025-44002",
-      "invoice_no": "REC-INV-2025-44002",
+      "id": "inv-rec-rg-inv-44002",
+      "invoice_no": "REC-RG-INV-44002",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -2568,8 +2568,8 @@
       "created_at": "2025-08-09T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44003_hayat",
-      "invoice_no": "REC-INV-44003_HAYAT",
+      "id": "inv-rec-rg-inv-44003",
+      "invoice_no": "REC-RG-INV-44003",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -2624,8 +2624,8 @@
       "created_at": "2025-08-18T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44004_hayat",
-      "invoice_no": "REC-INV-44004_HAYAT",
+      "id": "inv-rec-rg-inv-44004",
+      "invoice_no": "REC-RG-INV-44004",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -2680,8 +2680,8 @@
       "created_at": "2025-08-19T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-2025-44005",
-      "invoice_no": "REC-INV-2025-44005",
+      "id": "inv-rec-rg-inv-44005",
+      "invoice_no": "REC-RG-INV-44005",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -2736,8 +2736,8 @@
       "created_at": "2025-08-22T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-2025-44006",
-      "invoice_no": "REC-INV-2025-44006",
+      "id": "inv-rec-rg-inv-44006",
+      "invoice_no": "REC-RG-INV-44006",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -2792,8 +2792,8 @@
       "created_at": "2025-09-12T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-2025-44007",
-      "invoice_no": "REC-INV-2025-44007",
+      "id": "inv-rec-rg-inv-44007",
+      "invoice_no": "REC-RG-INV-44007",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -2848,8 +2848,8 @@
       "created_at": "2025-11-26T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-2025-44008",
-      "invoice_no": "REC-INV-2025-44008",
+      "id": "inv-rec-rg-inv-44008",
+      "invoice_no": "REC-RG-INV-44008",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -2904,8 +2904,8 @@
       "created_at": "2025-11-26T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-2025-44012",
-      "invoice_no": "REC-INV-2025-44012",
+      "id": "inv-rec-rg-inv-44012",
+      "invoice_no": "REC-RG-INV-44012",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -2960,8 +2960,8 @@
       "created_at": "2025-11-26T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-2025-44013",
-      "invoice_no": "REC-INV-2025-44013",
+      "id": "inv-rec-rg-inv-44013",
+      "invoice_no": "REC-RG-INV-44013",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -3016,8 +3016,8 @@
       "created_at": "2025-11-26T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44009_map",
-      "invoice_no": "REC-INV-44009_MAP",
+      "id": "inv-rec-rg-inv-44009",
+      "invoice_no": "REC-RG-INV-44009",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-mapout",
       "customer_name": "M/S MAP OUT DECOR TECHNICAL SERVICES LLC",
@@ -3072,8 +3072,8 @@
       "created_at": "2025-11-07T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44011r_map",
-      "invoice_no": "REC-INV-44011R_MAP",
+      "id": "inv-rec-rg-inv-44011r",
+      "invoice_no": "REC-RG-INV-44011R",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-mapout",
       "customer_name": "M/S MAP OUT DECOR TECHNICAL SERVICES LLC",
@@ -3128,8 +3128,8 @@
       "created_at": "2025-11-17T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44021",
-      "invoice_no": "REC-INV-44021",
+      "id": "inv-rec-rg-inv-44021",
+      "invoice_no": "REC-RG-INV-44021",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-whitecrescent",
       "customer_name": "WHITE CRESCENT GROUP L.L.C",
@@ -3184,8 +3184,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44022",
-      "invoice_no": "REC-INV-44022",
+      "id": "inv-rec-rg-inv-44022",
+      "invoice_no": "REC-RG-INV-44022",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-whitecrescent",
       "customer_name": "WHITE CRESCENT GROUP L.L.C",
@@ -3240,8 +3240,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44015",
-      "invoice_no": "REC-INV-44015",
+      "id": "inv-rec-rg-inv-44015",
+      "invoice_no": "REC-RG-INV-44015",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -3296,8 +3296,8 @@
       "created_at": "2026-06-19T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44016",
-      "invoice_no": "REC-INV-44016",
+      "id": "inv-rec-rg-inv-44016",
+      "invoice_no": "REC-RG-INV-44016",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -3352,8 +3352,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44017_remaya",
-      "invoice_no": "REC-INV-44017_Remaya",
+      "id": "inv-rec-rg-inv-44017",
+      "invoice_no": "REC-RG-INV-44017",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-remaya",
       "customer_name": "M/S REMAYA INTERNATIONAL COMPANY L.L.C",
@@ -3408,8 +3408,8 @@
       "created_at": "2026-06-08T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44018",
-      "invoice_no": "REC-INV-44018",
+      "id": "inv-rec-rg-inv-44018",
+      "invoice_no": "REC-RG-INV-44018",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ayat",
       "customer_name": "M/S AYAT TECHNICAL SERVICES EST.",
@@ -3464,8 +3464,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44019",
-      "invoice_no": "REC-INV-44019",
+      "id": "inv-rec-rg-inv-44019",
+      "invoice_no": "REC-RG-INV-44019",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -3520,8 +3520,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44020",
-      "invoice_no": "REC-INV-44020",
+      "id": "inv-rec-rg-inv-44020",
+      "invoice_no": "REC-RG-INV-44020",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ayat",
       "customer_name": "M/S AYAT TECHNICAL SERVICES EST.",
@@ -3576,8 +3576,8 @@
       "created_at": "2026-02-17T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44023",
-      "invoice_no": "REC-INV-44023",
+      "id": "inv-rec-rg-inv-44023",
+      "invoice_no": "REC-RG-INV-44023",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ayat",
       "customer_name": "M/S AYAT TECHNICAL SERVICES EST.",
@@ -3632,8 +3632,8 @@
       "created_at": "2026-03-19T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44024",
-      "invoice_no": "REC-INV-44024",
+      "id": "inv-rec-rg-inv-44024",
+      "invoice_no": "REC-RG-INV-44024",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-zorawar",
       "customer_name": "ZORAWAR INTERIOR DECORATION LLC",
@@ -3688,8 +3688,8 @@
       "created_at": "2026-04-14T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44025",
-      "invoice_no": "REC-INV-44025",
+      "id": "inv-rec-rg-inv-44025",
+      "invoice_no": "REC-RG-INV-44025",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -3744,8 +3744,8 @@
       "created_at": "2026-06-01T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44026",
-      "invoice_no": "REC-INV-44026",
+      "id": "inv-rec-rg-inv-44026",
+      "invoice_no": "REC-RG-INV-44026",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-brook",
       "customer_name": "BROOK AND RIPPLES SWIMMING POOLS LLC",
@@ -3800,8 +3800,8 @@
       "created_at": "2026-05-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44027",
-      "invoice_no": "REC-INV-44027",
+      "id": "inv-rec-rg-inv-44027",
+      "invoice_no": "REC-RG-INV-44027",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -3856,8 +3856,8 @@
       "created_at": "2026-05-11T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44028",
-      "invoice_no": "REC-INV-44028",
+      "id": "inv-rec-rg-inv-44028",
+      "invoice_no": "REC-RG-INV-44028",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-solidmarble",
       "customer_name": "SOLID MARBLE INDUSTRIES LLC",
@@ -3912,8 +3912,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44029",
-      "invoice_no": "REC-INV-44029",
+      "id": "inv-rec-rg-inv-44029",
+      "invoice_no": "REC-RG-INV-44029",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ayat",
       "customer_name": "M/S AYAT TECHNICAL SERVICES EST.",
@@ -3968,8 +3968,8 @@
       "created_at": "2026-05-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44030",
-      "invoice_no": "REC-INV-44030",
+      "id": "inv-rec-rg-inv-44030",
+      "invoice_no": "REC-RG-INV-44030",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-specon",
       "customer_name": "SPECON DESIGN INTERIOR & EVENTS LLC",
@@ -4024,8 +4024,8 @@
       "created_at": "2026-05-20T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44031",
-      "invoice_no": "REC-INV-44031",
+      "id": "inv-rec-rg-inv-44031",
+      "invoice_no": "REC-RG-INV-44031",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-magma",
       "customer_name": "MAGMA WASTE TREATMENT SERVICES SOLE PROPRIETORSHIP LLC",
@@ -4080,8 +4080,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44032",
-      "invoice_no": "REC-INV-44032",
+      "id": "inv-rec-rg-inv-44032",
+      "invoice_no": "REC-RG-INV-44032",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -4136,64 +4136,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44032",
-      "invoice_no": "REC-INV-44032",
-      "company_id": "rayan-corp-uae",
-      "customer_id": "cust-ironbeam",
-      "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
-      "customer_address": "Mussafah M-14, Abu Dhabi, UAE",
-      "billing_address": "Mussafah M-14, Abu Dhabi, UAE",
-      "contact_person": "Engr. Tariq Mahmoud",
-      "email": "info@ironbeam.ae",
-      "phone": "+971 2 555 6677",
-      "customer_trn": "100589123400003",
-      "trn": "100589123400003",
-      "tax_regime": "trn",
-      "tax_type": "TRN",
-      "tax_number": "100589123400003",
-      "currency": "AED",
-      "currency_symbol": "AED ",
-      "place_of_supply": "Abu Dhabi",
-      "project_id": "prj-rec-inv-44032",
-      "project_name": "Fitout, Gypsum & Contracting Works (M/S IRON BEAM GENERAL CONTRACTING LLC)",
-      "po_reference": "/",
-      "invoice_date": "2026-06-15",
-      "due_date": "2026-07-15",
-      "payment_terms": 30,
-      "payment_terms_label": "Net 30 Days",
-      "tax_inclusive": false,
-      "line_items": [
-        {
-          "sr": 1,
-          "name": "Fitout, Gypsum & Contracting Works (M/S IRON BEAM GENERAL CONTRACTING LLC)",
-          "description": "Fitout, Gypsum & Contracting Works (M/S IRON BEAM GENERAL CONTRACTING LLC)",
-          "unit": "Lump Sum",
-          "uom": "Ls",
-          "qty": 1,
-          "unit_price": 3790.48,
-          "rate": 3790.48,
-          "invoice_amount": 3790.48,
-          "taxable_amount": 3790.48,
-          "vat_rate": 5,
-          "vat_amount": 189.52,
-          "total_amount": 3980
-        }
-      ],
-      "sub_total": 3790.48,
-      "taxable_subtotal": 3790.48,
-      "vat_total": 189.52,
-      "total_tax": 189.52,
-      "grand_total": 3980,
-      "amount_paid": 0,
-      "balance_due": 3980,
-      "status": "unpaid",
-      "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
-      "created_by": "Arshad Alam Shaikh",
-      "created_at": "2026-06-15T10:00:00Z"
-    },
-    {
-      "id": "inv-rec-inv-44033",
-      "invoice_no": "REC-INV-44033",
+      "id": "inv-rec-rg-inv-44033",
+      "invoice_no": "REC-RG-INV-44033",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-specon",
       "customer_name": "SPECON DESIGN INTERIOR & EVENTS LLC",
@@ -4248,8 +4192,8 @@
       "created_at": "2026-06-07T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44034",
-      "invoice_no": "REC-INV-44034",
+      "id": "inv-rec-rg-inv-44034",
+      "invoice_no": "REC-RG-INV-44034",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -4304,64 +4248,8 @@
       "created_at": "2026-06-10T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44034",
-      "invoice_no": "REC-INV-44034",
-      "company_id": "rayan-corp-uae",
-      "customer_id": "cust-ironbeam",
-      "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
-      "customer_address": "Mussafah M-14, Abu Dhabi, UAE",
-      "billing_address": "Mussafah M-14, Abu Dhabi, UAE",
-      "contact_person": "Engr. Tariq Mahmoud",
-      "email": "info@ironbeam.ae",
-      "phone": "+971 2 555 6677",
-      "customer_trn": "100589123400003",
-      "trn": "100589123400003",
-      "tax_regime": "trn",
-      "tax_type": "TRN",
-      "tax_number": "100589123400003",
-      "currency": "AED",
-      "currency_symbol": "AED ",
-      "place_of_supply": "Abu Dhabi",
-      "project_id": "prj-rec-inv-44034",
-      "project_name": "Emirates Driving Company- Dalma Mall",
-      "po_reference": ".IB-037-113",
-      "invoice_date": "2026-06-10",
-      "due_date": "2026-07-10",
-      "payment_terms": 30,
-      "payment_terms_label": "Net 30 Days",
-      "tax_inclusive": false,
-      "line_items": [
-        {
-          "sr": 1,
-          "name": "Emirates Driving Company- Dalma Mall",
-          "description": "Emirates Driving Company- Dalma Mall",
-          "unit": "Lump Sum",
-          "uom": "Ls",
-          "qty": 1,
-          "unit_price": 4761.9,
-          "rate": 4761.9,
-          "invoice_amount": 4761.9,
-          "taxable_amount": 4761.9,
-          "vat_rate": 5,
-          "vat_amount": 238.1,
-          "total_amount": 4761.9
-        }
-      ],
-      "sub_total": 4761.9,
-      "taxable_subtotal": 4761.9,
-      "vat_total": 238.1,
-      "total_tax": 238.1,
-      "grand_total": 4761.9,
-      "amount_paid": 0,
-      "balance_due": 4761.9,
-      "status": "unpaid",
-      "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
-      "created_by": "Arshad Alam Shaikh",
-      "created_at": "2026-06-10T10:00:00Z"
-    },
-    {
-      "id": "inv-rec-inv-44035",
-      "invoice_no": "REC-INV-44035",
+      "id": "inv-rec-rg-inv-44035",
+      "invoice_no": "REC-RG-INV-44035",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -4416,8 +4304,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44036",
-      "invoice_no": "REC-INV-44036",
+      "id": "inv-rec-rg-inv-44036",
+      "invoice_no": "REC-RG-INV-44036",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -4472,8 +4360,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44037",
-      "invoice_no": "REC-INV-44037",
+      "id": "inv-rec-rg-inv-44037",
+      "invoice_no": "REC-RG-INV-44037",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-luminar",
       "customer_name": "LUMINAR ENGINEERING AND DECOR LLC OPC",
@@ -4528,8 +4416,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44038",
-      "invoice_no": "REC-INV-44038",
+      "id": "inv-rec-rg-inv-44038",
+      "invoice_no": "REC-RG-INV-44038",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -4584,8 +4472,8 @@
       "created_at": "2026-06-25T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44039",
-      "invoice_no": "REC-INV-44039",
+      "id": "inv-rec-rg-inv-44039",
+      "invoice_no": "REC-RG-INV-44039",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -4640,8 +4528,8 @@
       "created_at": "2026-06-27T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44040",
-      "invoice_no": "REC-INV-44040",
+      "id": "inv-rec-rg-inv-44040",
+      "invoice_no": "REC-RG-INV-44040",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -4696,8 +4584,8 @@
       "created_at": "2026-06-29T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44041",
-      "invoice_no": "REC-INV-44041",
+      "id": "inv-rec-rg-inv-44041",
+      "invoice_no": "REC-RG-INV-44041",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-ironbeam",
       "customer_name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
@@ -4752,8 +4640,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44042",
-      "invoice_no": "REC-INV-44042",
+      "id": "inv-rec-rg-inv-44042",
+      "invoice_no": "REC-RG-INV-44042",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-specon",
       "customer_name": "SPECON DESIGN INTERIOR & EVENTS LLC",
@@ -4808,64 +4696,8 @@
       "created_at": "2026-06-07T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44042",
-      "invoice_no": "REC-INV-44042",
-      "company_id": "rayan-corp-uae",
-      "customer_id": "cust-luminar",
-      "customer_name": "LUMINAR ENGINEERING AND DECOR LLC OPC",
-      "customer_address": "Business Bay, Dubai, UAE",
-      "billing_address": "Business Bay, Dubai, UAE",
-      "contact_person": "Managing Director",
-      "email": "info@luminardecor.com",
-      "phone": "+971 4 456 7890",
-      "customer_trn": "100890123400003",
-      "trn": "100890123400003",
-      "tax_regime": "trn",
-      "tax_type": "TRN",
-      "tax_number": "100890123400003",
-      "currency": "AED",
-      "currency_symbol": "AED ",
-      "place_of_supply": "Dubai, UAE",
-      "project_id": "prj-rec-inv-44042",
-      "project_name": "Arab Bank Abu Dhabi",
-      "po_reference": "011 , 012 , 013",
-      "invoice_date": "2026-06-15",
-      "due_date": "2026-07-15",
-      "payment_terms": 30,
-      "payment_terms_label": "Net 30 Days",
-      "tax_inclusive": false,
-      "line_items": [
-        {
-          "sr": 1,
-          "name": "Arab Bank Abu Dhabi",
-          "description": "Arab Bank Abu Dhabi",
-          "unit": "Lump Sum",
-          "uom": "Ls",
-          "qty": 1,
-          "unit_price": 32281,
-          "rate": 32281,
-          "invoice_amount": 32281,
-          "taxable_amount": 32281,
-          "vat_rate": 5,
-          "vat_amount": 1614.05,
-          "total_amount": 32281
-        }
-      ],
-      "sub_total": 32281,
-      "taxable_subtotal": 32281,
-      "vat_total": 1614.05,
-      "total_tax": 1614.05,
-      "grand_total": 32281,
-      "amount_paid": 0,
-      "balance_due": 32281,
-      "status": "unpaid",
-      "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
-      "created_by": "Arshad Alam Shaikh",
-      "created_at": "2026-06-15T10:00:00Z"
-    },
-    {
-      "id": "inv-rec-inv-44043",
-      "invoice_no": "REC-INV-44043",
+      "id": "inv-rec-rg-inv-44043",
+      "invoice_no": "REC-RG-INV-44043",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -4920,8 +4752,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44044",
-      "invoice_no": "REC-INV-44044",
+      "id": "inv-rec-rg-inv-44044",
+      "invoice_no": "REC-RG-INV-44044",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-buildara",
       "customer_name": "M/S BUILDARA GENERAL CONTRACTING LLC",
@@ -4976,8 +4808,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44045",
-      "invoice_no": "REC-INV-44045",
+      "id": "inv-rec-rg-inv-44045",
+      "invoice_no": "REC-RG-INV-44045",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -5032,8 +4864,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44046",
-      "invoice_no": "REC-INV-44046",
+      "id": "inv-rec-rg-inv-44046",
+      "invoice_no": "REC-RG-INV-44046",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-buildara",
       "customer_name": "M/S BUILDARA GENERAL CONTRACTING LLC",
@@ -5088,8 +4920,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44047",
-      "invoice_no": "REC-INV-44047",
+      "id": "inv-rec-rg-inv-44047",
+      "invoice_no": "REC-RG-INV-44047",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -5144,8 +4976,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44048",
-      "invoice_no": "REC-INV-44048",
+      "id": "inv-rec-rg-inv-44048",
+      "invoice_no": "REC-RG-INV-44048",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-magma",
       "customer_name": "MAGMA WASTE TREATMENT SERVICES SOLE PROPRIETORSHIP LLC",
@@ -5200,8 +5032,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44049",
-      "invoice_no": "REC-INV-44049",
+      "id": "inv-rec-rg-inv-44049",
+      "invoice_no": "REC-RG-INV-44049",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-buildara",
       "customer_name": "M/S BUILDARA GENERAL CONTRACTING LLC",
@@ -5256,8 +5088,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44050",
-      "invoice_no": "REC-INV-44050",
+      "id": "inv-rec-rg-inv-44050",
+      "invoice_no": "REC-RG-INV-44050",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -5312,8 +5144,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44051",
-      "invoice_no": "REC-INV-44051",
+      "id": "inv-rec-rg-inv-44051",
+      "invoice_no": "REC-RG-INV-44051",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-buildara",
       "customer_name": "M/S BUILDARA GENERAL CONTRACTING LLC",
@@ -5368,8 +5200,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44052",
-      "invoice_no": "REC-INV-44052",
+      "id": "inv-rec-rg-inv-44052",
+      "invoice_no": "REC-RG-INV-44052",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -5424,8 +5256,8 @@
       "created_at": "2026-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-inv-44053",
-      "invoice_no": "REC-INV-44053",
+      "id": "inv-rec-rg-inv-44053",
+      "invoice_no": "REC-RG-INV-44053",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-sadeco",
       "customer_name": "SADECO DECOR LLC",

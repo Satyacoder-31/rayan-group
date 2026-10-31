@@ -493,6 +493,31 @@ class FinanceApp {
     return merged;
   }
 
+  sanitizeInvoices() {
+    if (!this.db || !Array.isArray(this.db.invoices)) return;
+    const cleanInvoiceNo = (no) => {
+      if (!no) return no;
+      const m1 = String(no).match(/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3})(?:_|$|[^0-9A-Z])/i);
+      if (m1) return 'REC-RG-' + m1[1];
+      const m2 = String(no).match(/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(?:2025-)?(44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i);
+      if (m2) return 'REC-RG-INV-' + m2[1];
+      return no;
+    };
+    const seen = new Set();
+    const deduped = [];
+    this.db.invoices.forEach(inv => {
+      if (!inv || !inv.invoice_no) return;
+      const cleanNo = cleanInvoiceNo(inv.invoice_no);
+      const key = cleanNo.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      inv.invoice_no = cleanNo;
+      inv.id = 'inv-' + cleanNo.toLowerCase();
+      deduped.push(inv);
+    });
+    this.db.invoices = deduped;
+  }
+
   sanitizeBankAccounts() {
     if (!this.db || !Array.isArray(this.db.bank_accounts)) return;
     this.db.bank_accounts = this.db.bank_accounts.filter(b => {
@@ -652,7 +677,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v25';
+    const CURRENT_DB_VERSION = 'v2026_clean_v27';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -668,6 +693,7 @@ class FinanceApp {
     } else {
       this.db = this.mergeWithSeedData(this.db);
     }
+    this.sanitizeInvoices();
     this.sanitizeBankAccounts();
     this.normalizeAllBalances();
 
@@ -680,6 +706,7 @@ class FinanceApp {
           const json = await res.json();
           if (json.data && typeof json.data === 'object' && json.data.companies && json.data.companies.length > 0) {
             this.db = this.mergeWithSeedData(json.data);
+            this.sanitizeInvoices();
             this.sanitizeBankAccounts();
             this.normalizeAllBalances();
             return;
@@ -3933,7 +3960,7 @@ class FinanceApp {
                 <th>Paid</th>
                 <th>Balance Due</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th class="fin-col-actions-sticky" style="text-align:center;">Actions</th>
               </tr>
             </thead>
             <tbody id="invoices-tbody">
@@ -3986,7 +4013,7 @@ class FinanceApp {
         <td><span style="color:#10b981;">${this.formatCurrency((inv.amount_paid && inv.amount_paid > 0.02) ? inv.amount_paid : 0)}</span></td>
         <td><strong style="color:${(inv.balance_due && inv.balance_due > 0.02) ? '#ef4444' : '#10b981'};">${this.formatCurrency((inv.balance_due && inv.balance_due > 0.02) ? inv.balance_due : 0)}</strong></td>
         <td><span class="fin-badge fin-badge-${inv.status}">${inv.status.replace('_', ' ')}</span></td>
-        <td style="white-space:nowrap;">
+        <td class="fin-col-actions-sticky">
           <button type="button" class="fin-btn-row-action" onclick="window.finApp.openInvoiceDetail('${inv.id}')" title="Print &amp; View Official Tax Invoice">Print / View</button>
           <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditInvoiceModal('${inv.id}')" title="Edit Tax Invoice">Edit</button>
           ${inv.status === 'draft' ? `
@@ -16784,6 +16811,14 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const invNumInput = document.getElementById('edit-inv-number');
+    if (invNumInput) {
+      invNumInput.addEventListener('input', () => {
+        const titleSpan = document.getElementById('edit-inv-title-no');
+        if (titleSpan) titleSpan.textContent = invNumInput.value.trim() || '—';
+      });
+    }
+
     const tbody = document.getElementById('edit-inv-items-tbody');
     const badge = document.getElementById('edit-inv-items-badge');
     const taxRateSel = document.getElementById('edit-inv-tax-rate');
@@ -16994,11 +17029,21 @@ class FinanceApp {
         return;
       }
 
-      // Check for duplicate invoice number across other invoices
+      const getSeqNum = (str) => {
+        if (!str) return null;
+        const m = String(str).match(/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3}|44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i);
+        return m ? m[1].toUpperCase() : null;
+      };
+      const oldSeq = getSeqNum(oldInvNo) || getSeqNum(oldId);
+      const newSeq = getSeqNum(newInvNo);
+
+      // Check for duplicate invoice number across other genuinely different invoices
       const isDupInv = (this.db?.invoices || []).some(i => {
         if (i === inv) return false;
         if (oldId && i.id === oldId) return false;
         if (oldInvNo && (i.invoice_no || '').trim().toLowerCase() === oldInvNo.toLowerCase()) return false;
+        // Ignore previous variants/duplicates of the invoice being edited
+        if (oldSeq && (getSeqNum(i.invoice_no) === oldSeq || getSeqNum(i.id) === oldSeq)) return false;
         return (i.invoice_no || '').trim().toLowerCase() === newInvNo.toLowerCase();
       });
       if (isDupInv) {
@@ -17070,15 +17115,24 @@ class FinanceApp {
 
       // 1. Immediately replace in memory so UI reflects update without duplicate
       if (this.db?.invoices) {
-        const idx = this.db.invoices.findIndex(i => (oldId && i.id === oldId) || (oldInvNo && (i.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase()) || i.id === newId || (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase());
+        const idx = this.db.invoices.findIndex(i => 
+          (oldId && i.id === oldId) || 
+          (oldInvNo && (i.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase()) || 
+          i.id === newId || 
+          (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase() ||
+          (oldSeq && (getSeqNum(i.invoice_no) === oldSeq || getSeqNum(i.id) === oldSeq))
+        );
         if (idx >= 0) this.db.invoices[idx] = inv;
         else this.db.invoices.unshift(inv);
-        // Clean out any stale copy
-        this.db.invoices = this.db.invoices.filter((item, index, self) =>
-          (item.id !== oldId || item.id === newId) &&
-          (oldInvNo ? (item.invoice_no || '').toLowerCase() !== oldInvNo.toLowerCase() || item.invoice_no === newInvNo : true) &&
-          index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()))
-        );
+        // Clean out any stale/duplicate copies of this invoice
+        this.db.invoices = this.db.invoices.filter((item, index, self) => {
+          if (item === inv) return true;
+          if (oldId && item.id === oldId && item.id !== newId) return false;
+          if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
+          if (oldSeq && (getSeqNum(item.invoice_no) === oldSeq || getSeqNum(item.id) === oldSeq)) return false;
+          return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
+        });
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
       }
 
       // 2. Synchronize with backend API
@@ -17086,14 +17140,20 @@ class FinanceApp {
 
       // 3. Reconcile after sync returns
       if (this.db?.invoices) {
-        const idx = this.db.invoices.findIndex(i => i.id === newId || (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase());
+        const idx = this.db.invoices.findIndex(i => 
+          i.id === newId || 
+          (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase() ||
+          (newSeq && (getSeqNum(i.invoice_no) === newSeq || getSeqNum(i.id) === newSeq))
+        );
         if (idx >= 0) this.db.invoices[idx] = inv;
         else this.db.invoices.unshift(inv);
-        this.db.invoices = this.db.invoices.filter((item, index, self) =>
-          (item.id !== oldId || item.id === newId) &&
-          (oldInvNo ? (item.invoice_no || '').toLowerCase() !== oldInvNo.toLowerCase() || item.invoice_no === newInvNo : true) &&
-          index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()))
-        );
+        this.db.invoices = this.db.invoices.filter((item, index, self) => {
+          if (item === inv) return true;
+          if (oldId && item.id === oldId && item.id !== newId) return false;
+          if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
+          if (oldSeq && (getSeqNum(item.invoice_no) === oldSeq || getSeqNum(item.id) === oldSeq)) return false;
+          return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
+        });
         try {
           localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
         } catch (e) {}
@@ -19083,14 +19143,24 @@ class FinanceApp {
       console.warn('API sync warning for delete_invoice:', err);
     }
 
+    const getSeqNum = (str) => {
+      if (!str) return null;
+      const m = String(str).match(/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3}|44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i);
+      return m ? m[1].toUpperCase() : null;
+    };
+    const delSeq = getSeqNum(invNo) || getSeqNum(invId) || getSeqNum(invoiceId);
+
     if (this.db.invoices) {
-      this.db.invoices = this.db.invoices.filter(i => 
-        i.id !== invId && 
-        i.invoice_no !== invNo && 
-        i.id !== invoiceId && 
-        i.invoice_no !== invoiceId &&
-        (invNo ? (i.invoice_no || '').toLowerCase() !== invNo.toLowerCase() : true)
-      );
+      this.db.invoices = this.db.invoices.filter(i => {
+        if (i.id === invId || i.id === invoiceId) return false;
+        if (i.invoice_no === invNo || i.invoice_no === invoiceId) return false;
+        if (invNo && (i.invoice_no || '').toLowerCase() === invNo.toLowerCase()) return false;
+        if (delSeq) {
+          const itemSeq = getSeqNum(i.invoice_no) || getSeqNum(i.id);
+          if (itemSeq && itemSeq === delSeq) return false;
+        }
+        return true;
+      });
     }
 
     // Also remove any allocations in customer receipts pointing to this invoice
