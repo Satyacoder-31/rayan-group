@@ -720,7 +720,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v31';
+    const CURRENT_DB_VERSION = 'v2026_clean_v32';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -6895,6 +6895,12 @@ class FinanceApp {
                     <span id="inv-calc-vat" style="font-weight:600; font-family:monospace; color:#38bdf8;">0.00</span>
                   </div>
 
+                  <!-- Adjustment / Round-Off line -->
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; font-size:0.88rem; border-top:1px solid rgba(255,255,255,0.08);">
+                    <span style="color:#94a3b8;">Adjustment / Round-Off (+/-)</span>
+                    <input type="number" id="inv-adjustment-input" class="fin-form-input" step="any" placeholder="0.00" value="${(editInv && editInv.adjustment !== undefined && editInv.adjustment !== 0) ? editInv.adjustment : ''}" style="width:110px; text-align:right; font-weight:700; color:#f59e0b; padding:3px 6px; font-size:0.85rem; height:auto;" title="Round-off or adjustment amount">
+                  </div>
+
                   <!-- Grand Total line -->
                   <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0 0.25rem; border-top:2px solid rgba(56,189,248,0.35); margin-top:0.35rem;">
                     <span style="font-weight:700; font-size:1.05rem; color:#f8fafc;">Total ( <span id="fin-s1-curr-label">${currentCurrency}</span> )</span>
@@ -7386,7 +7392,7 @@ class FinanceApp {
           <input type="number" class="fin-s1-qty row-qty" value="${qty}" min="0" step="any" placeholder="1.00">
         </td>
         <td style="padding:0.75rem 0.65rem; width:120px; vertical-align:top; text-align:right;">
-          <input type="number" class="fin-s1-rate row-rate" value="${rate > 0 ? rate : ''}" min="0" step="any" placeholder="0.00">
+          <input type="number" class="fin-s1-rate row-rate" value="${(rate !== undefined && rate !== null && rate !== 0) ? rate : ''}" step="any" placeholder="0.00">
         </td>
         <td style="padding:0.75rem 0.65rem; width:95px; vertical-align:top; text-align:center;">
           <div style="display:flex; align-items:center; gap:2px; justify-content:center;">
@@ -7523,7 +7529,8 @@ class FinanceApp {
 
       const invoiceSubtotal = totalContractBase;
       const invoiceVat = totalRowTax;
-      const invoiceGrandTotal = invoiceSubtotal + invoiceVat;
+      const adjVal = Number(document.getElementById('inv-adjustment-input')?.value) || 0;
+      const invoiceGrandTotal = Math.round((invoiceSubtotal + invoiceVat + adjVal) * 100) / 100;
 
       // Update Summary Box right card matching Screenshot
       const taxableEl = document.getElementById('inv-calc-taxable');
@@ -7561,6 +7568,12 @@ class FinanceApp {
           }
         };
       });
+
+      const createAdjInp = document.getElementById('inv-adjustment-input');
+      if (createAdjInp) {
+        createAdjInp.oninput = () => recalculateInvoice();
+        createAdjInp.onchange = () => recalculateInvoice();
+      }
 
       const poRefEl = document.getElementById('inv-po-ref');
       if (poRefEl) {
@@ -7779,7 +7792,7 @@ class FinanceApp {
             <input type="number" class="billed-cell-input billed-qty-input" value="${item.qty || 1}" min="0.001" step="any" style="text-align:center;">
           </td>
           <td style="width:150px;">
-            <input type="number" class="billed-cell-input billed-price-input" value="${item.rate > 0 ? item.rate : ''}" min="0" step="any" placeholder="0">
+            <input type="number" class="billed-cell-input billed-price-input" value="${item.rate !== undefined && item.rate !== 0 ? item.rate : ''}" step="any" placeholder="0">
           </td>
           <td style="width:100px;">
             <select class="billed-cell-select billed-tax-select">
@@ -9153,7 +9166,8 @@ class FinanceApp {
 
       const taxableSubtotal = totalNet;
       const totalTax = totalRowTax;
-      const grandTotal = taxableSubtotal + totalTax;
+      const adjVal = Number(document.getElementById('inv-adjustment-input')?.value) || 0;
+      const grandTotal = Math.round((taxableSubtotal + totalTax + adjVal) * 100) / 100;
 
       const newInvoice = {
         id: invoiceId,
@@ -9161,7 +9175,7 @@ class FinanceApp {
         company_id: this.activeCompanyId || 'rayan-corp-uae',
         payment_stage: paymentStage,
         payment_stage_label: paymentStageLabel,
-        adjustment: 0,
+        adjustment: adjVal,
         sub_total: totalNet,
         contract_base_value: totalGross,
         customer_id: customer?.id || '',
@@ -15905,7 +15919,7 @@ class FinanceApp {
                     const invAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate * (wdPct / 100)));
                     const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (isIndia ? 18 : 5)));
                     const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (invAmt * (vatRate / 100)));
-                    const totalAmt = Number(item.total_amount && item.total_amount > invAmt ? item.total_amount : (invAmt + vatAmt));
+                    const totalAmt = Number((item.total_amount !== undefined && item.total_amount !== null && !isNaN(Number(item.total_amount))) ? item.total_amount : (invAmt + vatAmt));
                     const uom = item.unit || item.uom || 'Sqm';
                     const itemName = item.name || item.description || 'Turnkey Work Item';
 
@@ -16933,6 +16947,10 @@ class FinanceApp {
                     <input type="text" id="edit-inv-tax-display" class="fin-form-input" readonly value="${currSym}0.00" style="font-weight:700; color:#10b981; background:rgba(0,0,0,0.3);">
                   </div>
                   <div class="fin-form-group">
+                    <label class="fin-form-label">Adjustment / Round-Off (${currLabel})</label>
+                    <input type="number" id="edit-inv-adjustment" class="fin-form-input" step="any" placeholder="0.00" value="${(inv.adjustment !== undefined && inv.adjustment !== 0) ? inv.adjustment : ''}" style="font-weight:700; color:#f59e0b; background:rgba(0,0,0,0.3);" title="Round-off adjustment (+/-) e.g. -5.05">
+                  </div>
+                  <div class="fin-form-group">
                     <label class="fin-form-label">Grand Total (${currLabel})</label>
                     <input type="text" id="edit-inv-grand" class="fin-form-input" readonly value="${currSym}0.00" style="font-weight:800; font-size:1.05rem; color:#38bdf8; background:rgba(0,0,0,0.3);">
                   </div>
@@ -17021,7 +17039,7 @@ class FinanceApp {
             </select>
           </td>
           <td style="padding:6px 6px;">
-            <input type="number" class="fin-form-input edit-row-rate" value="${rowRate}" min="0" step="any" required style="text-align:right; font-size:0.83rem; width:100%;">
+            <input type="number" class="fin-form-input edit-row-rate" value="${rowRate}" step="any" required style="text-align:right; font-size:0.83rem; width:100%;">
           </td>
           <td style="padding:6px 6px;">
             <input type="number" class="fin-form-input edit-row-wd" value="${rowWd}" min="0" max="100" step="any" style="text-align:center; font-size:0.83rem; width:100%;" title="Work Done %">
@@ -17061,7 +17079,8 @@ class FinanceApp {
 
       const rate = Number(taxRateSel.value) || 0;
       const tax = Math.round((subtotal * (rate / 100)) * 100) / 100;
-      const grand = Math.round((subtotal + tax) * 100) / 100;
+      const adj = Number(document.getElementById('edit-inv-adjustment')?.value) || 0;
+      const grand = Math.round((subtotal + tax + adj) * 100) / 100;
       const paid = Number(inv.amount_paid) || 0;
       const balanceDue = Math.max(0, Math.round((grand - paid) * 100) / 100);
 
@@ -17111,6 +17130,11 @@ class FinanceApp {
     };
 
     taxRateSel.onchange = updateTotals;
+    const editAdjInp = document.getElementById('edit-inv-adjustment');
+    if (editAdjInp) {
+      editAdjInp.oninput = updateTotals;
+      editAdjInp.onchange = updateTotals;
+    }
 
     const invNoInput = document.getElementById('edit-inv-number');
     if (invNoInput) {
@@ -17177,7 +17201,8 @@ class FinanceApp {
 
       subtotal = Math.round(subtotal * 100) / 100;
       const totalTax = Math.round((subtotal * (taxRate / 100)) * 100) / 100;
-      const grandTotal = Math.round((subtotal + totalTax) * 100) / 100;
+      const adjustment = Number(document.getElementById('edit-inv-adjustment')?.value) || 0;
+      const grandTotal = Math.round((subtotal + totalTax + adjustment) * 100) / 100;
       const paid = Number(inv.amount_paid) || 0;
       const balanceDue = Math.max(0, Math.round((grandTotal - paid) * 100) / 100);
 
@@ -17260,6 +17285,7 @@ class FinanceApp {
       inv.contract_base_value = totalGross;
       inv.total_tax = totalTax;
       inv.vat_total = isIndia ? 0 : totalTax;
+      inv.adjustment = adjustment;
       inv.grand_total = grandTotal;
       inv.balance_due = balanceDue;
       inv.status = balanceDue <= 0.01 ? 'paid' : (paid > 0 ? 'partially_paid' : (inv.status === 'draft' ? 'draft' : 'issued'));
