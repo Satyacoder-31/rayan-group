@@ -720,7 +720,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v32';
+    const CURRENT_DB_VERSION = 'v2026_clean_v33';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3733,7 +3733,7 @@ class FinanceApp {
           </p>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:0.6rem;">
-          <button type="button" class="fin-btn-quick primary" style="background:#00a699; border-color:#00a699;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44015')">
+          <button type="button" class="fin-btn-quick primary" style="background:#00a699; border-color:#00a699;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44035')">
             📄 Tax Invoice (REC-RG-INV-44035)
           </button>
           <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal()">
@@ -3999,7 +3999,7 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete billing register with ${this.activeCompanyId === 'ashaz-eng-in' ? 'GST' : 'VAT'} breakup, payment allocation tracking, and PDF generation.</p>
           </div>
           <div class="fin-panel-actions">
-            <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44015')">
+            <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44035')">
               📄 Sample Tax Invoice
             </button>
             ${this.hasPermission('create_invoice') ? `
@@ -8838,8 +8838,8 @@ class FinanceApp {
     const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
     const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
     if (openBilledBtn1) openBilledBtn1.onclick = () => openBilledItemsModal();
-    const isTopRockEdit = editInv && (((editInv.customer_name || '').toLowerCase().includes('top rock')) || editInv.customer_trn === '100360644700003' || editInv.invoice_no === 'REC-RG-INV-44035');
-    const itemsToLoad = (isTopRockEdit && (!editInv.line_items || editInv.line_items.length < 4)) ? [
+    const isTopRock44035 = editInv && (editInv.invoice_no === 'REC-RG-INV-44035' || editInv.id === 'inv-rec-rg-inv-44035');
+    const itemsToLoad = (isTopRock44035 && (!editInv.line_items || editInv.line_items.length < 4)) ? [
       { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
       { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
       { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
@@ -15543,19 +15543,17 @@ class FinanceApp {
       inv = invoiceId;
     } else if (invoiceId) {
       const searchKey = String(invoiceId).trim().toLowerCase();
-      inv = list.find(i => 
-        String(i.id || '').trim().toLowerCase() === searchKey || 
-        String(i.invoice_no || '').trim().toLowerCase() === searchKey ||
-        (searchKey.includes('44015') && (String(i.id || '').includes('44015') || String(i.invoice_no || '').includes('44035') || String(i.invoice_no || '').includes('44015'))) ||
-        (searchKey.includes('44035') && (String(i.id || '').includes('44015') || String(i.invoice_no || '').includes('44035') || String(i.invoice_no || '').includes('44015')))
-      );
+      const matchInv = (i) => {
+        if (!i) return false;
+        const id = String(i.id || '').trim().toLowerCase();
+        const no = String(i.invoice_no || '').trim().toLowerCase();
+        if (id === searchKey || no === searchKey) return true;
+        if (searchKey.length >= 4 && (id.endsWith(searchKey) || no.endsWith(searchKey))) return true;
+        return false;
+      };
+      inv = list.find(matchInv);
       if (!inv) {
-        inv = (defaultSeedData.invoices || []).find(i => 
-          String(i.id || '').trim().toLowerCase() === searchKey || 
-          String(i.invoice_no || '').trim().toLowerCase() === searchKey ||
-          (searchKey.includes('44015') && (String(i.id || '').includes('44015') || String(i.invoice_no || '').includes('44035') || String(i.invoice_no || '').includes('44015'))) ||
-          (searchKey.includes('44035') && (String(i.id || '').includes('44015') || String(i.invoice_no || '').includes('44035') || String(i.invoice_no || '').includes('44015')))
-        );
+        inv = (defaultSeedData.invoices || []).find(matchInv);
       }
     }
     if (!inv) {
@@ -16083,14 +16081,13 @@ class FinanceApp {
     const amountInWords = this.formatAmountInWords(rec.amount_in_words || amountVal, curr);
     if (rec.amount_in_words) rec.amount_in_words = amountInWords;
 
-    const isTopRock = (rec.customer_name || '').toLowerCase().includes('top rock') || 
-                      (rec.ref_invoice_no === 'REC-RG-INV-44035') || 
-                      (rec.receipt_no === 'REC-RV-44035');
+    const isTopRock44035 = (rec.ref_invoice_no === 'REC-RG-INV-44035') || 
+                           (rec.receipt_no === 'REC-RV-44035');
 
     const linkedInv = (this.db?.invoices || []).find(i => 
       i.invoice_no === rec.ref_invoice_no || 
       (rec.allocations && rec.allocations.some(a => a.invoice_no === i.invoice_no || a.invoice_id === i.id)) ||
-      (isTopRock && (i.invoice_no === 'REC-RG-INV-44035' || (i.customer_name || '').includes('TOP ROCK')))
+      (isTopRock44035 && i.invoice_no === 'REC-RG-INV-44035')
     );
 
     const comp = (this.db?.companies || []).find(c => c.id === (rec.company_id || this.activeCompanyId)) ||
@@ -16111,7 +16108,7 @@ class FinanceApp {
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
-    const receiptLineItems = (isTopRock && (!linkedInv?.line_items || linkedInv.line_items.length < 4)) ? [
+    const receiptLineItems = (isTopRock44035 && (!linkedInv?.line_items || linkedInv.line_items.length < 4)) ? [
       { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, unit: 'Sqm', rate: 56, wd_pct: 50, amount: 7646.80 },
       { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, unit: 'Sqm', rate: 51, wd_pct: 50, amount: 7494.45 },
       { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, unit: 'Sqm', rate: 11, wd_pct: 100, amount: 3533.20 },

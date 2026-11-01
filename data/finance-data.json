@@ -2400,8 +2400,8 @@
       "created_at": "2025-06-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-inv-44010r",
-      "invoice_no": "REC-RG-INV-44010R",
+      "id": "inv-rec-rg-inv-44010",
+      "invoice_no": "REC-RG-INV-44010",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
