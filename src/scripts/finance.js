@@ -873,7 +873,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v41';
+    const CURRENT_DB_VERSION = 'v2026_clean_v42';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4346,6 +4346,23 @@ class FinanceApp {
           </div>
         </div>
 
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="bill-filter-search" class="fin-filter-input" placeholder="🔍 Search bill #, vendor invoice #, vendor name, project..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="bill-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <select id="bill-filter-status" class="fin-select-pill">
+            <option value="all">All Bills (${bills.length})</option>
+            <option value="unpaid">Unpaid / Dues</option>
+            <option value="paid">Fully Paid</option>
+          </select>
+          <div id="bill-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="bill-showing-count">${bills.length}</span> of ${bills.length} bills
+          </div>
+        </div>
+
         <div class="fin-table-responsive">
           <table class="fin-data-table">
             <thead>
@@ -4364,43 +4381,89 @@ class FinanceApp {
                 <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${bills.length === 0 ? `
-                <tr>
-                  <td colspan="12" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">📥</div>
-                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No purchase bills recorded yet</div>
-                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Purchase Bill" to record a new supplier bill.</div>
-                  </td>
-                </tr>
-              ` : bills.map(b => `
-                <tr>
-                  <td style="white-space:nowrap;"><strong>${b.bill_no}</strong></td>
-                  <td style="white-space:nowrap;">${b.vendor_invoice_no || '—'}</td>
-                  <td style="white-space:nowrap;">${this.formatDate(b.bill_date)}</td>
-                  <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${b.vendor_name}</span></td>
-                  <td style="white-space:nowrap; min-width:180px;"><span style="font-size:0.75rem; color:#94a3b8;">${b.project_name || 'General Supply'}</span></td>
-                  <td style="white-space:nowrap;">${this.formatCurrency(b.taxable_subtotal)}</td>
-                  <td style="white-space:nowrap;">${this.formatCurrency(b.tax_total)}</td>
-                  <td style="white-space:nowrap;"><strong>${this.formatCurrency(b.grand_total)}</strong></td>
-                  <td style="white-space:nowrap;"><strong style="color:${b.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(b.balance_due)}</strong></td>
-                  <td style="white-space:nowrap;"><span class="fin-badge fin-badge-${b.approval_status || 'approved'}">${b.approval_status || 'Approved'}</span></td>
-                  <td style="white-space:nowrap;"><span class="fin-badge fin-badge-${b.status}">${(b.status || 'unpaid').replace('_', ' ')}</span></td>
-                  <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')" title="Print &amp; View Purchase Bill">Print / View</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditBillModal('${b.id}')" title="Edit Purchase Bill">Edit</button>
-                    ${b.balance_due > 0 ? `
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openQuickPayBill('${b.id}')" title="Disburse Payment Out">Pay</button>
-                    ` : ''}
-                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteBill('${b.id}')" title="Delete Purchase Bill">Delete</button>
-                  </td>
-                </tr>
-              `).join('')}
+            <tbody id="bills-tbody">
+              ${this.renderBillRows(bills)}
             </tbody>
           </table>
         </div>
       </div>
     `;
+
+    const billSearch = document.getElementById('bill-filter-search');
+    const billClear = document.getElementById('bill-search-clear');
+    const billStatus = document.getElementById('bill-filter-status');
+    const billCount = document.getElementById('bill-showing-count');
+    const billTbody = document.getElementById('bills-tbody');
+
+    const updateBillFilter = () => {
+      const q = (billSearch?.value || '').toLowerCase().trim();
+      const st = billStatus ? billStatus.value : 'all';
+      if (billClear) billClear.style.display = q ? 'block' : 'none';
+
+      const filtered = bills.filter(b => {
+        if (st === 'unpaid' && Number(b.balance_due || 0) <= 0) return false;
+        if (st === 'paid' && Number(b.balance_due || 0) > 0) return false;
+        if (!q) return true;
+
+        const haystack = [
+          b.bill_no,
+          b.vendor_invoice_no,
+          b.vendor_name,
+          b.project_name,
+          String(b.grand_total || ''),
+          b.status
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return haystack.includes(q);
+      });
+
+      if (billTbody) billTbody.innerHTML = this.renderBillRows(filtered, q);
+      if (billCount) billCount.textContent = filtered.length;
+    };
+
+    if (billSearch) billSearch.oninput = updateBillFilter;
+    if (billStatus) billStatus.onchange = updateBillFilter;
+    if (billClear) {
+      billClear.onclick = () => {
+        billSearch.value = '';
+        updateBillFilter();
+        billSearch.focus();
+      };
+    }
+  }
+
+  renderBillRows(bills, query = '') {
+    if (!bills.length) {
+      return `<tr><td colspan="12" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔍</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No purchase bills found ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Try searching by a different bill number, vendor name, or project.</div>
+      </td></tr>`;
+    }
+
+    return bills.map(b => `
+      <tr>
+        <td style="white-space:nowrap;"><strong>${b.bill_no}</strong></td>
+        <td style="white-space:nowrap;">${b.vendor_invoice_no || '—'}</td>
+        <td style="white-space:nowrap;">${this.formatDate(b.bill_date)}</td>
+        <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${b.vendor_name}</span></td>
+        <td style="white-space:nowrap; min-width:180px;"><span style="font-size:0.75rem; color:#94a3b8;">${b.project_name || 'General Supply'}</span></td>
+        <td style="white-space:nowrap;">${this.formatCurrency(b.taxable_subtotal)}</td>
+        <td style="white-space:nowrap;">${this.formatCurrency(b.tax_total)}</td>
+        <td style="white-space:nowrap;"><strong>${this.formatCurrency(b.grand_total)}</strong></td>
+        <td style="white-space:nowrap;"><strong style="color:${b.balance_due > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(b.balance_due)}</strong></td>
+        <td style="white-space:nowrap;"><span class="fin-badge fin-badge-${b.approval_status || 'approved'}">${b.approval_status || 'Approved'}</span></td>
+        <td style="white-space:nowrap;"><span class="fin-badge fin-badge-${b.status}">${(b.status || 'unpaid').replace('_', ' ')}</span></td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="fin-btn-row-action" onclick="window.finApp.openBillDetail('${b.id}')" title="Print &amp; View Purchase Bill">Print / View</button>
+          <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditBillModal('${b.id}')" title="Edit Purchase Bill">Edit</button>
+          ${b.balance_due > 0 ? `
+            <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openQuickPayBill('${b.id}')" title="Disburse Payment Out">Pay</button>
+          ` : ''}
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteBill('${b.id}')" title="Delete Purchase Bill">Delete</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   // --------------------------------------------------------------------------
@@ -4442,6 +4505,23 @@ class FinanceApp {
           </div>
         </div>
 
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="cust-filter-search" class="fin-filter-input" placeholder="🔍 Search customers by name, code, contact, TRN, phone..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="cust-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <select id="cust-filter-status" class="fin-select-pill">
+            <option value="all">All Clients (${customers.length})</option>
+            <option value="dues">With Outstanding Dues</option>
+            <option value="settled">Fully Settled (Zero Balance)</option>
+          </select>
+          <div id="cust-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="cust-showing-count">${customers.length}</span> of ${customers.length} clients
+          </div>
+        </div>
+
         <div class="fin-table-responsive">
           <table class="fin-data-table">
             <thead>
@@ -4458,57 +4538,121 @@ class FinanceApp {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${customers.map(c => {
+            <tbody id="customers-tbody">
+              ${this.renderCustomerRows(customers, invoices)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const custSearch = document.getElementById('cust-filter-search');
+    const custClear = document.getElementById('cust-search-clear');
+    const custStatus = document.getElementById('cust-filter-status');
+    const custCount = document.getElementById('cust-showing-count');
+    const custTbody = document.getElementById('customers-tbody');
+
+    const updateCustFilter = () => {
+      const q = (custSearch?.value || '').toLowerCase().trim();
+      const st = custStatus ? custStatus.value : 'all';
+      if (custClear) custClear.style.display = q ? 'block' : 'none';
+
+      const filtered = customers.filter(c => {
+        const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
+        const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+        const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
+        const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
+
+        if (st === 'dues' && outstanding <= 0) return false;
+        if (st === 'settled' && outstanding > 0) return false;
+        if (!q) return true;
+
+        const haystack = [
+          c.code,
+          c.id,
+          c.name,
+          c.company_name,
+          c.display_name,
+          c.contact_person,
+          c.email,
+          c.phone,
+          c.trn,
+          c.gstin,
+          c.place_of_supply
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return haystack.includes(q);
+      });
+
+      if (custTbody) custTbody.innerHTML = this.renderCustomerRows(filtered, invoices, q);
+      if (custCount) custCount.textContent = filtered.length;
+    };
+
+    if (custSearch) custSearch.oninput = updateCustFilter;
+    if (custStatus) custStatus.onchange = updateCustFilter;
+    if (custClear) {
+      custClear.onclick = () => {
+        custSearch.value = '';
+        updateCustFilter();
+        custSearch.focus();
+      };
+    }
+  }
+
+  renderCustomerRows(customers, invoices, query = '') {
+    if (!customers.length) {
+      return `<tr><td colspan="10" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔍</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No clients found matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Try searching by a different name, code, contact person, or TRN.</div>
+      </td></tr>`;
+    }
+
+    return customers.map(c => {
       const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
       const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
       const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
       const totalInvoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
       const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
       return `
-                  <tr>
-                    <td><strong>${c.code || c.id || 'CUST'}</strong></td>
-                    <td style="white-space:nowrap;">
-                      <span class="fin-customer-cell">${c.name}</span>
-                      <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">
-                        <span class="fin-badge" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.25); font-size:0.68rem; padding:1px 6px;">
-                          💼 ${c.accounts_receivable || 'Accounts Receivable'}
-                        </span>
-                        ${Number(c.opening_balance) > 0 ? `
-                          <span class="fin-badge" style="background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.25); font-size:0.68rem; padding:1px 6px;">
-                            Opening: ${this.formatCurrency(c.opening_balance)}
-                          </span>
-                        ` : ''}
-                      </div>
-                    </td>
-                    <td>${c.contact_person || '—'}</td>
-                    <td>
-                      <div>${c.email || '—'}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${c.phone || '—'}</span>
-                    </td>
-                    <td>
-                      ${c.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${c.trn}</code></div>` : ''}
-                      ${c.gstin && !c.gstin.startsWith('EXEMPT') ? `<div><code>GST: ${c.gstin}</code></div>` : (!c.trn ? `<code>${c.gstin || '—'}</code>` : '')}
-                    </td>
-                    <td>${c.place_of_supply || '—'}</td>
-                    <td>${this.formatCurrency(totalInvoiced)}</td>
-                    <td><strong style="color:${outstanding > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
-                    <td>${this.formatCurrency(c.credit_limit || 15000000)}</td>
-                    <td>
-                      <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
-                        <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCustomerProfile('${c.id}')">360° Profile</button>
-                        <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.3);" onclick="window.finApp.openEditCustomerModal('${c.id}')">✏️ Edit</button>
-                        <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.12); color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="window.finApp.deleteCustomer('${c.id}')">🗑️ Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                `;
-    }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
+        <tr>
+          <td><strong style="color:#38bdf8; font-family:monospace;">${c.code || c.id || 'CUST'}</strong></td>
+          <td style="white-space:nowrap;">
+            <span class="fin-customer-cell">${c.name}</span>
+            <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">
+              <span class="fin-badge" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.25); font-size:0.68rem; padding:1px 6px;">
+                💼 ${c.accounts_receivable || 'Accounts Receivable'}
+              </span>
+              ${Number(c.opening_balance) > 0 ? `
+                <span class="fin-badge" style="background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.25); font-size:0.68rem; padding:1px 6px;">
+                  Opening: ${this.formatCurrency(c.opening_balance)}
+                </span>
+              ` : ''}
+            </div>
+          </td>
+          <td>${c.contact_person || '—'}</td>
+          <td>
+            <div>${c.email || '—'}</div>
+            <span style="font-size:0.68rem; color:#94a3b8;">${c.phone || '—'}</span>
+          </td>
+          <td>
+            ${c.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${c.trn}</code></div>` : ''}
+            ${c.gstin && !c.gstin.startsWith('EXEMPT') ? `<div><code>GST: ${c.gstin}</code></div>` : (!c.trn ? `<code>${c.gstin || '—'}</code>` : '')}
+          </td>
+          <td>${c.place_of_supply || '—'}</td>
+          <td>${this.formatCurrency(totalInvoiced)}</td>
+          <td><strong style="color:${outstanding > 0 ? '#ef4444' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
+          <td>${this.formatCurrency(c.credit_limit || 15000000)}</td>
+          <td>
+            <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+              <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCustomerProfile('${c.id}')">360° Profile</button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.3);" onclick="window.finApp.openEditCustomerModal('${c.id}')">✏️ Edit</button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.12); color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="window.finApp.deleteCustomer('${c.id}')">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   // --------------------------------------------------------------------------
@@ -4534,6 +4678,18 @@ class FinanceApp {
           </div>
         </div>
 
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="vend-filter-search" class="fin-filter-input" placeholder="🔍 Search vendor by name, code, contact, TRN, PAN..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="vend-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <div id="vend-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="vend-showing-count">${vendors.length}</span> of ${vendors.length} vendors
+          </div>
+        </div>
+
         <div class="fin-table-responsive">
           <table class="fin-data-table">
             <thead>
@@ -4549,51 +4705,95 @@ class FinanceApp {
                 <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${vendors.length === 0 ? `
-                <tr>
-                  <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">🏢</div>
-                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No vendors or subcontractors found</div>
-                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Add Vendor" to register a new supplier profile.</div>
-                  </td>
-                </tr>
-              ` : vendors.map(v => {
-      const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === v.name.toLowerCase())) && b.status !== 'void');
-      const outstanding = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
-      return `
-                  <tr>
-                    <td style="white-space:nowrap;"><strong>${v.code || '—'}</strong></td>
-                    <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${v.name}</span></td>
-                    <td><span class="fin-badge fin-badge-issued">${v.category || 'General Supplier'}</span></td>
-                    <td>
-                      <div>${v.contact_person || '—'}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${v.email || '—'}</span>
-                    </td>
-                    <td>
-                      ${v.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${v.trn}</code></div>` : ''}
-                      ${v.gstin ? `<div><code>GST: ${v.gstin}</code></div>` : ''}
-                      ${v.pan ? `<span style="font-size:0.68rem; color:#94a3b8;">PAN: ${v.pan}</span>` : (!v.trn && !v.gstin ? '—' : '')}
-                    </td>
-                    <td>
-                      <span style="font-size:0.75rem;">${v.bank_name || 'Corporate Bank'}</span><br>
-                      <code style="font-size:0.68rem;">A/C: ${v.account_no ? '••••' + String(v.account_no).slice(-4) : (v.iban ? '••••' + String(v.iban).slice(-4) : '—')}</code>
-                    </td>
-                    <td><strong style="color:${outstanding > 0 ? '#fb923c' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
-                    <td>${v.payment_terms || 30} Days</td>
-                    <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" onclick="window.finApp.openVendorProfile('${v.id}')">Profile &amp; Ledger</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditVendorModal('${v.id}')">Edit</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteVendor('${v.id}')">Delete</button>
-                    </td>
-                  </tr>
-                `;
-    }).join('')}
+            <tbody id="vendors-tbody">
+              ${this.renderVendorRows(vendors, bills)}
             </tbody>
           </table>
         </div>
       </div>
     `;
+
+    const vendSearch = document.getElementById('vend-filter-search');
+    const vendClear = document.getElementById('vend-search-clear');
+    const vendCount = document.getElementById('vend-showing-count');
+    const vendTbody = document.getElementById('vendors-tbody');
+
+    const updateVendFilter = () => {
+      const q = (vendSearch?.value || '').toLowerCase().trim();
+      if (vendClear) vendClear.style.display = q ? 'block' : 'none';
+
+      const filtered = vendors.filter(v => {
+        if (!q) return true;
+        const haystack = [
+          v.code,
+          v.id,
+          v.name,
+          v.contact_person,
+          v.email,
+          v.phone,
+          v.trn,
+          v.gstin,
+          v.pan,
+          v.category,
+          v.bank_name
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      if (vendTbody) vendTbody.innerHTML = this.renderVendorRows(filtered, bills, q);
+      if (vendCount) vendCount.textContent = filtered.length;
+    };
+
+    if (vendSearch) vendSearch.oninput = updateVendFilter;
+    if (vendClear) {
+      vendClear.onclick = () => {
+        vendSearch.value = '';
+        updateVendFilter();
+        vendSearch.focus();
+      };
+    }
+  }
+
+  renderVendorRows(vendors, bills, query = '') {
+    if (!vendors.length) {
+      return `<tr><td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">🏢</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No vendors found ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Try searching by a different name, code, contact, or TRN.</div>
+      </td></tr>`;
+    }
+
+    return vendors.map(v => {
+      const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === v.name.toLowerCase())) && b.status !== 'void');
+      const outstanding = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
+      return `
+        <tr>
+          <td style="white-space:nowrap;"><strong style="color:#38bdf8; font-family:monospace;">${v.code || '—'}</strong></td>
+          <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${v.name}</span></td>
+          <td><span class="fin-badge fin-badge-issued">${v.category || 'General Supplier'}</span></td>
+          <td>
+            <div>${v.contact_person || '—'}</div>
+            <span style="font-size:0.68rem; color:#94a3b8;">${v.email || '—'}</span>
+          </td>
+          <td>
+            ${v.trn ? `<div><code style="color:#38bdf8; font-weight:700;">TRN: ${v.trn}</code></div>` : ''}
+            ${v.gstin ? `<div><code>GST: ${v.gstin}</code></div>` : ''}
+            ${v.pan ? `<span style="font-size:0.68rem; color:#94a3b8;">PAN: ${v.pan}</span>` : (!v.trn && !v.gstin ? '—' : '')}
+          </td>
+          <td>
+            <span style="font-size:0.75rem;">${v.bank_name || 'Corporate Bank'}</span><br>
+            <code style="font-size:0.68rem;">A/C: ${v.account_no ? '••••' + String(v.account_no).slice(-4) : (v.iban ? '••••' + String(v.iban).slice(-4) : '—')}</code>
+          </td>
+          <td><strong style="color:${outstanding > 0 ? '#fb923c' : '#10b981'};">${this.formatCurrency(outstanding)}</strong></td>
+          <td>${v.payment_terms || 30} Days</td>
+          <td style="white-space:nowrap;">
+            <button type="button" class="fin-btn-row-action" onclick="window.finApp.openVendorProfile('${v.id}')">Profile &amp; Ledger</button>
+            <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditVendorModal('${v.id}')">Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteVendor('${v.id}')">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   // --------------------------------------------------------------------------
@@ -4957,6 +5157,24 @@ class FinanceApp {
             </div>
           </div>
 
+          <!-- Filter / Search Bar -->
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+            <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+              <input type="text" id="rcp-filter-search" class="fin-filter-input" placeholder="🔍 Search voucher #, client name, bank, wire ref, or invoice..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="rcp-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            </div>
+            <select id="rcp-filter-mode" class="fin-select-pill">
+              <option value="all">All Payment Modes (${receipts.length})</option>
+              <option value="Online">Online / Wire Transfer</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Cash">Cash</option>
+            </select>
+            <div id="rcp-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="rcp-showing-count">${receipts.length}</span> of ${receipts.length} vouchers
+            </div>
+          </div>
+
           <div class="fin-table-responsive">
             <table class="fin-data-table">
               <thead>
@@ -4970,8 +5188,90 @@ class FinanceApp {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                  ${receipts.map(r => {
+              <tbody id="receipts-tbody">
+                ${this.renderReceiptRows(receipts)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const rcpSearch = document.getElementById('rcp-filter-search');
+    const rcpClear = document.getElementById('rcp-search-clear');
+    const rcpMode = document.getElementById('rcp-filter-mode');
+    const rcpCount = document.getElementById('rcp-showing-count');
+    const rcpTbody = document.getElementById('receipts-tbody');
+
+    const updateRcpFilter = () => {
+      const q = (rcpSearch?.value || '').toLowerCase().trim();
+      const mode = rcpMode ? rcpMode.value : 'all';
+      if (rcpClear) rcpClear.style.display = q ? 'block' : 'none';
+
+      const filtered = receipts.filter(r => {
+        if (mode !== 'all') {
+          const rMode = (r.payment_mode || 'Online').toLowerCase();
+          if (mode === 'Online' && !rMode.includes('online') && !rMode.includes('wire') && !rMode.includes('transfer') && !rMode.includes('rtgs') && !rMode.includes('neft')) return false;
+          if (mode === 'Cheque' && !rMode.includes('cheque') && !rMode.includes('check')) return false;
+          if (mode === 'Cash' && !rMode.includes('cash')) return false;
+        }
+        if (!q) return true;
+
+        let custDisp = r.customer_name || '';
+        const firstAlloc = (r.allocations || [])[0];
+        if (!custDisp || custDisp.trim() === '' || custDisp === 'Customer' || custDisp === 'Client') {
+          if (firstAlloc) {
+            const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
+            if (mi?.customer_name) custDisp = mi.customer_name;
+          } else if (r.ref_invoice_no) {
+            const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
+            if (mi?.customer_name) custDisp = mi.customer_name;
+          }
+        }
+
+        const allocInvs = (r.allocations || []).map(a => a.invoice_no).join(' ');
+        const haystack = [
+          r.receipt_no,
+          r.id,
+          custDisp,
+          r.payment_mode,
+          r.reference_no,
+          r.bank_name,
+          r.utr_no,
+          r.cheque_no,
+          r.ref_invoice_no,
+          allocInvs,
+          String(r.amount_received || '')
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return haystack.includes(q);
+      });
+
+      if (rcpTbody) rcpTbody.innerHTML = this.renderReceiptRows(filtered, q);
+      if (rcpCount) rcpCount.textContent = filtered.length;
+    };
+
+    if (rcpSearch) rcpSearch.oninput = updateRcpFilter;
+    if (rcpMode) rcpMode.onchange = updateRcpFilter;
+    if (rcpClear) {
+      rcpClear.onclick = () => {
+        rcpSearch.value = '';
+        updateRcpFilter();
+        rcpSearch.focus();
+      };
+    }
+  }
+
+  renderReceiptRows(receipts, query = '') {
+    if (!receipts.length) {
+      return `<tr><td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔍</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No payment vouchers found matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Try searching by voucher number, client name, bank, or wire reference.</div>
+      </td></tr>`;
+    }
+
+    return receipts.map(r => {
       let custDisp = r.customer_name;
       const firstAlloc = (r.allocations || [])[0];
       if (!custDisp || custDisp.trim() === '' || custDisp === 'Customer' || custDisp === 'Client') {
@@ -4984,36 +5284,30 @@ class FinanceApp {
         }
       }
       return `
-                    <tr>
-                      <td><strong>${r.receipt_no}</strong></td>
-                      <td>${this.formatDate(r.receipt_date)}</td>
-                      <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${custDisp || 'Client'}</span></td>
-                      <td>
-                        <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
-                        <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}${r.bank_name ? ` • ${r.bank_name}` : ''}</span>
-                      </td>
-                      <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
-                      <td>
-                        ${(r.allocations || []).map(a => {
-        const matchedInv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
-        const dispInvNo = matchedInv ? matchedInv.invoice_no : a.invoice_no;
-        return `<span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${dispInvNo}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
-      }).join(' ')}
-                      </td>
-                      <td style="white-space:nowrap;">
-                        <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
-                        <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Customer Receipt">✏️ Edit</button>
-                        <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
-                      </td>
-                    </tr>
-                  `;
-    }).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
+        <tr>
+          <td><strong style="color:#38bdf8; font-family:monospace;">${r.receipt_no}</strong></td>
+          <td>${this.formatDate(r.receipt_date)}</td>
+          <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${custDisp || 'Client'}</span></td>
+          <td>
+            <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
+            <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}${r.bank_name ? ` • ${r.bank_name}` : ''}</span>
+          </td>
+          <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
+          <td>
+            ${(r.allocations || []).map(a => {
+              const matchedInv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
+              const dispInvNo = matchedInv ? matchedInv.invoice_no : a.invoice_no;
+              return `<span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${dispInvNo}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
+            }).join(' ')}
+          </td>
+          <td style="white-space:nowrap;">
+            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
+            <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Customer Receipt">✏️ Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   renderPaymentOutTab(root) {
@@ -5121,6 +5415,18 @@ class FinanceApp {
             + Create Credit Note
           </button>
         </div>
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="cn-filter-search" class="fin-filter-input" placeholder="🔍 Search credit note #, invoice ref, customer, reason..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="cn-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <div id="cn-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="cn-showing-count">${creditNotes.length}</span> of ${creditNotes.length} credit notes
+          </div>
+        </div>
+
         <div class="fin-table-responsive">
           <table class="fin-data-table">
             <thead>
@@ -5134,35 +5440,74 @@ class FinanceApp {
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${creditNotes.length === 0 ? `
-                <tr>
-                  <td colspan="7" style="text-align:center; padding:3rem 1rem; color:#64748b;">
-                    <div style="font-size:2rem; margin-bottom:0.5rem;">📄</div>
-                    <div style="font-size:0.95rem; font-weight:600; color:#cbd5e1;">No credit notes found</div>
-                    <div style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Click "+ Create Credit Note" or click "Cr. Note" next to any invoice to issue a credit note.</div>
-                  </td>
-                </tr>
-              ` : creditNotes.map(cn => `
-                <tr>
-                  <td><strong>${cn.credit_note_no}</strong></td>
-                  <td><code>${cn.invoice_no}</code></td>
-                  <td style="white-space:nowrap;"><span class="fin-customer-cell">${cn.customer_name}</span></td>
-                  <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
-                  <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
-                  <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
-                  <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openCreditNotePrintModal('${cn.id}')" title="Print &amp; View Credit Note PDF">Print / View</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCreditNote('${cn.id}')">Delete</button>
-                  </td>
-                </tr>
-              `).join('')}
+            <tbody id="credit-notes-tbody">
+              ${this.renderCreditNoteRows(creditNotes)}
             </tbody>
           </table>
         </div>
       </div>
     `;
+
+    const cnSearch = document.getElementById('cn-filter-search');
+    const cnClear = document.getElementById('cn-search-clear');
+    const cnCount = document.getElementById('cn-showing-count');
+    const cnTbody = document.getElementById('credit-notes-tbody');
+
+    const updateCnFilter = () => {
+      const q = (cnSearch?.value || '').toLowerCase().trim();
+      if (cnClear) cnClear.style.display = q ? 'block' : 'none';
+
+      const filtered = creditNotes.filter(cn => {
+        if (!q) return true;
+        const haystack = [
+          cn.credit_note_no,
+          cn.invoice_no,
+          cn.ref_invoice_no,
+          cn.customer_name,
+          cn.reason,
+          String(cn.total_credit_amount || '')
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      if (cnTbody) cnTbody.innerHTML = this.renderCreditNoteRows(filtered, q);
+      if (cnCount) cnCount.textContent = filtered.length;
+    };
+
+    if (cnSearch) cnSearch.oninput = updateCnFilter;
+    if (cnClear) {
+      cnClear.onclick = () => {
+        cnSearch.value = '';
+        updateCnFilter();
+        cnSearch.focus();
+      };
+    }
+  }
+
+  renderCreditNoteRows(creditNotes, query = '') {
+    if (!creditNotes.length) {
+      return `<tr><td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔍</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No credit notes found ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Credit Note" or click "Cr. Note" next to any invoice to issue a credit note.</div>
+      </td></tr>`;
+    }
+
+    return creditNotes.map(cn => `
+      <tr>
+        <td><strong style="color:#38bdf8; font-family:monospace;">${cn.credit_note_no}</strong></td>
+        <td><code>${cn.invoice_no}</code></td>
+        <td style="white-space:nowrap;"><span class="fin-customer-cell">${cn.customer_name}</span></td>
+        <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
+        <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
+        <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openCreditNotePrintModal('${cn.id}')" title="Print &amp; View Credit Note PDF">Print / View</button>
+          <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCreditNote('${cn.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   renderDebitNotesTab(root) {
