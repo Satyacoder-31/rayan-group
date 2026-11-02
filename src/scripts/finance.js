@@ -214,7 +214,7 @@ class FinanceApp {
       'exp-rg-001', 'exp-rg-002', 'exp-rg-003',
       'vend-001', 'vend-002', 'vend-003', 'vend-004',
       'cust-004', 'cust-005', 'cust-kgc-alias', 'prj-dpa-01',
-      'rec-mvdvmilf',
+      'rec-mvdvmilf', 'rec-mvy61blt', 'rec-rv-44073',
       'item-001', 'item-002', 'item-003', 'item-004', 'item-005', 'item-006', 'item-007', 'item-008',
       'doc-001', 'doc-002', 'doc-003', 'doc-004',
       'chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01',
@@ -873,7 +873,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v43';
+    const CURRENT_DB_VERSION = 'v2026_clean_v46';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -889,6 +889,13 @@ class FinanceApp {
     } else {
       this.db = this.mergeWithSeedData(this.db);
     }
+    if (this.db.customer_receipts) {
+      this.db.customer_receipts = this.db.customer_receipts.filter(r => {
+        const id = (r.id || '').toLowerCase();
+        const no = (r.receipt_no || '').toLowerCase();
+        return id !== 'rec-mvy61blt' && no !== 'rec-rv-44073';
+      });
+    }
     this.sanitizeInvoices();
     this.sanitizeBankAccounts();
     this.normalizeAllBalances();
@@ -902,6 +909,13 @@ class FinanceApp {
           const json = await res.json();
           if (json.data && typeof json.data === 'object' && json.data.companies && json.data.companies.length > 0) {
             this.db = this.mergeWithSeedData(json.data);
+            if (this.db.customer_receipts) {
+              this.db.customer_receipts = this.db.customer_receipts.filter(r => {
+                const id = (r.id || '').toLowerCase();
+                const no = (r.receipt_no || '').toLowerCase();
+                return id !== 'rec-mvy61blt' && no !== 'rec-rv-44073';
+              });
+            }
             this.sanitizeInvoices();
             this.sanitizeBankAccounts();
             this.normalizeAllBalances();
@@ -2858,6 +2872,13 @@ class FinanceApp {
 
               <div class="fin-header-vsep" aria-hidden="true"></div>
 
+              <!-- Quick Cloud Sync -->
+              <button type="button" class="fin-icon-btn" onclick="window.finApp.refreshFromBackend()" title="Instant Cloud Database Sync" style="color:#38bdf8;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </button>
+
+              <div class="fin-header-vsep" aria-hidden="true"></div>
+
               <!-- Notifications Hub -->
               <button type="button" class="fin-icon-btn" id="fin-notif-btn" title="Financial Notifications &amp; Alerts">
                 <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -4177,6 +4198,9 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Complete billing register with ${this.activeCompanyId === 'ashaz-eng-in' ? 'GST' : 'VAT'} breakup, payment allocation tracking, and PDF generation.</p>
           </div>
           <div class="fin-panel-actions">
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-weight:600;" onclick="window.finApp.refreshFromBackend()" title="Force refresh and synchronize data directly from cloud database">
+              🔄 Sync &amp; Refresh
+            </button>
             <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openInvoicePrintModal('inv-rec-rg-inv-44035')">
               📄 Sample Tax Invoice
             </button>
@@ -4890,7 +4914,10 @@ class FinanceApp {
               <h2 class="fin-panel-title">💳 Customer Receipts</h2>
               <p style="font-size:0.75rem; color:#94a3b8;">Inward client collections &amp; invoice allocations</p>
             </div>
-            <div style="display:flex; gap:0.5rem; align-items:center;">
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-weight:600;" onclick="window.finApp.refreshFromBackend()" title="Force refresh and synchronize data directly from cloud database">
+                🔄 Sync &amp; Refresh
+              </button>
               <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('${latestReceiptId}')">
                 💳 Official Receipt Voucher
               </button>
@@ -4942,9 +4969,9 @@ class FinanceApp {
                       `).join(' ')}
                     </td>
                     <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Receipt Voucher">Print / View</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Receipt">✏️ Edit</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Receipt Voucher">🗑️ Delete</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id || r.receipt_no}')" title="Print Official Receipt Voucher">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id || r.receipt_no}')" title="Edit Payment-In Voucher / Receipt">✏️ Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id || r.receipt_no}')" title="Delete Receipt Voucher">🗑️ Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -5137,7 +5164,10 @@ class FinanceApp {
               <h2 class="fin-panel-title">💳 Payment-In (Customer Collections &amp; Receipts)</h2>
               <p style="font-size:0.75rem; color:#94a3b8;">Inward client collections, wire transfers, and invoice receipts</p>
             </div>
-            <div style="display:flex; gap:0.5rem; align-items:center;">
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-weight:600;" onclick="window.finApp.refreshFromBackend()" title="Force refresh and synchronize data directly from cloud database">
+                🔄 Sync &amp; Refresh
+              </button>
               <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5d2;" onclick="window.finApp.openReceiptPrintModal('${latestReceiptId}')">
                 💳 Official Receipt Voucher
               </button>
@@ -5311,9 +5341,9 @@ class FinanceApp {
             }).join(' ')}
           </td>
           <td style="white-space:nowrap;">
-            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
-            <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Customer Receipt">✏️ Edit</button>
-            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
+            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id || r.receipt_no}')" title="Print Official Bilingual Voucher">Print / View</button>
+            <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id || r.receipt_no}')" title="Edit Payment-In Voucher / Customer Receipt">✏️ Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id || r.receipt_no}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
           </td>
         </tr>
       `;
@@ -20797,13 +20827,35 @@ class FinanceApp {
     const rcp = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
     const label = rcp ? rcp.receipt_no : receiptId;
     if (!confirm(`Are you sure you want to delete Payment-In voucher ${label}?`)) return;
-    await this.syncApi('delete_receipt', { receipt_id: receiptId, id: receiptId });
+
+    // 1. Immediately remove from local database & update invoice balances
     if (this.db.customer_receipts) {
-      this.db.customer_receipts = this.db.customer_receipts.filter(r => r.id !== receiptId && r.receipt_no !== receiptId);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.db.customer_receipts = this.db.customer_receipts.filter(r => r.id !== receiptId && r.receipt_no !== receiptId && r.receipt_no !== label);
     }
-    this.showNotification(`Payment-In voucher ${label} deleted successfully.`, 'info');
+    this.normalizeAllBalances();
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) { }
+
+    // 2. Re-render UI immediately so there is zero delay
     this.renderActiveTab();
+    this.showNotification(`Payment-In voucher ${label} deleted successfully.`, 'info');
+
+    // 3. Persist deletion to backend server
+    await this.syncApi('delete_receipt', { receipt_id: receiptId, id: receiptId, receipt_no: label });
+  }
+
+  async refreshFromBackend() {
+    this.showNotification('Synchronizing data with cloud server...', 'info');
+    try {
+      localStorage.removeItem('rayan_fin_db_cache');
+      await this.loadDatabase();
+      this.renderActiveTab();
+      this.showNotification('✓ Portal data synchronized successfully with cloud database!', 'success');
+    } catch (err) {
+      console.error('Refresh failed:', err);
+      this.renderActiveTab();
+    }
   }
 
   async deletePO(poId) {

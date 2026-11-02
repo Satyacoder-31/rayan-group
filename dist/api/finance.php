@@ -511,7 +511,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     $dummyVendorIds = ['vend-001', 'vend-002', 'vend-003', 'vend-004'];
     $dummyCustIds = ['cust-004', 'cust-005', 'cust-kgc-alias'];
     $dummyInvIds = [];
-    $dummyRecIds = ['rec-mvdvmilf'];
+    $dummyRecIds = ['rec-mvdvmilf', 'rec-mvy61blt', 'REC-RV-44073', 'rec-rv-44073'];
     $dummyProjIds = ['prj-dpa-01'];
     $dummyChequeIds = ['chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01'];
     $dummyCvIds = ['cv-01', 'cv-02', 'cv-03'];
@@ -649,7 +649,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
             $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-001', 'vend-002', 'vend-003', 'vend-004')");
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004', 'cust-005', 'cust-kgc-alias')");
-            $pdo->exec("DELETE FROM finance_receipts WHERE id = 'rec-mvdvmilf'");
+            $pdo->exec("DELETE FROM finance_receipts WHERE id IN ('rec-mvdvmilf', 'rec-mvy61blt') OR receipt_no = 'REC-RV-44073'");
             $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-adcb-44035'");
             $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
             $pdo->exec("UPDATE finance_customers SET 
@@ -2889,33 +2889,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'delete_receipt':
-            $rcpId = $body['receipt_id'] ?? $body['id'] ?? '';
+            $rcpId = $body['receipt_id'] ?? $body['id'] ?? $body['receipt_no'] ?? '';
+            $rcpNo = $body['receipt_no'] ?? $rcpId;
             if (!empty($rcpId) && isset($db['customer_receipts'])) {
-                $db['customer_receipts'] = array_values(array_filter($db['customer_receipts'], function($item) use ($rcpId) {
-                    return ($item['id'] ?? '') !== $rcpId && ($item['receipt_no'] ?? '') !== $rcpId;
+                $db['customer_receipts'] = array_values(array_filter($db['customer_receipts'], function($item) use ($rcpId, $rcpNo) {
+                    $id = $item['id'] ?? '';
+                    $no = $item['receipt_no'] ?? '';
+                    return $id !== $rcpId && $no !== $rcpId && $id !== $rcpNo && $no !== $rcpNo;
                 }));
                 if ($pdo) {
                     try {
-                        $stmt = $pdo->prepare("DELETE FROM finance_receipts WHERE id = ? OR receipt_no = ?");
-                        $stmt->execute([$rcpId, $rcpId]);
+                        $stmt = $pdo->prepare("DELETE FROM finance_receipts WHERE id = ? OR receipt_no = ? OR id = ? OR receipt_no = ?");
+                        $stmt->execute([$rcpId, $rcpId, $rcpNo, $rcpNo]);
                     } catch (Exception $e) {}
                 }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('delete', 'receipt', $rcpId, 'Deleted customer receipt ' . $rcpId);
             }
             break;
 
         case 'delete_payment':
-            $payId = $body['payment_id'] ?? $body['id'] ?? '';
+            $payId = $body['payment_id'] ?? $body['id'] ?? $body['voucher_no'] ?? '';
+            $payNo = $body['voucher_no'] ?? $payId;
             if (!empty($payId) && isset($db['vendor_payments'])) {
-                $db['vendor_payments'] = array_values(array_filter($db['vendor_payments'], function($item) use ($payId) {
-                    return ($item['id'] ?? '') !== $payId && ($item['voucher_no'] ?? '') !== $payId;
+                $db['vendor_payments'] = array_values(array_filter($db['vendor_payments'], function($item) use ($payId, $payNo) {
+                    $id = $item['id'] ?? '';
+                    $no = $item['voucher_no'] ?? '';
+                    return $id !== $payId && $no !== $payId && $id !== $payNo && $no !== $payNo;
                 }));
                 if ($pdo) {
                     try {
-                        $stmt = $pdo->prepare("DELETE FROM finance_vendor_payments WHERE id = ? OR voucher_no = ?");
-                        $stmt->execute([$payId, $payId]);
+                        $stmt = $pdo->prepare("DELETE FROM finance_vendor_payments WHERE id = ? OR voucher_no = ? OR id = ? OR voucher_no = ?");
+                        $stmt->execute([$payId, $payId, $payNo, $payNo]);
                     } catch (Exception $e) {}
                 }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('delete', 'payment', $payId, 'Deleted vendor payment ' . $payId);
             }
             break;
