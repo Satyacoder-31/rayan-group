@@ -1245,49 +1245,10 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                     } catch (Exception $e) {}
 
-                    // Migration v26: Standardize invoice numbers to clean REC-RG-#### format and remove duplicates
+                    // Migration v26: Standardize invoice numbers to clean REC-RG-#### format (Completed)
                     try {
                         $chkInv26 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'invoice_cleanup_v26'")->fetchColumn();
                         if (!$chkInv26) {
-                            $cleanInvFn = function($no) {
-                                if (empty($no)) return $no;
-                                if (preg_match('/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3})(?:_|$|[^0-9A-Z])/i', $no, $m)) {
-                                    return 'REC-RG-' . $m[1];
-                                }
-                                if (preg_match('/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(?:2025-)?(44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i', $no, $m)) {
-                                    return 'REC-RG-INV-' . $m[1];
-                                }
-                                return $no;
-                            };
-
-                            if (!empty($data['invoices']) && is_array($data['invoices'])) {
-                                $migratedInvs = [];
-                                $seenMigKeys = [];
-                                foreach ($data['invoices'] as $invItem) {
-                                    $newNo = $cleanInvFn($invItem['invoice_no'] ?? '');
-                                    $newId = 'inv-' . strtolower($newNo);
-                                    $key = strtolower($newNo);
-                                    if (isset($seenMigKeys[$key])) continue;
-                                    $seenMigKeys[$key] = true;
-                                    $invItem['invoice_no'] = $newNo;
-                                    $invItem['id'] = $newId;
-                                    $migratedInvs[] = $invItem;
-                                }
-                                $data['invoices'] = $migratedInvs;
-                            }
-
-                            // Clean MySQL finance_invoices table
-                            $pdo->exec("DELETE FROM finance_invoices WHERE invoice_no LIKE '%_Focus%' OR invoice_no LIKE '%_HLN%' OR invoice_no LIKE '%_PROFESSIONAL%' OR invoice_no LIKE '%_Al%' OR invoice_no LIKE '%_Ali%' OR invoice_no LIKE '%_Hayat%' OR invoice_no LIKE '%_HI%' OR invoice_no LIKE '%_MURGANTI%' OR invoice_no LIKE '%_Top%' OR invoice_no LIKE '%_Alex%'");
-                            // Replace 1000-series REC-RG-INV- with REC-RG-
-                            for ($seq = 1001; $seq <= 1027; $seq++) {
-                                $oldInvPattern = "REC-RG-INV-$seq";
-                                $newInvNum = "REC-RG-$seq";
-                                $newInvId = "inv-rec-rg-$seq";
-                                $pdo->exec("UPDATE finance_invoices SET invoice_no = '$newInvNum', id = '$newInvId', data_json = REPLACE(REPLACE(data_json, '\"$oldInvPattern\"', '\"$newInvNum\"'), '\"inv-rec-rg-inv-$seq\"', '\"$newInvId\"') WHERE invoice_no = '$oldInvPattern'");
-                            }
-                            // Delete any orphaned duplicates
-                            $pdo->exec("DELETE f1 FROM finance_invoices f1 INNER JOIN finance_invoices f2 WHERE f1.id < f2.id AND f1.invoice_no = f2.invoice_no");
-
                             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('invoice_cleanup_v26', 'completed', NOW())");
                         }
                     } catch (Exception $e) {}
@@ -1673,10 +1634,13 @@ function syncToRelationalTables($pdo, &$data) {
         // 2. Customers
         if (!empty($data['customers']) && is_array($data['customers'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_customers (id, code, name, contact_person, email, phone, trn, gstin, credit_limit, data_json, updated_at) VALUES (:id, :code, :name, :contact_person, :email, :phone, :trn, :gstin, :credit_limit, :data_json, NOW())");
+            $validCustIds = [];
             foreach ($data['customers'] as $c) {
                 if (empty($c['name'])) continue;
+                $cid = $c['id'] ?? ('cust-' . rand(1000, 9999));
+                $validCustIds[] = $cid;
                 $stmt->execute([
-                    ':id' => $c['id'] ?? ('cust-' . rand(1000, 9999)),
+                    ':id' => $cid,
                     ':code' => $c['code'] ?? '',
                     ':name' => $c['name'],
                     ':contact_person' => $c['contact_person'] ?? '',
@@ -1687,6 +1651,11 @@ function syncToRelationalTables($pdo, &$data) {
                     ':credit_limit' => floatval($c['credit_limit'] ?? 10000000),
                     ':data_json' => json_encode($c, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
+            }
+            if (!empty($validCustIds)) {
+                $inClause = implode(',', array_fill(0, count($validCustIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_customers WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validCustIds);
             }
         }
 
@@ -1769,10 +1738,13 @@ function syncToRelationalTables($pdo, &$data) {
         // 6. Vendors
         if (!empty($data['vendors']) && is_array($data['vendors'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_vendors (id, code, company_id, name, country, trn, gstin, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :country, :trn, :gstin, :status, :data_json, NOW())");
+            $validVendIds = [];
             foreach ($data['vendors'] as $v) {
                 if (empty($v['name'])) continue;
+                $vid = $v['id'] ?? ('vend-' . rand(1000, 9999));
+                $validVendIds[] = $vid;
                 $stmt->execute([
-                    ':id' => $v['id'] ?? ('vend-' . rand(1000, 9999)),
+                    ':id' => $vid,
                     ':code' => $v['code'] ?? '',
                     ':company_id' => $v['company_id'] ?? 'rayan-corp-uae',
                     ':name' => $v['name'],
@@ -1782,6 +1754,11 @@ function syncToRelationalTables($pdo, &$data) {
                     ':status' => $v['status'] ?? 'active',
                     ':data_json' => json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
+            }
+            if (!empty($validVendIds)) {
+                $inClause = implode(',', array_fill(0, count($validVendIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_vendors WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validVendIds);
             }
         }
 
@@ -2241,128 +2218,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $inv = $body['invoice'] ?? [];
             $oldInvNo = trim($body['old_invoice_no'] ?? '');
             $oldId = trim($body['old_id'] ?? '');
-            if (!empty($inv)) {
+            if (!empty($inv) && !empty($inv['invoice_no'])) {
                 if (!isset($db['invoices']) || !is_array($db['invoices'])) {
                     $db['invoices'] = [];
                 }
 
-                $getSeqNum = function($str) {
-                    if (empty($str)) return null;
-                    if (preg_match('/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3}|44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i', $str, $m)) {
-                        return rtrim(strtoupper($m[1]), 'R');
-                    }
-                    return null;
-                };
+                $newInvNo = trim($inv['invoice_no']);
+                $newId = !empty($inv['id']) ? trim($inv['id']) : ('inv-' . strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '-', $newInvNo)));
+                $inv['invoice_no'] = $newInvNo;
+                $inv['id'] = $newId;
 
-                $oldSeq = $getSeqNum($oldInvNo) ?: $getSeqNum($oldId);
-                $newSeq = $getSeqNum($inv['invoice_no'] ?? '') ?: $getSeqNum($inv['id'] ?? '');
-                $targetSeq = $oldSeq ?: $newSeq;
-
-                $targetInvNo = !empty($oldInvNo) ? $oldInvNo : ($inv['invoice_no'] ?? '');
-                $targetId = !empty($oldId) ? $oldId : ($inv['id'] ?? '');
-
-                // Find existing invoice by old_id, old_invoice_no, id, invoice_no, or sequence number
+                // Find existing invoice by oldId, oldInvNo, newId, or newInvNo
                 $foundIdx = -1;
                 foreach ($db['invoices'] as $idx => $exI) {
                     $matchOldId = (!empty($oldId) && ($exI['id'] ?? '') === $oldId);
                     $matchOldNo = (!empty($oldInvNo) && strcasecmp($exI['invoice_no'] ?? '', $oldInvNo) === 0);
-                    $matchId = (!empty($inv['id']) && ($exI['id'] ?? '') === $inv['id']);
-                    $matchNo = (!empty($inv['invoice_no']) && strcasecmp($exI['invoice_no'] ?? '', $inv['invoice_no']) === 0);
-                    $matchSeq = false;
-                    if ($targetSeq) {
-                        $exSeq = $getSeqNum($exI['invoice_no'] ?? '') ?: $getSeqNum($exI['id'] ?? '');
-                        if ($exSeq && $exSeq === $targetSeq) {
-                            $matchSeq = true;
-                        }
-                    }
-                    if ($matchOldId || $matchOldNo || $matchId || $matchNo || $matchSeq) {
+                    $matchNewId = (($exI['id'] ?? '') === $newId);
+                    $matchNewNo = (strcasecmp($exI['invoice_no'] ?? '', $newInvNo) === 0);
+                    if ($matchOldId || $matchOldNo || $matchNewId || $matchNewNo) {
                         $foundIdx = $idx;
                         break;
                     }
                 }
 
                 if ($foundIdx >= 0) {
-                    // Update the existing record in-place!
                     $db['invoices'][$foundIdx] = array_merge($db['invoices'][$foundIdx], $inv);
-                    $addAuditLog('update', 'invoice', $inv['invoice_no'] ?? '', 'Updated tax invoice for ' . ($inv['customer_name'] ?? ''));
+                    $addAuditLog('update', 'invoice', $newInvNo, 'Updated tax invoice for ' . ($inv['customer_name'] ?? ''));
                 } else {
-                    // Only insert if completely new
                     array_unshift($db['invoices'], $inv);
-                    $addAuditLog('create', 'invoice', $inv['invoice_no'] ?? '', 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
+                    $addAuditLog('create', 'invoice', $newInvNo, 'Created tax invoice for ' . ($inv['customer_name'] ?? ''));
                 }
 
-                // Clean out any duplicate / legacy copies in $db['invoices']
-                $currInvNo = strtolower(trim($inv['invoice_no'] ?? ''));
-                $currId = strtolower(trim($inv['id'] ?? ''));
-                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($inv, $currInvNo, $currId, $oldInvNo, $oldId, $targetSeq, $getSeqNum) {
-                    $iNo = strtolower(trim($item['invoice_no'] ?? ''));
-                    $iId = strtolower(trim($item['id'] ?? ''));
-                    if ($iNo === $currInvNo && $iId === $currId) return true;
-                    if (!empty($oldInvNo) && $iNo === strtolower($oldInvNo)) return false;
-                    if (!empty($oldId) && $iId === strtolower($oldId)) return false;
-                    if ($targetSeq) {
-                        $itemSeq = $getSeqNum($item['invoice_no'] ?? '') ?: $getSeqNum($item['id'] ?? '');
-                        if ($itemSeq && $itemSeq === $targetSeq) {
-                            return false; // drop old format / duplicate
-                        }
-                    }
+                // Clean out any duplicates of this invoice in $db['invoices']
+                $db['invoices'] = array_values(array_filter($db['invoices'], function($item) use ($newInvNo, $newId, $oldInvNo, $oldId) {
+                    $iNo = trim($item['invoice_no'] ?? '');
+                    $iId = trim($item['id'] ?? '');
+                    if (strcasecmp($iNo, $newInvNo) === 0 && $iId === $newId) return true;
+                    if (!empty($oldInvNo) && strcasecmp($iNo, $oldInvNo) === 0 && strcasecmp($oldInvNo, $newInvNo) !== 0) return false;
+                    if (!empty($oldId) && $iId === $oldId && $oldId !== $newId) return false;
+                    if (strcasecmp($iNo, $newInvNo) === 0) return false;
                     return true;
                 }));
 
-                // Deduplicate $db['invoices'] so no two invoices share the same invoice_no, ID, or sequence
+                // Deduplicate $db['invoices'] by invoice_no
                 $deduped = [];
                 $seenNos = [];
-                $seenIds = [];
-                $seenSeqs = [];
                 foreach ($db['invoices'] as $item) {
                     $noKey = strtolower(trim($item['invoice_no'] ?? ''));
-                    $idKey = strtolower(trim($item['id'] ?? ''));
-                    $itemSeq = $getSeqNum($item['invoice_no'] ?? '') ?: $getSeqNum($item['id'] ?? '');
-                    if ((!empty($noKey) && isset($seenNos[$noKey])) || 
-                        (!empty($idKey) && isset($seenIds[$idKey])) ||
-                        (!empty($itemSeq) && isset($seenSeqs[$itemSeq]))) {
-                        continue;
-                    }
-                    if (!empty($noKey)) $seenNos[$noKey] = true;
-                    if (!empty($idKey)) $seenIds[$idKey] = true;
-                    if (!empty($itemSeq)) $seenSeqs[$itemSeq] = true;
+                    if (empty($noKey)) continue;
+                    if (isset($seenNos[$noKey])) continue;
+                    $seenNos[$noKey] = true;
                     $deduped[] = $item;
                 }
                 $db['invoices'] = $deduped;
 
-                // Delete any old/legacy or orphaned row from MySQL finance_invoices
+                // Update MySQL database directly
                 if ($pdo) {
                     try {
-                        if (!empty($oldInvNo) && strcasecmp($oldInvNo, $inv['invoice_no'] ?? '') !== 0) {
+                        if (!empty($oldInvNo) && strcasecmp($oldInvNo, $newInvNo) !== 0) {
                             $stmtDel = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no = ?");
                             $stmtDel->execute([$oldInvNo]);
                         }
-                        if (!empty($oldId) && $oldId !== ($inv['id'] ?? '')) {
+                        if (!empty($oldId) && $oldId !== $newId) {
                             $stmtDel = $pdo->prepare("DELETE FROM finance_invoices WHERE id = ?");
                             $stmtDel->execute([$oldId]);
                         }
-                        if ($targetSeq) {
-                            $stmtDelSeq = $pdo->prepare("DELETE FROM finance_invoices WHERE (invoice_no LIKE ? OR id LIKE ?) AND invoice_no != ? AND id != ?");
-                            $likePattern = "%$targetSeq%";
-                            $stmtDelSeq->execute([$likePattern, $likePattern, $inv['invoice_no'] ?? '', $inv['id'] ?? '']);
-                        }
-                    } catch (Exception $e) {}
+                        $stmtUp = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, customer_gstin, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (:id, :invoice_no, :company_id, :customer_id, :customer_name, :customer_trn, :customer_gstin, :invoice_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :data_json, NOW())");
+                        $stmtUp->execute([
+                            ':id' => $newId,
+                            ':invoice_no' => $newInvNo,
+                            ':company_id' => $inv['company_id'] ?? 'rayan-corp-uae',
+                            ':customer_id' => $inv['customer_id'] ?? '',
+                            ':customer_name' => $inv['customer_name'] ?? '',
+                            ':customer_trn' => $inv['customer_trn'] ?? '',
+                            ':customer_gstin' => $inv['customer_gstin'] ?? '',
+                            ':invoice_date' => $inv['invoice_date'] ?? date('Y-m-d'),
+                            ':due_date' => !empty($inv['due_date']) ? $inv['due_date'] : null,
+                            ':grand_total' => floatval($inv['grand_total'] ?? 0),
+                            ':amount_paid' => floatval($inv['amount_paid'] ?? 0),
+                            ':balance_due' => floatval($inv['balance_due'] ?? 0),
+                            ':currency' => $inv['currency'] ?? 'AED',
+                            ':status' => $inv['status'] ?? 'unpaid',
+                            ':data_json' => json_encode($inv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("update_invoice SQL error: " . $e->getMessage());
+                    }
                 }
 
                 // If invoice number changed, cascade update to linked customer receipts and credit notes
-                if (!empty($oldInvNo) && !empty($inv['invoice_no']) && strcasecmp($oldInvNo, $inv['invoice_no']) !== 0) {
+                if (!empty($oldInvNo) && strcasecmp($oldInvNo, $newInvNo) !== 0) {
                     if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
                         foreach ($db['customer_receipts'] as &$rcp) {
                             if (strcasecmp($rcp['ref_invoice_no'] ?? '', $oldInvNo) === 0) {
-                                $rcp['ref_invoice_no'] = $inv['invoice_no'];
+                                $rcp['ref_invoice_no'] = $newInvNo;
                             }
                             if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
                                 foreach ($rcp['allocations'] as &$alloc) {
                                     $matchAllocNo = strcasecmp($alloc['invoice_no'] ?? '', $oldInvNo) === 0;
                                     $matchAllocId = (!empty($oldId) && ($alloc['invoice_id'] ?? '') === $oldId);
                                     if ($matchAllocNo || $matchAllocId) {
-                                        $alloc['invoice_no'] = $inv['invoice_no'];
-                                        if (!empty($inv['id'])) $alloc['invoice_id'] = $inv['id'];
+                                        $alloc['invoice_no'] = $newInvNo;
+                                        $alloc['invoice_id'] = $newId;
                                     }
                                 }
                                 unset($alloc);
@@ -2372,8 +2329,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
                         foreach ($db['credit_notes'] as &$cn) {
-                            if (strcasecmp($cn['ref_invoice_no'] ?? '', $oldInvNo) === 0) {
-                                $cn['ref_invoice_no'] = $inv['invoice_no'];
+                            if (strcasecmp($cn['ref_invoice_no'] ?? '', $oldInvNo) === 0 || (!empty($oldId) && ($cn['invoice_id'] ?? '') === $oldId)) {
+                                $cn['ref_invoice_no'] = $newInvNo;
+                                $cn['invoice_id'] = $newId;
                             }
                         }
                         unset($cn);
@@ -3353,19 +3311,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$found) {
                     array_unshift($db['customers'], $cust);
                 }
+                if ($pdo) {
+                    try {
+                        $stmtC = $pdo->prepare("REPLACE INTO finance_customers (id, code, name, contact_person, email, phone, trn, gstin, credit_limit, data_json, updated_at) VALUES (:id, :code, :name, :contact_person, :email, :phone, :trn, :gstin, :credit_limit, :data_json, NOW())");
+                        $stmtC->execute([
+                            ':id' => $cust['id'],
+                            ':code' => $cust['code'] ?? '',
+                            ':name' => $cust['name'],
+                            ':contact_person' => $cust['contact_person'] ?? '',
+                            ':email' => $cust['email'] ?? '',
+                            ':phone' => $cust['phone'] ?? '',
+                            ':trn' => $cust['trn'] ?? '',
+                            ':gstin' => $cust['gstin'] ?? '',
+                            ':credit_limit' => floatval($cust['credit_limit'] ?? 10000000),
+                            ':data_json' => json_encode($cust, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('create', 'customer', $cust['name'] ?? '', 'Added client ' . ($cust['name'] ?? ''));
             }
             break;
 
+        case 'update_customer':
+            $cust = $body['customer'] ?? [];
+            $oldId = trim($body['old_id'] ?? '');
+            $oldCode = trim($body['old_code'] ?? '');
+            $oldName = trim($body['old_name'] ?? '');
+            if (!empty($cust) && !empty($cust['name'])) {
+                if (empty($cust['id'])) {
+                    $cust['id'] = !empty($oldId) ? $oldId : ('cust-' . round(microtime(true) * 1000));
+                }
+                if (empty($cust['code'])) {
+                    $cust['code'] = !empty($oldCode) ? $oldCode : ('CUST-' . rand(100, 999));
+                }
+                if (!isset($db['customers']) || !is_array($db['customers'])) {
+                    $db['customers'] = [];
+                }
+
+                $foundIdx = -1;
+                foreach ($db['customers'] as $idx => $exC) {
+                    $matchId = (!empty($oldId) && ($exC['id'] ?? '') === $oldId) || (($exC['id'] ?? '') === $cust['id']);
+                    $matchCode = (!empty($oldCode) && strcasecmp($exC['code'] ?? '', $oldCode) === 0) || (!empty($cust['code']) && strcasecmp($exC['code'] ?? '', $cust['code']) === 0);
+                    $matchName = (!empty($oldName) && strcasecmp($exC['name'] ?? '', $oldName) === 0);
+                    if ($matchId || $matchCode || $matchName) {
+                        $foundIdx = $idx;
+                        break;
+                    }
+                }
+
+                if ($foundIdx >= 0) {
+                    $db['customers'][$foundIdx] = array_merge($db['customers'][$foundIdx], $cust);
+                } else {
+                    array_unshift($db['customers'], $cust);
+                }
+
+                if ($pdo) {
+                    try {
+                        if (!empty($oldId) && $oldId !== $cust['id']) {
+                            $stmtDel = $pdo->prepare("DELETE FROM finance_customers WHERE id = ?");
+                            $stmtDel->execute([$oldId]);
+                        }
+                        $stmtC = $pdo->prepare("REPLACE INTO finance_customers (id, code, name, contact_person, email, phone, trn, gstin, credit_limit, data_json, updated_at) VALUES (:id, :code, :name, :contact_person, :email, :phone, :trn, :gstin, :credit_limit, :data_json, NOW())");
+                        $stmtC->execute([
+                            ':id' => $cust['id'],
+                            ':code' => $cust['code'] ?? '',
+                            ':name' => $cust['name'],
+                            ':contact_person' => $cust['contact_person'] ?? '',
+                            ':email' => $cust['email'] ?? '',
+                            ':phone' => $cust['phone'] ?? '',
+                            ':trn' => $cust['trn'] ?? '',
+                            ':gstin' => $cust['gstin'] ?? '',
+                            ':credit_limit' => floatval($cust['credit_limit'] ?? 10000000),
+                            ':data_json' => json_encode($cust, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
+
+                // If customer name or code changed, cascade to invoices and customer receipts
+                $targetOldName = !empty($oldName) ? $oldName : ($cust['name'] ?? '');
+                $targetNewName = $cust['name'];
+                if (!empty($targetOldName) && strcasecmp($targetOldName, $targetNewName) !== 0) {
+                    if (!empty($db['invoices']) && is_array($db['invoices'])) {
+                        foreach ($db['invoices'] as &$invItem) {
+                            if (strcasecmp($invItem['customer_name'] ?? '', $targetOldName) === 0 || (!empty($oldId) && ($invItem['customer_id'] ?? '') === $oldId)) {
+                                $invItem['customer_name'] = $targetNewName;
+                                $invItem['customer_id'] = $cust['id'];
+                                if (!empty($cust['trn'])) $invItem['customer_trn'] = $cust['trn'];
+                                if (!empty($cust['gstin'])) $invItem['customer_gstin'] = $cust['gstin'];
+                            }
+                        }
+                        unset($invItem);
+                    }
+                    if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
+                        foreach ($db['customer_receipts'] as &$rcpItem) {
+                            if (strcasecmp($rcpItem['customer_name'] ?? '', $targetOldName) === 0 || (!empty($oldId) && ($rcpItem['customer_id'] ?? '') === $oldId)) {
+                                $rcpItem['customer_name'] = $targetNewName;
+                                $rcpItem['customer_id'] = $cust['id'];
+                            }
+                        }
+                        unset($rcpItem);
+                    }
+                }
+
+                $addAuditLog('update', 'customer', $cust['name'] ?? '', 'Updated client profile and customer code ' . ($cust['code'] ?? ''));
+            }
+            break;
+
         case 'create_vendor':
-        case 'update_vendor':
             $vnd = $body['vendor'] ?? [];
             if (!empty($vnd) && !empty($vnd['name'])) {
                 if (empty($vnd['id'])) {
                     $vnd['id'] = 'vend-' . round(microtime(true) * 1000);
                 }
                 if (empty($vnd['code'])) {
-                    $vnd['code'] = 'VEND-' . rand(100, 999);
+                    $words = preg_split('/\s+/', preg_replace('/[^a-zA-Z0-9\s]/', '', $vnd['name']));
+                    $abbr = '';
+                    foreach ($words as $w) {
+                        if (!empty($w)) $abbr .= strtoupper($w[0]);
+                    }
+                    $vnd['code'] = 'VEND-' . (substr($abbr, 0, 5) ?: rand(100, 999));
                 }
                 if (empty($vnd['company_id'])) {
                     $vnd['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
@@ -3388,7 +3452,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$found) {
                     array_unshift($db['vendors'], $vnd);
                 }
+                if ($pdo) {
+                    try {
+                        $stmtV = $pdo->prepare("REPLACE INTO finance_vendors (id, code, company_id, name, country, trn, gstin, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :country, :trn, :gstin, :status, :data_json, NOW())");
+                        $stmtV->execute([
+                            ':id' => $vnd['id'],
+                            ':code' => $vnd['code'] ?? '',
+                            ':company_id' => $vnd['company_id'] ?? 'rayan-corp-uae',
+                            ':name' => $vnd['name'],
+                            ':country' => $vnd['country'] ?? 'UAE',
+                            ':trn' => $vnd['trn'] ?? '',
+                            ':gstin' => $vnd['gstin'] ?? '',
+                            ':status' => $vnd['status'] ?? 'active',
+                            ':data_json' => json_encode($vnd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('create', 'vendor', $vnd['name'] ?? '', 'Added supplier/subcontractor ' . ($vnd['name'] ?? ''));
+            }
+            break;
+
+        case 'update_vendor':
+            $vnd = $body['vendor'] ?? [];
+            $oldId = trim($body['old_id'] ?? '');
+            $oldCode = trim($body['old_code'] ?? '');
+            $oldName = trim($body['old_name'] ?? '');
+            if (!empty($vnd) && !empty($vnd['name'])) {
+                if (empty($vnd['id'])) {
+                    $vnd['id'] = !empty($oldId) ? $oldId : ('vend-' . round(microtime(true) * 1000));
+                }
+                if (empty($vnd['code'])) {
+                    $vnd['code'] = !empty($oldCode) ? $oldCode : ('VEND-' . rand(100, 999));
+                }
+                if (!isset($db['vendors']) || !is_array($db['vendors'])) {
+                    $db['vendors'] = [];
+                }
+
+                $foundIdx = -1;
+                foreach ($db['vendors'] as $idx => $exV) {
+                    $matchId = (!empty($oldId) && ($exV['id'] ?? '') === $oldId) || (($exV['id'] ?? '') === $vnd['id']);
+                    $matchCode = (!empty($oldCode) && strcasecmp($exV['code'] ?? '', $oldCode) === 0) || (!empty($vnd['code']) && strcasecmp($exV['code'] ?? '', $vnd['code']) === 0);
+                    $matchName = (!empty($oldName) && strcasecmp($exV['name'] ?? '', $oldName) === 0);
+                    if ($matchId || $matchCode || $matchName) {
+                        $foundIdx = $idx;
+                        break;
+                    }
+                }
+
+                if ($foundIdx >= 0) {
+                    $db['vendors'][$foundIdx] = array_merge($db['vendors'][$foundIdx], $vnd);
+                } else {
+                    array_unshift($db['vendors'], $vnd);
+                }
+
+                if ($pdo) {
+                    try {
+                        if (!empty($oldId) && $oldId !== $vnd['id']) {
+                            $stmtDel = $pdo->prepare("DELETE FROM finance_vendors WHERE id = ?");
+                            $stmtDel->execute([$oldId]);
+                        }
+                        $stmtV = $pdo->prepare("REPLACE INTO finance_vendors (id, code, company_id, name, country, trn, gstin, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :country, :trn, :gstin, :status, :data_json, NOW())");
+                        $stmtV->execute([
+                            ':id' => $vnd['id'],
+                            ':code' => $vnd['code'] ?? '',
+                            ':company_id' => $vnd['company_id'] ?? 'rayan-corp-uae',
+                            ':name' => $vnd['name'],
+                            ':country' => $vnd['country'] ?? 'UAE',
+                            ':trn' => $vnd['trn'] ?? '',
+                            ':gstin' => $vnd['gstin'] ?? '',
+                            ':status' => $vnd['status'] ?? 'active',
+                            ':data_json' => json_encode($vnd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
+
+                // Cascade changes to purchase bills and POs if vendor name changed
+                $targetOldName = !empty($oldName) ? $oldName : ($vnd['name'] ?? '');
+                $targetNewName = $vnd['name'];
+                if (!empty($targetOldName) && strcasecmp($targetOldName, $targetNewName) !== 0) {
+                    if (!empty($db['purchase_bills']) && is_array($db['purchase_bills'])) {
+                        foreach ($db['purchase_bills'] as &$bItem) {
+                            if (strcasecmp($bItem['vendor_name'] ?? '', $targetOldName) === 0 || (!empty($oldId) && ($bItem['vendor_id'] ?? '') === $oldId)) {
+                                $bItem['vendor_name'] = $targetNewName;
+                                $bItem['vendor_id'] = $vnd['id'];
+                                if (!empty($vnd['trn'])) $bItem['vendor_trn'] = $vnd['trn'];
+                            }
+                        }
+                        unset($bItem);
+                    }
+                    if (!empty($db['purchase_orders']) && is_array($db['purchase_orders'])) {
+                        foreach ($db['purchase_orders'] as &$poItem) {
+                            if (strcasecmp($poItem['vendor_name'] ?? '', $targetOldName) === 0 || (!empty($oldId) && ($poItem['vendor_id'] ?? '') === $oldId)) {
+                                $poItem['vendor_name'] = $targetNewName;
+                                $poItem['supplier_name'] = $targetNewName;
+                                $poItem['vendor_id'] = $vnd['id'];
+                            }
+                        }
+                        unset($poItem);
+                    }
+                }
+
+                $addAuditLog('update', 'vendor', $vnd['name'] ?? '', 'Updated vendor profile and vendor code ' . ($vnd['code'] ?? ''));
             }
             break;
 

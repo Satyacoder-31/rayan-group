@@ -265,25 +265,9 @@ class FinanceApp {
       }
 
       if (key === 'customers') {
+        // Preserve all user-edited fields on customer profiles; only supply defaults if missing
         incomingArr.forEach(c => {
-          if (c && (c.name || '').includes('TOP ROCK')) {
-            c.customer_type = 'Business';
-            c.name = 'M/S TOP ROCK INTERIORS LLC.';
-            c.company_name = 'M/S TOP ROCK INTERIORS LLC.';
-            c.display_name = 'M/S TOP ROCK INTERIORS LLC.';
-            c.trn = '100360644700003';
-            c.tax_treatment = 'VAT Registered';
-            c.place_of_supply = 'Dubai, UAE';
-            c.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-            c.office_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-            c.contact_person = 'Mr. Shahil';
-            c.salutation = 'Mr.';
-            c.first_name = 'Shahil';
-            c.email = 'procurementofficer@toprockinteriors.com';
-            c.phone = '+971 502131834';
-            c.currency = 'AED';
-            c.payment_terms = 0;
-            c.payment_terms_label = 'Due on Receipt';
+          if (c && !c.accounts_receivable) {
             c.accounts_receivable = 'Accounts Receivable';
           }
         });
@@ -360,40 +344,7 @@ class FinanceApp {
             total_amount: 6532
           }
         ];
-
-        incomingArr.forEach(inv => {
-          if (inv && ((inv.invoice_no || '').includes('44035') || (inv.id || '').includes('44035'))) {
-            inv.id = 'inv-rec-rg-inv-44035';
-            inv.invoice_no = 'REC-RG-INV-44035';
-            inv.customer_name = 'M/S TOP ROCK INTERIORS LLC.';
-            inv.customer_trn = '100360644700003';
-            inv.trn = '100360644700003';
-            inv.tax_number = '100360644700003';
-            inv.contact_person = 'Mr. Shahil';
-            inv.email = 'procurementofficer@toprockinteriors.com';
-            inv.phone = '+971 502131834';
-            inv.payment_terms = 0;
-            inv.payment_terms_label = 'Due on Receipt';
-            inv.customer_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-            inv.billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
-            inv.place_of_supply = 'Dubai, UAE';
-            inv.po_reference = 'PODSUB-2026/0810 & 0858';
-            inv.order_no = 'PODSUB-2026/0810 & 0858';
-            inv.subject = 'THE NEW DUBAI POLICE ACADMY @ AL ROWAIYH, DUBAI,UAE FITOUT WORKS';
-            inv.sub_total = 25206.45;
-            inv.taxable_subtotal = 25206.45;
-            inv.vat_total = 1260.323;
-            inv.total_tax = 1260.323;
-            inv.grand_total = 26466.773;
-            inv.amount_paid = 0;
-            inv.balance_due = 26466.773;
-            inv.status = 'unpaid';
-            inv.amount_in_words = 'Twenty Six Thousand Four Hundred Sixty Six and Seventy Seven Fils AED Only.';
-            if (!inv.line_items || inv.line_items.length < 4) {
-              inv.line_items = JSON.parse(JSON.stringify(topRock4Items));
-            }
-          }
-        });
+        // Invoices are preserved as saved by the user
       }
 
       if (key === 'customer_receipts') {
@@ -500,24 +451,13 @@ class FinanceApp {
 
   sanitizeInvoices() {
     if (!this.db || !Array.isArray(this.db.invoices)) return;
-    const cleanInvoiceNo = (no) => {
-      if (!no) return no;
-      const m1 = String(no).match(/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3})(?:_|$|[^0-9A-Z])/i);
-      if (m1) return 'REC-RG-' + m1[1];
-      const m2 = String(no).match(/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(?:2025-)?(44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i);
-      if (m2) return 'REC-RG-INV-' + m2[1];
-      return no;
-    };
     const seen = new Set();
     const deduped = [];
     this.db.invoices.forEach(inv => {
       if (!inv || !inv.invoice_no) return;
-      const cleanNo = cleanInvoiceNo(inv.invoice_no);
-      const key = cleanNo.toLowerCase();
+      const key = String(inv.invoice_no).trim().toLowerCase();
       if (seen.has(key)) return;
       seen.add(key);
-      inv.invoice_no = cleanNo;
-      inv.id = 'inv-' + cleanNo.toLowerCase();
       deduped.push(inv);
     });
     this.db.invoices = deduped;
@@ -720,7 +660,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v35';
+    const CURRENT_DB_VERSION = 'v2026_clean_v36';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -12348,8 +12288,12 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Company Name & Display Name -->
-              <div class="fin-form-grid-2">
+              <!-- Customer Code, Company Name & Display Name -->
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Customer Code</label>
+                  <input type="text" id="new-cust-code" class="fin-form-input" placeholder="e.g. CUST-TOPROCK (auto if blank)" style="font-family:monospace; color:#38bdf8; font-weight:700;">
+                </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Company Name <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="new-cust-company" class="fin-form-input" required placeholder="e.g. M/S TOP ROCK INTERIORS LLC.">
@@ -12516,9 +12460,10 @@ class FinanceApp {
       const phoneNum = document.getElementById('new-cust-phone').value.trim();
       const fullPhone = phoneNum ? `${phonePrefix} ${phoneNum}`.trim() : '';
 
+      const customCode = (document.getElementById('new-cust-code')?.value || '').trim();
       const codePart = compName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'CUST';
       const custId = `cust-${Date.now().toString(36)}`;
-      const custCode = `CUST-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
+      const custCode = customCode || `CUST-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
 
       const termsDays = Number(document.getElementById('new-cust-terms').value) || 0;
       const termsLabel = termsDays === 0 ? 'Due on Receipt' : `${termsDays} Days`;
@@ -12638,29 +12583,55 @@ class FinanceApp {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-cust">
-        <div class="fin-modal-dialog" style="max-width:720px;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title">✏️ Edit Customer (${cust.code || cust.name})</h3>
+        <div class="fin-modal-dialog" style="max-width:760px; max-height:92vh; display:flex; flex-direction:column;">
+          <div class="fin-modal-header" style="flex-shrink:0;">
+            <h3 class="fin-modal-title">✏️ Edit Customer / Client Profile (<span style="color:#38bdf8; font-family:monospace;">${cust.code || cust.name}</span>)</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-cust')">&times;</button>
           </div>
-          <div class="fin-modal-body">
+          <div class="fin-modal-body" style="overflow-y:auto; flex-grow:1; padding-right:8px;">
             <form id="edit-cust-form">
-              <!-- Customer Type -->
-              <div class="fin-form-group" style="margin-bottom:1rem;">
-                <label class="fin-form-label" style="margin-bottom:0.4rem;">Customer Type</label>
-                <div style="display:flex; gap:1.5rem; align-items:center;">
-                  <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#f8fafc; font-size:0.88rem;">
-                    <input type="radio" name="edit-cust-type" value="Business" ${cust.customer_type !== 'Individual' ? 'checked' : ''}> Business
-                  </label>
-                  <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#94a3b8; font-size:0.88rem;">
-                    <input type="radio" name="edit-cust-type" value="Individual" ${cust.customer_type === 'Individual' ? 'checked' : ''}> Individual
-                  </label>
+              <!-- Customer Code, Type & Status -->
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns: 180px 1fr 140px; gap:1rem; margin-bottom:1rem; align-items:center;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Customer Code <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-cust-code" class="fin-form-input" style="font-weight:700; color:#38bdf8; font-family:monospace;" value="${cust.code || cust.id || ''}" required placeholder="e.g. CUST-MBARS">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label" style="margin-bottom:0.4rem;">Customer Type</label>
+                  <div style="display:flex; gap:1.5rem; align-items:center; padding-top:4px;">
+                    <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#f8fafc; font-size:0.88rem;">
+                      <input type="radio" name="edit-cust-type" value="Business" ${cust.customer_type !== 'Individual' ? 'checked' : ''}> Business
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; color:#94a3b8; font-size:0.88rem;">
+                      <input type="radio" name="edit-cust-type" value="Individual" ${cust.customer_type === 'Individual' ? 'checked' : ''}> Individual
+                    </label>
+                  </div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Account Status</label>
+                  <select id="edit-cust-status" class="fin-form-select">
+                    <option value="Active" ${(!cust.status || cust.status.toLowerCase() === 'active') ? 'selected' : ''}>Active</option>
+                    <option value="Inactive" ${cust.status && cust.status.toLowerCase() === 'inactive' ? 'selected' : ''}>Inactive</option>
+                    <option value="Suspended" ${cust.status && cust.status.toLowerCase() === 'suspended' ? 'selected' : ''}>Suspended</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Company Name & Display Name -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Company / Client Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-cust-company" class="fin-form-input" required value="${cust.company_name || cust.name || ''}" placeholder="e.g. M/S TOP ROCK INTERIORS LLC.">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Display Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-cust-display" class="fin-form-input" required value="${cust.display_name || cust.name || ''}" placeholder="e.g. M/S TOP ROCK INTERIORS LLC.">
                 </div>
               </div>
 
               <!-- Primary Contact -->
-              <div class="fin-form-group">
-                <label class="fin-form-label">Primary Contact</label>
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label">Primary Contact Person</label>
                 <div style="display:grid; grid-template-columns: 100px 1fr 1fr; gap:0.75rem;">
                   <select id="edit-cust-salutation" class="fin-form-select">
                     <option value="Mr." ${cust.salutation === 'Mr.' ? 'selected' : ''}>Mr.</option>
@@ -12675,32 +12646,20 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Company Name & Display Name -->
-              <div class="fin-form-grid-2">
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Company Name <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="edit-cust-company" class="fin-form-input" required value="${cust.company_name || cust.name || ''}">
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Display Name <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="edit-cust-display" class="fin-form-input" required value="${cust.display_name || cust.name || ''}">
-                </div>
-              </div>
-
               <!-- Email & Phone -->
-              <div class="fin-form-grid-2">
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Email Address <span style="color:#ef4444;">*</span></label>
                   <input type="email" id="edit-cust-email" class="fin-form-input" required value="${cust.email || ''}">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Phone</label>
-                  <input type="tel" id="edit-cust-phone" class="fin-form-input" value="${cust.phone || ''}">
+                  <label class="fin-form-label">Phone Number</label>
+                  <input type="tel" id="edit-cust-phone" class="fin-form-input" value="${cust.phone || ''}" placeholder="+971 50 123 4567">
                 </div>
               </div>
 
-              <!-- Tax Treatment & TRN -->
-              <div class="fin-form-grid-2">
+              <!-- Tax Treatment, TRN & GSTIN -->
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Tax Treatment <span style="color:#ef4444;">*</span></label>
                   <select id="edit-cust-tax-treatment" class="fin-form-select">
@@ -12712,13 +12671,17 @@ class FinanceApp {
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Tax Registration Number (TRN) <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="edit-cust-trn" class="fin-form-input" value="${cust.trn || cust.gstin || ''}">
+                  <label class="fin-form-label">Tax ID / TRN (UAE VAT)</label>
+                  <input type="text" id="edit-cust-trn" class="fin-form-input" value="${cust.trn || ''}" placeholder="e.g. 100360644700003">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">GSTIN (India)</label>
+                  <input type="text" id="edit-cust-gstin" class="fin-form-input" value="${cust.gstin || ''}" placeholder="e.g. 27AAACT2727Q1ZT">
                 </div>
               </div>
 
               <!-- Place of Supply, Currency & Accounts Receivable -->
-              <div class="fin-form-grid-3">
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Place of Supply <span style="color:#ef4444;">*</span></label>
                   <select id="edit-cust-pos" class="fin-form-select">
@@ -12738,10 +12701,12 @@ class FinanceApp {
                     <option value="AED" ${cust.currency === 'AED' ? 'selected' : ''}>AED - UAE Dirham</option>
                     <option value="INR" ${cust.currency === 'INR' ? 'selected' : ''}>INR - Indian Rupee</option>
                     <option value="USD" ${cust.currency === 'USD' ? 'selected' : ''}>USD - US Dollar</option>
+                    <option value="SAR" ${cust.currency === 'SAR' ? 'selected' : ''}>SAR - Saudi Riyal</option>
+                    <option value="EUR" ${cust.currency === 'EUR' ? 'selected' : ''}>EUR - Euro</option>
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Accounts Receivable <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Accounts Receivable Ledger <span style="color:#ef4444;">*</span></label>
                   <div style="display:flex; flex-direction:column; gap:0.4rem;">
                     <select id="edit-cust-ar" class="fin-form-select">
                       <option value="Accounts Receivable" ${cust.accounts_receivable === 'Accounts Receivable' ? 'selected' : ''}>Accounts Receivable (Trade Debtors)</option>
@@ -12757,8 +12722,8 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Payment Terms & Opening Balance -->
-              <div class="fin-form-grid-2">
+              <!-- Payment Terms, Credit Limit & Opening Balance -->
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment Terms</label>
                   <select id="edit-cust-terms" class="fin-form-select">
@@ -12771,22 +12736,44 @@ class FinanceApp {
                   </select>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Opening Balance</label>
+                  <label class="fin-form-label">Credit Limit (AED)</label>
+                  <input type="number" id="edit-cust-credit-limit" class="fin-form-input" placeholder="15000000" value="${cust.credit_limit !== undefined ? cust.credit_limit : 15000000}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Opening Balance (AED)</label>
                   <input type="number" id="edit-cust-opening-bal" class="fin-form-input" placeholder="0.00" value="${cust.opening_balance || 0}">
                 </div>
               </div>
 
-              <!-- Office / Billing Address -->
-              <div class="fin-form-group">
-                <label class="fin-form-label">Office / Billing Address</label>
-                <textarea id="edit-cust-address" class="fin-form-textarea" rows="2">${cust.billing_address || cust.office_address || ''}</textarea>
+              <!-- Preferred Bank Account -->
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label">Preferred Bank / Settlement Account</label>
+                <input type="text" id="edit-cust-bank" class="fin-form-input" value="${cust.preferred_bank || ''}" placeholder="e.g. Abu Dhabi Commercial Bank (ADCB) - IBAN AE920030012697347820001">
+              </div>
+
+              <!-- Billing Address & Shipping / Site Address -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Office / Billing Address</label>
+                  <textarea id="edit-cust-billing-address" class="fin-form-textarea" rows="2" placeholder="Corporate office address">${cust.billing_address || cust.office_address || ''}</textarea>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Shipping / Site Delivery Address</label>
+                  <textarea id="edit-cust-shipping-address" class="fin-form-textarea" rows="2" placeholder="Site delivery address / project location">${cust.shipping_address || ''}</textarea>
+                </div>
+              </div>
+
+              <!-- Notes & Remarks -->
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label">Client Notes &amp; Payment Instructions</label>
+                <textarea id="edit-cust-notes" class="fin-form-textarea" rows="2" placeholder="Special payment instructions, billing notes, or client SLA details...">${cust.notes || ''}</textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:space-between; align-items:center;">
                 <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.35);" onclick="window.finApp.deleteCustomer('${cust.id}')">🗑️ Delete Customer</button>
                 <div style="display:flex; gap:0.5rem;">
                   <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-cust')">Cancel</button>
-                  <button type="submit" class="fin-btn-quick primary">Update Customer Record &rarr;</button>
+                  <button type="submit" class="fin-btn-quick primary">Save &amp; Update Customer Record &rarr;</button>
                 </div>
               </div>
             </form>
@@ -12812,6 +12799,10 @@ class FinanceApp {
 
     document.getElementById('edit-cust-form').onsubmit = async (e) => {
       e.preventDefault();
+      const oldId = cust.id;
+      const oldCode = cust.code || '';
+      const oldName = cust.name || '';
+      const newCode = (document.getElementById('edit-cust-code')?.value || '').trim() || oldCode || 'CUST';
       const compName = document.getElementById('edit-cust-company').value.trim();
       const dispName = document.getElementById('edit-cust-display').value.trim() || compName;
       const salutation = document.getElementById('edit-cust-salutation').value;
@@ -12824,13 +12815,22 @@ class FinanceApp {
         ? document.getElementById('edit-cust-ar-custom')?.value.trim()
         : document.getElementById('edit-cust-ar')?.value.trim()) || 'Accounts Receivable';
       const openingBal = Number(document.getElementById('edit-cust-opening-bal')?.value) || 0;
+      const creditLimit = Number(document.getElementById('edit-cust-credit-limit')?.value) || 15000000;
+      const trnVal = document.getElementById('edit-cust-trn').value.trim();
+      const gstinVal = document.getElementById('edit-cust-gstin').value.trim();
+      const billingAddr = document.getElementById('edit-cust-billing-address').value.trim();
+      const shippingAddr = document.getElementById('edit-cust-shipping-address').value.trim();
+      const bankPref = document.getElementById('edit-cust-bank').value.trim();
+      const notesVal = document.getElementById('edit-cust-notes').value.trim();
 
       const updatedCust = {
         ...cust,
+        code: newCode,
         name: compName,
         company_name: compName,
         display_name: dispName,
         customer_type: document.querySelector('input[name="edit-cust-type"]:checked')?.value || 'Business',
+        status: document.getElementById('edit-cust-status')?.value || 'Active',
         contact_person: contactPerson,
         salutation: salutation,
         first_name: firstName,
@@ -12838,24 +12838,55 @@ class FinanceApp {
         email: document.getElementById('edit-cust-email').value.trim(),
         phone: document.getElementById('edit-cust-phone').value.trim(),
         tax_treatment: document.getElementById('edit-cust-tax-treatment').value,
-        trn: document.getElementById('edit-cust-trn').value.trim(),
+        trn: trnVal,
+        gstin: gstinVal,
         place_of_supply: document.getElementById('edit-cust-pos').value,
         currency: document.getElementById('edit-cust-currency').value,
         accounts_receivable: arAccount,
         opening_balance: openingBal,
-        billing_address: document.getElementById('edit-cust-address').value.trim(),
-        office_address: document.getElementById('edit-cust-address').value.trim(),
+        credit_limit: creditLimit,
+        billing_address: billingAddr,
+        office_address: billingAddr,
+        shipping_address: shippingAddr,
+        preferred_bank: bankPref,
+        notes: notesVal,
         payment_terms: termsDays,
         payment_terms_label: termsLabel
       };
 
-      const res = await this.syncApi('create_customer', { customer: updatedCust });
-      if (res && res.success) {
-        alert(`Customer ${updatedCust.name} updated successfully.`);
-        this.closeModal('modal-edit-cust');
-        this.closeModal('modal-cust-profile');
-        this.switchTab('customers');
+      // 1. Immediately replace in memory so UI reflects update without duplicate
+      if (this.db?.customers) {
+        const idx = this.db.customers.findIndex(c => c.id === oldId || (oldCode && c.code === oldCode));
+        if (idx >= 0) this.db.customers[idx] = updatedCust;
+        else this.db.customers.unshift(updatedCust);
+
+        // Cascade customer name/code/TRN changes to invoices and receipts
+        if (oldName && (compName !== oldName || newCode !== oldCode)) {
+          (this.db?.invoices || []).forEach(inv => {
+            if (inv.customer_id === oldId || (inv.customer_name && inv.customer_name.toLowerCase() === oldName.toLowerCase())) {
+              inv.customer_name = compName;
+              inv.customer_id = updatedCust.id;
+              if (trnVal) inv.customer_trn = trnVal;
+              if (gstinVal) inv.customer_gstin = gstinVal;
+            }
+          });
+          (this.db?.customer_receipts || []).forEach(rcp => {
+            if (rcp.customer_id === oldId || (rcp.customer_name && rcp.customer_name.toLowerCase() === oldName.toLowerCase())) {
+              rcp.customer_name = compName;
+              rcp.customer_id = updatedCust.id;
+            }
+          });
+        }
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
       }
+
+      // 2. Synchronize with backend API
+      await this.syncApi('update_customer', { customer: updatedCust, old_id: oldId, old_code: oldCode, old_name: oldName });
+
+      this.showNotification(`Customer "${updatedCust.name}" (${updatedCust.code}) updated successfully.`, 'success');
+      this.closeModal('modal-edit-cust');
+      this.closeModal('modal-cust-profile');
+      this.renderActiveTab();
     };
   }
 
@@ -12871,9 +12902,15 @@ class FinanceApp {
           </div>
           <div class="fin-modal-body">
             <form id="add-vend-form">
-              <div class="fin-form-group">
-                <label class="fin-form-label">Vendor Business Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="new-vend-name" class="fin-form-input" required placeholder="${isIndia ? 'e.g. Jindal Steel & Power Ltd' : 'e.g. Danube Building Materials LLC'}">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Vendor Code</label>
+                  <input type="text" id="new-vend-code" class="fin-form-input" placeholder="e.g. VEND-DANUBE (auto if blank)" style="font-family:monospace; color:#f59e0b; font-weight:700;">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Vendor Business Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="new-vend-name" class="fin-form-input" required placeholder="${isIndia ? 'e.g. Jindal Steel & Power Ltd' : 'e.g. Danube Building Materials LLC'}">
+                </div>
               </div>
 
               <div class="fin-form-grid-2">
@@ -12957,10 +12994,11 @@ class FinanceApp {
 
     document.getElementById('add-vend-form').onsubmit = async (e) => {
       e.preventDefault();
+      const customCode = (document.getElementById('new-vend-code')?.value || '').trim();
       const vendName = document.getElementById('new-vend-name').value.trim();
       const codePart = vendName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'VEND';
       const vendId = `vend-${Date.now().toString(36)}`;
-      const vendCode = `VEND-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
+      const vendCode = customCode || `VEND-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
 
       const payload = {
         vendor: {
@@ -17297,21 +17335,11 @@ class FinanceApp {
         return;
       }
 
-      const getSeqNum = (str) => {
-        if (!str) return null;
-        const m = String(str).match(/(?:REC-(?:INVOICE|INV|RG|RG-INV)-?|)(1\d{3}|44\d{3}[A-Z]?)(?:_|$|[^0-9A-Z])/i);
-        return m ? m[1].toUpperCase() : null;
-      };
-      const oldSeq = getSeqNum(oldInvNo) || getSeqNum(oldId);
-      const newSeq = getSeqNum(newInvNo);
-
       // Check for duplicate invoice number across other genuinely different invoices
       const isDupInv = (this.db?.invoices || []).some(i => {
         if (i === inv) return false;
         if (oldId && i.id === oldId) return false;
         if (oldInvNo && (i.invoice_no || '').trim().toLowerCase() === oldInvNo.toLowerCase()) return false;
-        // Ignore previous variants/duplicates of the invoice being edited
-        if (oldSeq && (getSeqNum(i.invoice_no) === oldSeq || getSeqNum(i.id) === oldSeq)) return false;
         return (i.invoice_no || '').trim().toLowerCase() === newInvNo.toLowerCase();
       });
       if (isDupInv) {
@@ -17388,8 +17416,7 @@ class FinanceApp {
           (oldId && i.id === oldId) || 
           (oldInvNo && (i.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase()) || 
           i.id === newId || 
-          (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase() ||
-          (oldSeq && (getSeqNum(i.invoice_no) === oldSeq || getSeqNum(i.id) === oldSeq))
+          (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase()
         );
         if (idx >= 0) this.db.invoices[idx] = inv;
         else this.db.invoices.unshift(inv);
@@ -17398,7 +17425,6 @@ class FinanceApp {
           if (item === inv) return true;
           if (oldId && item.id === oldId && item.id !== newId) return false;
           if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
-          if (oldSeq && (getSeqNum(item.invoice_no) === oldSeq || getSeqNum(item.id) === oldSeq)) return false;
           return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
         });
         try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
@@ -17411,8 +17437,7 @@ class FinanceApp {
       if (this.db?.invoices) {
         const idx = this.db.invoices.findIndex(i => 
           i.id === newId || 
-          (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase() ||
-          (newSeq && (getSeqNum(i.invoice_no) === newSeq || getSeqNum(i.id) === newSeq))
+          (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase()
         );
         if (idx >= 0) this.db.invoices[idx] = inv;
         else this.db.invoices.unshift(inv);
@@ -17420,7 +17445,6 @@ class FinanceApp {
           if (item === inv) return true;
           if (oldId && item.id === oldId && item.id !== newId) return false;
           if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
-          if (oldSeq && (getSeqNum(item.invoice_no) === oldSeq || getSeqNum(item.id) === oldSeq)) return false;
           return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
         });
         try {
@@ -19583,19 +19607,27 @@ class FinanceApp {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-vend">
-        <div class="fin-modal-dialog" style="max-width:680px;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title">✏️ Edit Supplier / Vendor (${vend.code || vend.name})</h3>
+        <div class="fin-modal-dialog" style="max-width:760px; max-height:92vh; display:flex; flex-direction:column;">
+          <div class="fin-modal-header" style="flex-shrink:0;">
+            <h3 class="fin-modal-title">✏️ Edit Supplier / Vendor Profile (<span style="color:#f59e0b; font-family:monospace;">${vend.code || vend.name}</span>)</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-vend')">&times;</button>
           </div>
-          <div class="fin-modal-body">
+          <div class="fin-modal-body" style="overflow-y:auto; flex-grow:1; padding-right:8px;">
             <form id="edit-vend-form">
-              <div class="fin-form-group">
-                <label class="fin-form-label">Vendor Business Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="edit-vend-name" class="fin-form-input" value="${vend.name || ''}" required>
+              <!-- Vendor Code & Business Name -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns: 200px 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Vendor / Supplier Code <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-vend-code" class="fin-form-input" style="font-weight:700; color:#f59e0b; font-family:monospace;" value="${vend.code || vend.id || ''}" required placeholder="e.g. VEND-DANUBE">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Vendor Business Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-vend-name" class="fin-form-input" value="${vend.name || ''}" required placeholder="e.g. Danube Building Materials LLC">
+                </div>
               </div>
 
-              <div class="fin-form-grid-2">
+              <!-- Category & Contact Person -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Category</label>
                   <select id="edit-vend-cat" class="fin-form-select">
@@ -19615,7 +19647,8 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-grid-2">
+              <!-- Email & Phone -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Email Address <span style="color:#ef4444;">*</span></label>
                   <input type="email" id="edit-vend-email" class="fin-form-input" value="${vend.email || ''}" required placeholder="sales@vendor.com">
@@ -19626,7 +19659,8 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-grid-3">
+              <!-- Jurisdiction, TRN & GSTIN -->
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Country / Jurisdiction</label>
                   <select id="edit-vend-country" class="fin-form-select">
@@ -19644,21 +19678,27 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-grid-2">
+              <!-- PAN & Accounting -->
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:1fr 1.2fr 100px; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">PAN (India) / Commercial License # (UAE)</label>
+                  <label class="fin-form-label">PAN / Commercial License #</label>
                   <input type="text" id="edit-vend-pan" class="fin-form-input" value="${vend.pan || ''}" placeholder="AAACJ1234F or CN-1049281">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Payment Terms (Days)</label>
+                  <label class="fin-form-label">Accounts Payable Ledger</label>
+                  <input type="text" id="edit-vend-ap" class="fin-form-input" value="${vend.accounts_payable || 'Accounts Payable'}" placeholder="Accounts Payable">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Terms (Days)</label>
                   <input type="number" id="edit-vend-terms" class="fin-form-input" value="${vend.payment_terms || 30}" min="0">
                 </div>
               </div>
 
-              <div class="fin-form-grid-3">
+              <!-- Bank Details for Wire Settlement -->
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Bank Name</label>
-                  <input type="text" id="edit-vend-bank" class="fin-form-input" value="${vend.bank_name || ''}" placeholder="FAB / ADCB">
+                  <input type="text" id="edit-vend-bank" class="fin-form-input" value="${vend.bank_name || ''}" placeholder="e.g. ADCB / FAB">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Account No / IBAN</label>
@@ -19670,9 +19710,24 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
-                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-vend')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Save &amp; Update Vendor &rarr;</button>
+              <!-- Address & Notes -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Office / Billing Address</label>
+                  <textarea id="edit-vend-address" class="fin-form-textarea" rows="2" placeholder="Vendor office location / address">${vend.billing_address || vend.address || ''}</textarea>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Supplier Notes &amp; Wire Remarks</label>
+                  <textarea id="edit-vend-notes" class="fin-form-textarea" rows="2" placeholder="Vendor settlement notes, wire details, credit terms...">${vend.notes || ''}</textarea>
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.35);" onclick="window.finApp.deleteVendor('${vend.id}')">🗑️ Delete Vendor</button>
+                <div style="display:flex; gap:0.5rem;">
+                  <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-vend')">Cancel</button>
+                  <button type="submit" class="fin-btn-quick primary">Save &amp; Update Vendor Record &rarr;</button>
+                </div>
               </div>
             </form>
           </div>
@@ -19683,7 +19738,14 @@ class FinanceApp {
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
     document.getElementById('edit-vend-form').onsubmit = async (e) => {
       e.preventDefault();
-      vend.name = document.getElementById('edit-vend-name').value.trim();
+      const oldId = vend.id;
+      const oldCode = vend.code || '';
+      const oldName = vend.name || '';
+      const newCode = (document.getElementById('edit-vend-code')?.value || '').trim() || oldCode || 'VEND';
+      const newName = document.getElementById('edit-vend-name').value.trim();
+
+      vend.code = newCode;
+      vend.name = newName;
       vend.category = document.getElementById('edit-vend-cat').value;
       vend.contact_person = document.getElementById('edit-vend-contact').value.trim();
       vend.email = document.getElementById('edit-vend-email').value.trim();
@@ -19692,13 +19754,45 @@ class FinanceApp {
       vend.trn = document.getElementById('edit-vend-trn').value.trim();
       vend.gstin = document.getElementById('edit-vend-gstin').value.trim();
       vend.pan = document.getElementById('edit-vend-pan').value.trim();
+      vend.accounts_payable = document.getElementById('edit-vend-ap')?.value.trim() || 'Accounts Payable';
       vend.payment_terms = Number(document.getElementById('edit-vend-terms').value) || 30;
       vend.bank_name = document.getElementById('edit-vend-bank').value.trim();
       vend.account_no = document.getElementById('edit-vend-ac').value.trim();
       vend.ifsc_code = document.getElementById('edit-vend-ifsc').value.trim();
+      vend.billing_address = document.getElementById('edit-vend-address')?.value.trim() || '';
+      vend.address = vend.billing_address;
+      vend.notes = document.getElementById('edit-vend-notes')?.value.trim() || '';
 
-      await this.syncApi('update_vendor', { vendor: vend });
-      this.showNotification(`Vendor "${vend.name}" updated successfully.`, 'success');
+      // 1. Update local memory immediately
+      if (this.db?.vendors) {
+        const idx = this.db.vendors.findIndex(v => v.id === oldId || (oldCode && v.code === oldCode));
+        if (idx >= 0) this.db.vendors[idx] = vend;
+        else this.db.vendors.unshift(vend);
+
+        // Cascade vendor changes to purchase bills and POs
+        if (oldName && (newName !== oldName || newCode !== oldCode)) {
+          (this.db?.purchase_bills || []).forEach(b => {
+            if (b.vendor_id === oldId || (b.vendor_name && b.vendor_name.toLowerCase() === oldName.toLowerCase())) {
+              b.vendor_name = newName;
+              b.vendor_id = vend.id;
+              if (vend.trn) b.vendor_trn = vend.trn;
+            }
+          });
+          (this.db?.purchase_orders || []).forEach(po => {
+            if (po.vendor_id === oldId || (po.vendor_name && po.vendor_name.toLowerCase() === oldName.toLowerCase())) {
+              po.vendor_name = newName;
+              po.supplier_name = newName;
+              po.vendor_id = vend.id;
+            }
+          });
+        }
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+      }
+
+      // 2. Sync to API
+      await this.syncApi('update_vendor', { vendor: vend, old_id: oldId, old_code: oldCode, old_name: oldName });
+
+      this.showNotification(`Vendor "${vend.name}" (${vend.code}) updated successfully.`, 'success');
       this.closeModal('modal-edit-vend');
       this.renderActiveTab();
     };
