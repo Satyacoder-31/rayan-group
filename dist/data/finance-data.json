@@ -22,7 +22,7 @@
     },
     {
       "id": "rayan-corp-uae",
-      "name": "Rayan Engineering & Contracting",
+      "name": "RAYAN ENGINEERING AND CONTRACTING LLC SPC",
       "short_name": "Rayan Engineering & Contracting",
       "country": "UAE",
       "currency": "AED",
@@ -1821,7 +1821,7 @@
       "place_of_supply": "Abu Dhabi",
       "project_id": "prj-rec-invoice-1001_professional",
       "project_name": "1 Maintenance of HVAC units, Mitsubishi 5",
-      "po_reference": ".",
+      "po_reference": "SL-091/2023",
       "invoice_date": "2024-02-26",
       "due_date": "2024-03-27",
       "payment_terms": 30,
@@ -1854,7 +1854,10 @@
       "status": "unpaid",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
-      "created_at": "2024-02-26T10:00:00Z"
+      "created_at": "2024-02-26T10:00:00Z",
+      "order_no": "SL-091/2023",
+      "order_number": "SL-091/2023",
+      "lpo_no": "SL-091/2023"
     },
     {
       "id": "inv-rec-rg-1002",

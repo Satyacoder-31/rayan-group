@@ -72,7 +72,7 @@ class FinanceApp {
     // Check Vendor Payment Voucher
     if (docType === 'voucher' || docType === 'payment' || upper.startsWith('PV-') || upper.startsWith('VOUCH-') || upper.startsWith('PAY-')) {
       const pay = (this.db?.vendor_payments || []).find(p => p.id === cleanId || p.voucher_no === cleanId) ||
-                  (this.db?.vendor_payments || [])[0] || { voucher_no: cleanId };
+        (this.db?.vendor_payments || [])[0] || { voucher_no: cleanId };
       this.openPaymentPrintModal(pay.id || cleanId, true);
       return;
     }
@@ -80,7 +80,7 @@ class FinanceApp {
     // Check Expense Claim Voucher
     if (docType === 'expense' || upper.startsWith('EXP-')) {
       const exp = (this.db?.expenses || []).find(e => e.id === cleanId || e.expense_no === cleanId) ||
-                  (this.db?.expenses || [])[0] || { expense_no: cleanId };
+        (this.db?.expenses || [])[0] || { expense_no: cleanId };
       this.openExpensePrintModal(exp.id || cleanId, true);
       return;
     }
@@ -88,7 +88,7 @@ class FinanceApp {
     // Check Receipt Voucher
     if (docType === 'receipt' || upper.includes('REC-RV') || upper.startsWith('RV-')) {
       const rec = (this.db?.customer_receipts || []).find(r => r.id === cleanId || r.receipt_no === cleanId) ||
-                  (this.db?.customer_receipts || [])[0] || { receipt_no: cleanId };
+        (this.db?.customer_receipts || [])[0] || { receipt_no: cleanId };
       this.openReceiptPrintModal(rec.id || cleanId, true);
       return;
     }
@@ -96,7 +96,7 @@ class FinanceApp {
     // Check Purchase Order
     if (docType === 'po' || upper.startsWith('PO-')) {
       const po = (this.db?.purchase_orders || []).find(p => p.id === cleanId || p.po_no === cleanId) ||
-                  (this.db?.purchase_orders || [])[0] || { po_no: cleanId };
+        (this.db?.purchase_orders || [])[0] || { po_no: cleanId };
       this.openPOPrintModal(po.id || cleanId, true);
       return;
     }
@@ -104,7 +104,7 @@ class FinanceApp {
     // Check Credit Note
     if (docType === 'credit_note' || docType === 'cr_note' || upper.startsWith('CN-') || upper.startsWith('CR-')) {
       const cn = (this.db?.credit_notes || []).find(c => c.id === cleanId || c.credit_note_no === cleanId || c.invoice_no === cleanId) ||
-                 (this.db?.credit_notes || [])[0] || { credit_note_no: cleanId };
+        (this.db?.credit_notes || [])[0] || { credit_note_no: cleanId };
       this.openCreditNotePrintModal(cn.id || cleanId, true);
       return;
     }
@@ -112,14 +112,14 @@ class FinanceApp {
     // Check Debit Note
     if (docType === 'debit_note' || docType === 'dn' || upper.startsWith('DN-')) {
       const dn = (this.db?.debit_notes || []).find(d => d.id === cleanId || d.debit_note_no === cleanId) ||
-                 (this.db?.debit_notes || [])[0] || { debit_note_no: cleanId };
+        (this.db?.debit_notes || [])[0] || { debit_note_no: cleanId };
       this.openDebitNotePrintModal(dn.id || cleanId, true);
       return;
     }
 
     // Default Tax Invoice
     const inv = (this.db?.invoices || []).find(i => i.id === cleanId || i.invoice_no === cleanId) ||
-                (this.db?.invoices || [])[0] || { invoice_no: cleanId };
+      (this.db?.invoices || [])[0] || { invoice_no: cleanId };
     this.openInvoicePrintModal(inv.id || cleanId, true);
   }
 
@@ -367,7 +367,7 @@ class FinanceApp {
         // Customer receipts empty by default as per verified company records
       }
 
-// Preserve user-edited bank accounts without overwriting
+      // Preserve user-edited bank accounts without overwriting
 
       // Add incoming user items first so newest submissions stay at top
       const map = new Map();
@@ -542,7 +542,7 @@ class FinanceApp {
 
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   recalculateInvoiceBalance(inv) {
@@ -561,7 +561,7 @@ class FinanceApp {
         }
       });
     });
-// No phantom paid fallback: only explicit receipts in customer_receipts dictate amount_paid
+    // No phantom paid fallback: only explicit receipts in customer_receipts dictate amount_paid
     paid = Math.round(paid * 100) / 100;
     if (paid <= 0.02) {
       paid = 0;
@@ -688,7 +688,7 @@ class FinanceApp {
       try {
         const parsed = JSON.parse(cached);
         this.db = this.mergeWithSeedData(parsed);
-      } catch (err) {}
+      } catch (err) { }
     } else {
       this.db = this.mergeWithSeedData(this.db);
     }
@@ -741,7 +741,7 @@ class FinanceApp {
             this.normalizeAllBalances();
             try {
               localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-            } catch (e) {}
+            } catch (e) { }
             return json;
           }
         }
@@ -1595,7 +1595,7 @@ class FinanceApp {
           return parsed.filter(p => typeof p === 'string' && p.trim().length > 0);
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     const fromDb = new Set();
     (this.db?.invoices || []).forEach(i => { if (i.place_of_supply) fromDb.add(i.place_of_supply.trim()); });
@@ -1607,7 +1607,7 @@ class FinanceApp {
     try {
       const stored = localStorage.getItem('rayan_fin_customer_pos_map');
       if (stored) return JSON.parse(stored);
-    } catch (e) {}
+    } catch (e) { }
     const map = {};
     (this.db?.customers || []).forEach(c => {
       if (c.name && c.place_of_supply) {
@@ -1631,7 +1631,7 @@ class FinanceApp {
       const filtered = currentList.filter(item => item.toLowerCase() !== lowerClean);
       filtered.unshift(cleanPos);
       localStorage.setItem('rayan_fin_saved_pos_list', JSON.stringify(filtered.slice(0, 50)));
-    } catch (e) {}
+    } catch (e) { }
 
     // 2. Save to customer-specific mapping & customer profile
     if (customerName && typeof customerName === 'string') {
@@ -1641,10 +1641,10 @@ class FinanceApp {
           const map = this.getCustomerPosMap();
           map[cleanCust.toLowerCase()] = cleanPos;
           localStorage.setItem('rayan_fin_customer_pos_map', JSON.stringify(map));
-        } catch (e) {}
+        } catch (e) { }
 
         if (this.db?.customers) {
-          const cust = this.db.customers.find(c => 
+          const cust = this.db.customers.find(c =>
             c.name.toLowerCase() === cleanCust.toLowerCase() ||
             (c.id && c.id.toLowerCase() === cleanCust.toLowerCase()) ||
             `${c.name} (${c.code || ''})`.toLowerCase() === cleanCust.toLowerCase()
@@ -1652,7 +1652,7 @@ class FinanceApp {
           if (cust) {
             cust.place_of_supply = cleanPos;
             localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-            this.syncApi('create_customer', { customer: cust }).catch(() => {});
+            this.syncApi('create_customer', { customer: cust }).catch(() => { });
           }
         }
       }
@@ -1665,7 +1665,7 @@ class FinanceApp {
     const map = this.getCustomerPosMap();
     if (map[key]) return map[key];
 
-    const found = (this.db?.customers || []).find(c => 
+    const found = (this.db?.customers || []).find(c =>
       (c.id && c.id.toLowerCase() === key) ||
       (c.name && c.name.toLowerCase() === key) ||
       (c.code && c.code.toLowerCase() === key) ||
@@ -1673,7 +1673,7 @@ class FinanceApp {
     );
     if (found && found.place_of_supply) return found.place_of_supply;
 
-    const lastInv = (this.db?.invoices || []).find(i => 
+    const lastInv = (this.db?.invoices || []).find(i =>
       (i.customer_id && i.customer_id.toLowerCase() === key) ||
       (i.customer_name && i.customer_name.toLowerCase() === key)
     );
@@ -1702,7 +1702,7 @@ class FinanceApp {
         map[cleanKey] = map[cleanCust];
       }
       localStorage.setItem('rayan_fin_customer_project_map', JSON.stringify(map));
-    } catch (e) {}
+    } catch (e) { }
 
     // 2. Add to global recent projects list
     try {
@@ -1711,11 +1711,11 @@ class FinanceApp {
       const filtered = list.filter(p => (p.name || p).toLowerCase() !== cleanPrjName.toLowerCase());
       filtered.unshift({ id: projectId || null, name: cleanPrjName });
       localStorage.setItem('rayan_fin_saved_project_list', JSON.stringify(filtered.slice(0, 30)));
-    } catch (e) {}
+    } catch (e) { }
 
     // 3. Update customer profile in memory and DB
     if (this.db?.customers) {
-      const cust = this.db.customers.find(c => 
+      const cust = this.db.customers.find(c =>
         (c.name && c.name.toLowerCase() === cleanCust) ||
         (c.id && c.id.toLowerCase() === cleanCust) ||
         (c.name && c.name.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === cleanCust.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim())
@@ -1725,7 +1725,7 @@ class FinanceApp {
         cust.default_project_name = cleanPrjName;
         if (poReference) cust.last_po_reference = poReference;
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        this.syncApi('create_customer', { customer: cust }).catch(() => {});
+        this.syncApi('create_customer', { customer: cust }).catch(() => { });
       }
     }
   }
@@ -1743,7 +1743,7 @@ class FinanceApp {
       });
       filtered.unshift({ id: null, name: cleanPrjName });
       localStorage.setItem('rayan_fin_saved_project_list', JSON.stringify(filtered.slice(0, 50)));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   getRecommendedProjectForCustomer(customerNameOrId) {
@@ -1763,10 +1763,10 @@ class FinanceApp {
           if (cleanKey.length >= 4 && (k.includes(cleanKey) || cleanKey.includes(k))) return map[k];
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 2. From customer profile
-    const cust = (this.db?.customers || []).find(c => 
+    const cust = (this.db?.customers || []).find(c =>
       (c.id && c.id.toLowerCase() === key) ||
       (c.name && c.name.toLowerCase() === key) ||
       (c.code && c.code.toLowerCase() === key) ||
@@ -1785,9 +1785,9 @@ class FinanceApp {
       const pClient = (p.client_name || p.client || '').toLowerCase();
       const pClean = pClient.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
       return (cust && p.client_id === cust.id) ||
-             pClient === key ||
-             pClean === cleanKey ||
-             (cleanKey.length >= 4 && (pClean.includes(cleanKey) || cleanKey.includes(pClean)));
+        pClient === key ||
+        pClean === cleanKey ||
+        (cleanKey.length >= 4 && (pClean.includes(cleanKey) || cleanKey.includes(pClean)));
     });
     if (prj) {
       return {
@@ -1803,9 +1803,9 @@ class FinanceApp {
       const iCustName = (i.customer_name || '').toLowerCase();
       const iClean = iCustName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
       return (cust && iCustId === cust.id.toLowerCase()) ||
-             iCustName === key ||
-             iClean === cleanKey ||
-             (cleanKey.length >= 4 && (iClean.includes(cleanKey) || cleanKey.includes(iClean)));
+        iCustName === key ||
+        iClean === cleanKey ||
+        (cleanKey.length >= 4 && (iClean.includes(cleanKey) || cleanKey.includes(iClean)));
     });
     if (lastInv && lastInv.project_name) {
       return {
@@ -1839,7 +1839,7 @@ class FinanceApp {
         map[normKey] = map[lowerName];
       }
       localStorage.setItem('rayan_fin_customer_info_map', JSON.stringify(map));
-    } catch (e) {}
+    } catch (e) { }
 
     // Update in this.db.customers immediately
     if (this.db && Array.isArray(this.db.customers)) {
@@ -1849,9 +1849,9 @@ class FinanceApp {
         const cClean = cName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
         const cNorm = cClean.replace(/[\s\-_.,/]+/g, ' ').replace(/\b(l\.?l\.?c|llc|pvt|ltd|limited|co|company|corp|corporation)\b/gi, '').trim();
         return (info.id && c.id === info.id) ||
-               cName === lowerName ||
-               cClean === cleanKey ||
-               (normKey && cNorm === normKey);
+          cName === lowerName ||
+          cClean === cleanKey ||
+          (normKey && cNorm === normKey);
       });
       if (existing) {
         if (info.trn) existing.trn = info.trn;
@@ -1905,7 +1905,7 @@ class FinanceApp {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 2. Find customer in this.db.customers
     const cust = (this.db?.customers || []).find(c => {
@@ -1917,16 +1917,16 @@ class FinanceApp {
       const cCode = (c.code || '').toLowerCase();
       const cTrn = (c.trn || '').toLowerCase();
 
-      return cId === lowerKey || 
-             cCode === lowerKey || 
-             cName === lowerKey || 
-             cClean === cleanKey ||
-             cNorm === normKey ||
-             (cTrn && cTrn === lowerKey) ||
-             (cleanKey.length >= 3 && (cClean.includes(cleanKey) || cleanKey.includes(cClean))) ||
-              (normKey.length >= 3 && (cNorm.includes(normKey) || normKey.includes(cNorm))) ||
-              (cleanKey.includes('buildara') && cClean.includes('buildara')) ||
-              (cleanKey.includes('top rock') && cClean.includes('top rock'));
+      return cId === lowerKey ||
+        cCode === lowerKey ||
+        cName === lowerKey ||
+        cClean === cleanKey ||
+        cNorm === normKey ||
+        (cTrn && cTrn === lowerKey) ||
+        (cleanKey.length >= 3 && (cClean.includes(cleanKey) || cleanKey.includes(cClean))) ||
+        (normKey.length >= 3 && (cNorm.includes(normKey) || normKey.includes(cNorm))) ||
+        (cleanKey.includes('buildara') && cClean.includes('buildara')) ||
+        (cleanKey.includes('top rock') && cClean.includes('top rock'));
     });
 
     // 3. Find latest invoices in this.db.invoices
@@ -1937,20 +1937,20 @@ class FinanceApp {
       const iClean = iCustName.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
       const iNorm = iClean.replace(/[\s\-_.,/]+/g, ' ').replace(/\b(l\.?l\.?c|llc|pvt|ltd|limited|co|company|corp|corporation)\b/gi, '').trim();
       return (cust && iCustId === (cust.id || '').toLowerCase()) ||
-             iCustName === lowerKey ||
-             iClean === cleanKey ||
-             iNorm === normKey ||
-             (cleanKey.length >= 3 && (iClean.includes(cleanKey) || cleanKey.includes(iClean))) ||
-             (normKey.length >= 3 && (iNorm.includes(normKey) || normKey.includes(iNorm))) ||
-             (cleanKey.includes('buildara') && iClean.includes('buildara')) ||
-             (cleanKey.includes('top rock') && iClean.includes('top rock'));
+        iCustName === lowerKey ||
+        iClean === cleanKey ||
+        iNorm === normKey ||
+        (cleanKey.length >= 3 && (iClean.includes(cleanKey) || cleanKey.includes(iClean))) ||
+        (normKey.length >= 3 && (iNorm.includes(normKey) || normKey.includes(iNorm))) ||
+        (cleanKey.includes('buildara') && iClean.includes('buildara')) ||
+        (cleanKey.includes('top rock') && iClean.includes('top rock'));
     });
     matchedInvoices.sort((a, b) => new Date(b.invoice_date || 0) - new Date(a.invoice_date || 0));
     const latestInv = matchedInvoices[0] || null;
 
     // 4. Linked project recommendations from map or customer project link
     const recPrj = this.getRecommendedProjectForCustomer(cust?.id || cust?.name || rawKey) ||
-                   (cleanKey.includes('buildara') ? this.getRecommendedProjectForCustomer('buildara') : null);
+      (cleanKey.includes('buildara') ? this.getRecommendedProjectForCustomer('buildara') : null);
 
     // 5. Check registered projects in this.db.projects for this client
     const clientPrj = (this.db?.projects || []).find(p => {
@@ -1958,11 +1958,11 @@ class FinanceApp {
       const pClient = (p.client_name || p.client || '').toLowerCase();
       const pClean = pClient.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
       return (cust && p.client_id === cust.id) ||
-             pClient === lowerKey ||
-             pClean === cleanKey ||
-             (cleanKey.length >= 3 && (pClean.includes(cleanKey) || cleanKey.includes(pClean))) ||
-             (cleanKey.includes('buildara') && pClean.includes('buildara')) ||
-             (cleanKey.includes('top rock') && pClean.includes('top rock'));
+        pClient === lowerKey ||
+        pClean === cleanKey ||
+        (cleanKey.length >= 3 && (pClean.includes(cleanKey) || cleanKey.includes(pClean))) ||
+        (cleanKey.includes('buildara') && pClean.includes('buildara')) ||
+        (cleanKey.includes('top rock') && pClean.includes('top rock'));
     });
 
     // If neither customer, nor latest invoice, nor local cache, nor project found
@@ -1998,55 +1998,55 @@ class FinanceApp {
     const gstin = localInfo?.gstin || cust?.gstin || latestInv?.customer_gstin || '';
 
     const isUae = (cust?.country && cust.country.toUpperCase() === 'UAE') ||
-                  (trn && trn.length > 5) ||
-                  (latestInv?.tax_regime === 'trn') ||
-                  (this.activeCompanyId !== 'ashaz-eng-in');
+      (trn && trn.length > 5) ||
+      (latestInv?.tax_regime === 'trn') ||
+      (this.activeCompanyId !== 'ashaz-eng-in');
 
     const placeOfSupply = isTopRock ? 'Dubai, UAE' : (localInfo?.place_of_supply ||
-                          this.getRecommendedPosForCustomer(name) ||
-                          cust?.place_of_supply ||
-                          latestInv?.place_of_supply ||
-                          (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra'));
+      this.getRecommendedPosForCustomer(name) ||
+      cust?.place_of_supply ||
+      latestInv?.place_of_supply ||
+      (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra'));
 
     const billingAddress = isTopRock ? 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' : (localInfo?.billing_address ||
-                           cust?.billing_address ||
-                           cust?.address ||
-                           latestInv?.customer_address ||
-                           (isBuildara ? 'ABU DHABI, MADINAT ZAYED, UAE' : ''));
+      cust?.billing_address ||
+      cust?.address ||
+      latestInv?.customer_address ||
+      (isBuildara ? 'ABU DHABI, MADINAT ZAYED, UAE' : ''));
 
     const contactPerson = isTopRock ? 'Mr. Shahil' : (localInfo?.contact_person ||
-                          cust?.contact_person ||
-                          latestInv?.contact_person ||
-                          (isBuildara ? 'Mr. Sooraj Kumar' : ''));
+      cust?.contact_person ||
+      latestInv?.contact_person ||
+      (isBuildara ? 'Mr. Sooraj Kumar' : ''));
 
     const email = isTopRock ? 'procurementofficer@toprockinteriors.com' : (localInfo?.email ||
-                  cust?.email ||
-                  latestInv?.email ||
-                  (isBuildara ? 'buildaradevelopers@gmail.com' : ''));
+      cust?.email ||
+      latestInv?.email ||
+      (isBuildara ? 'buildaradevelopers@gmail.com' : ''));
 
     const paymentTerms = isTopRock ? 0 : (localInfo?.payment_terms !== undefined ? localInfo.payment_terms :
-                         (cust?.payment_terms !== undefined ? cust.payment_terms :
-                         (latestInv?.payment_terms !== undefined ? latestInv.payment_terms : 30)));
+      (cust?.payment_terms !== undefined ? cust.payment_terms :
+        (latestInv?.payment_terms !== undefined ? latestInv.payment_terms : 30)));
 
     const projectId = recPrj?.projectId ||
-                      cust?.default_project_id ||
-                      clientPrj?.id ||
-                      latestInv?.project_id ||
-                      localInfo?.project_id ||
-                      '';
+      cust?.default_project_id ||
+      clientPrj?.id ||
+      latestInv?.project_id ||
+      localInfo?.project_id ||
+      '';
 
     const projectName = recPrj?.projectName ||
-                        cust?.default_project_name ||
-                        clientPrj?.name ||
-                        latestInv?.project_name ||
-                        localInfo?.project_name ||
-                        '';
+      cust?.default_project_name ||
+      clientPrj?.name ||
+      latestInv?.project_name ||
+      localInfo?.project_name ||
+      '';
 
     const poReference = recPrj?.poReference ||
-                        cust?.last_po_reference ||
-                        latestInv?.po_reference ||
-                        localInfo?.po_reference ||
-                        (cleanKey.includes('buildara') ? 'PO-BD-2026-99' : '');
+      cust?.last_po_reference ||
+      latestInv?.po_reference ||
+      localInfo?.po_reference ||
+      (cleanKey.includes('buildara') ? 'PO-BD-2026-99' : '');
 
     return {
       customer: cust || null,
@@ -2521,7 +2521,7 @@ class FinanceApp {
           });
 
           let data = null;
-          try { data = await res.json(); } catch(e) {}
+          try { data = await res.json(); } catch (e) { }
 
           if (res.ok && data && data.success && data.user) {
             this.saveSession(data.user);
@@ -2606,9 +2606,9 @@ class FinanceApp {
                 <svg class="fin-select-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
                 <select id="fin-entity-select" class="fin-select-modern" title="Switch Operating Legal Entity">
                   ${(this.db?.companies || defaultSeedData.companies || []).filter(c => c.id !== 'rayan-energy-uae').map(c => {
-                    const shortName = c.short_name || c.name.replace('Private Limited', 'Ltd').replace('Corporate HQ', 'HQ').replace('Division', 'Div');
-                    return `<option value="${c.id}" ${c.id === this.activeCompanyId ? 'selected' : ''}>${shortName}</option>`;
-                  }).join('')}
+      const shortName = c.short_name || c.name.replace('Private Limited', 'Ltd').replace('Corporate HQ', 'HQ').replace('Division', 'Div');
+      return `<option value="${c.id}" ${c.id === this.activeCompanyId ? 'selected' : ''}>${shortName}</option>`;
+    }).join('')}
                 </select>
                 <svg class="fin-select-arrow" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
               </div>
@@ -4242,12 +4242,12 @@ class FinanceApp {
             </thead>
             <tbody>
               ${customers.map(c => {
-                const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
-                const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
-                const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
-                const totalInvoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
-                const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
-                return `
+      const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
+      const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+      const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
+      const totalInvoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
+      const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
+      return `
                   <tr>
                     <td><strong>${c.code || c.id || 'CUST'}</strong></td>
                     <td style="white-space:nowrap;">
@@ -4285,7 +4285,7 @@ class FinanceApp {
                     </td>
                   </tr>
                 `;
-              }).join('')}
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -4341,9 +4341,9 @@ class FinanceApp {
                   </td>
                 </tr>
               ` : vendors.map(v => {
-                const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === v.name.toLowerCase())) && b.status !== 'void');
-                const outstanding = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
-                return `
+      const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === v.name.toLowerCase())) && b.status !== 'void');
+      const outstanding = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
+      return `
                   <tr>
                     <td style="white-space:nowrap;"><strong>${v.code || '—'}</strong></td>
                     <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${v.name}</span></td>
@@ -4370,7 +4370,7 @@ class FinanceApp {
                     </td>
                   </tr>
                 `;
-              }).join('')}
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -4992,7 +4992,7 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // CASH & BANK MODULES (Matching Reference Image 3)
   // --------------------------------------------------------------------------
-    // --------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
   // CASH & BANK MODULES (Full Multi-Company Enterprise Implementation)
   // --------------------------------------------------------------------------
   renderBankAccountsTab(root) {
@@ -5094,11 +5094,11 @@ class FinanceApp {
                   </td>
                 </tr>
               ` : transfers.map(t => {
-                const isInward = t.type === 'inward';
-                const isInter = t.type === 'inter_account';
-                const color = isInward ? '#10b981' : (isInter ? '#38bdf8' : '#fb923c');
-                const sign = isInward ? '+' : (isInter ? '⇄' : '-');
-                return `
+      const isInward = t.type === 'inward';
+      const isInter = t.type === 'inter_account';
+      const color = isInward ? '#10b981' : (isInter ? '#38bdf8' : '#fb923c');
+      const sign = isInward ? '+' : (isInter ? '⇄' : '-');
+      return `
                   <tr>
                     <td><strong>${t.reference_no}</strong></td>
                     <td>${this.formatDate(t.date)}</td>
@@ -5118,7 +5118,7 @@ class FinanceApp {
                     </td>
                   </tr>
                 `;
-              }).join('')}
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -5220,10 +5220,10 @@ class FinanceApp {
                   </td>
                 </tr>
               ` : vouchers.map(v => {
-                const isInflow = v.type === 'inflow';
-                const color = isInflow ? '#10b981' : '#fb923c';
-                const sign = isInflow ? '+' : '-';
-                return `
+      const isInflow = v.type === 'inflow';
+      const color = isInflow ? '#10b981' : '#fb923c';
+      const sign = isInflow ? '+' : '-';
+      return `
                   <tr>
                     <td><strong>${v.voucher_no}</strong></td>
                     <td>${this.formatDate(v.date)}</td>
@@ -5244,7 +5244,7 @@ class FinanceApp {
                     </td>
                   </tr>
                 `;
-              }).join('')}
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -5421,13 +5421,13 @@ class FinanceApp {
         ` : `
           <div class="fin-bank-grid">
             ${loans.map(l => {
-              const isDirector = (l.facility_type || '').includes('Director') || l.id === 'loan-dir-current-act';
-              const badgeBg = isDirector ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)';
-              const badgeColor = isDirector ? '#34d399' : '#60a5fa';
-              const badgeBorder = isDirector ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.3)';
-              const badgeText = isDirector ? "Director's Current Account" : 'Sanctioned Facility';
-              const balanceLabel = isDirector ? 'Payable by Company to Director' : 'Outstanding Debt / Utilization';
-              return `
+      const isDirector = (l.facility_type || '').includes('Director') || l.id === 'loan-dir-current-act';
+      const badgeBg = isDirector ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)';
+      const badgeColor = isDirector ? '#34d399' : '#60a5fa';
+      const badgeBorder = isDirector ? 'rgba(16,185,129,0.3)' : 'rgba(59,130,246,0.3)';
+      const badgeText = isDirector ? "Director's Current Account" : 'Sanctioned Facility';
+      const balanceLabel = isDirector ? 'Payable by Company to Director' : 'Outstanding Debt / Utilization';
+      return `
               <div class="fin-bank-card" style="${isDirector ? 'border-color:rgba(16,185,129,0.35); background:linear-gradient(145deg, rgba(15,23,42,0.9), rgba(16,185,129,0.06));' : ''}">
                 <div class="fin-bank-card-header">
                   <div>
@@ -5453,7 +5453,8 @@ class FinanceApp {
                   <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteLoanAccount('${l.id}')">🗑️ Remove</button>
                 </div>
               </div>
-            `;}).join('')}
+            `;
+    }).join('')}
           </div>
         `}
 
@@ -5484,9 +5485,9 @@ class FinanceApp {
                   <td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">No facility transactions logged yet.</td>
                 </tr>
               ` : transactions.map(t => {
-                const isDrawdown = t.type === 'drawdown';
-                const color = isDrawdown ? '#f59e0b' : '#34d399';
-                return `
+      const isDrawdown = t.type === 'drawdown';
+      const color = isDrawdown ? '#f59e0b' : '#34d399';
+      return `
                   <tr>
                     <td><strong>${t.reference_no || t.id}</strong></td>
                     <td>${this.formatDate(t.date)}</td>
@@ -5499,7 +5500,7 @@ class FinanceApp {
                     </td>
                   </tr>
                 `;
-              }).join('')}
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -5689,18 +5690,18 @@ class FinanceApp {
         ` : `
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:1.5rem;">
             ${projects.map(prj => {
-              const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
-              const invoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-              const collected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-              const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
-              const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-              const prjExpenses = expenses.filter(e => e.project_id === prj.id);
-              const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
-              const totalCost = materialsCost + siteExpenses;
-              const estimatedProfit = invoiced - totalCost;
-              const profitMargin = invoiced > 0 ? ((estimatedProfit / invoiced) * 100).toFixed(1) : '0';
+      const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
+      const invoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+      const collected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
+      const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
+      const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
+      const prjExpenses = expenses.filter(e => e.project_id === prj.id);
+      const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+      const totalCost = materialsCost + siteExpenses;
+      const estimatedProfit = invoiced - totalCost;
+      const profitMargin = invoiced > 0 ? ((estimatedProfit / invoiced) * 100).toFixed(1) : '0';
 
-              return `
+      return `
                 <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:12px; padding:1.5rem;">
                   <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
                     <div>
@@ -5744,7 +5745,7 @@ class FinanceApp {
                   </div>
                 </div>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         `}
       </div>
@@ -6471,30 +6472,30 @@ class FinanceApp {
       let currentRegime = initialRegime || 'trn'; // 'trn' | 'gst'
       let currentCurrency = initialRegime === 'gst' ? 'INR' : 'AED'; // 'AED' | 'INR'
 
-    // Zoho Books Billing, Shipping & Invoice Accounting fields
-    const initialOrderNo = editInv ? (editInv.order_no || editInv.order_number || '') : '';
-    const initialTaxTreatment = editInv ? (editInv.tax_treatment || 'VAT Registered') : 'VAT Registered';
-    const initialArAccount = editInv ? (editInv.accounts_receivable || 'Accounts Receivable') : 'Accounts Receivable';
-    const initialSalesperson = editInv ? (editInv.salesperson || '') : '';
-    const initialDrc = editInv ? Boolean(editInv.drc_applicable) : false;
-    const initialSubject = editInv ? (editInv.subject || '') : '';
-    const initialPaymentStage = editInv ? (editInv.payment_stage || 'standard') : 'standard';
-    const initialClaimPct = editInv ? (editInv.claim_pct || 100) : 100;
+      // Zoho Books Billing, Shipping & Invoice Accounting fields
+      const initialOrderNo = editInv ? (editInv.order_no || editInv.order_number || '') : '';
+      const initialTaxTreatment = editInv ? (editInv.tax_treatment || 'VAT Registered') : 'VAT Registered';
+      const initialArAccount = editInv ? (editInv.accounts_receivable || 'Accounts Receivable') : 'Accounts Receivable';
+      const initialSalesperson = editInv ? (editInv.salesperson || '') : '';
+      const initialDrc = editInv ? Boolean(editInv.drc_applicable) : false;
+      const initialSubject = editInv ? (editInv.subject || '') : '';
+      const initialPaymentStage = editInv ? (editInv.payment_stage || 'standard') : 'standard';
+      const initialClaimPct = editInv ? (editInv.claim_pct || 100) : 100;
 
-    this.currentBillingAddress = editInv?.billing_address_details || (editInv?.customer_address ? {
-      street1: editInv.customer_address,
-      attention: editInv.contact_person || '',
-      country: 'United Arab Emirates'
-    } : null);
+      this.currentBillingAddress = editInv?.billing_address_details || (editInv?.customer_address ? {
+        street1: editInv.customer_address,
+        attention: editInv.contact_person || '',
+        country: 'United Arab Emirates'
+      } : null);
 
-    this.currentShippingAddress = editInv?.shipping_address_details || (editInv?.shipping_address ? {
-      street1: editInv.shipping_address,
-      country: 'United Arab Emirates'
-    } : null);
+      this.currentShippingAddress = editInv?.shipping_address_details || (editInv?.shipping_address ? {
+        street1: editInv.shipping_address,
+        country: 'United Arab Emirates'
+      } : null);
 
-    let currentAddressLang = 'primary'; // 'primary' | 'secondary'
+      let currentAddressLang = 'primary'; // 'primary' | 'secondary'
 
-    const modalHtml = `
+      const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-invoice">
         <div class="fin-modal-dialog">
           <div class="fin-modal-header">
@@ -6885,54 +6886,54 @@ class FinanceApp {
       </div>
     `;
 
-    let modalContainer = document.getElementById('fin-modal-container');
-    if (!modalContainer) {
-      modalContainer = document.createElement('div');
-      modalContainer.id = 'fin-modal-container';
-      document.body.appendChild(modalContainer);
-    }
-    modalContainer.innerHTML = modalHtml;
+      let modalContainer = document.getElementById('fin-modal-container');
+      if (!modalContainer) {
+        modalContainer = document.createElement('div');
+        modalContainer.id = 'fin-modal-container';
+        document.body.appendChild(modalContainer);
+      }
+      modalContainer.innerHTML = modalHtml;
 
-    const tbody = document.getElementById('inv-items-tbody');
+      const tbody = document.getElementById('inv-items-tbody');
 
-    // Render Bilingual Address Cards in Invoice Modal (Zoho Books Style)
-    const renderInvoiceAddressCards = () => {
-      const bContainer = document.getElementById('inv-billing-addr-container');
-      const sContainer = document.getElementById('inv-shipping-addr-container');
-      const isArabic = currentAddressLang === 'secondary';
+      // Render Bilingual Address Cards in Invoice Modal (Zoho Books Style)
+      const renderInvoiceAddressCards = () => {
+        const bContainer = document.getElementById('inv-billing-addr-container');
+        const sContainer = document.getElementById('inv-shipping-addr-container');
+        const isArabic = currentAddressLang === 'secondary';
 
-      // 1. Billing Address
-      if (bContainer) {
-        const b = this.currentBillingAddress;
-        const hasBilling = b && (b.street1 || b.attention || b.city || b.country || b.street1_ar || b.attention_ar);
-        if (!hasBilling) {
-          bContainer.innerHTML = `<button type="button" class="fin-addr-link-action" id="inv-new-billing-link">New Address</button>`;
-          const btn = document.getElementById('inv-new-billing-link');
-          if (btn) btn.onclick = (e) => { e.preventDefault(); this.openAddressModal('billing'); };
-        } else {
-          let lines = [];
-          if (!isArabic) {
-            if (b.attention) lines.push(`<strong style="color:#f1f5f9;">${b.attention}</strong>`);
-            if (b.street1) lines.push(b.street1);
-            if (b.street2) lines.push(b.street2);
-            const loc = [b.city, b.state, b.zip].filter(Boolean).join(', ');
-            if (loc) lines.push(loc);
-            if (b.country) lines.push(b.country);
-            if (b.phone) lines.push(`Phone: ${b.phone_code || '+971'} ${b.phone}`);
-            if (b.fax) lines.push(`Fax: ${b.fax}`);
+        // 1. Billing Address
+        if (bContainer) {
+          const b = this.currentBillingAddress;
+          const hasBilling = b && (b.street1 || b.attention || b.city || b.country || b.street1_ar || b.attention_ar);
+          if (!hasBilling) {
+            bContainer.innerHTML = `<button type="button" class="fin-addr-link-action" id="inv-new-billing-link">New Address</button>`;
+            const btn = document.getElementById('inv-new-billing-link');
+            if (btn) btn.onclick = (e) => { e.preventDefault(); this.openAddressModal('billing'); };
           } else {
-            if (b.attention_ar || b.attention) lines.push(`<strong style="color:#f1f5f9;">${b.attention_ar || b.attention}</strong>`);
-            if (b.street1_ar || b.street1) lines.push(b.street1_ar || b.street1);
-            if (b.street2_ar || b.street2) lines.push(b.street2_ar || b.street2);
-            const locAr = [b.city_ar || b.city, b.state_ar || b.state, b.zip_ar || b.zip].filter(Boolean).join('، ');
-            if (locAr) lines.push(locAr);
-            if (b.country_ar || b.country) lines.push(b.country_ar || b.country);
-            if (b.phone_ar || b.phone) lines.push(`هاتف: ${b.phone_ar || b.phone}`);
-          }
-          if (lines.length === 0) {
-            lines.push('<span style="color:#94a3b8; font-style:italic;">(No address in this language)</span>');
-          }
-          bContainer.innerHTML = `
+            let lines = [];
+            if (!isArabic) {
+              if (b.attention) lines.push(`<strong style="color:#f1f5f9;">${b.attention}</strong>`);
+              if (b.street1) lines.push(b.street1);
+              if (b.street2) lines.push(b.street2);
+              const loc = [b.city, b.state, b.zip].filter(Boolean).join(', ');
+              if (loc) lines.push(loc);
+              if (b.country) lines.push(b.country);
+              if (b.phone) lines.push(`Phone: ${b.phone_code || '+971'} ${b.phone}`);
+              if (b.fax) lines.push(`Fax: ${b.fax}`);
+            } else {
+              if (b.attention_ar || b.attention) lines.push(`<strong style="color:#f1f5f9;">${b.attention_ar || b.attention}</strong>`);
+              if (b.street1_ar || b.street1) lines.push(b.street1_ar || b.street1);
+              if (b.street2_ar || b.street2) lines.push(b.street2_ar || b.street2);
+              const locAr = [b.city_ar || b.city, b.state_ar || b.state, b.zip_ar || b.zip].filter(Boolean).join('، ');
+              if (locAr) lines.push(locAr);
+              if (b.country_ar || b.country) lines.push(b.country_ar || b.country);
+              if (b.phone_ar || b.phone) lines.push(`هاتف: ${b.phone_ar || b.phone}`);
+            }
+            if (lines.length === 0) {
+              lines.push('<span style="color:#94a3b8; font-style:italic;">(No address in this language)</span>');
+            }
+            bContainer.innerHTML = `
             <div class="fin-addr-card-preview ${isArabic ? 'arabic-mode' : ''}">
               ${lines.join('<br>')}
               <div style="margin-top:6px;">
@@ -6940,67 +6941,67 @@ class FinanceApp {
               </div>
             </div>
           `;
-          const editBtn = document.getElementById('inv-edit-billing-link');
-          if (editBtn) editBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('billing'); };
+            const editBtn = document.getElementById('inv-edit-billing-link');
+            if (editBtn) editBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('billing'); };
+          }
         }
-      }
 
-      // 2. Shipping Address
-      if (sContainer) {
-        const s = this.currentShippingAddress;
-        const hasShipping = s && (s.street1 || s.attention || s.city || s.country || s.street1_ar || s.attention_ar);
-        if (!hasShipping) {
-          sContainer.innerHTML = `
+        // 2. Shipping Address
+        if (sContainer) {
+          const s = this.currentShippingAddress;
+          const hasShipping = s && (s.street1 || s.attention || s.city || s.country || s.street1_ar || s.attention_ar);
+          if (!hasShipping) {
+            sContainer.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
               <button type="button" class="fin-addr-link-action" id="inv-new-shipping-link">New Address</button>
               <button type="button" class="fin-addr-link-action" id="inv-dropship-link" style="color:#0284c7;">+ Dropshipping Address</button>
               <button type="button" class="fin-addr-link-action" id="inv-copy-billing-link" style="color:#64748b; font-size:0.76rem;">+ Copy from Billing</button>
             </div>
           `;
-          const newBtn = document.getElementById('inv-new-shipping-link');
-          if (newBtn) newBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', false); };
-          const dropBtn = document.getElementById('inv-dropship-link');
-          if (dropBtn) dropBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', true); };
-          const copyBtn = document.getElementById('inv-copy-billing-link');
-          if (copyBtn) copyBtn.onclick = (e) => {
-            e.preventDefault();
-            if (!this.currentBillingAddress) {
-              alert('Please enter a Billing Address first.');
-              return;
-            }
-            this.currentShippingAddress = JSON.parse(JSON.stringify(this.currentBillingAddress));
-            renderInvoiceAddressCards();
-          };
-        } else {
-          let lines = [];
-          if (!isArabic) {
-            if (s.is_dropship) {
-              lines.push(`<span style="font-size:0.68rem; background:rgba(2,132,199,0.18); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700; border:1px solid rgba(2,132,199,0.35); display:inline-block; margin-bottom:4px;">Dropshipping Address</span>`);
-            }
-            if (s.attention) lines.push(`<strong style="color:#f1f5f9;">${s.attention}</strong>`);
-            if (s.street1) lines.push(s.street1);
-            if (s.street2) lines.push(s.street2);
-            const loc = [s.city, s.state, s.zip].filter(Boolean).join(', ');
-            if (loc) lines.push(loc);
-            if (s.country) lines.push(s.country);
-            if (s.phone) lines.push(`Phone: ${s.phone_code || '+971'} ${s.phone}`);
-            if (s.fax) lines.push(`Fax: ${s.fax}`);
+            const newBtn = document.getElementById('inv-new-shipping-link');
+            if (newBtn) newBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', false); };
+            const dropBtn = document.getElementById('inv-dropship-link');
+            if (dropBtn) dropBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', true); };
+            const copyBtn = document.getElementById('inv-copy-billing-link');
+            if (copyBtn) copyBtn.onclick = (e) => {
+              e.preventDefault();
+              if (!this.currentBillingAddress) {
+                alert('Please enter a Billing Address first.');
+                return;
+              }
+              this.currentShippingAddress = JSON.parse(JSON.stringify(this.currentBillingAddress));
+              renderInvoiceAddressCards();
+            };
           } else {
-            if (s.is_dropship) {
-              lines.push(`<span style="font-size:0.68rem; background:rgba(2,132,199,0.18); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700; border:1px solid rgba(2,132,199,0.35); display:inline-block; margin-bottom:4px;">عنوان دروبشيبينغ</span>`);
+            let lines = [];
+            if (!isArabic) {
+              if (s.is_dropship) {
+                lines.push(`<span style="font-size:0.68rem; background:rgba(2,132,199,0.18); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700; border:1px solid rgba(2,132,199,0.35); display:inline-block; margin-bottom:4px;">Dropshipping Address</span>`);
+              }
+              if (s.attention) lines.push(`<strong style="color:#f1f5f9;">${s.attention}</strong>`);
+              if (s.street1) lines.push(s.street1);
+              if (s.street2) lines.push(s.street2);
+              const loc = [s.city, s.state, s.zip].filter(Boolean).join(', ');
+              if (loc) lines.push(loc);
+              if (s.country) lines.push(s.country);
+              if (s.phone) lines.push(`Phone: ${s.phone_code || '+971'} ${s.phone}`);
+              if (s.fax) lines.push(`Fax: ${s.fax}`);
+            } else {
+              if (s.is_dropship) {
+                lines.push(`<span style="font-size:0.68rem; background:rgba(2,132,199,0.18); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700; border:1px solid rgba(2,132,199,0.35); display:inline-block; margin-bottom:4px;">عنوان دروبشيبينغ</span>`);
+              }
+              if (s.attention_ar || s.attention) lines.push(`<strong style="color:#f1f5f9;">${s.attention_ar || s.attention}</strong>`);
+              if (s.street1_ar || s.street1) lines.push(s.street1_ar || s.street1);
+              if (s.street2_ar || s.street2) lines.push(s.street2_ar || s.street2);
+              const locAr = [s.city_ar || s.city, s.state_ar || s.state, s.zip_ar || s.zip].filter(Boolean).join('، ');
+              if (locAr) lines.push(locAr);
+              if (s.country_ar || s.country) lines.push(s.country_ar || s.country);
+              if (s.phone_ar || s.phone) lines.push(`هاتف: ${s.phone_ar || s.phone}`);
             }
-            if (s.attention_ar || s.attention) lines.push(`<strong style="color:#f1f5f9;">${s.attention_ar || s.attention}</strong>`);
-            if (s.street1_ar || s.street1) lines.push(s.street1_ar || s.street1);
-            if (s.street2_ar || s.street2) lines.push(s.street2_ar || s.street2);
-            const locAr = [s.city_ar || s.city, s.state_ar || s.state, s.zip_ar || s.zip].filter(Boolean).join('، ');
-            if (locAr) lines.push(locAr);
-            if (s.country_ar || s.country) lines.push(s.country_ar || s.country);
-            if (s.phone_ar || s.phone) lines.push(`هاتف: ${s.phone_ar || s.phone}`);
-          }
-          if (lines.length === 0) {
-            lines.push('<span style="color:#94a3b8; font-style:italic;">(No address in this language)</span>');
-          }
-          sContainer.innerHTML = `
+            if (lines.length === 0) {
+              lines.push('<span style="color:#94a3b8; font-style:italic;">(No address in this language)</span>');
+            }
+            sContainer.innerHTML = `
             <div class="fin-addr-card-preview ${isArabic ? 'arabic-mode' : ''}">
               ${lines.join('<br>')}
               <div style="margin-top:6px; display:flex; gap:0.65rem; align-items:center;">
@@ -7009,272 +7010,272 @@ class FinanceApp {
               </div>
             </div>
           `;
-          const editBtn = document.getElementById('inv-edit-shipping-link');
-          if (editBtn) editBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', Boolean(s.is_dropship)); };
-          const clearBtn = document.getElementById('inv-clear-shipping-link');
-          if (clearBtn) clearBtn.onclick = (e) => {
-            e.preventDefault();
-            this.currentShippingAddress = null;
-            renderInvoiceAddressCards();
-          };
+            const editBtn = document.getElementById('inv-edit-shipping-link');
+            if (editBtn) editBtn.onclick = (e) => { e.preventDefault(); this.openAddressModal('shipping', Boolean(s.is_dropship)); };
+            const clearBtn = document.getElementById('inv-clear-shipping-link');
+            if (clearBtn) clearBtn.onclick = (e) => {
+              e.preventDefault();
+              this.currentShippingAddress = null;
+              renderInvoiceAddressCards();
+            };
+          }
         }
+      };
+
+      window._reRenderInvoiceAddresses = renderInvoiceAddressCards;
+      renderInvoiceAddressCards();
+
+      // Language switcher pills listener
+      const pillPrimary = document.getElementById('addr-lang-primary');
+      const pillSecondary = document.getElementById('addr-lang-secondary');
+      if (pillPrimary && pillSecondary) {
+        pillPrimary.onclick = (e) => {
+          e.preventDefault();
+          currentAddressLang = 'primary';
+          pillPrimary.classList.add('active');
+          pillSecondary.classList.remove('active');
+          renderInvoiceAddressCards();
+        };
+        pillSecondary.onclick = (e) => {
+          e.preventDefault();
+          currentAddressLang = 'secondary';
+          pillSecondary.classList.add('active');
+          pillPrimary.classList.remove('active');
+          renderInvoiceAddressCards();
+        };
       }
-    };
 
-    window._reRenderInvoiceAddresses = renderInvoiceAddressCards;
-    renderInvoiceAddressCards();
-
-    // Language switcher pills listener
-    const pillPrimary = document.getElementById('addr-lang-primary');
-    const pillSecondary = document.getElementById('addr-lang-secondary');
-    if (pillPrimary && pillSecondary) {
-      pillPrimary.onclick = (e) => {
-        e.preventDefault();
-        currentAddressLang = 'primary';
-        pillPrimary.classList.add('active');
-        pillSecondary.classList.remove('active');
-        renderInvoiceAddressCards();
-      };
-      pillSecondary.onclick = (e) => {
-        e.preventDefault();
-        currentAddressLang = 'secondary';
-        pillSecondary.classList.add('active');
-        pillPrimary.classList.remove('active');
-        renderInvoiceAddressCards();
-      };
-    }
-
-    // Customer search button
-    const searchBtn = document.getElementById('inv-cust-search-btn');
-    if (searchBtn) {
-      searchBtn.onclick = (e) => {
-        e.preventDefault();
-        const inp = document.getElementById('inv-cust-input');
-        if (inp) {
-          inp.focus();
-          inp.click();
-        }
-      };
-    }
-
-    // Sequence refresh button
-    const seqRefreshBtn = document.getElementById('inv-seq-refresh-btn');
-    if (seqRefreshBtn) {
-      seqRefreshBtn.onclick = (e) => {
-        e.preventDefault();
-        const newSeq = this.getNextInvoiceNumber();
-        const seqInp = document.getElementById('inv-custom-seq-no');
-        if (seqInp) seqInp.value = newSeq;
-      };
-    }
-
-    // Terms select dropdown
-    const termsSelect = document.getElementById('inv-terms-select');
-    if (termsSelect) {
-      termsSelect.onchange = () => {
-        const val = termsSelect.value;
-        const termsInp = document.getElementById('inv-terms');
-        if (val === 'custom') {
-          if (termsInp) {
-            termsInp.style.display = 'block';
-            termsInp.focus();
+      // Customer search button
+      const searchBtn = document.getElementById('inv-cust-search-btn');
+      if (searchBtn) {
+        searchBtn.onclick = (e) => {
+          e.preventDefault();
+          const inp = document.getElementById('inv-cust-input');
+          if (inp) {
+            inp.focus();
+            inp.click();
           }
-        } else {
-          if (termsInp) {
-            termsInp.style.display = 'none';
-            termsInp.value = val;
+        };
+      }
+
+      // Sequence refresh button
+      const seqRefreshBtn = document.getElementById('inv-seq-refresh-btn');
+      if (seqRefreshBtn) {
+        seqRefreshBtn.onclick = (e) => {
+          e.preventDefault();
+          const newSeq = this.getNextInvoiceNumber();
+          const seqInp = document.getElementById('inv-custom-seq-no');
+          if (seqInp) seqInp.value = newSeq;
+        };
+      }
+
+      // Terms select dropdown
+      const termsSelect = document.getElementById('inv-terms-select');
+      if (termsSelect) {
+        termsSelect.onchange = () => {
+          const val = termsSelect.value;
+          const termsInp = document.getElementById('inv-terms');
+          if (val === 'custom') {
+            if (termsInp) {
+              termsInp.style.display = 'block';
+              termsInp.focus();
+            }
+          } else {
+            if (termsInp) {
+              termsInp.style.display = 'none';
+              termsInp.value = val;
+            }
+            if (typeof updateDueDate === 'function') updateDueDate();
           }
-          if (typeof updateDueDate === 'function') updateDueDate();
+        };
+      }
+
+      // Tax Treatment editor
+      const taxTreatmentBtn = document.getElementById('inv-tax-treatment-btn');
+      if (taxTreatmentBtn) {
+        taxTreatmentBtn.onclick = (e) => {
+          e.preventDefault();
+          const treatments = [
+            'VAT Registered',
+            'Non-VAT Registered',
+            'Designated Zone (Tax-Free / 0%)',
+            'GCC VAT Registered (Reverse Charge)',
+            'Out of Scope / Zero-Rated'
+          ];
+          const valEl = document.getElementById('inv-tax-treatment-val');
+          const currentVal = valEl?.textContent.trim() || 'VAT Registered';
+          const nextIdx = (treatments.indexOf(currentVal) + 1) % treatments.length;
+          const nextVal = treatments[nextIdx];
+          if (valEl) valEl.textContent = nextVal;
+
+          if (nextVal.includes('0%') || nextVal.includes('Zero') || nextVal.includes('Designated')) {
+            tbody?.querySelectorAll('.row-gst').forEach(sel => { sel.value = '0'; });
+            if (typeof recalculateInvoice === 'function') recalculateInvoice();
+          } else if (nextVal === 'VAT Registered') {
+            tbody?.querySelectorAll('.row-gst').forEach(sel => { sel.value = '5'; });
+            if (typeof recalculateInvoice === 'function') recalculateInvoice();
+          }
+        };
+      }
+
+      const setTaxRegime = (regime, options = {}) => {
+        currentRegime = regime;
+        const isTrn = regime === 'trn';
+
+        const btnGst = document.getElementById('regime-toggle-gst');
+        const btnTrn = document.getElementById('regime-toggle-trn');
+        const taxInp = document.getElementById('inv-cust-gstin');
+        const taxLabelText = document.getElementById('inv-tax-type-text');
+        const taxHelper = document.getElementById('inv-tax-helper-text');
+        const posInp = document.getElementById('inv-cust-pos');
+        const posLabel = document.getElementById('inv-pos-label');
+        const regimeHidden = document.getElementById('inv-tax-regime');
+        const currBadge = document.getElementById('inv-currency-symbol');
+        const rateCol = document.getElementById('inv-rate-col-header');
+        const taxCol = document.getElementById('inv-tax-col-header');
+        const totCol = document.getElementById('inv-total-col-header');
+        const regBadge = document.getElementById('inv-calc-regime-badge');
+
+        if (regimeHidden) regimeHidden.value = regime;
+
+        if (regBadge) {
+          if (isTrn) {
+            regBadge.textContent = '🇦🇪 UAE VAT (5%)';
+            regBadge.style.color = '#10b981';
+            regBadge.style.background = 'rgba(16,185,129,0.12)';
+            regBadge.style.border = '1px solid rgba(16,185,129,0.3)';
+          } else {
+            regBadge.textContent = '🇮🇳 India GST (18%)';
+            regBadge.style.color = '#38bdf8';
+            regBadge.style.background = 'rgba(56,189,248,0.12)';
+            regBadge.style.border = '1px solid rgba(56,189,248,0.3)';
+          }
         }
-      };
-    }
 
-    // Tax Treatment editor
-    const taxTreatmentBtn = document.getElementById('inv-tax-treatment-btn');
-    if (taxTreatmentBtn) {
-      taxTreatmentBtn.onclick = (e) => {
-        e.preventDefault();
-        const treatments = [
-          'VAT Registered',
-          'Non-VAT Registered',
-          'Designated Zone (Tax-Free / 0%)',
-          'GCC VAT Registered (Reverse Charge)',
-          'Out of Scope / Zero-Rated'
-        ];
-        const valEl = document.getElementById('inv-tax-treatment-val');
-        const currentVal = valEl?.textContent.trim() || 'VAT Registered';
-        const nextIdx = (treatments.indexOf(currentVal) + 1) % treatments.length;
-        const nextVal = treatments[nextIdx];
-        if (valEl) valEl.textContent = nextVal;
-
-        if (nextVal.includes('0%') || nextVal.includes('Zero') || nextVal.includes('Designated')) {
-          tbody?.querySelectorAll('.row-gst').forEach(sel => { sel.value = '0'; });
-          if (typeof recalculateInvoice === 'function') recalculateInvoice();
-        } else if (nextVal === 'VAT Registered') {
-          tbody?.querySelectorAll('.row-gst').forEach(sel => { sel.value = '5'; });
-          if (typeof recalculateInvoice === 'function') recalculateInvoice();
-        }
-      };
-    }
-
-    const setTaxRegime = (regime, options = {}) => {
-      currentRegime = regime;
-      const isTrn = regime === 'trn';
-
-      const btnGst = document.getElementById('regime-toggle-gst');
-      const btnTrn = document.getElementById('regime-toggle-trn');
-      const taxInp = document.getElementById('inv-cust-gstin');
-      const taxLabelText = document.getElementById('inv-tax-type-text');
-      const taxHelper = document.getElementById('inv-tax-helper-text');
-      const posInp = document.getElementById('inv-cust-pos');
-      const posLabel = document.getElementById('inv-pos-label');
-      const regimeHidden = document.getElementById('inv-tax-regime');
-      const currBadge = document.getElementById('inv-currency-symbol');
-      const rateCol = document.getElementById('inv-rate-col-header');
-      const taxCol = document.getElementById('inv-tax-col-header');
-      const totCol = document.getElementById('inv-total-col-header');
-      const regBadge = document.getElementById('inv-calc-regime-badge');
-
-      if (regimeHidden) regimeHidden.value = regime;
-
-      if (regBadge) {
         if (isTrn) {
-          regBadge.textContent = '🇦🇪 UAE VAT (5%)';
-          regBadge.style.color = '#10b981';
-          regBadge.style.background = 'rgba(16,185,129,0.12)';
-          regBadge.style.border = '1px solid rgba(16,185,129,0.3)';
-        } else {
-          regBadge.textContent = '🇮🇳 India GST (18%)';
-          regBadge.style.color = '#38bdf8';
-          regBadge.style.background = 'rgba(56,189,248,0.12)';
-          regBadge.style.border = '1px solid rgba(56,189,248,0.3)';
-        }
-      }
-
-      if (isTrn) {
-        if (btnTrn) btnTrn.classList.add('active', 'trn-pill');
-        if (btnGst) btnGst.classList.remove('active');
-        if (taxLabelText) taxLabelText.textContent = 'CUSTOMER TRN';
-        if (taxInp) {
-          taxInp.placeholder = 'e.g. 100492817200003 (15-digit UAE TRN)';
-          taxInp.title = '15-digit UAE Tax Registration Number (TRN)';
-          if (options.taxNumber !== undefined) {
-            taxInp.value = options.taxNumber;
+          if (btnTrn) btnTrn.classList.add('active', 'trn-pill');
+          if (btnGst) btnGst.classList.remove('active');
+          if (taxLabelText) taxLabelText.textContent = 'CUSTOMER TRN';
+          if (taxInp) {
+            taxInp.placeholder = 'e.g. 100492817200003 (15-digit UAE TRN)';
+            taxInp.title = '15-digit UAE Tax Registration Number (TRN)';
+            if (options.taxNumber !== undefined) {
+              taxInp.value = options.taxNumber;
+            }
           }
-        }
-        if (taxHelper) taxHelper.textContent = 'UAE VAT Registration # (15 Digits)';
-        if (posLabel) posLabel.innerHTML = 'Place of Supply / Emirate <span style="color:#ef4444;">*</span>';
+          if (taxHelper) taxHelper.textContent = 'UAE VAT Registration # (15 Digits)';
+          if (posLabel) posLabel.innerHTML = 'Place of Supply / Emirate <span style="color:#ef4444;">*</span>';
 
-        if (!options.keepPos && posInp && (!posInp.value || posInp.value.includes('Maharashtra') || posInp.value.includes('27'))) {
-          posInp.value = options.suggestedPos || 'Abu Dhabi, UAE';
-        }
+          if (!options.keepPos && posInp && (!posInp.value || posInp.value.includes('Maharashtra') || posInp.value.includes('27'))) {
+            posInp.value = options.suggestedPos || 'Abu Dhabi, UAE';
+          }
 
-        if (!options.keepCurrency) {
-          currentCurrency = 'AED';
-          if (currBadge) currBadge.textContent = 'AED (د.إ)';
-        }
+          if (!options.keepCurrency) {
+            currentCurrency = 'AED';
+            if (currBadge) currBadge.textContent = 'AED (د.إ)';
+          }
 
-        if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
-        if (taxCol) taxCol.textContent = 'VAT 5%';
-        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+          if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+          if (taxCol) taxCol.textContent = 'VAT 5%';
+          if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
 
-        tbody.querySelectorAll('tr').forEach(tr => {
-          const gstSel = tr.querySelector('.row-gst');
-          if (gstSel) {
-            const currVal = gstSel.value;
-            gstSel.innerHTML = `
+          tbody.querySelectorAll('tr').forEach(tr => {
+            const gstSel = tr.querySelector('.row-gst');
+            if (gstSel) {
+              const currVal = gstSel.value;
+              gstSel.innerHTML = `
               <option value="5" ${currVal === '5' || currVal === '18' || !options.preserveRates ? 'selected' : ''}>Standard Rate [5%]</option>
               <option value="0" ${currVal === '0' ? 'selected' : ''}>Zero Rate [0%]</option>
               <option value="exempt" ${currVal === 'exempt' ? 'selected' : ''}>Exempt [0%]</option>
             `;
-            if (currVal === '18' || !options.preserveRates) gstSel.value = '5';
+              if (currVal === '18' || !options.preserveRates) gstSel.value = '5';
+            }
+          });
+        } else {
+          if (btnGst) btnGst.classList.add('active');
+          if (btnTrn) btnTrn.classList.remove('active', 'trn-pill');
+          if (taxLabelText) taxLabelText.textContent = 'CUSTOMER GSTIN';
+          if (taxInp) {
+            taxInp.placeholder = 'e.g. 27AAACL0149K1ZM (India GST)';
+            taxInp.title = '15-character Indian Goods & Services Tax Identification Number';
+            if (options.taxNumber !== undefined) {
+              taxInp.value = options.taxNumber;
+            }
           }
-        });
-      } else {
-        if (btnGst) btnGst.classList.add('active');
-        if (btnTrn) btnTrn.classList.remove('active', 'trn-pill');
-        if (taxLabelText) taxLabelText.textContent = 'CUSTOMER GSTIN';
-        if (taxInp) {
-          taxInp.placeholder = 'e.g. 27AAACL0149K1ZM (India GST)';
-          taxInp.title = '15-character Indian Goods & Services Tax Identification Number';
-          if (options.taxNumber !== undefined) {
-            taxInp.value = options.taxNumber;
+          if (taxHelper) taxHelper.textContent = 'India GSTIN (15 Alphanumeric)';
+          if (posLabel) posLabel.innerHTML = 'Place of Supply State <span style="color:#ef4444;">*</span>';
+
+          if (!options.keepPos && posInp && (!posInp.value || posInp.value.includes('UAE') || posInp.value.includes('Dubai') || posInp.value.includes('Abu Dhabi'))) {
+            posInp.value = options.suggestedPos || '27-Maharashtra';
           }
-        }
-        if (taxHelper) taxHelper.textContent = 'India GSTIN (15 Alphanumeric)';
-        if (posLabel) posLabel.innerHTML = 'Place of Supply State <span style="color:#ef4444;">*</span>';
 
-        if (!options.keepPos && posInp && (!posInp.value || posInp.value.includes('UAE') || posInp.value.includes('Dubai') || posInp.value.includes('Abu Dhabi'))) {
-          posInp.value = options.suggestedPos || '27-Maharashtra';
-        }
+          if (!options.keepCurrency) {
+            currentCurrency = 'INR';
+            if (currBadge) currBadge.textContent = '₹ INR';
+          }
 
-        if (!options.keepCurrency) {
-          currentCurrency = 'INR';
-          if (currBadge) currBadge.textContent = '₹ INR';
-        }
+          if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+          if (taxCol) taxCol.textContent = 'GST %';
+          if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
 
-        if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
-        if (taxCol) taxCol.textContent = 'GST %';
-        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
-
-        tbody.querySelectorAll('tr').forEach(tr => {
-          const gstSel = tr.querySelector('.row-gst');
-          if (gstSel) {
-            const currVal = gstSel.value;
-            gstSel.innerHTML = `
+          tbody.querySelectorAll('tr').forEach(tr => {
+            const gstSel = tr.querySelector('.row-gst');
+            if (gstSel) {
+              const currVal = gstSel.value;
+              gstSel.innerHTML = `
               <option value="18" ${currVal === '18' || (!options.preserveRates && currVal !== '5') ? 'selected' : ''}>18%</option>
               <option value="12" ${currVal === '12' ? 'selected' : ''}>12%</option>
               <option value="5" ${currVal === '5' ? 'selected' : ''}>5%</option>
               <option value="28" ${currVal === '28' ? 'selected' : ''}>28%</option>
               <option value="0" ${currVal === '0' ? 'selected' : ''}>0%</option>
             `;
-            if (currVal === '5' && !options.preserveRates) gstSel.value = '18';
-          }
+              if (currVal === '5' && !options.preserveRates) gstSel.value = '18';
+            }
+          });
+        }
+
+        // HSN / SAC column visibility (hidden for UAE TRN VAT, shown for India GST)
+        const hsnHeader = document.getElementById('inv-hsn-col-header');
+        const descHeader = document.getElementById('inv-desc-col-header');
+        if (hsnHeader) hsnHeader.style.display = isTrn ? 'none' : '';
+        if (descHeader) descHeader.style.width = isTrn ? '44%' : '34%';
+
+        tbody.querySelectorAll('.row-hsn-cell').forEach(cell => {
+          cell.style.display = isTrn ? 'none' : '';
         });
-      }
-
-      // HSN / SAC column visibility (hidden for UAE TRN VAT, shown for India GST)
-      const hsnHeader = document.getElementById('inv-hsn-col-header');
-      const descHeader = document.getElementById('inv-desc-col-header');
-      if (hsnHeader) hsnHeader.style.display = isTrn ? 'none' : '';
-      if (descHeader) descHeader.style.width = isTrn ? '44%' : '34%';
-
-      tbody.querySelectorAll('.row-hsn-cell').forEach(cell => {
-        cell.style.display = isTrn ? 'none' : '';
-      });
-      tbody.querySelectorAll('.row-desc-cell').forEach(cell => {
-        cell.style.width = isTrn ? '44%' : '34%';
-      });
-
-      recalculateInvoice();
-    };
-
-    // Currency toggle click handler
-    const currToggle = document.getElementById('inv-currency-indicator');
-    if (currToggle) {
-      currToggle.onclick = () => {
-        currentCurrency = currentCurrency === 'INR' ? 'AED' : 'INR';
-        const currBadge = document.getElementById('inv-currency-symbol');
-        if (currBadge) currBadge.textContent = currentCurrency === 'AED' ? 'AED (د.إ)' : '₹ INR';
-
-        const rateCol = document.getElementById('inv-rate-col-header');
-        const totCol = document.getElementById('inv-total-col-header');
-        if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
-        if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+        tbody.querySelectorAll('.row-desc-cell').forEach(cell => {
+          cell.style.width = isTrn ? '44%' : '34%';
+        });
 
         recalculateInvoice();
       };
-    }
 
-    // Check and render friendly empty-state when no line rows exist
-    const checkEmptyTbody = () => {
-      const activeRows = tbody.querySelectorAll('tr:not(.inv-items-empty-row)');
-      const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
-      if (activeRows.length === 0) {
-        if (!existingPlaceholder) {
-          const emptyTr = document.createElement('tr');
-          emptyTr.className = 'inv-items-empty-row';
-          emptyTr.innerHTML = `
+      // Currency toggle click handler
+      const currToggle = document.getElementById('inv-currency-indicator');
+      if (currToggle) {
+        currToggle.onclick = () => {
+          currentCurrency = currentCurrency === 'INR' ? 'AED' : 'INR';
+          const currBadge = document.getElementById('inv-currency-symbol');
+          if (currBadge) currBadge.textContent = currentCurrency === 'AED' ? 'AED (د.إ)' : '₹ INR';
+
+          const rateCol = document.getElementById('inv-rate-col-header');
+          const totCol = document.getElementById('inv-total-col-header');
+          if (rateCol) rateCol.textContent = `CONTRACT / RATE (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+          if (totCol) totCol.textContent = `AMOUNT (${currentCurrency === 'AED' ? 'AED' : '₹'})`;
+
+          recalculateInvoice();
+        };
+      }
+
+      // Check and render friendly empty-state when no line rows exist
+      const checkEmptyTbody = () => {
+        const activeRows = tbody.querySelectorAll('tr:not(.inv-items-empty-row)');
+        const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
+        if (activeRows.length === 0) {
+          if (!existingPlaceholder) {
+            const emptyTr = document.createElement('tr');
+            emptyTr.className = 'inv-items-empty-row';
+            emptyTr.innerHTML = `
             <td colspan="8" style="text-align:center; padding:1.75rem 1rem; color:#94a3b8; font-size:0.85rem; background:rgba(15,23,42,0.45); border:1px dashed rgba(56,189,248,0.3); border-radius:8px;">
               <div style="display:flex; flex-direction:column; align-items:center; gap:0.55rem;">
                 <span style="color:#f1f5f9; font-weight:700; font-size:0.9rem;">⚠️ No line items currently added</span>
@@ -7285,46 +7286,46 @@ class FinanceApp {
               </div>
             </td>
           `;
-          tbody.appendChild(emptyTr);
-          const emptyAddBtn = emptyTr.querySelector('#inv-empty-add-row-btn');
-          if (emptyAddBtn) {
-            emptyAddBtn.onclick = (e) => {
-              e.preventDefault();
-              emptyTr.remove();
-              addRow();
-            };
+            tbody.appendChild(emptyTr);
+            const emptyAddBtn = emptyTr.querySelector('#inv-empty-add-row-btn');
+            if (emptyAddBtn) {
+              emptyAddBtn.onclick = (e) => {
+                e.preventDefault();
+                emptyTr.remove();
+                addRow();
+              };
+            }
           }
+        } else if (existingPlaceholder) {
+          existingPlaceholder.remove();
         }
-      } else if (existingPlaceholder) {
-        existingPlaceholder.remove();
-      }
-    };
+      };
 
-    // Current Invoice-level Payment Stage: 'standard' | 'advance' | 'progressive' | 'final'
-    window._currentInvoicePaymentStage = initialPaymentStage || 'standard';
+      // Current Invoice-level Payment Stage: 'standard' | 'advance' | 'progressive' | 'final'
+      window._currentInvoicePaymentStage = initialPaymentStage || 'standard';
 
-    // Line items manager matching Screenshot 1 (Zoho Books Style)
-    const addRow = (defaultItem = null, defaultQty = 1) => {
-      const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
-      if (existingPlaceholder) existingPlaceholder.remove();
+      // Line items manager matching Screenshot 1 (Zoho Books Style)
+      const addRow = (defaultItem = null, defaultQty = 1) => {
+        const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
+        if (existingPlaceholder) existingPlaceholder.remove();
 
-      const tr = document.createElement('tr');
-      const isTrn = currentRegime === 'trn';
-      const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
+        const tr = document.createElement('tr');
+        const isTrn = currentRegime === 'trn';
+        const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
 
-      const itemName = defaultItem ? (defaultItem.name || defaultItem.description || '') : '';
-      const uom = defaultItem ? (defaultItem.uom || defaultItem.unit || 'Sqm') : 'Sqm';
-      const qty = defaultItem && defaultItem.qty !== undefined ? defaultItem.qty : defaultQty;
-      const rate = defaultItem ? (defaultItem.sales_price !== undefined ? defaultItem.sales_price : (defaultItem.rate || 0)) : 0;
-      let wdPct = 100;
-      if (defaultItem) {
-        if (defaultItem.wd_pct !== undefined) wdPct = defaultItem.wd_pct;
-        else if (defaultItem.progress_pct !== undefined) wdPct = defaultItem.progress_pct;
-        else if (defaultItem.discount_val !== undefined) wdPct = defaultItem.discount_val === 0 ? 100 : (100 - defaultItem.discount_val);
-      }
-      const gstRate = defaultItem && defaultItem.gst_rate !== undefined ? defaultItem.gst_rate : (isTrn ? 5 : 18);
+        const itemName = defaultItem ? (defaultItem.name || defaultItem.description || '') : '';
+        const uom = defaultItem ? (defaultItem.uom || defaultItem.unit || 'Sqm') : 'Sqm';
+        const qty = defaultItem && defaultItem.qty !== undefined ? defaultItem.qty : defaultQty;
+        const rate = defaultItem ? (defaultItem.sales_price !== undefined ? defaultItem.sales_price : (defaultItem.rate || 0)) : 0;
+        let wdPct = 100;
+        if (defaultItem) {
+          if (defaultItem.wd_pct !== undefined) wdPct = defaultItem.wd_pct;
+          else if (defaultItem.progress_pct !== undefined) wdPct = defaultItem.progress_pct;
+          else if (defaultItem.discount_val !== undefined) wdPct = defaultItem.discount_val === 0 ? 100 : (100 - defaultItem.discount_val);
+        }
+        const gstRate = defaultItem && defaultItem.gst_rate !== undefined ? defaultItem.gst_rate : (isTrn ? 5 : 18);
 
-      tr.innerHTML = `
+        tr.innerHTML = `
         <td style="padding:0.75rem 0.5rem; text-align:center; vertical-align:middle; width:28px;">
           <span style="color:#94a3b8; font-size:0.9rem; cursor:grab;" title="Drag row">:::</span>
         </td>
@@ -7391,253 +7392,253 @@ class FinanceApp {
           <button type="button" class="fin-s1-row-del row-del" title="Delete Row">🗑️</button>
         </td>
       `;
-      tbody.appendChild(tr);
+        tbody.appendChild(tr);
 
-      // Clear tax button ✕
-      const clearBtn = tr.querySelector('.fin-s1-tax-clear');
-      if (clearBtn) {
-        clearBtn.onclick = () => {
-          const taxSel = tr.querySelector('.row-gst');
-          if (taxSel) taxSel.value = '0';
-          recalculateInvoice();
-        };
-      }
+        // Clear tax button ✕
+        const clearBtn = tr.querySelector('.fin-s1-tax-clear');
+        if (clearBtn) {
+          clearBtn.onclick = () => {
+            const taxSel = tr.querySelector('.row-gst');
+            if (taxSel) taxSel.value = '0';
+            recalculateInvoice();
+          };
+        }
 
-      // Autocomplete helper from catalog
-      const descInp = tr.querySelector('.row-desc');
-      if (descInp) {
-        descInp.oninput = () => {
-          const val = descInp.value.trim().toLowerCase();
-          const demoCatalog = [
-            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', rate: 56, uom: 'Sqm', wd_pct: 50 },
-            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', rate: 51, uom: 'Sqm', wd_pct: 50 },
-            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', rate: 11, uom: 'Sqm', wd_pct: 100 },
-            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', rate: 40, uom: 'Sqm', wd_pct: 50 },
-            ...(items || [])
-          ];
-          const found = demoCatalog.find(it => (it.name || '').toLowerCase() === val);
-          if (found) {
-            if (found.rate) tr.querySelector('.row-rate').value = found.rate;
-            if (found.sales_price) tr.querySelector('.row-rate').value = found.sales_price;
-            if (found.uom) tr.querySelector('.row-uom').value = found.uom;
-            if (found.wd_pct !== undefined) tr.querySelector('.row-wd-pct').value = found.wd_pct;
-          }
-          recalculateInvoice();
-        };
-      }
-
-      tr.querySelectorAll('.row-desc, .row-qty, .row-rate, .row-wd-pct, .row-gst, .row-uom').forEach(inp => {
-        inp.oninput = () => recalculateInvoice();
-        inp.onchange = () => recalculateInvoice();
-      });
-
-      const editUnitIcon = tr.querySelector('.fin-s1-unit-code-row span[title="Click to update unit code"]');
-      if (editUnitIcon) {
-        editUnitIcon.onclick = () => {
-          const select = tr.querySelector('.row-uom');
-          const custom = prompt('Enter custom Unit Code (e.g. %, Sqm, Lsum, Nos):', select?.value || '%');
-          if (custom && custom.trim()) {
-            const val = custom.trim();
-            if (select) {
-              let opt = Array.from(select.options).find(o => o.value.toLowerCase() === val.toLowerCase());
-              if (!opt) {
-                opt = document.createElement('option');
-                opt.value = val;
-                opt.textContent = val;
-                select.appendChild(opt);
-              }
-              select.value = opt.value;
-              recalculateInvoice();
+        // Autocomplete helper from catalog
+        const descInp = tr.querySelector('.row-desc');
+        if (descInp) {
+          descInp.oninput = () => {
+            const val = descInp.value.trim().toLowerCase();
+            const demoCatalog = [
+              { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', rate: 56, uom: 'Sqm', wd_pct: 50 },
+              { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', rate: 51, uom: 'Sqm', wd_pct: 50 },
+              { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', rate: 11, uom: 'Sqm', wd_pct: 100 },
+              { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', rate: 40, uom: 'Sqm', wd_pct: 50 },
+              ...(items || [])
+            ];
+            const found = demoCatalog.find(it => (it.name || '').toLowerCase() === val);
+            if (found) {
+              if (found.rate) tr.querySelector('.row-rate').value = found.rate;
+              if (found.sales_price) tr.querySelector('.row-rate').value = found.sales_price;
+              if (found.uom) tr.querySelector('.row-uom').value = found.uom;
+              if (found.wd_pct !== undefined) tr.querySelector('.row-wd-pct').value = found.wd_pct;
             }
-          }
-        };
-      }
+            recalculateInvoice();
+          };
+        }
 
-      tr.querySelector('.row-del').onclick = () => {
-        tr.remove();
+        tr.querySelectorAll('.row-desc, .row-qty, .row-rate, .row-wd-pct, .row-gst, .row-uom').forEach(inp => {
+          inp.oninput = () => recalculateInvoice();
+          inp.onchange = () => recalculateInvoice();
+        });
+
+        const editUnitIcon = tr.querySelector('.fin-s1-unit-code-row span[title="Click to update unit code"]');
+        if (editUnitIcon) {
+          editUnitIcon.onclick = () => {
+            const select = tr.querySelector('.row-uom');
+            const custom = prompt('Enter custom Unit Code (e.g. %, Sqm, Lsum, Nos):', select?.value || '%');
+            if (custom && custom.trim()) {
+              const val = custom.trim();
+              if (select) {
+                let opt = Array.from(select.options).find(o => o.value.toLowerCase() === val.toLowerCase());
+                if (!opt) {
+                  opt = document.createElement('option');
+                  opt.value = val;
+                  opt.textContent = val;
+                  select.appendChild(opt);
+                }
+                select.value = opt.value;
+                recalculateInvoice();
+              }
+            }
+          };
+        }
+
+        tr.querySelector('.row-del').onclick = () => {
+          tr.remove();
+          recalculateInvoice();
+          checkEmptyTbody();
+        };
+
         recalculateInvoice();
+      };
+
+      const recalculateInvoice = () => {
+        const isTrn = currentRegime === 'trn';
+        const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
+
+        let totalContractBase = 0;
+        let totalGross = 0;
+        let totalRowTax = 0;
+
+        tbody.querySelectorAll('tr:not(.inv-items-empty-row)').forEach(tr => {
+          const qty = Number(tr.querySelector('.row-qty')?.value) || 0;
+          const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
+          const gross = qty * rate;
+
+          const wdInp = tr.querySelector('.row-wd-pct');
+          const wdPct = (wdInp && wdInp.value !== '') ? Number(wdInp.value) : 100;
+          const lineInvoiceAmount = qty * rate * (wdPct / 100);
+
+          const taxRateVal = tr.querySelector('.row-gst')?.value;
+          const taxRate = taxRateVal === 'exempt' ? 0 : (Number(taxRateVal) || 0);
+          const rowTax = lineInvoiceAmount * (taxRate / 100);
+
+          const rowAmountEl = tr.querySelector('.row-total');
+          if (rowAmountEl) {
+            rowAmountEl.textContent = lineInvoiceAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          }
+
+          totalGross += gross;
+          totalContractBase += lineInvoiceAmount;
+          totalRowTax += rowTax;
+        });
+
+        const invoiceSubtotal = totalContractBase;
+        const invoiceVat = totalRowTax;
+        const adjVal = Number(document.getElementById('inv-adjustment-input')?.value) || 0;
+        const invoiceGrandTotal = Math.round((invoiceSubtotal + invoiceVat + adjVal) * 100) / 100;
+
+        // Update Summary Box right card matching Screenshot
+        const taxableEl = document.getElementById('inv-calc-taxable');
+        if (taxableEl) taxableEl.textContent = invoiceSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const vatEl = document.getElementById('inv-calc-vat');
+        if (vatEl) vatEl.textContent = invoiceVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const grandEl = document.getElementById('inv-calc-grand');
+        if (grandEl) grandEl.textContent = invoiceGrandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const currLabel = document.getElementById('fin-s1-curr-label');
+        if (currLabel) currLabel.textContent = currentCurrency;
+
         checkEmptyTbody();
       };
 
-      recalculateInvoice();
-    };
+      // Item Table Controls & Claim Type Selector
+      const setupItemTableControls = () => {
+        // Claim Type selector buttons (Advance, Progressive, Complete)
+        document.querySelectorAll('.fin-claim-btn').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const stage = btn.getAttribute('data-stage') || 'progressive';
+            document.querySelectorAll('.fin-claim-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const hiddenInp = document.getElementById('inv-payment-claim-type');
+            if (hiddenInp) hiddenInp.value = stage;
+            window._currentInvoicePaymentStage = stage;
+            const indicator = document.getElementById('fin-claim-type-indicator');
+            if (indicator) {
+              if (stage === 'advance') indicator.textContent = 'Advance Payment Active';
+              else if (stage === 'complete') indicator.textContent = 'Complete Payment Active';
+              else indicator.textContent = 'Progressive Payment Active';
+            }
+          };
+        });
 
-    const recalculateInvoice = () => {
-      const isTrn = currentRegime === 'trn';
-      const currSym = currentCurrency === 'AED' ? 'AED ' : '₹';
-
-      let totalContractBase = 0;
-      let totalGross = 0;
-      let totalRowTax = 0;
-
-      tbody.querySelectorAll('tr:not(.inv-items-empty-row)').forEach(tr => {
-        const qty = Number(tr.querySelector('.row-qty')?.value) || 0;
-        const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
-        const gross = qty * rate;
-
-        const wdInp = tr.querySelector('.row-wd-pct');
-        const wdPct = (wdInp && wdInp.value !== '') ? Number(wdInp.value) : 100;
-        const lineInvoiceAmount = qty * rate * (wdPct / 100);
-
-        const taxRateVal = tr.querySelector('.row-gst')?.value;
-        const taxRate = taxRateVal === 'exempt' ? 0 : (Number(taxRateVal) || 0);
-        const rowTax = lineInvoiceAmount * (taxRate / 100);
-
-        const rowAmountEl = tr.querySelector('.row-total');
-        if (rowAmountEl) {
-          rowAmountEl.textContent = lineInvoiceAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const createAdjInp = document.getElementById('inv-adjustment-input');
+        if (createAdjInp) {
+          createAdjInp.oninput = () => recalculateInvoice();
+          createAdjInp.onchange = () => recalculateInvoice();
         }
 
-        totalGross += gross;
-        totalContractBase += lineInvoiceAmount;
-        totalRowTax += rowTax;
-      });
-
-      const invoiceSubtotal = totalContractBase;
-      const invoiceVat = totalRowTax;
-      const adjVal = Number(document.getElementById('inv-adjustment-input')?.value) || 0;
-      const invoiceGrandTotal = Math.round((invoiceSubtotal + invoiceVat + adjVal) * 100) / 100;
-
-      // Update Summary Box right card matching Screenshot
-      const taxableEl = document.getElementById('inv-calc-taxable');
-      if (taxableEl) taxableEl.textContent = invoiceSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      const vatEl = document.getElementById('inv-calc-vat');
-      if (vatEl) vatEl.textContent = invoiceVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      const grandEl = document.getElementById('inv-calc-grand');
-      if (grandEl) grandEl.textContent = invoiceGrandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      const currLabel = document.getElementById('fin-s1-curr-label');
-      if (currLabel) currLabel.textContent = currentCurrency;
-
-      checkEmptyTbody();
-    };
-
-    // Item Table Controls & Claim Type Selector
-    const setupItemTableControls = () => {
-      // Claim Type selector buttons (Advance, Progressive, Complete)
-      document.querySelectorAll('.fin-claim-btn').forEach(btn => {
-        btn.onclick = (e) => {
-          e.preventDefault();
-          const stage = btn.getAttribute('data-stage') || 'progressive';
-          document.querySelectorAll('.fin-claim-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const hiddenInp = document.getElementById('inv-payment-claim-type');
-          if (hiddenInp) hiddenInp.value = stage;
-          window._currentInvoicePaymentStage = stage;
-          const indicator = document.getElementById('fin-claim-type-indicator');
-          if (indicator) {
-            if (stage === 'advance') indicator.textContent = 'Advance Payment Active';
-            else if (stage === 'complete') indicator.textContent = 'Complete Payment Active';
-            else indicator.textContent = 'Progressive Payment Active';
-          }
-        };
-      });
-
-      const createAdjInp = document.getElementById('inv-adjustment-input');
-      if (createAdjInp) {
-        createAdjInp.oninput = () => recalculateInvoice();
-        createAdjInp.onchange = () => recalculateInvoice();
-      }
-
-      const poRefEl = document.getElementById('inv-po-ref');
-      if (poRefEl) {
-        poRefEl.oninput = () => recalculateInvoice();
-      }
-
-      const prjInpEl = document.getElementById('inv-project-input');
-      if (prjInpEl) {
-        prjInpEl.oninput = () => recalculateInvoice();
-      }
-
-      // Add New Row button
-      const addRowBtn = document.getElementById('inv-add-row-btn');
-      if (addRowBtn) {
-        addRowBtn.onclick = (e) => {
-          e.preventDefault();
-          addRow();
-        };
-      }
-
-      // Add Items in Bulk button (loads Screenshot items)
-      const bulkBtn = document.getElementById('inv-add-bulk-btn');
-      if (bulkBtn) {
-        bulkBtn.onclick = (e) => {
-          e.preventDefault();
-          const demoItems = [
-            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
-            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
-            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
-            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
-          ];
-          tbody.innerHTML = '';
-          demoItems.forEach(it => addRow(it));
-          recalculateInvoice();
-        };
-      }
-
-      // Scan Item button
-      const scanBtn = document.getElementById('inv-scan-item-btn');
-      if (scanBtn) {
-        scanBtn.onclick = (e) => {
-          e.preventDefault();
-          alert('📷 Barcode & Item Scanner: Place scanner over item barcode or label to auto-insert line item.');
-        };
-      }
-
-      // Bulk actions button
-      const bulkActionsBtn = document.getElementById('inv-bulk-actions-btn');
-      if (bulkActionsBtn) {
-        bulkActionsBtn.onclick = (e) => {
-          e.preventDefault();
-          const action = prompt('Bulk Actions:\n1: Apply 5% VAT to all rows\n2: Apply 0% VAT to all rows\n3: Clear all discounts\n\nEnter 1, 2, or 3:');
-          if (action === '1') {
-            tbody.querySelectorAll('.row-gst').forEach(sel => sel.value = '5');
-            recalculateInvoice();
-          } else if (action === '2') {
-            tbody.querySelectorAll('.row-gst').forEach(sel => sel.value = '0');
-            recalculateInvoice();
-          } else if (action === '3') {
-            tbody.querySelectorAll('.row-discount-val').forEach(inp => inp.value = '0');
-            recalculateInvoice();
-          }
-        };
-      }
-    };
-
-    setupItemTableControls();
-
-    // Billed Item/s List Modal (Vyapar Style)
-    const openBilledItemsModal = () => {
-      const existingItems = [];
-      tbody.querySelectorAll('tr').forEach(tr => {
-        const name = tr.querySelector('.row-desc')?.value.trim() || '';
-        const qty = Number(tr.querySelector('.row-qty')?.value) || 1;
-        const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
-        const taxRate = Number(tr.querySelector('.row-gst')?.value) || (currentRegime === 'trn' ? 5 : 18);
-        const hsn = tr.querySelector('.row-hsn')?.value || '9954';
-        const uom = tr.querySelector('.row-uom')?.value || 'LSUM';
-        if (name || rate > 0) {
-          existingItems.push({ name, qty, rate, taxRate, hsn, uom });
+        const poRefEl = document.getElementById('inv-po-ref');
+        if (poRefEl) {
+          poRefEl.oninput = () => recalculateInvoice();
         }
-      });
 
-      if (!existingItems.length) {
-        existingItems.push(
-          { name: 'PROGRESSIVE PAYMENT - CIVIL & INTERIOR FIT-OUT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' },
-          { name: 'ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' }
-        );
-      }
+        const prjInpEl = document.getElementById('inv-project-input');
+        if (prjInpEl) {
+          prjInpEl.oninput = () => recalculateInvoice();
+        }
 
-      while (existingItems.length < 4) {
-        existingItems.push({ name: '', qty: 1, rate: 0, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' });
-      }
+        // Add New Row button
+        const addRowBtn = document.getElementById('inv-add-row-btn');
+        if (addRowBtn) {
+          addRowBtn.onclick = (e) => {
+            e.preventDefault();
+            addRow();
+          };
+        }
 
-      const currLabel = currentCurrency === 'AED' ? 'AED' : '₹';
-      const isTrn = currentRegime === 'trn';
+        // Add Items in Bulk button (loads Screenshot items)
+        const bulkBtn = document.getElementById('inv-add-bulk-btn');
+        if (bulkBtn) {
+          bulkBtn.onclick = (e) => {
+            e.preventDefault();
+            const demoItems = [
+              { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+              { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+              { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
+              { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
+            ];
+            tbody.innerHTML = '';
+            demoItems.forEach(it => addRow(it));
+            recalculateInvoice();
+          };
+        }
 
-      const billedModalHtml = `
+        // Scan Item button
+        const scanBtn = document.getElementById('inv-scan-item-btn');
+        if (scanBtn) {
+          scanBtn.onclick = (e) => {
+            e.preventDefault();
+            alert('📷 Barcode & Item Scanner: Place scanner over item barcode or label to auto-insert line item.');
+          };
+        }
+
+        // Bulk actions button
+        const bulkActionsBtn = document.getElementById('inv-bulk-actions-btn');
+        if (bulkActionsBtn) {
+          bulkActionsBtn.onclick = (e) => {
+            e.preventDefault();
+            const action = prompt('Bulk Actions:\n1: Apply 5% VAT to all rows\n2: Apply 0% VAT to all rows\n3: Clear all discounts\n\nEnter 1, 2, or 3:');
+            if (action === '1') {
+              tbody.querySelectorAll('.row-gst').forEach(sel => sel.value = '5');
+              recalculateInvoice();
+            } else if (action === '2') {
+              tbody.querySelectorAll('.row-gst').forEach(sel => sel.value = '0');
+              recalculateInvoice();
+            } else if (action === '3') {
+              tbody.querySelectorAll('.row-discount-val').forEach(inp => inp.value = '0');
+              recalculateInvoice();
+            }
+          };
+        }
+      };
+
+      setupItemTableControls();
+
+      // Billed Item/s List Modal (Vyapar Style)
+      const openBilledItemsModal = () => {
+        const existingItems = [];
+        tbody.querySelectorAll('tr').forEach(tr => {
+          const name = tr.querySelector('.row-desc')?.value.trim() || '';
+          const qty = Number(tr.querySelector('.row-qty')?.value) || 1;
+          const rate = Number(tr.querySelector('.row-rate')?.value) || 0;
+          const taxRate = Number(tr.querySelector('.row-gst')?.value) || (currentRegime === 'trn' ? 5 : 18);
+          const hsn = tr.querySelector('.row-hsn')?.value || '9954';
+          const uom = tr.querySelector('.row-uom')?.value || 'LSUM';
+          if (name || rate > 0) {
+            existingItems.push({ name, qty, rate, taxRate, hsn, uom });
+          }
+        });
+
+        if (!existingItems.length) {
+          existingItems.push(
+            { name: 'PROGRESSIVE PAYMENT - CIVIL & INTERIOR FIT-OUT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' },
+            { name: 'ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' }
+          );
+        }
+
+        while (existingItems.length < 4) {
+          existingItems.push({ name: '', qty: 1, rate: 0, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' });
+        }
+
+        const currLabel = currentCurrency === 'AED' ? 'AED' : '₹';
+        const isTrn = currentRegime === 'trn';
+
+        const billedModalHtml = `
         <div class="fin-modal-backdrop open" id="modal-billed-items-list" style="z-index:1060; background:rgba(15,23,42,0.75); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center;">
           <div class="fin-billed-items-modal-dialog">
             <div class="fin-billed-items-modal-header">
@@ -7691,62 +7692,62 @@ class FinanceApp {
         </div>
       `;
 
-      const existingModal = document.getElementById('modal-billed-items-list');
-      if (existingModal) existingModal.remove();
-      document.body.insertAdjacentHTML('beforeend', billedModalHtml);
+        const existingModal = document.getElementById('modal-billed-items-list');
+        if (existingModal) existingModal.remove();
+        document.body.insertAdjacentHTML('beforeend', billedModalHtml);
 
-      const billedTbody = document.getElementById('billed-modal-tbody');
+        const billedTbody = document.getElementById('billed-modal-tbody');
 
-      const reindexBilledModalRows = () => {
-        billedTbody.querySelectorAll('.billed-modal-tr').forEach((tr, i) => {
-          const numSpan = tr.querySelector('.row-num');
-          if (numSpan) numSpan.textContent = i + 1;
-        });
-      };
+        const reindexBilledModalRows = () => {
+          billedTbody.querySelectorAll('.billed-modal-tr').forEach((tr, i) => {
+            const numSpan = tr.querySelector('.row-num');
+            if (numSpan) numSpan.textContent = i + 1;
+          });
+        };
 
-      const updateBilledModalCalculations = () => {
-        let grandSum = 0;
-        billedTbody.querySelectorAll('.billed-modal-tr').forEach(tr => {
-          const name = tr.querySelector('.billed-name-input')?.value.trim();
-          const qty = Number(tr.querySelector('.billed-qty-input')?.value) || 0;
-          const rate = Number(tr.querySelector('.billed-price-input')?.value) || 0;
-          const taxRate = Number(tr.querySelector('.billed-tax-select')?.value) || 0;
+        const updateBilledModalCalculations = () => {
+          let grandSum = 0;
+          billedTbody.querySelectorAll('.billed-modal-tr').forEach(tr => {
+            const name = tr.querySelector('.billed-name-input')?.value.trim();
+            const qty = Number(tr.querySelector('.billed-qty-input')?.value) || 0;
+            const rate = Number(tr.querySelector('.billed-price-input')?.value) || 0;
+            const taxRate = Number(tr.querySelector('.billed-tax-select')?.value) || 0;
 
-          const taxable = qty * rate;
+            const taxable = qty * rate;
+            const taxVal = taxable * (taxRate / 100);
+            const totalVal = taxable + taxVal;
+
+            const taxEl = tr.querySelector('.billed-tax-val');
+            const amtEl = tr.querySelector('.billed-amount-val');
+
+            if (rate > 0 || name) {
+              if (taxEl) taxEl.textContent = (taxVal > 0 ? taxVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0');
+              if (amtEl) amtEl.textContent = totalVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+              grandSum += totalVal;
+            } else {
+              if (taxEl) taxEl.textContent = '';
+              if (amtEl) amtEl.textContent = '';
+            }
+          });
+
+          const grandEl = document.getElementById('billed-modal-grand-total');
+          if (grandEl) {
+            grandEl.textContent = `${grandSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currLabel}`;
+          }
+        };
+
+        const renderBilledModalRow = (item, idx) => {
+          const tr = document.createElement('tr');
+          tr.className = 'billed-modal-tr';
+          tr.setAttribute('data-hsn', item.hsn || '9954');
+          tr.setAttribute('data-uom', item.uom || 'LSUM');
+
+          const taxRate = item.taxRate !== undefined ? item.taxRate : (isTrn ? 5 : 18);
+          const taxable = (item.qty || 1) * (item.rate || 0);
           const taxVal = taxable * (taxRate / 100);
           const totalVal = taxable + taxVal;
 
-          const taxEl = tr.querySelector('.billed-tax-val');
-          const amtEl = tr.querySelector('.billed-amount-val');
-
-          if (rate > 0 || name) {
-            if (taxEl) taxEl.textContent = (taxVal > 0 ? taxVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0');
-            if (amtEl) amtEl.textContent = totalVal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-            grandSum += totalVal;
-          } else {
-            if (taxEl) taxEl.textContent = '';
-            if (amtEl) amtEl.textContent = '';
-          }
-        });
-
-        const grandEl = document.getElementById('billed-modal-grand-total');
-        if (grandEl) {
-          grandEl.textContent = `${grandSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currLabel}`;
-        }
-      };
-
-      const renderBilledModalRow = (item, idx) => {
-        const tr = document.createElement('tr');
-        tr.className = 'billed-modal-tr';
-        tr.setAttribute('data-hsn', item.hsn || '9954');
-        tr.setAttribute('data-uom', item.uom || 'LSUM');
-
-        const taxRate = item.taxRate !== undefined ? item.taxRate : (isTrn ? 5 : 18);
-        const taxable = (item.qty || 1) * (item.rate || 0);
-        const taxVal = taxable * (taxRate / 100);
-        const totalVal = taxable + taxVal;
-
-        tr.innerHTML = `
+          tr.innerHTML = `
           <td class="billed-row-index-cell" style="text-align:center; color:#64748b; font-size:0.82rem; position:relative; width:40px;">
             <span class="row-num">${idx + 1}</span>
             <button type="button" class="row-del-btn" title="Delete row" style="display:none; background:none; border:none; color:#ef4444; cursor:pointer; font-size:1rem; padding:0;">🗑️</button>
@@ -7782,116 +7783,116 @@ class FinanceApp {
           </td>
         `;
 
-        billedTbody.appendChild(tr);
+          billedTbody.appendChild(tr);
 
-        tr.querySelector('.row-del-btn').onclick = () => {
-          tr.remove();
-          reindexBilledModalRows();
-          updateBilledModalCalculations();
+          tr.querySelector('.row-del-btn').onclick = () => {
+            tr.remove();
+            reindexBilledModalRows();
+            updateBilledModalCalculations();
+          };
+
+          tr.querySelectorAll('.billed-name-input, .billed-qty-input, .billed-price-input, .billed-tax-select').forEach(el => {
+            el.oninput = () => updateBilledModalCalculations();
+            el.onchange = () => updateBilledModalCalculations();
+          });
         };
 
-        tr.querySelectorAll('.billed-name-input, .billed-qty-input, .billed-price-input, .billed-tax-select').forEach(el => {
-          el.oninput = () => updateBilledModalCalculations();
-          el.onchange = () => updateBilledModalCalculations();
-        });
-      };
+        existingItems.forEach((it, idx) => renderBilledModalRow(it, idx));
+        updateBilledModalCalculations();
 
-      existingItems.forEach((it, idx) => renderBilledModalRow(it, idx));
-      updateBilledModalCalculations();
+        document.getElementById('billed-modal-add-btn').onclick = () => {
+          renderBilledModalRow({ name: '', qty: 1, rate: 0, taxRate: isTrn ? 5 : 18, hsn: '9954', uom: 'LSUM' }, billedTbody.children.length);
+          reindexBilledModalRows();
+          const lastRow = billedTbody.lastElementChild;
+          lastRow?.querySelector('.billed-name-input')?.focus();
+        };
 
-      document.getElementById('billed-modal-add-btn').onclick = () => {
-        renderBilledModalRow({ name: '', qty: 1, rate: 0, taxRate: isTrn ? 5 : 18, hsn: '9954', uom: 'LSUM' }, billedTbody.children.length);
-        reindexBilledModalRows();
-        const lastRow = billedTbody.lastElementChild;
-        lastRow?.querySelector('.billed-name-input')?.focus();
-      };
+        document.getElementById('billed-modal-save-btn').onclick = () => {
+          const rowsToSave = [];
+          billedTbody.querySelectorAll('.billed-modal-tr').forEach(tr => {
+            const name = tr.querySelector('.billed-name-input')?.value.trim();
+            const qty = Number(tr.querySelector('.billed-qty-input')?.value) || 1;
+            const rate = Number(tr.querySelector('.billed-price-input')?.value) || 0;
+            const taxRate = Number(tr.querySelector('.billed-tax-select')?.value) || 0;
+            const hsn = tr.getAttribute('data-hsn') || '9954';
+            const uom = tr.getAttribute('data-uom') || 'LSUM';
 
-      document.getElementById('billed-modal-save-btn').onclick = () => {
-        const rowsToSave = [];
-        billedTbody.querySelectorAll('.billed-modal-tr').forEach(tr => {
-          const name = tr.querySelector('.billed-name-input')?.value.trim();
-          const qty = Number(tr.querySelector('.billed-qty-input')?.value) || 1;
-          const rate = Number(tr.querySelector('.billed-price-input')?.value) || 0;
-          const taxRate = Number(tr.querySelector('.billed-tax-select')?.value) || 0;
-          const hsn = tr.getAttribute('data-hsn') || '9954';
-          const uom = tr.getAttribute('data-uom') || 'LSUM';
+            if (name || rate > 0) {
+              rowsToSave.push({
+                name: name || 'Item / Service',
+                hsn_sac_code: hsn,
+                uom,
+                sales_price: rate,
+                gst_rate: taxRate,
+                qty
+              });
+            }
+          });
 
-          if (name || rate > 0) {
-            rowsToSave.push({
-              name: name || 'Item / Service',
-              hsn_sac_code: hsn,
-              uom,
-              sales_price: rate,
-              gst_rate: taxRate,
-              qty
-            });
+          if (!rowsToSave.length) {
+            alert('Please enter at least one item.');
+            return;
           }
-        });
 
-        if (!rowsToSave.length) {
-          alert('Please enter at least one item.');
-          return;
+          tbody.innerHTML = '';
+          rowsToSave.forEach(it => {
+            addRow(it, it.qty);
+          });
+
+          recalculateInvoice();
+
+          const modal = document.getElementById('modal-billed-items-list');
+          if (modal) modal.remove();
+        };
+
+        document.getElementById('billed-modal-close-btn').onclick = () => {
+          const modal = document.getElementById('modal-billed-items-list');
+          if (modal) modal.remove();
+        };
+      };
+
+      const custInput = document.getElementById('inv-cust-input');
+      const custQuickSelect = document.getElementById('inv-cust-quick-select');
+      const custBadge = document.getElementById('inv-cust-badge');
+      const custHint = document.getElementById('inv-cust-hint');
+
+      const posInp = document.getElementById('inv-cust-pos');
+      const posDropdown = document.getElementById('inv-pos-dropdown');
+      const posBadge = document.getElementById('inv-pos-badge');
+      const posHint = document.getElementById('inv-pos-hint');
+      const posDatalist = document.getElementById('pos-suggestions');
+
+      // Place of Supply Recommendation Renderer
+      const renderPosRecommendations = (filterQuery = '') => {
+        if (!posDropdown) return;
+        const q = (filterQuery || '').trim().toLowerCase();
+        const currentCust = (custInput?.value || '').trim();
+        const savedForCust = this.getRecommendedPosForCustomer(currentCust);
+        const savedGeneralList = this.getSavedPlacesOfSupply();
+        const standards = this.getStandardPlacesOfSupply();
+        const isTrn = currentRegime === 'trn';
+
+        // Update native datalist with all unique places
+        const allUniquePlaces = new Set();
+        if (savedForCust) allUniquePlaces.add(savedForCust);
+        savedGeneralList.forEach(p => allUniquePlaces.add(p));
+        standards.uae.forEach(p => allUniquePlaces.add(p));
+        standards.india.forEach(p => allUniquePlaces.add(p));
+        if (posDatalist) {
+          posDatalist.innerHTML = Array.from(allUniquePlaces).map(p => `<option value="${p}">${p}</option>`).join('');
         }
 
-        tbody.innerHTML = '';
-        rowsToSave.forEach(it => {
-          addRow(it, it.qty);
+        // Build structured sections for dropdown
+        let html = '';
+
+        // Check if user is typing a custom value not already in list
+        let hasExactMatch = false;
+        allUniquePlaces.forEach(p => {
+          if (p.toLowerCase() === q) hasExactMatch = true;
         });
 
-        recalculateInvoice();
-
-        const modal = document.getElementById('modal-billed-items-list');
-        if (modal) modal.remove();
-      };
-
-      document.getElementById('billed-modal-close-btn').onclick = () => {
-        const modal = document.getElementById('modal-billed-items-list');
-        if (modal) modal.remove();
-      };
-    };
-
-    const custInput = document.getElementById('inv-cust-input');
-    const custQuickSelect = document.getElementById('inv-cust-quick-select');
-    const custBadge = document.getElementById('inv-cust-badge');
-    const custHint = document.getElementById('inv-cust-hint');
-
-    const posInp = document.getElementById('inv-cust-pos');
-    const posDropdown = document.getElementById('inv-pos-dropdown');
-    const posBadge = document.getElementById('inv-pos-badge');
-    const posHint = document.getElementById('inv-pos-hint');
-    const posDatalist = document.getElementById('pos-suggestions');
-
-    // Place of Supply Recommendation Renderer
-    const renderPosRecommendations = (filterQuery = '') => {
-      if (!posDropdown) return;
-      const q = (filterQuery || '').trim().toLowerCase();
-      const currentCust = (custInput?.value || '').trim();
-      const savedForCust = this.getRecommendedPosForCustomer(currentCust);
-      const savedGeneralList = this.getSavedPlacesOfSupply();
-      const standards = this.getStandardPlacesOfSupply();
-      const isTrn = currentRegime === 'trn';
-
-      // Update native datalist with all unique places
-      const allUniquePlaces = new Set();
-      if (savedForCust) allUniquePlaces.add(savedForCust);
-      savedGeneralList.forEach(p => allUniquePlaces.add(p));
-      standards.uae.forEach(p => allUniquePlaces.add(p));
-      standards.india.forEach(p => allUniquePlaces.add(p));
-      if (posDatalist) {
-        posDatalist.innerHTML = Array.from(allUniquePlaces).map(p => `<option value="${p}">${p}</option>`).join('');
-      }
-
-      // Build structured sections for dropdown
-      let html = '';
-
-      // Check if user is typing a custom value not already in list
-      let hasExactMatch = false;
-      allUniquePlaces.forEach(p => {
-        if (p.toLowerCase() === q) hasExactMatch = true;
-      });
-
-      if (q && !hasExactMatch && q.length >= 2) {
-        html += `
+        if (q && !hasExactMatch && q.length >= 2) {
+          html += `
           <div class="fin-autocomplete-header" style="color:#38bdf8;">✨ Custom Place of Supply (Will be Saved)</div>
           <div class="fin-autocomplete-item pos-opt-item active" data-pos="${filterQuery.trim()}">
             <div>
@@ -7901,11 +7902,11 @@ class FinanceApp {
             <span class="fin-autocomplete-item-badge" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.4);">Save &amp; Use</span>
           </div>
         `;
-      }
+        }
 
-      // 1. Saved for Selected Customer
-      if (savedForCust && (!q || savedForCust.toLowerCase().includes(q))) {
-        html += `
+        // 1. Saved for Selected Customer
+        if (savedForCust && (!q || savedForCust.toLowerCase().includes(q))) {
+          html += `
           <div class="fin-autocomplete-header" style="color:#10b981;">⭐ Saved for Selected Customer (${currentCust})</div>
           <div class="fin-autocomplete-item pos-opt-item" data-pos="${savedForCust}">
             <div>
@@ -7915,14 +7916,14 @@ class FinanceApp {
             <span class="fin-autocomplete-item-badge" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);">Client Default</span>
           </div>
         `;
-      }
+        }
 
-      // 2. Custom & Recently Saved Places
-      const customSaved = savedGeneralList.filter(p => p !== savedForCust && (!q || p.toLowerCase().includes(q)));
-      if (customSaved.length > 0) {
-        html += `<div class="fin-autocomplete-header">🕒 Recently Used &amp; Custom Saved</div>`;
-        customSaved.forEach(p => {
-          html += `
+        // 2. Custom & Recently Saved Places
+        const customSaved = savedGeneralList.filter(p => p !== savedForCust && (!q || p.toLowerCase().includes(q)));
+        if (customSaved.length > 0) {
+          html += `<div class="fin-autocomplete-header">🕒 Recently Used &amp; Custom Saved</div>`;
+          customSaved.forEach(p => {
+            html += `
             <div class="fin-autocomplete-item pos-opt-item" data-pos="${p}">
               <div>
                 <div class="fin-autocomplete-item-name">${p}</div>
@@ -7931,17 +7932,17 @@ class FinanceApp {
               <span class="fin-autocomplete-item-badge" style="background:rgba(0,153,230,0.15); color:#38bdf8;">Saved</span>
             </div>
           `;
-        });
-      }
+          });
+        }
 
-      // UAE Section
-      const uaeMatches = standards.uae.filter(p => p !== savedForCust && !customSaved.includes(p) && (!q || p.toLowerCase().includes(q)));
-      // India Section
-      const indiaMatches = standards.india.filter(p => p !== savedForCust && !customSaved.includes(p) && (!q || p.toLowerCase().includes(q)));
+        // UAE Section
+        const uaeMatches = standards.uae.filter(p => p !== savedForCust && !customSaved.includes(p) && (!q || p.toLowerCase().includes(q)));
+        // India Section
+        const indiaMatches = standards.india.filter(p => p !== savedForCust && !customSaved.includes(p) && (!q || p.toLowerCase().includes(q)));
 
-      const renderUaeSection = () => {
-        if (!uaeMatches.length) return '';
-        return `
+        const renderUaeSection = () => {
+          if (!uaeMatches.length) return '';
+          return `
           <div class="fin-autocomplete-header">🇦🇪 UAE Emirates &amp; Freezones</div>
           ${uaeMatches.map(p => `
             <div class="fin-autocomplete-item pos-opt-item" data-pos="${p}">
@@ -7953,11 +7954,11 @@ class FinanceApp {
             </div>
           `).join('')}
         `;
-      };
+        };
 
-      const renderIndiaSection = () => {
-        if (!indiaMatches.length) return '';
-        return `
+        const renderIndiaSection = () => {
+          if (!indiaMatches.length) return '';
+          return `
           <div class="fin-autocomplete-header">🇮🇳 Indian States &amp; Codes</div>
           ${indiaMatches.map(p => `
             <div class="fin-autocomplete-item pos-opt-item" data-pos="${p}">
@@ -7969,109 +7970,109 @@ class FinanceApp {
             </div>
           `).join('')}
         `;
-      };
+        };
 
-      if (isTrn) {
-        html += renderUaeSection();
-        html += renderIndiaSection();
-      } else {
-        html += renderIndiaSection();
-        html += renderUaeSection();
-      }
+        if (isTrn) {
+          html += renderUaeSection();
+          html += renderIndiaSection();
+        } else {
+          html += renderIndiaSection();
+          html += renderUaeSection();
+        }
 
-      if (!html.trim()) {
-        html = `
+        if (!html.trim()) {
+          html = `
           <div style="padding:1rem; text-align:center; color:#94a3b8; font-size:0.8rem;">
             No preset match for "${filterQuery}". Press Tab/Enter or click outside to save as custom.
           </div>
         `;
-      }
-
-      posDropdown.innerHTML = html;
-
-      // Attach click events to options
-      posDropdown.querySelectorAll('.pos-opt-item').forEach(item => {
-        item.onmousedown = (e) => {
-          e.preventDefault();
-          const selectedPos = item.getAttribute('data-pos');
-          if (selectedPos) {
-            posInp.value = selectedPos;
-            this.savePosRecommendation(selectedPos, custInput?.value);
-            posDropdown.classList.remove('open');
-            if (posBadge) {
-              posBadge.textContent = '✓ Saved & Applied';
-              posBadge.style.color = '#10b981';
-            }
-            if (posHint) {
-              posHint.textContent = `Applied "${selectedPos}" (Saved for next time)`;
-            }
-            recalculateInvoice();
-          }
-        };
-      });
-    };
-
-    // Update due date with No Due Date toggle support
-    const updateDueDate = () => {
-      const noDue = document.getElementById('inv-no-due-date')?.checked;
-      const dueInp = document.getElementById('inv-due-date');
-      const termsInp = document.getElementById('inv-terms');
-      const noDueHint = document.getElementById('inv-no-due-date-hint');
-
-      if (noDue) {
-        if (dueInp) {
-          dueInp.value = '';
-          dueInp.disabled = true;
-          dueInp.required = false;
-          dueInp.style.opacity = '0.45';
         }
-        if (noDueHint) noDueHint.style.display = 'block';
-        if (termsInp) termsInp.disabled = true;
-        return;
-      }
 
-      if (dueInp) {
-        dueInp.disabled = false;
-        dueInp.required = true;
-        dueInp.style.opacity = '1';
-      }
-      if (noDueHint) noDueHint.style.display = 'none';
-      if (termsInp) termsInp.disabled = false;
+        posDropdown.innerHTML = html;
 
-      const invDateEl = document.getElementById('inv-date');
-      const invDate = invDateEl?.value ? new Date(invDateEl.value) : new Date();
-      const terms = Number(termsInp?.value) || 30;
-      invDate.setDate(invDate.getDate() + terms);
-      if (dueInp) dueInp.value = invDate.toISOString().split('T')[0];
-    };
+        // Attach click events to options
+        posDropdown.querySelectorAll('.pos-opt-item').forEach(item => {
+          item.onmousedown = (e) => {
+            e.preventDefault();
+            const selectedPos = item.getAttribute('data-pos');
+            if (selectedPos) {
+              posInp.value = selectedPos;
+              this.savePosRecommendation(selectedPos, custInput?.value);
+              posDropdown.classList.remove('open');
+              if (posBadge) {
+                posBadge.textContent = '✓ Saved & Applied';
+                posBadge.style.color = '#10b981';
+              }
+              if (posHint) {
+                posHint.textContent = `Applied "${selectedPos}" (Saved for next time)`;
+              }
+              recalculateInvoice();
+            }
+          };
+        });
+      };
 
-    document.getElementById('inv-date').onchange = updateDueDate;
-    document.getElementById('inv-terms').oninput = updateDueDate;
-    const noDueCheckbox = document.getElementById('inv-no-due-date');
-    if (noDueCheckbox) noDueCheckbox.onchange = updateDueDate;
-    updateDueDate();
+      // Update due date with No Due Date toggle support
+      const updateDueDate = () => {
+        const noDue = document.getElementById('inv-no-due-date')?.checked;
+        const dueInp = document.getElementById('inv-due-date');
+        const termsInp = document.getElementById('inv-terms');
+        const noDueHint = document.getElementById('inv-no-due-date-hint');
 
-    // Project / Cost Center Recommendations Dropdown
-    const prjInput = document.getElementById('inv-project-input');
-    const prjDropdown = document.getElementById('inv-project-dropdown');
-    const prjBadge = document.getElementById('inv-project-badge');
-    const prjHint = document.getElementById('inv-project-hint');
+        if (noDue) {
+          if (dueInp) {
+            dueInp.value = '';
+            dueInp.disabled = true;
+            dueInp.required = false;
+            dueInp.style.opacity = '0.45';
+          }
+          if (noDueHint) noDueHint.style.display = 'block';
+          if (termsInp) termsInp.disabled = true;
+          return;
+        }
 
-    // Dynamic Project Recommendations Renderer
-    const renderPrjRecommendations = (filterQuery = '') => {
-      if (!prjDropdown) return;
-      const q = (filterQuery || '').trim().toLowerCase();
-      const currentCust = (custInput?.value || '').trim();
-      const custInfo = this.getCustomerFullInfo(currentCust);
-      const linkedPrj = custInfo?.projectName ? { id: custInfo.projectId, name: custInfo.projectName } : null;
+        if (dueInp) {
+          dueInp.disabled = false;
+          dueInp.required = true;
+          dueInp.style.opacity = '1';
+        }
+        if (noDueHint) noDueHint.style.display = 'none';
+        if (termsInp) termsInp.disabled = false;
 
-      let html = '';
+        const invDateEl = document.getElementById('inv-date');
+        const invDate = invDateEl?.value ? new Date(invDateEl.value) : new Date();
+        const terms = Number(termsInp?.value) || 30;
+        invDate.setDate(invDate.getDate() + terms);
+        if (dueInp) dueInp.value = invDate.toISOString().split('T')[0];
+      };
 
-      // If user typing custom project name
-      if (q && q.length >= 2) {
-        const exactMatch = projects.some(p => p.name.toLowerCase() === q);
-        if (!exactMatch && (!linkedPrj || linkedPrj.name.toLowerCase() !== q)) {
-          html += `
+      document.getElementById('inv-date').onchange = updateDueDate;
+      document.getElementById('inv-terms').oninput = updateDueDate;
+      const noDueCheckbox = document.getElementById('inv-no-due-date');
+      if (noDueCheckbox) noDueCheckbox.onchange = updateDueDate;
+      updateDueDate();
+
+      // Project / Cost Center Recommendations Dropdown
+      const prjInput = document.getElementById('inv-project-input');
+      const prjDropdown = document.getElementById('inv-project-dropdown');
+      const prjBadge = document.getElementById('inv-project-badge');
+      const prjHint = document.getElementById('inv-project-hint');
+
+      // Dynamic Project Recommendations Renderer
+      const renderPrjRecommendations = (filterQuery = '') => {
+        if (!prjDropdown) return;
+        const q = (filterQuery || '').trim().toLowerCase();
+        const currentCust = (custInput?.value || '').trim();
+        const custInfo = this.getCustomerFullInfo(currentCust);
+        const linkedPrj = custInfo?.projectName ? { id: custInfo.projectId, name: custInfo.projectName } : null;
+
+        let html = '';
+
+        // If user typing custom project name
+        if (q && q.length >= 2) {
+          const exactMatch = projects.some(p => p.name.toLowerCase() === q);
+          if (!exactMatch && (!linkedPrj || linkedPrj.name.toLowerCase() !== q)) {
+            html += `
             <div class="fin-autocomplete-header" style="color:#38bdf8;">✨ Custom Project / Cost Center (Will be Saved)</div>
             <div class="fin-autocomplete-item prj-opt-item active" data-id="" data-name="${filterQuery.trim()}">
               <div>
@@ -8081,12 +8082,12 @@ class FinanceApp {
               <span class="fin-autocomplete-item-badge" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.4);">Link &amp; Save</span>
             </div>
           `;
+          }
         }
-      }
 
-      // 1. Linked Project for Selected Customer
-      if (linkedPrj && (!q || linkedPrj.name.toLowerCase().includes(q))) {
-        html += `
+        // 1. Linked Project for Selected Customer
+        if (linkedPrj && (!q || linkedPrj.name.toLowerCase().includes(q))) {
+          html += `
           <div class="fin-autocomplete-header" style="color:#10b981;">⭐ Linked for Selected Customer (${currentCust})</div>
           <div class="fin-autocomplete-item prj-opt-item" data-id="${linkedPrj.id || ''}" data-name="${linkedPrj.name}">
             <div>
@@ -8096,14 +8097,14 @@ class FinanceApp {
             <span class="fin-autocomplete-item-badge" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);">Customer Default</span>
           </div>
         `;
-      }
+        }
 
-      // 2. Registered Projects
-      const matchedProjects = projects.filter(p => (!linkedPrj || p.name !== linkedPrj.name) && (!q || p.name.toLowerCase().includes(q) || (p.code && p.code.toLowerCase().includes(q)) || (p.client && p.client.toLowerCase().includes(q))));
-      if (matchedProjects.length > 0) {
-        html += `<div class="fin-autocomplete-header">🏗️ Registered Projects &amp; Accounts</div>`;
-        matchedProjects.forEach(p => {
-          html += `
+        // 2. Registered Projects
+        const matchedProjects = projects.filter(p => (!linkedPrj || p.name !== linkedPrj.name) && (!q || p.name.toLowerCase().includes(q) || (p.code && p.code.toLowerCase().includes(q)) || (p.client && p.client.toLowerCase().includes(q))));
+        if (matchedProjects.length > 0) {
+          html += `<div class="fin-autocomplete-header">🏗️ Registered Projects &amp; Accounts</div>`;
+          matchedProjects.forEach(p => {
+            html += `
             <div class="fin-autocomplete-item prj-opt-item" data-id="${p.id}" data-name="${p.name}">
               <div>
                 <div class="fin-autocomplete-item-name">${p.name}</div>
@@ -8112,28 +8113,28 @@ class FinanceApp {
               <span class="fin-autocomplete-item-badge">${p.code}</span>
             </div>
           `;
-        });
-      }
-
-      // 2b. Recent & Custom Saved Projects
-      let savedPrjs = [];
-      try {
-        const stored = localStorage.getItem('rayan_fin_saved_project_list');
-        if (stored) {
-          const list = JSON.parse(stored);
-          savedPrjs = list.filter(p => {
-            const pName = typeof p === 'string' ? p : (p?.name || '');
-            return pName && (!linkedPrj || pName.toLowerCase() !== linkedPrj.name.toLowerCase()) &&
-                   !matchedProjects.some(pj => pj.name.toLowerCase() === pName.toLowerCase()) &&
-                   (!q || pName.toLowerCase().includes(q));
           });
         }
-      } catch (e) {}
-      if (savedPrjs.length > 0) {
-        html += `<div class="fin-autocomplete-header" style="color:#38bdf8;">🕒 Recent &amp; Custom Saved Projects</div>`;
-        savedPrjs.forEach(p => {
-          const pName = typeof p === 'string' ? p : (p?.name || '');
-          html += `
+
+        // 2b. Recent & Custom Saved Projects
+        let savedPrjs = [];
+        try {
+          const stored = localStorage.getItem('rayan_fin_saved_project_list');
+          if (stored) {
+            const list = JSON.parse(stored);
+            savedPrjs = list.filter(p => {
+              const pName = typeof p === 'string' ? p : (p?.name || '');
+              return pName && (!linkedPrj || pName.toLowerCase() !== linkedPrj.name.toLowerCase()) &&
+                !matchedProjects.some(pj => pj.name.toLowerCase() === pName.toLowerCase()) &&
+                (!q || pName.toLowerCase().includes(q));
+            });
+          }
+        } catch (e) { }
+        if (savedPrjs.length > 0) {
+          html += `<div class="fin-autocomplete-header" style="color:#38bdf8;">🕒 Recent &amp; Custom Saved Projects</div>`;
+          savedPrjs.forEach(p => {
+            const pName = typeof p === 'string' ? p : (p?.name || '');
+            html += `
             <div class="fin-autocomplete-item prj-opt-item" data-id="${p.id || ''}" data-name="${pName}">
               <div>
                 <div class="fin-autocomplete-item-name">${pName}</div>
@@ -8142,21 +8143,21 @@ class FinanceApp {
               <span class="fin-autocomplete-item-badge" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);">Saved</span>
             </div>
           `;
-        });
-      }
+          });
+        }
 
-      // 3. Cost Centers & General
-      const costCenters = [
-        { id: 'GENERAL', name: 'General Corporate Billing', meta: 'Standard Operating Entity Billing', badge: 'Default' },
-        { id: 'CC-101', name: 'Cost Center CC-101 Civil Infrastructure', meta: 'Civil Engineering & Earthworks Division', badge: 'CC-101' },
-        { id: 'CC-102', name: 'Cost Center CC-102 Architectural Joinery', meta: 'Joinery, Marble & Interior Fit-Outs', badge: 'CC-102' },
-        { id: 'CC-103', name: 'Cost Center CC-103 MEP & HVAC Systems', meta: 'Mechanical, Electrical & Plumbing', badge: 'CC-103' }
-      ];
-      const matchedCC = costCenters.filter(cc => !q || cc.name.toLowerCase().includes(q) || cc.id.toLowerCase().includes(q));
-      if (matchedCC.length > 0) {
-        html += `<div class="fin-autocomplete-header">🏢 Cost Centers &amp; Corporate Ledgers</div>`;
-        matchedCC.forEach(cc => {
-          html += `
+        // 3. Cost Centers & General
+        const costCenters = [
+          { id: 'GENERAL', name: 'General Corporate Billing', meta: 'Standard Operating Entity Billing', badge: 'Default' },
+          { id: 'CC-101', name: 'Cost Center CC-101 Civil Infrastructure', meta: 'Civil Engineering & Earthworks Division', badge: 'CC-101' },
+          { id: 'CC-102', name: 'Cost Center CC-102 Architectural Joinery', meta: 'Joinery, Marble & Interior Fit-Outs', badge: 'CC-102' },
+          { id: 'CC-103', name: 'Cost Center CC-103 MEP & HVAC Systems', meta: 'Mechanical, Electrical & Plumbing', badge: 'CC-103' }
+        ];
+        const matchedCC = costCenters.filter(cc => !q || cc.name.toLowerCase().includes(q) || cc.id.toLowerCase().includes(q));
+        if (matchedCC.length > 0) {
+          html += `<div class="fin-autocomplete-header">🏢 Cost Centers &amp; Corporate Ledgers</div>`;
+          matchedCC.forEach(cc => {
+            html += `
             <div class="fin-autocomplete-item prj-opt-item" data-id="${cc.id}" data-name="${cc.name}">
               <div>
                 <div class="fin-autocomplete-item-name">${cc.name}</div>
@@ -8165,706 +8166,706 @@ class FinanceApp {
               <span class="fin-autocomplete-item-badge">${cc.badge}</span>
             </div>
           `;
-        });
-      }
+          });
+        }
 
-      if (!html.trim()) {
-        html = `
+        if (!html.trim()) {
+          html = `
           <div style="padding:1rem; text-align:center; color:#94a3b8; font-size:0.8rem;">
             No preset match for "${filterQuery}". Press Tab/Enter or click outside to use as custom project.
           </div>
         `;
+        }
+
+        prjDropdown.innerHTML = html;
+
+        // Attach click listeners to options
+        prjDropdown.querySelectorAll('.prj-opt-item').forEach(item => {
+          item.onmousedown = (e) => {
+            e.preventDefault();
+            const pId = item.getAttribute('data-id');
+            const pName = item.getAttribute('data-name');
+            if (pName) {
+              prjInput.value = pName;
+              if (pId && !pId.startsWith('CC-') && pId !== 'GENERAL') {
+                prjInput.setAttribute('data-project-id', pId);
+              } else {
+                prjInput.removeAttribute('data-project-id');
+              }
+              if (prjBadge) {
+                prjBadge.textContent = '✓ Saved & Applied';
+                prjBadge.style.color = '#10b981';
+              }
+              if (prjHint) {
+                prjHint.textContent = `Applied "${pName}" (Saved for ${custInput?.value || 'client'})`;
+              }
+              if (custInput?.value) {
+                this.saveCustomerProjectLink(custInput.value, pId, pName);
+              }
+              prjDropdown.classList.remove('open');
+            }
+          };
+        });
+      };
+
+      if (prjInput && prjDropdown) {
+        const showPrj = () => {
+          renderPrjRecommendations(prjInput.value.trim());
+          prjDropdown.classList.add('open');
+        };
+
+        prjInput.onfocus = showPrj;
+        prjInput.onclick = showPrj;
+
+        prjInput.oninput = () => {
+          const val = prjInput.value.trim();
+          renderPrjRecommendations(val);
+          prjDropdown.classList.add('open');
+          const found = projects.find(p => p.name.toLowerCase() === val.toLowerCase() || `${p.name} (${p.code})`.toLowerCase() === val.toLowerCase());
+          if (found) {
+            prjInput.setAttribute('data-project-id', found.id);
+            if (prjBadge) { prjBadge.textContent = `✓ ${found.code || 'Registered Project'}`; prjBadge.style.color = '#10b981'; }
+            if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
+          } else if (val) {
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) { prjBadge.textContent = '✎ Custom Project (Auto-linking)'; prjBadge.style.color = '#38bdf8'; }
+            if (prjHint) prjHint.textContent = `Custom project "${val}" will be used and remembered for this client.`;
+          } else {
+            prjInput.removeAttribute('data-project-id');
+            if (prjBadge) { prjBadge.textContent = 'Click for Recommendations ▾'; prjBadge.style.color = '#38bdf8'; }
+            if (prjHint) prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
+          }
+        };
+
+        prjInput.onchange = () => {
+          const val = prjInput.value.trim();
+          const clientVal = custInput?.value.trim();
+          if (val && clientVal) {
+            this.saveCustomerProjectLink(clientVal, prjInput.getAttribute('data-project-id'), val);
+          }
+        };
+
+        prjInput.onblur = () => {
+          const val = prjInput.value.trim();
+          const clientVal = custInput?.value.trim();
+          if (val && clientVal) {
+            this.saveCustomerProjectLink(clientVal, prjInput.getAttribute('data-project-id'), val);
+          }
+        };
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('#inv-project-input') && !e.target.closest('#inv-project-dropdown')) {
+            prjDropdown.classList.remove('open');
+          }
+        });
       }
 
-      prjDropdown.innerHTML = html;
+      const applyCustomerData = (c) => {
+        if (!c) return;
+        const custObj = (typeof c === 'object') ? c : null;
+        const info = (c && c.hasPastData !== undefined) ? c : (this.getCustomerFullInfo(c?.id || c?.name || c) || c);
+        if (!info) return;
 
-      // Attach click listeners to options
-      prjDropdown.querySelectorAll('.prj-opt-item').forEach(item => {
-        item.onmousedown = (e) => {
-          e.preventDefault();
-          const pId = item.getAttribute('data-id');
-          const pName = item.getAttribute('data-name');
-          if (pName) {
-            prjInput.value = pName;
-            if (pId && !pId.startsWith('CC-') && pId !== 'GENERAL') {
-              prjInput.setAttribute('data-project-id', pId);
-            } else {
-              prjInput.removeAttribute('data-project-id');
-            }
+        const clientName = info.name || custObj?.name || (typeof c === 'string' ? c : '');
+        const clientId = info.id || custObj?.id || '';
+        const clientCode = info.code || custObj?.code || '';
+        const clientTrn = info.trn || custObj?.trn || custObj?.customer_trn || '';
+        const clientGstin = info.gstin || custObj?.gstin || custObj?.customer_gstin || '';
+        const clientPos = info.placeOfSupply || custObj?.place_of_supply || '';
+        const clientAddr = info.billingAddress || custObj?.billing_address || custObj?.address || '';
+        const clientContact = info.contactPerson || custObj?.contact_person || '';
+        const clientEmail = info.email || custObj?.email || '';
+        const clientTerms = (info.paymentTerms !== undefined && info.paymentTerms !== null) ? info.paymentTerms : (custObj?.payment_terms || 30);
+        const clientPrjName = info.projectName || custObj?.default_project_name || '';
+        const clientPrjId = info.projectId || custObj?.default_project_id || '';
+        const clientPoRef = info.poReference || custObj?.last_po_reference || '';
+
+        if (custInput) {
+          custInput.value = clientName;
+          if (clientId) custInput.setAttribute('data-cust-id', clientId);
+          else custInput.removeAttribute('data-cust-id');
+        }
+
+        const isUae = Boolean(
+          clientTrn ||
+          (custObj?.country && custObj.country.toUpperCase() === 'UAE') ||
+          (info.country && info.country.toUpperCase() === 'UAE') ||
+          (clientPos && (clientPos.includes('UAE') || clientPos.includes('Abu Dhabi') || clientPos.includes('Dubai'))) ||
+          info.isTrn ||
+          this.activeCompanyId !== 'ashaz-eng-in'
+        );
+        const recommendedPos = clientPos || (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
+
+        // Update TRN / GSTIN field directly FIRST so it reflects immediately
+        const gstinEl = document.getElementById('inv-cust-gstin');
+        const targetTaxNo = isUae ? clientTrn : (clientGstin || clientTrn);
+        if (gstinEl) {
+          gstinEl.value = targetTaxNo || '';
+        }
+        if (posInp) posInp.value = recommendedPos;
+
+        if (isUae) {
+          setTaxRegime('trn', {
+            keepPos: true,
+            suggestedPos: recommendedPos,
+            taxNumber: targetTaxNo
+          });
+        } else {
+          setTaxRegime('gst', {
+            keepPos: true,
+            suggestedPos: recommendedPos,
+            taxNumber: targetTaxNo
+          });
+        }
+
+        // Re-verify TRN input has targetTaxNo
+        if (gstinEl && targetTaxNo) {
+          gstinEl.value = targetTaxNo;
+        }
+
+        if (posBadge) {
+          posBadge.textContent = clientPos ? `✓ Saved for ${clientCode || 'Client'}` : 'Saved • Pick or Type ▾';
+          posBadge.style.color = '#10b981';
+        }
+        if (posHint) {
+          posHint.textContent = `Recommended "${recommendedPos}" for ${clientName}`;
+        }
+
+        const termsEl = document.getElementById('inv-terms');
+        if (termsEl) termsEl.value = clientTerms;
+
+        const termsSelect = document.getElementById('inv-terms-select');
+        if (termsSelect) {
+          if ([0, 15, 30, 45, 60].includes(Number(clientTerms))) {
+            termsSelect.value = String(clientTerms);
+            if (termsEl) termsEl.style.display = 'none';
+          } else {
+            termsSelect.value = 'custom';
+            if (termsEl) termsEl.style.display = 'block';
+          }
+        }
+
+        const addrInp = document.getElementById('inv-cust-address');
+        if (addrInp) {
+          addrInp.value = clientAddr;
+        }
+
+        const contactInp = document.getElementById('inv-cust-contact');
+        if (contactInp) {
+          contactInp.value = clientContact;
+        }
+
+        const emailInp = document.getElementById('inv-cust-email');
+        if (emailInp) {
+          emailInp.value = clientEmail;
+        }
+
+        // Populate Bilingual Billing & Shipping Addresses
+        if (custObj?.billing_address_details || info.billing_address_details) {
+          this.currentBillingAddress = custObj?.billing_address_details || info.billing_address_details;
+        } else if (clientAddr) {
+          this.currentBillingAddress = {
+            attention: clientContact,
+            street1: clientAddr,
+            country: isUae ? 'United Arab Emirates' : 'India'
+          };
+        }
+
+        if (custObj?.shipping_address_details || info.shipping_address_details) {
+          this.currentShippingAddress = custObj?.shipping_address_details || info.shipping_address_details;
+        } else if (custObj?.shipping_address || info.shipping_address) {
+          this.currentShippingAddress = {
+            street1: custObj?.shipping_address || info.shipping_address,
+            country: isUae ? 'United Arab Emirates' : 'India'
+          };
+        }
+
+        const taxTreatEl = document.getElementById('inv-tax-treatment-val');
+        if (taxTreatEl) {
+          taxTreatEl.textContent = custObj?.tax_treatment || info.tax_treatment || (clientTrn ? 'VAT Registered' : (isUae ? 'VAT Registered' : 'GST Registered'));
+        }
+
+        const arEl = document.getElementById('inv-ar-account');
+        if (arEl && (custObj?.accounts_receivable || info.accounts_receivable)) {
+          arEl.value = custObj?.accounts_receivable || info.accounts_receivable;
+        }
+
+        const spEl = document.getElementById('inv-salesperson');
+        if (spEl && (custObj?.salesperson || info.salesperson)) {
+          spEl.value = custObj?.salesperson || info.salesperson;
+        }
+
+        renderInvoiceAddressCards();
+
+        // Auto-fill Linked Project
+        if (prjInput) {
+          if (clientPrjName) {
+            prjInput.value = clientPrjName;
+            if (clientPrjId) prjInput.setAttribute('data-project-id', clientPrjId);
+            else prjInput.removeAttribute('data-project-id');
             if (prjBadge) {
-              prjBadge.textContent = '✓ Saved & Applied';
+              prjBadge.textContent = '✓ Linked Project';
               prjBadge.style.color = '#10b981';
             }
             if (prjHint) {
-              prjHint.textContent = `Applied "${pName}" (Saved for ${custInput?.value || 'client'})`;
+              prjHint.textContent = `Auto-linked "${clientPrjName}" for ${clientName}`;
             }
-            if (custInput?.value) {
-              this.saveCustomerProjectLink(custInput.value, pId, pName);
-            }
-            prjDropdown.classList.remove('open');
-          }
-        };
-      });
-    };
-
-    if (prjInput && prjDropdown) {
-      const showPrj = () => {
-        renderPrjRecommendations(prjInput.value.trim());
-        prjDropdown.classList.add('open');
-      };
-
-      prjInput.onfocus = showPrj;
-      prjInput.onclick = showPrj;
-
-      prjInput.oninput = () => {
-        const val = prjInput.value.trim();
-        renderPrjRecommendations(val);
-        prjDropdown.classList.add('open');
-        const found = projects.find(p => p.name.toLowerCase() === val.toLowerCase() || `${p.name} (${p.code})`.toLowerCase() === val.toLowerCase());
-        if (found) {
-          prjInput.setAttribute('data-project-id', found.id);
-          if (prjBadge) { prjBadge.textContent = `✓ ${found.code || 'Registered Project'}`; prjBadge.style.color = '#10b981'; }
-          if (prjHint) prjHint.textContent = `${found.name} (${found.code || ''})`;
-        } else if (val) {
-          prjInput.removeAttribute('data-project-id');
-          if (prjBadge) { prjBadge.textContent = '✎ Custom Project (Auto-linking)'; prjBadge.style.color = '#38bdf8'; }
-          if (prjHint) prjHint.textContent = `Custom project "${val}" will be used and remembered for this client.`;
-        } else {
-          prjInput.removeAttribute('data-project-id');
-          if (prjBadge) { prjBadge.textContent = 'Click for Recommendations ▾'; prjBadge.style.color = '#38bdf8'; }
-          if (prjHint) prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
-        }
-      };
-
-      prjInput.onchange = () => {
-        const val = prjInput.value.trim();
-        const clientVal = custInput?.value.trim();
-        if (val && clientVal) {
-          this.saveCustomerProjectLink(clientVal, prjInput.getAttribute('data-project-id'), val);
-        }
-      };
-
-      prjInput.onblur = () => {
-        const val = prjInput.value.trim();
-        const clientVal = custInput?.value.trim();
-        if (val && clientVal) {
-          this.saveCustomerProjectLink(clientVal, prjInput.getAttribute('data-project-id'), val);
-        }
-      };
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#inv-project-input') && !e.target.closest('#inv-project-dropdown')) {
-          prjDropdown.classList.remove('open');
-        }
-      });
-    }
-
-    const applyCustomerData = (c) => {
-      if (!c) return;
-      const custObj = (typeof c === 'object') ? c : null;
-      const info = (c && c.hasPastData !== undefined) ? c : (this.getCustomerFullInfo(c?.id || c?.name || c) || c);
-      if (!info) return;
-
-      const clientName = info.name || custObj?.name || (typeof c === 'string' ? c : '');
-      const clientId = info.id || custObj?.id || '';
-      const clientCode = info.code || custObj?.code || '';
-      const clientTrn = info.trn || custObj?.trn || custObj?.customer_trn || '';
-      const clientGstin = info.gstin || custObj?.gstin || custObj?.customer_gstin || '';
-      const clientPos = info.placeOfSupply || custObj?.place_of_supply || '';
-      const clientAddr = info.billingAddress || custObj?.billing_address || custObj?.address || '';
-      const clientContact = info.contactPerson || custObj?.contact_person || '';
-      const clientEmail = info.email || custObj?.email || '';
-      const clientTerms = (info.paymentTerms !== undefined && info.paymentTerms !== null) ? info.paymentTerms : (custObj?.payment_terms || 30);
-      const clientPrjName = info.projectName || custObj?.default_project_name || '';
-      const clientPrjId = info.projectId || custObj?.default_project_id || '';
-      const clientPoRef = info.poReference || custObj?.last_po_reference || '';
-
-      if (custInput) {
-        custInput.value = clientName;
-        if (clientId) custInput.setAttribute('data-cust-id', clientId);
-        else custInput.removeAttribute('data-cust-id');
-      }
-
-      const isUae = Boolean(
-        clientTrn ||
-        (custObj?.country && custObj.country.toUpperCase() === 'UAE') ||
-        (info.country && info.country.toUpperCase() === 'UAE') ||
-        (clientPos && (clientPos.includes('UAE') || clientPos.includes('Abu Dhabi') || clientPos.includes('Dubai'))) ||
-        info.isTrn ||
-        this.activeCompanyId !== 'ashaz-eng-in'
-      );
-      const recommendedPos = clientPos || (isUae ? 'Abu Dhabi, UAE' : '27-Maharashtra');
-
-      // Update TRN / GSTIN field directly FIRST so it reflects immediately
-      const gstinEl = document.getElementById('inv-cust-gstin');
-      const targetTaxNo = isUae ? clientTrn : (clientGstin || clientTrn);
-      if (gstinEl) {
-        gstinEl.value = targetTaxNo || '';
-      }
-      if (posInp) posInp.value = recommendedPos;
-
-      if (isUae) {
-        setTaxRegime('trn', {
-          keepPos: true,
-          suggestedPos: recommendedPos,
-          taxNumber: targetTaxNo
-        });
-      } else {
-        setTaxRegime('gst', {
-          keepPos: true,
-          suggestedPos: recommendedPos,
-          taxNumber: targetTaxNo
-        });
-      }
-
-      // Re-verify TRN input has targetTaxNo
-      if (gstinEl && targetTaxNo) {
-        gstinEl.value = targetTaxNo;
-      }
-
-      if (posBadge) {
-        posBadge.textContent = clientPos ? `✓ Saved for ${clientCode || 'Client'}` : 'Saved • Pick or Type ▾';
-        posBadge.style.color = '#10b981';
-      }
-      if (posHint) {
-        posHint.textContent = `Recommended "${recommendedPos}" for ${clientName}`;
-      }
-
-      const termsEl = document.getElementById('inv-terms');
-      if (termsEl) termsEl.value = clientTerms;
-
-      const termsSelect = document.getElementById('inv-terms-select');
-      if (termsSelect) {
-        if ([0, 15, 30, 45, 60].includes(Number(clientTerms))) {
-          termsSelect.value = String(clientTerms);
-          if (termsEl) termsEl.style.display = 'none';
-        } else {
-          termsSelect.value = 'custom';
-          if (termsEl) termsEl.style.display = 'block';
-        }
-      }
-
-      const addrInp = document.getElementById('inv-cust-address');
-      if (addrInp) {
-        addrInp.value = clientAddr;
-      }
-
-      const contactInp = document.getElementById('inv-cust-contact');
-      if (contactInp) {
-        contactInp.value = clientContact;
-      }
-
-      const emailInp = document.getElementById('inv-cust-email');
-      if (emailInp) {
-        emailInp.value = clientEmail;
-      }
-
-      // Populate Bilingual Billing & Shipping Addresses
-      if (custObj?.billing_address_details || info.billing_address_details) {
-        this.currentBillingAddress = custObj?.billing_address_details || info.billing_address_details;
-      } else if (clientAddr) {
-        this.currentBillingAddress = {
-          attention: clientContact,
-          street1: clientAddr,
-          country: isUae ? 'United Arab Emirates' : 'India'
-        };
-      }
-
-      if (custObj?.shipping_address_details || info.shipping_address_details) {
-        this.currentShippingAddress = custObj?.shipping_address_details || info.shipping_address_details;
-      } else if (custObj?.shipping_address || info.shipping_address) {
-        this.currentShippingAddress = {
-          street1: custObj?.shipping_address || info.shipping_address,
-          country: isUae ? 'United Arab Emirates' : 'India'
-        };
-      }
-
-      const taxTreatEl = document.getElementById('inv-tax-treatment-val');
-      if (taxTreatEl) {
-        taxTreatEl.textContent = custObj?.tax_treatment || info.tax_treatment || (clientTrn ? 'VAT Registered' : (isUae ? 'VAT Registered' : 'GST Registered'));
-      }
-
-      const arEl = document.getElementById('inv-ar-account');
-      if (arEl && (custObj?.accounts_receivable || info.accounts_receivable)) {
-        arEl.value = custObj?.accounts_receivable || info.accounts_receivable;
-      }
-
-      const spEl = document.getElementById('inv-salesperson');
-      if (spEl && (custObj?.salesperson || info.salesperson)) {
-        spEl.value = custObj?.salesperson || info.salesperson;
-      }
-
-      renderInvoiceAddressCards();
-
-      // Auto-fill Linked Project
-      if (prjInput) {
-        if (clientPrjName) {
-          prjInput.value = clientPrjName;
-          if (clientPrjId) prjInput.setAttribute('data-project-id', clientPrjId);
-          else prjInput.removeAttribute('data-project-id');
-          if (prjBadge) {
-            prjBadge.textContent = '✓ Linked Project';
-            prjBadge.style.color = '#10b981';
-          }
-          if (prjHint) {
-            prjHint.textContent = `Auto-linked "${clientPrjName}" for ${clientName}`;
-          }
-        } else {
-          prjInput.value = '';
-          prjInput.removeAttribute('data-project-id');
-          if (prjBadge) {
-            prjBadge.textContent = 'Pick from List or Type Custom ▾';
-            prjBadge.style.color = '#38bdf8';
-          }
-          if (prjHint) {
-            prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
-          }
-        }
-      }
-
-      // Auto-fill PO Reference
-      const poInp = document.getElementById('inv-po-ref');
-      if (poInp) {
-        poInp.value = clientPoRef || (clientName.toLowerCase().includes('top rock') ? 'PODSUB-2026/0810 & 0858' : '');
-      }
-
-      // If Top Rock client is selected and table has no active items, auto-fill Dubai Police Academy items
-      const isTopRockClient = (clientName || '').toLowerCase().includes('top rock') || clientTrn === '100360644700003';
-      if (isTopRockClient) {
-        if (prjInput && (!prjInput.value || prjInput.value === 'General Corporate Billing')) {
-          prjInput.value = 'THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI, UAE';
-          prjInput.setAttribute('data-project-id', 'prj-toprock-police-01');
-        }
-        // Set claim type to Progressive Payment
-        const claimTypeInp = document.getElementById('inv-payment-claim-type');
-        if (claimTypeInp) claimTypeInp.value = 'progressive';
-        document.querySelectorAll('.fin-claim-btn').forEach(b => {
-          b.classList.toggle('active', b.getAttribute('data-stage') === 'progressive');
-        });
-        const claimInd = document.getElementById('fin-claim-type-indicator');
-        if (claimInd) claimInd.textContent = 'Progressive Payment Active';
-
-        if (!tbody.children.length || tbody.querySelector('.inv-items-empty-row')) {
-          tbody.innerHTML = '';
-          const topRockItems = [
-            { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
-            { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
-            { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
-            { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
-          ];
-          topRockItems.forEach(it => addRow(it));
-        }
-      }
-
-      if (custBadge) {
-        custBadge.textContent = `✓ ${clientCode || 'Registered Client'}`;
-        custBadge.style.color = '#10b981';
-      }
-      if (custHint) {
-        custHint.textContent = `${clientName} • TRN: ${clientTrn || 'N/A'} • Details auto-filled`;
-      }
-
-      updateDueDate();
-      recalculateInvoice();
-      renderPosRecommendations();
-      renderPrjRecommendations();
-    };
-
-    // Customer Recommendations Dropdown when clicked on text box
-    const custDropdown = document.getElementById('inv-cust-dropdown');
-    if (custInput && custDropdown) {
-      const showCustRecommendations = () => {
-        const val = (custInput?.value || '').trim().toLowerCase();
-        custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
-          const name = (item.getAttribute('data-name') || '').toLowerCase();
-          const meta = item.textContent.toLowerCase();
-          if (!val || name.includes(val) || meta.includes(val)) {
-            item.style.display = 'flex';
           } else {
-            item.style.display = 'none';
-          }
-        });
-        custDropdown.classList.add('open');
-      };
-
-      custInput.onfocus = showCustRecommendations;
-      custInput.onclick = showCustRecommendations;
-
-      const selectCustomerItem = (item) => {
-        const custId = item.getAttribute('data-id');
-        const custName = item.getAttribute('data-name');
-        const found = customers.find(c => c.id === custId || (custName && c.name === custName)) ||
-                      (this.db?.customers || []).find(c => c.id === custId || (custName && c.name === custName)) ||
-                      { id: custId, name: custName };
-        applyCustomerData(found);
-        custDropdown.classList.remove('open');
-      };
-
-      custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
-        item.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          selectCustomerItem(item);
-        });
-        item.addEventListener('click', (e) => {
-          e.preventDefault();
-          selectCustomerItem(item);
-        });
-      });
-
-      // Event delegation for items inside custDropdown
-      custDropdown.addEventListener('click', (e) => {
-        const item = e.target.closest('.fin-autocomplete-item');
-        if (item) {
-          e.preventDefault();
-          selectCustomerItem(item);
-        }
-      });
-      custDropdown.addEventListener('mousedown', (e) => {
-        const item = e.target.closest('.fin-autocomplete-item');
-        if (item) {
-          e.preventDefault();
-          selectCustomerItem(item);
-        }
-      });
-
-      const handleCustomerInput = () => {
-        showCustRecommendations();
-        const val = custInput.value.trim();
-        if (!val) {
-          custInput.removeAttribute('data-cust-id');
-          if (custBadge) {
-            custBadge.textContent = 'Editable • Click for Options ▾';
-            custBadge.style.color = '#38bdf8';
-          }
-          if (custHint) {
-            custHint.textContent = 'Click text box to pick registered clients, or type custom name';
-          }
-          const gstinEl = document.getElementById('inv-cust-gstin');
-          if (gstinEl) gstinEl.value = '';
-          const addrInp = document.getElementById('inv-cust-address');
-          if (addrInp) addrInp.value = '';
-          const contactInp = document.getElementById('inv-cust-contact');
-          if (contactInp) contactInp.value = '';
-          const emailInp = document.getElementById('inv-cust-email');
-          if (emailInp) emailInp.value = '';
-          if (prjInput) {
             prjInput.value = '';
             prjInput.removeAttribute('data-project-id');
             if (prjBadge) {
               prjBadge.textContent = 'Pick from List or Type Custom ▾';
               prjBadge.style.color = '#38bdf8';
             }
+            if (prjHint) {
+              prjHint.textContent = 'Click text box for registered projects / cost centers, or type custom';
+            }
           }
-          const poInp = document.getElementById('inv-po-ref');
-          if (poInp) poInp.value = '';
-          renderPosRecommendations();
-          renderPrjRecommendations();
-          return;
         }
 
-        const foundExact = customers.find(c => (c.name || '').toLowerCase() === val.toLowerCase() || (c.code || '').toLowerCase() === val.toLowerCase()) ||
-                           (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === val.toLowerCase() || (c.code || '').toLowerCase() === val.toLowerCase());
+        // Auto-fill PO Reference
+        const poInp = document.getElementById('inv-po-ref');
+        if (poInp) {
+          poInp.value = clientPoRef || (clientName.toLowerCase().includes('top rock') ? 'PODSUB-2026/0810 & 0858' : '');
+        }
 
-        const info = foundExact || this.getCustomerFullInfo(val);
-        if (info && (info.hasPastData || info.customer || info.trn || info.gstin || foundExact)) {
-          applyCustomerData(info);
-          if (custBadge) {
-            const isExact = (info.name || '').toLowerCase() === val.toLowerCase();
-            custBadge.textContent = isExact ? `✓ ${info.code || 'Registered Client'}` : `✓ Matched (${info.name})`;
-            custBadge.style.color = '#10b981';
+        // If Top Rock client is selected and table has no active items, auto-fill Dubai Police Academy items
+        const isTopRockClient = (clientName || '').toLowerCase().includes('top rock') || clientTrn === '100360644700003';
+        if (isTopRockClient) {
+          if (prjInput && (!prjInput.value || prjInput.value === 'General Corporate Billing')) {
+            prjInput.value = 'THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI, UAE';
+            prjInput.setAttribute('data-project-id', 'prj-toprock-police-01');
           }
-          if (custHint) {
-            custHint.textContent = `Auto-filled details & linked project for "${info.name}"`;
-          }
-        } else {
-          custInput.removeAttribute('data-cust-id');
-          if (custBadge) {
-            custBadge.textContent = '✎ Custom Client';
-            custBadge.style.color = '#38bdf8';
-          }
-          if (custHint) {
-            custHint.textContent = `Custom client "${val}" will be used for this invoice (saved for next time).`;
-          }
-          const addrInp = document.getElementById('inv-cust-address');
-          if (addrInp) addrInp.value = '';
-          const contactInp = document.getElementById('inv-cust-contact');
-          if (contactInp) contactInp.value = '';
-          const emailInp = document.getElementById('inv-cust-email');
-          if (emailInp) emailInp.value = '';
-          const poInp = document.getElementById('inv-po-ref');
-          if (poInp) poInp.value = '';
+          // Set claim type to Progressive Payment
+          const claimTypeInp = document.getElementById('inv-payment-claim-type');
+          if (claimTypeInp) claimTypeInp.value = 'progressive';
+          document.querySelectorAll('.fin-claim-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-stage') === 'progressive');
+          });
+          const claimInd = document.getElementById('fin-claim-type-indicator');
+          if (claimInd) claimInd.textContent = 'Progressive Payment Active';
 
-          const rememberedPos = this.getRecommendedPosForCustomer(val);
-          if (rememberedPos && posInp) {
-            posInp.value = rememberedPos;
+          if (!tbody.children.length || tbody.querySelector('.inv-items-empty-row')) {
+            tbody.innerHTML = '';
+            const topRockItems = [
+              { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+              { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+              { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
+              { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
+            ];
+            topRockItems.forEach(it => addRow(it));
           }
-          const rememberedPrj = this.getRecommendedProjectForCustomer(val);
-          if (rememberedPrj && prjInput) {
-            prjInput.value = rememberedPrj.projectName;
-            if (rememberedPrj.projectId) prjInput.setAttribute('data-project-id', rememberedPrj.projectId);
-            if (prjBadge) {
-              prjBadge.textContent = '✓ Saved Project';
-              prjBadge.style.color = '#10b981';
+        }
+
+        if (custBadge) {
+          custBadge.textContent = `✓ ${clientCode || 'Registered Client'}`;
+          custBadge.style.color = '#10b981';
+        }
+        if (custHint) {
+          custHint.textContent = `${clientName} • TRN: ${clientTrn || 'N/A'} • Details auto-filled`;
+        }
+
+        updateDueDate();
+        recalculateInvoice();
+        renderPosRecommendations();
+        renderPrjRecommendations();
+      };
+
+      // Customer Recommendations Dropdown when clicked on text box
+      const custDropdown = document.getElementById('inv-cust-dropdown');
+      if (custInput && custDropdown) {
+        const showCustRecommendations = () => {
+          const val = (custInput?.value || '').trim().toLowerCase();
+          custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+            const name = (item.getAttribute('data-name') || '').toLowerCase();
+            const meta = item.textContent.toLowerCase();
+            if (!val || name.includes(val) || meta.includes(val)) {
+              item.style.display = 'flex';
+            } else {
+              item.style.display = 'none';
             }
-          } else if (prjInput) {
-            prjInput.value = '';
-            prjInput.removeAttribute('data-project-id');
-            if (prjBadge) {
-              prjBadge.textContent = 'Pick from List or Type Custom ▾';
-              prjBadge.style.color = '#38bdf8';
+          });
+          custDropdown.classList.add('open');
+        };
+
+        custInput.onfocus = showCustRecommendations;
+        custInput.onclick = showCustRecommendations;
+
+        const selectCustomerItem = (item) => {
+          const custId = item.getAttribute('data-id');
+          const custName = item.getAttribute('data-name');
+          const found = customers.find(c => c.id === custId || (custName && c.name === custName)) ||
+            (this.db?.customers || []).find(c => c.id === custId || (custName && c.name === custName)) ||
+            { id: custId, name: custName };
+          applyCustomerData(found);
+          custDropdown.classList.remove('open');
+        };
+
+        custDropdown.querySelectorAll('.fin-autocomplete-item').forEach(item => {
+          item.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            selectCustomerItem(item);
+          });
+          item.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectCustomerItem(item);
+          });
+        });
+
+        // Event delegation for items inside custDropdown
+        custDropdown.addEventListener('click', (e) => {
+          const item = e.target.closest('.fin-autocomplete-item');
+          if (item) {
+            e.preventDefault();
+            selectCustomerItem(item);
+          }
+        });
+        custDropdown.addEventListener('mousedown', (e) => {
+          const item = e.target.closest('.fin-autocomplete-item');
+          if (item) {
+            e.preventDefault();
+            selectCustomerItem(item);
+          }
+        });
+
+        const handleCustomerInput = () => {
+          showCustRecommendations();
+          const val = custInput.value.trim();
+          if (!val) {
+            custInput.removeAttribute('data-cust-id');
+            if (custBadge) {
+              custBadge.textContent = 'Editable • Click for Options ▾';
+              custBadge.style.color = '#38bdf8';
+            }
+            if (custHint) {
+              custHint.textContent = 'Click text box to pick registered clients, or type custom name';
+            }
+            const gstinEl = document.getElementById('inv-cust-gstin');
+            if (gstinEl) gstinEl.value = '';
+            const addrInp = document.getElementById('inv-cust-address');
+            if (addrInp) addrInp.value = '';
+            const contactInp = document.getElementById('inv-cust-contact');
+            if (contactInp) contactInp.value = '';
+            const emailInp = document.getElementById('inv-cust-email');
+            if (emailInp) emailInp.value = '';
+            if (prjInput) {
+              prjInput.value = '';
+              prjInput.removeAttribute('data-project-id');
+              if (prjBadge) {
+                prjBadge.textContent = 'Pick from List or Type Custom ▾';
+                prjBadge.style.color = '#38bdf8';
+              }
+            }
+            const poInp = document.getElementById('inv-po-ref');
+            if (poInp) poInp.value = '';
+            renderPosRecommendations();
+            renderPrjRecommendations();
+            return;
+          }
+
+          const foundExact = customers.find(c => (c.name || '').toLowerCase() === val.toLowerCase() || (c.code || '').toLowerCase() === val.toLowerCase()) ||
+            (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === val.toLowerCase() || (c.code || '').toLowerCase() === val.toLowerCase());
+
+          const info = foundExact || this.getCustomerFullInfo(val);
+          if (info && (info.hasPastData || info.customer || info.trn || info.gstin || foundExact)) {
+            applyCustomerData(info);
+            if (custBadge) {
+              const isExact = (info.name || '').toLowerCase() === val.toLowerCase();
+              custBadge.textContent = isExact ? `✓ ${info.code || 'Registered Client'}` : `✓ Matched (${info.name})`;
+              custBadge.style.color = '#10b981';
+            }
+            if (custHint) {
+              custHint.textContent = `Auto-filled details & linked project for "${info.name}"`;
+            }
+          } else {
+            custInput.removeAttribute('data-cust-id');
+            if (custBadge) {
+              custBadge.textContent = '✎ Custom Client';
+              custBadge.style.color = '#38bdf8';
+            }
+            if (custHint) {
+              custHint.textContent = `Custom client "${val}" will be used for this invoice (saved for next time).`;
+            }
+            const addrInp = document.getElementById('inv-cust-address');
+            if (addrInp) addrInp.value = '';
+            const contactInp = document.getElementById('inv-cust-contact');
+            if (contactInp) contactInp.value = '';
+            const emailInp = document.getElementById('inv-cust-email');
+            if (emailInp) emailInp.value = '';
+            const poInp = document.getElementById('inv-po-ref');
+            if (poInp) poInp.value = '';
+
+            const rememberedPos = this.getRecommendedPosForCustomer(val);
+            if (rememberedPos && posInp) {
+              posInp.value = rememberedPos;
+            }
+            const rememberedPrj = this.getRecommendedProjectForCustomer(val);
+            if (rememberedPrj && prjInput) {
+              prjInput.value = rememberedPrj.projectName;
+              if (rememberedPrj.projectId) prjInput.setAttribute('data-project-id', rememberedPrj.projectId);
+              if (prjBadge) {
+                prjBadge.textContent = '✓ Saved Project';
+                prjBadge.style.color = '#10b981';
+              }
+            } else if (prjInput) {
+              prjInput.value = '';
+              prjInput.removeAttribute('data-project-id');
+              if (prjBadge) {
+                prjBadge.textContent = 'Pick from List or Type Custom ▾';
+                prjBadge.style.color = '#38bdf8';
+              }
+            }
+            recalculateInvoice();
+            renderPosRecommendations();
+            renderPrjRecommendations();
+          }
+        };
+
+        // Real-time auto-saver for customer & project details
+        let autoSaveTimer = null;
+        const autoSaveCustomerModalFields = () => {
+          const clientVal = (custInput?.value || '').trim();
+          if (!clientVal) return;
+          const isTrnMode = document.getElementById('inv-tax-regime')?.value === 'trn';
+          const taxNum = (document.getElementById('inv-cust-gstin')?.value || '').trim();
+          const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
+          const addrVal = (document.getElementById('inv-cust-address')?.value || '').trim();
+          const contactVal = (document.getElementById('inv-cust-contact')?.value || '').trim();
+          const emailVal = (document.getElementById('inv-cust-email')?.value || '').trim();
+          const termsVal = Number(document.getElementById('inv-terms')?.value) || 30;
+          const pName = (prjInput?.value || '').trim();
+          const pId = prjInput?.getAttribute('data-project-id') || null;
+          const poVal = (document.getElementById('inv-po-ref')?.value || '').trim();
+
+          this.saveCustomerFullInfo({
+            id: custInput.getAttribute('data-cust-id') || null,
+            name: clientVal,
+            billing_address: addrVal,
+            contact_person: contactVal,
+            email: emailVal,
+            trn: isTrnMode ? taxNum : '',
+            gstin: !isTrnMode ? taxNum : '',
+            tax_regime: isTrnMode ? 'trn' : 'gst',
+            place_of_supply: posVal,
+            payment_terms: termsVal,
+            project_id: pId,
+            project_name: pName,
+            po_reference: poVal
+          });
+
+          // Update dropdown item meta text in real-time
+          if (custDropdown) {
+            const matchedItem = Array.from(custDropdown.querySelectorAll('.fin-autocomplete-item')).find(item => {
+              const name = (item.getAttribute('data-name') || '').toLowerCase();
+              return name === clientVal.toLowerCase() || name.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === clientVal.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
+            });
+            if (matchedItem && taxNum) {
+              const metaEl = matchedItem.querySelector('.fin-autocomplete-item-meta');
+              if (metaEl) {
+                const code = matchedItem.getAttribute('data-code') || '';
+                metaEl.textContent = `${code ? code + ' • ' : ''}${isTrnMode ? 'TRN: ' : 'GSTIN: '}${taxNum}`;
+              }
+            }
+          }
+
+          if (posVal) this.savePosRecommendation(posVal, clientVal);
+          if (pName) {
+            this.saveProjectRecommendation(pName);
+            this.saveCustomerProjectLink(clientVal, pId, pName, poVal);
+          }
+        };
+
+        const debouncedAutoSave = () => {
+          clearTimeout(autoSaveTimer);
+          autoSaveTimer = setTimeout(autoSaveCustomerModalFields, 300);
+        };
+
+        ['inv-cust-gstin', 'inv-cust-pos', 'inv-cust-address', 'inv-cust-contact', 'inv-cust-email', 'inv-terms', 'inv-po-ref'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('input', debouncedAutoSave);
+            el.addEventListener('change', autoSaveCustomerModalFields);
+            el.addEventListener('blur', autoSaveCustomerModalFields);
+          }
+        });
+
+        custInput.oninput = handleCustomerInput;
+        custInput.onchange = handleCustomerInput;
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('#inv-cust-input') && !e.target.closest('#inv-cust-dropdown')) {
+            custDropdown.classList.remove('open');
+          }
+        });
+      }
+
+      // Regime toggle buttons
+      const btnGst = document.getElementById('regime-toggle-gst');
+      const btnTrn = document.getElementById('regime-toggle-trn');
+
+      if (btnGst) {
+        btnGst.onclick = () => {
+          const val = (custInput?.value || '').trim();
+          const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase())) ||
+            (this.db?.customers || []).find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase()));
+          setTaxRegime('gst', {
+            suggestedPos: c?.place_of_supply && !c.place_of_supply.includes('UAE') ? c.place_of_supply : '27-Maharashtra'
+          });
+          if (c && c.gstin && !c.gstin.startsWith('EXEMPT')) {
+            document.getElementById('inv-cust-gstin').value = c.gstin;
+          }
+        };
+      }
+
+      if (btnTrn) {
+        btnTrn.onclick = () => {
+          const val = (custInput?.value || '').trim();
+          const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase())) ||
+            (this.db?.customers || []).find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase()));
+          setTaxRegime('trn', {
+            suggestedPos: c?.place_of_supply && c.place_of_supply.includes('UAE') ? c.place_of_supply : 'Abu Dhabi, UAE'
+          });
+          if (c && c.trn) {
+            document.getElementById('inv-cust-gstin').value = c.trn;
+          }
+        };
+      }
+
+      // Place of Supply input & recommendations dropdown event listeners
+      if (posInp && posDropdown) {
+        const showPosRecommendations = () => {
+          renderPosRecommendations(posInp.value.trim());
+          posDropdown.classList.add('open');
+        };
+
+        posInp.onfocus = showPosRecommendations;
+        posInp.onclick = showPosRecommendations;
+
+        posInp.oninput = () => {
+          const val = posInp.value.trim();
+          renderPosRecommendations(val);
+          posDropdown.classList.add('open');
+          if (posBadge) {
+            posBadge.textContent = '✎ Custom Entry (Auto-saving)';
+            posBadge.style.color = '#38bdf8';
+          }
+          recalculateInvoice();
+        };
+
+        posInp.onchange = () => {
+          const val = posInp.value.trim();
+          if (val) {
+            this.savePosRecommendation(val, custInput?.value);
+            if (posBadge) {
+              posBadge.textContent = '✓ Saved for Next Time';
+              posBadge.style.color = '#10b981';
+            }
+            if (posHint) {
+              posHint.textContent = `"${val}" saved to recommendations for next time.`;
             }
           }
           recalculateInvoice();
+        };
+
+        posInp.onblur = () => {
+          const val = posInp.value.trim();
+          if (val) {
+            this.savePosRecommendation(val, custInput?.value);
+          }
+        };
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('#inv-cust-pos') && !e.target.closest('#inv-pos-dropdown')) {
+            posDropdown.classList.remove('open');
+          }
+        });
+      }
+
+      // Initial check for default customer or remembered pos on modal open
+      const currentCustVal = (custInput?.value || '').trim();
+      if (currentCustVal) {
+        const initialInfo = this.getCustomerFullInfo(currentCustVal);
+        if (initialInfo && initialInfo.hasPastData) {
+          applyCustomerData(initialInfo);
+        } else {
           renderPosRecommendations();
           renderPrjRecommendations();
         }
-      };
-
-      // Real-time auto-saver for customer & project details
-      let autoSaveTimer = null;
-      const autoSaveCustomerModalFields = () => {
-        const clientVal = (custInput?.value || '').trim();
-        if (!clientVal) return;
-        const isTrnMode = document.getElementById('inv-tax-regime')?.value === 'trn';
-        const taxNum = (document.getElementById('inv-cust-gstin')?.value || '').trim();
-        const posVal = (document.getElementById('inv-cust-pos')?.value || '').trim();
-        const addrVal = (document.getElementById('inv-cust-address')?.value || '').trim();
-        const contactVal = (document.getElementById('inv-cust-contact')?.value || '').trim();
-        const emailVal = (document.getElementById('inv-cust-email')?.value || '').trim();
-        const termsVal = Number(document.getElementById('inv-terms')?.value) || 30;
-        const pName = (prjInput?.value || '').trim();
-        const pId = prjInput?.getAttribute('data-project-id') || null;
-        const poVal = (document.getElementById('inv-po-ref')?.value || '').trim();
-
-        this.saveCustomerFullInfo({
-          id: custInput.getAttribute('data-cust-id') || null,
-          name: clientVal,
-          billing_address: addrVal,
-          contact_person: contactVal,
-          email: emailVal,
-          trn: isTrnMode ? taxNum : '',
-          gstin: !isTrnMode ? taxNum : '',
-          tax_regime: isTrnMode ? 'trn' : 'gst',
-          place_of_supply: posVal,
-          payment_terms: termsVal,
-          project_id: pId,
-          project_name: pName,
-          po_reference: poVal
-        });
-
-        // Update dropdown item meta text in real-time
-        if (custDropdown) {
-          const matchedItem = Array.from(custDropdown.querySelectorAll('.fin-autocomplete-item')).find(item => {
-            const name = (item.getAttribute('data-name') || '').toLowerCase();
-            return name === clientVal.toLowerCase() || name.replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim() === clientVal.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
-          });
-          if (matchedItem && taxNum) {
-            const metaEl = matchedItem.querySelector('.fin-autocomplete-item-meta');
-            if (metaEl) {
-              const code = matchedItem.getAttribute('data-code') || '';
-              metaEl.textContent = `${code ? code + ' • ' : ''}${isTrnMode ? 'TRN: ' : 'GSTIN: '}${taxNum}`;
-            }
-          }
-        }
-
-        if (posVal) this.savePosRecommendation(posVal, clientVal);
-        if (pName) {
-          this.saveProjectRecommendation(pName);
-          this.saveCustomerProjectLink(clientVal, pId, pName, poVal);
-        }
-      };
-
-      const debouncedAutoSave = () => {
-        clearTimeout(autoSaveTimer);
-        autoSaveTimer = setTimeout(autoSaveCustomerModalFields, 300);
-      };
-
-      ['inv-cust-gstin', 'inv-cust-pos', 'inv-cust-address', 'inv-cust-contact', 'inv-cust-email', 'inv-terms', 'inv-po-ref'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener('input', debouncedAutoSave);
-          el.addEventListener('change', autoSaveCustomerModalFields);
-          el.addEventListener('blur', autoSaveCustomerModalFields);
-        }
-      });
-
-      custInput.oninput = handleCustomerInput;
-      custInput.onchange = handleCustomerInput;
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#inv-cust-input') && !e.target.closest('#inv-cust-dropdown')) {
-          custDropdown.classList.remove('open');
-        }
-      });
-    }
-
-    // Regime toggle buttons
-    const btnGst = document.getElementById('regime-toggle-gst');
-    const btnTrn = document.getElementById('regime-toggle-trn');
-
-    if (btnGst) {
-      btnGst.onclick = () => {
-        const val = (custInput?.value || '').trim();
-        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase())) ||
-                  (this.db?.customers || []).find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase()));
-        setTaxRegime('gst', {
-          suggestedPos: c?.place_of_supply && !c.place_of_supply.includes('UAE') ? c.place_of_supply : '27-Maharashtra'
-        });
-        if (c && c.gstin && !c.gstin.startsWith('EXEMPT')) {
-          document.getElementById('inv-cust-gstin').value = c.gstin;
-        }
-      };
-    }
-
-    if (btnTrn) {
-      btnTrn.onclick = () => {
-        const val = (custInput?.value || '').trim();
-        const c = customers.find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase())) ||
-                  (this.db?.customers || []).find(x => x.id === custInput?.getAttribute('data-cust-id') || (x.name && x.name.toLowerCase() === val.toLowerCase()));
-        setTaxRegime('trn', {
-          suggestedPos: c?.place_of_supply && c.place_of_supply.includes('UAE') ? c.place_of_supply : 'Abu Dhabi, UAE'
-        });
-        if (c && c.trn) {
-          document.getElementById('inv-cust-gstin').value = c.trn;
-        }
-      };
-    }
-
-    // Place of Supply input & recommendations dropdown event listeners
-    if (posInp && posDropdown) {
-      const showPosRecommendations = () => {
-        renderPosRecommendations(posInp.value.trim());
-        posDropdown.classList.add('open');
-      };
-
-      posInp.onfocus = showPosRecommendations;
-      posInp.onclick = showPosRecommendations;
-
-      posInp.oninput = () => {
-        const val = posInp.value.trim();
-        renderPosRecommendations(val);
-        posDropdown.classList.add('open');
-        if (posBadge) {
-          posBadge.textContent = '✎ Custom Entry (Auto-saving)';
-          posBadge.style.color = '#38bdf8';
-        }
-        recalculateInvoice();
-      };
-
-      posInp.onchange = () => {
-        const val = posInp.value.trim();
-        if (val) {
-          this.savePosRecommendation(val, custInput?.value);
-          if (posBadge) {
-            posBadge.textContent = '✓ Saved for Next Time';
-            posBadge.style.color = '#10b981';
-          }
-          if (posHint) {
-            posHint.textContent = `"${val}" saved to recommendations for next time.`;
-          }
-        }
-        recalculateInvoice();
-      };
-
-      posInp.onblur = () => {
-        const val = posInp.value.trim();
-        if (val) {
-          this.savePosRecommendation(val, custInput?.value);
-        }
-      };
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#inv-cust-pos') && !e.target.closest('#inv-pos-dropdown')) {
-          posDropdown.classList.remove('open');
-        }
-      });
-    }
-
-    // Initial check for default customer or remembered pos on modal open
-    const currentCustVal = (custInput?.value || '').trim();
-    if (currentCustVal) {
-      const initialInfo = this.getCustomerFullInfo(currentCustVal);
-      if (initialInfo && initialInfo.hasPastData) {
-        applyCustomerData(initialInfo);
       } else {
         renderPosRecommendations();
         renderPrjRecommendations();
       }
-    } else {
-      renderPosRecommendations();
-      renderPrjRecommendations();
-    }
 
-    document.getElementById('inv-add-row-btn').onclick = () => {
-      const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
-      if (existingPlaceholder) existingPlaceholder.remove();
-      addRow();
-    };
-
-    const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
-    const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
-    if (openBilledBtn1) openBilledBtn1.onclick = () => openBilledItemsModal();
-    const isTopRock44035 = editInv && (editInv.invoice_no === 'REC-RG-INV-44035' || editInv.id === 'inv-rec-rg-inv-44035');
-    const itemsToLoad = (isTopRock44035 && (!editInv.line_items || editInv.line_items.length < 4)) ? [
-      { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
-      { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
-      { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
-      { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
-    ] : (editInv && Array.isArray(editInv.line_items) && editInv.line_items.length > 0 ? editInv.line_items : null);
-
-    if (itemsToLoad && itemsToLoad.length > 0) {
-      tbody.innerHTML = '';
-      itemsToLoad.forEach(it => {
-        const itemObj = {
-          id: it.id || '',
-          code: it.code || '',
-          name: it.name || it.description || '',
-          description: it.description || it.name || '',
-          uom: it.uom || it.unit || 'Sqm',
-          sales_price: it.unit_price !== undefined ? it.unit_price : (it.rate || 0),
-          rate: it.rate !== undefined ? it.rate : (it.unit_price || 0),
-          wd_pct: it.wd_pct !== undefined ? it.wd_pct : 100,
-          discount_val: it.discount_val !== undefined ? it.discount_val : (it.wd_pct ? (100 - it.wd_pct) : 0),
-          discount_type: it.discount_type || 'pct',
-          gst_rate: it.gst_rate !== undefined ? it.gst_rate : (it.vat_rate !== undefined ? it.vat_rate : 5)
-        };
-        addRow(itemObj, it.qty || 1);
-      });
-      const editRegime = editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst');
-      setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
-      recalculateInvoice();
-    } else if (editInv) {
-      tbody.innerHTML = '';
-      checkEmptyTbody();
-      const editRegime = editInv.tax_regime || 'trn';
-      setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
-      recalculateInvoice();
-    } else {
-      tbody.innerHTML = '';
-      checkEmptyTbody();
-      setTaxRegime('trn', { preserveRates: true, keepPos: true });
-      recalculateInvoice();
-    }
-
-    // Form submit: Issue invoice
-    document.getElementById('create-invoice-form').onsubmit = async (e) => {
-      e.preventDefault();
-      await this.saveInvoiceHandler('issued');
-    };
-
-    // Save as draft
-    const saveDraftBtn = document.getElementById('inv-save-draft-btn');
-    if (saveDraftBtn) {
-      saveDraftBtn.onclick = async (e) => {
-        e.preventDefault();
-        await this.saveInvoiceHandler('draft');
+      document.getElementById('inv-add-row-btn').onclick = () => {
+        const existingPlaceholder = tbody.querySelector('.inv-items-empty-row');
+        if (existingPlaceholder) existingPlaceholder.remove();
+        addRow();
       };
+
+      const openBilledBtn1 = document.getElementById('inv-open-billed-modal-btn');
+      const openBilledBtn2 = document.getElementById('inv-open-billed-modal-btn2');
+      if (openBilledBtn1) openBilledBtn1.onclick = () => openBilledItemsModal();
+      const isTopRock44035 = editInv && (editInv.invoice_no === 'REC-RG-INV-44035' || editInv.id === 'inv-rec-rg-inv-44035');
+      const itemsToLoad = (isTopRock44035 && (!editInv.line_items || editInv.line_items.length < 4)) ? [
+        { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, rate: 56, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+        { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, rate: 51, wd_pct: 50, uom: 'Sqm', gst_rate: 5 },
+        { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, rate: 11, wd_pct: 100, uom: 'Sqm', gst_rate: 5 },
+        { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, rate: 40, wd_pct: 50, uom: 'Sqm', gst_rate: 5 }
+      ] : (editInv && Array.isArray(editInv.line_items) && editInv.line_items.length > 0 ? editInv.line_items : null);
+
+      if (itemsToLoad && itemsToLoad.length > 0) {
+        tbody.innerHTML = '';
+        itemsToLoad.forEach(it => {
+          const itemObj = {
+            id: it.id || '',
+            code: it.code || '',
+            name: it.name || it.description || '',
+            description: it.description || it.name || '',
+            uom: it.uom || it.unit || 'Sqm',
+            sales_price: it.unit_price !== undefined ? it.unit_price : (it.rate || 0),
+            rate: it.rate !== undefined ? it.rate : (it.unit_price || 0),
+            wd_pct: it.wd_pct !== undefined ? it.wd_pct : 100,
+            discount_val: it.discount_val !== undefined ? it.discount_val : (it.wd_pct ? (100 - it.wd_pct) : 0),
+            discount_type: it.discount_type || 'pct',
+            gst_rate: it.gst_rate !== undefined ? it.gst_rate : (it.vat_rate !== undefined ? it.vat_rate : 5)
+          };
+          addRow(itemObj, it.qty || 1);
+        });
+        const editRegime = editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst');
+        setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
+        recalculateInvoice();
+      } else if (editInv) {
+        tbody.innerHTML = '';
+        checkEmptyTbody();
+        const editRegime = editInv.tax_regime || 'trn';
+        setTaxRegime(editRegime, { preserveRates: true, keepPos: true, taxNumber: initialCustTrn });
+        recalculateInvoice();
+      } else {
+        tbody.innerHTML = '';
+        checkEmptyTbody();
+        setTaxRegime('trn', { preserveRates: true, keepPos: true });
+        recalculateInvoice();
+      }
+
+      // Form submit: Issue invoice
+      document.getElementById('create-invoice-form').onsubmit = async (e) => {
+        e.preventDefault();
+        await this.saveInvoiceHandler('issued');
+      };
+
+      // Save as draft
+      const saveDraftBtn = document.getElementById('inv-save-draft-btn');
+      if (saveDraftBtn) {
+        saveDraftBtn.onclick = async (e) => {
+          e.preventDefault();
+          await this.saveInvoiceHandler('draft');
+        };
+      }
+    } catch (err) {
+      console.error('Error opening Create Tax Invoice modal:', err);
+      alert('Unable to open invoice modal: ' + (err?.message || err));
     }
-  } catch (err) {
-    console.error('Error opening Create Tax Invoice modal:', err);
-    alert('Unable to open invoice modal: ' + (err?.message || err));
   }
-}
 
   async saveInvoiceHandler(status = 'issued') {
     const submitBtn = document.querySelector('#create-invoice-form button[type="submit"]');
@@ -9203,7 +9204,7 @@ class FinanceApp {
       }
       try {
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) {}
+      } catch (e) { }
 
       // Sync to backend API
       try {
@@ -9220,7 +9221,7 @@ class FinanceApp {
           }
           try {
             localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-          } catch (e) {}
+          } catch (e) { }
         }
       } catch (syncErr) {
         console.warn('Backend sync warning (fallback offline):', syncErr);
@@ -9267,7 +9268,7 @@ class FinanceApp {
     inv.updated_at = new Date().toISOString();
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) {}
+    } catch (e) { }
     await this.syncApi('create_invoice', { invoice: inv });
     this.renderInvoicesTab(document.getElementById('fin-content-pane'));
     alert(`✓ Invoice ${inv.invoice_no} has been officially issued and posted.`);
@@ -9863,11 +9864,11 @@ class FinanceApp {
           if (amt <= 0) {
             summaryEl.innerHTML = '';
           } else if (Math.abs(unallocated) < 0.01) {
-            summaryEl.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ Fully Allocated (${curr} ${totalAlloc.toLocaleString('en-US', {minimumFractionDigits: 2})})</span>`;
+            summaryEl.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ Fully Allocated (${curr} ${totalAlloc.toLocaleString('en-US', { minimumFractionDigits: 2 })})</span>`;
           } else if (unallocated > 0) {
-            summaryEl.innerHTML = `<span style="color:#38bdf8;">Allocated: ${curr} ${totalAlloc.toLocaleString('en-US', {minimumFractionDigits: 2})} | <strong style="color:#00e5d2;">Advance Credit: ${curr} ${unallocated.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></span>`;
+            summaryEl.innerHTML = `<span style="color:#38bdf8;">Allocated: ${curr} ${totalAlloc.toLocaleString('en-US', { minimumFractionDigits: 2 })} | <strong style="color:#00e5d2;">Advance Credit: ${curr} ${unallocated.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>`;
           } else {
-            summaryEl.innerHTML = `<span style="color:#ef4444; font-weight:700;">⚠ Allocated exceeds Received by ${curr} ${Math.abs(unallocated).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>`;
+            summaryEl.innerHTML = `<span style="color:#ef4444; font-weight:700;">⚠ Allocated exceeds Received by ${curr} ${Math.abs(unallocated).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
           }
         }
 
@@ -9879,7 +9880,7 @@ class FinanceApp {
                 <span style="font-size:1.1rem; line-height:1;">💡</span>
                 <div>
                   <strong style="color:#00e5d2;">Customer Advance / Credit on Account:</strong>
-                  The excess received amount of <strong style="color:#38bdf8;">${curr} ${unallocated.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong> is retained on the customer account as an Unallocated Advance Credit and will reduce outstanding balances on the Master Client Statement of Account (SOA), or can be offset against subsequent invoices.
+                  The excess received amount of <strong style="color:#38bdf8;">${curr} ${unallocated.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> is retained on the customer account as an Unallocated Advance Credit and will reduce outstanding balances on the Master Client Statement of Account (SOA), or can be offset against subsequent invoices.
                 </div>
               </div>
             `;
@@ -9896,8 +9897,8 @@ class FinanceApp {
         let remaining = amt;
 
         if (preselectInvoiceId) {
-          const targetInp = curInputs.find(inp => 
-            inp.getAttribute('data-inv-id') === preselectInvoiceId || 
+          const targetInp = curInputs.find(inp =>
+            inp.getAttribute('data-inv-id') === preselectInvoiceId ||
             inp.getAttribute('data-inv-no') === preselectInvoiceId
           );
           if (targetInp) {
@@ -10036,7 +10037,7 @@ class FinanceApp {
       if (bankName && mode !== 'Cash') {
         try {
           localStorage.setItem('fin_last_used_bank', bankName);
-        } catch (err) {}
+        } catch (err) { }
         if (!this.db.saved_banks) this.db.saved_banks = [];
         if (!this.db.saved_banks.includes(bankName)) {
           this.db.saved_banks.unshift(bankName);
@@ -10089,7 +10090,7 @@ class FinanceApp {
       allocations.forEach(al => {
         if (al.invoice_id && al.invoice_id.startsWith('open-bal-') && cust) {
           cust.opening_balance = Math.max(0, (Number(cust.opening_balance) || 0) - al.amount_allocated);
-          this.syncApi('create_customer', { customer: cust }).catch(() => {});
+          this.syncApi('create_customer', { customer: cust }).catch(() => { });
         }
       });
 
@@ -10098,8 +10099,8 @@ class FinanceApp {
         const rcpObj = res.receipt || payload.receipt;
         this.closeModal('modal-receipt');
         this.switchTab('payment_in');
-        const invSummary = allocations.length > 0 
-          ? `\nAllocated against: ${allocations.map(a => `${a.invoice_no} (${currency} ${Number(a.amount_allocated).toLocaleString('en-US', {minimumFractionDigits: 2})})`).join(', ')}`
+        const invSummary = allocations.length > 0
+          ? `\nAllocated against: ${allocations.map(a => `${a.invoice_no} (${currency} ${Number(a.amount_allocated).toLocaleString('en-US', { minimumFractionDigits: 2 })})`).join(', ')}`
           : '';
         if (confirm(`✅ Official Receipt Voucher #${rcpObj.receipt_no} generated successfully!${invSummary}\n\nInvoice balance(s) updated automatically.\nWould you like to view & print the official Receipt Voucher now?`)) {
           this.openReceiptPrintModal(rcpObj.id);
@@ -10164,7 +10165,7 @@ class FinanceApp {
     const defaultRegime = isIndia ? 'gst' : 'trn';
     const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
     const projects = (this.db?.projects || []).filter(p => !p.company_id || this.matchesActiveCompany(p.company_id));
-    
+
     // Gather all purchase orders for the company (including any referenced in previous bills)
     const poMap = new Map();
     (this.db?.purchase_orders || [])
@@ -10495,7 +10496,7 @@ class FinanceApp {
           return;
         }
 
-        const found = vendors.find(v => 
+        const found = vendors.find(v =>
           v.name.toLowerCase() === val.toLowerCase() ||
           `${v.name} (${v.code || ''})`.toLowerCase() === val.toLowerCase()
         );
@@ -10622,7 +10623,7 @@ class FinanceApp {
           return;
         }
 
-        const found = projects.find(p => 
+        const found = projects.find(p =>
           p.name.toLowerCase() === val.toLowerCase() ||
           `${p.name} (${p.code || ''})`.toLowerCase() === val.toLowerCase()
         );
@@ -10786,7 +10787,7 @@ class FinanceApp {
       const taxRegime = billRegimeHidden.value;
       const taxNo = billTaxInp.value.trim();
 
-      let vendor = vendors.find(v => 
+      let vendor = vendors.find(v =>
         v.id === vendInput.getAttribute('data-vend-id') ||
         v.name.toLowerCase() === vendorName.toLowerCase()
       );
@@ -10846,8 +10847,8 @@ class FinanceApp {
       let poNo = poVal;
 
       if (poVal) {
-        let matchPo = (this.db?.purchase_orders || []).find(p => 
-          (p.po_no || '').toLowerCase() === poVal.toLowerCase() || 
+        let matchPo = (this.db?.purchase_orders || []).find(p =>
+          (p.po_no || '').toLowerCase() === poVal.toLowerCase() ||
           (poId && p.id === poId)
         );
         if (matchPo) {
@@ -11296,9 +11297,10 @@ class FinanceApp {
     const currSym = isIndia ? '₹' : 'AED ';
 
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) || {};
-    let compName = 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C';
-    if (this.activeCompanyId === 'rayan-prop-uae') compName = 'RAYAN PROPERTIES';
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (this.activeCompanyId === 'rayan-prop-uae' || this.activeCompanyId === 'rayan-properties-uae') compName = 'RAYAN PROPERTIES';
     else if (this.activeCompanyId === 'ashaz-eng-in') compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    else if (this.activeCompanyId === 'rayan-corp-uae' || this.activeCompanyId === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     else if (comp.name) compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
 
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
@@ -11687,9 +11689,9 @@ class FinanceApp {
                             </tr>
                           ` : ''}
                           ${item.invoices.map(inv => {
-                            const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
-                            const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
-                            return `
+      const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
+      const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
+      return `
                               <tr style="border-bottom:1px solid #e2e8f0;">
                                 <td style="padding:4px 6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
                                 <td style="padding:4px 6px; font-weight:700; color:#0f172a;">
@@ -11710,7 +11712,7 @@ class FinanceApp {
                                 </td>
                               </tr>
                             `;
-                          }).join('')}
+    }).join('')}
                         </tbody>
                       </table>
                     </div>
@@ -11911,9 +11913,10 @@ class FinanceApp {
     const currSym = isIndia ? '₹' : 'AED ';
 
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) || {};
-    let compName = 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C';
-    if (this.activeCompanyId === 'rayan-prop-uae') compName = 'RAYAN PROPERTIES';
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (this.activeCompanyId === 'rayan-prop-uae' || this.activeCompanyId === 'rayan-properties-uae') compName = 'RAYAN PROPERTIES';
     else if (this.activeCompanyId === 'ashaz-eng-in') compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    else if (this.activeCompanyId === 'rayan-corp-uae' || this.activeCompanyId === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     else if (comp.name) compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
 
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
@@ -12090,9 +12093,9 @@ class FinanceApp {
                       </tr>
                     ` : ''}
                     ${invoices.map(inv => {
-                      const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
-                      const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
-                      return `
+      const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
+      const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
+      return `
                         <tr style="border-bottom:1px solid #e2e8f0;">
                           <td style="padding:6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
                           <td style="padding:6px; font-weight:700; color:#0f172a;">
@@ -12105,7 +12108,7 @@ class FinanceApp {
                           <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `;
-                    }).join('')}
+    }).join('')}
                   </tbody>
                   <tfoot>
                     <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:3px double #0f172a;">
@@ -12905,7 +12908,7 @@ class FinanceApp {
             }
           });
         }
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       }
 
       // 2. Synchronize with backend API
@@ -13722,7 +13725,7 @@ class FinanceApp {
       if (res && res.success) {
         this.recalculateInvoiceBalance(inv);
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
         alert(`Credit note ${res.credit_note?.credit_note_no || 'posted'} posted in ${currLabel}. Invoice balance updated.`);
         this.closeModal('modal-cn');
         this.switchTab(this.activeTab === 'notes' ? 'notes' : 'credit_notes');
@@ -13971,7 +13974,7 @@ class FinanceApp {
               <div style="background:rgba(255,255,255,0.035); border-left:3px solid ${n.type === 'warning' ? '#ef4444' : (n.type === 'action_required' ? '#f59e0b' : '#10b981')}; border-radius:6px; padding:0.85rem 1rem; margin-bottom:0.75rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <strong style="font-size:0.85rem; color:#f8fafc;">${n.title}</strong>
-                  <span style="font-size:0.68rem; color:#94a3b8;">${new Date(n.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</span>
+                  <span style="font-size:0.68rem; color:#94a3b8;">${new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <p style="font-size:0.78rem; color:#cbd5e1; margin-top:0.35rem; line-height:1.4;">${n.message}</p>
                 <div style="margin-top:0.5rem;">
@@ -14049,13 +14052,13 @@ class FinanceApp {
       }
       try {
         window.history.replaceState({}, document.title, window.location.pathname);
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
   printDocument() {
     const modalPaper = document.querySelector('#fin-doc-print-modal .fin-document-paper') ||
-                       document.querySelector('.fin-document-paper');
+      document.querySelector('.fin-document-paper');
 
     if (!modalPaper) {
       window.print();
@@ -14244,7 +14247,7 @@ class FinanceApp {
   }
 
   // 17. BANK TRANSFER / WIRE MODAL
-    // ==========================================================================
+  // ==========================================================================
   // CASH & BANK INTERACTIVE MODALS & HANDLERS
   // ==========================================================================
 
@@ -14380,7 +14383,7 @@ class FinanceApp {
       } else {
         this.db.bank_accounts.unshift(bankData);
       }
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
       await this.syncApi(b ? 'update_bank_account' : 'create_bank_account', {
         bank_account: bankData,
@@ -14399,7 +14402,7 @@ class FinanceApp {
     if (this.db?.bank_accounts) {
       this.db.bank_accounts = this.db.bank_accounts.filter(b => b.id !== bankId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     await this.syncApi('delete_bank_account', { id: bankId });
     this.renderActiveTab();
     this.showNotification('Bank account removed.', 'info');
@@ -14527,7 +14530,7 @@ class FinanceApp {
     if (this.db?.bank_transfers) {
       this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== transferId && t.reference_no !== transferId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     await this.syncApi('delete_bank_transfer', { id: transferId, transfer_id: transferId });
     this.renderActiveTab();
     this.showNotification('Bank wire record deleted.', 'info');
@@ -15605,9 +15608,9 @@ class FinanceApp {
     let s = wordsOrNum.trim();
     // Normalize currencies
     s = s.replace(/\bUAE Dirhams\b/gi, '')
-         .replace(/\bDirhams\b/gi, '')
-         .replace(/\bIndian Rupees\b/gi, '')
-         .replace(/\bRupees\b/gi, '');
+      .replace(/\bDirhams\b/gi, '')
+      .replace(/\bIndian Rupees\b/gi, '')
+      .replace(/\bRupees\b/gi, '');
     // Strip out existing currency code (like AED or INR) and 'Only.' or 'Only'
     s = s.replace(new RegExp('\\b' + currency + '\\b', 'gi'), '');
     s = s.replace(/Only\.?/gi, '');
@@ -15678,28 +15681,28 @@ class FinanceApp {
     }
     if (!inv) {
       inv = list.find(i => (i.customer_name || '').toUpperCase().includes('TOP ROCK')) ||
-            (defaultSeedData.invoices || []).find(i => (i.customer_name || '').toUpperCase().includes('TOP ROCK')) ||
-            list.find(i => i.company_id === this.activeCompanyId) ||
-            list[0] || (defaultSeedData.invoices || [])[0] || {};
+        (defaultSeedData.invoices || []).find(i => (i.customer_name || '').toUpperCase().includes('TOP ROCK')) ||
+        list.find(i => i.company_id === this.activeCompanyId) ||
+        list[0] || (defaultSeedData.invoices || [])[0] || {};
     }
 
     const curr = inv.currency || (this.activeCompanyId === 'ashaz-eng-in' ? 'INR' : 'AED');
     const isIndia = curr === 'INR' || inv.company_id === 'ashaz-eng-in';
 
     let comp = (this.db?.companies || []).find(c => c.id === (inv.company_id || this.activeCompanyId)) ||
-               (defaultSeedData.companies || []).find(c => c.id === (inv.company_id || this.activeCompanyId));
+      (defaultSeedData.companies || []).find(c => c.id === (inv.company_id || this.activeCompanyId));
     if (!comp || (!isIndia && comp.id !== 'rayan-corp-uae' && comp.id !== 'rayan-group')) {
       comp = (this.db?.companies || []).find(c => c.id === (isIndia ? 'ashaz-eng-in' : 'rayan-corp-uae')) ||
-             (defaultSeedData.companies || []).find(c => c.id === (isIndia ? 'ashaz-eng-in' : 'rayan-corp-uae')) || {};
+        (defaultSeedData.companies || []).find(c => c.id === (isIndia ? 'ashaz-eng-in' : 'rayan-corp-uae')) || {};
     }
 
-    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
-    if (comp.id === 'rayan-group') {
-      compName = 'RAYAN ENGINEERING';
-    } else if (comp.id === 'rayan-properties-uae') {
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
       compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     } else if (comp.name) {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
@@ -15713,19 +15716,26 @@ class FinanceApp {
     const custClean = custName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
     const isTopRock = (inv.invoice_no === 'REC-RG-INV-44035') || (inv.id === 'inv-rec-rg-inv-44035') || (inv.invoice_no === 'REC-INV-44035');
 
-    const customer = (this.db?.customers || []).find(c => 
-      (inv.customer_id && c.id === inv.customer_id) || 
+    const customer = (this.db?.customers || []).find(c =>
+      (inv.customer_id && c.id === inv.customer_id) ||
       (c.name && c.name.toLowerCase() === custName.toLowerCase()) ||
       (c.name && c.name.toLowerCase().includes('top rock') && isTopRock)
-    ) || (defaultSeedData.customers || []).find(c => 
-      (inv.customer_id && c.id === inv.customer_id) || 
+    ) || (defaultSeedData.customers || []).find(c =>
+      (inv.customer_id && c.id === inv.customer_id) ||
       (c.name && c.name.toLowerCase() === custName.toLowerCase()) ||
       (c.name && c.name.toLowerCase().includes('top rock') && isTopRock)
     ) || {};
 
     const custAddress = inv.customer_address || inv.billing_address || customer.billing_address || customer.office_address || customer.address || (isTopRock ? 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' : '');
     const custTrn = inv.customer_trn || inv.trn || customer.trn || (isTopRock ? '100360644700003' : '');
-    const poRef = inv.lpo_no || inv.po_reference || inv.order_no || inv.last_po_reference || customer.last_po_reference || (isTopRock ? 'PODSUB-2026/0810 & 0858' : '');
+    let rawPo = (inv.order_no || inv.order_number || (inv.po_reference && inv.po_reference !== '.' && inv.po_reference !== '/' ? inv.po_reference.replace(/^\.\s*/, '') : '') || inv.lpo_no || inv.last_po_reference || customer.last_po_reference || (isTopRock ? 'PODSUB-2026/0810 & 0858' : '')).trim();
+    if (rawPo === '.' || rawPo === '/' || rawPo.toLowerCase() === 'invoice no /' || rawPo.toLowerCase() === 'none') {
+      rawPo = '';
+    }
+    if (!rawPo && (inv.invoice_no === 'REC-RG-1001' || inv.id === 'inv-rec-rg-1001')) {
+      rawPo = 'SL-091/2023';
+    }
+    const poRef = rawPo;
 
     const stageKey = (inv.payment_stage || 'progressive').toLowerCase();
     let stageLabel = 'Progressive Payment';
@@ -15749,7 +15759,7 @@ class FinanceApp {
         const day = d.getDate();
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return `${day} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-      } catch(e) {
+      } catch (e) {
         return String(dateVal);
       }
     };
@@ -15923,8 +15933,11 @@ class FinanceApp {
                 <div style="font-size:0.8rem; color:#374151; line-height:1.45;">
                   <table style="margin-left:auto; border-collapse:collapse; text-align:right;">
                     <tr>
-                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">LPO / Order# :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:3px;">${poRef || '—'}</td>
+                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Order# :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">
+                        <span>${poRef || '—'}</span>
+                        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditOrderNumber('${inv.id || inv.invoice_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Order Number">✏️</button>
+                      </td>
                     </tr>
                     <tr>
                       <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Invoice Date :</td>
@@ -16027,22 +16040,22 @@ class FinanceApp {
                 </thead>
                 <tbody>
                   ${lineItems.map((item, idx) => {
-                    const qty = Number(item.qty !== undefined ? item.qty : 1);
-                    const rate = Number(item.rate !== undefined ? item.rate : (item.unit_price !== undefined ? item.unit_price : 0));
-                    let wdPct = 100;
-                    if (item.wd_pct !== undefined && item.wd_pct !== null && item.wd_pct !== '') {
-                      wdPct = Number(item.wd_pct);
-                    } else if (item.discount_val !== undefined) {
-                      wdPct = item.discount_val === 0 ? 100 : (100 - item.discount_val);
-                    }
-                    const invAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate * (wdPct / 100)));
-                    const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (isIndia ? 18 : 5)));
-                    const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (invAmt * (vatRate / 100)));
-                    const totalAmt = Number((item.total_amount !== undefined && item.total_amount !== null && !isNaN(Number(item.total_amount))) ? item.total_amount : (invAmt + vatAmt));
-                    const uom = item.unit || item.uom || 'Sqm';
-                    const itemName = item.name || item.description || 'Turnkey Work Item';
+      const qty = Number(item.qty !== undefined ? item.qty : 1);
+      const rate = Number(item.rate !== undefined ? item.rate : (item.unit_price !== undefined ? item.unit_price : 0));
+      let wdPct = 100;
+      if (item.wd_pct !== undefined && item.wd_pct !== null && item.wd_pct !== '') {
+        wdPct = Number(item.wd_pct);
+      } else if (item.discount_val !== undefined) {
+        wdPct = item.discount_val === 0 ? 100 : (100 - item.discount_val);
+      }
+      const invAmt = Number(item.invoice_amount !== undefined ? item.invoice_amount : (qty * rate * (wdPct / 100)));
+      const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (isIndia ? 18 : 5)));
+      const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (invAmt * (vatRate / 100)));
+      const totalAmt = Number((item.total_amount !== undefined && item.total_amount !== null && !isNaN(Number(item.total_amount))) ? item.total_amount : (invAmt + vatAmt));
+      const uom = item.unit || item.uom || 'Sqm';
+      const itemName = item.name || item.description || 'Turnkey Work Item';
 
-                    return `
+      return `
                       <tr style="border-bottom:1px solid #111827; font-size:0.78rem; background:#ffffff; page-break-inside:avoid; break-inside:avoid;">
                         <td style="border:1px solid #111827; padding:5px 3px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
                         <td style="border:1px solid #111827; padding:5px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word; line-height:1.35;">${itemName}</td>
@@ -16055,7 +16068,7 @@ class FinanceApp {
                         <td style="border:1px solid #111827; padding:5px 6px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     `;
-                  }).join('')}
+    }).join('')}
                 </tbody>
                 <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
                   <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
@@ -16117,7 +16130,7 @@ class FinanceApp {
     document.body.classList.add('fin-doc-open');
   }
 
-    downloadInvoiceDocument(invoiceId) {
+  downloadInvoiceDocument(invoiceId) {
     let inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
     const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
     if (paperHtml) {
@@ -16149,6 +16162,28 @@ class FinanceApp {
 </html>`;
       this.downloadFile(`${inv?.invoice_no || 'Tax_Invoice'}.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${inv?.invoice_no || 'Tax Invoice'} document.`, 'success');
+    }
+  }
+
+  quickEditOrderNumber(invoiceId) {
+    const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    if (!inv) return;
+    const current = (inv.order_no || inv.order_number || (inv.po_reference && inv.po_reference !== '.' && inv.po_reference !== '/' ? inv.po_reference : '') || inv.lpo_no || '').replace(/^\.\s*/, '');
+    const updated = prompt(`Edit Order Number for Invoice ${inv.invoice_no}:`, current || (inv.invoice_no === 'REC-RG-1001' ? 'SL-091/2023' : ''));
+    if (updated !== null) {
+      const trimmed = updated.trim();
+      inv.order_no = trimmed;
+      inv.order_number = trimmed;
+      inv.po_reference = trimmed;
+      inv.lpo_no = trimmed;
+      if (trimmed) {
+        const custMatch = (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === (inv.customer_name || '').toLowerCase());
+        if (custMatch) custMatch.last_po_reference = trimmed;
+      }
+      this.syncApi('update_invoice', { invoice: inv });
+      this.showNotification(`Order Number updated to "${trimmed}" for ${inv.invoice_no}.`, 'success');
+      this.openInvoicePrintModal(inv.id || inv.invoice_no);
+      this.renderActiveTab();
     }
   }
 
@@ -16202,25 +16237,25 @@ class FinanceApp {
     const amountInWords = this.formatAmountInWords(rec.amount_in_words || amountVal, curr);
     if (rec.amount_in_words) rec.amount_in_words = amountInWords;
 
-    const isTopRock44035 = (rec.ref_invoice_no === 'REC-RG-INV-44035') || 
-                           (rec.receipt_no === 'REC-RV-44035');
+    const isTopRock44035 = (rec.ref_invoice_no === 'REC-RG-INV-44035') ||
+      (rec.receipt_no === 'REC-RV-44035');
 
-    const linkedInv = (this.db?.invoices || []).find(i => 
-      i.invoice_no === rec.ref_invoice_no || 
+    const linkedInv = (this.db?.invoices || []).find(i =>
+      i.invoice_no === rec.ref_invoice_no ||
       (rec.allocations && rec.allocations.some(a => a.invoice_no === i.invoice_no || a.invoice_id === i.id)) ||
       (isTopRock44035 && i.invoice_no === 'REC-RG-INV-44035')
     );
 
     const comp = (this.db?.companies || []).find(c => c.id === (rec.company_id || this.activeCompanyId)) ||
-                 (defaultSeedData.companies || []).find(c => c.id === (rec.company_id || this.activeCompanyId)) ||
-                 (this.db?.companies || [])[0] || {};
-    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
-    if (comp.id === 'rayan-group') {
-      compName = 'RAYAN ENGINEERING';
-    } else if (comp.id === 'rayan-properties-uae') {
+      (defaultSeedData.companies || []).find(c => c.id === (rec.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
       compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     } else if (comp.name) {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
@@ -16403,8 +16438,8 @@ class FinanceApp {
                 </thead>
                 <tbody>
                   ${receiptLineItems && receiptLineItems.length > 1 ? receiptLineItems.map((item, idx) => {
-                    const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
-                    return `
+      const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
+      return `
                       <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                         <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
                         <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word;">
@@ -16418,7 +16453,7 @@ class FinanceApp {
                         <td style="border:1px solid #111827; padding:6px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     `;
-                  }).join('') : `
+    }).join('') : `
                     <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                       <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700; color:#111827;">1</td>
                       <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word;">
@@ -16527,15 +16562,15 @@ class FinanceApp {
     const curr = po.currency || 'AED';
     const isIndia = curr === 'INR' || po.company_id === 'ashaz-eng-in';
     const comp = (this.db?.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
-                 (defaultSeedData.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
-                 (this.db?.companies || [])[0] || {};
-    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
-    if (comp.id === 'rayan-group') {
-      compName = 'RAYAN ENGINEERING';
-    } else if (comp.id === 'rayan-properties-uae') {
+      (defaultSeedData.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
       compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     } else if (comp.name) {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
@@ -16708,24 +16743,24 @@ class FinanceApp {
                 </thead>
                 <tbody>
                   ${(po.line_items && po.line_items.length ? po.line_items : [
-                    {
-                      sr: 1,
-                      name: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
-                      description: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
-                      unit: "Sqm",
-                      qty: 160,
-                      unit_price: 60,
-                      invoice_amount: 9600,
-                      vat_amount: 480,
-                      total_amount: 10080
-                    }
-                  ]).map((item, idx) => {
-                    const itemUnitPrice = Number(item.unit_price || 60);
-                    const itemQty = Number(item.qty || 160);
-                    const itemInvAmt = Number(item.invoice_amount || (itemUnitPrice * itemQty));
-                    const itemVat = Number(item.vat_amount || item.tax_amount || (itemInvAmt * 0.05));
-                    const itemTotal = Number(item.total_amount && item.total_amount > itemInvAmt ? item.total_amount : (itemInvAmt + itemVat));
-                    return `
+        {
+          sr: 1,
+          name: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
+          description: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
+          unit: "Sqm",
+          qty: 160,
+          unit_price: 60,
+          invoice_amount: 9600,
+          vat_amount: 480,
+          total_amount: 10080
+        }
+      ]).map((item, idx) => {
+        const itemUnitPrice = Number(item.unit_price || 60);
+        const itemQty = Number(item.qty || 160);
+        const itemInvAmt = Number(item.invoice_amount || (itemUnitPrice * itemQty));
+        const itemVat = Number(item.vat_amount || item.tax_amount || (itemInvAmt * 0.05));
+        const itemTotal = Number(item.total_amount && item.total_amount > itemInvAmt ? item.total_amount : (itemInvAmt + itemVat));
+        return `
                     <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                       <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700; color:#111827;">${item.sr || (idx + 1)}</td>
                       <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word;">
@@ -16738,7 +16773,7 @@ class FinanceApp {
                       <td style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   `;
-                  }).join('')}
+      }).join('')}
                 </tbody>
                 <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
                   <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
@@ -16976,6 +17011,14 @@ class FinanceApp {
       }
     }
 
+    let cleanOrderNo = (inv.order_no || inv.order_number || (inv.po_reference && inv.po_reference !== '.' && inv.po_reference !== '/' ? inv.po_reference.replace(/^\.\s*/, '') : '') || inv.lpo_no || '').trim();
+    if (cleanOrderNo === '.' || cleanOrderNo === '/' || cleanOrderNo.toLowerCase() === 'invoice no /' || cleanOrderNo.toLowerCase() === 'none') {
+      cleanOrderNo = '';
+    }
+    if (!cleanOrderNo && (inv.invoice_no === 'REC-RG-1001' || inv.id === 'inv-rec-rg-1001')) {
+      cleanOrderNo = 'SL-091/2023';
+    }
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-invoice">
         <div class="fin-modal-dialog" style="max-width:1050px; width:95vw; max-height:92vh; display:flex; flex-direction:column;">
@@ -17023,8 +17066,9 @@ class FinanceApp {
                   <input type="date" id="edit-inv-due-date" class="fin-form-input" value="${inv.due_date || ''}" required>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">LPO / PO Reference #</label>
-                  <input type="text" id="edit-inv-lpo" class="fin-form-input" value="${inv.lpo_no || inv.po_reference || inv.order_no || ''}" placeholder="e.g. LPO/BD/2026/12 or PO-701102" style="font-weight:600; color:#38bdf8;">
+                  <label class="fin-form-label">Order Number / LPO # <span style="color:#38bdf8;">(Order#)</span></label>
+                  <input type="text" id="edit-inv-order-no" class="fin-form-input" value="${cleanOrderNo}" placeholder="e.g. SL-091/2023 or LPO/BD/2026/12" style="font-weight:700; color:#38bdf8;">
+                  <input type="hidden" id="edit-inv-lpo" value="${cleanOrderNo}">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Linked Project / Cost Center</label>
@@ -17444,9 +17488,10 @@ class FinanceApp {
       inv.due_date = document.getElementById('edit-inv-due-date').value;
       inv.payment_terms = Number(document.getElementById('edit-inv-terms').value);
       inv.project_name = document.getElementById('edit-inv-project')?.value.trim() || inv.project_name || '';
-      const lpoVal = (document.getElementById('edit-inv-lpo')?.value || '').trim();
+      const lpoVal = (document.getElementById('edit-inv-order-no')?.value || document.getElementById('edit-inv-lpo')?.value || '').trim();
       inv.po_reference = lpoVal;
       inv.order_no = lpoVal;
+      inv.order_number = lpoVal;
       inv.lpo_no = lpoVal;
       if (lpoVal) {
         const custMatch = (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === (inv.customer_name || '').toLowerCase());
@@ -17472,14 +17517,14 @@ class FinanceApp {
       inv.description = updatedLineItems[0]?.name || '';
       try {
         inv.amount_in_words = this.numberToEnglishWords(grandTotal, inv.currency || (isIndia ? 'INR' : 'AED'));
-      } catch (e) {}
+      } catch (e) { }
 
       // 1. Immediately replace in memory so UI reflects update without duplicate
       if (this.db?.invoices) {
-        const idx = this.db.invoices.findIndex(i => 
-          (oldId && i.id === oldId) || 
-          (oldInvNo && (i.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase()) || 
-          i.id === newId || 
+        const idx = this.db.invoices.findIndex(i =>
+          (oldId && i.id === oldId) ||
+          (oldInvNo && (i.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase()) ||
+          i.id === newId ||
           (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase()
         );
         if (idx >= 0) this.db.invoices[idx] = inv;
@@ -17491,7 +17536,7 @@ class FinanceApp {
           if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
           return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
         });
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       }
 
       // 2. Synchronize with backend API
@@ -17499,8 +17544,8 @@ class FinanceApp {
 
       // 3. Reconcile after sync returns
       if (this.db?.invoices) {
-        const idx = this.db.invoices.findIndex(i => 
-          i.id === newId || 
+        const idx = this.db.invoices.findIndex(i =>
+          i.id === newId ||
           (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase()
         );
         if (idx >= 0) this.db.invoices[idx] = inv;
@@ -17513,7 +17558,7 @@ class FinanceApp {
         });
         try {
           localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (e) {}
+        } catch (e) { }
       }
       this.showNotification(`Invoice ${inv.invoice_no} updated successfully with ${updatedLineItems.length} items.`, 'success');
       this.closeModal('modal-edit-invoice');
@@ -17819,7 +17864,7 @@ class FinanceApp {
           return;
         }
 
-        const found = projects.find(p => 
+        const found = projects.find(p =>
           p.name.toLowerCase() === val.toLowerCase() ||
           `${p.name} (${p.code || ''})`.toLowerCase() === val.toLowerCase()
         );
@@ -18034,8 +18079,8 @@ class FinanceApp {
       if (!poVal) {
         bill.po_id = null;
       } else {
-        let matchPo = (this.db?.purchase_orders || []).find(p => 
-          (p.po_no || '').toLowerCase() === poVal.toLowerCase() || 
+        let matchPo = (this.db?.purchase_orders || []).find(p =>
+          (p.po_no || '').toLowerCase() === poVal.toLowerCase() ||
           (poId && p.id === poId)
         );
         if (matchPo) {
@@ -18246,7 +18291,7 @@ class FinanceApp {
       const editBank = document.getElementById('edit-rcp-bank').value.trim();
       if (editBank) {
         rcp.bank_name = editBank;
-        try { localStorage.setItem('fin_last_used_bank', editBank); } catch (err) {}
+        try { localStorage.setItem('fin_last_used_bank', editBank); } catch (err) { }
         if (!this.db.saved_banks) this.db.saved_banks = [];
         if (!this.db.saved_banks.includes(editBank)) this.db.saved_banks.unshift(editBank);
       }
@@ -18447,15 +18492,15 @@ class FinanceApp {
     const curr = exp.currency || 'AED';
     const isIndia = (exp.company_id || this.activeCompanyId) === 'ashaz-eng-in' || curr === 'INR';
     const comp = (this.db?.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) ||
-                 (defaultSeedData.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) ||
-                 (this.db?.companies || [])[0] || {};
-    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
-    if (comp.id === 'rayan-group') {
-      compName = 'RAYAN ENGINEERING';
-    } else if (comp.id === 'rayan-properties-uae') {
+      (defaultSeedData.companies || []).find(c => c.id === (exp.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
       compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     } else if (comp.name) {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
@@ -18746,15 +18791,15 @@ class FinanceApp {
     }
 
     const comp = (this.db?.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) ||
-                 (defaultSeedData.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) ||
-                 (this.db?.companies || [])[0] || {};
-    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
-    if (comp.id === 'rayan-group') {
-      compName = 'RAYAN ENGINEERING';
-    } else if (comp.id === 'rayan-properties-uae') {
+      (defaultSeedData.companies || []).find(c => c.id === (pay.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
       compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     } else if (comp.name) {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
@@ -19534,7 +19579,7 @@ class FinanceApp {
     this.normalizeAllBalances();
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) {}
+    } catch (e) { }
 
     this.showNotification(`Tax Invoice ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
@@ -19557,17 +19602,17 @@ class FinanceApp {
     }
 
     if (this.db.customers) {
-      this.db.customers = this.db.customers.filter(c => 
-        c.id !== custId && 
-        c.id !== customerId && 
-        (custCode ? c.code !== custCode : true) && 
+      this.db.customers = this.db.customers.filter(c =>
+        c.id !== custId &&
+        c.id !== customerId &&
+        (custCode ? c.code !== custCode : true) &&
         (custName ? (c.name || '').toLowerCase() !== custName.toLowerCase() : true)
       );
     }
 
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) {}
+    } catch (e) { }
 
     this.closeModal('modal-edit-cust');
     this.closeModal('modal-cust-profile');
@@ -19634,7 +19679,7 @@ class FinanceApp {
       this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cnId && c.credit_note_no !== cnId);
     }
     this.normalizeAllBalances();
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
     this.showNotification(`Credit note ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
   }
@@ -19852,7 +19897,7 @@ class FinanceApp {
             }
           });
         }
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       }
 
       // 2. Sync to API
@@ -19898,15 +19943,15 @@ class FinanceApp {
 
     const isIndia = (cn.company_id || this.activeCompanyId) === 'ashaz-eng-in' || cn.currency === 'INR';
     const comp = (this.db?.companies || []).find(c => c.id === (cn.company_id || this.activeCompanyId)) ||
-                 (typeof defaultSeedData !== 'undefined' ? (defaultSeedData.companies || []).find(c => c.id === (cn.company_id || this.activeCompanyId)) : null) ||
-                 (this.db?.companies || [])[0] || {};
-    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
-    if (comp.id === 'rayan-group') {
-      compName = 'RAYAN ENGINEERING';
-    } else if (comp.id === 'rayan-properties-uae') {
+      (typeof defaultSeedData !== 'undefined' ? (defaultSeedData.companies || []).find(c => c.id === (cn.company_id || this.activeCompanyId)) : null) ||
+      (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
       compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     } else if (comp.name) {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
@@ -19933,7 +19978,7 @@ class FinanceApp {
         const day = d.getDate();
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return `${day} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-      } catch(e) {
+      } catch (e) {
         return String(dateVal);
       }
     };
@@ -20235,15 +20280,15 @@ class FinanceApp {
 
     const isIndia = (dn.company_id || this.activeCompanyId) === 'ashaz-eng-in' || dn.currency === 'INR';
     const comp = (this.db?.companies || []).find(c => c.id === (dn.company_id || this.activeCompanyId)) ||
-                 (defaultSeedData.companies || []).find(c => c.id === (dn.company_id || this.activeCompanyId)) ||
-                 (this.db?.companies || [])[0] || {};
-    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
-    if (comp.id === 'rayan-group') {
-      compName = 'RAYAN ENGINEERING';
-    } else if (comp.id === 'rayan-properties-uae') {
+      (defaultSeedData.companies || []).find(c => c.id === (dn.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
       compName = 'RAYAN PROPERTIES';
     } else if (comp.id === 'ashaz-eng-in') {
       compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     } else if (comp.name) {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
@@ -20486,7 +20531,7 @@ class FinanceApp {
     }
   }
 
-    bindGlobalEvents() {
+  bindGlobalEvents() {
     // Intercept clicks on any element with data-finance-login or href="/billing/#login"
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('#header-finance-login-btn, .btn-finance-portal-trigger, .header-top-link-finance');
