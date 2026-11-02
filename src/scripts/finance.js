@@ -873,7 +873,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v42';
+    const CURRENT_DB_VERSION = 'v2026_clean_v43';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2930,6 +2930,13 @@ class FinanceApp {
                       <span class="fin-qc-desc">Record client collection</span>
                     </div>
                   </button>
+                  <button type="button" class="fin-qc-item" id="qa-btn-pdc">
+                    <span class="fin-qc-badge-icon" style="background:rgba(168,85,247,0.15); color:#c084fc;">📅</span>
+                    <div class="fin-qc-text">
+                      <span class="fin-qc-name">PDC / Cheque In Hand</span>
+                      <span class="fin-qc-desc">Log post-dated client cheque</span>
+                    </div>
+                  </button>
                 ` : ''}
                 ${this.hasPermission('create_customer') ? `
                   <button type="button" class="fin-qc-item" id="qa-btn-customer">
@@ -3565,6 +3572,9 @@ class FinanceApp {
 
     const qaReceipt = document.getElementById('qa-btn-receipt');
     if (qaReceipt) qaReceipt.onclick = () => this.openRecordReceiptModal();
+
+    const qaPdc = document.getElementById('qa-btn-pdc');
+    if (qaPdc) qaPdc.onclick = () => this.openRecordChequeModal('inward');
 
     const qaPayment = document.getElementById('qa-btn-payment');
     if (qaPayment) qaPayment.onclick = () => this.openRecordPaymentModal();
@@ -5830,6 +5840,15 @@ class FinanceApp {
     `;
   }
 
+  getChequeBadge(status) {
+    if (status === 'Cleared') return `<span class="fin-badge fin-badge-paid">✅ Cleared</span>`;
+    if (status === 'Bounced') return `<span class="fin-badge fin-badge-void">❌ Bounced</span>`;
+    if (status === 'Security Cheque') return `<span class="fin-badge fin-badge-security">🛡️ Security Cheque</span>`;
+    if (status === 'Post-Dated Cheque (PDC)' || status === 'In Hand') return `<span class="fin-badge fin-badge-pdc">📅 PDC (In Hand)</span>`;
+    if (status === 'Deposited') return `<span class="fin-badge fin-badge-pending">🏦 Deposited in Bank</span>`;
+    return `<span class="fin-badge fin-badge-pending">${status}</span>`;
+  }
+
   renderChequesTab(root) {
     const cheques = (this.db?.cheques || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const inward = cheques.filter(c => c.type === 'inward');
@@ -5842,13 +5861,33 @@ class FinanceApp {
         <div class="fin-panel-card">
           <div class="fin-panel-header">
             <div>
-              <h2 class="fin-panel-title">📥 Inward Cheques (Customer Receipts)</h2>
-              <p style="font-size:0.75rem; color:#94a3b8;">Cheques received from clients under banking clearance (${inward.length})</p>
+              <h2 class="fin-panel-title">📥 Inward Cheques &amp; PDCs (Customer Receipts)</h2>
+              <p style="font-size:0.75rem; color:#94a3b8;">Cheques and post-dated instruments received from clients under banking clearance (${inward.length})</p>
             </div>
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordChequeModal('inward')">
-              + Inward Cheque
+              + Inward Cheque / PDC
             </button>
           </div>
+
+          <!-- Inward Cheques Search & Filter Bar -->
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom:0.85rem;">
+            <div style="position:relative; flex:1; min-width:200px;">
+              <input type="text" id="inward-chq-search" class="fin-filter-input" placeholder="🔍 Search cheque #, customer, bank, invoice..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="inward-chq-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            </div>
+            <select id="inward-chq-filter" class="fin-select-pill">
+              <option value="all">All Inward Cheques (${inward.length})</option>
+              <option value="pdc">📅 PDC / In Hand</option>
+              <option value="deposited">🏦 Deposited in Bank</option>
+              <option value="cleared">✅ Cleared</option>
+              <option value="security">🛡️ Security Cheque</option>
+            </select>
+            <div style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="inward-chq-count">${inward.length}</span> of ${inward.length}
+            </div>
+          </div>
+
           <div class="fin-table-responsive">
             <table class="fin-data-table">
               <thead>
@@ -5862,37 +5901,8 @@ class FinanceApp {
                   <th style="text-align:center;">Action</th>
                 </tr>
               </thead>
-              <tbody>
-                ${inward.length === 0 ? `
-                  <tr>
-                    <td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">No inward cheques registered.</td>
-                  </tr>
-                ` : inward.map(c => `
-                  <tr>
-                    <td><strong>${c.cheque_no}</strong></td>
-                    <td>${c.bank_name || '—'}</td>
-                    <td>
-                      <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
-                      ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
-                    </td>
-                    <td>${this.formatDate(c.date)}</td>
-                    <td style="text-align:right;"><strong style="color:#10b981;">${this.formatCurrency(c.amount)}</strong></td>
-                    <td>
-                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : (c.status === 'Bounced' ? 'fin-badge-void' : (c.status === 'Security Cheque' ? 'fin-badge-security' : 'fin-badge-pending'))}">
-                        ${c.status === 'Security Cheque' ? '🛡️ Security Cheque' : c.status}
-                      </span>
-                    </td>
-                    <td style="text-align:center;">
-                      <div style="display:inline-flex; gap:3px;">
-                        ${c.status !== 'Cleared' ? `
-                          <button type="button" class="fin-btn-card-action success" title="Clear & Credit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'inward')">⚡ Clear</button>
-                        ` : ''}
-                        <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
-                        <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
-                      </div>
-                    </td>
-                  </tr>
-                `).join('')}
+              <tbody id="inward-cheques-tbody">
+                ${this.renderInwardChequeRows(inward)}
               </tbody>
             </table>
           </div>
@@ -5909,6 +5919,19 @@ class FinanceApp {
               + Issue Cheque
             </button>
           </div>
+
+          <!-- Outward Cheques Search Bar -->
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom:0.85rem;">
+            <div style="position:relative; flex:1; min-width:200px;">
+              <input type="text" id="outward-chq-search" class="fin-filter-input" placeholder="🔍 Search cheque #, vendor, bank, notes..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="outward-chq-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            </div>
+            <div style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="outward-chq-count">${outward.length}</span> of ${outward.length}
+            </div>
+          </div>
+
           <div class="fin-table-responsive">
             <table class="fin-data-table">
               <thead>
@@ -5922,43 +5945,145 @@ class FinanceApp {
                   <th style="text-align:center;">Action</th>
                 </tr>
               </thead>
-              <tbody>
-                ${outward.length === 0 ? `
-                  <tr>
-                    <td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">No outward cheques issued.</td>
-                  </tr>
-                ` : outward.map(c => `
-                  <tr>
-                    <td><strong>${c.cheque_no}</strong></td>
-                    <td>${c.bank_name || '—'}</td>
-                    <td>
-                      <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
-                      ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
-                    </td>
-                    <td>${this.formatDate(c.date)}</td>
-                    <td style="text-align:right;"><strong style="color:#fb923c;">${this.formatCurrency(c.amount)}</strong></td>
-                    <td>
-                      <span class="fin-badge ${c.status === 'Cleared' ? 'fin-badge-paid' : (c.status === 'Bounced' ? 'fin-badge-void' : (c.status === 'Security Cheque' ? 'fin-badge-security' : 'fin-badge-pending'))}">
-                        ${c.status === 'Security Cheque' ? '🛡️ Security Cheque' : c.status}
-                      </span>
-                    </td>
-                    <td style="text-align:center;">
-                      <div style="display:inline-flex; gap:3px;">
-                        ${c.status !== 'Cleared' ? `
-                          <button type="button" class="fin-btn-card-action success" title="Clear & Debit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'outward')">⚡ Clear</button>
-                        ` : ''}
-                        <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
-                        <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
-                      </div>
-                    </td>
-                  </tr>
-                `).join('')}
+              <tbody id="outward-cheques-tbody">
+                ${this.renderOutwardChequeRows(outward)}
               </tbody>
             </table>
           </div>
         </div>
       </div>
     `;
+
+    // Bind Inward Filter Events
+    const inSearch = document.getElementById('inward-chq-search');
+    const inClear = document.getElementById('inward-chq-clear');
+    const inFilter = document.getElementById('inward-chq-filter');
+    const inCount = document.getElementById('inward-chq-count');
+    const inTbody = document.getElementById('inward-cheques-tbody');
+
+    const updateInwardFilter = () => {
+      const q = (inSearch?.value || '').toLowerCase().trim();
+      const st = inFilter?.value || 'all';
+      if (inClear) inClear.style.display = q ? 'block' : 'none';
+
+      const filtered = inward.filter(c => {
+        if (st === 'pdc' && c.status !== 'Post-Dated Cheque (PDC)' && c.status !== 'In Hand') return false;
+        if (st === 'deposited' && c.status !== 'Deposited') return false;
+        if (st === 'cleared' && c.status !== 'Cleared') return false;
+        if (st === 'security' && c.status !== 'Security Cheque') return false;
+        if (!q) return true;
+        const haystack = [c.cheque_no, c.bank_name, c.party_name, c.notes, String(c.amount || ''), c.status].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      if (inTbody) inTbody.innerHTML = this.renderInwardChequeRows(filtered, q);
+      if (inCount) inCount.textContent = filtered.length;
+    };
+
+    if (inSearch) inSearch.oninput = updateInwardFilter;
+    if (inFilter) inFilter.onchange = updateInwardFilter;
+    if (inClear) {
+      inClear.onclick = () => {
+        inSearch.value = '';
+        updateInwardFilter();
+        inSearch.focus();
+      };
+    }
+
+    // Bind Outward Filter Events
+    const outSearch = document.getElementById('outward-chq-search');
+    const outClear = document.getElementById('outward-chq-clear');
+    const outCount = document.getElementById('outward-chq-count');
+    const outTbody = document.getElementById('outward-cheques-tbody');
+
+    const updateOutwardFilter = () => {
+      const q = (outSearch?.value || '').toLowerCase().trim();
+      if (outClear) outClear.style.display = q ? 'block' : 'none';
+
+      const filtered = outward.filter(c => {
+        if (!q) return true;
+        const haystack = [c.cheque_no, c.bank_name, c.party_name, c.notes, String(c.amount || ''), c.status].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      if (outTbody) outTbody.innerHTML = this.renderOutwardChequeRows(filtered, q);
+      if (outCount) outCount.textContent = filtered.length;
+    };
+
+    if (outSearch) outSearch.oninput = updateOutwardFilter;
+    if (outClear) {
+      outClear.onclick = () => {
+        outSearch.value = '';
+        updateOutwardFilter();
+        outSearch.focus();
+      };
+    }
+  }
+
+  renderInwardChequeRows(inwardList, query = '') {
+    if (!inwardList.length) {
+      return `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">
+        ${query ? `No inward cheques found matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}".` : 'No inward cheques registered.'}
+      </td></tr>`;
+    }
+
+    return inwardList.map(c => `
+      <tr>
+        <td><strong style="color:#38bdf8; font-family:monospace;">${c.cheque_no}</strong></td>
+        <td>${c.bank_name || '—'}</td>
+        <td>
+          <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
+          ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
+        </td>
+        <td>${this.formatDate(c.date)}</td>
+        <td style="text-align:right;"><strong style="color:#10b981;">${this.formatCurrency(c.amount)}</strong></td>
+        <td>
+          ${this.getChequeBadge(c.status)}
+        </td>
+        <td style="text-align:center;">
+          <div style="display:inline-flex; gap:3px;">
+            ${c.status !== 'Cleared' ? `
+              <button type="button" class="fin-btn-card-action success" title="Clear &amp; Credit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'inward')">⚡ Clear</button>
+            ` : ''}
+            <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
+            <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  renderOutwardChequeRows(outwardList, query = '') {
+    if (!outwardList.length) {
+      return `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">
+        ${query ? `No outward cheques found matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}".` : 'No outward cheques issued.'}
+      </td></tr>`;
+    }
+
+    return outwardList.map(c => `
+      <tr>
+        <td><strong style="color:#fb923c; font-family:monospace;">${c.cheque_no}</strong></td>
+        <td>${c.bank_name || '—'}</td>
+        <td>
+          <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
+          ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
+        </td>
+        <td>${this.formatDate(c.date)}</td>
+        <td style="text-align:right;"><strong style="color:#fb923c;">${this.formatCurrency(c.amount)}</strong></td>
+        <td>
+          ${this.getChequeBadge(c.status)}
+        </td>
+        <td style="text-align:center;">
+          <div style="display:inline-flex; gap:3px;">
+            ${c.status !== 'Cleared' ? `
+              <button type="button" class="fin-btn-card-action success" title="Clear &amp; Debit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'outward')">⚡ Clear</button>
+            ` : ''}
+            <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
+            <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
   }
 
   renderLoanAccountsTab(root) {
@@ -15893,17 +16018,22 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Initial Status</label>
                   <select id="cq-status" class="fin-form-select">
-                    <option value="${isInward ? 'In Hand' : 'Issued'}">${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
+                    <option value="Post-Dated Cheque (PDC)" ${isInward ? 'selected' : ''}>📅 Post-Dated Cheque (PDC - In Hand)</option>
+                    <option value="${isInward ? 'In Hand' : 'Issued'}" ${!isInward ? 'selected' : ''}>${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
                     <option value="Deposited">${isInward ? 'Deposited in Bank' : 'Presented for Clearing'}</option>
-                    <option value="Security Cheque">Security Cheque</option>
-                    <option value="Cleared">Cleared Directly</option>
+                    <option value="Security Cheque">🛡️ Security Cheque</option>
+                    <option value="Cleared">⚡ Cleared Directly</option>
                   </select>
                 </div>
               </div>
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Notes / Linked Invoice or Project</label>
-                <input type="text" id="cq-notes" class="fin-form-input" placeholder="e.g. Milestone RA Bill payment / Spares supply">
+                <input type="text" id="cq-notes" class="fin-form-input" placeholder="e.g. PDC for Invoice REC-RG-INV-44023 / AON Project">
+              </div>
+
+              <div style="margin-top:0.6rem; padding:0.6rem 0.8rem; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:6px; font-size:0.75rem; color:#94a3b8; line-height:1.4;">
+                💡 <strong style="color:#38bdf8;">PDC Accounting Notice:</strong> Post-Dated Cheques recorded here are logged as "In Hand" in your <strong>Cheques Register</strong>. The linked sales invoice remains pending until the cheque is deposited and cleared. When the cheque date arrives, click <strong>⚡ Clear</strong> to credit your bank account.
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -16026,12 +16156,13 @@ class FinanceApp {
               <div class="fin-form-group">
                 <label class="fin-form-label">Current Status: <strong style="color:#38bdf8;">${chq.status}</strong></label>
                 <select id="chq-new-status" class="fin-form-select">
+                  <option value="Post-Dated Cheque (PDC)" ${chq.status === 'Post-Dated Cheque (PDC)' ? 'selected' : ''}>📅 Post-Dated Cheque (PDC - In Hand)</option>
                   <option value="${isInward ? 'In Hand' : 'Issued'}" ${chq.status === 'In Hand' || chq.status === 'Issued' ? 'selected' : ''}>${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
                   <option value="Deposited" ${chq.status === 'Deposited' ? 'selected' : ''}>${isInward ? 'Deposited in Bank' : 'Presented for Clearing'}</option>
-                  <option value="Security Cheque" ${chq.status === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
-                  <option value="Cleared" ${chq.status === 'Cleared' ? 'selected' : ''}>Cleared Directly</option>
+                  <option value="Security Cheque" ${chq.status === 'Security Cheque' ? 'selected' : ''}>🛡️ Security Cheque</option>
+                  <option value="Cleared" ${chq.status === 'Cleared' ? 'selected' : ''}>⚡ Cleared Directly</option>
                   <option value="Returned" ${chq.status === 'Returned' ? 'selected' : ''}>Returned / Cancelled</option>
-                  <option value="Bounced" ${chq.status === 'Bounced' ? 'selected' : ''}>Bounced</option>
+                  <option value="Bounced" ${chq.status === 'Bounced' ? 'selected' : ''}>❌ Bounced</option>
                 </select>
               </div>
 
