@@ -747,6 +747,23 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 contact_person = 'Mr. Shahil', 
                 email = 'procurementofficer@toprockinteriors.com' 
             WHERE customer_name LIKE '%TOP ROCK%'");
+            $pdo->exec("UPDATE finance_invoices SET 
+                customer_id = 'cust-toprock',
+                customer_name = 'M/S TOP ROCK INTERIORS LLC.',
+                customer_trn = '100360644700003',
+                data_json = JSON_SET(
+                    data_json, 
+                    '$.customer_id', 'cust-toprock', 
+                    '$.customer_name', 'M/S TOP ROCK INTERIORS LLC.',
+                    '$.customer_trn', '100360644700003',
+                    '$.tax_number', '100360644700003',
+                    '$.contact_person', 'Mr. Shahil',
+                    '$.email', 'procurementofficer@toprockinteriors.com',
+                    '$.customer_address', 'TRI Office No.1, Al Qusais Ind Area 1, Dubai, UAE',
+                    '$.project_id', 'prj-toprock-police-01',
+                    '$.project_name', 'The New Dubai Police Academy @ Al Rowaiyah, Dubai'
+                )
+            WHERE invoice_no = 'REC-RG-INV-44050' OR id = 'inv-rec-rg-inv-44050'");
             $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01', 'prj-1793293174613', 'prj-1793293174359', 'prj-1793293174181', 'prj-1793293174006', 'prj-1793293173653', 'prj-1793293172695', 'prj-1793293172111', 'prj-1793293172304', 'prj-1793293136777') OR (name LIKE '%Yateem Optician%' AND id != 'prj-yok-02')");
             $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
@@ -817,6 +834,24 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             return !in_array($id, $dummyExpIds) && !in_array($no, $dummyExpIds);
         }));
         if (count($data['expenses']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        foreach ($data['invoices'] as &$inv) {
+            if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44050' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-44050') {
+                $inv['customer_id'] = 'cust-toprock';
+                $inv['customer_name'] = 'M/S TOP ROCK INTERIORS LLC.';
+                $inv['customer_trn'] = '100360644700003';
+                $inv['tax_number'] = '100360644700003';
+                $inv['contact_person'] = 'Mr. Shahil';
+                $inv['email'] = 'procurementofficer@toprockinteriors.com';
+                $inv['customer_address'] = 'TRI Office No.1, Al Qusais Ind Area 1, Dubai, UAE';
+                $inv['project_id'] = 'prj-toprock-police-01';
+                $inv['project_name'] = 'The New Dubai Police Academy @ Al Rowaiyah, Dubai';
+                $changed = true;
+            }
+        }
+        unset($inv);
     }
 
     if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {

@@ -743,6 +743,22 @@ class FinanceApp {
   normalizeAllBalances() {
     if (!this.db) return;
 
+    // 0. Auto-align invoice customer_id with actual registered customer by normalized customer_name
+    const customers = this.db.customers || [];
+    const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    (this.db.invoices || []).forEach(inv => {
+      if (inv.customer_name) {
+        const iNorm = norm(inv.customer_name);
+        const match = customers.find(c => {
+          const cNorm = norm(c.name);
+          return cNorm && iNorm && (cNorm === iNorm || cNorm.includes(iNorm) || iNorm.includes(cNorm));
+        });
+        if (match && inv.customer_id !== match.id) {
+          inv.customer_id = match.id;
+        }
+      }
+    });
+
     // 1. Auto-align customer receipts allocations and customer names with current invoices
     (this.db.customer_receipts || []).forEach(rcp => {
       (rcp.allocations || []).forEach(alloc => {
@@ -790,7 +806,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v39';
+    const CURRENT_DB_VERSION = 'v2026_clean_v40';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -11337,8 +11353,17 @@ class FinanceApp {
     const cust = this.db?.customers?.find(c => c.id === custId || c.code === custId || (c.name && c.name.toLowerCase() === (custId || '').toLowerCase()));
     if (!cust) return;
 
-    const invoices = (this.db?.invoices || []).filter(i => (i.customer_id === cust.id || (cust.name && i.customer_name === cust.name)) && i.status !== 'void');
-    const receipts = (this.db?.customer_receipts || []).filter(r => (r.customer_id === cust.id || (cust.name && r.customer_name === cust.name)));
+    const custNorm = (cust.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isDocForThisCust = (doc) => {
+      if (!doc) return false;
+      const docCustNorm = (doc.customer_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (docCustNorm && custNorm) {
+        return docCustNorm === custNorm || docCustNorm.includes(custNorm) || custNorm.includes(docCustNorm);
+      }
+      return doc.customer_id === cust.id || doc.customer_id === cust.code;
+    };
+    const invoices = (this.db?.invoices || []).filter(i => isDocForThisCust(i) && i.status !== 'void');
+    const receipts = (this.db?.customer_receipts || []).filter(r => isDocForThisCust(r) && r.status !== 'void');
 
     const hasOpeningInvoice = invoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
     const unbilledOpening = hasOpeningInvoice ? 0 : (Number(cust.opening_balance) || 0);
@@ -11529,18 +11554,17 @@ class FinanceApp {
 
     const customerData = uniqueCusts.map(c => {
       const norm = (c.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-      const cInvs = allInvoices.filter(i => {
-        const invNorm = (i.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        return (i.customer_id && (i.customer_id === c.id || i.customer_id === c.code)) || invNorm === norm || (invNorm && norm && (invNorm.includes(norm) || norm.includes(invNorm)));
-      });
-      const cCNs = allCreditNotes.filter(cn => {
-        const cnNorm = (cn.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        return (cn.customer_id && (cn.customer_id === c.id || cn.customer_id === c.code)) || cnNorm === norm || (cnNorm && norm && (cnNorm.includes(norm) || norm.includes(cnNorm)));
-      });
-      const cReceipts = allReceipts.filter(r => {
-        const rNorm = (r.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        return (r.customer_id && (r.customer_id === c.id || r.customer_id === c.code)) || rNorm === norm || (rNorm && norm && (rNorm.includes(norm) || norm.includes(rNorm)));
-      });
+      const isDocForCust = (doc) => {
+        if (!doc) return false;
+        const dNorm = (doc.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (dNorm && norm) {
+          return dNorm === norm || dNorm.includes(norm) || norm.includes(dNorm);
+        }
+        return doc.customer_id && (doc.customer_id === c.id || doc.customer_id === c.code);
+      };
+      const cInvs = allInvoices.filter(i => isDocForCust(i));
+      const cCNs = allCreditNotes.filter(cn => isDocForCust(cn));
+      const cReceipts = allReceipts.filter(r => isDocForCust(r));
 
       const hasOpeningInvoice = cInvs.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
       const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
@@ -12114,21 +12138,17 @@ class FinanceApp {
     const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Al Wahda Commercial Tower, Abu Dhabi, United Arab Emirates');
 
     const norm = (cust.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const invoices = (this.db?.invoices || []).filter(i => {
-      if (i.status === 'void') return false;
-      const invNorm = (i.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-      return (i.customer_id && (i.customer_id === cust.id || i.customer_id === cust.code)) || invNorm === norm || (invNorm && norm && (invNorm.includes(norm) || norm.includes(invNorm)));
-    });
-    const receipts = (this.db?.customer_receipts || []).filter(r => {
-      if (r.status === 'void') return false;
-      const rNorm = (r.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-      return (r.customer_id && (r.customer_id === cust.id || r.customer_id === cust.code)) || rNorm === norm || (rNorm && norm && (rNorm.includes(norm) || norm.includes(rNorm)));
-    });
-    const creditNotes = (this.db?.credit_notes || []).filter(cn => {
-      if (cn.status === 'void') return false;
-      const cnNorm = (cn.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-      return (cn.customer_id && (cn.customer_id === cust.id || cn.customer_id === cust.code)) || cnNorm === norm || (cnNorm && norm && (cnNorm.includes(norm) || norm.includes(cnNorm)));
-    });
+    const isDocForThisCust = (doc) => {
+      if (!doc) return false;
+      const dNorm = (doc.customer_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (dNorm && norm) {
+        return dNorm === norm || dNorm.includes(norm) || norm.includes(dNorm);
+      }
+      return doc.customer_id && (doc.customer_id === cust.id || doc.customer_id === cust.code);
+    };
+    const invoices = (this.db?.invoices || []).filter(i => i.status !== 'void' && isDocForThisCust(i));
+    const receipts = (this.db?.customer_receipts || []).filter(r => r.status !== 'void' && isDocForThisCust(r));
+    const creditNotes = (this.db?.credit_notes || []).filter(cn => cn.status !== 'void' && isDocForThisCust(cn));
 
     const hasOpeningInvoice = invoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
     const unbilledOpening = hasOpeningInvoice ? 0 : (Number(cust.opening_balance) || 0);
@@ -17976,8 +17996,13 @@ class FinanceApp {
         inv.customer_trn = newCustTax;
       }
 
-      // Sync customer_id
-      const custMatch = (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === newCustName.toLowerCase());
+      // Sync customer_id with normalized name
+      const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const newCustNorm = norm(newCustName);
+      const custMatch = (this.db?.customers || []).find(c => {
+        const cn = norm(c.name);
+        return cn && newCustNorm && (cn === newCustNorm || cn.includes(newCustNorm) || newCustNorm.includes(cn));
+      });
       if (custMatch) {
         inv.customer_id = custMatch.id;
         if (custMatch.trn && !inv.customer_trn) inv.customer_trn = custMatch.trn;

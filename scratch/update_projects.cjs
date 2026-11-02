@@ -188,3 +188,4 @@ function applyProjects(file) {
 
 applyProjects('data/finance-data.json');
 applyProjects('public/data/finance-data.json');
+
