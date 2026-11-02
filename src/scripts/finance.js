@@ -4050,6 +4050,7 @@ class FinanceApp {
       <tr>
         <td style="white-space:nowrap !important; font-family:monospace; font-size:0.86rem; font-weight:700; color:#38bdf8; min-width:180px;">
           ${inv.invoice_no || '—'}
+          ${(inv.lpo_no || inv.po_reference || inv.order_no) ? `<div style="font-size:0.68rem; color:#94a3b8; font-weight:500; font-family:sans-serif;">LPO: ${inv.lpo_no || inv.po_reference || inv.order_no}</div>` : ''}
         </td>
         <td style="white-space:nowrap;">${this.formatDate(inv.invoice_date)}</td>
         <td style="white-space:nowrap; min-width:200px;">
@@ -6440,7 +6441,7 @@ class FinanceApp {
       const initialTerms = editInv ? (editInv.payment_terms !== undefined ? editInv.payment_terms : 0) : 0;
       const initialDueDate = editInv ? (editInv.due_date || '') : '';
       const initialPrj = editInv ? (editInv.project_name || '') : '';
-      const initialPoRef = editInv ? (editInv.po_reference || '') : '';
+      const initialPoRef = editInv ? (editInv.lpo_no || editInv.po_reference || editInv.order_no || '') : '';
       const initialNotes = editInv ? (editInv.notes || '') : '';
       const initialRegime = editInv ? (editInv.tax_regime || (editInv.customer_trn ? 'trn' : 'gst')) : 'trn';
       let currentRegime = initialRegime || 'trn'; // 'trn' | 'gst'
@@ -6708,7 +6709,7 @@ class FinanceApp {
                   </div>
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">PO / Contract Reference #</label>
+                  <label class="fin-form-label">LPO / PO Reference #</label>
                   <input type="text" id="inv-po-ref" class="fin-form-input" placeholder="e.g. LPO/BD/2026/12 or PO-LT-2025-99" value="${initialPoRef}">
                 </div>
               </div>
@@ -9145,6 +9146,8 @@ class FinanceApp {
         project_id: prjId,
         project_name: prjName,
         po_reference: poRef,
+        lpo_no: poRef,
+        order_no: poRef,
         invoice_date: invDate,
         due_date: dueDateVal,
         payment_terms: paymentTermsVal,
@@ -15696,7 +15699,7 @@ class FinanceApp {
 
     const custAddress = inv.customer_address || inv.billing_address || customer.billing_address || customer.office_address || customer.address || (isTopRock ? 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' : '');
     const custTrn = inv.customer_trn || inv.trn || customer.trn || (isTopRock ? '100360644700003' : '');
-    const poRef = inv.order_no || inv.po_reference || inv.last_po_reference || customer.last_po_reference || (isTopRock ? 'PODSUB-2026/0810 & 0858' : '');
+    const poRef = inv.lpo_no || inv.po_reference || inv.order_no || inv.last_po_reference || customer.last_po_reference || (isTopRock ? 'PODSUB-2026/0810 & 0858' : '');
 
     const stageKey = (inv.payment_stage || 'progressive').toLowerCase();
     let stageLabel = 'Progressive Payment';
@@ -15893,8 +15896,8 @@ class FinanceApp {
                 <div style="font-size:0.8rem; color:#374151; line-height:1.45;">
                   <table style="margin-left:auto; border-collapse:collapse; text-align:right;">
                     <tr>
-                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Order# :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:3px;">${poRef}</td>
+                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">LPO / Order# :</td>
+                      <td style="font-weight:600; color:#111827; padding-bottom:3px;">${poRef || '—'}</td>
                     </tr>
                     <tr>
                       <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Invoice Date :</td>
@@ -16977,8 +16980,8 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Dates, Terms & Project -->
-              <div class="fin-form-grid-4" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+              <!-- Dates, Terms, LPO & Project -->
+              <div class="fin-form-grid-5" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Invoice Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="edit-inv-date" class="fin-form-input" value="${inv.invoice_date || ''}" required>
@@ -16990,6 +16993,10 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Due Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="edit-inv-due-date" class="fin-form-input" value="${inv.due_date || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">LPO / PO Reference #</label>
+                  <input type="text" id="edit-inv-lpo" class="fin-form-input" value="${inv.lpo_no || inv.po_reference || inv.order_no || ''}" placeholder="e.g. LPO/BD/2026/12 or PO-701102" style="font-weight:600; color:#38bdf8;">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Linked Project / Cost Center</label>
@@ -17113,6 +17120,25 @@ class FinanceApp {
       invNumInput.addEventListener('input', () => {
         const titleSpan = document.getElementById('edit-inv-title-no');
         if (titleSpan) titleSpan.textContent = invNumInput.value.trim() || '—';
+      });
+    }
+
+    const editCustInp = document.getElementById('edit-inv-cust-name');
+    if (editCustInp) {
+      editCustInp.addEventListener('change', () => {
+        const val = editCustInp.value.trim();
+        const found = customers.find(c => (c.name || '').toLowerCase() === val.toLowerCase() || (c.code || '').toLowerCase() === val.toLowerCase());
+        if (found) {
+          editCustInp.value = found.name;
+          const trnInput = document.getElementById('edit-inv-cust-tax');
+          if (trnInput && !trnInput.value) trnInput.value = found.trn || found.gstin || '';
+          const posInput = document.getElementById('edit-inv-pos');
+          if (posInput && !posInput.value) posInput.value = found.place_of_supply || found.city || (isIndia ? 'Maharashtra (27)' : 'Abu Dhabi, UAE');
+          const prjInput = document.getElementById('edit-inv-project');
+          if (prjInput && !prjInput.value && found.default_project_name) prjInput.value = found.default_project_name;
+          const lpoInput = document.getElementById('edit-inv-lpo');
+          if (lpoInput && !lpoInput.value && found.last_po_reference) lpoInput.value = found.last_po_reference;
+        }
       });
     }
 
@@ -17390,6 +17416,16 @@ class FinanceApp {
       inv.due_date = document.getElementById('edit-inv-due-date').value;
       inv.payment_terms = Number(document.getElementById('edit-inv-terms').value);
       inv.project_name = document.getElementById('edit-inv-project')?.value.trim() || inv.project_name || '';
+      const lpoVal = (document.getElementById('edit-inv-lpo')?.value || '').trim();
+      inv.po_reference = lpoVal;
+      inv.order_no = lpoVal;
+      inv.lpo_no = lpoVal;
+      if (lpoVal) {
+        const custMatch = (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === (inv.customer_name || '').toLowerCase());
+        if (custMatch) {
+          custMatch.last_po_reference = lpoVal;
+        }
+      }
 
       inv.taxable_subtotal = subtotal;
       inv.sub_total = subtotal;
