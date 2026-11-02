@@ -829,9 +829,10 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             WHERE invoice_no = 'REC-RG-INV-44050' OR id = 'inv-rec-rg-inv-44050'");
             $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01', 'prj-1793293174613', 'prj-1793293174359', 'prj-1793293174181', 'prj-1793293174006', 'prj-1793293173653', 'prj-1793293172695', 'prj-1793293172111', 'prj-1793293172304', 'prj-1793293136777') OR (name LIKE '%Yateem Optician%' AND id != 'prj-yok-02')");
 
-            // v2026_clean_v48: Purge all Pink City Ceramic dummy bills/payments & ensure HLN bill and payment are linked and marked paid
+            // v2026_clean_v48 & v49: Purge all Pink City Ceramic dummy bills/payments & ensure HLN bill and payment are linked and marked paid
             $pdo->exec("DELETE FROM finance_purchase_bills WHERE vendor_name LIKE '%PINK CITY%' OR id LIKE 'bill-1793293%' OR vendor_invoice_no IN ('PC-26-0950', 'PC-26-3152')");
             $pdo->exec("DELETE FROM finance_vendor_payments WHERE vendor_name LIKE '%PINK CITY%' OR id IN ('pay-1793369661067', 'pay-1793290968855') OR voucher_no IN ('PV-RG-2026-101', 'PV-RG-2026-102')");
+            $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 316571.79, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 316571.79, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793641982443' OR vendor_invoice_no = 'HLN/PO/0526/2025' OR bill_no = 'BILL-RG-2026-1001'");
 
             if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
                 $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) {

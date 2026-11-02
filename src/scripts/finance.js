@@ -969,7 +969,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v48';
+    const CURRENT_DB_VERSION = 'v2026_clean_v49';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -10166,136 +10166,340 @@ class FinanceApp {
     this.openCreateInvoiceModal(invoiceId);
   }
 
-  // 2B. VENDOR PURCHASE BILL DETAIL MODAL
+  // 2B. VENDOR PURCHASE BILL DETAIL & PRINT MODAL (RAYAN ENGINEERING OFFICIAL FORMAT)
   openBillDetail(billId) {
-    let bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
+    this.openBillPrintModal(billId);
+  }
+
+  openBillPrintModal(billId, isVerifiedScan = false) {
+    let bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId || b.vendor_invoice_no === billId);
     if (!bill) {
       bill = (this.db?.purchase_bills || [])[0] || {};
     }
-    const vendor = (this.db?.vendors || []).find(v => v.id === bill.vendor_id) || {};
-    const lineItems = bill.line_items || [];
+    const vendor = (this.db?.vendors || []).find(v => v.id === bill.vendor_id || (v.name && v.name.toLowerCase() === (bill.vendor_name || '').toLowerCase())) || {};
+
+    const curr = bill.currency || (this.activeCompanyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+    const isIndia = curr === 'INR' || bill.company_id === 'ashaz-eng-in';
+
+    let comp = (this.db?.companies || []).find(c => c.id === (bill.company_id || this.activeCompanyId)) ||
+      (defaultSeedData.companies || []).find(c => c.id === (bill.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') {
+      compName = 'RAYAN PROPERTIES';
+    } else if (comp.id === 'ashaz-eng-in') {
+      compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.id === 'rayan-corp-uae' || comp.id === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) {
+      compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    } else if (comp.name) {
+      compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+    }
+
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
+
+    const grandTotal = Number(bill.grand_total || 0);
+    const taxTotal = Number(bill.tax_total !== undefined ? bill.tax_total : (bill.total_tax !== undefined ? bill.total_tax : (bill.vat_total || 0)));
+    const taxableSubtotal = Number(bill.taxable_subtotal || bill.subtotal || (grandTotal - taxTotal));
+    const amountPaid = Number(bill.amount_paid || 0);
+    const balanceDue = Number(bill.balance_due !== undefined ? bill.balance_due : Math.max(0, grandTotal - amountPaid));
+
+    const formattedDate = this.formatDate(bill.bill_date || new Date());
+    const formattedDueDate = bill.due_date ? this.formatDate(bill.due_date) : 'Due on Receipt';
+    const amountInWords = this.formatAmountInWords(bill.amount_in_words || grandTotal, curr);
+
+    const isPaid = balanceDue <= 0.02 && (amountPaid > 0 || bill.status === 'paid');
+    const isPartiallyPaid = !isPaid && amountPaid > 0.02;
+    const statusLabel = isPaid ? 'PAID' : (isPartiallyPaid ? 'PARTIALLY PAID' : 'UNPAID');
+    const statusColor = isPaid ? '#10b981' : (isPartiallyPaid ? '#f59e0b' : '#ef4444');
+    const statusBg = isPaid ? 'rgba(16,185,129,0.12)' : (isPartiallyPaid ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)');
+
+    const lineItems = (bill.line_items && bill.line_items.length) ? bill.line_items : [
+      {
+        name: bill.notes || 'Procurement of Engineering Materials & Structural Items',
+        qty: 1,
+        uom: 'LSUM',
+        unit_price: taxableSubtotal,
+        taxable_amount: taxableSubtotal,
+        vat_rate: isIndia ? 18 : 5,
+        tax_amount: taxTotal,
+        total_amount: grandTotal
+      }
+    ];
 
     const modalHtml = `
-      <div class="fin-modal-backdrop open" id="modal-bill-detail">
-        <div class="fin-modal-dialog" style="max-width:850px; background:var(--fin-bg-card, #0f172a);">
-          <div class="fin-modal-header" style="border-bottom:1px solid var(--fin-border, #1e293b); padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:0.75rem;">
-              <span class="fin-badge fin-badge-${bill.status || 'paid'}" style="font-size:0.8rem; text-transform:uppercase;">${bill.status || 'Approved'}</span>
-              <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; color:#f8fafc;">Purchase Bill: ${bill.bill_no || 'BILL-2026-001'}</h3>
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📑</span>
+              <span>Official Purchase Bill — ${bill.bill_no || 'BILL-RG-2026-1001'}</span>
             </div>
-            <div style="display:flex; gap:0.5rem;">
-              <button type="button" class="fin-btn-quick" style="border-color:#f59e0b; color:#f59e0b;" onclick="window.finApp.closeModal('modal-bill-detail'); window.finApp.openEditBillModal('${bill.id}')">✏️ Edit Bill</button>
-              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Purchase Bill</button>
-              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bill-detail')">&times;</button>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openBillPrintModal('${bill.id || ''}')">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
-          <div class="fin-modal-body" style="padding:1.5rem; background:#ffffff; color:#0f172a; border-radius:0 0 12px 12px;">
-            <div class="fin-print-sheet" style="padding:1rem;">
-              <!-- Header -->
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; border-bottom:2px solid #0f172a; padding-bottom:1rem;">
-                <div>
-                  <h2 style="font-family:'Outfit', sans-serif; font-size:1.6rem; font-weight:800; color:#0f172a; margin:0 0 0.25rem;">RAYAN GROUP</h2>
-                  <div style="font-size:0.8rem; color:#475569; line-height:1.4;">
-                    Rayan Engineering &amp; Contracting LLC-SPC<br>
-                    Abu Dhabi, United Arab Emirates<br>
-                    TRN: 104937380400003 | Tel: +971-25654497
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadPurchaseBillDocument('${bill.id || ''}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditBillModal('${bill.id || ''}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+              ✏️ Edit Bill
+            </button>
+            ${!isPaid ? `
+              <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openQuickPayBill('${bill.id || ''}')" style="color:#10b981; border-color:rgba(16,185,129,0.4);">
+                💸 Pay Bill
+              </button>
+            ` : ''}
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.deleteBill('${bill.id || ''}')" style="color:#ef4444; border-color:rgba(239,68,68,0.4);">
+              🗑️ Delete
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+              <!-- Header Section (Left: Logo & Company, Right: Title & Metadata) -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
+                <div style="max-width:60%;">
+                  <div style="margin-bottom:0.75rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                   </div>
+                  <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                    ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
+                  </div>
+                  <div style="font-size:0.78rem; color:#6b7280; line-height:1.4;">
+                    ${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, United Arab Emirates'} | Tel: ${compPhone}
+                  </div>
+                  ${this.getRayanDynamicVerificationCode(bill, 'purchase_bill')}
                 </div>
+
                 <div style="text-align:right;">
-                  <div style="font-size:1.35rem; font-weight:800; color:#0099e6;">PURCHASE BILL</div>
-                  <div style="font-size:0.85rem; color:#1e293b; font-weight:700;">${bill.bill_no || 'BILL-2026-001'}</div>
-                  <div style="font-size:0.78rem; color:#64748b; margin-top:0.2rem;">Date: <strong>${this.formatDate(bill.bill_date)}</strong></div>
-                  <div style="font-size:0.78rem; color:#64748b;">Due: <strong>${this.formatDate(bill.due_date)}</strong></div>
+                  <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
+                    PURCHASE BILL
+                  </div>
+                  <div style="font-size:0.95rem; font-family:'Amiri', serif; font-weight:700; color:#374151; margin-top:3px; margin-bottom:2px;">
+                    فاتورة شراء معتمدة
+                  </div>
+                  <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:8px;">
+                    # ${bill.bill_no || 'BILL-RG-2026-1001'}
+                  </div>
+                  <div style="margin-bottom:8px;">
+                    <span style="background:${statusBg}; color:${statusColor}; border:1px solid ${statusColor}44; padding:2px 10px; border-radius:4px; font-weight:800; font-size:0.76rem; letter-spacing:0.04em;">
+                      ${statusLabel}
+                    </span>
+                  </div>
+
+                  <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                    <tr>
+                      <td style="padding:1px 8px; color:#6b7280;">Bill Date :</td>
+                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 8px; color:#6b7280;">Payment Due :</td>
+                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDueDate}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 8px; color:#6b7280;">Supplier Inv # :</td>
+                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#0284c7;">${bill.vendor_invoice_no || '—'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 8px; color:#6b7280;">PO Reference :</td>
+                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${bill.po_reference || bill.po_no || 'Direct Bill'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 8px; color:#6b7280;">Payment Terms :</td>
+                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${bill.payment_terms || 30} Days</td>
+                    </tr>
+                  </table>
                 </div>
               </div>
 
-              <!-- Vendor & Project Info -->
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem; font-size:0.82rem;">
-                <div>
-                  <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:0.25rem;">Vendor Details</div>
-                  <div style="font-weight:700; font-size:0.95rem; color:#0f172a;">${bill.vendor_name || vendor.name || 'Vendor'}</div>
-                  <div style="color:#475569; margin-top:0.25rem;">${vendor.address || 'Industrial Area, Abu Dhabi'}</div>
-                  ${vendor.trn ? `<div style="color:#475569;">TRN: <code>${vendor.trn}</code></div>` : ''}
-                  ${bill.vendor_invoice_no ? `<div style="color:#0284c7; font-weight:600; margin-top:0.25rem;">Supplier Inv #: ${bill.vendor_invoice_no}</div>` : ''}
+              <!-- Vendor & Project Allocation Details (2 Columns) -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:1.25rem;">
+                <!-- Left: Vendor Details -->
+                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; background:#f9fafb;">
+                  <div style="font-size:0.7rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">
+                    BILL FROM / VENDOR DETAILS (بيانات المورد)
+                  </div>
+                  <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                    ${this.formatCompanyName(bill.vendor_name || vendor.name || 'Vendor')}
+                  </div>
+                  <div style="font-size:0.78rem; color:#4b5563; line-height:1.4;">
+                    ${vendor.address || 'Industrial Area, Abu Dhabi, United Arab Emirates'}
+                  </div>
+                  ${(bill.vendor_trn || vendor.trn) ? `
+                    <div style="font-size:0.78rem; color:#111827; font-weight:600; margin-top:3px;">
+                      TRN: <code style="font-family:monospace; background:#e2e8f0; padding:1px 4px; border-radius:3px;">${bill.vendor_trn || vendor.trn}</code>
+                    </div>
+                  ` : ''}
+                  ${vendor.phone ? `<div style="font-size:0.76rem; color:#4b5563;">Phone: ${vendor.phone}</div>` : ''}
+                  ${vendor.email ? `<div style="font-size:0.76rem; color:#0284c7;">Email: ${vendor.email}</div>` : ''}
                 </div>
-                <div>
-                  <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:0.25rem;">Project &amp; PO Allocation</div>
-                  <div style="font-weight:700; color:#0f172a;">${bill.project_name || 'Corporate Civil Operations'}</div>
-                  <div style="color:#475569; margin-top:0.25rem;">PO Ref: <strong>${bill.po_reference || bill.po_no || (bill.po_id ? bill.po_id : 'Direct Bill / No PO')}</strong></div>
-                  <div style="color:#475569;">Payment Terms: <strong>${bill.payment_terms || 30} Days</strong></div>
+
+                <!-- Right: Project & Cost Center Allocation -->
+                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; background:#f9fafb;">
+                  <div style="font-size:0.7rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">
+                    PROJECT &amp; COST CENTER ALLOCATION (تخصيص المشروع)
+                  </div>
+                  <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                    ${bill.project_name || 'Civil Works - Max - Al Wahda Mall, Abu Dhabi'}
+                  </div>
+                  <div style="font-size:0.78rem; color:#4b5563; line-height:1.4;">
+                    Entity: <strong>${compName}</strong>
+                  </div>
+                  <div style="font-size:0.78rem; color:#4b5563; margin-top:2px;">
+                    Procurement Ref: <strong>${bill.po_reference || bill.po_no || bill.vendor_invoice_no || 'Direct Subcontract'}</strong>
+                  </div>
+                  <div style="font-size:0.78rem; color:#4b5563;">
+                    Approval Status: <strong style="color:#059669; text-transform:uppercase;">${bill.approval_status || 'Approved'}</strong>
+                  </div>
                 </div>
               </div>
 
-              <!-- Line Items -->
-              <table style="width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:0.85rem;">
-                <thead>
-                  <tr style="background:#0f172a; color:#ffffff; text-align:left;">
-                    <th style="padding:0.6rem; border:1px solid #0f172a;">#</th>
-                    <th style="padding:0.6rem; border:1px solid #0f172a;">Description / Material</th>
-                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:center;">Qty</th>
-                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:right;">Rate</th>
-                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:right;">Tax</th>
-                    <th style="padding:0.6rem; border:1px solid #0f172a; text-align:right;">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${lineItems.length > 0 ? lineItems.map((item, idx) => `
-                    <tr style="border-bottom:1px solid #e2e8f0;">
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">${idx + 1}</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0;"><strong>${item.name || item.description || 'Supplies'}</strong></td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">${item.qty} ${item.uom || ''}</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">${this.formatCurrency(item.unit_price)}</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">${item.gst_rate || item.vat_rate || 5}%</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right; font-weight:700;">${this.formatCurrency(item.total_amount || (item.taxable_amount + (item.tax_amount || 0)))}</td>
+              <!-- Line Items Table -->
+              <div style="margin-bottom:1.25rem;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.8rem; border:1px solid #111827;">
+                  <thead>
+                    <tr style="background:#111827; color:#ffffff;">
+                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center;">#</th>
+                      <th style="border:1px solid #111827; padding:6px 8px; width:46%; text-align:left;">
+                        <div>Description / Material Particulars</div>
+                        <div style="font-size:0.68rem; font-weight:500; font-family:'Amiri', serif;">بيان المواد والأعمال</div>
+                      </th>
+                      <th style="border:1px solid #111827; padding:6px 4px; width:10%; text-align:center;">Qty</th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:13%; text-align:right;">Rate (${curr})</th>
+                      <th style="border:1px solid #111827; padding:6px 4px; width:8%; text-align:right;">Tax %</th>
+                      <th style="border:1px solid #111827; padding:6px 6px; width:18%; text-align:right;">Total (${curr})</th>
                     </tr>
-                  `).join('') : `
-                    <tr style="border-bottom:1px solid #e2e8f0;">
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">1</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0;"><strong>Procurement of Engineering Materials &amp; Structural Items</strong></td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:center;">1 Lot</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">${this.formatCurrency(bill.taxable_subtotal || bill.grand_total * 0.95)}</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right;">5%</td>
-                      <td style="padding:0.6rem; border:1px solid #e2e8f0; text-align:right; font-weight:700;">${this.formatCurrency(bill.grand_total)}</td>
+                  </thead>
+                  <tbody>
+                    ${lineItems.map((item, idx) => {
+                      const itemRate = Number(item.unit_price || item.rate || 0);
+                      const itemQty = Number(item.qty || 1);
+                      const itemTaxPct = Number(item.vat_rate || item.tax_rate || item.gst_rate || 5);
+                      const itemTotal = Number(item.total_amount || (itemRate * itemQty * (1 + itemTaxPct / 100)));
+                      return `
+                        <tr style="border-bottom:1px solid #111827; background:#ffffff;">
+                          <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700;">${idx + 1}</td>
+                          <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:600; color:#111827;">
+                            <div>${item.name || item.description || 'Materials / Subcontracting Works'}</div>
+                            ${item.description && item.description !== item.name ? `<div style="font-size:0.72rem; color:#6b7280; font-weight:400; margin-top:2px;">${item.description}</div>` : ''}
+                          </td>
+                          <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:600;">
+                            ${itemQty} ${item.uom || 'LSUM'}
+                          </td>
+                          <td style="border:1px solid #111827; padding:6px 6px; text-align:right; font-variant-numeric:tabular-nums;">
+                            ${itemRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td style="border:1px solid #111827; padding:6px 4px; text-align:right; font-variant-numeric:tabular-nums;">
+                            ${itemTaxPct}%
+                          </td>
+                          <td style="border:1px solid #111827; padding:6px 6px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap;">
+                            ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#f8fafc; border-top:1.5px solid #111827;">
+                      <td colspan="4" rowspan="4" style="border:1px solid #111827; padding:10px 14px; vertical-align:top; background:#f8fafc;">
+                        <div style="font-size:0.80rem; font-weight:700; color:#111827; line-height:1.45; margin-bottom:8px;">
+                          Total In Words (المبلغ كتابة) :<br>
+                          <span style="font-weight:600; color:#374151;">${amountInWords}</span>
+                        </div>
+                        ${bill.notes ? `
+                          <div style="font-size:0.75rem; color:#6b7280; border-top:1px dashed #cbd5e1; padding-top:6px; margin-top:6px;">
+                            <strong>Notes:</strong> ${bill.notes}
+                          </div>
+                        ` : ''}
+                      </td>
+                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#4b5563; text-align:right; font-size:0.78rem;">Sub-Total:</td>
+                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        ${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
                     </tr>
-                  `}
-                </tbody>
-              </table>
+                    <tr style="background:#f8fafc;">
+                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#4b5563; text-align:right; font-size:0.78rem;">VAT / Tax (5%):</td>
+                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        ${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                    <tr style="background:#eaf3ec;">
+                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Grand Total:</td>
+                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">
+                        ${curr} ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                    <tr style="background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#059669; text-align:right; font-size:0.80rem;">Amount Paid:</td>
+                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:800; color:#059669; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        ${curr} ${amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                    <tr style="background:${balanceDue > 0 ? '#fef2f2' : '#f0fdf4'};">
+                      <td colspan="4" style="border:1px solid #111827; padding:6px 14px; font-size:0.78rem; color:#4b5563;">
+                        Disbursement Status: <strong style="color:${statusColor};">${statusLabel}</strong>
+                      </td>
+                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:${balanceDue > 0 ? '#dc2626' : '#059669'}; text-align:right; font-size:0.86rem;">Balance Payable:</td>
+                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:900; color:${balanceDue > 0 ? '#dc2626' : '#059669'}; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        ${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
 
-              <!-- Totals -->
-              <div style="display:flex; justify-content:flex-end; margin-bottom:1.5rem;">
-                <div style="width:300px; font-size:0.85rem;">
-                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                    <span>Sub-Total:</span>
-                    <strong>${this.formatCurrency(bill.taxable_subtotal || bill.subtotal || (bill.grand_total - (bill.total_tax || 0)))}</strong>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0;">
-                    <span>VAT / Tax Total:</span>
-                    <span>${this.formatCurrency(bill.total_tax || bill.vat_total || 0)}</span>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-top:2px solid #0099e6; margin-top:0.4rem; font-size:1.05rem; font-weight:900; color:#0f172a;">
-                    <span>Grand Total:</span>
-                    <span>${this.formatCurrency(bill.grand_total)}</span>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0; color:#10b981; font-weight:700;">
-                    <span>Amount Paid:</span>
-                    <span>${this.formatCurrency(bill.amount_paid || 0)}</span>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; padding:0.25rem 0; color:${(bill.balance_due || 0) > 0 ? '#ef4444' : '#10b981'}; font-weight:800;">
-                    <span>Balance Payable:</span>
-                    <span>${this.formatCurrency(bill.balance_due || 0)}</span>
-                  </div>
-                </div>
+              <!-- Compliance & Authorization Note -->
+              <div style="margin-top:1.25rem; font-size:0.78rem; color:#4b5563; line-height:1.5; border-left:3px solid #0099e6; padding-left:10px;">
+                <div style="font-weight:700; color:#111827; font-size:0.82rem; margin-bottom:2px;">Procurement Verification &amp; Tax Compliance</div>
+                <div>This approved purchase bill has been validated against corporate purchase specifications and is certified for vendor settlement in accordance with UAE VAT Federal Decree-Law No. (8) of 2017.</div>
+              </div>
+
+              <!-- Contact & Company Details -->
+              <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+                <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+                <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+                <div>Hotline : ${compPhone}</div>
+                <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
               </div>
 
               <!-- System Generated Notice & Page Number Footer -->
-              <div style="margin-top:auto; padding-top:2.5rem;">
-                <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-                  <span style="min-width:24px;"></span>
-                  <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system-generated purchase bill and does not require a signature or stamp.</span>
-                  <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
+              <div style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+                <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                  This is a system-generated purchase bill and does not require a signature or stamp.
                 </div>
+                <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
               </div>
-            </div>
+
+            </div> <!-- End Main Document Content Layer -->
           </div>
         </div>
       </div>
@@ -10303,6 +10507,33 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+  }
+
+  downloadPurchaseBillDocument(billId) {
+    const bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
+    const paper = document.querySelector('.fin-document-paper');
+    if (!paper) {
+      this.showNotification('Cannot download document: Preview not active.', 'warning');
+      return;
+    }
+    const htmlContent = paper.outerHTML;
+    const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Purchase Bill - ${bill?.bill_no || 'Document'}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 20px; background: #f1f5f9; display: flex; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; }
+    @media print { body { padding: 0; background: #fff; } }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+</body>
+</html>`;
+    this.downloadFile(`${bill?.bill_no || 'Purchase_Bill'}.html`, fullDoc, 'text/html');
+    this.showNotification(`Purchase Bill ${bill?.bill_no || ''} downloaded successfully.`, 'success');
   }
 
 
@@ -12497,9 +12728,10 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -13029,6 +13261,7 @@ class FinanceApp {
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">Customer SOA</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -17276,6 +17509,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openInvoicePrintModal('${inv.id || ''}')">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
@@ -17715,12 +17949,13 @@ class FinanceApp {
               <span>Rayan Engineering Official Receipt Voucher (سند قبض)</span>
             </div>
             <div class="fin-doc-type-pills">
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal('${linkedInv?.id || ''}')">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openReceiptPrintModal('${rec.id || ''}')">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${linkedInv?.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -18003,9 +18238,12 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPOPrintModal('${po.id || ''}')">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -19969,9 +20207,10 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openExpensePrintModal('${exp.id || ''}')">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -20273,9 +20512,10 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPaymentPrintModal('${pay.id || ''}')">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -21487,6 +21727,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal('${linkedInvoice?.id || ''}')">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCreditNotePrintModal('${cn.id || ''}')">Credit Note</button>
@@ -21798,10 +22039,12 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openDebitNotePrintModal('${dn.id || ''}')">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
