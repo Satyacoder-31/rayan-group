@@ -720,7 +720,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v34';
+    const CURRENT_DB_VERSION = 'v2026_clean_v35';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -11974,8 +11974,11 @@ class FinanceApp {
     const unbilledOpening = hasOpeningInvoice ? 0 : (Number(cust.opening_balance) || 0);
 
     const totalInvoiced = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) + unbilledOpening;
-    const totalReceived = invoices.reduce((s, i) => s + ((i.amount_paid && i.amount_paid > 0.02) ? Number(i.amount_paid) : 0), 0);
-    const totalOutstanding = invoices.reduce((s, i) => s + ((i.balance_due && i.balance_due > 0.02) ? Number(i.balance_due) : 0), 0) + unbilledOpening;
+    const totalAllocatedPaid = invoices.reduce((s, i) => s + ((i.amount_paid && i.amount_paid > 0.02) ? Number(i.amount_paid) : 0), 0);
+    const totalReceived = receipts.reduce((s, r) => s + (Number(r.amount_received || 0)), 0);
+    const customerAdvanceCredit = Math.max(0, totalReceived - totalAllocatedPaid);
+    const rawOutstanding = invoices.reduce((s, i) => s + ((i.balance_due && i.balance_due > 0.02) ? Number(i.balance_due) : 0), 0) + unbilledOpening;
+    const totalOutstanding = Math.max(0, rawOutstanding - customerAdvanceCredit);
     const totalCN = creditNotes.reduce((s, cn) => s + (Number(cn.total_credit_amount || cn.amount || 0)), 0);
 
     const formattedToday = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -12062,7 +12065,7 @@ class FinanceApp {
               </div>
 
               <!-- KPI Metrics -->
-              <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
+              <div style="display:grid; grid-template-columns:${customerAdvanceCredit > 0.01 ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)'}; gap:0.75rem; margin-bottom:1.25rem;">
                 <div style="background:#f8fafc; border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:6px; padding:0.65rem 0.75rem;">
                   <div style="font-size:0.68rem; font-weight:700; color:#475569; text-transform:uppercase;">Total Invoiced</div>
                   <div style="font-size:1.15rem; font-weight:800; color:#0f172a; margin-top:3px;">${currSym}${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
@@ -12071,11 +12074,25 @@ class FinanceApp {
                   <div style="font-size:0.68rem; font-weight:700; color:#15803d; text-transform:uppercase;">Total Collections Received</div>
                   <div style="font-size:1.15rem; font-weight:800; color:#16a34a; margin-top:3px;">${currSym}${totalReceived.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                 </div>
+                ${customerAdvanceCredit > 0.01 ? `
+                  <div style="background:rgba(0, 229, 210, 0.08); border:1px solid rgba(0, 229, 210, 0.4); border-top:3px solid #00a699; border-radius:6px; padding:0.65rem 0.75rem;">
+                    <div style="font-size:0.68rem; font-weight:700; color:#00a699; text-transform:uppercase;">Customer Advance Credit</div>
+                    <div style="font-size:1.15rem; font-weight:800; color:#008b8b; margin-top:3px;">${currSym}${customerAdvanceCredit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  </div>
+                ` : ''}
                 <div style="background:#fef2f2; border:1px solid #fca5a5; border-top:3px solid #dc2626; border-radius:6px; padding:0.65rem 0.75rem;">
                   <div style="font-size:0.68rem; font-weight:700; color:#b91c1c; text-transform:uppercase;">Net Outstanding Balance</div>
                   <div style="font-size:1.2rem; font-weight:900; color:#dc2626; margin-top:3px;">${currSym}${totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                 </div>
               </div>
+              ${customerAdvanceCredit > 0.01 ? `
+                <div style="background:#f0fdfa; border:1px solid #99f6e4; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.75rem; color:#0f766e; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                  <span style="font-size:1rem;">💡</span>
+                  <div>
+                    <strong>Customer Advance on Account:</strong> This client has an unallocated advance credit balance of <strong>${currSym}${customerAdvanceCredit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> held on account. This credit directly offsets outstanding dues.
+                  </div>
+                </div>
+              ` : ''}
 
               <!-- Invoices Table -->
               <h4 style="font-family:'Outfit', sans-serif; font-size:0.9rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem 0; text-transform:uppercase;">
@@ -16144,12 +16161,43 @@ class FinanceApp {
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
-    const receiptLineItems = (isTopRock44035 && (!linkedInv?.line_items || linkedInv.line_items.length < 4)) ? [
+    let receiptLineItems = (isTopRock44035 && (!linkedInv?.line_items || linkedInv.line_items.length < 4)) ? [
       { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, unit: 'Sqm', rate: 56, wd_pct: 50, amount: 7646.80 },
       { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, unit: 'Sqm', rate: 51, wd_pct: 50, amount: 7494.45 },
       { name: 'Rockwool Stud & Furing For Academy Building (PODSUB-2026/0810)', qty: 321.2, unit: 'Sqm', rate: 11, wd_pct: 100, amount: 3533.20 },
       { name: 'Normal Ceiling Work For Academy Building (PODSUB-2026/0858)', qty: 326.6, unit: 'Sqm', rate: 40, wd_pct: 50, amount: 6532.00 }
-    ] : (linkedInv && linkedInv.line_items && linkedInv.line_items.length > 1 ? linkedInv.line_items : null);
+    ] : null;
+
+    if (!receiptLineItems && rec.allocations && rec.allocations.length > 0) {
+      let sumAlloc = 0;
+      const allocRows = [];
+      rec.allocations.forEach(al => {
+        const amt = Number(al.amount_allocated || al.amount || 0);
+        if (amt > 0) {
+          sumAlloc += amt;
+          allocRows.push({
+            name: `Settlement towards Tax Invoice #${al.invoice_no || rec.ref_invoice_no}`,
+            description: `Settlement towards Tax Invoice #${al.invoice_no || rec.ref_invoice_no}`,
+            amount: amt
+          });
+        }
+      });
+      const unalloc = amountVal - sumAlloc;
+      if (unalloc > 0.01) {
+        allocRows.push({
+          name: 'Customer Advance / Credit on Account (Unallocated Balance)',
+          description: 'Retained customer credit balance on account towards subsequent billings or refund',
+          amount: unalloc
+        });
+      }
+      if (allocRows.length > 1 || (allocRows.length === 1 && unalloc > 0.01)) {
+        receiptLineItems = allocRows;
+      }
+    }
+
+    if (!receiptLineItems && linkedInv && linkedInv.line_items && linkedInv.line_items.length > 1) {
+      receiptLineItems = linkedInv.line_items;
+    }
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
