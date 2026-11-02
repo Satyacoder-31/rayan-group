@@ -720,7 +720,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v33';
+    const CURRENT_DB_VERSION = 'v2026_clean_v34';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -7370,6 +7370,7 @@ class FinanceApp {
             <select class="fin-s1-uom-select row-uom">
               <option value="Sqm" ${uom === 'Sqm' || uom === 'SQM' ? 'selected' : ''}>Sqm</option>
               <option value="Sqft" ${uom === 'Sqft' || uom === 'SQFT' ? 'selected' : ''}>Sqft</option>
+              <option value="LM" ${uom === 'LM' || uom === 'Lm' || uom === 'lm' ? 'selected' : ''}>LM</option>
               <option value="Mtr" ${uom === 'Mtr' || uom === 'MTR' ? 'selected' : ''}>Mtr</option>
               <option value="Rmt" ${uom === 'Rmt' || uom === 'RMT' ? 'selected' : ''}>Rmt</option>
               <option value="Pcs" ${uom === 'Pcs' || uom === 'PCS' ? 'selected' : ''}>Pcs</option>
@@ -9873,41 +9874,99 @@ class FinanceApp {
       `;
       }).join('');
 
+      const refreshAllocSummary = () => {
+        const amt = Number(amountInp.value) || 0;
+        const curr = currSel.value || 'AED';
+        const curInputs = Array.from(document.querySelectorAll('.rec-alloc-input'));
+        let totalAlloc = 0;
+        curInputs.forEach(inp => {
+          totalAlloc += (Number(inp.value) || 0);
+        });
+
+        const summaryEl = document.getElementById('rec-alloc-summary');
+        let excessHint = document.getElementById('rec-excess-advance-hint');
+        if (!excessHint && invList && invList.parentNode) {
+          excessHint = document.createElement('div');
+          excessHint.id = 'rec-excess-advance-hint';
+          invList.parentNode.insertBefore(excessHint, invList.nextSibling);
+        }
+
+        const unallocated = amt - totalAlloc;
+        if (summaryEl) {
+          if (amt <= 0) {
+            summaryEl.innerHTML = '';
+          } else if (Math.abs(unallocated) < 0.01) {
+            summaryEl.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ Fully Allocated (${curr} ${totalAlloc.toLocaleString('en-US', {minimumFractionDigits: 2})})</span>`;
+          } else if (unallocated > 0) {
+            summaryEl.innerHTML = `<span style="color:#38bdf8;">Allocated: ${curr} ${totalAlloc.toLocaleString('en-US', {minimumFractionDigits: 2})} | <strong style="color:#00e5d2;">Advance Credit: ${curr} ${unallocated.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></span>`;
+          } else {
+            summaryEl.innerHTML = `<span style="color:#ef4444; font-weight:700;">⚠ Allocated exceeds Received by ${curr} ${Math.abs(unallocated).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>`;
+          }
+        }
+
+        if (excessHint) {
+          if (unallocated > 0.01 && amt > 0) {
+            excessHint.style.display = 'block';
+            excessHint.innerHTML = `
+              <div style="background:rgba(0, 229, 210, 0.08); border:1px solid rgba(0, 229, 210, 0.35); border-radius:6px; padding:0.55rem 0.8rem; font-size:0.76rem; color:#f0fdf4; display:flex; align-items:flex-start; gap:0.5rem; margin-top:0.5rem;">
+                <span style="font-size:1.1rem; line-height:1;">💡</span>
+                <div>
+                  <strong style="color:#00e5d2;">Customer Advance / Credit on Account:</strong>
+                  The excess received amount of <strong style="color:#38bdf8;">${curr} ${unallocated.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong> is retained on the customer account as an Unallocated Advance Credit and will reduce outstanding balances on the Master Client Statement of Account (SOA), or can be offset against subsequent invoices.
+                </div>
+              </div>
+            `;
+          } else {
+            excessHint.style.display = 'none';
+          }
+        }
+      };
+
       // Distribute amount: if target invoice specified, apply directly to it; otherwise FIFO across open invoices
       const distributeAllocations = () => {
         const amt = Number(amountInp.value) || 0;
-        const inputs = Array.from(document.querySelectorAll('.rec-alloc-input'));
+        const curInputs = Array.from(document.querySelectorAll('.rec-alloc-input'));
+        let remaining = amt;
+
         if (preselectInvoiceId) {
-          const targetInp = inputs.find(inp => 
+          const targetInp = curInputs.find(inp => 
             inp.getAttribute('data-inv-id') === preselectInvoiceId || 
             inp.getAttribute('data-inv-no') === preselectInvoiceId
           );
           if (targetInp) {
-            inputs.forEach(inp => {
-              if (inp === targetInp) {
-                const max = Number(inp.getAttribute('data-max')) || amt;
-                const toAlloc = Math.min(amt, max);
-                inp.value = toAlloc > 0 ? toAlloc : '';
-                inp.style.borderColor = '#10b981';
-                inp.style.background = 'rgba(16, 185, 129, 0.1)';
-              } else {
-                inp.value = '';
-                inp.style.borderColor = '';
-                inp.style.background = '';
+            const max = Number(targetInp.getAttribute('data-max')) || amt;
+            const toAlloc = Math.min(remaining, max);
+            targetInp.value = toAlloc > 0 ? toAlloc : '';
+            targetInp.style.borderColor = '#10b981';
+            targetInp.style.background = 'rgba(16, 185, 129, 0.1)';
+            remaining -= toAlloc;
+
+            curInputs.forEach(inp => {
+              if (inp !== targetInp) {
+                const oMax = Number(inp.getAttribute('data-max')) || 0;
+                const oToAlloc = Math.min(remaining, oMax);
+                inp.value = oToAlloc > 0 ? oToAlloc : '';
+                remaining -= oToAlloc;
               }
             });
+            refreshAllocSummary();
             return;
           }
         }
 
-        let remaining = amt;
-        inputs.forEach(inp => {
+        curInputs.forEach(inp => {
           const max = Number(inp.getAttribute('data-max')) || 0;
           const toAlloc = Math.min(remaining, max);
           inp.value = toAlloc > 0 ? toAlloc : '';
           remaining -= toAlloc;
         });
+        refreshAllocSummary();
       };
+
+      const curInputs = Array.from(document.querySelectorAll('.rec-alloc-input'));
+      curInputs.forEach(inp => {
+        inp.oninput = () => refreshAllocSummary();
+      });
 
       distributeAllocations();
     };
@@ -9915,39 +9974,15 @@ class FinanceApp {
     this.updateCustomerReceiptInvoices = updateCustomerInvoices;
 
     custSel.onchange = updateCustomerInvoices;
+    currSel.onchange = updateCustomerInvoices;
 
     amountInp.oninput = () => {
-      const amt = Number(amountInp.value) || 0;
-      const inputs = Array.from(document.querySelectorAll('.rec-alloc-input'));
-      if (preselectInvoiceId) {
-        const targetInp = inputs.find(inp => 
-          inp.getAttribute('data-inv-id') === preselectInvoiceId || 
-          inp.getAttribute('data-inv-no') === preselectInvoiceId
-        );
-        if (targetInp) {
-          inputs.forEach(inp => {
-            if (inp === targetInp) {
-              const max = Number(inp.getAttribute('data-max')) || amt;
-              const toAlloc = Math.min(amt, max);
-              inp.value = toAlloc > 0 ? toAlloc : '';
-              inp.style.borderColor = '#10b981';
-              inp.style.background = 'rgba(16, 185, 129, 0.1)';
-            } else {
-              inp.value = '';
-              inp.style.borderColor = '';
-              inp.style.background = '';
-            }
-          });
-          return;
-        }
+      const dist = this.updateCustomerReceiptInvoices;
+      if (typeof distributeAllocations === 'function') {
+        distributeAllocations();
+      } else {
+        updateCustomerInvoices();
       }
-      let remaining = amt;
-      inputs.forEach(inp => {
-        const max = Number(inp.getAttribute('data-max')) || 0;
-        const toAlloc = Math.min(remaining, max);
-        inp.value = toAlloc > 0 ? toAlloc : '';
-        remaining -= toAlloc;
-      });
     };
 
     if (preselectInvoiceId) {
@@ -12982,6 +13017,7 @@ class FinanceApp {
                   <select id="new-item-uom" class="fin-form-select">
                     <option value="Sqm">Sqm (Square Meter)</option>
                     <option value="Sqft">Sqft (Square Feet)</option>
+                    <option value="LM">LM (Linear Meter)</option>
                     <option value="MT">MT (Metric Ton)</option>
                     <option value="CUM">CUM (Cubic Meter)</option>
                     <option value="LSUM">LSUM (Lump Sum)</option>
@@ -17021,7 +17057,9 @@ class FinanceApp {
           </td>
           <td style="padding:6px 6px;">
             <select class="fin-form-select edit-row-uom" style="font-size:0.83rem; width:100%;">
-              <option value="Sqm" ${rowUom === 'Sqm' ? 'selected' : ''}>Sqm</option>
+              <option value="Sqm" ${rowUom === 'Sqm' || rowUom === 'SQM' ? 'selected' : ''}>Sqm</option>
+              <option value="Sqft" ${rowUom === 'Sqft' || rowUom === 'SQFT' ? 'selected' : ''}>Sqft</option>
+              <option value="LM" ${rowUom === 'LM' || rowUom === 'Lm' || rowUom === 'lm' ? 'selected' : ''}>LM</option>
               <option value="LSUM" ${rowUom === 'LSUM' ? 'selected' : ''}>LSUM</option>
               <option value="%" ${rowUom === '%' ? 'selected' : ''}>%</option>
               <option value="MT" ${rowUom === 'MT' ? 'selected' : ''}>MT</option>
