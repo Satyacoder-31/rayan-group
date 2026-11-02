@@ -694,10 +694,10 @@ class FinanceApp {
         const allocBillId = alloc.bill_id || '';
         const allocBillNo = alloc.bill_no || '';
         const allocInvNo = alloc.vendor_invoice_no || alloc.supplier_invoice_no || '';
-        if ((allocBillId && allocBillId === billId) || 
-            (allocBillNo && allocBillNo === billNo) || 
-            (bill.vendor_invoice_no && allocInvNo && allocInvNo === bill.vendor_invoice_no) ||
-            (bill.vendor_invoice_no && allocBillNo && allocBillNo === bill.vendor_invoice_no)) {
+        if ((allocBillId && allocBillId === billId) ||
+          (allocBillNo && allocBillNo === billNo) ||
+          (bill.vendor_invoice_no && allocInvNo && allocInvNo === bill.vendor_invoice_no) ||
+          (bill.vendor_invoice_no && allocBillNo && allocBillNo === bill.vendor_invoice_no)) {
           paid += Number(alloc.amount_allocated) || 0;
         }
       });
@@ -813,6 +813,9 @@ class FinanceApp {
       if (CUST_ALIAS_MAP[cn.customer_id]) {
         cn.customer_id = CUST_ALIAS_MAP[cn.customer_id];
       }
+      if (cn.credit_note_no && cn.credit_note_no.startsWith('CN-RG-')) {
+        cn.credit_note_no = cn.credit_note_no.replace('CN-RG-', 'CN-REC-');
+      }
     });
     (this.db.projects || []).forEach(prj => {
       if (CUST_ALIAS_MAP[prj.customer_id]) {
@@ -900,6 +903,9 @@ class FinanceApp {
 
     // 2. Auto-align credit notes with current invoices
     (this.db.credit_notes || []).forEach(cn => {
+      if (cn.credit_note_no && cn.credit_note_no.startsWith('CN-RG-')) {
+        cn.credit_note_no = cn.credit_note_no.replace('CN-RG-', 'CN-REC-');
+      }
       const matchedInv = (this.db.invoices || []).find(i => this.matchInvoiceRef(i, cn.invoice_no || cn.ref_invoice_no, cn.invoice_id));
       if (matchedInv) {
         cn.invoice_no = matchedInv.invoice_no;
@@ -969,7 +975,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v49';
+    const CURRENT_DB_VERSION = 'v2026_clean_v50';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2617,6 +2623,22 @@ class FinanceApp {
       }
     });
     const prefix = isIndia ? 'PV-ASH-2026' : 'PV-RG-2026';
+    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+  }
+
+  getNextCreditNoteNumber() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const notes = (this.db?.credit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    let maxSeq = 100;
+    notes.forEach(n => {
+      const nNo = n.credit_note_no || '';
+      const m = nNo.match(/CN-.*-(\d+)/i) || nNo.match(/(\d{3,})$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    });
+    const prefix = isIndia ? 'CN-ASH-2026' : 'CN-REC-2026';
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
@@ -5431,10 +5453,10 @@ class FinanceApp {
           <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
           <td>
             ${(r.allocations || []).map(a => {
-              const matchedInv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
-              const dispInvNo = matchedInv ? matchedInv.invoice_no : a.invoice_no;
-              return `<span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${dispInvNo}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
-            }).join(' ')}
+        const matchedInv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
+        const dispInvNo = matchedInv ? matchedInv.invoice_no : a.invoice_no;
+        return `<span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${dispInvNo}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
+      }).join(' ')}
           </td>
           <td style="white-space:nowrap;">
             <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id || r.receipt_no}')" title="Print Official Bilingual Voucher">Print / View</button>
@@ -10399,11 +10421,11 @@ class FinanceApp {
                   </thead>
                   <tbody>
                     ${lineItems.map((item, idx) => {
-                      const itemRate = Number(item.unit_price || item.rate || 0);
-                      const itemQty = Number(item.qty || 1);
-                      const itemTaxPct = Number(item.vat_rate || item.tax_rate || item.gst_rate || 5);
-                      const itemTotal = Number(item.total_amount || (itemRate * itemQty * (1 + itemTaxPct / 100)));
-                      return `
+      const itemRate = Number(item.unit_price || item.rate || 0);
+      const itemQty = Number(item.qty || 1);
+      const itemTaxPct = Number(item.vat_rate || item.tax_rate || item.gst_rate || 5);
+      const itemTotal = Number(item.total_amount || (itemRate * itemQty * (1 + itemTaxPct / 100)));
+      return `
                         <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                           <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700;">${idx + 1}</td>
                           <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:600; color:#111827;">
@@ -10424,7 +10446,7 @@ class FinanceApp {
                           </td>
                         </tr>
                       `;
-                    }).join('')}
+    }).join('')}
                   </tbody>
                   <tfoot>
                     <tr style="background:#f8fafc; border-top:1.5px solid #111827;">
@@ -12392,7 +12414,7 @@ class FinanceApp {
       this.normalizeAllBalances();
       try {
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (err) {}
+      } catch (err) { }
 
       // 4. Close modal and re-render UI immediately
       this.closeModal('modal-payment');
@@ -12406,7 +12428,7 @@ class FinanceApp {
           this.normalizeAllBalances();
           try {
             localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-          } catch (err) {}
+          } catch (err) { }
           this.renderActiveTab();
         }
         this.showNotification(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`, 'success');
@@ -15016,6 +15038,7 @@ class FinanceApp {
       const payload = {
         credit_note: {
           id: 'cn-' + Date.now(),
+          credit_note_no: this.getNextCreditNoteNumber(),
           company_id: inv.company_id || this.activeCompanyId,
           currency: isIndia ? 'INR' : 'AED',
           currency_symbol: currSym,
@@ -21647,7 +21670,7 @@ class FinanceApp {
 
     if (!cn) {
       cn = (this.db?.credit_notes || [])[0] || {
-        credit_note_no: 'CN-RG-2026-350',
+        credit_note_no: 'CN-REC-2026-350',
         invoice_no: 'REC-RG-INV-44024',
         customer_name: 'M/S ZORAWAR INTERIOR DECORATION LLC',
         customer_trn: '100511370700003',
@@ -21783,7 +21806,7 @@ class FinanceApp {
                   إشعار دائن ضريبي
                 </div>
                 <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:12px;">
-                  # ${cn.credit_note_no || 'CN-RG-2026-350'}
+                  # ${cn.credit_note_no || 'CN-REC-2026-350'}
                 </div>
 
                 <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">

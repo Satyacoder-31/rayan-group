@@ -5404,7 +5404,7 @@
   "credit_notes": [
     {
       "id": "cn-1793355330000",
-      "credit_note_no": "CN-RG-2026-578",
+      "credit_note_no": "CN-REC-2026-578",
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
@@ -5423,7 +5423,7 @@
     },
     {
       "id": "cn-1793352063000",
-      "credit_note_no": "CN-RG-2026-260",
+      "credit_note_no": "CN-REC-2026-260",
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
@@ -5442,7 +5442,7 @@
     },
     {
       "id": "cn-1793351995000",
-      "credit_note_no": "CN-RG-2026-514",
+      "credit_note_no": "CN-REC-2026-514",
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
@@ -5461,7 +5461,7 @@
     },
     {
       "id": "cn-1793351964000",
-      "credit_note_no": "CN-RG-2026-993",
+      "credit_note_no": "CN-REC-2026-993",
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",

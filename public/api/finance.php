@@ -834,6 +834,18 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_vendor_payments WHERE vendor_name LIKE '%PINK CITY%' OR id IN ('pay-1793369661067', 'pay-1793290968855') OR voucher_no IN ('PV-RG-2026-101', 'PV-RG-2026-102')");
             $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 316571.79, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 316571.79, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793641982443' OR vendor_invoice_no = 'HLN/PO/0526/2025' OR bill_no = 'BILL-RG-2026-1001'");
 
+            // v2026_clean_v50: Update all credit notes prefix from CN-RG- to CN-REC-
+            $pdo->exec("UPDATE finance_credit_notes SET credit_note_no = REPLACE(credit_note_no, 'CN-RG-', 'CN-REC-'), data_json = REPLACE(data_json, 'CN-RG-', 'CN-REC-') WHERE credit_note_no LIKE 'CN-RG-%' OR data_json LIKE '%CN-RG-%'");
+
+            if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+                foreach ($data['credit_notes'] as &$cnItem) {
+                    if (!empty($cnItem['credit_note_no']) && strpos($cnItem['credit_note_no'], 'CN-RG-') === 0) {
+                        $cnItem['credit_note_no'] = str_replace('CN-RG-', 'CN-REC-', $cnItem['credit_note_no']);
+                    }
+                }
+                unset($cnItem);
+            }
+
             if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
                 $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) {
                     $vName = $b['vendor_name'] ?? '';
@@ -977,6 +989,16 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             return !in_array($id, $dummyDocIds);
         }));
         if (count($data['documents']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+        foreach ($data['credit_notes'] as &$cn) {
+            if (!empty($cn['credit_note_no']) && strpos($cn['credit_note_no'], 'CN-RG-') === 0) {
+                $cn['credit_note_no'] = str_replace('CN-RG-', 'CN-REC-', $cn['credit_note_no']);
+                $changed = true;
+            }
+        }
+        unset($cn);
     }
 
     if (!empty($data['vendors']) && is_array($data['vendors'])) {
@@ -3579,7 +3601,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($cn['company_id'])) $cn['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
                 if (empty($cn['currency'])) $cn['currency'] = ($cn['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
                 if (empty($cn['credit_note_no'])) {
-                    $prefix = ($cn['company_id'] === 'ashaz-eng-in') ? 'CN-ASH' : 'CN-RG-2026';
+                    $prefix = ($cn['company_id'] === 'ashaz-eng-in') ? 'CN-ASH' : 'CN-REC-2026';
                     $cn['credit_note_no'] = $prefix . '-' . rand(100, 999);
                 }
                 if (empty($cn['status'])) $cn['status'] = 'applied';
