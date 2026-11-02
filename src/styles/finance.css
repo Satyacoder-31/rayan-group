@@ -1698,6 +1698,25 @@
   border-color: var(--fin-primary);
 }
 
+.fin-select-pill {
+  background: var(--fin-bg-input, #0b1526);
+  border: 1px solid var(--fin-border, #1e293b);
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  color: var(--fin-text-heading, #e2e8f0);
+  font-size: 0.8rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fin-select-pill:focus,
+.fin-select-pill:hover {
+  border-color: var(--fin-primary, #0099e6);
+  box-shadow: 0 0 0 2px rgba(0, 153, 230, 0.15);
+}
+
 /* Responsive Table with horizontal scroll support */
 .fin-table-responsive {
   width: 100%;

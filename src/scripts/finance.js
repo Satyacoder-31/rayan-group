@@ -16,6 +16,17 @@ class FinanceApp {
     this.activeTab = 'dashboard';
     this.currencyRates = { INR: 1, AED: 1, USD: 1 };
     this.currencySymbols = { INR: '₹', AED: 'AED ', USD: '$' };
+    this.invSort = 'serial-desc';
+    this.rcpSort = 'serial-desc';
+    this.billSort = 'serial-desc';
+    this.paySort = 'serial-desc';
+    this.custSort = 'name-asc';
+    this.vendSort = 'name-asc';
+    this.cnSort = 'serial-desc';
+    this.dnSort = 'serial-desc';
+    this.poSort = 'serial-desc';
+    this.expSort = 'serial-desc';
+    this.prjSort = 'name-asc';
   }
 
   async init() {
@@ -975,7 +986,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v50';
+    const CURRENT_DB_VERSION = 'v2026_clean_v51';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4255,44 +4266,115 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // 2. SALES & INVOICES MODULE
   // --------------------------------------------------------------------------
-  extractSerialNum(invNo) {
-    if (!invNo) return 0;
-    const m = String(invNo).match(/(\d{4,5})/);
+  extractSerialNum(str) {
+    if (!str) return 0;
+    const mEnd = String(str).match(/[-/](\d+)$/);
+    if (mEnd) return parseInt(mEnd[1], 10);
+    const m = String(str).match(/(\d{4,6})/);
     if (m) return parseInt(m[1], 10);
-    const m2 = String(invNo).match(/(\d+)/);
+    const m2 = String(str).match(/(\d+)/);
     return m2 ? parseInt(m2[1], 10) : 0;
   }
 
-  sortInvoices(list, sortMode = 'serial-desc') {
+  sortRecords(list, sortMode = 'serial-desc', fields = {}) {
+    const numField = fields.num || 'id';
+    const dateField = fields.date || 'date';
+    const nameField = fields.name || 'name';
+    const amountField = fields.amount || 'amount';
+
     return [...list].sort((a, b) => {
       if (sortMode === 'serial-desc') {
-        const numA = this.extractSerialNum(a.invoice_no);
-        const numB = this.extractSerialNum(b.invoice_no);
+        const valA = a[numField] || a.id || '';
+        const valB = b[numField] || b.id || '';
+        const numA = this.extractSerialNum(valA);
+        const numB = this.extractSerialNum(valB);
         if (numB !== numA) return numB - numA;
-        return (b.invoice_no || '').localeCompare(a.invoice_no || '');
+        return String(valB).localeCompare(String(valA), undefined, { numeric: true });
       }
       if (sortMode === 'serial-asc') {
-        const numA = this.extractSerialNum(a.invoice_no);
-        const numB = this.extractSerialNum(b.invoice_no);
+        const valA = a[numField] || a.id || '';
+        const valB = b[numField] || b.id || '';
+        const numA = this.extractSerialNum(valA);
+        const numB = this.extractSerialNum(valB);
         if (numA !== numB) return numA - numB;
-        return (a.invoice_no || '').localeCompare(b.invoice_no || '');
+        return String(valA).localeCompare(String(valB), undefined, { numeric: true });
       }
       if (sortMode === 'date-desc') {
-        const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
-        const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
+        const dateA = new Date(a[dateField] || a.created_at || 0).getTime();
+        const dateB = new Date(b[dateField] || b.created_at || 0).getTime();
         if (dateB !== dateA) return dateB - dateA;
-        return this.extractSerialNum(b.invoice_no) - this.extractSerialNum(a.invoice_no);
+        const numA = this.extractSerialNum(a[numField] || a.id || '');
+        const numB = this.extractSerialNum(b[numField] || b.id || '');
+        return numB - numA;
       }
       if (sortMode === 'date-asc') {
-        const dateA = new Date(a.invoice_date || a.created_at || 0).getTime();
-        const dateB = new Date(b.invoice_date || b.created_at || 0).getTime();
+        const dateA = new Date(a[dateField] || a.created_at || 0).getTime();
+        const dateB = new Date(b[dateField] || b.created_at || 0).getTime();
         if (dateA !== dateB) return dateA - dateB;
-        return this.extractSerialNum(a.invoice_no) - this.extractSerialNum(b.invoice_no);
+        const numA = this.extractSerialNum(a[numField] || a.id || '');
+        const numB = this.extractSerialNum(b[numField] || b.id || '');
+        return numA - numB;
+      }
+      if (sortMode === 'name-asc') {
+        const nameA = String(typeof fields.getName === 'function' ? fields.getName(a) : (a[nameField] || '')).toLowerCase().trim();
+        const nameB = String(typeof fields.getName === 'function' ? fields.getName(b) : (b[nameField] || '')).toLowerCase().trim();
+        return nameA.localeCompare(nameB);
+      }
+      if (sortMode === 'name-desc') {
+        const nameA = String(typeof fields.getName === 'function' ? fields.getName(a) : (a[nameField] || '')).toLowerCase().trim();
+        const nameB = String(typeof fields.getName === 'function' ? fields.getName(b) : (b[nameField] || '')).toLowerCase().trim();
+        return nameB.localeCompare(nameA);
       }
       if (sortMode === 'amount-desc') {
-        return (Number(b.grand_total) || 0) - (Number(a.grand_total) || 0);
+        const amtA = typeof fields.getAmount === 'function' ? fields.getAmount(a) : (Number(a[amountField]) || 0);
+        const amtB = typeof fields.getAmount === 'function' ? fields.getAmount(b) : (Number(b[amountField]) || 0);
+        return amtB - amtA;
+      }
+      if (sortMode === 'amount-asc') {
+        const amtA = typeof fields.getAmount === 'function' ? fields.getAmount(a) : (Number(a[amountField]) || 0);
+        const amtB = typeof fields.getAmount === 'function' ? fields.getAmount(b) : (Number(b[amountField]) || 0);
+        return amtA - amtB;
+      }
+      if (sortMode === 'due-desc') {
+        const dueA = typeof fields.getDue === 'function' ? fields.getDue(a) : (Number(a.balance_due || a.due || 0));
+        const dueB = typeof fields.getDue === 'function' ? fields.getDue(b) : (Number(b.balance_due || b.due || 0));
+        return dueB - dueA;
+      }
+      if (sortMode === 'due-asc') {
+        const dueA = typeof fields.getDue === 'function' ? fields.getDue(a) : (Number(a.balance_due || a.due || 0));
+        const dueB = typeof fields.getDue === 'function' ? fields.getDue(b) : (Number(b.balance_due || b.due || 0));
+        return dueA - dueB;
+      }
+      if (sortMode === 'invoiced-desc') {
+        const invA = typeof fields.getInvoiced === 'function' ? fields.getInvoiced(a) : (Number(a.total_invoiced || a.billed || 0));
+        const invB = typeof fields.getInvoiced === 'function' ? fields.getInvoiced(b) : (Number(b.total_invoiced || b.billed || 0));
+        return invB - invA;
+      }
+      if (sortMode === 'invoiced-asc') {
+        const invA = typeof fields.getInvoiced === 'function' ? fields.getInvoiced(a) : (Number(a.total_invoiced || a.billed || 0));
+        const invB = typeof fields.getInvoiced === 'function' ? fields.getInvoiced(b) : (Number(b.total_invoiced || b.billed || 0));
+        return invA - invB;
+      }
+      if (sortMode === 'payables-desc') {
+        const payA = typeof fields.getPayables === 'function' ? fields.getPayables(a) : (Number(a.outstanding_payables || a.balance_due || 0));
+        const payB = typeof fields.getPayables === 'function' ? fields.getPayables(b) : (Number(b.outstanding_payables || b.balance_due || 0));
+        return payB - payA;
+      }
+      if (sortMode === 'payables-asc') {
+        const payA = typeof fields.getPayables === 'function' ? fields.getPayables(a) : (Number(a.outstanding_payables || a.balance_due || 0));
+        const payB = typeof fields.getPayables === 'function' ? fields.getPayables(b) : (Number(b.outstanding_payables || b.balance_due || 0));
+        return payA - payB;
       }
       return 0;
+    });
+  }
+
+  sortInvoices(list, sortMode = 'serial-desc') {
+    return this.sortRecords(list, sortMode, {
+      num: 'invoice_no',
+      date: 'invoice_date',
+      name: 'customer_name',
+      amount: 'grand_total'
     });
   }
 
@@ -4353,7 +4435,11 @@ class FinanceApp {
             <option value="serial-asc" ${this.invSort === 'serial-asc' ? 'selected' : ''}>🔢 Serial # (Low to High)</option>
             <option value="date-desc" ${this.invSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
             <option value="date-asc" ${this.invSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+            <option value="name-asc" ${this.invSort === 'name-asc' ? 'selected' : ''}>🔤 Customer Name (A to Z)</option>
+            <option value="name-desc" ${this.invSort === 'name-desc' ? 'selected' : ''}>🔤 Customer Name (Z to A)</option>
             <option value="amount-desc" ${this.invSort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
+            <option value="amount-asc" ${this.invSort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
+            <option value="due-desc" ${this.invSort === 'due-desc' ? 'selected' : ''}>⚠️ Balance Due (Highest First)</option>
           </select>
         </div>
 
@@ -4362,17 +4448,25 @@ class FinanceApp {
           <table class="fin-data-table" id="invoices-table">
             <thead>
               <tr>
-                <th id="th-inv-serial" style="white-space:nowrap !important; min-width:180px; cursor:pointer; user-select:none;" title="Click to toggle serial order">
-                  Invoice # <span id="inv-sort-icon" style="color:#38bdf8; font-size:0.75rem;">${this.invSort === 'serial-asc' ? '▲ (Asc)' : '▼ (Desc)'}</span>
+                <th id="th-inv-serial" style="white-space:nowrap !important; min-width:180px; cursor:pointer; user-select:none;" title="Click to sort by Serial #">
+                  Invoice # <span id="inv-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.invSort === 'serial-asc' ? '▲' : (this.invSort === 'serial-desc' ? '▼' : '↕')}</span>
                 </th>
-                <th style="white-space:nowrap;">Date</th>
-                <th>Customer Name</th>
+                <th id="th-inv-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                  Date <span id="inv-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.invSort === 'date-asc' ? '▲' : (this.invSort === 'date-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-inv-name" style="cursor:pointer; user-select:none; min-width:200px;" title="Click to sort by Customer Name">
+                  Customer Name <span id="inv-sort-icon-name" style="color:#38bdf8; font-size:0.75rem;">${this.invSort === 'name-asc' ? '▲' : (this.invSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Place of Supply</th>
                 <th style="white-space:nowrap;">Taxable Value</th>
                 <th style="white-space:nowrap;">Tax (${this.activeCompanyId === 'ashaz-eng-in' ? 'CGST/SGST/IGST' : 'VAT 5%'})</th>
-                <th style="white-space:nowrap;">Grand Total</th>
+                <th id="th-inv-amount" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Grand Total">
+                  Grand Total <span id="inv-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.invSort === 'amount-asc' ? '▲' : (this.invSort === 'amount-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap;">Paid</th>
-                <th style="white-space:nowrap;">Balance Due</th>
+                <th id="th-inv-due" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Balance Due">
+                  Balance Due <span id="inv-sort-icon-due" style="color:#38bdf8; font-size:0.75rem;">${this.invSort === 'due-desc' ? '▼' : (this.invSort === 'due-asc' ? '▲' : '↕')}</span>
+                </th>
                 <th>Status</th>
                 <th class="fin-col-actions-sticky" style="text-align:center;">Actions</th>
               </tr>
@@ -4390,6 +4484,10 @@ class FinanceApp {
     const statusSelect = document.getElementById('inv-filter-status');
     const sortSelect = document.getElementById('inv-filter-sort');
     const thInvSerial = document.getElementById('th-inv-serial');
+    const thInvDate = document.getElementById('th-inv-date');
+    const thInvName = document.getElementById('th-inv-name');
+    const thInvAmount = document.getElementById('th-inv-amount');
+    const thInvDue = document.getElementById('th-inv-due');
 
     const updateFilter = () => {
       const q = searchInput.value.toLowerCase().trim();
@@ -4403,18 +4501,55 @@ class FinanceApp {
       });
       const sorted = this.sortInvoices(filtered, sMode);
       document.getElementById('invoices-tbody').innerHTML = this.renderInvoiceRows(sorted);
-      const icon = document.getElementById('inv-sort-icon');
-      if (icon) {
-        icon.textContent = sMode === 'serial-asc' ? '▲ (Asc)' : (sMode === 'serial-desc' ? '▼ (Desc)' : '↕');
-      }
+
+      // Update sort header icons
+      const iconSerial = document.getElementById('inv-sort-icon-serial');
+      const iconDate = document.getElementById('inv-sort-icon-date');
+      const iconName = document.getElementById('inv-sort-icon-name');
+      const iconAmount = document.getElementById('inv-sort-icon-amount');
+      const iconDue = document.getElementById('inv-sort-icon-due');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconName) iconName.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
+      if (iconDue) iconDue.textContent = sMode === 'due-asc' ? '▲' : (sMode === 'due-desc' ? '▼' : '↕');
     };
 
     if (searchInput) searchInput.oninput = updateFilter;
     if (statusSelect) statusSelect.onchange = updateFilter;
     if (sortSelect) sortSelect.onchange = updateFilter;
+
     if (thInvSerial) {
       thInvSerial.onclick = () => {
         this.invSort = (this.invSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (sortSelect) sortSelect.value = this.invSort;
+        updateFilter();
+      };
+    }
+    if (thInvDate) {
+      thInvDate.onclick = () => {
+        this.invSort = (this.invSort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (sortSelect) sortSelect.value = this.invSort;
+        updateFilter();
+      };
+    }
+    if (thInvName) {
+      thInvName.onclick = () => {
+        this.invSort = (this.invSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (sortSelect) sortSelect.value = this.invSort;
+        updateFilter();
+      };
+    }
+    if (thInvAmount) {
+      thInvAmount.onclick = () => {
+        this.invSort = (this.invSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (sortSelect) sortSelect.value = this.invSort;
+        updateFilter();
+      };
+    }
+    if (thInvDue) {
+      thInvDue.onclick = () => {
+        this.invSort = (this.invSort === 'due-desc') ? 'due-asc' : 'due-desc';
         if (sortSelect) sortSelect.value = this.invSort;
         updateFilter();
       };
@@ -4477,7 +4612,14 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   renderBillsTab(root) {
     this.normalizeAllBalances();
-    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    const rawBills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    this.billSort = this.billSort || 'serial-desc';
+    const sortedInitialBills = this.sortRecords(rawBills, this.billSort, {
+      num: 'bill_no',
+      date: 'bill_date',
+      name: 'vendor_name',
+      amount: 'grand_total'
+    });
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -4506,12 +4648,23 @@ class FinanceApp {
             <button type="button" id="bill-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
           </div>
           <select id="bill-filter-status" class="fin-select-pill">
-            <option value="all">All Bills (${bills.length})</option>
+            <option value="all">All Bills (${rawBills.length})</option>
             <option value="unpaid">Unpaid / Dues</option>
             <option value="paid">Fully Paid</option>
           </select>
+          <select id="bill-filter-sort" class="fin-select-pill" title="Order Bills">
+            <option value="serial-desc" ${this.billSort === 'serial-desc' ? 'selected' : ''}>🔢 Bill # (High to Low)</option>
+            <option value="serial-asc" ${this.billSort === 'serial-asc' ? 'selected' : ''}>🔢 Bill # (Low to High)</option>
+            <option value="date-desc" ${this.billSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+            <option value="date-asc" ${this.billSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+            <option value="name-asc" ${this.billSort === 'name-asc' ? 'selected' : ''}>🔤 Vendor Name (A to Z)</option>
+            <option value="name-desc" ${this.billSort === 'name-desc' ? 'selected' : ''}>🔤 Vendor Name (Z to A)</option>
+            <option value="amount-desc" ${this.billSort === 'amount-desc' ? 'selected' : ''}>💰 Grand Total (Highest First)</option>
+            <option value="amount-asc" ${this.billSort === 'amount-asc' ? 'selected' : ''}>💰 Grand Total (Lowest First)</option>
+            <option value="due-desc" ${this.billSort === 'due-desc' ? 'selected' : ''}>⚠️ Balance Due (Highest First)</option>
+          </select>
           <div id="bill-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
-            Showing <span id="bill-showing-count">${bills.length}</span> of ${bills.length} bills
+            Showing <span id="bill-showing-count">${rawBills.length}</span> of ${rawBills.length} bills
           </div>
         </div>
 
@@ -4519,22 +4672,32 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th style="white-space:nowrap; min-width:130px;">Bill #</th>
+                <th id="th-bill-serial" style="white-space:nowrap; min-width:130px; cursor:pointer; user-select:none;" title="Click to sort by Bill #">
+                  Bill # <span id="bill-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.billSort === 'serial-asc' ? '▲' : (this.billSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap; min-width:140px;">Supplier Invoice #</th>
-                <th style="white-space:nowrap; min-width:110px;">Bill Date</th>
-                <th style="white-space:nowrap; min-width:220px;">Vendor Name</th>
+                <th id="th-bill-date" style="white-space:nowrap; min-width:110px; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                  Bill Date <span id="bill-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.billSort === 'date-asc' ? '▲' : (this.billSort === 'date-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-bill-vendor" style="white-space:nowrap; min-width:220px; cursor:pointer; user-select:none;" title="Click to sort by Vendor">
+                  Vendor Name <span id="bill-sort-icon-vendor" style="color:#38bdf8; font-size:0.75rem;">${this.billSort === 'name-asc' ? '▲' : (this.billSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap; min-width:180px;">Linked Project</th>
                 <th style="white-space:nowrap;">Taxable Subtotal</th>
                 <th style="white-space:nowrap;">Tax</th>
-                <th style="white-space:nowrap;">Grand Total</th>
-                <th style="white-space:nowrap;">Balance Due</th>
+                <th id="th-bill-total" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Total">
+                  Grand Total <span id="bill-sort-icon-total" style="color:#38bdf8; font-size:0.75rem;">${this.billSort === 'amount-asc' ? '▲' : (this.billSort === 'amount-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-bill-due" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Due">
+                  Balance Due <span id="bill-sort-icon-due" style="color:#38bdf8; font-size:0.75rem;">${this.billSort === 'due-desc' ? '▼' : (this.billSort === 'due-asc' ? '▲' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap;">Approval</th>
                 <th style="white-space:nowrap;">Status</th>
                 <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
             <tbody id="bills-tbody">
-              ${this.renderBillRows(bills)}
+              ${this.renderBillRows(sortedInitialBills)}
             </tbody>
           </table>
         </div>
@@ -4544,15 +4707,23 @@ class FinanceApp {
     const billSearch = document.getElementById('bill-filter-search');
     const billClear = document.getElementById('bill-search-clear');
     const billStatus = document.getElementById('bill-filter-status');
+    const billSort = document.getElementById('bill-filter-sort');
     const billCount = document.getElementById('bill-showing-count');
     const billTbody = document.getElementById('bills-tbody');
+    const thBillSerial = document.getElementById('th-bill-serial');
+    const thBillDate = document.getElementById('th-bill-date');
+    const thBillVendor = document.getElementById('th-bill-vendor');
+    const thBillTotal = document.getElementById('th-bill-total');
+    const thBillDue = document.getElementById('th-bill-due');
 
     const updateBillFilter = () => {
       const q = (billSearch?.value || '').toLowerCase().trim();
       const st = billStatus ? billStatus.value : 'all';
+      const sMode = billSort ? billSort.value : (this.billSort || 'serial-desc');
+      this.billSort = sMode;
       if (billClear) billClear.style.display = q ? 'block' : 'none';
 
-      const filtered = bills.filter(b => {
+      const filtered = rawBills.filter(b => {
         if (st === 'unpaid' && Number(b.balance_due || 0) <= 0) return false;
         if (st === 'paid' && Number(b.balance_due || 0) > 0) return false;
         if (!q) return true;
@@ -4569,12 +4740,68 @@ class FinanceApp {
         return haystack.includes(q);
       });
 
-      if (billTbody) billTbody.innerHTML = this.renderBillRows(filtered, q);
-      if (billCount) billCount.textContent = filtered.length;
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'bill_no',
+        date: 'bill_date',
+        name: 'vendor_name',
+        amount: 'grand_total'
+      });
+
+      if (billTbody) billTbody.innerHTML = this.renderBillRows(sorted, q);
+      if (billCount) billCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('bill-sort-icon-serial');
+      const iconDate = document.getElementById('bill-sort-icon-date');
+      const iconVendor = document.getElementById('bill-sort-icon-vendor');
+      const iconTotal = document.getElementById('bill-sort-icon-total');
+      const iconDue = document.getElementById('bill-sort-icon-due');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconVendor) iconVendor.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconTotal) iconTotal.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
+      if (iconDue) iconDue.textContent = sMode === 'due-asc' ? '▲' : (sMode === 'due-desc' ? '▼' : '↕');
     };
 
     if (billSearch) billSearch.oninput = updateBillFilter;
     if (billStatus) billStatus.onchange = updateBillFilter;
+    if (billSort) billSort.onchange = updateBillFilter;
+
+    if (thBillSerial) {
+      thBillSerial.onclick = () => {
+        this.billSort = (this.billSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (billSort) billSort.value = this.billSort;
+        updateBillFilter();
+      };
+    }
+    if (thBillDate) {
+      thBillDate.onclick = () => {
+        this.billSort = (this.billSort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (billSort) billSort.value = this.billSort;
+        updateBillFilter();
+      };
+    }
+    if (thBillVendor) {
+      thBillVendor.onclick = () => {
+        this.billSort = (this.billSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (billSort) billSort.value = this.billSort;
+        updateBillFilter();
+      };
+    }
+    if (thBillTotal) {
+      thBillTotal.onclick = () => {
+        this.billSort = (this.billSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (billSort) billSort.value = this.billSort;
+        updateBillFilter();
+      };
+    }
+    if (thBillDue) {
+      thBillDue.onclick = () => {
+        this.billSort = (this.billSort === 'due-desc') ? 'due-asc' : 'due-desc';
+        if (billSort) billSort.value = this.billSort;
+        updateBillFilter();
+      };
+    }
     if (billClear) {
       billClear.onclick = () => {
         billSearch.value = '';
@@ -4637,6 +4864,26 @@ class FinanceApp {
       customers.push(c);
     }
 
+    const getCustomerDues = (c) => {
+      const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
+      const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+      const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
+      return custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
+    };
+
+    const getCustomerInvoiced = (c) => {
+      const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
+      return custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+    };
+
+    this.custSort = this.custSort || 'name-asc';
+    const sortedInitialCustomers = this.sortRecords(customers, this.custSort, {
+      num: 'code',
+      name: 'name',
+      getDue: getCustomerDues,
+      getInvoiced: getCustomerInvoiced
+    });
+
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -4669,6 +4916,15 @@ class FinanceApp {
             <option value="dues">With Outstanding Dues</option>
             <option value="settled">Fully Settled (Zero Balance)</option>
           </select>
+          <select id="cust-filter-sort" class="fin-select-pill" title="Order Customers">
+            <option value="name-asc" ${this.custSort === 'name-asc' ? 'selected' : ''}>🔤 Name (A to Z)</option>
+            <option value="name-desc" ${this.custSort === 'name-desc' ? 'selected' : ''}>🔤 Name (Z to A)</option>
+            <option value="serial-asc" ${this.custSort === 'serial-asc' ? 'selected' : ''}>🔢 Customer Code (Ascending)</option>
+            <option value="serial-desc" ${this.custSort === 'serial-desc' ? 'selected' : ''}>🔢 Customer Code (Descending)</option>
+            <option value="due-desc" ${this.custSort === 'due-desc' ? 'selected' : ''}>⚠️ Outstanding Dues (Highest First)</option>
+            <option value="due-asc" ${this.custSort === 'due-asc' ? 'selected' : ''}>⚠️ Outstanding Dues (Lowest First)</option>
+            <option value="invoiced-desc" ${this.custSort === 'invoiced-desc' ? 'selected' : ''}>💰 Total Invoiced (Highest First)</option>
+          </select>
           <div id="cust-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
             Showing <span id="cust-showing-count">${customers.length}</span> of ${customers.length} clients
           </div>
@@ -4678,20 +4934,28 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th>Customer Code</th>
-                <th>Company / Client Name</th>
+                <th id="th-cust-code" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Customer Code">
+                  Customer Code <span id="cust-sort-icon-code" style="color:#38bdf8; font-size:0.75rem;">${this.custSort === 'serial-asc' ? '▲' : (this.custSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-cust-name" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Name">
+                  Company / Client Name <span id="cust-sort-icon-name" style="color:#38bdf8; font-size:0.75rem;">${this.custSort === 'name-asc' ? '▲' : (this.custSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Contact Person</th>
                 <th>Email &amp; Phone</th>
                 <th>Tax ID (GSTIN / TRN)</th>
                 <th>Place of Supply</th>
-                <th>Total Invoiced</th>
-                <th>Outstanding Dues</th>
+                <th id="th-cust-invoiced" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Total Invoiced">
+                  Total Invoiced <span id="cust-sort-icon-invoiced" style="color:#38bdf8; font-size:0.75rem;">${this.custSort === 'invoiced-desc' ? '▼' : (this.custSort === 'invoiced-asc' ? '▲' : '↕')}</span>
+                </th>
+                <th id="th-cust-dues" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Outstanding Dues">
+                  Outstanding Dues <span id="cust-sort-icon-dues" style="color:#38bdf8; font-size:0.75rem;">${this.custSort === 'due-desc' ? '▼' : (this.custSort === 'due-asc' ? '▲' : '↕')}</span>
+                </th>
                 <th>Credit Limit</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="customers-tbody">
-              ${this.renderCustomerRows(customers, invoices)}
+              ${this.renderCustomerRows(sortedInitialCustomers, invoices)}
             </tbody>
           </table>
         </div>
@@ -4701,19 +4965,23 @@ class FinanceApp {
     const custSearch = document.getElementById('cust-filter-search');
     const custClear = document.getElementById('cust-search-clear');
     const custStatus = document.getElementById('cust-filter-status');
+    const custSort = document.getElementById('cust-filter-sort');
     const custCount = document.getElementById('cust-showing-count');
     const custTbody = document.getElementById('customers-tbody');
+    const thCustCode = document.getElementById('th-cust-code');
+    const thCustName = document.getElementById('th-cust-name');
+    const thCustInvoiced = document.getElementById('th-cust-invoiced');
+    const thCustDues = document.getElementById('th-cust-dues');
 
     const updateCustFilter = () => {
       const q = (custSearch?.value || '').toLowerCase().trim();
       const st = custStatus ? custStatus.value : 'all';
+      const sMode = custSort ? custSort.value : (this.custSort || 'name-asc');
+      this.custSort = sMode;
       if (custClear) custClear.style.display = q ? 'block' : 'none';
 
       const filtered = customers.filter(c => {
-        const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
-        const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
-        const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
-        const outstanding = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
+        const outstanding = getCustomerDues(c);
 
         if (st === 'dues' && outstanding <= 0) return false;
         if (st === 'settled' && outstanding > 0) return false;
@@ -4736,12 +5004,60 @@ class FinanceApp {
         return haystack.includes(q);
       });
 
-      if (custTbody) custTbody.innerHTML = this.renderCustomerRows(filtered, invoices, q);
-      if (custCount) custCount.textContent = filtered.length;
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'code',
+        name: 'name',
+        getDue: getCustomerDues,
+        getInvoiced: getCustomerInvoiced
+      });
+
+      if (custTbody) custTbody.innerHTML = this.renderCustomerRows(sorted, invoices, q);
+      if (custCount) custCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconCode = document.getElementById('cust-sort-icon-code');
+      const iconName = document.getElementById('cust-sort-icon-name');
+      const iconInvoiced = document.getElementById('cust-sort-icon-invoiced');
+      const iconDues = document.getElementById('cust-sort-icon-dues');
+      if (iconCode) iconCode.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconName) iconName.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconInvoiced) iconInvoiced.textContent = sMode === 'invoiced-asc' ? '▲' : (sMode === 'invoiced-desc' ? '▼' : '↕');
+      if (iconDues) iconDues.textContent = sMode === 'due-asc' ? '▲' : (sMode === 'due-desc' ? '▼' : '↕');
     };
 
     if (custSearch) custSearch.oninput = updateCustFilter;
     if (custStatus) custStatus.onchange = updateCustFilter;
+    if (custSort) custSort.onchange = updateCustFilter;
+
+    if (thCustCode) {
+      thCustCode.onclick = () => {
+        this.custSort = (this.custSort === 'serial-asc') ? 'serial-desc' : 'serial-asc';
+        if (custSort) custSort.value = this.custSort;
+        updateCustFilter();
+      };
+    }
+    if (thCustName) {
+      thCustName.onclick = () => {
+        this.custSort = (this.custSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (custSort) custSort.value = this.custSort;
+        updateCustFilter();
+      };
+    }
+    if (thCustInvoiced) {
+      thCustInvoiced.onclick = () => {
+        this.custSort = (this.custSort === 'invoiced-desc') ? 'invoiced-asc' : 'invoiced-desc';
+        if (custSort) custSort.value = this.custSort;
+        updateCustFilter();
+      };
+    }
+    if (thCustDues) {
+      thCustDues.onclick = () => {
+        this.custSort = (this.custSort === 'due-desc') ? 'due-asc' : 'due-desc';
+        if (custSort) custSort.value = this.custSort;
+        updateCustFilter();
+      };
+    }
+
     if (custClear) {
       custClear.onclick = () => {
         custSearch.value = '';
@@ -4811,8 +5127,20 @@ class FinanceApp {
   // 5. VENDORS MODULE
   // --------------------------------------------------------------------------
   renderVendorsTab(root) {
-    const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+    const rawVendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
     const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+
+    const getVendorPayables = (v) => {
+      const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === (v.name || '').toLowerCase())) && b.status !== 'void');
+      return vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
+    };
+
+    this.vendSort = this.vendSort || 'name-asc';
+    const sortedInitialVendors = this.sortRecords(rawVendors, this.vendSort, {
+      num: 'code',
+      name: 'name',
+      getPayables: getVendorPayables
+    });
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -4837,8 +5165,16 @@ class FinanceApp {
             <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
             <button type="button" id="vend-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
           </div>
+          <select id="vend-filter-sort" class="fin-select-pill" title="Order Vendors">
+            <option value="name-asc" ${this.vendSort === 'name-asc' ? 'selected' : ''}>🔤 Vendor Name (A to Z)</option>
+            <option value="name-desc" ${this.vendSort === 'name-desc' ? 'selected' : ''}>🔤 Vendor Name (Z to A)</option>
+            <option value="serial-asc" ${this.vendSort === 'serial-asc' ? 'selected' : ''}>🔢 Vendor Code (Ascending)</option>
+            <option value="serial-desc" ${this.vendSort === 'serial-desc' ? 'selected' : ''}>🔢 Vendor Code (Descending)</option>
+            <option value="payables-desc" ${this.vendSort === 'payables-desc' ? 'selected' : ''}>⚠️ Outstanding Payables (Highest First)</option>
+            <option value="payables-asc" ${this.vendSort === 'payables-asc' ? 'selected' : ''}>⚠️ Outstanding Payables (Lowest First)</option>
+          </select>
           <div id="vend-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
-            Showing <span id="vend-showing-count">${vendors.length}</span> of ${vendors.length} vendors
+            Showing <span id="vend-showing-count">${rawVendors.length}</span> of ${rawVendors.length} vendors
           </div>
         </div>
 
@@ -4846,19 +5182,25 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th style="white-space:nowrap;">Vendor Code</th>
-                <th style="white-space:nowrap; min-width:220px;">Supplier / Subcontractor</th>
+                <th id="th-vend-code" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Vendor Code">
+                  Vendor Code <span id="vend-sort-icon-code" style="color:#38bdf8; font-size:0.75rem;">${this.vendSort === 'serial-asc' ? '▲' : (this.vendSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-vend-name" style="white-space:nowrap; min-width:220px; cursor:pointer; user-select:none;" title="Click to sort by Name">
+                  Supplier / Subcontractor <span id="vend-sort-icon-name" style="color:#38bdf8; font-size:0.75rem;">${this.vendSort === 'name-asc' ? '▲' : (this.vendSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap;">Category</th>
                 <th style="white-space:nowrap;">Contact</th>
                 <th style="white-space:nowrap;">Tax ID (TRN / GSTIN / PAN)</th>
                 <th style="white-space:nowrap;">Bank Account (Wire)</th>
-                <th style="white-space:nowrap;">Outstanding Payables</th>
+                <th id="th-vend-payables" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Payables">
+                  Outstanding Payables <span id="vend-sort-icon-payables" style="color:#38bdf8; font-size:0.75rem;">${this.vendSort === 'payables-desc' ? '▼' : (this.vendSort === 'payables-asc' ? '▲' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap;">Payment Terms</th>
                 <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
             <tbody id="vendors-tbody">
-              ${this.renderVendorRows(vendors, bills)}
+              ${this.renderVendorRows(sortedInitialVendors, bills)}
             </tbody>
           </table>
         </div>
@@ -4867,14 +5209,20 @@ class FinanceApp {
 
     const vendSearch = document.getElementById('vend-filter-search');
     const vendClear = document.getElementById('vend-search-clear');
+    const vendSort = document.getElementById('vend-filter-sort');
     const vendCount = document.getElementById('vend-showing-count');
     const vendTbody = document.getElementById('vendors-tbody');
+    const thVendCode = document.getElementById('th-vend-code');
+    const thVendName = document.getElementById('th-vend-name');
+    const thVendPayables = document.getElementById('th-vend-payables');
 
     const updateVendFilter = () => {
       const q = (vendSearch?.value || '').toLowerCase().trim();
+      const sMode = vendSort ? vendSort.value : (this.vendSort || 'name-asc');
+      this.vendSort = sMode;
       if (vendClear) vendClear.style.display = q ? 'block' : 'none';
 
-      const filtered = vendors.filter(v => {
+      const filtered = rawVendors.filter(v => {
         if (!q) return true;
         const haystack = [
           v.code,
@@ -4892,11 +5240,49 @@ class FinanceApp {
         return haystack.includes(q);
       });
 
-      if (vendTbody) vendTbody.innerHTML = this.renderVendorRows(filtered, bills, q);
-      if (vendCount) vendCount.textContent = filtered.length;
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'code',
+        name: 'name',
+        getPayables: getVendorPayables
+      });
+
+      if (vendTbody) vendTbody.innerHTML = this.renderVendorRows(sorted, bills, q);
+      if (vendCount) vendCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconCode = document.getElementById('vend-sort-icon-code');
+      const iconName = document.getElementById('vend-sort-icon-name');
+      const iconPayables = document.getElementById('vend-sort-icon-payables');
+      if (iconCode) iconCode.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconName) iconName.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconPayables) iconPayables.textContent = sMode === 'payables-asc' ? '▲' : (sMode === 'payables-desc' ? '▼' : '↕');
     };
 
     if (vendSearch) vendSearch.oninput = updateVendFilter;
+    if (vendSort) vendSort.onchange = updateVendFilter;
+
+    if (thVendCode) {
+      thVendCode.onclick = () => {
+        this.vendSort = (this.vendSort === 'serial-asc') ? 'serial-desc' : 'serial-asc';
+        if (vendSort) vendSort.value = this.vendSort;
+        updateVendFilter();
+      };
+    }
+    if (thVendName) {
+      thVendName.onclick = () => {
+        this.vendSort = (this.vendSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (vendSort) vendSort.value = this.vendSort;
+        updateVendFilter();
+      };
+    }
+    if (thVendPayables) {
+      thVendPayables.onclick = () => {
+        this.vendSort = (this.vendSort === 'payables-desc') ? 'payables-asc' : 'payables-desc';
+        if (vendSort) vendSort.value = this.vendSort;
+        updateVendFilter();
+      };
+    }
+
     if (vendClear) {
       vendClear.onclick = () => {
         vendSearch.value = '';
@@ -5264,15 +5650,33 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   renderPaymentInTab(root) {
     const rawReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const receipts = [...rawReceipts].sort((a, b) => {
-      const dateA = new Date(a.receipt_date || 0).getTime();
-      const dateB = new Date(b.receipt_date || 0).getTime();
-      if (dateB !== dateA) return dateB - dateA;
-      return (b.id || '').localeCompare(a.id || '');
+    this.rcpSort = this.rcpSort || 'serial-desc';
+
+    const getCustomerName = (r) => {
+      let custDisp = r.customer_name || '';
+      const firstAlloc = (r.allocations || [])[0];
+      if (!custDisp || custDisp.trim() === '' || custDisp === 'Customer' || custDisp === 'Client') {
+        if (firstAlloc) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
+          if (mi?.customer_name) custDisp = mi.customer_name;
+        } else if (r.ref_invoice_no) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
+          if (mi?.customer_name) custDisp = mi.customer_name;
+        }
+      }
+      return custDisp;
+    };
+
+    const sortedInitialReceipts = this.sortRecords(rawReceipts, this.rcpSort, {
+      num: 'receipt_no',
+      date: 'receipt_date',
+      amount: 'amount_received',
+      getName: getCustomerName
     });
-    const totalReceived = receipts.reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
-    const fabReceipts = receipts.filter(r => (r.bank_name || '').toLowerCase().includes('abu dhabi') || (r.currency === 'AED')).reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
-    const latestReceiptId = receipts[0]?.id || 'rec-rv-44035';
+
+    const totalReceived = rawReceipts.reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
+    const fabReceipts = rawReceipts.filter(r => (r.bank_name || '').toLowerCase().includes('abu dhabi') || (r.currency === 'AED')).reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
+    const latestReceiptId = sortedInitialReceipts[0]?.id || 'rec-rv-44035';
 
     root.innerHTML = `
       <div class="fin-dash-row-responsive">
@@ -5305,7 +5709,7 @@ class FinanceApp {
             </div>
             <div class="fin-metric-card">
               <span class="fin-metric-label">Total Vouchers Issued</span>
-              <div class="fin-metric-value">${receipts.length} Instruments</div>
+              <div class="fin-metric-value">${rawReceipts.length} Instruments</div>
               <span class="fin-metric-sub">Official bilingual vouchers generated</span>
             </div>
             <div class="fin-metric-card">
@@ -5323,13 +5727,23 @@ class FinanceApp {
               <button type="button" id="rcp-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
             </div>
             <select id="rcp-filter-mode" class="fin-select-pill">
-              <option value="all">All Payment Modes (${receipts.length})</option>
+              <option value="all">All Payment Modes (${rawReceipts.length})</option>
               <option value="Online">Online / Wire Transfer</option>
               <option value="Cheque">Cheque</option>
               <option value="Cash">Cash</option>
             </select>
+            <select id="rcp-filter-sort" class="fin-select-pill" title="Order Receipts">
+              <option value="serial-desc" ${this.rcpSort === 'serial-desc' ? 'selected' : ''}>🔢 Voucher # (High to Low)</option>
+              <option value="serial-asc" ${this.rcpSort === 'serial-asc' ? 'selected' : ''}>🔢 Voucher # (Low to High)</option>
+              <option value="date-desc" ${this.rcpSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.rcpSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="name-asc" ${this.rcpSort === 'name-asc' ? 'selected' : ''}>🔤 Customer Name (A to Z)</option>
+              <option value="name-desc" ${this.rcpSort === 'name-desc' ? 'selected' : ''}>🔤 Customer Name (Z to A)</option>
+              <option value="amount-desc" ${this.rcpSort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
+              <option value="amount-asc" ${this.rcpSort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
+            </select>
             <div id="rcp-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
-              Showing <span id="rcp-showing-count">${receipts.length}</span> of ${receipts.length} vouchers
+              Showing <span id="rcp-showing-count">${rawReceipts.length}</span> of ${rawReceipts.length} vouchers
             </div>
           </div>
 
@@ -5337,17 +5751,25 @@ class FinanceApp {
             <table class="fin-data-table">
               <thead>
                 <tr>
-                  <th>Receipt Voucher #</th>
-                  <th>Date</th>
-                  <th style="min-width:220px; white-space:nowrap;">Customer / Client</th>
+                  <th id="th-rcp-serial" style="white-space:nowrap; min-width:140px; cursor:pointer; user-select:none;" title="Click to sort by Voucher #">
+                    Receipt Voucher # <span id="rcp-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.rcpSort === 'serial-asc' ? '▲' : (this.rcpSort === 'serial-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-rcp-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                    Date <span id="rcp-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.rcpSort === 'date-asc' ? '▲' : (this.rcpSort === 'date-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-rcp-name" style="min-width:220px; white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Customer">
+                    Customer / Client <span id="rcp-sort-icon-name" style="color:#38bdf8; font-size:0.75rem;">${this.rcpSort === 'name-asc' ? '▲' : (this.rcpSort === 'name-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Mode / Bank Wire</th>
-                  <th>Amount Received</th>
+                  <th id="th-rcp-amount" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Amount">
+                    Amount Received <span id="rcp-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.rcpSort === 'amount-asc' ? '▲' : (this.rcpSort === 'amount-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Allocated Invoices</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="receipts-tbody">
-                ${this.renderReceiptRows(receipts)}
+                ${this.renderReceiptRows(sortedInitialReceipts)}
               </tbody>
             </table>
           </div>
@@ -5358,15 +5780,22 @@ class FinanceApp {
     const rcpSearch = document.getElementById('rcp-filter-search');
     const rcpClear = document.getElementById('rcp-search-clear');
     const rcpMode = document.getElementById('rcp-filter-mode');
+    const rcpSort = document.getElementById('rcp-filter-sort');
     const rcpCount = document.getElementById('rcp-showing-count');
     const rcpTbody = document.getElementById('receipts-tbody');
+    const thRcpSerial = document.getElementById('th-rcp-serial');
+    const thRcpDate = document.getElementById('th-rcp-date');
+    const thRcpName = document.getElementById('th-rcp-name');
+    const thRcpAmount = document.getElementById('th-rcp-amount');
 
     const updateRcpFilter = () => {
       const q = (rcpSearch?.value || '').toLowerCase().trim();
       const mode = rcpMode ? rcpMode.value : 'all';
+      const sMode = rcpSort ? rcpSort.value : (this.rcpSort || 'serial-desc');
+      this.rcpSort = sMode;
       if (rcpClear) rcpClear.style.display = q ? 'block' : 'none';
 
-      const filtered = receipts.filter(r => {
+      const filtered = rawReceipts.filter(r => {
         if (mode !== 'all') {
           const rMode = (r.payment_mode || 'Online').toLowerCase();
           if (mode === 'Online' && !rMode.includes('online') && !rMode.includes('wire') && !rMode.includes('transfer') && !rMode.includes('rtgs') && !rMode.includes('neft')) return false;
@@ -5375,18 +5804,7 @@ class FinanceApp {
         }
         if (!q) return true;
 
-        let custDisp = r.customer_name || '';
-        const firstAlloc = (r.allocations || [])[0];
-        if (!custDisp || custDisp.trim() === '' || custDisp === 'Customer' || custDisp === 'Client') {
-          if (firstAlloc) {
-            const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
-            if (mi?.customer_name) custDisp = mi.customer_name;
-          } else if (r.ref_invoice_no) {
-            const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
-            if (mi?.customer_name) custDisp = mi.customer_name;
-          }
-        }
-
+        const custDisp = getCustomerName(r);
         const allocInvs = (r.allocations || []).map(a => a.invoice_no).join(' ');
         const haystack = [
           r.receipt_no,
@@ -5405,12 +5823,60 @@ class FinanceApp {
         return haystack.includes(q);
       });
 
-      if (rcpTbody) rcpTbody.innerHTML = this.renderReceiptRows(filtered, q);
-      if (rcpCount) rcpCount.textContent = filtered.length;
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'receipt_no',
+        date: 'receipt_date',
+        amount: 'amount_received',
+        getName: getCustomerName
+      });
+
+      if (rcpTbody) rcpTbody.innerHTML = this.renderReceiptRows(sorted, q);
+      if (rcpCount) rcpCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('rcp-sort-icon-serial');
+      const iconDate = document.getElementById('rcp-sort-icon-date');
+      const iconName = document.getElementById('rcp-sort-icon-name');
+      const iconAmount = document.getElementById('rcp-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconName) iconName.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
     };
 
     if (rcpSearch) rcpSearch.oninput = updateRcpFilter;
     if (rcpMode) rcpMode.onchange = updateRcpFilter;
+    if (rcpSort) rcpSort.onchange = updateRcpFilter;
+
+    if (thRcpSerial) {
+      thRcpSerial.onclick = () => {
+        this.rcpSort = (this.rcpSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (rcpSort) rcpSort.value = this.rcpSort;
+        updateRcpFilter();
+      };
+    }
+    if (thRcpDate) {
+      thRcpDate.onclick = () => {
+        this.rcpSort = (this.rcpSort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (rcpSort) rcpSort.value = this.rcpSort;
+        updateRcpFilter();
+      };
+    }
+    if (thRcpName) {
+      thRcpName.onclick = () => {
+        this.rcpSort = (this.rcpSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (rcpSort) rcpSort.value = this.rcpSort;
+        updateRcpFilter();
+      };
+    }
+    if (thRcpAmount) {
+      thRcpAmount.onclick = () => {
+        this.rcpSort = (this.rcpSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (rcpSort) rcpSort.value = this.rcpSort;
+        updateRcpFilter();
+      };
+    }
+
     if (rcpClear) {
       rcpClear.onclick = () => {
         rcpSearch.value = '';
@@ -5469,8 +5935,16 @@ class FinanceApp {
   }
 
   renderPaymentOutTab(root) {
-    const payments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id));
-    const totalPaid = payments.reduce((acc, p) => acc + (Number(p.amount_paid) || 0), 0);
+    const rawPayments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id));
+    const totalPaid = rawPayments.reduce((acc, p) => acc + (Number(p.amount_paid) || 0), 0);
+    this.paySort = this.paySort || 'serial-desc';
+
+    const sortedInitialPayments = this.sortRecords(rawPayments, this.paySort, {
+      num: 'voucher_no',
+      date: 'payment_date',
+      name: 'vendor_name',
+      amount: 'amount_paid'
+    });
 
     root.innerHTML = `
       <div class="fin-dash-row-responsive">
@@ -5495,7 +5969,7 @@ class FinanceApp {
             </div>
             <div class="fin-metric-card">
               <span class="fin-metric-label">Payment Vouchers</span>
-              <div class="fin-metric-value">${payments.length} Vouchers</div>
+              <div class="fin-metric-value">${rawPayments.length} Vouchers</div>
               <span class="fin-metric-sub">Direct wire transfers &amp; banker cheques</span>
             </div>
             <div class="fin-metric-card">
@@ -5505,63 +5979,199 @@ class FinanceApp {
             </div>
           </div>
 
+          <!-- Filter / Search Bar -->
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+            <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+              <input type="text" id="pay-filter-search" class="fin-filter-input" placeholder="🔍 Search voucher #, vendor name, bank, wire ref, or bill..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="pay-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            </div>
+            <select id="pay-filter-sort" class="fin-select-pill" title="Order Payment-Out">
+              <option value="serial-desc" ${this.paySort === 'serial-desc' ? 'selected' : ''}>🔢 Voucher # (High to Low)</option>
+              <option value="serial-asc" ${this.paySort === 'serial-asc' ? 'selected' : ''}>🔢 Voucher # (Low to High)</option>
+              <option value="date-desc" ${this.paySort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.paySort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="name-asc" ${this.paySort === 'name-asc' ? 'selected' : ''}>🔤 Vendor Name (A to Z)</option>
+              <option value="name-desc" ${this.paySort === 'name-desc' ? 'selected' : ''}>🔤 Vendor Name (Z to A)</option>
+              <option value="amount-desc" ${this.paySort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
+              <option value="amount-asc" ${this.paySort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
+            </select>
+            <div id="pay-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="pay-showing-count">${rawPayments.length}</span> of ${rawPayments.length} vouchers
+            </div>
+          </div>
+
           <div class="fin-table-responsive">
             <table class="fin-data-table">
               <thead>
                 <tr>
-                  <th>Voucher #</th>
-                  <th>Date</th>
-                  <th style="min-width:220px; white-space:nowrap;">Vendor / Contractor</th>
+                  <th id="th-pay-serial" style="white-space:nowrap; min-width:130px; cursor:pointer; user-select:none;" title="Click to sort by Voucher #">
+                    Voucher # <span id="pay-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.paySort === 'serial-asc' ? '▲' : (this.paySort === 'serial-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-pay-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                    Date <span id="pay-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.paySort === 'date-asc' ? '▲' : (this.paySort === 'date-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-pay-vendor" style="min-width:220px; white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Vendor">
+                    Vendor / Contractor <span id="pay-sort-icon-vendor" style="color:#38bdf8; font-size:0.75rem;">${this.paySort === 'name-asc' ? '▲' : (this.paySort === 'name-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Remittance Channel</th>
-                  <th>Disbursed Amount</th>
+                  <th id="th-pay-amount" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Amount">
+                    Disbursed Amount <span id="pay-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.paySort === 'amount-asc' ? '▲' : (this.paySort === 'amount-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Allocated Bills</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                ${payments.length === 0 ? `
-                  <tr>
-                    <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                      <div style="font-size:1.6rem; margin-bottom:0.4rem;">💸</div>
-                      <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No payment vouchers recorded yet</div>
-                      <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Payment-Out" to disburse a supplier payment.</div>
-                    </td>
-                  </tr>
-                ` : payments.map(p => `
-                  <tr>
-                    <td><strong>${p.voucher_no}</strong></td>
-                    <td>${this.formatDate(p.payment_date)}</td>
-                    <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${p.vendor_name}</span></td>
-                    <td>
-                      <div>${(p.payment_mode === 'Corporate RTGS' || p.payment_mode === 'RTGS') ? 'Online' : (p.payment_mode || 'Online')}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no || '—'}</span>
-                    </td>
-                    <td><strong style="color:#fb923c;">${this.formatCurrency(p.amount_paid)}</strong></td>
-                    <td>
-                      ${(p.allocations && p.allocations.length > 0) ? p.allocations.map(a => `
-                        <span class="fin-badge fin-badge-pending" style="font-size:0.65rem;">${a.bill_no}: ${this.formatCurrency(a.amount_allocated)}</span>
-                      `).join(' ') : '<span style="font-size:0.75rem; color:#94a3b8;">On-Account Advance</span>'}
-                    </td>
-                    <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print &amp; View Official Payment Voucher">Print / View</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')" title="Edit Payment Voucher">✏️ Edit</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
-                    </td>
-                  </tr>
-                `).join('')}
+              <tbody id="payments-tbody">
+                ${this.renderPaymentOutRows(sortedInitialPayments)}
               </tbody>
             </table>
           </div>
         </div>
       </div>
     `;
+
+    const paySearch = document.getElementById('pay-filter-search');
+    const payClear = document.getElementById('pay-search-clear');
+    const paySort = document.getElementById('pay-filter-sort');
+    const payCount = document.getElementById('pay-showing-count');
+    const payTbody = document.getElementById('payments-tbody');
+    const thPaySerial = document.getElementById('th-pay-serial');
+    const thPayDate = document.getElementById('th-pay-date');
+    const thPayVendor = document.getElementById('th-pay-vendor');
+    const thPayAmount = document.getElementById('th-pay-amount');
+
+    const updatePayFilter = () => {
+      const q = (paySearch?.value || '').toLowerCase().trim();
+      const sMode = paySort ? paySort.value : (this.paySort || 'serial-desc');
+      this.paySort = sMode;
+      if (payClear) payClear.style.display = q ? 'block' : 'none';
+
+      const filtered = rawPayments.filter(p => {
+        if (!q) return true;
+        const allocBills = (p.allocations || []).map(a => a.bill_no).join(' ');
+        const haystack = [
+          p.voucher_no,
+          p.id,
+          p.vendor_name,
+          p.payment_mode,
+          p.reference_no,
+          p.bank_name,
+          allocBills,
+          String(p.amount_paid || '')
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'voucher_no',
+        date: 'payment_date',
+        name: 'vendor_name',
+        amount: 'amount_paid'
+      });
+
+      if (payTbody) payTbody.innerHTML = this.renderPaymentOutRows(sorted, q);
+      if (payCount) payCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('pay-sort-icon-serial');
+      const iconDate = document.getElementById('pay-sort-icon-date');
+      const iconVendor = document.getElementById('pay-sort-icon-vendor');
+      const iconAmount = document.getElementById('pay-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconVendor) iconVendor.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
+    };
+
+    if (paySearch) paySearch.oninput = updatePayFilter;
+    if (paySort) paySort.onchange = updatePayFilter;
+
+    if (thPaySerial) {
+      thPaySerial.onclick = () => {
+        this.paySort = (this.paySort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (paySort) paySort.value = this.paySort;
+        updatePayFilter();
+      };
+    }
+    if (thPayDate) {
+      thPayDate.onclick = () => {
+        this.paySort = (this.paySort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (paySort) paySort.value = this.paySort;
+        updatePayFilter();
+      };
+    }
+    if (thPayVendor) {
+      thPayVendor.onclick = () => {
+        this.paySort = (this.paySort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (paySort) paySort.value = this.paySort;
+        updatePayFilter();
+      };
+    }
+    if (thPayAmount) {
+      thPayAmount.onclick = () => {
+        this.paySort = (this.paySort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (paySort) paySort.value = this.paySort;
+        updatePayFilter();
+      };
+    }
+
+    if (payClear) {
+      payClear.onclick = () => {
+        paySearch.value = '';
+        updatePayFilter();
+        paySearch.focus();
+      };
+    }
+  }
+
+  renderPaymentOutRows(payments, query = '') {
+    if (!payments.length) {
+      return `<tr><td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">💸</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No payment vouchers recorded ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : 'yet'}</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Payment-Out" to disburse a supplier payment.</div>
+      </td></tr>`;
+    }
+
+    return payments.map(p => `
+      <tr>
+        <td><strong style="color:#38bdf8; font-family:monospace;">${p.voucher_no}</strong></td>
+        <td>${this.formatDate(p.payment_date)}</td>
+        <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${p.vendor_name}</span></td>
+        <td>
+          <div>${(p.payment_mode === 'Corporate RTGS' || p.payment_mode === 'RTGS') ? 'Online' : (p.payment_mode || 'Online')}</div>
+          <span style="font-size:0.68rem; color:#94a3b8;">${p.reference_no || '—'}</span>
+        </td>
+        <td><strong style="color:#fb923c;">${this.formatCurrency(p.amount_paid)}</strong></td>
+        <td>
+          ${(p.allocations && p.allocations.length > 0) ? p.allocations.map(a => `
+            <span class="fin-badge fin-badge-pending" style="font-size:0.65rem;">${a.bill_no}: ${this.formatCurrency(a.amount_allocated)}</span>
+          `).join(' ') : '<span style="font-size:0.75rem; color:#94a3b8;">On-Account Advance</span>'}
+        </td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print &amp; View Official Payment Voucher">Print / View</button>
+          <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')" title="Edit Payment Voucher">✏️ Edit</button>
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   // --------------------------------------------------------------------------
   // SALES CREDIT NOTES & PURCHASE DEBIT NOTES MODULES
   // --------------------------------------------------------------------------
   renderCreditNotesTab(root) {
-    const creditNotes = (this.db?.credit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    const rawCreditNotes = (this.db?.credit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    this.cnSort = this.cnSort || 'serial-desc';
+
+    const sortedInitialCreditNotes = this.sortRecords(rawCreditNotes, this.cnSort, {
+      num: 'credit_note_no',
+      name: 'customer_name',
+      amount: 'total_credit_amount',
+      date: 'date'
+    });
+
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -5580,8 +6190,18 @@ class FinanceApp {
             <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
             <button type="button" id="cn-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
           </div>
+          <select id="cn-filter-sort" class="fin-select-pill" title="Order Credit Notes">
+            <option value="serial-desc" ${this.cnSort === 'serial-desc' ? 'selected' : ''}>🔢 Credit Note # (High to Low)</option>
+            <option value="serial-asc" ${this.cnSort === 'serial-asc' ? 'selected' : ''}>🔢 Credit Note # (Low to High)</option>
+            <option value="name-asc" ${this.cnSort === 'name-asc' ? 'selected' : ''}>🔤 Customer (A to Z)</option>
+            <option value="name-desc" ${this.cnSort === 'name-desc' ? 'selected' : ''}>🔤 Customer (Z to A)</option>
+            <option value="amount-desc" ${this.cnSort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
+            <option value="amount-asc" ${this.cnSort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
+            <option value="date-desc" ${this.cnSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+            <option value="date-asc" ${this.cnSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+          </select>
           <div id="cn-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
-            Showing <span id="cn-showing-count">${creditNotes.length}</span> of ${creditNotes.length} credit notes
+            Showing <span id="cn-showing-count">${rawCreditNotes.length}</span> of ${rawCreditNotes.length} credit notes
           </div>
         </div>
 
@@ -5589,17 +6209,23 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th>Credit Note #</th>
+                <th id="th-cn-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Credit Note #">
+                  Credit Note # <span id="cn-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.cnSort === 'serial-asc' ? '▲' : (this.cnSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Invoice Ref</th>
-                <th>Customer</th>
+                <th id="th-cn-customer" style="white-space:nowrap; min-width:200px; cursor:pointer; user-select:none;" title="Click to sort by Customer">
+                  Customer <span id="cn-sort-icon-customer" style="color:#38bdf8; font-size:0.75rem;">${this.cnSort === 'name-asc' ? '▲' : (this.cnSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Adjustment Reason</th>
-                <th>Credit Amount</th>
+                <th id="th-cn-amount" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Amount">
+                  Credit Amount <span id="cn-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.cnSort === 'amount-asc' ? '▲' : (this.cnSort === 'amount-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="credit-notes-tbody">
-              ${this.renderCreditNoteRows(creditNotes)}
+              ${this.renderCreditNoteRows(sortedInitialCreditNotes)}
             </tbody>
           </table>
         </div>
@@ -5608,14 +6234,20 @@ class FinanceApp {
 
     const cnSearch = document.getElementById('cn-filter-search');
     const cnClear = document.getElementById('cn-search-clear');
+    const cnSort = document.getElementById('cn-filter-sort');
     const cnCount = document.getElementById('cn-showing-count');
     const cnTbody = document.getElementById('credit-notes-tbody');
+    const thCnSerial = document.getElementById('th-cn-serial');
+    const thCnCustomer = document.getElementById('th-cn-customer');
+    const thCnAmount = document.getElementById('th-cn-amount');
 
     const updateCnFilter = () => {
       const q = (cnSearch?.value || '').toLowerCase().trim();
+      const sMode = cnSort ? cnSort.value : (this.cnSort || 'serial-desc');
+      this.cnSort = sMode;
       if (cnClear) cnClear.style.display = q ? 'block' : 'none';
 
-      const filtered = creditNotes.filter(cn => {
+      const filtered = rawCreditNotes.filter(cn => {
         if (!q) return true;
         const haystack = [
           cn.credit_note_no,
@@ -5628,11 +6260,50 @@ class FinanceApp {
         return haystack.includes(q);
       });
 
-      if (cnTbody) cnTbody.innerHTML = this.renderCreditNoteRows(filtered, q);
-      if (cnCount) cnCount.textContent = filtered.length;
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'credit_note_no',
+        name: 'customer_name',
+        amount: 'total_credit_amount',
+        date: 'date'
+      });
+
+      if (cnTbody) cnTbody.innerHTML = this.renderCreditNoteRows(sorted, q);
+      if (cnCount) cnCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('cn-sort-icon-serial');
+      const iconCustomer = document.getElementById('cn-sort-icon-customer');
+      const iconAmount = document.getElementById('cn-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconCustomer) iconCustomer.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
     };
 
     if (cnSearch) cnSearch.oninput = updateCnFilter;
+    if (cnSort) cnSort.onchange = updateCnFilter;
+
+    if (thCnSerial) {
+      thCnSerial.onclick = () => {
+        this.cnSort = (this.cnSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (cnSort) cnSort.value = this.cnSort;
+        updateCnFilter();
+      };
+    }
+    if (thCnCustomer) {
+      thCnCustomer.onclick = () => {
+        this.cnSort = (this.cnSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (cnSort) cnSort.value = this.cnSort;
+        updateCnFilter();
+      };
+    }
+    if (thCnAmount) {
+      thCnAmount.onclick = () => {
+        this.cnSort = (this.cnSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (cnSort) cnSort.value = this.cnSort;
+        updateCnFilter();
+      };
+    }
+
     if (cnClear) {
       cnClear.onclick = () => {
         cnSearch.value = '';
@@ -5669,7 +6340,16 @@ class FinanceApp {
   }
 
   renderDebitNotesTab(root) {
-    const debitNotes = (this.db?.debit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    const rawDebitNotes = (this.db?.debit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    this.dnSort = this.dnSort || 'serial-desc';
+
+    const sortedInitialDebitNotes = this.sortRecords(rawDebitNotes, this.dnSort, {
+      num: 'debit_note_no',
+      name: 'vendor_name',
+      amount: 'total_debit_amount',
+      date: 'date'
+    });
+
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -5681,48 +6361,160 @@ class FinanceApp {
             + Create Debit Note
           </button>
         </div>
+
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="dn-filter-search" class="fin-filter-input" placeholder="🔍 Search debit note #, bill ref, vendor, reason..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="dn-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <select id="dn-filter-sort" class="fin-select-pill" title="Order Debit Notes">
+            <option value="serial-desc" ${this.dnSort === 'serial-desc' ? 'selected' : ''}>🔢 Debit Note # (High to Low)</option>
+            <option value="serial-asc" ${this.dnSort === 'serial-asc' ? 'selected' : ''}>🔢 Debit Note # (Low to High)</option>
+            <option value="name-asc" ${this.dnSort === 'name-asc' ? 'selected' : ''}>🔤 Vendor (A to Z)</option>
+            <option value="name-desc" ${this.dnSort === 'name-desc' ? 'selected' : ''}>🔤 Vendor (Z to A)</option>
+            <option value="amount-desc" ${this.dnSort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
+            <option value="amount-asc" ${this.dnSort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
+            <option value="date-desc" ${this.dnSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+            <option value="date-asc" ${this.dnSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+          </select>
+          <div id="dn-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="dn-showing-count">${rawDebitNotes.length}</span> of ${rawDebitNotes.length} debit notes
+          </div>
+        </div>
+
         <div class="fin-table-responsive">
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th>Debit Note #</th>
+                <th id="th-dn-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Debit Note #">
+                  Debit Note # <span id="dn-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.dnSort === 'serial-asc' ? '▲' : (this.dnSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Bill Ref</th>
-                <th>Vendor</th>
+                <th id="th-dn-vendor" style="white-space:nowrap; min-width:200px; cursor:pointer; user-select:none;" title="Click to sort by Vendor">
+                  Vendor <span id="dn-sort-icon-vendor" style="color:#38bdf8; font-size:0.75rem;">${this.dnSort === 'name-asc' ? '▲' : (this.dnSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Adjustment Reason</th>
-                <th>Debit Amount</th>
+                <th id="th-dn-amount" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Amount">
+                  Debit Amount <span id="dn-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.dnSort === 'amount-asc' ? '▲' : (this.dnSort === 'amount-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${debitNotes.length === 0 ? `
-                <tr>
-                  <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔄</div>
-                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No debit notes recorded yet</div>
-                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Debit Note" to issue vendor deductions or transit returns.</div>
-                  </td>
-                </tr>
-              ` : debitNotes.map(dn => `
-                <tr>
-                  <td><strong>${dn.debit_note_no}</strong></td>
-                  <td><code>${dn.bill_no || 'Direct Debit'}</code></td>
-                  <td style="white-space:nowrap; min-width:200px;"><span class="fin-customer-cell">${dn.vendor_name || 'Vendor'}</span></td>
-                  <td><span style="font-size:0.75rem;">${dn.reason || 'Material adjustment'}</span></td>
-                  <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
-                  <td><span class="fin-badge fin-badge-paid">${dn.status || 'applied'}</span></td>
-                  <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openDebitNotePrintModal('${dn.id}')" title="Print &amp; View Debit Note">Print / View</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditDebitNoteModal('${dn.id}')">Edit</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDebitNote('${dn.id}')">Delete</button>
-                  </td>
-                </tr>
-              `).join('')}
+            <tbody id="debit-notes-tbody">
+              ${this.renderDebitNoteRows(sortedInitialDebitNotes)}
             </tbody>
           </table>
         </div>
       </div>
     `;
+
+    const dnSearch = document.getElementById('dn-filter-search');
+    const dnClear = document.getElementById('dn-search-clear');
+    const dnSort = document.getElementById('dn-filter-sort');
+    const dnCount = document.getElementById('dn-showing-count');
+    const dnTbody = document.getElementById('debit-notes-tbody');
+    const thDnSerial = document.getElementById('th-dn-serial');
+    const thDnVendor = document.getElementById('th-dn-vendor');
+    const thDnAmount = document.getElementById('th-dn-amount');
+
+    const updateDnFilter = () => {
+      const q = (dnSearch?.value || '').toLowerCase().trim();
+      const sMode = dnSort ? dnSort.value : (this.dnSort || 'serial-desc');
+      this.dnSort = sMode;
+      if (dnClear) dnClear.style.display = q ? 'block' : 'none';
+
+      const filtered = rawDebitNotes.filter(dn => {
+        if (!q) return true;
+        const haystack = [
+          dn.debit_note_no,
+          dn.bill_no,
+          dn.vendor_name,
+          dn.reason,
+          String(dn.total_debit_amount || '')
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'debit_note_no',
+        name: 'vendor_name',
+        amount: 'total_debit_amount',
+        date: 'date'
+      });
+
+      if (dnTbody) dnTbody.innerHTML = this.renderDebitNoteRows(sorted, q);
+      if (dnCount) dnCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('dn-sort-icon-serial');
+      const iconVendor = document.getElementById('dn-sort-icon-vendor');
+      const iconAmount = document.getElementById('dn-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconVendor) iconVendor.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
+    };
+
+    if (dnSearch) dnSearch.oninput = updateDnFilter;
+    if (dnSort) dnSort.onchange = updateDnFilter;
+
+    if (thDnSerial) {
+      thDnSerial.onclick = () => {
+        this.dnSort = (this.dnSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (dnSort) dnSort.value = this.dnSort;
+        updateDnFilter();
+      };
+    }
+    if (thDnVendor) {
+      thDnVendor.onclick = () => {
+        this.dnSort = (this.dnSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (dnSort) dnSort.value = this.dnSort;
+        updateDnFilter();
+      };
+    }
+    if (thDnAmount) {
+      thDnAmount.onclick = () => {
+        this.dnSort = (this.dnSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (dnSort) dnSort.value = this.dnSort;
+        updateDnFilter();
+      };
+    }
+
+    if (dnClear) {
+      dnClear.onclick = () => {
+        dnSearch.value = '';
+        updateDnFilter();
+        dnSearch.focus();
+      };
+    }
+  }
+
+  renderDebitNoteRows(debitNotes, query = '') {
+    if (!debitNotes.length) {
+      return `<tr><td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔄</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No debit notes found ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : 'yet'}</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Debit Note" to issue vendor deductions or transit returns.</div>
+      </td></tr>`;
+    }
+
+    return debitNotes.map(dn => `
+      <tr>
+        <td><strong style="color:#38bdf8; font-family:monospace;">${dn.debit_note_no}</strong></td>
+        <td><code>${dn.bill_no || 'Direct Debit'}</code></td>
+        <td style="white-space:nowrap; min-width:200px;"><span class="fin-customer-cell">${dn.vendor_name || 'Vendor'}</span></td>
+        <td><span style="font-size:0.75rem;">${dn.reason || 'Material adjustment'}</span></td>
+        <td><strong style="color:#f59e0b;">${this.formatCurrency(dn.total_debit_amount)}</strong></td>
+        <td><span class="fin-badge fin-badge-paid">${dn.status || 'applied'}</span></td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openDebitNotePrintModal('${dn.id}')" title="Print &amp; View Debit Note">Print / View</button>
+          <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditDebitNoteModal('${dn.id}')">Edit</button>
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDebitNote('${dn.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   // --------------------------------------------------------------------------
@@ -6003,6 +6795,23 @@ class FinanceApp {
     const outward = cheques.filter(c => c.type === 'outward');
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
 
+    this.inwardChqSort = this.inwardChqSort || 'serial-desc';
+    this.outwardChqSort = this.outwardChqSort || 'serial-desc';
+
+    const sortedInitialInward = this.sortRecords(inward, this.inwardChqSort, {
+      num: 'cheque_no',
+      date: 'date',
+      name: 'party_name',
+      amount: 'amount'
+    });
+
+    const sortedInitialOutward = this.sortRecords(outward, this.outwardChqSort, {
+      num: 'cheque_no',
+      date: 'date',
+      name: 'party_name',
+      amount: 'amount'
+    });
+
     root.innerHTML = `
       <div class="fin-dash-row-responsive">
         <!-- Inward Cheques -->
@@ -6031,6 +6840,16 @@ class FinanceApp {
               <option value="cleared">✅ Cleared</option>
               <option value="security">🛡️ Security Cheque</option>
             </select>
+            <select id="inward-chq-sort" class="fin-select-pill" title="Order Inward Cheques">
+              <option value="serial-desc" ${this.inwardChqSort === 'serial-desc' ? 'selected' : ''}>🔢 Cheque # (High to Low)</option>
+              <option value="serial-asc" ${this.inwardChqSort === 'serial-asc' ? 'selected' : ''}>🔢 Cheque # (Low to High)</option>
+              <option value="date-desc" ${this.inwardChqSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.inwardChqSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="name-asc" ${this.inwardChqSort === 'name-asc' ? 'selected' : ''}>🔤 Customer (A to Z)</option>
+              <option value="name-desc" ${this.inwardChqSort === 'name-desc' ? 'selected' : ''}>🔤 Customer (Z to A)</option>
+              <option value="amount-desc" ${this.inwardChqSort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
+              <option value="amount-asc" ${this.inwardChqSort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
+            </select>
             <div style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
               Showing <span id="inward-chq-count">${inward.length}</span> of ${inward.length}
             </div>
@@ -6040,17 +6859,25 @@ class FinanceApp {
             <table class="fin-data-table">
               <thead>
                 <tr>
-                  <th>Cheque #</th>
+                  <th id="th-inward-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Cheque #">
+                    Cheque # <span id="inward-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.inwardChqSort === 'serial-asc' ? '▲' : (this.inwardChqSort === 'serial-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Drawee Bank</th>
-                  <th>Customer / Issuer</th>
-                  <th>Date</th>
-                  <th style="text-align:right;">Amount</th>
+                  <th id="th-inward-party" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Customer">
+                    Customer / Issuer <span id="inward-sort-icon-party" style="color:#38bdf8; font-size:0.75rem;">${this.inwardChqSort === 'name-asc' ? '▲' : (this.inwardChqSort === 'name-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-inward-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                    Date <span id="inward-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.inwardChqSort === 'date-asc' ? '▲' : (this.inwardChqSort === 'date-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-inward-amount" style="text-align:right; white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Amount">
+                    Amount <span id="inward-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.inwardChqSort === 'amount-asc' ? '▲' : (this.inwardChqSort === 'amount-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Status</th>
                   <th style="text-align:center;">Action</th>
                 </tr>
               </thead>
               <tbody id="inward-cheques-tbody">
-                ${this.renderInwardChequeRows(inward)}
+                ${this.renderInwardChequeRows(sortedInitialInward)}
               </tbody>
             </table>
           </div>
@@ -6075,6 +6902,16 @@ class FinanceApp {
               <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
               <button type="button" id="outward-chq-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
             </div>
+            <select id="outward-chq-sort" class="fin-select-pill" title="Order Outward Cheques">
+              <option value="serial-desc" ${this.outwardChqSort === 'serial-desc' ? 'selected' : ''}>🔢 Cheque # (High to Low)</option>
+              <option value="serial-asc" ${this.outwardChqSort === 'serial-asc' ? 'selected' : ''}>🔢 Cheque # (Low to High)</option>
+              <option value="date-desc" ${this.outwardChqSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.outwardChqSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="name-asc" ${this.outwardChqSort === 'name-asc' ? 'selected' : ''}>🔤 Vendor (A to Z)</option>
+              <option value="name-desc" ${this.outwardChqSort === 'name-desc' ? 'selected' : ''}>🔤 Vendor (Z to A)</option>
+              <option value="amount-desc" ${this.outwardChqSort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
+              <option value="amount-asc" ${this.outwardChqSort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
+            </select>
             <div style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
               Showing <span id="outward-chq-count">${outward.length}</span> of ${outward.length}
             </div>
@@ -6084,17 +6921,25 @@ class FinanceApp {
             <table class="fin-data-table">
               <thead>
                 <tr>
-                  <th>Cheque #</th>
+                  <th id="th-outward-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Cheque #">
+                    Cheque # <span id="outward-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.outwardChqSort === 'serial-asc' ? '▲' : (this.outwardChqSort === 'serial-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Account Bank</th>
-                  <th>Payee Vendor</th>
-                  <th>Date</th>
-                  <th style="text-align:right;">Amount</th>
+                  <th id="th-outward-party" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Vendor">
+                    Payee Vendor <span id="outward-sort-icon-party" style="color:#38bdf8; font-size:0.75rem;">${this.outwardChqSort === 'name-asc' ? '▲' : (this.outwardChqSort === 'name-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-outward-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                    Date <span id="outward-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.outwardChqSort === 'date-asc' ? '▲' : (this.outwardChqSort === 'date-desc' ? '▼' : '↕')}</span>
+                  </th>
+                  <th id="th-outward-amount" style="text-align:right; white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Amount">
+                    Amount <span id="outward-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.outwardChqSort === 'amount-asc' ? '▲' : (this.outwardChqSort === 'amount-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th>Status</th>
                   <th style="text-align:center;">Action</th>
                 </tr>
               </thead>
               <tbody id="outward-cheques-tbody">
-                ${this.renderOutwardChequeRows(outward)}
+                ${this.renderOutwardChequeRows(sortedInitialOutward)}
               </tbody>
             </table>
           </div>
@@ -6106,12 +6951,19 @@ class FinanceApp {
     const inSearch = document.getElementById('inward-chq-search');
     const inClear = document.getElementById('inward-chq-clear');
     const inFilter = document.getElementById('inward-chq-filter');
+    const inSort = document.getElementById('inward-chq-sort');
     const inCount = document.getElementById('inward-chq-count');
     const inTbody = document.getElementById('inward-cheques-tbody');
+    const thInSerial = document.getElementById('th-inward-serial');
+    const thInParty = document.getElementById('th-inward-party');
+    const thInDate = document.getElementById('th-inward-date');
+    const thInAmount = document.getElementById('th-inward-amount');
 
     const updateInwardFilter = () => {
       const q = (inSearch?.value || '').toLowerCase().trim();
       const st = inFilter?.value || 'all';
+      const sMode = inSort ? inSort.value : (this.inwardChqSort || 'serial-desc');
+      this.inwardChqSort = sMode;
       if (inClear) inClear.style.display = q ? 'block' : 'none';
 
       const filtered = inward.filter(c => {
@@ -6124,12 +6976,60 @@ class FinanceApp {
         return haystack.includes(q);
       });
 
-      if (inTbody) inTbody.innerHTML = this.renderInwardChequeRows(filtered, q);
-      if (inCount) inCount.textContent = filtered.length;
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'cheque_no',
+        date: 'date',
+        name: 'party_name',
+        amount: 'amount'
+      });
+
+      if (inTbody) inTbody.innerHTML = this.renderInwardChequeRows(sorted, q);
+      if (inCount) inCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('inward-sort-icon-serial');
+      const iconParty = document.getElementById('inward-sort-icon-party');
+      const iconDate = document.getElementById('inward-sort-icon-date');
+      const iconAmount = document.getElementById('inward-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconParty) iconParty.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
     };
 
     if (inSearch) inSearch.oninput = updateInwardFilter;
     if (inFilter) inFilter.onchange = updateInwardFilter;
+    if (inSort) inSort.onchange = updateInwardFilter;
+
+    if (thInSerial) {
+      thInSerial.onclick = () => {
+        this.inwardChqSort = (this.inwardChqSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (inSort) inSort.value = this.inwardChqSort;
+        updateInwardFilter();
+      };
+    }
+    if (thInParty) {
+      thInParty.onclick = () => {
+        this.inwardChqSort = (this.inwardChqSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (inSort) inSort.value = this.inwardChqSort;
+        updateInwardFilter();
+      };
+    }
+    if (thInDate) {
+      thInDate.onclick = () => {
+        this.inwardChqSort = (this.inwardChqSort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (inSort) inSort.value = this.inwardChqSort;
+        updateInwardFilter();
+      };
+    }
+    if (thInAmount) {
+      thInAmount.onclick = () => {
+        this.inwardChqSort = (this.inwardChqSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (inSort) inSort.value = this.inwardChqSort;
+        updateInwardFilter();
+      };
+    }
+
     if (inClear) {
       inClear.onclick = () => {
         inSearch.value = '';
@@ -6141,11 +7041,18 @@ class FinanceApp {
     // Bind Outward Filter Events
     const outSearch = document.getElementById('outward-chq-search');
     const outClear = document.getElementById('outward-chq-clear');
+    const outSort = document.getElementById('outward-chq-sort');
     const outCount = document.getElementById('outward-chq-count');
     const outTbody = document.getElementById('outward-cheques-tbody');
+    const thOutSerial = document.getElementById('th-outward-serial');
+    const thOutParty = document.getElementById('th-outward-party');
+    const thOutDate = document.getElementById('th-outward-date');
+    const thOutAmount = document.getElementById('th-outward-amount');
 
     const updateOutwardFilter = () => {
       const q = (outSearch?.value || '').toLowerCase().trim();
+      const sMode = outSort ? outSort.value : (this.outwardChqSort || 'serial-desc');
+      this.outwardChqSort = sMode;
       if (outClear) outClear.style.display = q ? 'block' : 'none';
 
       const filtered = outward.filter(c => {
@@ -6154,11 +7061,59 @@ class FinanceApp {
         return haystack.includes(q);
       });
 
-      if (outTbody) outTbody.innerHTML = this.renderOutwardChequeRows(filtered, q);
-      if (outCount) outCount.textContent = filtered.length;
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'cheque_no',
+        date: 'date',
+        name: 'party_name',
+        amount: 'amount'
+      });
+
+      if (outTbody) outTbody.innerHTML = this.renderOutwardChequeRows(sorted, q);
+      if (outCount) outCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('outward-sort-icon-serial');
+      const iconParty = document.getElementById('outward-sort-icon-party');
+      const iconDate = document.getElementById('outward-sort-icon-date');
+      const iconAmount = document.getElementById('outward-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconParty) iconParty.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
     };
 
     if (outSearch) outSearch.oninput = updateOutwardFilter;
+    if (outSort) outSort.onchange = updateOutwardFilter;
+
+    if (thOutSerial) {
+      thOutSerial.onclick = () => {
+        this.outwardChqSort = (this.outwardChqSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (outSort) outSort.value = this.outwardChqSort;
+        updateOutwardFilter();
+      };
+    }
+    if (thOutParty) {
+      thOutParty.onclick = () => {
+        this.outwardChqSort = (this.outwardChqSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (outSort) outSort.value = this.outwardChqSort;
+        updateOutwardFilter();
+      };
+    }
+    if (thOutDate) {
+      thOutDate.onclick = () => {
+        this.outwardChqSort = (this.outwardChqSort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (outSort) outSort.value = this.outwardChqSort;
+        updateOutwardFilter();
+      };
+    }
+    if (thOutAmount) {
+      thOutAmount.onclick = () => {
+        this.outwardChqSort = (this.outwardChqSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (outSort) outSort.value = this.outwardChqSort;
+        updateOutwardFilter();
+      };
+    }
+
     if (outClear) {
       outClear.onclick = () => {
         outSearch.value = '';
@@ -6363,7 +7318,15 @@ class FinanceApp {
   // 9. EXPENSES & CLAIMS MODULE
   // --------------------------------------------------------------------------
   renderExpensesTab(root) {
-    const expenses = (this.db?.expenses || []).filter(e => this.matchesActiveCompany(e.company_id));
+    const rawExpenses = (this.db?.expenses || []).filter(e => this.matchesActiveCompany(e.company_id));
+    this.expSort = this.expSort || 'serial-desc';
+
+    const sortedInitialExpenses = this.sortRecords(rawExpenses, this.expSort, {
+      num: 'expense_no',
+      date: 'date',
+      name: 'category',
+      amount: 'total_amount'
+    });
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -6381,63 +7344,195 @@ class FinanceApp {
           </div>
         </div>
 
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="exp-filter-search" class="fin-filter-input" placeholder="🔍 Search expense #, category, description, project, person..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="exp-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <select id="exp-filter-sort" class="fin-select-pill" title="Order Expenses">
+            <option value="serial-desc" ${this.expSort === 'serial-desc' ? 'selected' : ''}>🔢 Expense # (High to Low)</option>
+            <option value="serial-asc" ${this.expSort === 'serial-asc' ? 'selected' : ''}>🔢 Expense # (Low to High)</option>
+            <option value="date-desc" ${this.expSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+            <option value="date-asc" ${this.expSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+            <option value="name-asc" ${this.expSort === 'name-asc' ? 'selected' : ''}>🔤 Category (A to Z)</option>
+            <option value="name-desc" ${this.expSort === 'name-desc' ? 'selected' : ''}>🔤 Category (Z to A)</option>
+            <option value="amount-desc" ${this.expSort === 'amount-desc' ? 'selected' : ''}>💰 Total Amount (Highest First)</option>
+            <option value="amount-asc" ${this.expSort === 'amount-asc' ? 'selected' : ''}>💰 Total Amount (Lowest First)</option>
+          </select>
+          <div id="exp-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="exp-showing-count">${rawExpenses.length}</span> of ${rawExpenses.length} expenses
+          </div>
+        </div>
+
         <div class="fin-table-responsive">
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th>Expense #</th>
-                <th>Date</th>
-                <th>Category</th>
+                <th id="th-exp-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Expense #">
+                  Expense # <span id="exp-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.expSort === 'serial-asc' ? '▲' : (this.expSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-exp-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                  Date <span id="exp-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.expSort === 'date-asc' ? '▲' : (this.expSort === 'date-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-exp-cat" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Category">
+                  Category <span id="exp-sort-icon-cat" style="color:#38bdf8; font-size:0.75rem;">${this.expSort === 'name-asc' ? '▲' : (this.expSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Description</th>
                 <th>Linked Project</th>
                 <th>Submitted By</th>
                 <th>Amount</th>
                 <th>Tax</th>
-                <th>Total</th>
+                <th id="th-exp-amount" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Total">
+                  Total <span id="exp-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.expSort === 'amount-asc' ? '▲' : (this.expSort === 'amount-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${expenses.length === 0 ? `
-                <tr>
-                  <td colspan="11" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">🧾</div>
-                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No expense claims recorded yet</div>
-                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Expense Claim" to track operational or site expenditures.</div>
-                  </td>
-                </tr>
-              ` : expenses.map(exp => `
-                <tr>
-                  <td><strong>${exp.expense_no}</strong></td>
-                  <td>${this.formatDate(exp.date)}</td>
-                  <td><span class="fin-badge fin-badge-issued">${exp.category || 'General'}</span></td>
-                  <td>${exp.description}</td>
-                  <td><span style="font-size:0.75rem;">${exp.project_name || 'General HQ'}</span></td>
-                  <td>${exp.submitted_by}</td>
-                  <td>${this.formatCurrency(exp.amount)}</td>
-                  <td>${this.formatCurrency(exp.tax_amount)}</td>
-                  <td><strong>${this.formatCurrency(exp.total_amount)}</strong></td>
-                  <td><span class="fin-badge fin-badge-${exp.status}">${exp.status}</span></td>
-                  <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openExpensePrintModal('${exp.id}')" title="View &amp; Print Official Receipt">Receipt</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditExpenseModal('${exp.id}')" title="Edit Expense Claim">Edit</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteExpense('${exp.id}')" title="Delete Expense">Delete</button>
-                  </td>
-                </tr>
-              `).join('')}
+            <tbody id="expenses-tbody">
+              ${this.renderExpenseRows(sortedInitialExpenses)}
             </tbody>
           </table>
         </div>
       </div>
     `;
+
+    const expSearch = document.getElementById('exp-filter-search');
+    const expClear = document.getElementById('exp-search-clear');
+    const expSort = document.getElementById('exp-filter-sort');
+    const expCount = document.getElementById('exp-showing-count');
+    const expTbody = document.getElementById('expenses-tbody');
+    const thExpSerial = document.getElementById('th-exp-serial');
+    const thExpDate = document.getElementById('th-exp-date');
+    const thExpCat = document.getElementById('th-exp-cat');
+    const thExpAmount = document.getElementById('th-exp-amount');
+
+    const updateExpFilter = () => {
+      const q = (expSearch?.value || '').toLowerCase().trim();
+      const sMode = expSort ? expSort.value : (this.expSort || 'serial-desc');
+      this.expSort = sMode;
+      if (expClear) expClear.style.display = q ? 'block' : 'none';
+
+      const filtered = rawExpenses.filter(exp => {
+        if (!q) return true;
+        const haystack = [
+          exp.expense_no,
+          exp.category,
+          exp.description,
+          exp.project_name,
+          exp.submitted_by,
+          String(exp.total_amount || '')
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'expense_no',
+        date: 'date',
+        name: 'category',
+        amount: 'total_amount'
+      });
+
+      if (expTbody) expTbody.innerHTML = this.renderExpenseRows(sorted, q);
+      if (expCount) expCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('exp-sort-icon-serial');
+      const iconDate = document.getElementById('exp-sort-icon-date');
+      const iconCat = document.getElementById('exp-sort-icon-cat');
+      const iconAmount = document.getElementById('exp-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconCat) iconCat.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
+    };
+
+    if (expSearch) expSearch.oninput = updateExpFilter;
+    if (expSort) expSort.onchange = updateExpFilter;
+
+    if (thExpSerial) {
+      thExpSerial.onclick = () => {
+        this.expSort = (this.expSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (expSort) expSort.value = this.expSort;
+        updateExpFilter();
+      };
+    }
+    if (thExpDate) {
+      thExpDate.onclick = () => {
+        this.expSort = (this.expSort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (expSort) expSort.value = this.expSort;
+        updateExpFilter();
+      };
+    }
+    if (thExpCat) {
+      thExpCat.onclick = () => {
+        this.expSort = (this.expSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (expSort) expSort.value = this.expSort;
+        updateExpFilter();
+      };
+    }
+    if (thExpAmount) {
+      thExpAmount.onclick = () => {
+        this.expSort = (this.expSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (expSort) expSort.value = this.expSort;
+        updateExpFilter();
+      };
+    }
+
+    if (expClear) {
+      expClear.onclick = () => {
+        expSearch.value = '';
+        updateExpFilter();
+        expSearch.focus();
+      };
+    }
+  }
+
+  renderExpenseRows(expenses, query = '') {
+    if (!expenses.length) {
+      return `<tr><td colspan="11" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">🧾</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No expense claims recorded ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : 'yet'}</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Expense Claim" to track operational or site expenditures.</div>
+      </td></tr>`;
+    }
+
+    return expenses.map(exp => `
+      <tr>
+        <td><strong style="color:#38bdf8; font-family:monospace;">${exp.expense_no}</strong></td>
+        <td>${this.formatDate(exp.date)}</td>
+        <td><span class="fin-badge fin-badge-issued">${exp.category || 'General'}</span></td>
+        <td>${exp.description}</td>
+        <td><span style="font-size:0.75rem;">${exp.project_name || 'General HQ'}</span></td>
+        <td>${exp.submitted_by}</td>
+        <td>${this.formatCurrency(exp.amount)}</td>
+        <td>${this.formatCurrency(exp.tax_amount)}</td>
+        <td><strong>${this.formatCurrency(exp.total_amount)}</strong></td>
+        <td><span class="fin-badge fin-badge-${exp.status}">${exp.status}</span></td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openExpensePrintModal('${exp.id}')" title="View &amp; Print Official Receipt">Receipt</button>
+          <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditExpenseModal('${exp.id}')" title="Edit Expense Claim">Edit</button>
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteExpense('${exp.id}')" title="Delete Expense">Delete</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   // --------------------------------------------------------------------------
   // 10. PURCHASE ORDERS MODULE
   // --------------------------------------------------------------------------
   renderPOTab(root) {
-    const pos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id));
+    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id));
+    this.poSort = this.poSort || 'serial-desc';
+
+    const sortedInitialPos = this.sortRecords(rawPos, this.poSort, {
+      num: 'po_no',
+      date: 'date',
+      name: 'vendor_name',
+      amount: 'total_value'
+    });
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -6458,54 +7553,178 @@ class FinanceApp {
           </div>
         </div>
 
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="po-filter-search" class="fin-filter-input" placeholder="🔍 Search PO #, vendor, project, approved by..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="po-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <select id="po-filter-sort" class="fin-select-pill" title="Order Purchase Orders">
+            <option value="serial-desc" ${this.poSort === 'serial-desc' ? 'selected' : ''}>🔢 PO # (High to Low)</option>
+            <option value="serial-asc" ${this.poSort === 'serial-asc' ? 'selected' : ''}>🔢 PO # (Low to High)</option>
+            <option value="date-desc" ${this.poSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+            <option value="date-asc" ${this.poSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+            <option value="name-asc" ${this.poSort === 'name-asc' ? 'selected' : ''}>🔤 Vendor (A to Z)</option>
+            <option value="name-desc" ${this.poSort === 'name-desc' ? 'selected' : ''}>🔤 Vendor (Z to A)</option>
+            <option value="amount-desc" ${this.poSort === 'amount-desc' ? 'selected' : ''}>💰 PO Value (Highest First)</option>
+            <option value="amount-asc" ${this.poSort === 'amount-asc' ? 'selected' : ''}>💰 PO Value (Lowest First)</option>
+          </select>
+          <div id="po-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="po-showing-count">${rawPos.length}</span> of ${rawPos.length} orders
+          </div>
+        </div>
+
         <div class="fin-table-responsive">
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th style="white-space:nowrap;">PO #</th>
-                <th style="white-space:nowrap;">Date</th>
-                <th style="white-space:nowrap; min-width:220px;">Vendor / Supplier</th>
+                <th id="th-po-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by PO #">
+                  PO # <span id="po-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.poSort === 'serial-asc' ? '▲' : (this.poSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-po-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                  Date <span id="po-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.poSort === 'date-asc' ? '▲' : (this.poSort === 'date-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-po-vendor" style="white-space:nowrap; min-width:220px; cursor:pointer; user-select:none;" title="Click to sort by Vendor">
+                  Vendor / Supplier <span id="po-sort-icon-vendor" style="color:#38bdf8; font-size:0.75rem;">${this.poSort === 'name-asc' ? '▲' : (this.poSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap; min-width:180px;">Project</th>
                 <th style="white-space:nowrap;">Expected Delivery</th>
-                <th style="white-space:nowrap;">Total PO Value</th>
+                <th id="th-po-amount" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Total">
+                  Total PO Value <span id="po-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.poSort === 'amount-asc' ? '▲' : (this.poSort === 'amount-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th style="white-space:nowrap;">Billed to Date</th>
                 <th style="white-space:nowrap;">Status</th>
                 <th style="white-space:nowrap;">Approved By</th>
                 <th style="white-space:nowrap;">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${pos.length === 0 ? `
-                <tr>
-                  <td colspan="10" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                    <div style="font-size:1.6rem; margin-bottom:0.4rem;">📑</div>
-                    <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No purchase orders issued yet</div>
-                    <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Purchase Order" to commit orders to registered suppliers.</div>
-                  </td>
-                </tr>
-              ` : pos.map(po => `
-                <tr>
-                  <td style="white-space:nowrap;"><strong>${po.po_no}</strong></td>
-                  <td style="white-space:nowrap;">${this.formatDate(po.date)}</td>
-                  <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${po.vendor_name || po.supplier_name || 'Vendor'}</span></td>
-                  <td>${po.project_name || 'General Operations'}</td>
-                  <td>${this.formatDate(po.expected_delivery)}</td>
-                  <td><strong>${this.formatCurrency(po.total_value || po.grand_total)}</strong></td>
-                  <td>${this.formatCurrency(po.billed_value || 0)}</td>
-                  <td><span class="fin-badge fin-badge-paid">${po.status || 'approved'}</span></td>
-                  <td>${po.approved_by || '—'}</td>
-                  <td style="white-space:nowrap;">
-                    <button type="button" class="fin-btn-row-action" onclick="window.finApp.openPOPrintModal('${po.id}')" title="Print Official Purchase Order">Print / View</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPOModal('${po.id}')" title="Edit Purchase Order">Edit</button>
-                    <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePO('${po.id}')" title="Delete Purchase Order">Delete</button>
-                  </td>
-                </tr>
-              `).join('')}
+            <tbody id="pos-tbody">
+              ${this.renderPORows(sortedInitialPos)}
             </tbody>
           </table>
         </div>
       </div>
     `;
+
+    const poSearch = document.getElementById('po-filter-search');
+    const poClear = document.getElementById('po-search-clear');
+    const poSort = document.getElementById('po-filter-sort');
+    const poCount = document.getElementById('po-showing-count');
+    const poTbody = document.getElementById('pos-tbody');
+    const thPoSerial = document.getElementById('th-po-serial');
+    const thPoDate = document.getElementById('th-po-date');
+    const thPoVendor = document.getElementById('th-po-vendor');
+    const thPoAmount = document.getElementById('th-po-amount');
+
+    const updatePoFilter = () => {
+      const q = (poSearch?.value || '').toLowerCase().trim();
+      const sMode = poSort ? poSort.value : (this.poSort || 'serial-desc');
+      this.poSort = sMode;
+      if (poClear) poClear.style.display = q ? 'block' : 'none';
+
+      const filtered = rawPos.filter(po => {
+        if (!q) return true;
+        const haystack = [
+          po.po_no,
+          po.vendor_name,
+          po.supplier_name,
+          po.project_name,
+          po.approved_by,
+          String(po.total_value || po.grand_total || '')
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+
+      const sorted = this.sortRecords(filtered, sMode, {
+        num: 'po_no',
+        date: 'date',
+        name: 'vendor_name',
+        amount: 'total_value'
+      });
+
+      if (poTbody) poTbody.innerHTML = this.renderPORows(sorted, q);
+      if (poCount) poCount.textContent = sorted.length;
+
+      // Update header sort icons
+      const iconSerial = document.getElementById('po-sort-icon-serial');
+      const iconDate = document.getElementById('po-sort-icon-date');
+      const iconVendor = document.getElementById('po-sort-icon-vendor');
+      const iconAmount = document.getElementById('po-sort-icon-amount');
+      if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
+      if (iconVendor) iconVendor.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
+      if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
+    };
+
+    if (poSearch) poSearch.oninput = updatePoFilter;
+    if (poSort) poSort.onchange = updatePoFilter;
+
+    if (thPoSerial) {
+      thPoSerial.onclick = () => {
+        this.poSort = (this.poSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (poSort) poSort.value = this.poSort;
+        updatePoFilter();
+      };
+    }
+    if (thPoDate) {
+      thPoDate.onclick = () => {
+        this.poSort = (this.poSort === 'date-desc') ? 'date-asc' : 'date-desc';
+        if (poSort) poSort.value = this.poSort;
+        updatePoFilter();
+      };
+    }
+    if (thPoVendor) {
+      thPoVendor.onclick = () => {
+        this.poSort = (this.poSort === 'name-asc') ? 'name-desc' : 'name-asc';
+        if (poSort) poSort.value = this.poSort;
+        updatePoFilter();
+      };
+    }
+    if (thPoAmount) {
+      thPoAmount.onclick = () => {
+        this.poSort = (this.poSort === 'amount-desc') ? 'amount-asc' : 'amount-desc';
+        if (poSort) poSort.value = this.poSort;
+        updatePoFilter();
+      };
+    }
+
+    if (poClear) {
+      poClear.onclick = () => {
+        poSearch.value = '';
+        updatePoFilter();
+        poSearch.focus();
+      };
+    }
+  }
+
+  renderPORows(pos, query = '') {
+    if (!pos.length) {
+      return `<tr><td colspan="10" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">📑</div>
+        <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No purchase orders issued ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : 'yet'}</div>
+        <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Purchase Order" to commit orders to registered suppliers.</div>
+      </td></tr>`;
+    }
+
+    return pos.map(po => `
+      <tr>
+        <td style="white-space:nowrap;"><strong style="color:#38bdf8; font-family:monospace;">${po.po_no}</strong></td>
+        <td style="white-space:nowrap;">${this.formatDate(po.date)}</td>
+        <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${po.vendor_name || po.supplier_name || 'Vendor'}</span></td>
+        <td>${po.project_name || 'General Operations'}</td>
+        <td>${this.formatDate(po.expected_delivery)}</td>
+        <td><strong>${this.formatCurrency(po.total_value || po.grand_total)}</strong></td>
+        <td>${this.formatCurrency(po.billed_value || 0)}</td>
+        <td><span class="fin-badge fin-badge-paid">${po.status || 'approved'}</span></td>
+        <td>${po.approved_by || '—'}</td>
+        <td style="white-space:nowrap;">
+          <button type="button" class="fin-btn-row-action" onclick="window.finApp.openPOPrintModal('${po.id}')" title="Print Official Purchase Order">Print / View</button>
+          <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPOModal('${po.id}')" title="Edit Purchase Order">Edit</button>
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePO('${po.id}')" title="Delete Purchase Order">Delete</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   // --------------------------------------------------------------------------
