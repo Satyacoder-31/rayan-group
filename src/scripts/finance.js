@@ -101,6 +101,22 @@ class FinanceApp {
       return;
     }
 
+    // Check Credit Note
+    if (docType === 'credit_note' || docType === 'cr_note' || upper.startsWith('CN-') || upper.startsWith('CR-')) {
+      const cn = (this.db?.credit_notes || []).find(c => c.id === cleanId || c.credit_note_no === cleanId || c.invoice_no === cleanId) ||
+                 (this.db?.credit_notes || [])[0] || { credit_note_no: cleanId };
+      this.openCreditNotePrintModal(cn.id || cleanId, true);
+      return;
+    }
+
+    // Check Debit Note
+    if (docType === 'debit_note' || docType === 'dn' || upper.startsWith('DN-')) {
+      const dn = (this.db?.debit_notes || []).find(d => d.id === cleanId || d.debit_note_no === cleanId) ||
+                 (this.db?.debit_notes || [])[0] || { debit_note_no: cleanId };
+      this.openDebitNotePrintModal(dn.id || cleanId, true);
+      return;
+    }
+
     // Default Tax Invoice
     const inv = (this.db?.invoices || []).find(i => i.id === cleanId || i.invoice_no === cleanId) ||
                 (this.db?.invoices || [])[0] || { invoice_no: cleanId };
@@ -2988,6 +3004,12 @@ class FinanceApp {
                   <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-lpo-bd-2026-12')">
                     <span class="fin-subitem-text">Purchase Order (2p)</span>
                   </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openCreditNotePrintModal()">
+                    <span class="fin-subitem-text">Credit Note (Sample)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openDebitNotePrintModal()">
+                    <span class="fin-subitem-text">Debit Note (Sample)</span>
+                  </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openConsolidatedCustomerSOA()">
                     <span class="fin-subitem-text" style="color:#38bdf8; font-weight:600;">📑 Master Statement (All Clients)</span>
                   </div>
@@ -4067,8 +4089,8 @@ class FinanceApp {
         <td style="white-space:nowrap;">
           <span style="color:#10b981;">${this.formatCurrency((inv.amount_paid && inv.amount_paid > 0.02) ? inv.amount_paid : 0)}</span>
           ${(inv.amount_credited && inv.amount_credited > 0.02) ? `
-            <div style="font-size:0.68rem; color:#c084fc; font-weight:700;" title="Adjusted via Credit Note">
-              Cr. Note: ${this.formatCurrency(inv.amount_credited)}
+            <div style="font-size:0.68rem; color:#c084fc; font-weight:700; cursor:pointer;" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no}')" title="Click to view &amp; print Credit Note PDF">
+              Cr. Note: ${this.formatCurrency(inv.amount_credited)} 📄
             </div>
           ` : ''}
         </td>
@@ -4608,6 +4630,7 @@ class FinanceApp {
                     <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
                     <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
                     <td style="white-space:nowrap;">
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openCreditNotePrintModal('${cn.id}')" title="Print &amp; View Credit Note PDF">Print / View</button>
                       <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
                       <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCreditNote('${cn.id}')">Delete</button>
                     </td>
@@ -4896,6 +4919,7 @@ class FinanceApp {
                   <td><strong style="color:#38bdf8;">${this.formatCurrency(cn.total_credit_amount)}</strong></td>
                   <td><span class="fin-badge fin-badge-paid">${cn.status}</span></td>
                   <td style="white-space:nowrap;">
+                    <button type="button" class="fin-btn-row-action" style="color:#00e5d2;" onclick="window.finApp.openCreditNotePrintModal('${cn.id}')" title="Print &amp; View Credit Note PDF">Print / View</button>
                     <button type="button" class="fin-btn-row-action" style="color:#f59e0b;" onclick="window.finApp.openEditCreditNoteModal('${cn.id}')">Edit</button>
                     <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCreditNote('${cn.id}')">Delete</button>
                   </td>
@@ -11413,6 +11437,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -15519,10 +15544,11 @@ class FinanceApp {
   }
 
   getRayanDynamicVerificationCode(doc = {}, docType = 'invoice') {
-    const docId = doc.invoice_no || doc.receipt_no || doc.po_no || doc.id || 'REC-RG-INV-44049';
+    const docId = doc.invoice_no || doc.receipt_no || doc.po_no || doc.credit_note_no || doc.debit_note_no || doc.voucher_no || doc.expense_no || doc.id || 'REC-RG-INV-44049';
     const verifyUrl = `https://rayan-group.com/billing/?verify=${encodeURIComponent(docId)}&type=${encodeURIComponent(docType)}`;
     const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&data=${encodeURIComponent(verifyUrl)}`;
     const barcodeSvg = this.generateBarcodeSVG(docId);
+    const docTypeLabel = docType.replace(/_/g, ' ');
 
     return `
       <div class="doc-qr-barcode-block" style="display:inline-flex; flex-direction:column; align-items:flex-start; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; margin-top:8px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
@@ -15535,7 +15561,7 @@ class FinanceApp {
             <div class="doc-barcode-num" style="font-size:7.5px; font-weight:800; color:#0f172a; letter-spacing:0.04em; line-height:1.2;">${docId}</div>
             <div class="doc-qr-scan-hint" style="font-size:6.5px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; display:flex; align-items:center; gap:3px; margin-top:1px;">
               <span>📷</span>
-              <span>Scan to verify invoice</span>
+              <span>Scan to verify ${docTypeLabel}</span>
             </div>
           </div>
         </div>
@@ -15838,6 +15864,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -16254,6 +16281,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -18460,6 +18488,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openExpensePrintModal('${exp.id || ''}')">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -18763,6 +18792,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPaymentPrintModal('${pay.id || ''}')">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
@@ -19834,7 +19864,361 @@ class FinanceApp {
     };
   }
 
-  // 11. DEBIT NOTE / PURCHASE RETURN PRINT & VIEW MODAL
+  // 11. SALES CREDIT NOTE PRINT & VIEW MODAL (UAE VAT FTA COMPLIANT)
+  openCreditNotePrintModal(cnId, isVerifiedScan = false) {
+    let cn = null;
+    if (cnId && typeof cnId === 'object') {
+      cn = cnId;
+    } else if (cnId) {
+      const searchKey = String(cnId).trim().toLowerCase();
+      cn = (this.db?.credit_notes || []).find(c => {
+        if (!c) return false;
+        const id = String(c.id || '').trim().toLowerCase();
+        const no = String(c.credit_note_no || '').trim().toLowerCase();
+        const invNo = String(c.invoice_no || '').trim().toLowerCase();
+        return id === searchKey || no === searchKey || invNo === searchKey;
+      });
+    }
+
+    if (!cn) {
+      cn = (this.db?.credit_notes || [])[0] || {
+        credit_note_no: 'CN-RG-2026-350',
+        invoice_no: 'REC-RG-INV-44024',
+        customer_name: 'M/S ZORAWAR INTERIOR DECORATION LLC',
+        customer_trn: '100511370700003',
+        reason: 'REC-RG-INV-44024 cancelled for accounting purposes',
+        taxable_amount: 95238.10,
+        tax_amount: 4761.91,
+        total_credit_amount: 100000.01,
+        currency: 'AED',
+        status: 'applied',
+        date: new Date().toISOString().split('T')[0]
+      };
+    }
+
+    const isIndia = (cn.company_id || this.activeCompanyId) === 'ashaz-eng-in' || cn.currency === 'INR';
+    const comp = (this.db?.companies || []).find(c => c.id === (cn.company_id || this.activeCompanyId)) ||
+                 (typeof defaultSeedData !== 'undefined' ? (defaultSeedData.companies || []).find(c => c.id === (cn.company_id || this.activeCompanyId)) : null) ||
+                 (this.db?.companies || [])[0] || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC - SPC';
+    if (comp.id === 'rayan-group') {
+      compName = 'RAYAN ENGINEERING';
+    } else if (comp.id === 'rayan-properties-uae') {
+      compName = 'RAYAN PROPERTIES';
+    } else if (comp.id === 'ashaz-eng-in') {
+      compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    } else if (comp.name) {
+      compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+    }
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+
+    const curr = cn.currency || (isIndia ? 'INR' : 'AED');
+    const currSym = cn.currency_symbol || (isIndia ? '₹' : 'AED ');
+    const totalCredit = Number(cn.total_credit_amount || cn.amount || 0);
+    const taxRate = isIndia ? 0.18 : 0.05;
+    const taxableAmount = Number(cn.taxable_amount !== undefined && cn.taxable_amount !== null ? cn.taxable_amount : (totalCredit / (1 + taxRate)));
+    const taxAmount = Number(cn.tax_amount !== undefined && cn.tax_amount !== null ? cn.tax_amount : (totalCredit - taxableAmount));
+
+    const formattedTotal = totalCredit.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedTaxable = taxableAmount.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedTax = taxAmount.toLocaleString(isIndia ? 'en-IN' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const formatDateDisplay = (dateVal) => {
+      if (!dateVal) return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      try {
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return String(dateVal);
+        const day = d.getDate();
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${day} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+      } catch(e) {
+        return String(dateVal);
+      }
+    };
+
+    const formattedDate = formatDateDisplay(cn.date);
+    const amountInWords = this.formatAmountInWords(cn.amount_in_words || totalCredit, curr);
+    if (cn.amount_in_words) cn.amount_in_words = amountInWords;
+
+    const customerObj = (this.db?.customers || []).find(c => c.id === cn.customer_id || c.name === cn.customer_name || (cn.customer_name && c.name && c.name.toLowerCase().includes(cn.customer_name.toLowerCase()))) || {};
+    const linkedInvoice = (this.db?.invoices || []).find(i => i.id === cn.invoice_id || i.invoice_no === cn.invoice_no) || null;
+    const custName = cn.customer_name || customerObj.name || linkedInvoice?.customer_name || 'Valued Client';
+    const custTrn = cn.customer_trn || customerObj.trn || customerObj.tax_registration_no || linkedInvoice?.customer_trn || '';
+    const custAddress = customerObj.billing_address || customerObj.office_address || customerObj.address || linkedInvoice?.customer_address || '';
+    const linkedInvNo = cn.invoice_no || linkedInvoice?.invoice_no || 'REC-RG-INV';
+    const linkedInvDate = linkedInvoice?.invoice_date ? formatDateDisplay(linkedInvoice.invoice_date) : '';
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📄</span>
+              <span>Rayan Engineering Official Tax Credit Note (إشعار دائن ضريبي)</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal('${linkedInvoice?.id || ''}')">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCreditNotePrintModal('${cn.id || ''}')">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadCreditNoteDocument('${cn.id || ''}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditCreditNoteModal('${cn.id || ''}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+              ✏️ Edit Credit Note
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+            <!-- Header Section (Left: Logo & Company, Right: Credit Note Title & Meta) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
+              <div style="max-width:60%;">
+                <div style="margin-bottom:0.75rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
+                </div>
+                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                  ${compName}
+                </div>
+                <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                </div>
+                ${this.getRayanDynamicVerificationCode(cn, 'credit_note')}
+              </div>
+
+              <div style="text-align:right;">
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
+                  TAX CREDIT NOTE
+                </div>
+                <div style="font-size:0.95rem; font-family:'Amiri', serif; font-weight:700; color:#374151; margin-top:3px; margin-bottom:2px;">
+                  إشعار دائن ضريبي
+                </div>
+                <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:12px;">
+                  # ${cn.credit_note_no || 'CN-RG-2026-350'}
+                </div>
+
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Credit Note Date :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Original Tax Invoice :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#0284c7;">${linkedInvNo}${linkedInvDate ? ` (${linkedInvDate})` : ''}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 8px; color:#6b7280;">Ledger Adjustment :</td>
+                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a;">CREDITED TO RECEIVABLES ✓</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Customer / Party Details -->
+            <div style="margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em;">CREDIT ISSUED TO (CUSTOMER / CLIENT)</div>
+                <div style="font-size:0.75rem; font-weight:700; color:#64748b; font-family:'Amiri', serif;">إشعار دائن صادر إلى العميل</div>
+              </div>
+              <div style="font-size:1.02rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+                ${custName}
+              </div>
+              ${custTrn ? `<div style="color:#4b5563; font-weight:600;">TRN: ${custTrn}</div>` : ''}
+              ${custAddress ? `<div style="color:#4b5563;">Address: ${custAddress}</div>` : ''}
+              ${customerObj.contact_person ? `<div style="color:#4b5563;">Attn: ${customerObj.contact_person}</div>` : ''}
+              ${customerObj.email ? `<div style="color:#4b5563;">Email: <a href="mailto:${customerObj.email}" style="color:#0284c7; text-decoration:none;">${customerObj.email}</a></div>` : ''}
+              ${cn.reason ? `
+                <div style="font-size:0.85rem; font-weight:700; color:#111827; margin-top:8px; background:#f8fafc; padding:6px 10px; border-left:3px solid #00a699; border-radius:2px;">
+                  Reason / Basis for Adjustment: <span style="font-weight:600; color:#334155;">${cn.reason}</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Particulars Table Matching Invoice & UAE FTA Standards -->
+            <div class="fin-doc-table-scroll-hint">
+              <span>↔</span> Swipe table horizontally to view full columns
+            </div>
+            <div class="fin-doc-table-wrapper" style="margin-top:1rem; margin-bottom:1rem;">
+              <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+                <colgroup>
+                  <col style="width:5%;">   <!-- Sr. No -->
+                  <col style="width:41%;">  <!-- Description of Credit / Return Adjustment -->
+                  <col style="width:18%;">  <!-- Linked Invoice Ref -->
+                  <col style="width:12%;">  <!-- Taxable Credited -->
+                  <col style="width:10%;">  <!-- VAT 5% -->
+                  <col style="width:14%;">  <!-- Total Credit -->
+                </colgroup>
+                <thead>
+                  <tr style="background:#ffffff; color:#111827; border-bottom:1.5px solid #111827;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:5%; text-align:center; vertical-align:middle;">
+                      <div>Sr. No.</div>
+                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:5px 8px; width:41%; vertical-align:middle; text-align:left;">
+                      <div>Description of Adjustment / Return</div>
+                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">بيان الإشعار الدائن وتفاصيل التعديل</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:5px 6px; width:18%; text-align:center; vertical-align:middle;">
+                      <div>Invoice Ref</div>
+                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">مرجع الفاتورة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:5px 6px; width:12%; text-align:right; vertical-align:middle;">
+                      <div>Taxable (${curr})</div>
+                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">الخاضع للضريبة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:5px 6px; width:10%; text-align:right; vertical-align:middle;">
+                      <div>VAT 5%</div>
+                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                    </th>
+                    <th style="border:1px solid #111827; padding:5px 6px; width:14%; text-align:right; vertical-align:middle;">
+                      <div>Total (${curr})</div>
+                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الدائن</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #111827; background:#ffffff;">
+                    <td style="border:1px solid #111827; padding:8px 4px; text-align:center; font-weight:700; color:#111827; vertical-align:top;">1</td>
+                    <td style="border:1px solid #111827; padding:8px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word; vertical-align:top;">
+                      ${cn.reason || 'Sales return & full / partial cancellation for accounting reconciliation'}
+                      <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:3px; line-height:1.4;">
+                        Client: ${custName} • Adjustment credited to reduce accounts receivable balance
+                      </div>
+                    </td>
+                    <td style="border:1px solid #111827; padding:8px 6px; text-align:center; color:#111827; font-weight:700; font-size:0.76rem; vertical-align:top;">
+                      <div>${linkedInvNo}</div>
+                      ${linkedInvDate ? `<div style="font-size:0.68rem; font-weight:500; color:#64748b;">${linkedInvDate}</div>` : ''}
+                    </td>
+                    <td style="border:1px solid #111827; padding:8px 6px; text-align:right; color:#111827; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; vertical-align:top;">
+                      ${formattedTaxable}
+                    </td>
+                    <td style="border:1px solid #111827; padding:8px 6px; text-align:right; color:#111827; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; vertical-align:top;">
+                      ${formattedTax}
+                    </td>
+                    <td style="border:1px solid #111827; padding:8px 6px; text-align:right; color:#111827; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; vertical-align:top;">
+                      ${formattedTotal}
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
+                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="3" rowspan="3" style="border:1px solid #111827; padding:10px 14px; vertical-align:middle; background:#eaf3ec;">
+                      <div style="font-size:0.82rem; font-weight:700; color:#111827; line-height:1.45;">
+                        Total Credit In Words : ${amountInWords}
+                      </div>
+                      <div style="font-size:0.72rem; color:#475569; margin-top:4px; line-height:1.4;">
+                        VAT reduction accounted for in compliance with UAE Federal Decree-Law No. (8) of 2017 Article 60.
+                      </div>
+                    </td>
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">Sub Total Taxable</td>
+                    <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${formattedTaxable}</td>
+                  </tr>
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">VAT 5%</td>
+                    <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${formattedTax}</td>
+                  </tr>
+                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Total Credit Credited</td>
+                    <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr} ${formattedTotal}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Notes Section Below Items -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
+              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Adjustment Authorization &amp; VAT Compliance (إشعار الامتثال الضريبي)</div>
+              <div style="color:#4b5563;">This official Tax Credit Note is issued in accordance with UAE VAT Law (Federal Decree-Law No. (8) of 2017). The adjustment reduces output tax liability and client receivable balance against Original Tax Invoice <strong>${linkedInvNo}</strong>. Please update your VAT return and accounts payable records accordingly.</div>
+            </div>
+
+            <!-- Contact & Company Details Below Notes -->
+            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Fixed System Generated Footer -->
+            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
+                This is a system-generated tax credit note and does not require a signature or stamp.
+              </div>
+              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer -->
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  downloadCreditNoteDocument(cnId) {
+    let cn = (this.db?.credit_notes || []).find(c => c.id === cnId || c.credit_note_no === cnId);
+    if (!cn && (this.db?.credit_notes || []).length > 0) cn = this.db.credit_notes[0];
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Tax Credit Note - ${cn?.credit_note_no || 'Document'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    .fin-doc-table-scroll-hint { display: none !important; }
+    .fin-doc-table-wrapper { overflow: visible !important; width: 100% !important; }
+    table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
+    @media print {
+      @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 10mm 4mm 10mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      tfoot, tfoot tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${cn?.credit_note_no || 'Tax_Credit_Note'}.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${cn?.credit_note_no || 'Tax Credit Note'} document.`, 'success');
+    }
+  }
+
+  // 12. DEBIT NOTE / PURCHASE RETURN PRINT & VIEW MODAL
   openDebitNotePrintModal(dnId, isVerifiedScan = false) {
     let dn = (this.db?.debit_notes || []).find(d => d.id === dnId || d.debit_note_no === dnId);
     if (!dn) {
@@ -19891,6 +20275,7 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openExpensePrintModal()">Expense Receipt</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openDebitNotePrintModal('${dn.id || ''}')">Debit Note</button>
             </div>
           </div>
