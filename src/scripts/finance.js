@@ -691,11 +691,38 @@ class FinanceApp {
     const payments = this.db?.vendor_payments || [];
     payments.forEach(pay => {
       (pay.allocations || []).forEach(alloc => {
-        if (alloc.bill_id === billId || alloc.bill_no === billNo) {
+        const allocBillId = alloc.bill_id || '';
+        const allocBillNo = alloc.bill_no || '';
+        const allocInvNo = alloc.vendor_invoice_no || alloc.supplier_invoice_no || '';
+        if ((allocBillId && allocBillId === billId) || 
+            (allocBillNo && allocBillNo === billNo) || 
+            (bill.vendor_invoice_no && allocInvNo && allocInvNo === bill.vendor_invoice_no) ||
+            (bill.vendor_invoice_no && allocBillNo && allocBillNo === bill.vendor_invoice_no)) {
           paid += Number(alloc.amount_allocated) || 0;
         }
       });
     });
+    if (paid === 0) {
+      const vId = bill.vendor_id || '';
+      const vName = (bill.vendor_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      payments.forEach(pay => {
+        const pvId = pay.vendor_id || '';
+        const pvName = (pay.vendor_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const matches = (vId && vId === pvId) || (vName && vName === pvName);
+        if (matches) {
+          const payAmt = Number(pay.amount_paid) || 0;
+          let hasAllocForOther = false;
+          (pay.allocations || []).forEach(al => {
+            if (al.bill_id !== billId && al.bill_no !== billNo && al.vendor_invoice_no !== bill.vendor_invoice_no) {
+              hasAllocForOther = true;
+            }
+          });
+          if (!hasAllocForOther && payAmt > 0) {
+            paid += Math.min(payAmt, grand);
+          }
+        }
+      });
+    }
     if (paid === 0 && Number(bill.amount_paid) > 0.02) {
       paid = Number(bill.amount_paid);
     }
@@ -942,7 +969,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v47';
+    const CURRENT_DB_VERSION = 'v2026_clean_v48';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -11816,9 +11843,14 @@ class FinanceApp {
     const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
     const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
 
+    let targetBill = null;
+    if (preselectBillId) {
+      targetBill = bills.find(b => b.id === preselectBillId || b.bill_no === preselectBillId || b.vendor_invoice_no === preselectBillId);
+    }
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-payment">
-        <div class="fin-modal-dialog" style="max-width:680px;">
+        <div class="fin-modal-dialog" style="max-width:700px;">
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">💸 Record Vendor Payment Voucher (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-payment')">&times;</button>
@@ -11828,8 +11860,8 @@ class FinanceApp {
               <div class="fin-form-group">
                 <label class="fin-form-label">Vendor / Subcontractor <span style="color:#ef4444;">*</span></label>
                 <select id="pay-vend-sel" class="fin-form-select" required>
-                  <option value="" disabled selected>Select Vendor (${currLabel})</option>
-                  ${vendors.map(v => `<option value="${v.id}">${v.name} (${v.code || ''})</option>`).join('')}
+                  <option value="" disabled ${!targetBill ? 'selected' : ''}>Select Vendor (${currLabel})</option>
+                  ${vendors.map(v => `<option value="${v.id}" ${targetBill && (v.id === targetBill.vendor_id || v.name === targetBill.vendor_name) ? 'selected' : ''}>${v.name} (${v.code || ''})</option>`).join('')}
                 </select>
               </div>
 
@@ -11854,23 +11886,28 @@ class FinanceApp {
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Amount Disbursed (${currLabel}) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" id="pay-amount" class="fin-form-input" min="1" step="any" required placeholder="0.00">
+                  <input type="number" id="pay-amount" class="fin-form-input" min="0.01" step="any" required placeholder="0.00" value="${targetBill ? (targetBill.balance_due > 0 ? targetBill.balance_due : targetBill.grand_total) : ''}">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment UTR / CMS Ref #</label>
-                  <input type="text" id="pay-ref" class="fin-form-input" required placeholder="${isIndia ? 'e.g. CMS-ONLINE-991203' : 'e.g. ADCB-FT-994821'}">
+                  <input type="text" id="pay-ref" class="fin-form-input" required placeholder="${isIndia ? 'e.g. CMS-ONLINE-991203' : 'e.g. ADCB-FT-994821'}" value="Cash / Bank Transfer">
                 </div>
               </div>
 
               <!-- Unpaid Bills Checklist -->
-              <h4 style="font-family:var(--fin-font-heading); font-size:0.95rem; color:#f8fafc; margin:1rem 0 0.5rem;">Allocate Against Approved Bills (${currLabel})</h4>
-              <div id="pay-bills-list" style="max-height:180px; overflow-y:auto; border:1px solid var(--fin-border); border-radius:8px; padding:0.75rem; background:rgba(0,0,0,0.2);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1.25rem 0 0.4rem;">
+                <h4 style="font-family:var(--fin-font-heading); font-size:0.95rem; color:#f8fafc; margin:0;">
+                  Allocate Against Approved Bills (${currLabel})
+                </h4>
+                <span id="pay-alloc-summary" style="font-size:0.75rem; color:#00e5d2; font-weight:700;"></span>
+              </div>
+              <div id="pay-bills-list" style="max-height:200px; overflow-y:auto; border:1px solid var(--fin-border); border-radius:8px; padding:0.75rem; background:rgba(0,0,0,0.25);">
                 <div style="font-size:0.78rem; color:#94a3b8;">Select a vendor above to allocate payment against bills.</div>
               </div>
 
               <div class="fin-form-group" style="margin-top:1.25rem;">
                 <label class="fin-form-label">Notes &amp; Approver Sign-Off</label>
-                <input type="text" id="pay-notes" class="fin-form-input" placeholder="Approved by CFO for immediate release">
+                <input type="text" id="pay-notes" class="fin-form-input" placeholder="Approved by CFO for immediate release" value="${targetBill ? `Disbursement against ${targetBill.vendor_invoice_no || targetBill.bill_no}` : ''}">
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -11889,58 +11926,124 @@ class FinanceApp {
     const billsList = document.getElementById('pay-bills-list');
     const amountInp = document.getElementById('pay-amount');
 
-    const updateVendorBills = () => {
-      const vId = vendSel.value;
-      const unpaid = bills.filter(b => b.vendor_id === vId && b.balance_due > 0 && b.status !== 'void');
+    const refreshPaymentAllocSummary = () => {
+      const amt = Number(amountInp.value) || 0;
+      const curInputs = Array.from(document.querySelectorAll('.pay-alloc-input'));
+      let totalAlloc = 0;
+      curInputs.forEach(inp => {
+        totalAlloc += (Number(inp.value) || 0);
+      });
+      totalAlloc = Math.round(totalAlloc * 100) / 100;
 
-      if (!unpaid.length) {
-        billsList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No unpaid approved bills found for this vendor in ${currLabel}.</div>`;
-        return;
-      }
-
-      billsList.innerHTML = unpaid.map(b => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-          <div>
-            <strong style="color:#f8fafc; font-size:0.8rem;">${b.bill_no}</strong>
-            <span style="font-size:0.72rem; color:#94a3b8;"> (${b.vendor_invoice_no})</span>
-            <div style="font-size:0.7rem; color:#fb923c;">Balance Due: ${this.formatCurrency(b.balance_due)}</div>
-          </div>
-          <div>
-            <input type="number" class="fin-form-input pay-alloc-input" data-bill-id="${b.id}" data-bill-no="${b.bill_no}" data-max="${b.balance_due}" placeholder="Amount" style="width:140px; padding:0.3rem 0.5rem; font-size:0.75rem;" step="any">
-          </div>
-        </div>
-      `).join('');
-
-      if (amountInp.value) {
-        let remaining = Number(amountInp.value) || 0;
-        document.querySelectorAll('.pay-alloc-input').forEach(inp => {
-          const max = Number(inp.getAttribute('data-max')) || 0;
-          const toAlloc = Math.min(remaining, max);
-          inp.value = toAlloc > 0 ? toAlloc : '';
-          remaining -= toAlloc;
-        });
+      const summaryEl = document.getElementById('pay-alloc-summary');
+      if (summaryEl) {
+        const unalloc = Math.round((amt - totalAlloc) * 100) / 100;
+        if (amt <= 0) {
+          summaryEl.innerHTML = '';
+        } else if (Math.abs(unalloc) < 0.02) {
+          summaryEl.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ Fully Allocated (${currLabel} ${totalAlloc.toLocaleString('en-US', { minimumFractionDigits: 2 })})</span>`;
+        } else if (unalloc > 0) {
+          summaryEl.innerHTML = `<span style="color:#38bdf8;">Allocated: ${currLabel} ${totalAlloc.toLocaleString('en-US', { minimumFractionDigits: 2 })} | <strong style="color:#f59e0b;">Unallocated: ${currLabel} ${unalloc.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>`;
+        } else {
+          summaryEl.innerHTML = `<span style="color:#ef4444; font-weight:700;">⚠ Allocated exceeds Disbursed by ${currLabel} ${Math.abs(unalloc).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
+        }
       }
     };
 
-    vendSel.onchange = updateVendorBills;
+    const distributePaymentAllocations = () => {
+      const amt = Number(amountInp.value) || 0;
+      const curInputs = Array.from(document.querySelectorAll('.pay-alloc-input'));
+      let remaining = amt;
 
-    amountInp.oninput = () => {
-      let remaining = Number(amountInp.value) || 0;
-      document.querySelectorAll('.pay-alloc-input').forEach(inp => {
+      if (targetBill) {
+        const targetInp = curInputs.find(inp =>
+          inp.getAttribute('data-bill-id') === targetBill.id ||
+          inp.getAttribute('data-bill-no') === targetBill.bill_no ||
+          inp.getAttribute('data-bill-inv-no') === targetBill.vendor_invoice_no
+        );
+        if (targetInp) {
+          const max = Number(targetInp.getAttribute('data-max')) || amt;
+          const toAlloc = Math.min(remaining, max);
+          targetInp.value = toAlloc > 0 ? toAlloc : '';
+          remaining -= toAlloc;
+
+          curInputs.forEach(inp => {
+            if (inp !== targetInp) {
+              const oMax = Number(inp.getAttribute('data-max')) || 0;
+              const oToAlloc = Math.min(remaining, oMax);
+              inp.value = oToAlloc > 0 ? oToAlloc : '';
+              remaining -= oToAlloc;
+            }
+          });
+          refreshPaymentAllocSummary();
+          return;
+        }
+      }
+
+      curInputs.forEach(inp => {
         const max = Number(inp.getAttribute('data-max')) || 0;
         const toAlloc = Math.min(remaining, max);
         inp.value = toAlloc > 0 ? toAlloc : '';
         remaining -= toAlloc;
       });
+      refreshPaymentAllocSummary();
     };
 
-    if (preselectBillId) {
-      const b = bills.find(x => x.id === preselectBillId);
-      if (b) {
-        vendSel.value = b.vendor_id;
-        amountInp.value = b.balance_due;
-        updateVendorBills();
+    const updateVendorBills = () => {
+      const vId = vendSel.value;
+      const vend = vendors.find(v => v.id === vId);
+      const vNorm = (vend?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      const unpaid = bills.filter(b => {
+        const bVNorm = (b.vendor_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const matches = (b.vendor_id === vId || (vNorm && bVNorm === vNorm));
+        return matches && (Number(b.balance_due) > 0 || (targetBill && b.id === targetBill.id)) && b.status !== 'void';
+      });
+
+      if (targetBill) {
+        unpaid.sort((a, b) => {
+          const aMatch = (a.id === targetBill.id || a.bill_no === targetBill.bill_no);
+          const bMatch = (b.id === targetBill.id || b.bill_no === targetBill.bill_no);
+          return (bMatch ? 1 : 0) - (aMatch ? 1 : 0);
+        });
       }
+
+      if (!unpaid.length) {
+        billsList.innerHTML = `<div style="font-size:0.78rem; color:#10b981;">No unpaid approved bills found for this vendor in ${currLabel}. Payment will be disbursed as unallocated vendor credit.</div>`;
+        refreshPaymentAllocSummary();
+        return;
+      }
+
+      billsList.innerHTML = unpaid.map(b => {
+        const isTarget = targetBill && (b.id === targetBill.id || b.bill_no === targetBill.bill_no);
+        return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0.6rem; border-bottom:1px solid rgba(255,255,255,0.06); ${isTarget ? 'background:rgba(16,185,129,0.08); border-radius:6px; margin-bottom:4px;' : ''}">
+          <div>
+            <strong style="color:#f8fafc; font-size:0.8rem;">${b.bill_no}</strong>
+            ${isTarget ? '<span style="background:#10b981; color:#fff; font-size:0.65rem; padding:1px 6px; border-radius:4px; margin-left:6px; font-weight:700;">Target Bill</span>' : ''}
+            <span style="font-size:0.72rem; color:#94a3b8;"> (${b.vendor_invoice_no || 'No Inv Ref'})</span>
+            <div style="font-size:0.7rem; color:#38bdf8;">Balance Due: ${this.formatCurrency(b.balance_due)}</div>
+          </div>
+          <div>
+            <input type="number" class="fin-form-input pay-alloc-input" data-bill-id="${b.id}" data-bill-no="${b.bill_no}" data-bill-inv-no="${b.vendor_invoice_no || ''}" data-max="${b.balance_due > 0 ? b.balance_due : b.grand_total}" placeholder="Amount" style="width:140px; padding:0.3rem 0.5rem; font-size:0.75rem; ${isTarget ? 'border-color:#10b981; background:rgba(16,185,129,0.1);' : ''}" step="any">
+          </div>
+        </div>
+      `;
+      }).join('');
+
+      document.querySelectorAll('.pay-alloc-input').forEach(inp => {
+        inp.oninput = () => refreshPaymentAllocSummary();
+      });
+
+      distributePaymentAllocations();
+    };
+
+    vendSel.onchange = updateVendorBills;
+    amountInp.oninput = () => distributePaymentAllocations();
+    amountInp.onchange = () => distributePaymentAllocations();
+
+    if (targetBill) {
+      updateVendorBills();
     }
 
     document.getElementById('record-payment-form').onsubmit = async (e) => {
@@ -11951,21 +12054,72 @@ class FinanceApp {
         return;
       }
 
+      // Collect allocations
       const allocations = [];
+      let totalAllocated = 0;
       document.querySelectorAll('.pay-alloc-input').forEach(inp => {
         const val = Number(inp.value) || 0;
         if (val > 0) {
           allocations.push({
             bill_id: inp.getAttribute('data-bill-id'),
             bill_no: inp.getAttribute('data-bill-no'),
+            vendor_invoice_no: inp.getAttribute('data-bill-inv-no'),
             amount_allocated: val
           });
+          totalAllocated += val;
         }
       });
 
-      const vend = vendors.find(v => v.id === vendSel.value);
+      // Automatic fallback if allocations is empty or under-allocated
+      let unalloc = Math.round((amountPaid - totalAllocated) * 100) / 100;
+      if (unalloc > 0) {
+        if (targetBill) {
+          const existingAlloc = allocations.find(a => a.bill_id === targetBill.id);
+          const maxBill = Number(targetBill.balance_due > 0 ? targetBill.balance_due : targetBill.grand_total) || amountPaid;
+          const canAlloc = Math.min(unalloc, maxBill);
+          if (existingAlloc) {
+            existingAlloc.amount_allocated += canAlloc;
+          } else if (canAlloc > 0) {
+            allocations.push({
+              bill_id: targetBill.id,
+              bill_no: targetBill.bill_no,
+              vendor_invoice_no: targetBill.vendor_invoice_no,
+              amount_allocated: canAlloc
+            });
+          }
+          unalloc -= canAlloc;
+        }
+
+        if (unalloc > 0) {
+          const vId = vendSel.value;
+          const openBills = bills.filter(b => b.vendor_id === vId && (Number(b.balance_due) > 0 || b.id === targetBill?.id));
+          for (const ob of openBills) {
+            if (unalloc <= 0) break;
+            const existingAlloc = allocations.find(a => a.bill_id === ob.id);
+            const curAlloc = existingAlloc ? existingAlloc.amount_allocated : 0;
+            const bBal = Math.max(0, (Number(ob.balance_due) || 0) - curAlloc);
+            if (bBal > 0) {
+              const take = Math.min(unalloc, bBal);
+              if (existingAlloc) {
+                existingAlloc.amount_allocated += take;
+              } else {
+                allocations.push({
+                  bill_id: ob.id,
+                  bill_no: ob.bill_no,
+                  vendor_invoice_no: ob.vendor_invoice_no,
+                  amount_allocated: take
+                });
+              }
+              unalloc -= take;
+            }
+          }
+        }
+      }
+
+      const vend = vendors.find(v => v.id === vendSel.value) || (targetBill ? { id: targetBill.vendor_id, name: targetBill.vendor_name } : null);
       const voucherNo = this.getNextPaymentVoucherNumber();
       const payload = {
+        preselect_bill_id: targetBill ? targetBill.id : null,
         payment: {
           id: 'pay-' + Date.now(),
           voucher_no: voucherNo,
@@ -11973,20 +12127,57 @@ class FinanceApp {
           currency: isIndia ? 'INR' : 'AED',
           currency_symbol: currSym,
           vendor_id: vend ? vend.id : null,
-          vendor_name: vend ? vend.name : '',
+          vendor_name: this.formatCompanyName(vend ? vend.name : ''),
           payment_date: document.getElementById('pay-date').value,
           payment_mode: document.getElementById('pay-mode').value,
           reference_no: document.getElementById('pay-ref').value,
           amount_paid: amountPaid,
           allocations,
-          notes: document.getElementById('pay-notes').value
+          notes: document.getElementById('pay-notes').value,
+          created_at: new Date().toISOString()
         }
       };
 
+      // 1. Instant Optimistic Local Database Update
+      if (!this.db.vendor_payments) this.db.vendor_payments = [];
+      this.db.vendor_payments.unshift(payload.payment);
+
+      if (Array.isArray(allocations) && this.db.purchase_bills) {
+        allocations.forEach(alloc => {
+          const b = this.db.purchase_bills.find(x => x.id === alloc.bill_id || x.bill_no === alloc.bill_no || (alloc.vendor_invoice_no && x.vendor_invoice_no === alloc.vendor_invoice_no));
+          if (b) {
+            const allocAmt = Number(alloc.amount_allocated) || 0;
+            b.amount_paid = (Number(b.amount_paid) || 0) + allocAmt;
+            b.balance_due = Math.max(0, Math.round(((Number(b.grand_total) || 0) - b.amount_paid) * 100) / 100);
+            b.status = b.balance_due <= 0.01 ? 'paid' : 'partially_paid';
+          }
+        });
+      }
+
+      // 2. Route vendor payment to Cash & Bank
+      this.routeVendorPaymentToCashAndBank(payload.payment, this.db);
+
+      // 3. Normalize all balances & save to local cache
+      this.normalizeAllBalances();
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (err) {}
+
+      // 4. Close modal and re-render UI immediately
+      this.closeModal('modal-payment');
+      this.renderActiveTab();
+
+      // 5. Sync with backend API
       const res = await this.syncApi('record_payment', payload);
       if (res && res.success) {
-        this.closeModal('modal-payment');
-        this.renderActiveTab();
+        if (res.data) {
+          this.db = this.mergeWithSeedData(res.data);
+          this.normalizeAllBalances();
+          try {
+            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+          } catch (err) {}
+          this.renderActiveTab();
+        }
         this.showNotification(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`, 'success');
         this.openPaymentPrintModal(res.payment?.id || payload.payment.id);
       }
@@ -20872,24 +21063,44 @@ class FinanceApp {
     const bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
     const label = bill ? bill.bill_no : billId;
     if (!confirm(`Are you sure you want to delete purchase bill ${label}?`)) return;
-    await this.syncApi('delete_bill', { bill_id: billId, id: billId });
+
+    // 1. Immediately remove from local database & recalculate balances
     if (this.db.purchase_bills) {
       this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== billId && b.bill_no !== billId);
     }
-    this.showNotification(`Purchase bill ${label} deleted successfully.`, 'info');
+    this.normalizeAllBalances();
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) { }
+
+    // 2. Re-render UI immediately
     this.renderActiveTab();
+    this.showNotification(`Purchase bill ${label} deleted successfully.`, 'info');
+
+    // 3. Persist deletion to backend server
+    await this.syncApi('delete_bill', { bill_id: billId, id: billId });
   }
 
   async deletePayment(payId) {
     const pay = (this.db?.vendor_payments || []).find(p => p.id === payId || p.voucher_no === payId);
     const label = pay ? pay.voucher_no : payId;
     if (!confirm(`Are you sure you want to delete payment voucher ${label}?`)) return;
-    await this.syncApi('delete_payment', { payment_id: payId, id: payId });
+
+    // 1. Immediately remove from local database & recalculate balances
     if (this.db.vendor_payments) {
       this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== payId && p.voucher_no !== payId);
     }
-    this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
+    this.normalizeAllBalances();
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) { }
+
+    // 2. Re-render UI immediately
     this.renderActiveTab();
+    this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
+
+    // 3. Persist deletion to backend server
+    await this.syncApi('delete_payment', { payment_id: payId, id: payId });
   }
 
   async deleteReceipt(receiptId) {

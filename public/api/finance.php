@@ -828,6 +828,48 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 )
             WHERE invoice_no = 'REC-RG-INV-44050' OR id = 'inv-rec-rg-inv-44050'");
             $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01', 'prj-1793293174613', 'prj-1793293174359', 'prj-1793293174181', 'prj-1793293174006', 'prj-1793293173653', 'prj-1793293172695', 'prj-1793293172111', 'prj-1793293172304', 'prj-1793293136777') OR (name LIKE '%Yateem Optician%' AND id != 'prj-yok-02')");
+
+            // v2026_clean_v48: Purge all Pink City Ceramic dummy bills/payments & ensure HLN bill and payment are linked and marked paid
+            $pdo->exec("DELETE FROM finance_purchase_bills WHERE vendor_name LIKE '%PINK CITY%' OR id LIKE 'bill-1793293%' OR vendor_invoice_no IN ('PC-26-0950', 'PC-26-3152')");
+            $pdo->exec("DELETE FROM finance_vendor_payments WHERE vendor_name LIKE '%PINK CITY%' OR id IN ('pay-1793369661067', 'pay-1793290968855') OR voucher_no IN ('PV-RG-2026-101', 'PV-RG-2026-102')");
+
+            if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+                $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) {
+                    $vName = $b['vendor_name'] ?? '';
+                    $invNo = $b['vendor_invoice_no'] ?? '';
+                    $id = $b['id'] ?? '';
+                    return stripos($vName, 'PINK CITY') === false && stripos($invNo, 'PC-') === false && strpos($id, 'bill-1793293') !== 0;
+                }));
+                foreach ($data['purchase_bills'] as &$hb) {
+                    if (($hb['id'] ?? '') === 'bill-1793641982443' || ($hb['vendor_invoice_no'] ?? '') === 'HLN/PO/0526/2025') {
+                        $hb['amount_paid'] = 316571.79;
+                        $hb['balance_due'] = 0.00;
+                        $hb['status'] = 'paid';
+                    }
+                }
+                unset($hb);
+            }
+            if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+                $data['vendor_payments'] = array_values(array_filter($data['vendor_payments'], function($p) {
+                    $vName = $p['vendor_name'] ?? '';
+                    $vNo = $p['voucher_no'] ?? '';
+                    $id = $p['id'] ?? '';
+                    return stripos($vName, 'PINK CITY') === false && !in_array($vNo, ['PV-RG-2026-101', 'PV-RG-2026-102']) && !in_array($id, ['pay-1793369661067', 'pay-1793290968855']);
+                }));
+                foreach ($data['vendor_payments'] as &$hp) {
+                    if (($hp['id'] ?? '') === 'pay-1793642108024' || ($hp['voucher_no'] ?? '') === 'PV-RG-2026-103') {
+                        $hp['allocations'] = [
+                            [
+                                'bill_id' => 'bill-1793641982443',
+                                'bill_no' => 'BILL-RG-2026-1001',
+                                'vendor_invoice_no' => 'HLN/PO/0526/2025',
+                                'amount_allocated' => 316571.79
+                            ]
+                        ];
+                    }
+                }
+                unset($hp);
+            }
             $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
             $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-01', 'wire-02', 'wire-04', 'wire-05', 'wire-adcb-44035') OR reference_no IN ('WIRE-ADCB-99210', '194651191', 'SBIN3409394') OR type = 'inward' OR id LIKE 'wire-%'");
@@ -1368,8 +1410,38 @@ function recalculateAllFinanceBalances(&$data) {
             foreach ($payments as $pay) {
                 if (!empty($pay['allocations']) && is_array($pay['allocations'])) {
                     foreach ($pay['allocations'] as $alloc) {
-                        if (($alloc['bill_id'] ?? '') === $bId || ($alloc['bill_no'] ?? '') === $bNo) {
+                        $allocBillId = $alloc['bill_id'] ?? '';
+                        $allocBillNo = $alloc['bill_no'] ?? '';
+                        $allocInvNo = $alloc['vendor_invoice_no'] ?? ($alloc['supplier_invoice_no'] ?? '');
+                        if (($allocBillId && $allocBillId === $bId) || 
+                            ($allocBillNo && $allocBillNo === $bNo) || 
+                            (!empty($b['vendor_invoice_no']) && $allocInvNo && $allocInvNo === $b['vendor_invoice_no']) ||
+                            (!empty($b['vendor_invoice_no']) && $allocBillNo && $allocBillNo === $b['vendor_invoice_no'])) {
                             $paid += floatval($alloc['amount_allocated'] ?? 0);
+                        }
+                    }
+                }
+            }
+            if ($paid == 0.0) {
+                $vId = $b['vendor_id'] ?? '';
+                $vName = formatCompanyNamePhp($b['vendor_name'] ?? '');
+                foreach ($payments as $pay) {
+                    $pvId = $pay['vendor_id'] ?? '';
+                    $pvName = formatCompanyNamePhp($pay['vendor_name'] ?? '');
+                    $matches = (!empty($vId) && $vId === $pvId) || (!empty($vName) && $vName === $pvName);
+                    if ($matches) {
+                        $payAmt = floatval($pay['amount_paid'] ?? 0);
+                        $hasAllocForOther = false;
+                        if (!empty($pay['allocations']) && is_array($pay['allocations'])) {
+                            foreach ($pay['allocations'] as $al) {
+                                if (($al['bill_id'] ?? '') !== $bId && ($al['bill_no'] ?? '') !== $bNo && ($al['vendor_invoice_no'] ?? '') !== ($b['vendor_invoice_no'] ?? '')) {
+                                    $hasAllocForOther = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!$hasAllocForOther && $payAmt > 0) {
+                            $paid += min($payAmt, $grand);
                         }
                     }
                 }
@@ -3004,6 +3076,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$billId, $billId]);
                     } catch (Exception $e) {}
                 }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('delete', 'bill', $billId, 'Deleted bill ' . $billId);
             }
             break;
@@ -3739,18 +3812,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $prefix = ($pay['company_id'] === 'ashaz-eng-in') ? 'PV-ASH' : 'PV-RG-2026';
                     $pay['voucher_no'] = $prefix . '-' . rand(100, 999);
                 }
+
+                $amtPaid = floatval($pay['amount_paid'] ?? 0);
+                $allocTotal = 0;
+                if (!empty($pay['allocations']) && is_array($pay['allocations'])) {
+                    foreach ($pay['allocations'] as $al) {
+                        $allocTotal += floatval($al['amount_allocated'] ?? 0);
+                    }
+                } else {
+                    $pay['allocations'] = [];
+                }
+
+                // Auto-allocation fallback if allocations is empty or under-allocated
+                $unallocated = max(0, $amtPaid - $allocTotal);
+                if ($unallocated > 0 && !empty($db['purchase_bills'])) {
+                    $vId = $pay['vendor_id'] ?? '';
+                    $vName = formatCompanyNamePhp($pay['vendor_name'] ?? '');
+                    $targetBillId = $body['preselect_bill_id'] ?? $pay['preselect_bill_id'] ?? $pay['bill_id'] ?? '';
+
+                    // 1. Target specific bill first if requested
+                    if (!empty($targetBillId)) {
+                        foreach ($db['purchase_bills'] as &$tb) {
+                            if (($tb['id'] ?? '') === $targetBillId || ($tb['bill_no'] ?? '') === $targetBillId || ($tb['vendor_invoice_no'] ?? '') === $targetBillId) {
+                                $bBal = floatval($tb['balance_due'] ?? ($tb['grand_total'] ?? 0));
+                                $toAlloc = min($unallocated, $bBal);
+                                if ($toAlloc > 0) {
+                                    $pay['allocations'][] = [
+                                        'bill_id' => $tb['id'] ?? '',
+                                        'bill_no' => $tb['bill_no'] ?? '',
+                                        'vendor_invoice_no' => $tb['vendor_invoice_no'] ?? '',
+                                        'amount_allocated' => $toAlloc
+                                    ];
+                                    $unallocated -= $toAlloc;
+                                }
+                                break;
+                            }
+                        }
+                        unset($tb);
+                    }
+
+                    // 2. FIFO across vendor's unpaid bills
+                    if ($unallocated > 0) {
+                        foreach ($db['purchase_bills'] as &$tb) {
+                            $matchesVendor = (!empty($vId) && ($tb['vendor_id'] ?? '') === $vId) ||
+                                (!empty($vName) && formatCompanyNamePhp($tb['vendor_name'] ?? '') === $vName);
+                            if ($matchesVendor && floatval($tb['balance_due'] ?? 0) > 0) {
+                                $alreadyAlloc = 0;
+                                foreach ($pay['allocations'] as $ea) {
+                                    if (($ea['bill_id'] ?? '') === ($tb['id'] ?? '')) {
+                                        $alreadyAlloc += floatval($ea['amount_allocated'] ?? 0);
+                                    }
+                                }
+                                $bBal = max(0, floatval($tb['balance_due'] ?? 0) - $alreadyAlloc);
+                                if ($bBal > 0) {
+                                    $toAlloc = min($unallocated, $bBal);
+                                    if ($toAlloc > 0) {
+                                        $pay['allocations'][] = [
+                                            'bill_id' => $tb['id'] ?? '',
+                                            'bill_no' => $tb['bill_no'] ?? '',
+                                            'vendor_invoice_no' => $tb['vendor_invoice_no'] ?? '',
+                                            'amount_allocated' => $toAlloc
+                                        ];
+                                        $unallocated -= $toAlloc;
+                                        if ($unallocated <= 0.001) break;
+                                    }
+                                }
+                            }
+                        }
+                        unset($tb);
+                    }
+                }
+
                 if (!isset($db['vendor_payments']) || !is_array($db['vendor_payments'])) {
                     $db['vendor_payments'] = [];
                 }
                 array_unshift($db['vendor_payments'], $pay);
 
+                // Apply allocations to purchase bills
                 if (!empty($pay['allocations']) && is_array($pay['allocations']) && isset($db['purchase_bills'])) {
                     foreach ($pay['allocations'] as $alloc) {
                         foreach ($db['purchase_bills'] as &$b) {
-                            if (($b['id'] ?? '') === ($alloc['bill_id'] ?? '') || ($b['bill_no'] ?? '') === ($alloc['bill_no'] ?? '')) {
+                            if (($b['id'] ?? '') === ($alloc['bill_id'] ?? '') || 
+                                ($b['bill_no'] ?? '') === ($alloc['bill_no'] ?? '') ||
+                                (!empty($b['vendor_invoice_no']) && ($alloc['vendor_invoice_no'] ?? '') === $b['vendor_invoice_no'])) {
                                 $allocAmt = floatval($alloc['amount_allocated'] ?? 0);
                                 $b['amount_paid'] = floatval($b['amount_paid'] ?? 0) + $allocAmt;
-                                $b['balance_due'] = max(0, floatval($b['grand_total'] ?? 0) - $b['amount_paid']);
+                                $b['balance_due'] = max(0, round(floatval($b['grand_total'] ?? 0) - $b['amount_paid'], 2));
                                 if ($b['balance_due'] <= 0.01) {
                                     $b['status'] = 'paid';
                                 } else {
@@ -3761,11 +3908,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unset($b);
                     }
                 }
-                // Check if payment was made from Director's Current Account (Personal Funds)
-                $payMode = $pay['payment_mode'] ?? '';
+
+                // Route vendor payment to Cash & Bank
+                $payMode = $pay['payment_mode'] ?? 'Online';
                 if (stripos($payMode, 'Director') !== false || stripos($payMode, 'Personal') !== false) {
                     $dirLoanId = 'loan-dir-current-act';
-                    $amtPaid = floatval($pay['amount_paid'] ?? 0);
                     if ($amtPaid > 0 && !empty($db['loan_accounts'])) {
                         foreach ($db['loan_accounts'] as &$lf) {
                             if (($lf['id'] ?? '') === $dirLoanId) {
@@ -3791,7 +3938,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'notes' => 'Settled supplier bill for ' . ($pay['vendor_name'] ?? 'Vendor') . ' from personal funds'
                         ]);
                     }
+                } elseif (stripos($payMode, 'Cash') !== false) {
+                    // Petty Cash outflow
+                    if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) {
+                        $db['cash_vouchers'] = [];
+                    }
+                    $cvId = 'cv-pay-' . ($pay['id'] ?? round(microtime(true) * 1000));
+                    $cvObj = [
+                        'id' => $cvId,
+                        'payment_id' => $pay['id'] ?? '',
+                        'voucher_no' => 'CV-' . ($pay['voucher_no'] ?? ('PV-' . rand(100, 999))),
+                        'company_id' => $pay['company_id'] ?? 'rayan-corp-uae',
+                        'register_id' => ($pay['currency'] === 'INR') ? 'cash-mumbai-reg' : 'cash-dubai-reg',
+                        'register_name' => ($pay['currency'] === 'INR') ? 'Ashaz Engineering Cash Register (Mumbai)' : 'Main Operations Cash Register (Dubai)',
+                        'custodian' => 'Cashier / Petty Cash Custodian',
+                        'date' => $pay['payment_date'] ?? date('Y-m-d'),
+                        'type' => 'outflow',
+                        'category' => 'Supplier Disbursement',
+                        'purpose' => $pay['notes'] ?: ('Settlement for ' . ($pay['vendor_name'] ?? 'Vendor') . ' under ' . ($pay['voucher_no'] ?? '')),
+                        'payee' => $pay['vendor_name'] ?? 'Vendor',
+                        'amount' => $amtPaid,
+                        'currency' => $pay['currency'] ?? 'AED',
+                        'status' => 'Cleared',
+                        'created_at' => date('Y-m-d\TH:i:s\Z')
+                    ];
+                    array_unshift($db['cash_vouchers'], $cvObj);
+                    if (!empty($db['cash_in_hand']) && is_array($db['cash_in_hand'])) {
+                        foreach ($db['cash_in_hand'] as &$cih) {
+                            if (($cih['company_id'] ?? '') === ($pay['company_id'] ?? 'rayan-corp-uae') || ($cih['id'] ?? '') === $cvObj['register_id']) {
+                                $cih['balance'] = max(0, floatval($cih['balance'] ?? 0) - $amtPaid);
+                                break;
+                            }
+                        }
+                        unset($cih);
+                    }
+                } else {
+                    // Bank Transfer / Wire outflow
+                    if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) {
+                        $db['bank_transfers'] = [];
+                    }
+                    $wireId = 'wire-pay-' . ($pay['id'] ?? round(microtime(true) * 1000));
+                    $wireObj = [
+                        'id' => $wireId,
+                        'payment_id' => $pay['id'] ?? '',
+                        'reference_no' => $pay['reference_no'] ?: ('WIRE-' . ($pay['voucher_no'] ?? rand(100, 999))),
+                        'company_id' => $pay['company_id'] ?? 'rayan-corp-uae',
+                        'transfer_date' => $pay['payment_date'] ?? date('Y-m-d'),
+                        'type' => 'outward',
+                        'party_type' => 'Vendor',
+                        'counterparty' => $pay['vendor_name'] ?? 'Vendor',
+                        'amount' => $amtPaid,
+                        'currency' => $pay['currency'] ?? 'AED',
+                        'status' => 'Cleared',
+                        'notes' => $pay['notes'] ?: ('Supplier disbursement for ' . ($pay['vendor_name'] ?? 'Vendor')),
+                        'created_at' => date('Y-m-d\TH:i:s\Z')
+                    ];
+                    array_unshift($db['bank_transfers'], $wireObj);
+                    if (!empty($db['bank_accounts']) && is_array($db['bank_accounts'])) {
+                        foreach ($db['bank_accounts'] as &$ba) {
+                            if (($ba['company_id'] ?? '') === ($pay['company_id'] ?? 'rayan-corp-uae')) {
+                                $ba['balance'] = max(0, floatval($ba['balance'] ?? 0) - $amtPaid);
+                                break;
+                            }
+                        }
+                        unset($ba);
+                    }
                 }
+
+                // Recalculate all balances across DB
+                recalculateAllFinanceBalances($db);
+
                 $addAuditLog('create', 'payment', $pay['voucher_no'] ?? '', 'Disbursed vendor payment of ' . ($pay['amount_paid'] ?? 0));
             }
             break;
