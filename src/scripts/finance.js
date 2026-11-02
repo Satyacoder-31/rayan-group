@@ -740,6 +740,26 @@ class FinanceApp {
     return bal;
   }
 
+  formatCompanyName(name) {
+    if (!name || typeof name !== 'string') return '';
+    const clean = name.trim();
+    if (!clean) return '';
+    if (/^m\s*[\/\.]\s*s[\.\s]*/i.test(clean)) {
+      return clean.replace(/^m\s*[\/\.]\s*s[\.\s]*/i, 'M/S ').trim();
+    }
+    if (/^messrs[\.\s]*/i.test(clean)) {
+      return clean.replace(/^messrs[\.\s]*/i, 'M/S ').trim();
+    }
+    if (/^(mr|mrs|ms|dr|eng)[\.\s]/i.test(clean)) {
+      return clean;
+    }
+    const lower = clean.toLowerCase();
+    if (lower === 'corporate treasury' || lower === 'general corporate overhead') {
+      return clean;
+    }
+    return `M/S ${clean}`;
+  }
+
   normalizeAllBalances() {
     if (!this.db) return;
 
@@ -868,12 +888,61 @@ class FinanceApp {
     // 3. Recalculate all balances
     (this.db.invoices || []).forEach(inv => this.recalculateInvoiceBalance(inv));
     (this.db.purchase_bills || []).forEach(bill => this.recalculateBillBalance(bill));
+
+    // 4. Auto-normalize and ensure standard M/S prefix across all corporate records
+    (this.db.customers || []).forEach(c => {
+      if (c.name) c.name = this.formatCompanyName(c.name);
+      if (c.company_name) c.company_name = this.formatCompanyName(c.company_name);
+      if (c.display_name) c.display_name = this.formatCompanyName(c.display_name);
+    });
+    (this.db.vendors || []).forEach(v => {
+      if (v.name) v.name = this.formatCompanyName(v.name);
+      if (v.company_name) v.company_name = this.formatCompanyName(v.company_name);
+      if (v.display_name) v.display_name = this.formatCompanyName(v.display_name);
+    });
+    (this.db.invoices || []).forEach(inv => {
+      if (inv.customer_name) inv.customer_name = this.formatCompanyName(inv.customer_name);
+    });
+    (this.db.customer_receipts || []).forEach(rcp => {
+      if (rcp.customer_name) rcp.customer_name = this.formatCompanyName(rcp.customer_name);
+    });
+    (this.db.purchase_bills || []).forEach(pb => {
+      if (pb.vendor_name) pb.vendor_name = this.formatCompanyName(pb.vendor_name);
+    });
+    (this.db.vendor_payments || []).forEach(vp => {
+      if (vp.vendor_name) vp.vendor_name = this.formatCompanyName(vp.vendor_name);
+      if (vp.party_name) vp.party_name = this.formatCompanyName(vp.party_name);
+    });
+    (this.db.cheques || []).forEach(chq => {
+      if (chq.party_name) chq.party_name = this.formatCompanyName(chq.party_name);
+    });
+    (this.db.projects || []).forEach(prj => {
+      if (prj.client_name) prj.client_name = this.formatCompanyName(prj.client_name);
+      if (prj.client) prj.client = this.formatCompanyName(prj.client);
+    });
+    (this.db.credit_notes || []).forEach(cn => {
+      if (cn.customer_name) cn.customer_name = this.formatCompanyName(cn.customer_name);
+    });
+    (this.db.debit_notes || []).forEach(dn => {
+      if (dn.vendor_name) dn.vendor_name = this.formatCompanyName(dn.vendor_name);
+    });
+    (this.db.bank_transfers || []).forEach(trn => {
+      if (trn.receipt_id && this.db.customer_receipts) {
+        const matchedRcp = this.db.customer_receipts.find(r => r.id === trn.receipt_id || r.receipt_no === trn.receipt_id);
+        if (matchedRcp && matchedRcp.customer_name) {
+          trn.counterparty = this.formatCompanyName(matchedRcp.customer_name);
+        }
+      }
+      if (trn.counterparty) {
+        trn.counterparty = this.formatCompanyName(trn.counterparty);
+      }
+    });
   }
 
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v46';
+    const CURRENT_DB_VERSION = 'v2026_clean_v47';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5721,7 +5790,7 @@ class FinanceApp {
                     <td><strong>${t.reference_no}</strong></td>
                     <td>${this.formatDate(t.date)}</td>
                     <td>
-                      <div style="font-weight:600; color:#ffffff;">${t.counterparty || 'Corporate Treasury'}</div>
+                      <div style="font-weight:600; color:#ffffff;">${this.formatCompanyName(t.counterparty) || 'Corporate Treasury'}</div>
                       ${t.purpose ? `<div style="font-size:0.7rem; color:#94a3b8;">${t.purpose}</div>` : ''}
                     </td>
                     <td>${t.source_bank || 'Corporate Account'}</td>
@@ -6062,7 +6131,7 @@ class FinanceApp {
         <td><strong style="color:#38bdf8; font-family:monospace;">${c.cheque_no}</strong></td>
         <td>${c.bank_name || '—'}</td>
         <td>
-          <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
+          <div style="font-weight:600; color:#ffffff;">${this.formatCompanyName(c.party_name)}</div>
           ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
         </td>
         <td>${this.formatDate(c.date)}</td>
@@ -6095,7 +6164,7 @@ class FinanceApp {
         <td><strong style="color:#fb923c; font-family:monospace;">${c.cheque_no}</strong></td>
         <td>${c.bank_name || '—'}</td>
         <td>
-          <div style="font-weight:600; color:#ffffff;">${c.party_name}</div>
+          <div style="font-weight:600; color:#ffffff;">${this.formatCompanyName(c.party_name)}</div>
           ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
         </td>
         <td>${this.formatDate(c.date)}</td>
@@ -6469,7 +6538,7 @@ class FinanceApp {
                           ${isManual ? '<span style="font-size:0.68rem; color:#f59e0b; background:rgba(245,158,11,0.12); padding:2px 7px; border-radius:4px; border:1px solid rgba(245,158,11,0.3); font-weight:600;">⚡ Manual P&amp;L</span>' : '<span style="font-size:0.68rem; color:#94a3b8; background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">📊 Auto-Tracked</span>'}
                         </div>
                         <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin:0 0 0.35rem; line-height:1.35; word-break:break-word;">${prj.name}</h3>
-                        <div style="font-size:0.78rem; color:#94a3b8;">Client: <strong style="color:#e2e8f0;">${prj.client_name || prj.client || 'Corporate Client'}</strong></div>
+                        <div style="font-size:0.78rem; color:#94a3b8;">Client: <strong style="color:#e2e8f0;">${this.formatCompanyName(prj.client_name || prj.client) || 'Corporate Client'}</strong></div>
                       </div>
                       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem; flex-shrink:0;">
                         <span class="fin-badge" style="${badgeStyle}; font-size:0.72rem; font-weight:700; letter-spacing:0.5px; padding:4px 10px; border-radius:6px;">${statusLabel}</span>

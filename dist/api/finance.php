@@ -1264,6 +1264,26 @@ function matchInvoiceRefPhp($inv, $targetNo, $targetId = '') {
     return false;
 }
 
+function formatCompanyNamePhp($name) {
+    if (!$name || !is_string($name)) return '';
+    $clean = trim($name);
+    if (empty($clean)) return '';
+    if (preg_match('/^m\s*[\/\.]\s*s[\.\s]*/i', $clean)) {
+        return trim(preg_replace('/^m\s*[\/\.]\s*s[\.\s]*/i', 'M/S ', $clean));
+    }
+    if (preg_match('/^messrs[\.\s]*/i', $clean)) {
+        return trim(preg_replace('/^messrs[\.\s]*/i', 'M/S ', $clean));
+    }
+    if (preg_match('/^(mr|mrs|ms|dr|eng)[\.\s]/i', $clean)) {
+        return $clean;
+    }
+    $lower = strtolower($clean);
+    if ($lower === 'corporate treasury' || $lower === 'general corporate overhead') {
+        return $clean;
+    }
+    return 'M/S ' . $clean;
+}
+
 function recalculateAllFinanceBalances(&$data) {
     if (!$data || !is_array($data)) return;
 
@@ -1394,6 +1414,92 @@ function recalculateAllFinanceBalances(&$data) {
             }
         }
         unset($b);
+    }
+
+    // Auto-normalize and prefix all corporate entity names with M/S
+    if (!empty($data['customers']) && is_array($data['customers'])) {
+        foreach ($data['customers'] as &$c) {
+            if (!empty($c['name'])) $c['name'] = formatCompanyNamePhp($c['name']);
+            if (!empty($c['company_name'])) $c['company_name'] = formatCompanyNamePhp($c['company_name']);
+            if (!empty($c['display_name'])) $c['display_name'] = formatCompanyNamePhp($c['display_name']);
+        }
+        unset($c);
+    }
+    if (!empty($data['vendors']) && is_array($data['vendors'])) {
+        foreach ($data['vendors'] as &$v) {
+            if (!empty($v['name'])) $v['name'] = formatCompanyNamePhp($v['name']);
+            if (!empty($v['company_name'])) $v['company_name'] = formatCompanyNamePhp($v['company_name']);
+            if (!empty($v['display_name'])) $v['display_name'] = formatCompanyNamePhp($v['display_name']);
+        }
+        unset($v);
+    }
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        foreach ($data['invoices'] as &$inv) {
+            if (!empty($inv['customer_name'])) $inv['customer_name'] = formatCompanyNamePhp($inv['customer_name']);
+        }
+        unset($inv);
+    }
+    if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+        foreach ($data['customer_receipts'] as &$rcp) {
+            if (!empty($rcp['customer_name'])) $rcp['customer_name'] = formatCompanyNamePhp($rcp['customer_name']);
+        }
+        unset($rcp);
+    }
+    if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+        foreach ($data['purchase_bills'] as &$pb) {
+            if (!empty($pb['vendor_name'])) $pb['vendor_name'] = formatCompanyNamePhp($pb['vendor_name']);
+        }
+        unset($pb);
+    }
+    if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        foreach ($data['vendor_payments'] as &$vp) {
+            if (!empty($vp['vendor_name'])) $vp['vendor_name'] = formatCompanyNamePhp($vp['vendor_name']);
+            if (!empty($vp['party_name'])) $vp['party_name'] = formatCompanyNamePhp($vp['party_name']);
+        }
+        unset($vp);
+    }
+    if (!empty($data['cheques']) && is_array($data['cheques'])) {
+        foreach ($data['cheques'] as &$chq) {
+            if (!empty($chq['party_name'])) $chq['party_name'] = formatCompanyNamePhp($chq['party_name']);
+        }
+        unset($chq);
+    }
+    if (!empty($data['projects']) && is_array($data['projects'])) {
+        foreach ($data['projects'] as &$prj) {
+            if (!empty($prj['client_name'])) $prj['client_name'] = formatCompanyNamePhp($prj['client_name']);
+            if (!empty($prj['client'])) $prj['client'] = formatCompanyNamePhp($prj['client']);
+        }
+        unset($prj);
+    }
+    if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+        foreach ($data['credit_notes'] as &$cn) {
+            if (!empty($cn['customer_name'])) $cn['customer_name'] = formatCompanyNamePhp($cn['customer_name']);
+        }
+        unset($cn);
+    }
+    if (!empty($data['debit_notes']) && is_array($data['debit_notes'])) {
+        foreach ($data['debit_notes'] as &$dn) {
+            if (!empty($dn['vendor_name'])) $dn['vendor_name'] = formatCompanyNamePhp($dn['vendor_name']);
+        }
+        unset($dn);
+    }
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        foreach ($data['bank_transfers'] as &$trn) {
+            if (!empty($trn['receipt_id']) && !empty($data['customer_receipts'])) {
+                foreach ($data['customer_receipts'] as $r) {
+                    if (($r['id'] ?? '') === $trn['receipt_id'] || ($r['receipt_no'] ?? '') === $trn['receipt_id']) {
+                        if (!empty($r['customer_name'])) {
+                            $trn['counterparty'] = formatCompanyNamePhp($r['customer_name']);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!empty($trn['counterparty'])) {
+                $trn['counterparty'] = formatCompanyNamePhp($trn['counterparty']);
+            }
+        }
+        unset($trn);
     }
 }
 
@@ -1577,6 +1683,20 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 $stmtState = $pdo->prepare("REPLACE INTO finance_state (id, state_json, updated_at) VALUES ('main', ?, NOW())");
                                 $stmtState->execute([json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]);
                             } catch (Exception $eState) {}
+                        }
+                    } catch (Exception $e) {}
+
+                    // Migration v47: Universal M/S normalization across MySQL tables
+                    try {
+                        $chkMs47 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'company_ms_normalization_v47'")->fetchColumn();
+                        if (!$chkMs47) {
+                            $pdo->exec("UPDATE finance_bank_transfers SET counterparty = CONCAT('M/S ', counterparty) WHERE counterparty NOT LIKE 'M/S%' AND counterparty NOT LIKE 'MR.%' AND counterparty NOT LIKE 'MS.%' AND counterparty NOT LIKE 'DR.%' AND counterparty != 'Corporate Treasury' AND counterparty != ''");
+                            $pdo->exec("UPDATE finance_cheques SET party_name = CONCAT('M/S ', party_name) WHERE party_name NOT LIKE 'M/S%' AND party_name NOT LIKE 'MR.%' AND party_name NOT LIKE 'MS.%' AND party_name NOT LIKE 'DR.%' AND party_name != ''");
+                            $pdo->exec("UPDATE finance_invoices SET customer_name = CONCAT('M/S ', customer_name) WHERE customer_name NOT LIKE 'M/S%' AND customer_name NOT LIKE 'MR.%' AND customer_name NOT LIKE 'MS.%' AND customer_name NOT LIKE 'DR.%' AND customer_name != ''");
+                            $pdo->exec("UPDATE finance_receipts SET customer_name = CONCAT('M/S ', customer_name) WHERE customer_name NOT LIKE 'M/S%' AND customer_name NOT LIKE 'MR.%' AND customer_name NOT LIKE 'MS.%' AND customer_name NOT LIKE 'DR.%' AND customer_name != ''");
+                            $pdo->exec("UPDATE finance_customers SET name = CONCAT('M/S ', name) WHERE name NOT LIKE 'M/S%' AND name NOT LIKE 'MR.%' AND name NOT LIKE 'MS.%' AND name NOT LIKE 'DR.%' AND name != ''");
+                            $pdo->exec("UPDATE finance_vendors SET name = CONCAT('M/S ', name) WHERE name NOT LIKE 'M/S%' AND name NOT LIKE 'MR.%' AND name NOT LIKE 'MS.%' AND name NOT LIKE 'DR.%' AND name != ''");
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('company_ms_normalization_v47', 'completed', NOW())");
                         }
                     } catch (Exception $e) {}
 
