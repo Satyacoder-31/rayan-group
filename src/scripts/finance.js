@@ -545,21 +545,56 @@ class FinanceApp {
     } catch (e) { }
   }
 
+  normalizeInvNo(no) {
+    if (!no) return '';
+    return String(no).trim().toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/(INVOICE|INV)/g, '');
+  }
+
+  matchInvoiceRef(inv, targetNo, targetId) {
+    if (!inv) return false;
+    const invNo = String(inv.invoice_no || '').trim().toUpperCase();
+    const invId = String(inv.id || '').trim().toLowerCase();
+    const tNo = String(targetNo || '').trim().toUpperCase();
+    const tId = String(targetId || '').trim().toLowerCase();
+
+    // 1. Exact matches
+    if (tNo && (invNo === tNo || invId === tNo.toLowerCase())) return true;
+    if (tId && (invId === tId || invNo.toLowerCase() === tId)) return true;
+
+    // 2. Normalized prefix & stripped inv/invoice
+    const nInv = this.normalizeInvNo(invNo);
+    const nTNo = this.normalizeInvNo(tNo);
+    const nTId = this.normalizeInvNo(tId);
+    if (nTNo && nInv === nTNo) return true;
+    if (nTId && nInv === nTId) return true;
+
+    // 3. Numeric trailing sequence (e.g. 1002 matches REC-RG-1002, REC-RG-INV-1002)
+    const digitsInv = invNo.match(/\d{4,}$/)?.[0];
+    const digitsTNo = tNo.match(/\d{4,}$/)?.[0];
+    const digitsTId = tId.match(/\d{4,}$/)?.[0];
+    if (digitsInv && (digitsInv === digitsTNo || digitsInv === digitsTId)) return true;
+
+    return false;
+  }
+
   recalculateInvoiceBalance(inv) {
     if (!inv) return 0;
-    const invId = inv.id;
-    const invNo = inv.invoice_no;
     const grand = Math.round((Number(inv.grand_total) || 0) * 100) / 100;
 
-    // Sum receipts allocated to this invoice
+    // Sum receipts allocated to this invoice (flexible matching)
     let paid = 0;
     const receipts = this.db?.customer_receipts || [];
     receipts.forEach(rcp => {
+      if (rcp.status === 'void') return;
       (rcp.allocations || []).forEach(alloc => {
-        if (alloc.invoice_id === invId || alloc.invoice_no === invNo) {
+        if (this.matchInvoiceRef(inv, alloc.invoice_no, alloc.invoice_id) || (rcp.ref_invoice_no && this.matchInvoiceRef(inv, rcp.ref_invoice_no))) {
           paid += Number(alloc.amount_allocated) || 0;
         }
       });
+      // Fallback: if receipt has ref_invoice_no pointing to this invoice but no explicit allocations array
+      if ((!rcp.allocations || rcp.allocations.length === 0) && rcp.ref_invoice_no && this.matchInvoiceRef(inv, rcp.ref_invoice_no)) {
+        paid += Number(rcp.amount_received) || 0;
+      }
     });
     // No phantom paid fallback: only explicit receipts in customer_receipts dictate amount_paid
     paid = Math.round(paid * 100) / 100;
@@ -568,12 +603,12 @@ class FinanceApp {
     }
     inv.amount_paid = paid;
 
-    // Sum credit notes linked to this invoice
+    // Sum credit notes linked to this invoice (flexible matching across REC-RG-xxxx and REC-RG-INV-xxxx)
     let credited = 0;
     const creditNotes = this.db?.credit_notes || [];
     creditNotes.forEach(cn => {
       if (cn.status === 'void') return;
-      if (cn.invoice_id === invId || cn.invoice_no === invNo) {
+      if (this.matchInvoiceRef(inv, cn.invoice_no || cn.ref_invoice_no, cn.invoice_id)) {
         const cnAmt = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
         credited += cnAmt;
       }
@@ -589,10 +624,10 @@ class FinanceApp {
     inv.amount_credited = credited;
     inv.balance_due = bal;
     if (bal === 0) {
-      if (paid > 0) {
-        inv.status = 'paid';
-      } else if (credited > 0) {
+      if (credited > 0 && paid === 0) {
         inv.status = 'credited';
+      } else if (paid > 0) {
+        inv.status = 'paid';
       } else {
         inv.status = 'unpaid';
       }
@@ -669,6 +704,47 @@ class FinanceApp {
 
   normalizeAllBalances() {
     if (!this.db) return;
+
+    // 1. Auto-align customer receipts allocations and customer names with current invoices
+    (this.db.customer_receipts || []).forEach(rcp => {
+      (rcp.allocations || []).forEach(alloc => {
+        const matchedInv = (this.db.invoices || []).find(i => this.matchInvoiceRef(i, alloc.invoice_no, alloc.invoice_id));
+        if (matchedInv) {
+          alloc.invoice_no = matchedInv.invoice_no;
+          alloc.invoice_id = matchedInv.id;
+          if (matchedInv.customer_name && (!rcp.customer_name || rcp.customer_name.trim() === '' || rcp.customer_name === 'Customer')) {
+            rcp.customer_name = matchedInv.customer_name;
+            rcp.customer_id = matchedInv.customer_id || rcp.customer_id;
+          }
+        }
+      });
+      if (rcp.ref_invoice_no) {
+        const matchedInv = (this.db.invoices || []).find(i => this.matchInvoiceRef(i, rcp.ref_invoice_no));
+        if (matchedInv) {
+          rcp.ref_invoice_no = matchedInv.invoice_no;
+          if (matchedInv.customer_name && (!rcp.customer_name || rcp.customer_name.trim() === '' || rcp.customer_name === 'Customer')) {
+            rcp.customer_name = matchedInv.customer_name;
+            rcp.customer_id = matchedInv.customer_id || rcp.customer_id;
+          }
+        }
+      }
+    });
+
+    // 2. Auto-align credit notes with current invoices
+    (this.db.credit_notes || []).forEach(cn => {
+      const matchedInv = (this.db.invoices || []).find(i => this.matchInvoiceRef(i, cn.invoice_no || cn.ref_invoice_no, cn.invoice_id));
+      if (matchedInv) {
+        cn.invoice_no = matchedInv.invoice_no;
+        cn.ref_invoice_no = matchedInv.invoice_no;
+        cn.invoice_id = matchedInv.id;
+        if (matchedInv.customer_name) {
+          cn.customer_name = matchedInv.customer_name;
+          cn.customer_id = matchedInv.customer_id || cn.customer_id;
+        }
+      }
+    });
+
+    // 3. Recalculate all balances
     (this.db.invoices || []).forEach(inv => this.recalculateInvoiceBalance(inv));
     (this.db.purchase_bills || []).forEach(bill => this.recalculateBillBalance(bill));
   }
@@ -676,7 +752,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v36';
+    const CURRENT_DB_VERSION = 'v2026_clean_v37';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4753,28 +4829,42 @@ class FinanceApp {
                 </tr>
               </thead>
               <tbody>
-                ${receipts.map(r => `
-                  <tr>
-                    <td><strong>${r.receipt_no}</strong></td>
-                    <td>${this.formatDate(r.receipt_date)}</td>
-                    <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${r.customer_name}</span></td>
-                    <td>
-                      <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
-                      <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}${r.bank_name ? ` • ${r.bank_name}` : ''}</span>
-                    </td>
-                    <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
-                    <td>
-                      ${(r.allocations || []).map(a => `
-                        <span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${a.invoice_no}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                      `).join(' ')}
-                    </td>
-                    <td style="white-space:nowrap;">
-                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Customer Receipt">✏️ Edit</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
-                    </td>
-                  </tr>
-                `).join('')}
+                  ${receipts.map(r => {
+                    let custDisp = r.customer_name;
+                    const firstAlloc = (r.allocations || [])[0];
+                    if (!custDisp || custDisp.trim() === '' || custDisp === 'Customer' || custDisp === 'Client') {
+                      if (firstAlloc) {
+                        const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
+                        if (mi?.customer_name) custDisp = mi.customer_name;
+                      } else if (r.ref_invoice_no) {
+                        const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
+                        if (mi?.customer_name) custDisp = mi.customer_name;
+                      }
+                    }
+                    return `
+                    <tr>
+                      <td><strong>${r.receipt_no}</strong></td>
+                      <td>${this.formatDate(r.receipt_date)}</td>
+                      <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${custDisp || 'Client'}</span></td>
+                      <td>
+                        <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
+                        <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}${r.bank_name ? ` • ${r.bank_name}` : ''}</span>
+                      </td>
+                      <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
+                      <td>
+                        ${(r.allocations || []).map(a => {
+                          const matchedInv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
+                          const dispInvNo = matchedInv ? matchedInv.invoice_no : a.invoice_no;
+                          return `<span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${dispInvNo}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
+                        }).join(' ')}
+                      </td>
+                      <td style="white-space:nowrap;">
+                        <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
+                        <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditReceiptModal('${r.id}')" title="Edit Payment-In Voucher / Customer Receipt">✏️ Edit</button>
+                        <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
+                      </td>
+                    </tr>
+                  `;}).join('')}
               </tbody>
             </table>
           </div>
@@ -12891,7 +12981,7 @@ class FinanceApp {
         if (idx >= 0) this.db.customers[idx] = updatedCust;
         else this.db.customers.unshift(updatedCust);
 
-        // Cascade customer name/code/TRN changes to invoices and receipts
+        // Cascade customer name/code/TRN changes to invoices, receipts, and credit notes
         if (oldName && (compName !== oldName || newCode !== oldCode)) {
           (this.db?.invoices || []).forEach(inv => {
             if (inv.customer_id === oldId || (inv.customer_name && inv.customer_name.toLowerCase() === oldName.toLowerCase())) {
@@ -12907,7 +12997,14 @@ class FinanceApp {
               rcp.customer_id = updatedCust.id;
             }
           });
+          (this.db?.credit_notes || []).forEach(cn => {
+            if (cn.customer_id === oldId || (cn.customer_name && cn.customer_name.toLowerCase() === oldName.toLowerCase())) {
+              cn.customer_name = compName;
+              cn.customer_id = updatedCust.id;
+            }
+          });
         }
+        this.normalizeAllBalances();
         try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       }
 
@@ -17450,36 +17547,59 @@ class FinanceApp {
       const newId = 'inv-' + newInvNo.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
       inv.id = newId;
 
-      // If invoice number changed, cascade update to linked customer receipts and credit notes
-      if (oldInvNo && newInvNo !== oldInvNo) {
-        (this.db?.customer_receipts || []).forEach(rcp => {
-          if (rcp.ref_invoice_no === oldInvNo) {
-            rcp.ref_invoice_no = newInvNo;
-          }
-          if (Array.isArray(rcp.allocations)) {
-            rcp.allocations.forEach(alloc => {
-              if (alloc.invoice_no === oldInvNo || (oldId && alloc.invoice_id === oldId) || alloc.invoice_id === newId) {
-                alloc.invoice_no = newInvNo;
-                alloc.invoice_id = newId;
-              }
-            });
-          }
-        });
-
-        (this.db?.credit_notes || []).forEach(cn => {
-          if (cn.ref_invoice_no === oldInvNo || (oldId && cn.invoice_id === oldId) || cn.invoice_id === newId) {
-            cn.ref_invoice_no = newInvNo;
-            cn.invoice_id = newId;
-          }
-        });
-      }
-
-      inv.customer_name = document.getElementById('edit-inv-cust-name').value.trim();
+      const newCustName = document.getElementById('edit-inv-cust-name').value.trim();
+      const newCustTax = document.getElementById('edit-inv-cust-tax').value.trim();
+      inv.customer_name = newCustName;
       if (isIndia) {
-        inv.customer_gstin = document.getElementById('edit-inv-cust-tax').value.trim();
+        inv.customer_gstin = newCustTax;
       } else {
-        inv.customer_trn = document.getElementById('edit-inv-cust-tax').value.trim();
+        inv.customer_trn = newCustTax;
       }
+
+      // Sync customer_id
+      const custMatch = (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === newCustName.toLowerCase());
+      if (custMatch) {
+        inv.customer_id = custMatch.id;
+        if (custMatch.trn && !inv.customer_trn) inv.customer_trn = custMatch.trn;
+      }
+      const newCustId = inv.customer_id;
+
+      // Always cascade update to linked customer receipts and credit notes (both exact and flexible ref match)
+      (this.db?.customer_receipts || []).forEach(rcp => {
+        let isLinked = false;
+        if (this.matchInvoiceRef(inv, rcp.ref_invoice_no) || (oldInvNo && rcp.ref_invoice_no === oldInvNo)) {
+          rcp.ref_invoice_no = newInvNo;
+          isLinked = true;
+        }
+        if (Array.isArray(rcp.allocations)) {
+          rcp.allocations.forEach(alloc => {
+            if (this.matchInvoiceRef(inv, alloc.invoice_no, alloc.invoice_id) || (oldInvNo && alloc.invoice_no === oldInvNo)) {
+              alloc.invoice_no = newInvNo;
+              alloc.invoice_id = newId;
+              isLinked = true;
+            }
+          });
+        }
+        if (isLinked) {
+          if (newCustName) rcp.customer_name = newCustName;
+          if (newCustId) rcp.customer_id = newCustId;
+        }
+      });
+
+      (this.db?.credit_notes || []).forEach(cn => {
+        let isLinked = false;
+        if (this.matchInvoiceRef(inv, cn.invoice_no || cn.ref_invoice_no, cn.invoice_id) || (oldInvNo && (cn.invoice_no === oldInvNo || cn.ref_invoice_no === oldInvNo))) {
+          cn.invoice_no = newInvNo;
+          cn.ref_invoice_no = newInvNo;
+          cn.invoice_id = newId;
+          isLinked = true;
+        }
+        if (isLinked) {
+          if (newCustName) cn.customer_name = newCustName;
+          if (newCustId) cn.customer_id = newCustId;
+        }
+      });
+
       inv.place_of_supply = document.getElementById('edit-inv-pos').value.trim();
       if (inv.place_of_supply) {
         this.savePosRecommendation(inv.place_of_supply, inv.customer_name);
@@ -17493,11 +17613,8 @@ class FinanceApp {
       inv.order_no = lpoVal;
       inv.order_number = lpoVal;
       inv.lpo_no = lpoVal;
-      if (lpoVal) {
-        const custMatch = (this.db?.customers || []).find(c => (c.name || '').toLowerCase() === (inv.customer_name || '').toLowerCase());
-        if (custMatch) {
-          custMatch.last_po_reference = lpoVal;
-        }
+      if (lpoVal && custMatch) {
+        custMatch.last_po_reference = lpoVal;
       }
 
       inv.taxable_subtotal = subtotal;
@@ -17507,8 +17624,6 @@ class FinanceApp {
       inv.vat_total = isIndia ? 0 : totalTax;
       inv.adjustment = adjustment;
       inv.grand_total = grandTotal;
-      inv.balance_due = balanceDue;
-      inv.status = balanceDue <= 0.01 ? 'paid' : (paid > 0 ? 'partially_paid' : (inv.status === 'draft' ? 'draft' : 'issued'));
       inv.notes = document.getElementById('edit-inv-notes').value.trim();
 
       inv.line_items = updatedLineItems;
@@ -17518,6 +17633,9 @@ class FinanceApp {
       try {
         inv.amount_in_words = this.numberToEnglishWords(grandTotal, inv.currency || (isIndia ? 'INR' : 'AED'));
       } catch (e) { }
+
+      // Accurately recalculate invoice balance taking into account both receipts and credit notes
+      this.recalculateInvoiceBalance(inv);
 
       // 1. Immediately replace in memory so UI reflects update without duplicate
       if (this.db?.invoices) {
@@ -17540,9 +17658,16 @@ class FinanceApp {
       }
 
       // 2. Synchronize with backend API
-      await this.syncApi('update_invoice', { invoice: inv, old_invoice_no: oldInvNo, old_id: oldId });
+      await this.syncApi('update_invoice', { 
+        invoice: inv, 
+        old_invoice_no: oldInvNo, 
+        old_id: oldId,
+        customer_name: newCustName,
+        customer_id: newCustId
+      });
 
-      // 3. Reconcile after sync returns
+      // 3. Reconcile and normalize balances across all modules after sync returns
+      this.normalizeAllBalances();
       if (this.db?.invoices) {
         const idx = this.db.invoices.findIndex(i =>
           i.id === newId ||

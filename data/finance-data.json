@@ -1945,14 +1945,15 @@
       "total_tax": 560,
       "grand_total": 11760,
       "amount_paid": 0,
-      "balance_due": 11760,
-      "status": "unpaid",
+      "balance_due": 0,
+      "status": "credited",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2024-02-26T10:00:00Z",
       "order_no": "SL-091/2023",
       "order_number": "SL-091/2023",
-      "lpo_no": "SL-091/2023"
+      "lpo_no": "SL-091/2023",
+      "amount_credited": 11760
     },
     {
       "id": "inv-rec-rg-1002",
@@ -2004,11 +2005,12 @@
       "total_tax": 562.5,
       "grand_total": 11812.5,
       "amount_paid": 0,
-      "balance_due": 11812.5,
-      "status": "unpaid",
+      "balance_due": 0,
+      "status": "credited",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
-      "created_at": "2024-03-12T10:00:00Z"
+      "created_at": "2024-03-12T10:00:00Z",
+      "amount_credited": 12403.13
     },
     {
       "id": "inv-rec-rg-1003",
@@ -2060,11 +2062,12 @@
       "total_tax": 188.75,
       "grand_total": 3963.75,
       "amount_paid": 0,
-      "balance_due": 3963.75,
-      "status": "unpaid",
+      "balance_due": 0,
+      "status": "credited",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
-      "created_at": "2024-03-15T10:00:00Z"
+      "created_at": "2024-03-15T10:00:00Z",
+      "amount_credited": 4161.94
     },
     {
       "id": "inv-rec-rg-1004",
@@ -2116,11 +2119,12 @@
       "total_tax": 377.5,
       "grand_total": 3963.75,
       "amount_paid": 0,
-      "balance_due": 3963.75,
-      "status": "unpaid",
+      "balance_due": 0,
+      "status": "credited",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
-      "created_at": "2024-03-30T10:00:00Z"
+      "created_at": "2024-03-30T10:00:00Z",
+      "amount_credited": 3963.75
     },
     {
       "id": "inv-rec-rg-1005",
@@ -5358,8 +5362,8 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "invoice_id": "inv-rec-rg-inv-1001",
-      "invoice_no": "REC-RG-INV-1001",
+      "invoice_id": "inv-rec-rg-1001",
+      "invoice_no": "REC-RG-1001",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
       "customer_trn": "100511370700003",
@@ -5368,7 +5372,8 @@
       "tax_amount": 560,
       "total_credit_amount": 11760,
       "status": "applied",
-      "date": "2026-10-30"
+      "date": "2026-10-30",
+      "ref_invoice_no": "REC-RG-1001"
     },
     {
       "id": "cn-1793352063000",
@@ -5376,8 +5381,8 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "invoice_id": "inv-rec-rg-inv-1002",
-      "invoice_no": "REC-RG-INV-1002",
+      "invoice_id": "inv-rec-rg-1002",
+      "invoice_no": "REC-RG-1002",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
       "customer_trn": "100511370700003",
@@ -5386,7 +5391,8 @@
       "tax_amount": 590.63,
       "total_credit_amount": 12403.13,
       "status": "applied",
-      "date": "2026-10-30"
+      "date": "2026-10-30",
+      "ref_invoice_no": "REC-RG-1002"
     },
     {
       "id": "cn-1793351995000",
@@ -5394,8 +5400,8 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "invoice_id": "inv-rec-rg-inv-1003",
-      "invoice_no": "REC-RG-INV-1003",
+      "invoice_id": "inv-rec-rg-1003",
+      "invoice_no": "REC-RG-1003",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
       "customer_trn": "100511370700003",
@@ -5404,7 +5410,8 @@
       "tax_amount": 198.19,
       "total_credit_amount": 4161.94,
       "status": "applied",
-      "date": "2026-10-30"
+      "date": "2026-10-30",
+      "ref_invoice_no": "REC-RG-1003"
     },
     {
       "id": "cn-1793351964000",
@@ -5412,8 +5419,8 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "invoice_id": "inv-rec-rg-inv-1004",
-      "invoice_no": "REC-RG-INV-1004",
+      "invoice_id": "inv-rec-rg-1004",
+      "invoice_no": "REC-RG-1004",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
       "customer_trn": "100511370700003",
@@ -5422,7 +5429,8 @@
       "tax_amount": 188.75,
       "total_credit_amount": 3963.75,
       "status": "applied",
-      "date": "2026-10-30"
+      "date": "2026-10-30",
+      "ref_invoice_no": "REC-RG-1004"
     }
   ],
   "debit_notes": [],

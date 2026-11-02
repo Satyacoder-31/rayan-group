@@ -1066,6 +1066,33 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     }
 }
 
+function matchInvoiceRefPhp($inv, $targetNo, $targetId = '') {
+    if (!$inv) return false;
+    $invNo = strtoupper(trim($inv['invoice_no'] ?? ''));
+    $invId = strtolower(trim($inv['id'] ?? ''));
+    $tNo = strtoupper(trim($targetNo ?? ''));
+    $tId = strtolower(trim($targetId ?? ''));
+
+    if (!empty($tNo) && ($invNo === $tNo || $invId === strtolower($tNo))) return true;
+    if (!empty($tId) && ($invId === $tId || strtolower($invNo) === $tId)) return true;
+
+    $normInv = preg_replace('/(INVOICE|INV)/', '', preg_replace('/[^A-Z0-9]/', '', $invNo));
+    $normTNo = preg_replace('/(INVOICE|INV)/', '', preg_replace('/[^A-Z0-9]/', '', $tNo));
+    $normTId = preg_replace('/(INVOICE|INV)/', '', preg_replace('/[^A-Z0-9]/', '', $tId));
+
+    if (!empty($normTNo) && $normInv === $normTNo) return true;
+    if (!empty($normTId) && $normInv === $normTId) return true;
+
+    preg_match('/\d{4,}$/', $invNo, $dInv);
+    preg_match('/\d{4,}$/', $tNo, $dTNo);
+    preg_match('/\d{4,}$/', $tId, $dTId);
+    if (!empty($dInv[0])) {
+        if (!empty($dTNo[0]) && $dInv[0] === $dTNo[0]) return true;
+        if (!empty($dTId[0]) && $dInv[0] === $dTId[0]) return true;
+    }
+    return false;
+}
+
 function recalculateAllFinanceBalances(&$data) {
     if (!$data || !is_array($data)) return;
 
@@ -1077,28 +1104,31 @@ function recalculateAllFinanceBalances(&$data) {
             $invNo = $inv['invoice_no'] ?? '';
             $grand = round(floatval($inv['grand_total'] ?? 0), 2);
 
-            // Sum receipts
+            // Sum receipts (flexible invoice ref matching)
             $paid = 0.0;
             foreach ($receipts as $rcp) {
+                if (($rcp['status'] ?? '') === 'void') continue;
                 if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
                     foreach ($rcp['allocations'] as $alloc) {
-                        if (($alloc['invoice_id'] ?? '') === $invId || ($alloc['invoice_no'] ?? '') === $invNo) {
+                        if (matchInvoiceRefPhp($inv, $alloc['invoice_no'] ?? '', $alloc['invoice_id'] ?? '') || 
+                            (!empty($rcp['ref_invoice_no']) && matchInvoiceRefPhp($inv, $rcp['ref_invoice_no']))) {
                             $paid += floatval($alloc['amount_allocated'] ?? 0);
                         }
                     }
+                } elseif (!empty($rcp['ref_invoice_no']) && matchInvoiceRefPhp($inv, $rcp['ref_invoice_no'])) {
+                    $paid += floatval($rcp['amount_received'] ?? 0);
                 }
             }
-// No phantom paid fallback: only explicit receipts dictate amount_paid
             if ($paid <= 0.02) {
                 $paid = 0.0;
             }
             $inv['amount_paid'] = $paid;
 
-            // Sum credit notes
+            // Sum credit notes (flexible invoice ref matching)
             $credited = 0.0;
             foreach ($creditNotes as $cn) {
                 if (($cn['status'] ?? '') === 'void') continue;
-                if (($cn['invoice_id'] ?? '') === $invId || ($cn['invoice_no'] ?? '') === $invNo) {
+                if (matchInvoiceRefPhp($inv, $cn['invoice_no'] ?? ($cn['ref_invoice_no'] ?? ''), $cn['invoice_id'] ?? '')) {
                     $cnAmt = floatval($cn['total_credit_amount'] ?? 0);
                     if ($cnAmt <= 0) {
                         $cnAmt = floatval($cn['taxable_amount'] ?? 0) + floatval($cn['tax_amount'] ?? 0);
@@ -1108,7 +1138,7 @@ function recalculateAllFinanceBalances(&$data) {
             }
 
             $rem = max(0.0, round($grand - $paid - $credited, 2));
-            // Tolerate up to 0.02 fils floating point mismatch so 0.01 fils never shows in red
+            // Tolerate up to 0.02 fils floating point mismatch
             if ($rem <= 0.02) {
                 $rem = 0.0;
             }
@@ -1546,6 +1576,60 @@ function syncFromRelationalTables($pdo, &$data) {
                     $existingPoNos[strtolower($poRef)] = true;
                 }
             }
+        }
+
+        // Auto-heal and normalize credit notes and customer receipts with current invoices
+        if (!empty($data['invoices']) && is_array($data['invoices'])) {
+            if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+                foreach ($data['customer_receipts'] as &$rcp) {
+                    if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
+                        foreach ($rcp['allocations'] as &$alloc) {
+                            foreach ($data['invoices'] as $inv) {
+                                if (matchInvoiceRefPhp($inv, $alloc['invoice_no'] ?? '', $alloc['invoice_id'] ?? '')) {
+                                    $alloc['invoice_no'] = $inv['invoice_no'];
+                                    $alloc['invoice_id'] = $inv['id'];
+                                    if (!empty($inv['customer_name']) && (empty($rcp['customer_name']) || $rcp['customer_name'] === 'Customer' || $rcp['customer_name'] === 'Client')) {
+                                        $rcp['customer_name'] = $inv['customer_name'];
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        unset($alloc);
+                    }
+                    if (!empty($rcp['ref_invoice_no'])) {
+                        foreach ($data['invoices'] as $inv) {
+                            if (matchInvoiceRefPhp($inv, $rcp['ref_invoice_no'])) {
+                                $rcp['ref_invoice_no'] = $inv['invoice_no'];
+                                if (!empty($inv['customer_name']) && (empty($rcp['customer_name']) || $rcp['customer_name'] === 'Customer' || $rcp['customer_name'] === 'Client')) {
+                                    $rcp['customer_name'] = $inv['customer_name'];
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                unset($rcp);
+            }
+
+            if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+                foreach ($data['credit_notes'] as &$cn) {
+                    foreach ($data['invoices'] as $inv) {
+                        if (matchInvoiceRefPhp($inv, $cn['invoice_no'] ?? ($cn['ref_invoice_no'] ?? ''), $cn['invoice_id'] ?? '')) {
+                            $cn['invoice_no'] = $inv['invoice_no'];
+                            $cn['ref_invoice_no'] = $inv['invoice_no'];
+                            $cn['invoice_id'] = $inv['id'];
+                            if (!empty($inv['customer_name'])) {
+                                $cn['customer_name'] = $inv['customer_name'];
+                            }
+                            break;
+                        }
+                    }
+                }
+                unset($cn);
+            }
+
+            recalculateAllFinanceBalances($data);
         }
     } catch (Exception $e) {
         error_log("syncFromRelationalTables error: " . $e->getMessage());
@@ -2306,37 +2390,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                // If invoice number changed, cascade update to linked customer receipts and credit notes
-                if (!empty($oldInvNo) && strcasecmp($oldInvNo, $newInvNo) !== 0) {
-                    if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
-                        foreach ($db['customer_receipts'] as &$rcp) {
-                            if (strcasecmp($rcp['ref_invoice_no'] ?? '', $oldInvNo) === 0) {
-                                $rcp['ref_invoice_no'] = $newInvNo;
-                            }
-                            if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
-                                foreach ($rcp['allocations'] as &$alloc) {
-                                    $matchAllocNo = strcasecmp($alloc['invoice_no'] ?? '', $oldInvNo) === 0;
-                                    $matchAllocId = (!empty($oldId) && ($alloc['invoice_id'] ?? '') === $oldId);
-                                    if ($matchAllocNo || $matchAllocId) {
-                                        $alloc['invoice_no'] = $newInvNo;
-                                        $alloc['invoice_id'] = $newId;
-                                    }
+                // Cascade update to linked customer receipts and credit notes (both exact and flexible ref match)
+                $targetCustName = trim($inv['customer_name'] ?? '');
+                $targetCustId = trim($inv['customer_id'] ?? '');
+
+                // 1. Cascade to customer receipts
+                if (!empty($db['customer_receipts']) && is_array($db['customer_receipts'])) {
+                    foreach ($db['customer_receipts'] as &$rcp) {
+                        $isLinked = false;
+                        if (matchInvoiceRefPhp($inv, $rcp['ref_invoice_no'] ?? '') || (!empty($oldInvNo) && strcasecmp($rcp['ref_invoice_no'] ?? '', $oldInvNo) === 0)) {
+                            $rcp['ref_invoice_no'] = $newInvNo;
+                            $isLinked = true;
+                        }
+                        if (!empty($rcp['allocations']) && is_array($rcp['allocations'])) {
+                            foreach ($rcp['allocations'] as &$alloc) {
+                                $matchAlloc = matchInvoiceRefPhp($inv, $alloc['invoice_no'] ?? '', $alloc['invoice_id'] ?? '') ||
+                                              (!empty($oldInvNo) && strcasecmp($alloc['invoice_no'] ?? '', $oldInvNo) === 0) ||
+                                              (!empty($oldId) && ($alloc['invoice_id'] ?? '') === $oldId);
+                                if ($matchAlloc) {
+                                    $alloc['invoice_no'] = $newInvNo;
+                                    $alloc['invoice_id'] = $newId;
+                                    $isLinked = true;
                                 }
-                                unset($alloc);
+                            }
+                            unset($alloc);
+                        }
+                        if ($isLinked) {
+                            if (!empty($targetCustName)) $rcp['customer_name'] = $targetCustName;
+                            if (!empty($targetCustId)) $rcp['customer_id'] = $targetCustId;
+                            if ($pdo) {
+                                try {
+                                    $stmtR = $pdo->prepare("UPDATE finance_receipts SET customer_name = :cust_name, customer_id = :cust_id, data_json = :data_json, updated_at = NOW() WHERE receipt_no = :rcp_no OR id = :rcp_id");
+                                    $stmtR->execute([
+                                        ':cust_name' => $rcp['customer_name'] ?? '',
+                                        ':cust_id' => $rcp['customer_id'] ?? '',
+                                        ':data_json' => json_encode($rcp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                                        ':rcp_no' => $rcp['receipt_no'],
+                                        ':rcp_id' => $rcp['id'] ?? ''
+                                    ]);
+                                } catch (Exception $e) {}
                             }
                         }
-                        unset($rcp);
                     }
-                    if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
-                        foreach ($db['credit_notes'] as &$cn) {
-                            if (strcasecmp($cn['ref_invoice_no'] ?? '', $oldInvNo) === 0 || (!empty($oldId) && ($cn['invoice_id'] ?? '') === $oldId)) {
-                                $cn['ref_invoice_no'] = $newInvNo;
-                                $cn['invoice_id'] = $newId;
-                            }
-                        }
-                        unset($cn);
-                    }
+                    unset($rcp);
                 }
+
+                // 2. Cascade to credit notes
+                if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
+                    foreach ($db['credit_notes'] as &$cn) {
+                        $matchCN = matchInvoiceRefPhp($inv, $cn['invoice_no'] ?? ($cn['ref_invoice_no'] ?? ''), $cn['invoice_id'] ?? '') ||
+                                   (!empty($oldInvNo) && (strcasecmp($cn['invoice_no'] ?? '', $oldInvNo) === 0 || strcasecmp($cn['ref_invoice_no'] ?? '', $oldInvNo) === 0)) ||
+                                   (!empty($oldId) && ($cn['invoice_id'] ?? '') === $oldId);
+                        if ($matchCN) {
+                            $cn['invoice_no'] = $newInvNo;
+                            $cn['ref_invoice_no'] = $newInvNo;
+                            $cn['invoice_id'] = $newId;
+                            if (!empty($targetCustName)) $cn['customer_name'] = $targetCustName;
+                            if (!empty($targetCustId)) $cn['customer_id'] = $targetCustId;
+                            if ($pdo) {
+                                try {
+                                    $stmtCN = $pdo->prepare("UPDATE finance_credit_notes SET invoice_no = :inv_no, invoice_id = :inv_id, customer_name = :cust_name, customer_id = :cust_id, data_json = :data_json, updated_at = NOW() WHERE credit_note_no = :cn_no OR id = :cn_id");
+                                    $stmtCN->execute([
+                                        ':inv_no' => $newInvNo,
+                                        ':inv_id' => $newId,
+                                        ':cust_name' => $cn['customer_name'] ?? '',
+                                        ':cust_id' => $cn['customer_id'] ?? '',
+                                        ':data_json' => json_encode($cn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                                        ':cn_no' => $cn['credit_note_no'],
+                                        ':cn_id' => $cn['id'] ?? ''
+                                    ]);
+                                } catch (Exception $e) {}
+                            }
+                        }
+                    }
+                    unset($cn);
+                }
+
+                recalculateAllFinanceBalances($db);
             }
             break;
 
@@ -2695,6 +2825,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 unset($existingR);
+
+                if ($pdo) {
+                    try {
+                        if (!empty($oldRcpNo) && !empty($rcp['receipt_no']) && strcasecmp($oldRcpNo, $rcp['receipt_no']) !== 0) {
+                            $stmtDel = $pdo->prepare("DELETE FROM finance_receipts WHERE receipt_no = ?");
+                            $stmtDel->execute([$oldRcpNo]);
+                        }
+                        $stmtR = $pdo->prepare("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (:id, :receipt_no, :customer_id, :customer_name, :receipt_date, :amount_received, :currency, :payment_mode, :reference_no, :data_json, NOW())");
+                        $stmtR->execute([
+                            ':id' => $rcp['id'] ?? ('rec-' . $rcp['receipt_no']),
+                            ':receipt_no' => $rcp['receipt_no'],
+                            ':customer_id' => $rcp['customer_id'] ?? '',
+                            ':customer_name' => $rcp['customer_name'] ?? '',
+                            ':receipt_date' => $rcp['receipt_date'] ?? date('Y-m-d'),
+                            ':amount_received' => floatval($rcp['amount_received'] ?? 0),
+                            ':currency' => $rcp['currency'] ?? 'AED',
+                            ':payment_mode' => $rcp['payment_mode'] ?? 'Cheque',
+                            ':reference_no' => $rcp['reference_no'] ?? '',
+                            ':data_json' => json_encode($rcp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
+
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'receipt', $rcp['receipt_no'] ?? '', 'Updated customer receipt ' . ($rcp['receipt_no'] ?? ''));
             }
             break;
@@ -3387,7 +3541,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (Exception $e) {}
                 }
 
-                // If customer name or code changed, cascade to invoices and customer receipts
+                // If customer name or code changed, cascade to invoices, receipts, and credit notes
                 $targetOldName = !empty($oldName) ? $oldName : ($cust['name'] ?? '');
                 $targetNewName = $cust['name'];
                 if (!empty($targetOldName) && strcasecmp($targetOldName, $targetNewName) !== 0) {
@@ -3411,6 +3565,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         unset($rcpItem);
                     }
+                    if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
+                        foreach ($db['credit_notes'] as &$cnItem) {
+                            if (strcasecmp($cnItem['customer_name'] ?? '', $targetOldName) === 0 || (!empty($oldId) && ($cnItem['customer_id'] ?? '') === $oldId)) {
+                                $cnItem['customer_name'] = $targetNewName;
+                                $cnItem['customer_id'] = $cust['id'];
+                            }
+                        }
+                        unset($cnItem);
+                    }
+                    if ($pdo) {
+                        try {
+                            $stmtUpInv = $pdo->prepare("UPDATE finance_invoices SET customer_name = :new_name, updated_at = NOW() WHERE customer_name = :old_name OR customer_id = :cust_id");
+                            $stmtUpInv->execute([':new_name' => $targetNewName, ':old_name' => $targetOldName, ':cust_id' => $cust['id']]);
+
+                            $stmtUpRcp = $pdo->prepare("UPDATE finance_receipts SET customer_name = :new_name, updated_at = NOW() WHERE customer_name = :old_name OR customer_id = :cust_id");
+                            $stmtUpRcp->execute([':new_name' => $targetNewName, ':old_name' => $targetOldName, ':cust_id' => $cust['id']]);
+
+                            $stmtUpCN = $pdo->prepare("UPDATE finance_credit_notes SET customer_name = :new_name, updated_at = NOW() WHERE customer_name = :old_name OR customer_id = :cust_id");
+                            $stmtUpCN->execute([':new_name' => $targetNewName, ':old_name' => $targetOldName, ':cust_id' => $cust['id']]);
+                        } catch (Exception $e) {}
+                    }
+                    recalculateAllFinanceBalances($db);
                 }
 
                 $addAuditLog('update', 'customer', $cust['name'] ?? '', 'Updated client profile and customer code ' . ($cust['code'] ?? ''));
