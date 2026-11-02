@@ -595,7 +595,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         'id' => 'inv-rec-rg-inv-44035',
         'invoice_no' => 'REC-RG-INV-44035',
         'company_id' => 'rayan-corp-uae',
-        'customer_id' => 'cust-1792414691494',
+        'customer_id' => 'cust-toprock',
         'customer_name' => 'M/S TOP ROCK INTERIORS LLC.',
         'customer_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
         'billing_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
@@ -747,6 +747,69 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 contact_person = 'Mr. Shahil', 
                 email = 'procurementofficer@toprockinteriors.com' 
             WHERE customer_name LIKE '%TOP ROCK%'");
+
+            // v2026_clean_v41: Deduplicate and consolidate customer accounts in MySQL
+            $custConsolidationMap = [
+                'cust-1792414691494' => 'cust-toprock',
+                'cust-1792415585310' => 'cust-hln',
+                'cust-1792320284603' => 'cust-buildara',
+                'cust-whitecrescent' => 'cust-1792419616536'
+            ];
+            foreach ($custConsolidationMap as $oldCustId => $targetCustId) {
+                $pdo->exec("UPDATE finance_invoices SET customer_id = '{$targetCustId}' WHERE customer_id = '{$oldCustId}'");
+                $pdo->exec("UPDATE finance_receipts SET customer_id = '{$targetCustId}' WHERE customer_id = '{$oldCustId}'");
+                $pdo->exec("UPDATE finance_customer_receipts SET customer_id = '{$targetCustId}' WHERE customer_id = '{$oldCustId}'");
+                $pdo->exec("UPDATE finance_credit_notes SET customer_id = '{$targetCustId}' WHERE customer_id = '{$oldCustId}'");
+                $pdo->exec("UPDATE finance_projects SET customer_id = '{$targetCustId}' WHERE customer_id = '{$oldCustId}'");
+            }
+            $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-1792414691494', 'cust-1792415585310', 'cust-1792320284603', 'cust-whitecrescent')");
+
+            // Ensure canonical customer details are fully updated
+            $pdo->exec("UPDATE finance_customers SET 
+                code = 'CUST-TOPROCK',
+                name = 'M/S TOP ROCK INTERIORS LLC.',
+                contact_person = 'Mr. Shahil',
+                salutation = 'Mr.',
+                first_name = 'Shahil',
+                email = 'procurementofficer@toprockinteriors.com',
+                phone = '+971 502131834',
+                trn = '100360644700003',
+                billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+                office_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
+                place_of_supply = 'Dubai, UAE',
+                tax_treatment = 'VAT Registered'
+            WHERE id = 'cust-toprock'");
+
+            $pdo->exec("UPDATE finance_customers SET 
+                code = 'CUST-HLN',
+                name = 'M/S HLN TECHNICAL SERVICES LLC',
+                contact_person = 'Mr. Linto Antony',
+                salutation = 'Mr.',
+                first_name = 'Linto',
+                email = 'info@hlnaue.com',
+                phone = '+971 504541669',
+                trn = '100579896000003',
+                billing_address = 'W/H 125, AL Habtoor ware house Al Qusais , Dubai',
+                office_address = 'W/H 125, AL Habtoor ware house Al Qusais , Dubai',
+                place_of_supply = 'Abu Dhabi',
+                tax_treatment = 'VAT Registered'
+            WHERE id = 'cust-hln'");
+
+            $pdo->exec("UPDATE finance_customers SET 
+                code = 'CUST-BUILDARA',
+                name = 'M/S BUILDARA GENERAL CONTRACTING LLC',
+                contact_person = 'Mr. Sooraj Kumar',
+                salutation = 'Mr.',
+                first_name = 'Sooraj',
+                email = 'buildaradevelopers@gmail.com',
+                phone = '+971 50 123 4567',
+                trn = '105405525400003',
+                billing_address = 'ABU DHABI, MADINAT ZAYED,',
+                office_address = 'ABU DHABI, MADINAT ZAYED,',
+                place_of_supply = 'Abu Dhabi',
+                tax_treatment = 'VAT Registered'
+            WHERE id = 'cust-buildara'");
+
             $pdo->exec("UPDATE finance_invoices SET 
                 customer_id = 'cust-toprock',
                 customer_name = 'M/S TOP ROCK INTERIORS LLC.',
@@ -884,13 +947,34 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
     if (!empty($data['customers']) && is_array($data['customers'])) {
         $orig = count($data['customers']);
-        $data['customers'] = array_values(array_filter($data['customers'], function($c) use ($dummyCustIds) {
+        $dupCustIds = ['cust-1792414691494', 'cust-1792415585310', 'cust-1792320284603', 'cust-whitecrescent'];
+        $allRemoveCustIds = array_merge($dummyCustIds, $dupCustIds);
+        $data['customers'] = array_values(array_filter($data['customers'], function($c) use ($allRemoveCustIds) {
             $id = strtolower(trim($c['id'] ?? ''));
-            return !in_array($id, $dummyCustIds);
+            return !in_array($id, $allRemoveCustIds);
         }));
+
+        // Deduplicate customers by normalized name and TRN
+        $seenCustKeys = [];
+        $uniqueCustomers = [];
+        foreach ($data['customers'] as $c) {
+            $norm = strtolower(preg_replace('/[^a-z0-9]/', '', $c['name'] ?? ''));
+            $trn = trim($c['trn'] ?? '');
+            $key = $trn ?: $norm;
+            if ($key && isset($seenCustKeys[$key])) {
+                $changed = true;
+                continue;
+            }
+            if ($key) $seenCustKeys[$key] = true;
+            $uniqueCustomers[] = $c;
+        }
+        $data['customers'] = $uniqueCustomers;
+
         foreach ($data['customers'] as &$c) {
             if (stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
                 if (($c['trn'] ?? '') !== '100360644700003' || ($c['phone'] ?? '') !== '+971 502131834' || ($c['contact_person'] ?? '') !== 'Mr. Shahil') {
+                    $c['id'] = 'cust-toprock';
+                    $c['code'] = 'CUST-TOPROCK';
                     $c['customer_type'] = 'Business';
                     $c['name'] = 'M/S TOP ROCK INTERIORS LLC.';
                     $c['display_name'] = 'M/S TOP ROCK INTERIORS LLC.';
@@ -911,10 +995,42 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     $changed = true;
                 }
             }
+            if (stripos($c['name'] ?? '', 'HLN TECHNICAL') !== false) {
+                $c['id'] = 'cust-hln';
+                $c['code'] = 'CUST-HLN';
+                $c['name'] = 'M/S HLN TECHNICAL SERVICES LLC';
+                $c['display_name'] = 'M/S HLN TECHNICAL SERVICES LLC';
+                $c['contact_person'] = 'Mr. Linto Antony';
+                $c['email'] = 'info@hlnaue.com';
+                $c['phone'] = '+971 504541669';
+                $c['trn'] = '100579896000003';
+                $c['billing_address'] = 'W/H 125, AL Habtoor ware house Al Qusais , Dubai';
+                $c['place_of_supply'] = 'Abu Dhabi';
+            }
+            if (stripos($c['name'] ?? '', 'BUILDARA') !== false) {
+                $c['id'] = 'cust-buildara';
+                $c['code'] = 'CUST-BUILDARA';
+                $c['name'] = 'M/S BUILDARA GENERAL CONTRACTING LLC';
+                $c['display_name'] = 'M/S BUILDARA GENERAL CONTRACTING LLC';
+                $c['contact_person'] = 'Mr. Sooraj Kumar';
+                $c['email'] = 'buildaradevelopers@gmail.com';
+                $c['phone'] = '+971 50 123 4567';
+                $c['trn'] = '105405525400003';
+                $c['billing_address'] = 'ABU DHABI, MADINAT ZAYED,';
+                $c['place_of_supply'] = 'Abu Dhabi';
+            }
         }
         unset($c);
         if (count($data['customers']) !== $orig) $changed = true;
     }
+
+    // Remap customer IDs across invoices, receipts, and credit notes
+    $custRemap = [
+        'cust-1792414691494' => 'cust-toprock',
+        'cust-1792415585310' => 'cust-hln',
+        'cust-1792320284603' => 'cust-buildara',
+        'cust-whitecrescent' => 'cust-1792419616536'
+    ];
 
     if (!empty($data['invoices']) && is_array($data['invoices'])) {
         $orig = count($data['invoices']);
@@ -939,6 +1055,13 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         if (!$hasTopRock) {
             array_unshift($filteredInvoices, $topRockInvoice);
         }
+        foreach ($filteredInvoices as &$invItem) {
+            if (isset($custRemap[$invItem['customer_id'] ?? ''])) {
+                $invItem['customer_id'] = $custRemap[$invItem['customer_id']];
+                $changed = true;
+            }
+        }
+        unset($invItem);
         $data['invoices'] = $filteredInvoices;
         if (count($data['invoices']) !== $orig) $changed = true;
     }
@@ -959,11 +1082,24 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $rcpNo = strtoupper(trim($r['receipt_no'] ?? ''));
             $key = $rcpNo ?: $rcpId;
             if (!$key) continue;
+            if (isset($custRemap[$r['customer_id'] ?? ''])) {
+                $r['customer_id'] = $custRemap[$r['customer_id']];
+            }
             $dedupedReceipts[$key] = $r;
         }
 
         $data['customer_receipts'] = array_values($dedupedReceipts);
         if (count($data['customer_receipts']) !== $orig) $changed = true;
+    }
+
+    if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+        foreach ($data['credit_notes'] as &$cnItem) {
+            if (isset($custRemap[$cnItem['customer_id'] ?? ''])) {
+                $cnItem['customer_id'] = $custRemap[$cnItem['customer_id']];
+                $changed = true;
+            }
+        }
+        unset($cnItem);
     }
 
     // Reconcile invoices: ensure statuses and balances are 100% reconciled
@@ -1601,6 +1737,23 @@ function syncFromRelationalTables($pdo, &$data) {
                 $filteredProjects[] = $p;
             }
             $data['projects'] = $filteredProjects;
+        }
+
+        if (!empty($data['customers']) && is_array($data['customers'])) {
+            $dupCustIds = ['cust-1792414691494', 'cust-1792415585310', 'cust-1792320284603', 'cust-whitecrescent'];
+            $seenCustKeys = [];
+            $filteredCusts = [];
+            foreach ($data['customers'] as $c) {
+                $cid = strtolower(trim($c['id'] ?? ''));
+                if (in_array($cid, $dupCustIds)) continue;
+                $norm = strtolower(preg_replace('/[^a-z0-9]/', '', $c['name'] ?? ''));
+                $trn = trim($c['trn'] ?? '');
+                $key = $trn ?: $norm;
+                if ($key && isset($seenCustKeys[$key])) continue;
+                if ($key) $seenCustKeys[$key] = true;
+                $filteredCusts[] = $c;
+            }
+            $data['customers'] = $filteredCusts;
         }
 
         if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {

@@ -743,7 +743,74 @@ class FinanceApp {
   normalizeAllBalances() {
     if (!this.db) return;
 
-    // 0. Auto-align invoice customer_id with actual registered customer by normalized customer_name
+    // 0a. Map legacy / duplicate customer IDs to canonical customer IDs
+    const CUST_ALIAS_MAP = {
+      'cust-1792414691494': 'cust-toprock',
+      'cust-1792415585310': 'cust-hln',
+      'cust-1792320284603': 'cust-buildara',
+      'cust-whitecrescent': 'cust-1792419616536'
+    };
+
+    // 0b. Remap document customer_id references to canonical IDs
+    (this.db.invoices || []).forEach(inv => {
+      if (CUST_ALIAS_MAP[inv.customer_id]) {
+        inv.customer_id = CUST_ALIAS_MAP[inv.customer_id];
+      }
+    });
+    (this.db.customer_receipts || []).forEach(rcp => {
+      if (CUST_ALIAS_MAP[rcp.customer_id]) {
+        rcp.customer_id = CUST_ALIAS_MAP[rcp.customer_id];
+      }
+    });
+    (this.db.credit_notes || []).forEach(cn => {
+      if (CUST_ALIAS_MAP[cn.customer_id]) {
+        cn.customer_id = CUST_ALIAS_MAP[cn.customer_id];
+      }
+    });
+    (this.db.projects || []).forEach(prj => {
+      if (CUST_ALIAS_MAP[prj.customer_id]) {
+        prj.customer_id = CUST_ALIAS_MAP[prj.customer_id];
+      }
+    });
+
+    // 0c. Deduplicate customers array, merging rich metadata into canonical records
+    if (Array.isArray(this.db.customers)) {
+      const seenKeys = new Map();
+      const dedupCusts = [];
+      const sortedCusts = [...this.db.customers].sort((a, b) => {
+        const aIsAlias = !!CUST_ALIAS_MAP[a.id];
+        const bIsAlias = !!CUST_ALIAS_MAP[b.id];
+        return aIsAlias - bIsAlias;
+      });
+
+      for (const c of sortedCusts) {
+        if (CUST_ALIAS_MAP[c.id]) {
+          const canonicalId = CUST_ALIAS_MAP[c.id];
+          const canonical = this.db.customers.find(x => x.id === canonicalId);
+          if (canonical) {
+            ['billing_address_details', 'shipping_address_details', 'shipping_address', 'office_address', 'phone', 'contact_person', 'email', 'default_project_id', 'default_project_name', 'last_po_reference'].forEach(field => {
+              if (c[field] && !canonical[field]) canonical[field] = c[field];
+            });
+            continue;
+          }
+        }
+        const norm = (c.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const trn = (c.trn || '').trim();
+        const key = trn || norm;
+        if (key && seenKeys.has(key)) {
+          const existing = seenKeys.get(key);
+          ['billing_address_details', 'shipping_address_details', 'shipping_address', 'office_address', 'phone', 'contact_person', 'email'].forEach(field => {
+            if (c[field] && !existing[field]) existing[field] = c[field];
+          });
+          continue;
+        }
+        if (key) seenKeys.set(key, c);
+        dedupCusts.push(c);
+      }
+      this.db.customers = dedupCusts;
+    }
+
+    // 0d. Auto-align invoice customer_id with actual registered customer by normalized customer_name
     const customers = this.db.customers || [];
     const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     (this.db.invoices || []).forEach(inv => {
@@ -806,7 +873,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v40';
+    const CURRENT_DB_VERSION = 'v2026_clean_v41';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4340,8 +4407,20 @@ class FinanceApp {
   // 4. CUSTOMERS MODULE
   // --------------------------------------------------------------------------
   renderCustomersTab(root) {
-    const customers = (this.db?.customers || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const rawCustomers = (this.db?.customers || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+
+    // Deduplicate customer entries so each company is displayed strictly once
+    const seenCust = new Set();
+    const customers = [];
+    for (const c of rawCustomers) {
+      const norm = (c.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const trn = (c.trn || '').trim();
+      const key = trn || norm;
+      if (key && seenCust.has(key)) continue;
+      if (key) seenCust.add(key);
+      customers.push(c);
+    }
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -4893,18 +4972,18 @@ class FinanceApp {
               </thead>
               <tbody>
                   ${receipts.map(r => {
-                    let custDisp = r.customer_name;
-                    const firstAlloc = (r.allocations || [])[0];
-                    if (!custDisp || custDisp.trim() === '' || custDisp === 'Customer' || custDisp === 'Client') {
-                      if (firstAlloc) {
-                        const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
-                        if (mi?.customer_name) custDisp = mi.customer_name;
-                      } else if (r.ref_invoice_no) {
-                        const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
-                        if (mi?.customer_name) custDisp = mi.customer_name;
-                      }
-                    }
-                    return `
+      let custDisp = r.customer_name;
+      const firstAlloc = (r.allocations || [])[0];
+      if (!custDisp || custDisp.trim() === '' || custDisp === 'Customer' || custDisp === 'Client') {
+        if (firstAlloc) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
+          if (mi?.customer_name) custDisp = mi.customer_name;
+        } else if (r.ref_invoice_no) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
+          if (mi?.customer_name) custDisp = mi.customer_name;
+        }
+      }
+      return `
                     <tr>
                       <td><strong>${r.receipt_no}</strong></td>
                       <td>${this.formatDate(r.receipt_date)}</td>
@@ -4916,10 +4995,10 @@ class FinanceApp {
                       <td><strong style="color:#10b981;">${r.currency || 'AED'} ${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></td>
                       <td>
                         ${(r.allocations || []).map(a => {
-                          const matchedInv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
-                          const dispInvNo = matchedInv ? matchedInv.invoice_no : a.invoice_no;
-                          return `<span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${dispInvNo}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
-                        }).join(' ')}
+        const matchedInv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
+        const dispInvNo = matchedInv ? matchedInv.invoice_no : a.invoice_no;
+        return `<span class="fin-badge fin-badge-paid" style="font-size:0.65rem;">${dispInvNo}: ${r.currency || 'AED'} ${Number(a.amount_allocated || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>`;
+      }).join(' ')}
                       </td>
                       <td style="white-space:nowrap;">
                         <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openReceiptPrintModal('${r.id}')" title="Print Official Bilingual Voucher">Print / View</button>
@@ -4927,7 +5006,8 @@ class FinanceApp {
                         <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteReceipt('${r.id}')" title="Delete Payment-In Voucher">🗑️ Delete</button>
                       </td>
                     </tr>
-                  `;}).join('')}
+                  `;
+    }).join('')}
               </tbody>
             </table>
           </div>
@@ -5843,42 +5923,42 @@ class FinanceApp {
         ` : `
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap:1.5rem;">
             ${projects.map(prj => {
-              const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
-              const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-              const autoCollected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-              const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
-              const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-              const prjExpenses = expenses.filter(e => e.project_id === prj.id);
-              const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
-              const autoCost = materialsCost + siteExpenses;
-              const autoProfit = autoInvoiced - autoCost;
-              const autoMargin = autoInvoiced > 0 ? ((autoProfit / autoInvoiced) * 100).toFixed(1) : '0.0';
+      const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
+      const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+      const autoCollected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
+      const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
+      const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
+      const prjExpenses = expenses.filter(e => e.project_id === prj.id);
+      const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+      const autoCost = materialsCost + siteExpenses;
+      const autoProfit = autoInvoiced - autoCost;
+      const autoMargin = autoInvoiced > 0 ? ((autoProfit / autoInvoiced) * 100).toFixed(1) : '0.0';
 
-              const isManual = prj.manual_financials === true;
-              const invoicedDisp = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
-              const collectedDisp = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
-              const costDisp = isManual ? Number(prj.manual_cost ?? prj.approved_budget ?? 0) : autoCost;
-              const profitDisp = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (invoicedDisp - costDisp)) : autoProfit;
-              const marginDisp = isManual ? (invoicedDisp > 0 ? ((profitDisp / invoicedDisp) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0')) : autoMargin;
+      const isManual = prj.manual_financials === true;
+      const invoicedDisp = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
+      const collectedDisp = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
+      const costDisp = isManual ? Number(prj.manual_cost ?? prj.approved_budget ?? 0) : autoCost;
+      const profitDisp = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (invoicedDisp - costDisp)) : autoProfit;
+      const marginDisp = isManual ? (invoicedDisp > 0 ? ((profitDisp / invoicedDisp) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0')) : autoMargin;
 
-              const isProfit = profitDisp >= 0;
-              const profitColor = isProfit ? '#10b981' : '#ef4444';
-              const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
+      const isProfit = profitDisp >= 0;
+      const profitColor = isProfit ? '#10b981' : '#ef4444';
+      const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
 
-              const normStatus = (prj.status || 'Active').toLowerCase();
-              const isClosed = normStatus === 'closed' || normStatus === 'completed';
-              const isOnHold = normStatus === 'on hold';
-              const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
-              const badgeStyle = isClosed 
-                ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
-                : isOnHold 
-                  ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
-                  : isPlanning 
-                    ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
-                    : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
-              const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
+      const normStatus = (prj.status || 'Active').toLowerCase();
+      const isClosed = normStatus === 'closed' || normStatus === 'completed';
+      const isOnHold = normStatus === 'on hold';
+      const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
+      const badgeStyle = isClosed
+        ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
+        : isOnHold
+          ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
+          : isPlanning
+            ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
+            : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
+      const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
 
-              return `
+      return `
                 <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:14px; padding:1.4rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.25);">
                   <div>
                     <!-- Header -->
@@ -5950,7 +6030,7 @@ class FinanceApp {
                   </div>
                 </div>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         `}
       </div>
@@ -11350,6 +11430,13 @@ class FinanceApp {
 
   // 6. CUSTOMER 360 PROFILE & STATEMENT OF ACCOUNT (SOA)
   openCustomerProfile(custId) {
+    const CUST_ALIAS_MAP = {
+      'cust-1792414691494': 'cust-toprock',
+      'cust-1792415585310': 'cust-hln',
+      'cust-1792320284603': 'cust-buildara',
+      'cust-whitecrescent': 'cust-1792419616536'
+    };
+    if (CUST_ALIAS_MAP[custId]) custId = CUST_ALIAS_MAP[custId];
     const cust = this.db?.customers?.find(c => c.id === custId || c.code === custId || (c.name && c.name.toLowerCase() === (custId || '').toLowerCase()));
     if (!cust) return;
 
@@ -12118,6 +12205,13 @@ class FinanceApp {
 
   // 6D. SINGLE CUSTOMER OFFICIAL SOA PRINT DOCUMENT
   openCustomerSOADocument(custId) {
+    const CUST_ALIAS_MAP = {
+      'cust-1792414691494': 'cust-toprock',
+      'cust-1792415585310': 'cust-hln',
+      'cust-1792320284603': 'cust-buildara',
+      'cust-whitecrescent': 'cust-1792419616536'
+    };
+    if (CUST_ALIAS_MAP[custId]) custId = CUST_ALIAS_MAP[custId];
     const cust = this.db?.customers?.find(c => c.id === custId || c.code === custId || (c.name && c.name.toLowerCase() === (custId || '').toLowerCase()));
     if (!cust) return;
 
@@ -12818,6 +12912,13 @@ class FinanceApp {
 
   // 8B. EDIT CUSTOMER MODAL
   openEditCustomerModal(custId) {
+    const CUST_ALIAS_MAP = {
+      'cust-1792414691494': 'cust-toprock',
+      'cust-1792415585310': 'cust-hln',
+      'cust-1792320284603': 'cust-buildara',
+      'cust-whitecrescent': 'cust-1792419616536'
+    };
+    if (CUST_ALIAS_MAP[custId]) custId = CUST_ALIAS_MAP[custId];
     const cust = this.db?.customers?.find(c => c.id === custId || c.code === custId || (c.name && c.name.toLowerCase() === (custId || '').toLowerCase()));
     if (!cust) return;
 
@@ -18103,9 +18204,9 @@ class FinanceApp {
       }
 
       // 2. Synchronize with backend API
-      await this.syncApi('update_invoice', { 
-        invoice: inv, 
-        old_invoice_no: oldInvNo, 
+      await this.syncApi('update_invoice', {
+        invoice: inv,
+        old_invoice_no: oldInvNo,
         old_id: oldId,
         customer_name: newCustName,
         customer_id: newCustId
