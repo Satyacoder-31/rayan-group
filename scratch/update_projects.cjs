@@ -1,0 +1,190 @@
+const fs = require('fs');
+
+const canonicalProjects = [
+  {
+    id: 'prj-yok-02',
+    code: 'PRJ-RG-YOK-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Yateem Optician Khalidiyah Mall Fitout',
+    client: 'Yateem Optician Retail Group LLC',
+    client_name: 'Yateem Optician Retail Group LLC',
+    contract_value: 860000,
+    approved_budget: 680000,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2026-01-10',
+    target_completion: '2026-08-30',
+    site_location: 'Khalidiyah Mall, Abu Dhabi, UAE',
+    description: 'Civil and turnkey interior fit-out works, joinery, and MEP installations for Yateem Optician boutique.'
+  },
+  {
+    id: 'prj-bd-03',
+    code: 'PRJ-RG-BD-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Commercial & Residential Tower Fit-Out - Sector E-25',
+    client: 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C',
+    client_name: 'M/s. BUILDARA GENERAL CONTRACTING - L.L.C',
+    contract_value: 3200000,
+    approved_budget: 2700000,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2026-01-15',
+    target_completion: '2026-11-30',
+    site_location: 'Sector E-25, Abu Dhabi, UAE',
+    description: 'Full turnkey fit-out, MEP integration, and joinery packages for tower floors 4 to 12.'
+  },
+  {
+    id: 'prj-toprock-police-01',
+    code: 'PRJ-RG-DPA-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+    client: 'M/S TOP ROCK INTERIORS LLC.',
+    client_name: 'M/S TOP ROCK INTERIORS LLC.',
+    contract_value: 850000,
+    approved_budget: 650000,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2024-05-01',
+    target_completion: '2024-12-31',
+    site_location: 'Al Rowaiyah, Dubai, UAE',
+    description: 'Partition wall lining, acoustic rockwool insulation, and ceiling systems for Dubai Police Academy Building.'
+  },
+  {
+    id: 'prj-mvr3cdaw',
+    code: 'PRJ-RG-AON-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Project AON Insurance Office Al Bateen Tower, Abu Dhabi',
+    client: 'M/S AYAT TECHNICAL SERVICES EST.',
+    client_name: 'M/S AYAT TECHNICAL SERVICES EST.',
+    contract_value: 75393.30,
+    approved_budget: 65000.00,
+    currency: 'AED',
+    status: 'Closed',
+    start_date: '2026-02-08',
+    target_completion: '2026-05-30',
+    site_location: 'Al Bateen Tower, Abu Dhabi, UAE',
+    description: 'Gypsum Partition & Wall Cladding Works @ AON Insurance Office.'
+  },
+  {
+    id: 'prj-mvr35qo2',
+    code: 'PRJ-RG-MAX-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Civil Works - Max - Al Wahda Mall, Abu Dhabi',
+    client: 'M/S HLN TECHNICAL SERVICES LLC',
+    client_name: 'M/S HLN TECHNICAL SERVICES LLC',
+    contract_value: 388099.54,
+    approved_budget: 320000.00,
+    currency: 'AED',
+    status: 'Closed',
+    start_date: '2025-08-09',
+    target_completion: '2025-11-30',
+    site_location: 'Al Wahda Mall, Abu Dhabi, UAE',
+    description: 'Civil Works-Max-Al Wahda-Abu Dhabi.'
+  },
+  {
+    id: 'prj-mvr2yfnl',
+    code: 'PRJ-RG-TOBY-2026',
+    company_id: 'rayan-corp-uae',
+    name: "Toby's Kiosk - Yas Mall",
+    client: 'M/S SADECO DÉCOR LLC',
+    client_name: 'M/S SADECO DÉCOR LLC',
+    contract_value: 2625.00,
+    approved_budget: 2000.00,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2026-10-27',
+    target_completion: '2026-10-31',
+    site_location: 'Yas Mall, Abu Dhabi, UAE',
+    description: 'Supply and apply of cement screeding 100mm high.'
+  },
+  {
+    id: 'prj-chipotle-mbz',
+    code: 'PRJ-RG-CHIP-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Chipotle @ My Town Centre MBZ, Abu Dhabi',
+    client: 'M/S MAP OUT DECOR TECHNICAL SERVICES LLC',
+    client_name: 'M/S MAP OUT DECOR TECHNICAL SERVICES LLC',
+    contract_value: 145000.00,
+    approved_budget: 115000.00,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2025-10-01',
+    target_completion: '2026-03-31',
+    site_location: 'MBZ City, Abu Dhabi, UAE',
+    description: 'Fit-out and MEP contracting for Chipotle restaurant outlet.'
+  },
+  {
+    id: 'prj-bateel-yas',
+    code: 'PRJ-RG-BATEEL-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Cafe Bateel @ Yas Mall, Abu Dhabi',
+    client: 'M/S ZORAWAR INTERIOR DECORATION LLC',
+    client_name: 'M/S ZORAWAR INTERIOR DECORATION LLC',
+    contract_value: 100000.00,
+    approved_budget: 80000.00,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2026-04-01',
+    target_completion: '2026-08-15',
+    site_location: 'Yas Mall, Abu Dhabi, UAE',
+    description: 'Turnkey luxury cafe fit-out, joinery, and decorative ceiling works.'
+  },
+  {
+    id: 'prj-specon-rak',
+    code: 'PRJ-RG-SPECON-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Specon Design Interior & Events - Ras Al Khaimah',
+    client: 'SPECON DESIGN INTERIOR & EVENTS',
+    client_name: 'SPECON DESIGN INTERIOR & EVENTS',
+    contract_value: 95000.00,
+    approved_budget: 72000.00,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2026-03-01',
+    target_completion: '2026-07-31',
+    site_location: 'Ras Al Khaimah, UAE',
+    description: 'Exhibition and luxury interior fit-out contracts.'
+  },
+  {
+    id: 'prj-edc-dalma',
+    code: 'PRJ-RG-EDC-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Emirates Driving Company - Dalma Mall & Madinati Mall',
+    client: 'EMIRATES DRIVING COMPANY',
+    client_name: 'EMIRATES DRIVING COMPANY',
+    contract_value: 210000.00,
+    approved_budget: 165000.00,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2026-02-15',
+    target_completion: '2026-09-30',
+    site_location: 'Dalma Mall & Madinati Mall, Abu Dhabi, UAE',
+    description: 'Corporate training center interior renovation and facilities expansion.'
+  },
+  {
+    id: 'prj-pggc-ad',
+    code: 'PRJ-RG-PGGC-2026',
+    company_id: 'rayan-corp-uae',
+    name: 'Abu Dhabi Professional Gulf Maintenance',
+    client: 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+    client_name: 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+    contract_value: 65000.00,
+    approved_budget: 48000.00,
+    currency: 'AED',
+    status: 'Active',
+    start_date: '2023-02-01',
+    target_completion: '2024-06-30',
+    site_location: 'Mussafah M-36, Abu Dhabi, UAE',
+    description: 'HVAC maintenance, Mitsubishi DX units, and interior block wall demolition.'
+  }
+];
+
+function applyProjects(file) {
+  const d = JSON.parse(fs.readFileSync(file, 'utf8'));
+  d.projects = canonicalProjects;
+  fs.writeFileSync(file, JSON.stringify(d, null, 2), 'utf8');
+  console.log('Updated canonical projects in:', file);
+}
+
+applyProjects('data/finance-data.json');
+applyProjects('public/data/finance-data.json');

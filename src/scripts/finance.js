@@ -545,6 +545,44 @@ class FinanceApp {
     } catch (e) { }
   }
 
+  findMatchingProject(query) {
+    if (!query || typeof query !== 'string') return null;
+    const raw = query.trim();
+    if (!raw || raw.toLowerCase() === 'general corporate overhead' || raw.toLowerCase() === 'head office general') return null;
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || p.company_id === this.activeCompanyId);
+
+    // 1. Exact ID
+    let found = projects.find(p => p.id && p.id.toLowerCase() === raw.toLowerCase());
+    if (found) return found;
+
+    // 2. Exact code
+    found = projects.find(p => p.code && p.code.toLowerCase() === raw.toLowerCase());
+    if (found) return found;
+
+    // 3. Exact name
+    found = projects.find(p => p.name && p.name.toLowerCase() === raw.toLowerCase());
+    if (found) return found;
+
+    // 4. Normalized comparison (stripping "Project:", punctuation, extra whitespace)
+    const norm = str => (str || '').toLowerCase().replace(/^(project\s*:\s*)/i, '').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+    const qNorm = norm(raw);
+    if (!qNorm) return null;
+
+    found = projects.find(p => {
+      const pNorm = norm(p.name);
+      if (pNorm === qNorm) return true;
+      if (pNorm && (pNorm.includes(qNorm) || qNorm.includes(pNorm))) return true;
+      const qTokens = qNorm.split(' ').filter(t => t.length > 2);
+      const pTokens = pNorm.split(' ').filter(t => t.length > 2);
+      if (qTokens.length > 0 && pTokens.length > 0) {
+        const matches = qTokens.filter(t => pTokens.includes(t)).length;
+        if (matches >= 2 || (qTokens.length === 1 && matches === 1)) return true;
+      }
+      return false;
+    });
+    return found || null;
+  }
+
   normalizeInvNo(no) {
     if (!no) return '';
     return String(no).trim().toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/(INVOICE|INV)/g, '');
@@ -752,7 +790,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v37';
+    const CURRENT_DB_VERSION = 'v2026_clean_v39';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -1105,6 +1143,15 @@ class FinanceApp {
       const pId = payload.po_id || payload.id;
       if (this.db.purchase_orders && pId) {
         this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== pId && p.po_no !== pId);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'delete_project') {
+      const prjId = payload.project_id || payload.id;
+      if (this.db.projects && prjId) {
+        this.db.projects = this.db.projects.filter(p => p.id !== prjId && p.code !== prjId);
       }
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db };
@@ -5761,7 +5808,7 @@ class FinanceApp {
         <div class="fin-panel-header">
           <div>
             <h2 class="fin-panel-title">🏗️ Project-Based Financial Accounts &amp; Profitability</h2>
-            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Contract revenues, budget utilization, vendor commitments, and project margins.</p>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Contract revenues, budget utilization, vendor commitments, active/close status, and project profit &amp; loss.</p>
           </div>
           <div class="fin-panel-actions">
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">
@@ -5778,64 +5825,116 @@ class FinanceApp {
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">+ Add First Project Account</button>
           </div>
         ` : `
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:1.5rem;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap:1.5rem;">
             ${projects.map(prj => {
-      const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
-      const invoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-      const collected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-      const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
-      const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-      const prjExpenses = expenses.filter(e => e.project_id === prj.id);
-      const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
-      const totalCost = materialsCost + siteExpenses;
-      const estimatedProfit = invoiced - totalCost;
-      const profitMargin = invoiced > 0 ? ((estimatedProfit / invoiced) * 100).toFixed(1) : '0';
+              const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
+              const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+              const autoCollected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
+              const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
+              const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
+              const prjExpenses = expenses.filter(e => e.project_id === prj.id);
+              const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+              const autoCost = materialsCost + siteExpenses;
+              const autoProfit = autoInvoiced - autoCost;
+              const autoMargin = autoInvoiced > 0 ? ((autoProfit / autoInvoiced) * 100).toFixed(1) : '0.0';
 
-      return `
-                <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:12px; padding:1.5rem;">
-                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
-                    <div>
-                      <span style="font-size:0.72rem; color:#38bdf8; font-weight:700;">${prj.code}</span>
-                      <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin-top:0.2rem;">${prj.name}</h3>
-                      <span style="font-size:0.78rem; color:#94a3b8;">Client: ${prj.client_name || prj.client || 'Corporate Client'}</span>
+              const isManual = prj.manual_financials === true;
+              const invoicedDisp = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
+              const collectedDisp = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
+              const costDisp = isManual ? Number(prj.manual_cost ?? prj.approved_budget ?? 0) : autoCost;
+              const profitDisp = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (invoicedDisp - costDisp)) : autoProfit;
+              const marginDisp = isManual ? (invoicedDisp > 0 ? ((profitDisp / invoicedDisp) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0')) : autoMargin;
+
+              const isProfit = profitDisp >= 0;
+              const profitColor = isProfit ? '#10b981' : '#ef4444';
+              const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
+
+              const normStatus = (prj.status || 'Active').toLowerCase();
+              const isClosed = normStatus === 'closed' || normStatus === 'completed';
+              const isOnHold = normStatus === 'on hold';
+              const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
+              const badgeStyle = isClosed 
+                ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
+                : isOnHold 
+                  ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
+                  : isPlanning 
+                    ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
+                    : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
+              const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
+
+              return `
+                <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:14px; padding:1.4rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.25);">
+                  <div>
+                    <!-- Header -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:0.75rem;">
+                      <div style="flex-grow:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.35rem;">
+                          <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; font-family:monospace; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:4px; border:1px solid rgba(56,189,248,0.25);">${prj.code || 'PRJ-PROJ'}</span>
+                          ${isManual ? '<span style="font-size:0.68rem; color:#f59e0b; background:rgba(245,158,11,0.12); padding:2px 7px; border-radius:4px; border:1px solid rgba(245,158,11,0.3); font-weight:600;">⚡ Manual P&amp;L</span>' : '<span style="font-size:0.68rem; color:#94a3b8; background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">📊 Auto-Tracked</span>'}
+                        </div>
+                        <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin:0 0 0.35rem; line-height:1.35; word-break:break-word;">${prj.name}</h3>
+                        <div style="font-size:0.78rem; color:#94a3b8;">Client: <strong style="color:#e2e8f0;">${prj.client_name || prj.client || 'Corporate Client'}</strong></div>
+                      </div>
+                      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem; flex-shrink:0;">
+                        <span class="fin-badge" style="${badgeStyle}; font-size:0.72rem; font-weight:700; letter-spacing:0.5px; padding:4px 10px; border-radius:6px;">${statusLabel}</span>
+                        <button type="button" class="fin-btn-row-action" style="font-size:0.72rem; padding:3px 9px; border-radius:4px; ${isClosed ? 'color:#10b981; border:1px solid rgba(16,185,129,0.35); background:rgba(16,185,129,0.08);' : 'color:#cbd5e1; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.04);'}" onclick="window.finApp.toggleProjectStatus('${prj.id}')" title="Quick toggle project active / closed status">
+                          ${isClosed ? '▶ Mark Active' : '✓ Mark Closed'}
+                        </button>
+                      </div>
                     </div>
-                    <span class="fin-badge fin-badge-paid">${prj.status}</span>
+
+                    <!-- Financial & Profit/Loss Grid -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1rem; margin-bottom:1rem; font-size:0.8rem;">
+                      <div>
+                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">Contract Value:</span>
+                        <strong style="color:#f8fafc; font-size:0.92rem;">${this.formatCurrency(prj.contract_value)}</strong>
+                      </div>
+                      <div>
+                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">Approved Budget:</span>
+                        <strong style="color:#f8fafc; font-size:0.92rem;">${this.formatCurrency(prj.approved_budget)}</strong>
+                      </div>
+                      <div>
+                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">Invoiced Revenue:</span>
+                        <strong style="color:#38bdf8; font-size:0.92rem;">${this.formatCurrency(invoicedDisp)}</strong>
+                      </div>
+                      <div>
+                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">Customer Collections:</span>
+                        <strong style="color:#10b981; font-size:0.92rem;">${this.formatCurrency(collectedDisp)}</strong>
+                      </div>
+                      <div>
+                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">Project Direct Cost:</span>
+                        <strong style="color:#fb923c; font-size:0.92rem;">${this.formatCurrency(costDisp)}</strong>
+                      </div>
+                      <div>
+                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">${profitLabel}:</span>
+                        <strong style="color:${profitColor}; font-size:0.92rem;">${this.formatCurrency(profitDisp)} (${marginDisp}%)</strong>
+                      </div>
+                    </div>
+
+                    <!-- Timeline & Site Location -->
+                    <div style="font-size:0.74rem; color:#94a3b8; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
+                      <span>📅 Timeline: ${this.formatDate(prj.start_date)} &rarr; ${this.formatDate(prj.target_completion)}</span>
+                      ${prj.site_location ? `<span style="color:#cbd5e1;">📍 ${prj.site_location}</span>` : ''}
+                    </div>
                   </div>
 
-                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; background:rgba(0,0,0,0.25); border-radius:8px; padding:1rem; margin-bottom:1rem; font-size:0.8rem;">
-                    <div>
-                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Contract Value:</span>
-                      <strong>${this.formatCurrency(prj.contract_value)}</strong>
+                  <!-- Actions Bar -->
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.85rem; gap:0.5rem; flex-wrap:wrap;">
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                      <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); font-weight:600; padding:5px 12px; border-radius:6px; cursor:pointer;" onclick="window.finApp.openEditProjectModal('${prj.id}')" title="Edit project title, client, status & manual profit/loss">
+                        ✏️ Edit Project
+                      </button>
+                      <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:5px 10px; border-radius:6px; cursor:pointer;" onclick="window.finApp.deleteProject('${prj.id}')" title="Delete project account">
+                        🗑️ Delete
+                      </button>
                     </div>
-                    <div>
-                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Approved Budget:</span>
-                      <strong>${this.formatCurrency(prj.approved_budget)}</strong>
-                    </div>
-                    <div>
-                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Invoiced Revenue:</span>
-                      <strong style="color:#38bdf8;">${this.formatCurrency(invoiced)}</strong>
-                    </div>
-                    <div>
-                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Customer Collections:</span>
-                      <strong style="color:#10b981;">${this.formatCurrency(collected)}</strong>
-                    </div>
-                    <div>
-                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Project Direct Cost:</span>
-                      <strong style="color:#fb923c;">${this.formatCurrency(totalCost)}</strong>
-                    </div>
-                    <div>
-                      <span style="color:#94a3b8; display:block; font-size:0.7rem;">Estimated Margin:</span>
-                      <strong style="color:#10b981;">${this.formatCurrency(estimatedProfit)} (${profitMargin}%)</strong>
-                    </div>
-                  </div>
-
-                  <div style="font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
-                    <span>Timeline: ${this.formatDate(prj.start_date)} &rarr; ${this.formatDate(prj.target_completion)}</span>
-                    <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCreateInvoiceModal();" title="Create invoice linked to this project">📄 Invoice Project &rarr;</button>
+                    <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.35); padding:5px 13px; border-radius:6px; font-weight:600; cursor:pointer;" onclick="window.finApp.openCreateInvoiceModal();" title="Create invoice linked to this project">
+                      📄 Invoice Project &rarr;
+                    </button>
                   </div>
                 </div>
               `;
-    }).join('')}
+            }).join('')}
           </div>
         `}
       </div>
@@ -10907,7 +11006,7 @@ class FinanceApp {
         prjId = null;
         prjName = 'General Corporate Overhead';
       } else if (!prjId) {
-        const matchPrj = projects.find(p => p.name.toLowerCase() === prjVal.toLowerCase() || (p.code && p.code.toLowerCase() === prjVal.toLowerCase()));
+        const matchPrj = this.findMatchingProject(prjVal);
         if (matchPrj) {
           prjId = matchPrj.id;
           prjName = matchPrj.name;
@@ -10916,9 +11015,9 @@ class FinanceApp {
           const newPrj = {
             id: prjId,
             code: 'PRJ-' + Math.floor(1000 + Math.random() * 9000),
-            name: prjName,
+            name: prjVal.replace(/^(Project:\s*)/i, '').trim(),
             company_id: this.activeCompanyId,
-            status: 'active'
+            status: 'Active'
           };
           if (!this.db.projects) this.db.projects = [];
           this.db.projects.push(newPrj);
@@ -13473,7 +13572,7 @@ class FinanceApp {
       if (isExpPrjManual) {
         expPrjName = (expPrjManualInp?.value || '').trim();
         if (expPrjName) {
-          const matchPrj = projects.find(p => p.name.toLowerCase() === expPrjName.toLowerCase() || (p.code && p.code.toLowerCase() === expPrjName.toLowerCase()));
+          const matchPrj = this.findMatchingProject(expPrjName);
           if (matchPrj) {
             expPrjId = matchPrj.id;
             expPrjName = matchPrj.name;
@@ -13482,9 +13581,9 @@ class FinanceApp {
             const newPrj = {
               id: expPrjId,
               code: 'PRJ-' + Math.floor(1000 + Math.random() * 9000),
-              name: expPrjName,
+              name: expPrjName.replace(/^(Project:\s*)/i, '').trim(),
               company_id: this.activeCompanyId,
-              status: 'active'
+              status: 'Active'
             };
             if (!this.db.projects) this.db.projects = [];
             this.db.projects.push(newPrj);
@@ -14053,6 +14152,327 @@ class FinanceApp {
         alert(res?.error || 'Could not create project.');
       }
     };
+  }
+
+  // 14C. EDIT PROJECT MODAL
+  openEditProjectModal(projectId) {
+    const prj = (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
+    if (!prj) {
+      alert('Project not found.');
+      return;
+    }
+    const customers = this.db?.customers || [];
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+
+    // Auto-calculated figures for reference or default
+    const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
+    const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+    const autoCollected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
+    const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
+    const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
+    const prjExpenses = expenses.filter(e => e.project_id === prj.id);
+    const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+    const autoCost = materialsCost + siteExpenses;
+    const autoProfit = autoInvoiced - autoCost;
+
+    const isManual = prj.manual_financials === true;
+    const initialInvoiced = prj.manual_invoiced !== undefined ? Number(prj.manual_invoiced) : (isManual ? Number(prj.contract_value || 0) : autoInvoiced);
+    const initialCollected = prj.manual_collected !== undefined ? Number(prj.manual_collected) : (isManual ? Number(prj.contract_value || 0) : autoCollected);
+    const initialCost = prj.manual_cost !== undefined ? Number(prj.manual_cost) : (isManual ? Number(prj.approved_budget || 0) : autoCost);
+    const initialProfit = prj.manual_profit !== undefined ? Number(prj.manual_profit) : (initialInvoiced - initialCost);
+    const initialMargin = initialInvoiced > 0 ? ((initialProfit / initialInvoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
+
+    const currLabel = prj.currency === 'INR' ? '₹' : 'AED';
+    const normStatus = (prj.status || 'Active').toLowerCase();
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-project" style="z-index:1050; background:rgba(15,23,42,0.85); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center;">
+        <div class="fin-modal-dialog" style="max-width:760px; width:95%; background:#0f172a; border:1px solid rgba(56,189,248,0.3); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.7); overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95)); border-bottom:1px solid rgba(255,255,255,0.08); padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; font-family:monospace; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:4px; border:1px solid rgba(56,189,248,0.25);">${prj.code || 'PRJ'}</span>
+                <h3 class="fin-modal-title" style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin:0;">✏️ Edit Project Account &amp; Profit/Loss</h3>
+              </div>
+              <p style="font-size:0.75rem; color:#94a3b8; margin:0;">Manage project status (Active / Closed) and manually record or override project profit &amp; loss figures.</p>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-project')" style="color:#94a3b8; font-size:1.6rem; line-height:1; border:none; background:none; cursor:pointer;">&times;</button>
+          </div>
+          <div class="fin-modal-body" style="padding:1.5rem; max-height:78vh; overflow-y:auto;">
+            <form id="edit-project-form">
+              <!-- Row 1: Code & Status -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Code <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-prj-code" class="fin-form-input" required value="${prj.code || ''}" style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Status <span style="color:#ef4444;">*</span></label>
+                  <select id="edit-prj-status" class="fin-form-select" style="font-weight:600;">
+                    <option value="Active" ${normStatus === 'active' || normStatus === 'in progress' ? 'selected' : ''}>Active / In Progress</option>
+                    <option value="Closed" ${normStatus === 'closed' || normStatus === 'completed' ? 'selected' : ''}>Closed / Completed</option>
+                    <option value="On Hold" ${normStatus === 'on hold' ? 'selected' : ''}>On Hold</option>
+                    <option value="Planning" ${normStatus.includes('plan') || normStatus.includes('tender') ? 'selected' : ''}>Planning / Tender</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Row 2: Title / Name -->
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label">Project Title / Name <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-prj-name" class="fin-form-input" required value="${prj.name || ''}" placeholder="e.g. Yateem Optician Khalidiyah Mall Fitout">
+              </div>
+
+              <!-- Row 3: Client & Location -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client / Customer <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-prj-client" class="fin-form-input" list="edit-prj-client-suggestions" required value="${prj.client_name || prj.client || ''}" placeholder="Pick registered client or type custom name...">
+                  <datalist id="edit-prj-client-suggestions">
+                    ${customers.map(c => `<option value="${c.name}">${c.code || ''} • ${c.trn ? `TRN: ${c.trn}` : (c.gstin ? `GSTIN: ${c.gstin}` : '')}</option>`).join('')}
+                  </datalist>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Site Location / Emirate / Address</label>
+                  <input type="text" id="edit-prj-location" class="fin-form-input" value="${prj.site_location || ''}" placeholder="e.g. Khalidiyah Mall, Abu Dhabi, UAE">
+                </div>
+              </div>
+
+              <!-- Row 4: Contract Value & Approved Budget -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Contract Value (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="edit-prj-contract" class="fin-form-input" min="0" step="any" required value="${prj.contract_value || 0}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Approved Budget (${currLabel}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="edit-prj-budget" class="fin-form-input" min="0" step="any" required value="${prj.approved_budget || 0}">
+                </div>
+              </div>
+
+              <!-- Financial & Profit/Loss Section -->
+              <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(56,189,248,0.25); border-radius:10px; padding:1.25rem; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <input type="checkbox" id="edit-prj-manual-toggle" ${isManual ? 'checked' : ''} style="width:18px; height:18px; accent-color:#38bdf8; cursor:pointer;">
+                    <label for="edit-prj-manual-toggle" style="font-weight:700; color:#38bdf8; cursor:pointer; font-size:0.92rem;">
+                      Enable Manual Profit / Loss Entry (Override Auto-Tracking)
+                    </label>
+                  </div>
+                  <span id="edit-prj-pnl-mode-badge" style="font-size:0.7rem; padding:2px 8px; border-radius:4px; font-weight:600; ${isManual ? 'background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3);' : 'background:rgba(255,255,255,0.08); color:#94a3b8; border:1px solid rgba(255,255,255,0.1);'}">
+                    ${isManual ? '⚡ Manual Entry Active' : '📊 Auto-Calculated'}
+                  </span>
+                </div>
+                <p style="font-size:0.75rem; color:#94a3b8; margin:0 0 1rem;">
+                  Toggle this on to manually specify project billed revenue, client collections, direct expenses, and verified profit/loss figures.
+                </p>
+
+                <div id="edit-prj-manual-fields" style="${isManual ? 'display:grid;' : 'display:none;'} grid-template-columns: 1fr 1fr; gap:0.85rem;">
+                  <div class="fin-form-group">
+                    <label class="fin-form-label" style="font-size:0.75rem;">Invoiced Revenue (${currLabel})</label>
+                    <input type="number" id="edit-prj-invoiced" class="fin-form-input" step="any" value="${initialInvoiced}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label" style="font-size:0.75rem;">Customer Collections (${currLabel})</label>
+                    <input type="number" id="edit-prj-collected" class="fin-form-input" step="any" value="${initialCollected}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label" style="font-size:0.75rem;">Project Direct Cost / Expenses (${currLabel})</label>
+                    <input type="number" id="edit-prj-cost" class="fin-form-input" step="any" value="${initialCost}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label" style="font-size:0.75rem;">Net Profit / Loss (${currLabel})</label>
+                    <input type="number" id="edit-prj-profit" class="fin-form-input" step="any" value="${initialProfit}" style="font-weight:700; color:#10b981;">
+                  </div>
+                  <div class="fin-form-group" style="grid-column: span 2;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.25); border-radius:6px; padding:0.6rem 0.85rem;">
+                      <span style="font-size:0.75rem; color:#94a3b8;">Estimated Profit Margin:</span>
+                      <strong id="edit-prj-margin-display" style="color:#10b981; font-size:0.95rem;">${initialMargin}%</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 5: Dates -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Start Date</label>
+                  <input type="date" id="edit-prj-start" class="fin-form-input" value="${prj.start_date || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Target Completion Date</label>
+                  <input type="date" id="edit-prj-completion" class="fin-form-input" value="${prj.target_completion || ''}">
+                </div>
+              </div>
+
+              <!-- Row 6: Description -->
+              <div class="fin-form-group" style="margin-bottom:1rem;">
+                <label class="fin-form-label">Scope Description &amp; Specifications</label>
+                <textarea id="edit-prj-desc" class="fin-form-textarea" rows="2" placeholder="Summary of civil, joinery, fit-out, or MEP scope...">${prj.description || ''}</textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1.25rem 0 0; background:transparent; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); margin-top:1rem;">
+                <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3);" onclick="window.finApp.deleteProject('${prj.id}')">🗑️ Delete Project</button>
+                <div style="display:flex; gap:0.75rem;">
+                  <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-project')">Cancel</button>
+                  <button type="submit" class="fin-btn-quick primary">Save &amp; Update Project &rarr;</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    let container = document.getElementById('fin-modal-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'fin-modal-container';
+      document.body.appendChild(container);
+    }
+    container.innerHTML = modalHtml;
+
+    // Reactivity for manual P&L toggle and calculations
+    const toggle = document.getElementById('edit-prj-manual-toggle');
+    const fieldsWrap = document.getElementById('edit-prj-manual-fields');
+    const badge = document.getElementById('edit-prj-pnl-mode-badge');
+    const invInp = document.getElementById('edit-prj-invoiced');
+    const costInp = document.getElementById('edit-prj-cost');
+    const profitInp = document.getElementById('edit-prj-profit');
+    const marginDisp = document.getElementById('edit-prj-margin-display');
+
+    const updateCalc = () => {
+      const inv = Number(invInp?.value) || 0;
+      const cost = Number(costInp?.value) || 0;
+      const prof = Number(profitInp?.value) || (inv - cost);
+      const marg = inv > 0 ? ((prof / inv) * 100).toFixed(1) : '0.0';
+      if (marginDisp) {
+        marginDisp.textContent = `${marg}%`;
+        marginDisp.style.color = prof >= 0 ? '#10b981' : '#ef4444';
+      }
+      if (profitInp) {
+        profitInp.style.color = prof >= 0 ? '#10b981' : '#ef4444';
+      }
+    };
+
+    if (toggle) {
+      toggle.onchange = () => {
+        const checked = toggle.checked;
+        if (fieldsWrap) fieldsWrap.style.display = checked ? 'grid' : 'none';
+        if (badge) {
+          badge.textContent = checked ? '⚡ Manual Entry Active' : '📊 Auto-Calculated';
+          badge.style.background = checked ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.08)';
+          badge.style.color = checked ? '#f59e0b' : '#94a3b8';
+          badge.style.border = checked ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(255,255,255,0.1)';
+        }
+      };
+    }
+
+    if (invInp) {
+      invInp.oninput = () => {
+        const inv = Number(invInp.value) || 0;
+        const cost = Number(costInp?.value) || 0;
+        if (profitInp) profitInp.value = (inv - cost).toFixed(2);
+        updateCalc();
+      };
+    }
+    if (costInp) {
+      costInp.oninput = () => {
+        const inv = Number(invInp?.value) || 0;
+        const cost = Number(costInp.value) || 0;
+        if (profitInp) profitInp.value = (inv - cost).toFixed(2);
+        updateCalc();
+      };
+    }
+    if (profitInp) {
+      profitInp.oninput = updateCalc;
+    }
+
+    document.getElementById('edit-project-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const clientName = document.getElementById('edit-prj-client').value.trim();
+      const matchedCust = customers.find(c => c.name.toLowerCase() === clientName.toLowerCase() || c.name.toLowerCase().includes(clientName.toLowerCase()));
+      const manualEnabled = toggle?.checked || false;
+
+      const payload = {
+        project: {
+          id: prj.id,
+          code: document.getElementById('edit-prj-code').value.trim() || prj.code,
+          company_id: prj.company_id || this.activeCompanyId || 'rayan-corp-uae',
+          name: document.getElementById('edit-prj-name').value.trim(),
+          client: clientName,
+          client_name: clientName,
+          client_id: matchedCust?.id || prj.client_id || null,
+          contract_value: Number(document.getElementById('edit-prj-contract').value) || 0,
+          approved_budget: Number(document.getElementById('edit-prj-budget').value) || 0,
+          currency: prj.currency || this.activeCurrency || 'AED',
+          status: document.getElementById('edit-prj-status').value,
+          start_date: document.getElementById('edit-prj-start').value,
+          target_completion: document.getElementById('edit-prj-completion').value,
+          site_location: document.getElementById('edit-prj-location').value.trim(),
+          description: document.getElementById('edit-prj-desc').value.trim(),
+          manual_financials: manualEnabled,
+          manual_invoiced: manualEnabled ? Number(invInp?.value || 0) : undefined,
+          manual_collected: manualEnabled ? Number(document.getElementById('edit-prj-collected')?.value || 0) : undefined,
+          manual_cost: manualEnabled ? Number(costInp?.value || 0) : undefined,
+          manual_profit: manualEnabled ? Number(profitInp?.value || 0) : undefined,
+          manual_margin: manualEnabled ? (marginDisp?.textContent?.replace('%', '') || '0.0') : undefined
+        }
+      };
+
+      const res = await this.syncApi('update_project', payload);
+      if (res && res.success) {
+        if (clientName) {
+          this.saveCustomerProjectLink(clientName, payload.project.id, payload.project.name);
+          this.saveProjectRecommendation(payload.project.name);
+        }
+        this.closeModal('modal-edit-project');
+        this.showNotification(`Project "${payload.project.name}" (${payload.project.code}) updated successfully.`, 'success');
+        if (this.activeTab === 'projects') {
+          const root = document.getElementById('fin-tab-content-root');
+          if (root) this.renderProjectsTab(root);
+        } else {
+          this.renderActiveTab();
+        }
+      } else {
+        alert(res?.error || 'Could not update project.');
+      }
+    };
+  }
+
+  // Quick toggle project status between Active and Closed
+  async toggleProjectStatus(projectId) {
+    const prj = (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
+    if (!prj) return;
+    const curStatus = (prj.status || 'Active').toLowerCase();
+    const newStatus = (curStatus === 'closed' || curStatus === 'completed') ? 'Active' : 'Closed';
+    prj.status = newStatus;
+    await this.syncApi('update_project', { project: prj });
+    this.showNotification(`Project "${prj.name}" marked as ${newStatus}.`, 'info');
+    if (this.activeTab === 'projects') {
+      const root = document.getElementById('fin-tab-content-root');
+      if (root) this.renderProjectsTab(root);
+    } else {
+      this.renderActiveTab();
+    }
+  }
+
+  // Delete project
+  async deleteProject(projectId) {
+    const prj = (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
+    const label = prj ? `${prj.name} (${prj.code})` : projectId;
+    if (!confirm(`Are you sure you want to delete project "${label}"? This will remove the project account.`)) return;
+    this.closeModal('modal-edit-project');
+    await this.syncApi('delete_project', { project_id: projectId, id: projectId });
+    this.showNotification(`Project "${label}" deleted.`, 'info');
+    if (this.activeTab === 'projects') {
+      const root = document.getElementById('fin-tab-content-root');
+      if (root) this.renderProjectsTab(root);
+    } else {
+      this.renderActiveTab();
+    }
   }
 
   // 15. NOTIFICATIONS MODAL
@@ -18172,17 +18592,18 @@ class FinanceApp {
       } else {
         bill.project_name = prjVal;
         if (!prjId) {
-          const matchPrj = projects.find(p => p.name.toLowerCase() === prjVal.toLowerCase() || (p.code && p.code.toLowerCase() === prjVal.toLowerCase()));
+          const matchPrj = this.findMatchingProject(prjVal);
           if (matchPrj) {
             bill.project_id = matchPrj.id;
+            bill.project_name = matchPrj.name;
           } else {
             bill.project_id = 'prj-' + Date.now();
             const newPrj = {
               id: bill.project_id,
               code: 'PRJ-' + Math.floor(1000 + Math.random() * 9000),
-              name: prjVal,
+              name: prjVal.replace(/^(Project:\s*)/i, '').trim(),
               company_id: bill.company_id || this.activeCompanyId,
-              status: 'active'
+              status: 'Active'
             };
             if (!this.db.projects) this.db.projects = [];
             this.db.projects.push(newPrj);

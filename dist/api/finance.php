@@ -747,7 +747,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 contact_person = 'Mr. Shahil', 
                 email = 'procurementofficer@toprockinteriors.com' 
             WHERE customer_name LIKE '%TOP ROCK%'");
-            $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01')");
+            $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01', 'prj-1793293174613', 'prj-1793293174359', 'prj-1793293174181', 'prj-1793293174006', 'prj-1793293173653', 'prj-1793293172695', 'prj-1793293172111', 'prj-1793293172304', 'prj-1793293136777') OR (name LIKE '%Yateem Optician%' AND id != 'prj-yok-02')");
             $pdo->exec("DELETE FROM finance_cheques WHERE id IN ('chq-in-01', 'chq-out-02', 'chq-in-02', 'chq-in-03', 'chq-out-01')");
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-01', 'cv-02', 'cv-03')");
             $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-01', 'wire-02', 'wire-04', 'wire-05', 'wire-adcb-44035') OR reference_no IN ('WIRE-ADCB-99210', '194651191', 'SBIN3409394') OR type = 'inward' OR id LIKE 'wire-%'");
@@ -1541,6 +1541,33 @@ function syncFromRelationalTables($pdo, &$data) {
         }
 
         // Auto-discover and populate purchase orders from any purchase bills that reference a PO
+        if (!empty($data['projects']) && is_array($data['projects'])) {
+            $dummyPrjIds = [
+                'prj-1793293174613', 'prj-1793293174359', 'prj-1793293174181', 
+                'prj-1793293174006', 'prj-1793293173653', 'prj-1793293172695', 
+                'prj-1793293172111', 'prj-1793293172304', 'prj-1793293136777', 'prj-dpa-01'
+            ];
+            $seenPrjNames = [];
+            $filteredProjects = [];
+            foreach ($data['projects'] as $p) {
+                $pid = strtolower(trim($p['id'] ?? ''));
+                if (in_array($pid, $dummyPrjIds)) continue;
+                $pName = trim($p['name'] ?? '');
+                if (!$pName) continue;
+                $normName = preg_replace('/^(project\s*:\s*)/i', '', strtolower($pName));
+                $normName = preg_replace('/[^a-z0-9]/', '', $normName);
+                if (strpos($normName, 'yateemoptician') !== false) {
+                    if (isset($seenPrjNames['yateemoptician'])) continue;
+                    $seenPrjNames['yateemoptician'] = true;
+                } else if ($normName && isset($seenPrjNames[$normName])) {
+                    continue;
+                }
+                $seenPrjNames[$normName] = true;
+                $filteredProjects[] = $p;
+            }
+            $data['projects'] = $filteredProjects;
+        }
+
         if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
             if (!isset($data['purchase_orders']) || !is_array($data['purchase_orders'])) {
                 $data['purchase_orders'] = [];
@@ -1870,21 +1897,29 @@ function syncToRelationalTables($pdo, &$data) {
 
         // 8. Projects
         if (!empty($data['projects']) && is_array($data['projects'])) {
+            $validPrjIds = [];
             $stmt = $pdo->prepare("REPLACE INTO finance_projects (id, code, company_id, name, client, contract_value, approved_budget, currency, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :client, :contract_value, :approved_budget, :currency, :status, :data_json, NOW())");
             foreach ($data['projects'] as $prj) {
                 if (empty($prj['name'])) continue;
+                $pid = $prj['id'] ?? ('prj-' . rand(1000, 9999));
+                $validPrjIds[] = $pid;
                 $stmt->execute([
-                    ':id' => $prj['id'] ?? ('prj-' . rand(1000, 9999)),
+                    ':id' => $pid,
                     ':code' => $prj['code'] ?? '',
                     ':company_id' => $prj['company_id'] ?? 'rayan-corp-uae',
                     ':name' => $prj['name'],
-                    ':client' => $prj['client'] ?? '',
+                    ':client' => $prj['client'] ?? $prj['client_name'] ?? '',
                     ':contract_value' => floatval($prj['contract_value'] ?? 0),
                     ':approved_budget' => floatval($prj['approved_budget'] ?? 0),
                     ':currency' => $prj['currency'] ?? 'AED',
-                    ':status' => $prj['status'] ?? 'In Progress',
+                    ':status' => $prj['status'] ?? 'Active',
                     ':data_json' => json_encode($prj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
+            }
+            if (!empty($validPrjIds)) {
+                $inClause = implode(',', array_fill(0, count($validPrjIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_projects WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validPrjIds);
             }
         }
 
@@ -2498,10 +2533,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if ($foundPrj >= 0) {
                     $db['projects'][$foundPrj] = array_merge($db['projects'][$foundPrj], $prj);
+                    $targetPrj = $db['projects'][$foundPrj];
                     $addAuditLog('update', 'project', $prj['code'] ?? '', 'Updated project ' . ($prj['name'] ?? ''));
                 } else {
                     array_unshift($db['projects'], $prj);
+                    $targetPrj = $prj;
                     $addAuditLog('create', 'project', $prj['code'] ?? '', 'Created project ' . ($prj['name'] ?? ''));
+                }
+                $response['project'] = $targetPrj;
+
+                if ($pdo) {
+                    try {
+                        $stmtPrj = $pdo->prepare("REPLACE INTO finance_projects (id, code, company_id, name, client, contract_value, approved_budget, currency, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :client, :contract_value, :approved_budget, :currency, :status, :data_json, NOW())");
+                        $stmtPrj->execute([
+                            ':id' => $targetPrj['id'],
+                            ':code' => $targetPrj['code'] ?? '',
+                            ':company_id' => $targetPrj['company_id'] ?? 'rayan-corp-uae',
+                            ':name' => $targetPrj['name'],
+                            ':client' => $targetPrj['client'] ?? $targetPrj['client_name'] ?? '',
+                            ':contract_value' => floatval($targetPrj['contract_value'] ?? 0),
+                            ':approved_budget' => floatval($targetPrj['approved_budget'] ?? 0),
+                            ':currency' => $targetPrj['currency'] ?? 'AED',
+                            ':status' => $targetPrj['status'] ?? 'Active',
+                            ':data_json' => json_encode($targetPrj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
                 }
             }
             break;
