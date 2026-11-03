@@ -986,7 +986,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v51';
+    const CURRENT_DB_VERSION = 'v2026_clean_v52';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -7730,72 +7730,270 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // 11. PROJECT FINANCIALS MODULE
   // --------------------------------------------------------------------------
+  getProjectLedgerData(projectId) {
+    const prj = (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
+    if (!prj) return null;
+
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = isIndia ? 'INR' : (prj.currency || this.activeCurrency || 'AED');
+    const currSym = curr === 'INR' ? '₹' : 'AED ';
+
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
+    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId && b.status !== 'void');
+    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId && e.status !== 'void');
+    const receipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId && r.status !== 'void');
+    const pos = (this.db?.purchase_orders || []).filter(po => (po.company_id || 'rayan-corp-uae') === this.activeCompanyId && po.status !== 'void');
+
+    const prjId = prj.id;
+    const prjCode = (prj.code || '').toLowerCase().trim();
+    const prjName = (prj.name || '').toLowerCase().trim();
+
+    const isDocLinked = (doc, isBill = false) => {
+      if (!doc) return false;
+      if (doc.project_id && (doc.project_id === prjId || doc.project_id.toLowerCase() === prjCode)) return true;
+      const docPName = (doc.project_name || '').toLowerCase().trim();
+      if (docPName && (docPName === prjName || docPName === prjCode)) return true;
+
+      const cleanPrj = prjName.replace(/[^a-z0-9]/g, '');
+      const cleanDoc = docPName.replace(/[^a-z0-9]/g, '');
+      if (cleanDoc && cleanPrj && (cleanDoc.includes(cleanPrj) || cleanPrj.includes(cleanDoc))) return true;
+
+      const docAll = (docPName + ' ' + (doc.notes || '') + ' ' + (doc.description || '') + ' ' + (doc.vendor_invoice_no || '')).toLowerCase();
+      if (prjCode.includes('max') || prjName.includes('max')) {
+        if (docAll.includes('max') || (docAll.includes('wahda') && !docAll.includes('commercial tower'))) return true;
+        if (isBill && (doc.vendor_invoice_no === 'HLN/PO/0526/2025' || (doc.vendor_name || '').toLowerCase().includes('hln'))) return true;
+      }
+      if (prjCode.includes('yok') || prjName.includes('yateem')) {
+        if (docAll.includes('yateem') || docAll.includes('khalidiyah')) return true;
+      }
+      if (prjCode.includes('dpa') || prjName.includes('police academy')) {
+        if (docAll.includes('police academy') || docAll.includes('rowaiyah')) return true;
+      }
+      if (prjCode.includes('chip') || prjName.includes('chipotle')) {
+        if (docAll.includes('chipotle') || docAll.includes('town centre mbz')) return true;
+      }
+      if (prjCode.includes('bateel') || prjName.includes('bateel')) {
+        if (docAll.includes('bateel')) return true;
+      }
+      if (prjCode.includes('bd') || prjName.includes('sector e-25') || prjName.includes('commercial & residential')) {
+        if (docAll.includes('sector e-25') || docAll.includes('residential tower')) return true;
+      }
+      if (prjCode.includes('toby') || prjName.includes('toby')) {
+        if (docAll.includes('toby') || docAll.includes('toby\'s')) return true;
+      }
+      if (prjCode.includes('specon') || prjName.includes('specon')) {
+        if (docAll.includes('specon') || docAll.includes('ras al khaimah')) return true;
+      }
+      if (prjCode.includes('aon') || prjName.includes('aon')) {
+        if (docAll.includes('aon') || docAll.includes('al bateen tower')) return true;
+      }
+      if (prjCode.includes('edc') || prjName.includes('emirates driving')) {
+        if (docAll.includes('emirates driving') || docAll.includes('edc')) return true;
+      }
+      if (prjCode.includes('pggc') || prjName.includes('professional gulf')) {
+        if (docAll.includes('professional gulf') || docAll.includes('pggc')) return true;
+      }
+      return false;
+    };
+
+    const prjInvoices = invoices.filter(i => isDocLinked(i, false));
+    const prjBills = bills.filter(b => isDocLinked(b, true));
+    const prjExpenses = expenses.filter(e => isDocLinked(e, false));
+    const prjPOs = pos.filter(po => isDocLinked(po, false));
+
+    const invNos = new Set(prjInvoices.map(i => i.invoice_no));
+    const prjReceipts = receipts.filter(r => {
+      if (isDocLinked(r, false)) return true;
+      if (r.allocated_invoices && Array.isArray(r.allocated_invoices)) {
+        return r.allocated_invoices.some(ai => invNos.has(ai.invoice_no));
+      }
+      return false;
+    });
+
+    const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+    const autoCollectedFromInvs = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
+    const autoCollectedFromReceipts = prjReceipts.reduce((s, r) => s + (Number(r.amount_received) || 0), 0);
+    const autoCollected = Math.max(autoCollectedFromInvs, autoCollectedFromReceipts);
+
+    const autoBillsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
+    const autoBillsPaid = prjBills.reduce((s, b) => s + (Number(b.amount_paid) || 0), 0);
+    const autoExpensesCost = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+    const autoCost = autoBillsCost + autoExpensesCost;
+    const autoProfit = autoInvoiced - autoCost;
+    const autoMargin = autoInvoiced > 0 ? ((autoProfit / autoInvoiced) * 100).toFixed(1) : '0.0';
+
+    const isManual = prj.manual_financials === true;
+    const invoiced = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : (autoInvoiced > 0 ? autoInvoiced : Number(prj.contract_value || 0));
+    const collected = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
+    const pendingDue = Math.max(0, invoiced - collected);
+
+    const billsCost = isManual && prj.manual_bills !== undefined ? Number(prj.manual_bills) : autoBillsCost;
+    const siteExpenses = isManual && prj.manual_expenses !== undefined ? Number(prj.manual_expenses) : autoExpensesCost;
+    const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses)) : (autoCost > 0 ? autoCost : Number(prj.approved_budget || 0));
+    const netProfit = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (invoiced - totalCost)) : (invoiced - totalCost);
+    const profitMargin = invoiced > 0 ? ((netProfit / invoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
+    const cashPosition = collected - (autoBillsPaid + siteExpenses);
+
+    return {
+      prj,
+      curr,
+      currSym,
+      isManual,
+      invoiced,
+      collected,
+      pendingDue,
+      billsCost,
+      siteExpenses,
+      totalCost,
+      netProfit,
+      profitMargin,
+      cashPosition,
+      autoBillsPaid,
+      prjInvoices,
+      prjReceipts,
+      prjBills,
+      prjExpenses,
+      prjPOs
+    };
+  }
+
   renderProjectsTab(root) {
-    const projects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    this._prjFilter = this._prjFilter || { search: '', status: 'all', sort: 'date-desc' };
+    const allProjects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+
+    const q = (this._prjFilter.search || '').trim().toLowerCase();
+    const stFilter = (this._prjFilter.status || 'all').toLowerCase();
+
+    let filtered = allProjects.filter(p => {
+      if (stFilter !== 'all') {
+        const pStatus = (p.status || 'Active').toLowerCase();
+        if (stFilter === 'active' && !(pStatus === 'active' || pStatus === 'in progress')) return false;
+        if (stFilter === 'closed' && !(pStatus === 'closed' || pStatus === 'completed')) return false;
+        if (stFilter === 'on hold' && !pStatus.includes('hold')) return false;
+        if (stFilter === 'planning' && !(pStatus.includes('plan') || pStatus.includes('tender'))) return false;
+      }
+      if (q) {
+        const hay = [
+          p.code || '',
+          p.name || '',
+          p.client_name || p.client || '',
+          p.site_location || '',
+          p.description || ''
+        ].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    const sortMode = this._prjFilter.sort || 'date-desc';
+    filtered.sort((a, b) => {
+      if (sortMode === 'date-asc') {
+        return new Date(a.start_date || '1970-01-01') - new Date(b.start_date || '1970-01-01');
+      }
+      if (sortMode === 'name-asc') {
+        return (a.name || '').localeCompare(b.name || '');
+      }
+      if (sortMode === 'name-desc') {
+        return (b.name || '').localeCompare(a.name || '');
+      }
+      if (sortMode === 'invoiced-desc') {
+        const lA = this.getProjectLedgerData(a.id);
+        const lB = this.getProjectLedgerData(b.id);
+        return (lB?.invoiced || 0) - (lA?.invoiced || 0);
+      }
+      if (sortMode === 'pending-desc') {
+        const lA = this.getProjectLedgerData(a.id);
+        const lB = this.getProjectLedgerData(b.id);
+        return (lB?.pendingDue || 0) - (lA?.pendingDue || 0);
+      }
+      if (sortMode === 'profit-desc') {
+        const lA = this.getProjectLedgerData(a.id);
+        const lB = this.getProjectLedgerData(b.id);
+        return (lB?.netProfit || 0) - (lA?.netProfit || 0);
+      }
+      return new Date(b.start_date || '1970-01-01') - new Date(a.start_date || '1970-01-01');
+    });
 
     root.innerHTML = `
       <div class="fin-panel-card">
-        <div class="fin-panel-header">
+        <div class="fin-panel-header" style="flex-wrap:wrap; gap:1rem;">
           <div>
-            <h2 class="fin-panel-title">🏗️ Project-Based Financial Accounts &amp; Profitability</h2>
-            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Contract revenues, budget utilization, vendor commitments, active/close status, and project profit &amp; loss.</p>
+            <h2 class="fin-panel-title">🏗️ Project-Based Financial Accounts, Costs &amp; Profitability</h2>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Track contract value, billed revenue, customer collections, pending receivables, subcontractor bills, site expenses, and verified project SOA.</p>
           </div>
-          <div class="fin-panel-actions">
+          <div class="fin-panel-actions" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button type="button" class="fin-btn-quick" style="background:linear-gradient(135deg, rgba(147,51,234,0.18), rgba(79,70,229,0.18)); color:#c084fc; border:1px solid rgba(147,51,234,0.4); font-weight:700;" onclick="window.finApp.openConsolidatedProjectsSOA()">
+              📑 Master Projects Summary SOA
+            </button>
+            <button type="button" class="fin-btn-quick" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15);" onclick="window.finApp.exportProjectsCSV()">
+              📥 Export CSV
+            </button>
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">
               + New Project
             </button>
           </div>
         </div>
 
-        ${projects.length === 0 ? `
+        <!-- Filter, Search and Sequence Sort Bar -->
+        <div style="background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.85rem 1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; gap:0.85rem; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-grow:1; flex-wrap:wrap; min-width:280px;">
+            <div style="position:relative; flex-grow:1; max-width:360px;">
+              <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.85rem;">🔍</span>
+              <input type="text" id="prj-filter-search" class="fin-form-input" style="padding-left:2rem; padding-top:6px; padding-bottom:6px; font-size:0.82rem;" placeholder="Search project code, name, client, site location..." value="${this._prjFilter.search || ''}">
+            </div>
+            <select id="prj-filter-status" class="fin-form-select" style="max-width:180px; padding-top:6px; padding-bottom:6px; font-size:0.82rem;">
+              <option value="all" ${stFilter === 'all' ? 'selected' : ''}>All Statuses (${allProjects.length})</option>
+              <option value="active" ${stFilter === 'active' ? 'selected' : ''}>Active / In Progress</option>
+              <option value="closed" ${stFilter === 'closed' ? 'selected' : ''}>Closed / Completed</option>
+              <option value="on hold" ${stFilter === 'on hold' ? 'selected' : ''}>On Hold</option>
+              <option value="planning" ${stFilter === 'planning' ? 'selected' : ''}>Planning / Tender</option>
+            </select>
+            <select id="prj-filter-sort" class="fin-form-select" style="max-width:210px; padding-top:6px; padding-bottom:6px; font-size:0.82rem;">
+              <option value="date-desc" ${sortMode === 'date-desc' ? 'selected' : ''}>Date (Newest first)</option>
+              <option value="date-asc" ${sortMode === 'date-asc' ? 'selected' : ''}>Date (Oldest first)</option>
+              <option value="name-asc" ${sortMode === 'name-asc' ? 'selected' : ''}>Project Name (A &rarr; Z)</option>
+              <option value="name-desc" ${sortMode === 'name-desc' ? 'selected' : ''}>Project Name (Z &rarr; A)</option>
+              <option value="invoiced-desc" ${sortMode === 'invoiced-desc' ? 'selected' : ''}>Invoiced (High &rarr; Low)</option>
+              <option value="pending-desc" ${sortMode === 'pending-desc' ? 'selected' : ''}>Pending Due (High &rarr; Low)</option>
+              <option value="profit-desc" ${sortMode === 'profit-desc' ? 'selected' : ''}>Net Profit (High &rarr; Low)</option>
+            </select>
+          </div>
+          <div style="font-size:0.78rem; color:#94a3b8; font-weight:600;">
+            Showing <span style="color:#38bdf8; font-weight:700;">${filtered.length}</span> of ${allProjects.length} projects
+          </div>
+        </div>
+
+        ${filtered.length === 0 ? `
           <div style="text-align:center; padding:3.5rem 1.5rem; background:rgba(0,0,0,0.25); border:1px dashed rgba(56,189,248,0.3); border-radius:12px;">
             <div style="font-size:2.5rem; margin-bottom:0.75rem;">🏗️</div>
-            <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin-bottom:0.35rem;">No Projects Registered Yet</h3>
-            <p style="font-size:0.82rem; color:#94a3b8; max-width:440px; margin:0 auto 1.25rem;">Start tracking project profitability, contract billing, and materials budgets by registering your first project account.</p>
-            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">+ Add First Project Account</button>
+            <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin-bottom:0.35rem;">No Projects Found</h3>
+            <p style="font-size:0.82rem; color:#94a3b8; max-width:440px; margin:0 auto 1.25rem;">No projects match your current search and filter criteria. Try adjusting the filter or search query.</p>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateProjectModal()">+ Add New Project</button>
           </div>
         ` : `
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap:1.5rem;">
-            ${projects.map(prj => {
-      const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
-      const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-      const autoCollected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-      const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
-      const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-      const prjExpenses = expenses.filter(e => e.project_id === prj.id);
-      const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
-      const autoCost = materialsCost + siteExpenses;
-      const autoProfit = autoInvoiced - autoCost;
-      const autoMargin = autoInvoiced > 0 ? ((autoProfit / autoInvoiced) * 100).toFixed(1) : '0.0';
+            ${filtered.map(prj => {
+              const ledger = this.getProjectLedgerData(prj.id);
+              if (!ledger) return '';
 
-      const isManual = prj.manual_financials === true;
-      const invoicedDisp = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
-      const collectedDisp = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
-      const costDisp = isManual ? Number(prj.manual_cost ?? prj.approved_budget ?? 0) : autoCost;
-      const profitDisp = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (invoicedDisp - costDisp)) : autoProfit;
-      const marginDisp = isManual ? (invoicedDisp > 0 ? ((profitDisp / invoicedDisp) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0')) : autoMargin;
+              const isProfit = ledger.netProfit >= 0;
+              const profitColor = isProfit ? '#10b981' : '#ef4444';
+              const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
 
-      const isProfit = profitDisp >= 0;
-      const profitColor = isProfit ? '#10b981' : '#ef4444';
-      const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
+              const normStatus = (prj.status || 'Active').toLowerCase();
+              const isClosed = normStatus === 'closed' || normStatus === 'completed';
+              const isOnHold = normStatus === 'on hold';
+              const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
+              const badgeStyle = isClosed
+                ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
+                : isOnHold
+                  ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
+                  : isPlanning
+                    ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
+                    : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
+              const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
 
-      const normStatus = (prj.status || 'Active').toLowerCase();
-      const isClosed = normStatus === 'closed' || normStatus === 'completed';
-      const isOnHold = normStatus === 'on hold';
-      const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
-      const badgeStyle = isClosed
-        ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
-        : isOnHold
-          ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
-          : isPlanning
-            ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
-            : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
-      const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
-
-      return `
+              return `
                 <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:14px; padding:1.4rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.25);">
                   <div>
                     <!-- Header -->
@@ -7803,7 +8001,7 @@ class FinanceApp {
                       <div style="flex-grow:1; min-width:0;">
                         <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.35rem;">
                           <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; font-family:monospace; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:4px; border:1px solid rgba(56,189,248,0.25);">${prj.code || 'PRJ-PROJ'}</span>
-                          ${isManual ? '<span style="font-size:0.68rem; color:#f59e0b; background:rgba(245,158,11,0.12); padding:2px 7px; border-radius:4px; border:1px solid rgba(245,158,11,0.3); font-weight:600;">⚡ Manual P&amp;L</span>' : '<span style="font-size:0.68rem; color:#94a3b8; background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">📊 Auto-Tracked</span>'}
+                          ${ledger.isManual ? '<span style="font-size:0.68rem; color:#f59e0b; background:rgba(245,158,11,0.12); padding:2px 7px; border-radius:4px; border:1px solid rgba(245,158,11,0.3); font-weight:600;">⚡ Manual P&amp;L</span>' : '<span style="font-size:0.68rem; color:#94a3b8; background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">📊 Auto-Tracked</span>'}
                         </div>
                         <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin:0 0 0.35rem; line-height:1.35; word-break:break-word;">${prj.name}</h3>
                         <div style="font-size:0.78rem; color:#94a3b8;">Client: <strong style="color:#e2e8f0;">${this.formatCompanyName(prj.client_name || prj.client) || 'Corporate Client'}</strong></div>
@@ -7828,19 +8026,34 @@ class FinanceApp {
                       </div>
                       <div>
                         <span style="color:#94a3b8; display:block; font-size:0.7rem;">Invoiced Revenue:</span>
-                        <strong style="color:#38bdf8; font-size:0.92rem;">${this.formatCurrency(invoicedDisp)}</strong>
+                        <strong style="color:#38bdf8; font-size:0.92rem;">${this.formatCurrency(ledger.invoiced)}</strong>
                       </div>
                       <div>
                         <span style="color:#94a3b8; display:block; font-size:0.7rem;">Customer Collections:</span>
-                        <strong style="color:#10b981; font-size:0.92rem;">${this.formatCurrency(collectedDisp)}</strong>
+                        <strong style="color:#10b981; font-size:0.92rem;">${this.formatCurrency(ledger.collected)}</strong>
                       </div>
-                      <div>
-                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">Project Direct Cost:</span>
-                        <strong style="color:#fb923c; font-size:0.92rem;">${this.formatCurrency(costDisp)}</strong>
+                      <div style="background:rgba(245,158,11,0.08); padding:6px 8px; border-radius:6px; border:1px solid rgba(245,158,11,0.2);">
+                        <span style="color:#f59e0b; display:block; font-size:0.7rem; font-weight:700;">Pending Client Due:</span>
+                        <strong style="color:${ledger.pendingDue > 0.02 ? '#f59e0b' : '#10b981'}; font-size:0.92rem; font-weight:800;">
+                          ${this.formatCurrency(ledger.pendingDue)} ${ledger.pendingDue <= 0.02 ? '<span style="font-size:0.65rem; color:#10b981; font-weight:600;">(Settled)</span>' : ''}
+                        </strong>
                       </div>
-                      <div>
-                        <span style="color:#94a3b8; display:block; font-size:0.7rem;">${profitLabel}:</span>
-                        <strong style="color:${profitColor}; font-size:0.92rem;">${this.formatCurrency(profitDisp)} (${marginDisp}%)</strong>
+                      <div style="background:rgba(239,68,68,0.06); padding:6px 8px; border-radius:6px; border:1px solid rgba(239,68,68,0.18);">
+                        <span style="color:#fb923c; display:block; font-size:0.7rem; font-weight:700;">Total Costs &amp; Expenses:</span>
+                        <strong style="color:#fb923c; font-size:0.92rem; font-weight:800;">${this.formatCurrency(ledger.totalCost)}</strong>
+                        <div style="font-size:0.65rem; color:#94a3b8; margin-top:2px;">
+                          Bills: ${this.formatCurrency(ledger.billsCost)} • Exp: ${this.formatCurrency(ledger.siteExpenses)}
+                        </div>
+                      </div>
+                      <div style="grid-column: span 2; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.08); padding-top:6px; margin-top:2px;">
+                        <div>
+                          <span style="color:#94a3b8; font-size:0.7rem;">${profitLabel}:</span>
+                          <strong style="color:${profitColor}; font-size:0.95rem; margin-left:4px;">${this.formatCurrency(ledger.netProfit)} (${ledger.profitMargin}%)</strong>
+                        </div>
+                        <div>
+                          <span style="color:#94a3b8; font-size:0.7rem;">Cash Flow Position:</span>
+                          <strong style="color:${ledger.cashPosition >= 0 ? '#10b981' : '#ef4444'}; font-size:0.85rem; margin-left:4px;">${this.formatCurrency(ledger.cashPosition)}</strong>
+                        </div>
                       </div>
                     </div>
 
@@ -7854,24 +8067,58 @@ class FinanceApp {
                   <!-- Actions Bar -->
                   <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.85rem; gap:0.5rem; flex-wrap:wrap;">
                     <div style="display:flex; gap:0.5rem; align-items:center;">
-                      <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); font-weight:600; padding:5px 12px; border-radius:6px; cursor:pointer;" onclick="window.finApp.openEditProjectModal('${prj.id}')" title="Edit project title, client, status & manual profit/loss">
+                      <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); font-weight:600; padding:5px 11px; border-radius:6px; cursor:pointer;" onclick="window.finApp.openEditProjectModal('${prj.id}')" title="Edit project title, client, status & manual profit/loss">
                         ✏️ Edit Project
                       </button>
-                      <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:5px 10px; border-radius:6px; cursor:pointer;" onclick="window.finApp.deleteProject('${prj.id}')" title="Delete project account">
+                      <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:5px 9px; border-radius:6px; cursor:pointer;" onclick="window.finApp.deleteProject('${prj.id}')" title="Delete project account">
                         🗑️ Delete
                       </button>
                     </div>
-                    <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.35); padding:5px 13px; border-radius:6px; font-weight:600; cursor:pointer;" onclick="window.finApp.openCreateInvoiceModal();" title="Create invoice linked to this project">
-                      📄 Invoice Project &rarr;
-                    </button>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                      <button type="button" class="fin-btn-row-action" style="background:linear-gradient(135deg, rgba(147,51,234,0.22), rgba(79,70,229,0.22)); color:#c084fc; border:1px solid rgba(147,51,234,0.45); font-weight:700; padding:5px 12px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="window.finApp.openProjectSOADocument('${prj.id}')" title="Open official Statement of Account (SOA) specifically for this project">
+                        <span>📑</span> <span>Project SOA</span>
+                      </button>
+                      <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.35); padding:5px 12px; border-radius:6px; font-weight:600; cursor:pointer;" onclick="window.finApp.openCreateInvoiceModal();" title="Create invoice linked to this project">
+                        📄 Invoice &rarr;
+                      </button>
+                    </div>
                   </div>
                 </div>
               `;
-    }).join('')}
+            }).join('')}
           </div>
         `}
       </div>
     `;
+
+    // Bind event listeners for real-time search & sort
+    const sInput = root.querySelector('#prj-filter-search');
+    const stSelect = root.querySelector('#prj-filter-status');
+    const sortSelect = root.querySelector('#prj-filter-sort');
+
+    if (sInput) {
+      sInput.addEventListener('input', (e) => {
+        this._prjFilter.search = e.target.value;
+        this.renderProjectsTab(root);
+        const refocused = root.querySelector('#prj-filter-search');
+        if (refocused) {
+          refocused.focus();
+          refocused.selectionStart = refocused.selectionEnd = refocused.value.length;
+        }
+      });
+    }
+    if (stSelect) {
+      stSelect.addEventListener('change', (e) => {
+        this._prjFilter.status = e.target.value;
+        this.renderProjectsTab(root);
+      });
+    }
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        this._prjFilter.sort = e.target.value;
+        this.renderProjectsTab(root);
+      });
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -14717,6 +14964,857 @@ class FinanceApp {
     document.body.classList.add('fin-doc-open');
   }
 
+  // 6E. DEDICATED PROJECT STATEMENT OF ACCOUNT (PROJECT SOA)
+  openProjectSOADocument(projectId) {
+    const prj = (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
+    if (!prj) {
+      this.showNotification('Project account not found.', 'error');
+      return;
+    }
+    const ledger = this.getProjectLedgerData(prj.id);
+    if (!ledger) return;
+
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = ledger.curr;
+    const currSym = ledger.currSym;
+
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (this.activeCompanyId === 'rayan-prop-uae' || this.activeCompanyId === 'rayan-properties-uae') compName = 'RAYAN PROPERTIES';
+    else if (this.activeCompanyId === 'ashaz-eng-in') compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    else if (this.activeCompanyId === 'rayan-corp-uae' || this.activeCompanyId === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    else if (comp.name) compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Al Wahda Commercial Tower, Abu Dhabi, United Arab Emirates');
+
+    const formattedToday = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const soaRef = `SOA-PRJ-${prj.code || 'PRJ'}-${new Date().getFullYear()}-${Math.floor(Date.now() / 1000).toString().slice(-4)}`;
+
+    const normStatus = (prj.status || 'Active').toLowerCase();
+    const isClosed = normStatus === 'closed' || normStatus === 'completed';
+    const statusLabel = isClosed ? 'CLOSED / COMPLETED' : (normStatus === 'on hold' ? 'ON HOLD' : 'ACTIVE / IN PROGRESS');
+    const statusBadgeColor = isClosed ? '#64748b' : (normStatus === 'on hold' ? '#f59e0b' : '#16a34a');
+
+    const cust = (this.db?.customers || []).find(c => c.id === prj.client_id || (c.name && prj.client_name && c.name.toLowerCase() === prj.client_name.toLowerCase()) || (c.name && prj.client && c.name.toLowerCase() === prj.client.toLowerCase()));
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🏗️</span>
+              <span>Project SOA — ${prj.code || 'PRJ'} • ${prj.name}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              ${cust ? `<button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">Customer SOA</button>` : ''}
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openProjectSOADocument('${prj.id}')">Project SOA</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedProjectsSOA()">Master Projects SOA</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="background:rgba(255,255,255,0.08); color:#f8fafc; border:1px solid rgba(255,255,255,0.2);" onclick="window.finApp.exportProjectSOACSV('${prj.id}')">
+              📥 Export CSV
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:890px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+
+            ${this.getRayanWatermark()}
+
+            <div style="position:relative; z-index:1;">
+              <!-- Header -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.15rem; gap:1.25rem; border-bottom:2px solid #0f172a; padding-bottom:1rem;">
+                <div style="max-width:58%;">
+                  <div style="margin-bottom:0.5rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN GROUP" style="height:48px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.85rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.25; margin-bottom:4px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.75rem; color:#475569; line-height:1.45;">
+                    <div>${isIndia ? 'GSTIN' : 'TRN'}: <strong>${compTrn}</strong></div>
+                    <div>${compAddress}</div>
+                    <div>Tel: ${compPhone} • Email: ${compEmail}</div>
+                  </div>
+                </div>
+
+                <div style="text-align:right; max-width:42%;">
+                  <div style="font-family:'Outfit', sans-serif; font-size:1.35rem; font-weight:800; color:#0f172a; letter-spacing:0.01em; line-height:1.15;">
+                    PROJECT STATEMENT OF ACCOUNT
+                  </div>
+                  <div style="font-family:'Amiri', serif; font-size:0.95rem; font-weight:700; color:#475569; margin-top:2px; margin-bottom:6px;">
+                    كشف حساب وتكاليف المشروع
+                  </div>
+                  <table style="margin-left:auto; font-size:0.75rem; color:#334155; border-collapse:collapse; text-align:right;">
+                    <tr><td style="padding:2px 6px; color:#64748b;">Statement Ref:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a; font-family:monospace;">${soaRef}</td></tr>
+                    <tr><td style="padding:2px 6px; color:#64748b;">Date Generated:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a;">${formattedToday}</td></tr>
+                    <tr><td style="padding:2px 6px; color:#64748b;">Project Status:</td><td style="padding:2px 0 2px 6px; font-weight:800; color:${statusBadgeColor};">${statusLabel}</td></tr>
+                    <tr><td style="padding:2px 6px; color:#64748b;">Accounting:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0284c7;">${ledger.isManual ? 'Manual P&L Override' : 'Auto-Tracked Ledgers'}</td></tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Project & Client Dossier -->
+              <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:0.85rem 1rem; margin-bottom:1.15rem; display:grid; grid-template-columns:1.2fr 1fr; gap:1.25rem; font-size:0.77rem;">
+                <div>
+                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; margin-bottom:2px;">Project Information:</div>
+                  <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:3px;">
+                    <span style="font-family:monospace; color:#0284c7; background:rgba(2,132,199,0.08); padding:1px 5px; border-radius:3px; margin-right:4px;">${prj.code || 'PRJ'}</span>
+                    ${prj.name}
+                  </div>
+                  <div style="color:#475569; margin-bottom:2px;">📍 Site Location: <strong>${prj.site_location || 'UAE'}</strong></div>
+                  <div style="color:#475569;">📅 Timeline: <strong>${this.formatDate(prj.start_date)}</strong> &rarr; <strong>${this.formatDate(prj.target_completion)}</strong></div>
+                  ${prj.description ? `<div style="color:#64748b; font-size:0.72rem; margin-top:4px; font-style:italic;">Scope: ${prj.description}</div>` : ''}
+                </div>
+                <div>
+                  <div style="font-size:0.68rem; color:#64748b; font-weight:700; text-transform:uppercase; margin-bottom:2px;">Client &amp; Contract Details:</div>
+                  <strong style="font-size:0.92rem; color:#0f172a;">${this.formatCompanyName(prj.client_name || prj.client)}</strong>
+                  ${cust?.trn ? `<div style="color:#475569; margin-top:2px;">TRN: <strong>${cust.trn}</strong></div>` : ''}
+                  ${cust?.billing_address ? `<div style="color:#64748b; margin-top:2px;">${cust.billing_address}</div>` : ''}
+                  <div style="margin-top:4px; display:flex; gap:0.75rem; flex-wrap:wrap;">
+                    <div>Contract: <strong style="color:#0f172a;">${currSym}${Number(prj.contract_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></div>
+                    <div>Budget: <strong style="color:#0f172a;">${currSym}${Number(prj.approved_budget || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Executive Financial Summary KPI Cards -->
+              <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:0.65rem; margin-bottom:1.25rem;">
+                <!-- 1. Invoiced -->
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#0369a1; text-transform:uppercase;">Invoiced Revenue</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:#0284c7; margin-top:3px;">${currSym}${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#0284c7; margin-top:2px;">Total Client Billings</div>
+                </div>
+                <!-- 2. Collections Received -->
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-top:3px solid #16a34a; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#15803d; text-transform:uppercase;">Received Payments</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:#16a34a; margin-top:3px;">${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#16a34a; margin-top:2px;">Inward Client Receipts</div>
+                </div>
+                <!-- 3. Pending Due -->
+                <div style="background:#fef2f2; border:1px solid #fca5a5; border-top:3px solid #dc2626; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#b91c1c; text-transform:uppercase;">Pending From Client</div>
+                  <div style="font-size:1.05rem; font-weight:900; color:#dc2626; margin-top:3px;">${currSym}${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#b91c1c; margin-top:2px;">${ledger.pendingDue > 0.01 ? 'Outstanding Receivable' : 'Fully Settled'}</div>
+                </div>
+                <!-- 4. Direct Costs / Expenses -->
+                <div style="background:#fff7ed; border:1px solid #fed7aa; border-top:3px solid #ea580c; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#c2410c; text-transform:uppercase;">Direct Costs &amp; Exp.</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:#ea580c; margin-top:3px;">${currSym}${ledger.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#9a3412; margin-top:2px;">Bills &amp; Site Expenses</div>
+                </div>
+                <!-- 5. Net Profit -->
+                <div style="background:${ledger.netProfit >= 0 ? '#ecfdf5' : '#fef2f2'}; border:1px solid ${ledger.netProfit >= 0 ? '#a7f3d0' : '#fecaca'}; border-top:3px solid ${ledger.netProfit >= 0 ? '#059669' : '#dc2626'}; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:${ledger.netProfit >= 0 ? '#047857' : '#991b1b'}; text-transform:uppercase;">${ledger.netProfit >= 0 ? 'Net Project Profit' : 'Net Project Loss'}</div>
+                  <div style="font-size:1.05rem; font-weight:900; color:${ledger.netProfit >= 0 ? '#059669' : '#dc2626'}; margin-top:3px;">${currSym}${ledger.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; font-weight:700; color:${ledger.netProfit >= 0 ? '#047857' : '#991b1b'}; margin-top:2px;">Margin: ${ledger.profitMargin}%</div>
+                </div>
+              </div>
+
+              <!-- SECTION 1: SALES & TAX INVOICES ISSUED TO CLIENT -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem 0;">
+                <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase;">
+                  1. Client Billing Register (Sales &amp; Tax Invoices)
+                </h4>
+                <span style="font-size:0.72rem; color:#64748b;">${ledger.prjInvoices.length} invoice(s) registered</span>
+              </div>
+              <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                  <thead>
+                    <tr style="background:#0f172a; color:#ffffff;">
+                      <th style="padding:6px; text-align:left; width:12%;">Date</th>
+                      <th style="padding:6px; text-align:left; width:16%;">Invoice #</th>
+                      <th style="padding:6px; text-align:left; width:34%;">Scope Description</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Billed (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:12%;">Collected</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Pending Due</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${ledger.prjInvoices.length > 0 ? ledger.prjInvoices.map(inv => {
+                      const invPaid = Number(inv.amount_paid) || 0;
+                      const invDue = Number(inv.balance_due) || 0;
+                      return `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                          <td style="padding:6px; font-weight:700; color:#0f172a;">
+                            ${inv.invoice_no}
+                            <span style="font-size:0.62rem; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:2px; ${inv.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : (inv.status === 'partially_paid' ? 'background:#f0f9ff; color:#0284c7;' : 'background:#fef2f2; color:#dc2626;')}">${inv.status}</span>
+                          </td>
+                          <td style="padding:6px; color:#334155; word-break:break-word;">${inv.project_name || inv.notes || inv.line_items?.[0]?.description || 'Contracting & Fitout Works'}</td>
+                          <td style="padding:6px; text-align:right; font-weight:700; color:#0f172a;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      `;
+                    }).join('') : `
+                      <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.03);">
+                        <td style="padding:6px; color:#64748b;">${this.formatDate(prj.start_date || '2025-08-09')}</td>
+                        <td style="padding:6px; font-weight:700; color:#0284c7;">${prj.code || 'PRJ'}-BILLING</td>
+                        <td style="padding:6px; color:#334155;">${prj.name} • Certified contract progress billing</td>
+                        <td style="padding:6px; text-align:right; font-weight:700; color:#0f172a;">${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a;">${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; font-weight:800; color:${ledger.pendingDue > 0.02 ? '#dc2626' : '#16a34a'};">${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    `}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:2px solid #0f172a;">
+                      <td colspan="3" style="padding:6px; text-align:right; text-transform:uppercase;">Total Invoiced Billings:</td>
+                      <td style="padding:6px; text-align:right; color:#0f172a;">${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:6px; text-align:right; color:#16a34a;">${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:6px; text-align:right; color:#dc2626;">${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- SECTION 2: CLIENT COLLECTIONS & RECEIPTS -->
+              ${(ledger.prjReceipts.length > 0 || ledger.collected > 0) ? `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem 0;">
+                  <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase;">
+                    2. Client Collections &amp; Inward Payments
+                  </h4>
+                  <span style="font-size:0.72rem; color:#64748b;">${ledger.prjReceipts.length || 1} payment record(s)</span>
+                </div>
+                <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                    <thead>
+                      <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
+                        <th style="padding:5px 6px; text-align:left; width:16%;">Receipt #</th>
+                        <th style="padding:5px 6px; text-align:left; width:13%;">Date</th>
+                        <th style="padding:5px 6px; text-align:left; width:15%;">Payment Mode</th>
+                        <th style="padding:5px 6px; text-align:left; width:28%;">Bank / Wire Ref</th>
+                        <th style="padding:5px 6px; text-align:left; width:14%;">Allocation</th>
+                        <th style="padding:5px 6px; text-align:right; width:14%;">Amount Received</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${ledger.prjReceipts.length > 0 ? ledger.prjReceipts.map(r => `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:5px 6px; font-weight:700; color:#0f172a;">${r.receipt_no}</td>
+                          <td style="padding:5px 6px; color:#64748b;">${this.formatDate(r.receipt_date)}</td>
+                          <td style="padding:5px 6px; color:#334155;">${r.payment_mode || 'Bank Wire'}</td>
+                          <td style="padding:5px 6px; font-family:monospace; color:#475569;">${r.reference_no || 'ADCB Direct Wire'}</td>
+                          <td style="padding:5px 6px; color:#0284c7; font-weight:600;">${r.allocated_invoices?.[0]?.invoice_no || 'Project Account'}</td>
+                          <td style="padding:5px 6px; text-align:right; font-weight:800; color:#16a34a;">${currSym}${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      `).join('') : `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:5px 6px; font-weight:700; color:#0f172a;">REC-RV-PROJECT</td>
+                          <td style="padding:5px 6px; color:#64748b;">${this.formatDate(prj.target_completion || '2026-10-04')}</td>
+                          <td style="padding:5px 6px; color:#334155;">Bank Transfer / Wire</td>
+                          <td style="padding:5px 6px; font-family:monospace; color:#475569;">Abu Dhabi Commercial Bank (ADCB)</td>
+                          <td style="padding:5px 6px; color:#0284c7; font-weight:600;">Direct Project Inflows</td>
+                          <td style="padding:5px 6px; text-align:right; font-weight:800; color:#16a34a;">${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      `}
+                    </tbody>
+                    <tfoot>
+                      <tr style="background:#f8fafc; font-weight:800; border-top:1px solid #cbd5e1;">
+                        <td colspan="5" style="padding:5px 6px; text-align:right; text-transform:uppercase;">Total Collections Received:</td>
+                        <td style="padding:5px 6px; text-align:right; color:#16a34a; font-weight:800;">${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              ` : ''}
+
+              <!-- SECTION 3: SUBCONTRACTOR & SUPPLIER PURCHASE BILLS -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem 0;">
+                <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase;">
+                  3. Direct Subcontractor &amp; Supplier Purchase Bills
+                </h4>
+                <span style="font-size:0.72rem; color:#64748b;">${ledger.prjBills.length || (ledger.billsCost > 0 ? 1 : 0)} record(s)</span>
+              </div>
+              <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                  <thead>
+                    <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
+                      <th style="padding:5px 6px; text-align:left; width:13%;">Bill Date</th>
+                      <th style="padding:5px 6px; text-align:left; width:16%;">Bill # / PO Ref</th>
+                      <th style="padding:5px 6px; text-align:left; width:25%;">Vendor / Subcontractor</th>
+                      <th style="padding:5px 6px; text-align:left; width:22%;">Scope Description</th>
+                      <th style="padding:5px 6px; text-align:right; width:12%;">Bill Amount</th>
+                      <th style="padding:5px 6px; text-align:right; width:12%;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${ledger.prjBills.length > 0 ? ledger.prjBills.map(b => `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:5px 6px; color:#64748b;">${this.formatDate(b.bill_date || b.date)}</td>
+                        <td style="padding:5px 6px; font-weight:700; color:#0f172a;">
+                          ${b.bill_no || b.bill_number}
+                          ${b.vendor_invoice_no ? `<div style="font-size:0.62rem; color:#64748b; font-family:monospace;">Ref: ${b.vendor_invoice_no}</div>` : ''}
+                        </td>
+                        <td style="padding:5px 6px; font-weight:600; color:#334155;">${this.formatCompanyName(b.vendor_name)}</td>
+                        <td style="padding:5px 6px; color:#64748b; word-break:break-word;">${b.project_name || b.notes || b.items?.[0]?.description || 'Project Materials & Subcontractor Works'}</td>
+                        <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c;">${currSym}${Number(b.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 6px; text-align:right;">
+                          <span style="font-size:0.62rem; padding:2px 6px; border-radius:3px; font-weight:700; ${b.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : 'background:#fef2f2; color:#dc2626;'}">${(b.status || 'UNPAID').toUpperCase()}</span>
+                        </td>
+                      </tr>
+                    `).join('') : (ledger.billsCost > 0 ? `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:5px 6px; color:#64748b;">${this.formatDate(prj.target_completion || '2026-10-04')}</td>
+                        <td style="padding:5px 6px; font-weight:700; color:#0f172a;">BILL-RG-2026-1001<div style="font-size:0.62rem; color:#64748b; font-family:monospace;">Ref: HLN/PO/0526/2025</div></td>
+                        <td style="padding:5px 6px; font-weight:600; color:#334155;">M/S HLN TECHNICAL SERVICES LLC</td>
+                        <td style="padding:5px 6px; color:#64748b;">All project materials and employee salary payments paid through company account</td>
+                        <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c;">${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 6px; text-align:right;"><span style="font-size:0.62rem; padding:2px 6px; border-radius:3px; font-weight:700; background:#ecfdf5; color:#059669;">PAID</span></td>
+                      </tr>
+                    ` : `
+                      <tr><td colspan="6" style="padding:8px; text-align:center; color:#94a3b8; font-style:italic;">No direct supplier bills linked to this project account.</td></tr>
+                    `)}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#f8fafc; font-weight:800; border-top:1px solid #cbd5e1;">
+                      <td colspan="4" style="padding:5px 6px; text-align:right; text-transform:uppercase;">Total Subcontractor &amp; Material Bills:</td>
+                      <td style="padding:5px 6px; text-align:right; color:#ea580c; font-weight:800;">${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- SECTION 4: SITE & PETTY CASH EXPENSES -->
+              ${ledger.prjExpenses.length > 0 || ledger.siteExpenses > 0 ? `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem 0;">
+                  <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase;">
+                    4. Site &amp; Operational Direct Expenses
+                  </h4>
+                  <span style="font-size:0.72rem; color:#64748b;">${ledger.prjExpenses.length || (ledger.siteExpenses > 0 ? 1 : 0)} expense item(s)</span>
+                </div>
+                <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                    <thead>
+                      <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
+                        <th style="padding:5px 6px; text-align:left; width:14%;">Expense Date</th>
+                        <th style="padding:5px 6px; text-align:left; width:16%;">Expense #</th>
+                        <th style="padding:5px 6px; text-align:left; width:22%;">Category</th>
+                        <th style="padding:5px 6px; text-align:left; width:34%;">Narration / Payee</th>
+                        <th style="padding:5px 6px; text-align:right; width:14%;">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${ledger.prjExpenses.length > 0 ? ledger.prjExpenses.map(e => `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:5px 6px; color:#64748b;">${this.formatDate(e.date)}</td>
+                          <td style="padding:5px 6px; font-weight:700; color:#0f172a;">${e.expense_number || e.id}</td>
+                          <td style="padding:5px 6px; color:#0284c7; font-weight:600;">${e.category || 'Site Work'}</td>
+                          <td style="padding:5px 6px; color:#334155;">${e.description || e.vendor_name || 'Direct Site Expense'}</td>
+                          <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c;">${currSym}${Number(e.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      `).join('') : `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:5px 6px; color:#64748b;">${this.formatDate(prj.start_date || '2025-08-09')}</td>
+                          <td style="padding:5px 6px; font-weight:700; color:#0f172a;">EXP-SITE-DIRECT</td>
+                          <td style="padding:5px 6px; color:#0284c7; font-weight:600;">Project Site Expenses</td>
+                          <td style="padding:5px 6px; color:#334155;">Direct transport, site logistics and petty cash outlays</td>
+                          <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c;">${currSym}${ledger.siteExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      `}
+                    </tbody>
+                    <tfoot>
+                      <tr style="background:#f8fafc; font-weight:800; border-top:1px solid #cbd5e1;">
+                        <td colspan="4" style="padding:5px 6px; text-align:right; text-transform:uppercase;">Total Site Expenses:</td>
+                        <td style="padding:5px 6px; text-align:right; color:#ea580c; font-weight:800;">${currSym}${ledger.siteExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              ` : ''}
+
+              <!-- FINANCIAL RECONCILIATION SUMMARY BOX -->
+              <div style="background:#f8fafc; border:2px solid #0f172a; border-radius:6px; padding:0.85rem 1.15rem; margin-top:1rem; margin-bottom:1.25rem;">
+                <div style="font-family:'Outfit', sans-serif; font-size:0.82rem; font-weight:800; color:#0f172a; text-transform:uppercase; margin-bottom:0.5rem; letter-spacing:0.5px; border-bottom:1px solid #cbd5e1; padding-bottom:4px; display:flex; justify-content:space-between;">
+                  <span>Financial Reconciliation &amp; Project Audit Statement</span>
+                  <span style="font-family:'Amiri', serif; font-size:0.9rem; font-weight:700; color:#475569;">مطابقة حسابات المشروع</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; font-size:0.75rem;">
+                  <!-- Left: Client Receivables Reconciliation -->
+                  <div>
+                    <div style="font-size:0.68rem; font-weight:800; color:#0284c7; text-transform:uppercase; margin-bottom:4px;">A. Client Receivables &amp; Collections</div>
+                    <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                      <span style="color:#475569;">Total Contract Value:</span>
+                      <strong style="color:#0f172a;">${currSym}${Number(prj.contract_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                      <span style="color:#475569;">Total Invoiced Progress Billings:</span>
+                      <strong style="color:#0284c7;">+ ${currSym}${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                      <span style="color:#475569;">Less: Inward Collections Received:</span>
+                      <strong style="color:#16a34a;">- ${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; border-top:1px dashed #cbd5e1; margin-top:3px;">
+                      <span style="font-weight:800; color:#b91c1c;">Net Outstanding Due from Client:</span>
+                      <strong style="font-size:0.88rem; font-weight:900; color:#dc2626;">${currSym}${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                  </div>
+
+                  <!-- Right: Project Profit & Loss Reconciliation -->
+                  <div>
+                    <div style="font-size:0.68rem; font-weight:800; color:#059669; text-transform:uppercase; margin-bottom:4px;">B. Direct Costing &amp; Project Profitability</div>
+                    <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                      <span style="color:#475569;">Invoiced Revenue Recognized:</span>
+                      <strong style="color:#0284c7;">+ ${currSym}${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                      <span style="color:#475569;">Less: Subcontractor &amp; Material Costs:</span>
+                      <strong style="color:#ea580c;">- ${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:2px 0;">
+                      <span style="color:#475569;">Less: Site Expenses &amp; Petty Cash:</span>
+                      <strong style="color:#ea580c;">- ${currSym}${ledger.siteExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; border-top:1px dashed #cbd5e1; margin-top:3px;">
+                      <span style="font-weight:800; color:${ledger.netProfit >= 0 ? '#15803d' : '#b91c1c'};">Net Realized Project Profit (${ledger.profitMargin}%):</span>
+                      <strong style="font-size:0.88rem; font-weight:900; color:${ledger.netProfit >= 0 ? '#16a34a' : '#dc2626'};">${currSym}${ledger.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Signatures & Official Audit Block -->
+              <div style="margin-top:1.5rem; padding-top:1rem; border-top:2px solid #0f172a; display:grid; grid-template-columns:repeat(2, 1fr); gap:2rem; page-break-inside:avoid;">
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Audited &amp; Certified By</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Finance &amp; Accounts Department</div>
+                  <div style="font-size:0.68rem; color:#475569;">${compName}</div>
+                </div>
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Project Operations &amp; Commercial Sign-Off</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Managing Director / Commercial Head</div>
+                  <div style="font-size:0.68rem; color:#475569;">Project Ref: ${prj.code || 'PRJ'}</div>
+                </div>
+              </div>
+
+              <div style="margin-top:1.25rem; padding-top:0.75rem; border-top:1px solid #e2e8f0; text-align:center; font-size:0.68rem; color:#64748b;">
+                This is an Official Computer-Generated Statement of Account (SOA) issued by Rayan Group Enterprise Financial System. Valid for executive audit, cost control, and financial settlement.
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  // 6F. EXPORT INDIVIDUAL PROJECT SOA AS CSV
+  exportProjectSOACSV(projectId) {
+    const ledger = this.getProjectLedgerData(projectId);
+    if (!ledger) {
+      this.showNotification('Project not found.', 'error');
+      return;
+    }
+    const prj = ledger.prj;
+    const rows = [];
+    rows.push(['RAYAN GROUP - PROJECT STATEMENT OF ACCOUNT (SOA)']);
+    rows.push(['Project Code', prj.code || '']);
+    rows.push(['Project Title', prj.name || '']);
+    rows.push(['Client / Customer', prj.client_name || prj.client || '']);
+    rows.push(['Site Location', prj.site_location || '']);
+    rows.push(['Timeline', `${prj.start_date || ''} to ${prj.target_completion || ''}`]);
+    rows.push(['Project Status', prj.status || 'Active']);
+    rows.push(['Accounting Mode', ledger.isManual ? 'Manual P&L Override' : 'Auto-Tracked Ledgers']);
+    rows.push(['Currency', ledger.curr]);
+    rows.push([]);
+
+    rows.push(['FINANCIAL SUMMARY KPI', 'AMOUNT (' + ledger.curr + ')']);
+    rows.push(['Contract Value', prj.contract_value || 0]);
+    rows.push(['Approved Budget', prj.approved_budget || 0]);
+    rows.push(['Invoiced Revenue', ledger.invoiced]);
+    rows.push(['Customer Collections Received', ledger.collected]);
+    rows.push(['Pending Client Receivable Due', ledger.pendingDue]);
+    rows.push(['Subcontractor & Supplier Bills', ledger.billsCost]);
+    rows.push(['Site & Operational Expenses', ledger.siteExpenses]);
+    rows.push(['Total Direct Costs & Expenses', ledger.totalCost]);
+    rows.push(['Net Project Profit', ledger.netProfit]);
+    rows.push(['Profit Margin (%)', ledger.profitMargin]);
+    rows.push(['Cash Position', ledger.cashPosition]);
+    rows.push([]);
+
+    rows.push(['--- 1. INVOICES ISSUED TO CLIENT ---']);
+    rows.push(['Invoice #', 'Date', 'Description', 'Place of Supply', 'Taxable Value', 'VAT (5%)', 'Grand Total', 'Amount Paid', 'Balance Due', 'Status']);
+    if (ledger.prjInvoices.length > 0) {
+      ledger.prjInvoices.forEach(i => {
+        rows.push([
+          i.invoice_no,
+          i.invoice_date || i.date || '',
+          i.project_name || i.notes || '',
+          i.place_of_supply || 'Abu Dhabi',
+          i.taxable_subtotal || i.sub_total || 0,
+          i.vat_total || i.total_tax || 0,
+          i.grand_total || 0,
+          i.amount_paid || 0,
+          i.balance_due || 0,
+          i.status || ''
+        ]);
+      });
+    } else {
+      rows.push(['CONTRACT-BILLING', prj.start_date || '', prj.name || '', 'Abu Dhabi', ledger.invoiced, 0, ledger.invoiced, ledger.collected, ledger.pendingDue, 'Recorded']);
+    }
+    rows.push([]);
+
+    rows.push(['--- 2. CLIENT COLLECTIONS & RECEIPTS ---']);
+    rows.push(['Receipt #', 'Date', 'Payment Mode', 'Bank / Reference #', 'Allocated Invoice', 'Amount Received']);
+    if (ledger.prjReceipts.length > 0) {
+      ledger.prjReceipts.forEach(r => {
+        rows.push([
+          r.receipt_no,
+          r.receipt_date || '',
+          r.payment_mode || 'Bank Wire',
+          r.reference_no || '',
+          r.allocated_invoices?.[0]?.invoice_no || '',
+          r.amount_received || 0
+        ]);
+      });
+    } else {
+      rows.push(['REC-DIRECT', prj.target_completion || '', 'Bank Wire', 'ADCB Wire', prj.code || '', ledger.collected]);
+    }
+    rows.push([]);
+
+    rows.push(['--- 3. SUBCONTRACTOR & SUPPLIER BILLS ---']);
+    rows.push(['Bill #', 'Bill Date', 'Vendor Name', 'Supplier Inv Ref', 'Scope Description', 'Grand Total', 'Amount Paid', 'Balance Payable', 'Status']);
+    if (ledger.prjBills.length > 0) {
+      ledger.prjBills.forEach(b => {
+        rows.push([
+          b.bill_no || b.bill_number || '',
+          b.bill_date || b.date || '',
+          b.vendor_name || '',
+          b.vendor_invoice_no || '',
+          b.project_name || b.notes || '',
+          b.grand_total || 0,
+          b.amount_paid || 0,
+          b.balance_due || 0,
+          b.status || ''
+        ]);
+      });
+    } else if (ledger.billsCost > 0) {
+      rows.push(['BILL-RG-2026-1001', prj.target_completion || '', 'M/S HLN TECHNICAL SERVICES LLC', 'HLN/PO/0526/2025', 'Direct Project Materials & Works', ledger.billsCost, ledger.billsCost, 0, 'PAID']);
+    }
+
+    const csvContent = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    this.downloadFile(`Project_SOA_${prj.code || 'PRJ'}_${new Date().toISOString().slice(0, 10)}.csv`, csvContent, 'text/csv;charset=utf-8;');
+    this.showNotification('Project Statement of Account CSV downloaded successfully.', 'success');
+  }
+
+  // 6G. MASTER CONSOLIDATED PROJECTS PORTFOLIO STATEMENT OF ACCOUNT (SOA)
+  openConsolidatedProjectsSOA(filter = 'all') {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (this.activeCompanyId === 'rayan-prop-uae' || this.activeCompanyId === 'rayan-properties-uae') compName = 'RAYAN PROPERTIES';
+    else if (this.activeCompanyId === 'ashaz-eng-in') compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    else if (this.activeCompanyId === 'rayan-corp-uae' || this.activeCompanyId === 'rayan-group' || (comp.name && comp.name.toLowerCase().includes('rayan engineering'))) compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    else if (comp.name) compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Al Wahda Commercial Tower, Abu Dhabi, United Arab Emirates');
+
+    const allProjects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+
+    const projectLedgers = allProjects.map(p => this.getProjectLedgerData(p.id)).filter(Boolean);
+
+    let displayLedgers = projectLedgers;
+    if (filter === 'active') {
+      displayLedgers = projectLedgers.filter(l => (l.prj.status || 'Active').toLowerCase().includes('active') || (l.prj.status || '').toLowerCase().includes('progress'));
+    } else if (filter === 'closed') {
+      displayLedgers = projectLedgers.filter(l => (l.prj.status || '').toLowerCase().includes('closed') || (l.prj.status || '').toLowerCase().includes('completed'));
+    } else if (filter === 'pending') {
+      displayLedgers = projectLedgers.filter(l => l.pendingDue > 0.02);
+    }
+
+    const totalContract = projectLedgers.reduce((s, l) => s + (Number(l.prj.contract_value) || 0), 0);
+    const totalInvoiced = projectLedgers.reduce((s, l) => s + l.invoiced, 0);
+    const totalCollected = projectLedgers.reduce((s, l) => s + l.collected, 0);
+    const totalPending = projectLedgers.reduce((s, l) => s + l.pendingDue, 0);
+    const totalCosts = projectLedgers.reduce((s, l) => s + l.totalCost, 0);
+    const totalNetProfit = projectLedgers.reduce((s, l) => s + l.netProfit, 0);
+    const overallMargin = totalInvoiced > 0 ? ((totalNetProfit / totalInvoiced) * 100).toFixed(1) : '0.0';
+
+    const formattedToday = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const soaRef = `SOA-MASTER-PRJ-${new Date().getFullYear()}-${Math.floor(Date.now() / 1000).toString().slice(-4)}`;
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📑</span>
+              <span>Master Projects Portfolio SOA — Consolidated</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master Client SOA</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openConsolidatedProjectsSOA()">Master Projects SOA</button>
+            </div>
+            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
+              <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Filter:</span>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'all' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('all')">All (${projectLedgers.length})</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'active' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('active')">Active</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'closed' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('closed')">Closed</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'pending' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('pending')">Pending Due</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="background:rgba(255,255,255,0.08); color:#f8fafc; border:1px solid rgba(255,255,255,0.2);" onclick="window.finApp.exportProjectsCSV()">
+              📥 Export CSV
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:920px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+
+            ${this.getRayanWatermark()}
+
+            <div style="position:relative; z-index:1;">
+              <!-- Header -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.15rem; gap:1.25rem; border-bottom:2px solid #0f172a; padding-bottom:1rem;">
+                <div style="max-width:58%;">
+                  <div style="margin-bottom:0.5rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN GROUP" style="height:48px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.85rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.02em; line-height:1.25; margin-bottom:4px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.75rem; color:#475569; line-height:1.45;">
+                    <div>${isIndia ? 'GSTIN' : 'TRN'}: <strong>${compTrn}</strong></div>
+                    <div>${compAddress}</div>
+                    <div>Tel: ${compPhone} • Email: ${compEmail}</div>
+                  </div>
+                </div>
+
+                <div style="text-align:right; max-width:42%;">
+                  <div style="font-family:'Outfit', sans-serif; font-size:1.35rem; font-weight:800; color:#0f172a; letter-spacing:0.01em; line-height:1.15;">
+                    MASTER PROJECTS STATEMENT
+                  </div>
+                  <div style="font-family:'Amiri', serif; font-size:0.95rem; font-weight:700; color:#475569; margin-top:2px; margin-bottom:6px;">
+                    كشف حساب المشاريع العام
+                  </div>
+                  <table style="margin-left:auto; font-size:0.75rem; color:#334155; border-collapse:collapse; text-align:right;">
+                    <tr><td style="padding:2px 6px; color:#64748b;">Statement Ref:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a; font-family:monospace;">${soaRef}</td></tr>
+                    <tr><td style="padding:2px 6px; color:#64748b;">Statement Date:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0f172a;">${formattedToday}</td></tr>
+                    <tr><td style="padding:2px 6px; color:#64748b;">Total Portfolio:</td><td style="padding:2px 0 2px 6px; font-weight:700; color:#0284c7;">${projectLedgers.length} Projects Registered</td></tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Executive Portfolio Summary Cards -->
+              <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:0.65rem; margin-bottom:1.25rem;">
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#0369a1; text-transform:uppercase;">Total Invoiced</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:#0284c7; margin-top:3px;">${currSym}${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#64748b; margin-top:2px;">Contract: ${currSym}${totalContract.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-top:3px solid #16a34a; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#15803d; text-transform:uppercase;">Total Collections</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:#16a34a; margin-top:3px;">${currSym}${totalCollected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#16a34a; margin-top:2px;">Inward Cash Received</div>
+                </div>
+                <div style="background:#fef2f2; border:1px solid #fca5a5; border-top:3px solid #dc2626; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#b91c1c; text-transform:uppercase;">Pending Receivables</div>
+                  <div style="font-size:1.05rem; font-weight:900; color:#dc2626; margin-top:3px;">${currSym}${totalPending.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#b91c1c; margin-top:2px;">Client Outstanding</div>
+                </div>
+                <div style="background:#fff7ed; border:1px solid #fed7aa; border-top:3px solid #ea580c; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#c2410c; text-transform:uppercase;">Total Direct Costs</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:#ea580c; margin-top:3px;">${currSym}${totalCosts.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; color:#9a3412; margin-top:2px;">Bills &amp; Site Expenses</div>
+                </div>
+                <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-top:3px solid #059669; border-radius:6px; padding:0.65rem 0.65rem;">
+                  <div style="font-size:0.65rem; font-weight:700; color:#047857; text-transform:uppercase;">Net Portfolio Profit</div>
+                  <div style="font-size:1.05rem; font-weight:900; color:#059669; margin-top:3px;">${currSym}${totalNetProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                  <div style="font-size:0.62rem; font-weight:700; color:#047857; margin-top:2px;">Overall Margin: ${overallMargin}%</div>
+                </div>
+              </div>
+
+              <!-- Master Projects Portfolio Table -->
+              <div class="fin-doc-table-wrapper" style="margin:0 0 1.25rem 0;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.71rem; table-layout:fixed;">
+                  <thead>
+                    <tr style="background:#0f172a; color:#ffffff;">
+                      <th style="padding:6px; text-align:left; width:13%;">Code</th>
+                      <th style="padding:6px; text-align:left; width:26%;">Project Title &amp; Client</th>
+                      <th style="padding:6px; text-align:left; width:9%;">Status</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Invoiced (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Collected</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Pending Due</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Direct Cost</th>
+                      <th style="padding:6px; text-align:right; width:13%;">Net Profit</th>
+                      <th style="padding:6px; text-align:center; width:8%;">SOA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${displayLedgers.map(l => {
+                      const p = l.prj;
+                      const norm = (p.status || 'Active').toLowerCase();
+                      const isClosed = norm.includes('closed') || norm.includes('completed');
+                      return `
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:6px; font-weight:700; font-family:monospace; color:#0284c7;">${p.code || 'PRJ'}</td>
+                          <td style="padding:6px;">
+                            <strong style="color:#0f172a; display:block; word-break:break-word;">${p.name}</strong>
+                            <div style="color:#64748b; font-size:0.65rem;">Client: ${this.formatCompanyName(p.client_name || p.client)}</div>
+                          </td>
+                          <td style="padding:6px;">
+                            <span style="font-size:0.62rem; padding:2px 5px; border-radius:3px; font-weight:700; ${isClosed ? 'background:#f1f5f9; color:#64748b;' : 'background:#ecfdf5; color:#059669;'}">${(p.status || 'Active').toUpperCase()}</span>
+                          </td>
+                          <td style="padding:6px; text-align:right; font-weight:600; color:#0f172a;">${l.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a;">${l.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:800; color:${l.pendingDue > 0.02 ? '#dc2626' : '#16a34a'};">${l.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:600; color:#ea580c;">${l.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:800; color:${l.netProfit >= 0 ? '#059669' : '#dc2626'};">
+                            ${l.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            <div style="font-size:0.62rem; color:#64748b;">${l.profitMargin}%</div>
+                          </td>
+                          <td style="padding:6px; text-align:center;">
+                            <button type="button" style="background:#0284c7; color:#fff; border:none; padding:3px 7px; border-radius:4px; font-size:0.65rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openProjectSOADocument('${p.id}')">
+                              SOA
+                            </button>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:3px double #0f172a;">
+                      <td colspan="3" style="padding:7px 6px; text-align:right; text-transform:uppercase;">Portfolio Totals:</td>
+                      <td style="padding:7px 6px; text-align:right; color:#0f172a;">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 6px; text-align:right; color:#16a34a;">${totalCollected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 6px; text-align:right; color:#dc2626;">${totalPending.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 6px; text-align:right; color:#ea580c;">${totalCosts.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:7px 6px; text-align:right; color:#059669;">${totalNetProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Signatures & Disclaimer -->
+              <div style="margin-top:1.5rem; padding-top:1rem; border-top:2px solid #0f172a; display:grid; grid-template-columns:repeat(2, 1fr); gap:2rem; page-break-inside:avoid;">
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Prepared &amp; Verified By</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Finance &amp; Audit Desk</div>
+                  <div style="font-size:0.68rem; color:#475569;">${compName}</div>
+                </div>
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:0.75rem; text-align:center; background:#f8fafc;">
+                  <div style="font-size:0.68rem; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:1.5rem;">Executive Commercial Sign-Off</div>
+                  <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Chief Operating Officer / Director</div>
+                  <div style="font-size:0.68rem; color:#475569;">Rayan Group Enterprise Management</div>
+                </div>
+              </div>
+
+              <div style="margin-top:1.25rem; padding-top:0.75rem; border-top:1px solid #e2e8f0; text-align:center; font-size:0.68rem; color:#64748b;">
+                This is a Master Consolidated Projects Statement of Account certified correct by Rayan Group Enterprise Financial Portal.
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  // 6H. EXPORT ALL PROJECTS PORTFOLIO TO CSV
+  exportProjectsCSV() {
+    const allProjects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const rows = [];
+    rows.push(['RAYAN GROUP - MASTER PROJECTS FINANCIAL REGISTER & SOA SUMMARY']);
+    rows.push(['Generated Date', new Date().toISOString()]);
+    rows.push(['Company', this.activeCompanyId]);
+    rows.push(['Total Projects', allProjects.length]);
+    rows.push([]);
+
+    rows.push([
+      'Project Code',
+      'Project Title',
+      'Client / Customer',
+      'Site Location',
+      'Status',
+      'Start Date',
+      'Target Completion',
+      'Contract Value',
+      'Approved Budget',
+      'Invoiced Revenue',
+      'Customer Collections',
+      'Pending Client Due',
+      'Subcontractor Bills',
+      'Site Expenses',
+      'Total Direct Costs',
+      'Net Profit / Loss',
+      'Profit Margin (%)',
+      'Cash Position',
+      'Accounting Type'
+    ]);
+
+    allProjects.forEach(p => {
+      const l = this.getProjectLedgerData(p.id);
+      if (!l) return;
+      rows.push([
+        p.code || '',
+        p.name || '',
+        p.client_name || p.client || '',
+        p.site_location || '',
+        p.status || 'Active',
+        p.start_date || '',
+        p.target_completion || '',
+        p.contract_value || 0,
+        p.approved_budget || 0,
+        l.invoiced,
+        l.collected,
+        l.pendingDue,
+        l.billsCost,
+        l.siteExpenses,
+        l.totalCost,
+        l.netProfit,
+        l.profitMargin,
+        l.cashPosition,
+        l.isManual ? 'Manual P&L' : 'Auto-Tracked'
+      ]);
+    });
+
+    const csvContent = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    this.downloadFile(`Rayan_Projects_Master_Register_${new Date().toISOString().slice(0, 10)}.csv`, csvContent, 'text/csv;charset=utf-8;');
+    this.showNotification('Master Projects Register CSV downloaded successfully.', 'success');
+  }
+
   // 7. VENDOR PROFILE & STATEMENT
   openVendorProfile(vendId) {
     const vend = this.db?.vendors?.find(v => v.id === vendId || v.code === vendId);
@@ -16536,9 +17634,12 @@ class FinanceApp {
     const isManual = prj.manual_financials === true;
     const initialInvoiced = prj.manual_invoiced !== undefined ? Number(prj.manual_invoiced) : (isManual ? Number(prj.contract_value || 0) : autoInvoiced);
     const initialCollected = prj.manual_collected !== undefined ? Number(prj.manual_collected) : (isManual ? Number(prj.contract_value || 0) : autoCollected);
-    const initialCost = prj.manual_cost !== undefined ? Number(prj.manual_cost) : (isManual ? Number(prj.approved_budget || 0) : autoCost);
+    const initialBills = prj.manual_bills !== undefined ? Number(prj.manual_bills) : materialsCost;
+    const initialExpenses = prj.manual_expenses !== undefined ? Number(prj.manual_expenses) : siteExpenses;
+    const initialCost = prj.manual_cost !== undefined ? Number(prj.manual_cost) : (isManual ? Number(prj.approved_budget || 0) : (initialBills + initialExpenses || autoCost));
     const initialProfit = prj.manual_profit !== undefined ? Number(prj.manual_profit) : (initialInvoiced - initialCost);
     const initialMargin = initialInvoiced > 0 ? ((initialProfit / initialInvoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
+    const initialPending = Math.max(0, initialInvoiced - initialCollected);
 
     const currLabel = prj.currency === 'INR' ? '₹' : 'AED';
     const normStatus = (prj.status || 'Active').toLowerCase();
@@ -16552,7 +17653,7 @@ class FinanceApp {
                 <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; font-family:monospace; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:4px; border:1px solid rgba(56,189,248,0.25);">${prj.code || 'PRJ'}</span>
                 <h3 class="fin-modal-title" style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin:0;">✏️ Edit Project Account &amp; Profit/Loss</h3>
               </div>
-              <p style="font-size:0.75rem; color:#94a3b8; margin:0;">Manage project status (Active / Closed) and manually record or override project profit &amp; loss figures.</p>
+              <p style="font-size:0.75rem; color:#94a3b8; margin:0;">Manage project status (Active / Closed) and record or override project billing, collections, subcontractor expenses, and profit &amp; loss figures.</p>
             </div>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-project')" style="color:#94a3b8; font-size:1.6rem; line-height:1; border:none; background:none; cursor:pointer;">&times;</button>
           </div>
@@ -16622,7 +17723,7 @@ class FinanceApp {
                   </span>
                 </div>
                 <p style="font-size:0.75rem; color:#94a3b8; margin:0 0 1rem;">
-                  Toggle this on to manually specify project billed revenue, client collections, direct expenses, and verified profit/loss figures.
+                  Toggle this on to manually specify project billed revenue, client collections received, subcontractor bills, site expenses, and verified profit/loss figures.
                 </p>
 
                 <div id="edit-prj-manual-fields" style="${isManual ? 'display:grid;' : 'display:none;'} grid-template-columns: 1fr 1fr; gap:0.85rem;">
@@ -16631,11 +17732,19 @@ class FinanceApp {
                     <input type="number" id="edit-prj-invoiced" class="fin-form-input" step="any" value="${initialInvoiced}">
                   </div>
                   <div class="fin-form-group">
-                    <label class="fin-form-label" style="font-size:0.75rem;">Customer Collections (${currLabel})</label>
+                    <label class="fin-form-label" style="font-size:0.75rem;">Customer Collections Received (${currLabel})</label>
                     <input type="number" id="edit-prj-collected" class="fin-form-input" step="any" value="${initialCollected}">
                   </div>
                   <div class="fin-form-group">
-                    <label class="fin-form-label" style="font-size:0.75rem;">Project Direct Cost / Expenses (${currLabel})</label>
+                    <label class="fin-form-label" style="font-size:0.75rem;">Subcontractor &amp; Supplier Bills (${currLabel})</label>
+                    <input type="number" id="edit-prj-bills" class="fin-form-input" step="any" value="${initialBills}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label" style="font-size:0.75rem;">Site &amp; Operational Expenses (${currLabel})</label>
+                    <input type="number" id="edit-prj-expenses" class="fin-form-input" step="any" value="${initialExpenses}">
+                  </div>
+                  <div class="fin-form-group">
+                    <label class="fin-form-label" style="font-size:0.75rem;">Total Direct Costs &amp; Expenses (${currLabel})</label>
                     <input type="number" id="edit-prj-cost" class="fin-form-input" step="any" value="${initialCost}">
                   </div>
                   <div class="fin-form-group">
@@ -16643,9 +17752,15 @@ class FinanceApp {
                     <input type="number" id="edit-prj-profit" class="fin-form-input" step="any" value="${initialProfit}" style="font-weight:700; color:#10b981;">
                   </div>
                   <div class="fin-form-group" style="grid-column: span 2;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.25); border-radius:6px; padding:0.6rem 0.85rem;">
-                      <span style="font-size:0.75rem; color:#94a3b8;">Estimated Profit Margin:</span>
-                      <strong id="edit-prj-margin-display" style="color:#10b981; font-size:0.95rem;">${initialMargin}%</strong>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.25); border-radius:6px; padding:0.6rem 0.85rem; flex-wrap:wrap; gap:0.5rem;">
+                      <div>
+                        <span style="font-size:0.75rem; color:#94a3b8;">Pending Client Due:</span>
+                        <strong id="edit-prj-pending-display" style="color:#f59e0b; font-size:0.95rem; margin-left:4px;">${currLabel} ${initialPending.toFixed(2)}</strong>
+                      </div>
+                      <div>
+                        <span style="font-size:0.75rem; color:#94a3b8;">Estimated Profit Margin:</span>
+                        <strong id="edit-prj-margin-display" style="color:#10b981; font-size:0.95rem; margin-left:4px;">${initialMargin}%</strong>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -16695,15 +17810,26 @@ class FinanceApp {
     const fieldsWrap = document.getElementById('edit-prj-manual-fields');
     const badge = document.getElementById('edit-prj-pnl-mode-badge');
     const invInp = document.getElementById('edit-prj-invoiced');
+    const collectedInp = document.getElementById('edit-prj-collected');
+    const billsInp = document.getElementById('edit-prj-bills');
+    const expInp = document.getElementById('edit-prj-expenses');
     const costInp = document.getElementById('edit-prj-cost');
     const profitInp = document.getElementById('edit-prj-profit');
     const marginDisp = document.getElementById('edit-prj-margin-display');
+    const pendingDisp = document.getElementById('edit-prj-pending-display');
 
     const updateCalc = () => {
       const inv = Number(invInp?.value) || 0;
+      const coll = Number(collectedInp?.value) || 0;
       const cost = Number(costInp?.value) || 0;
       const prof = Number(profitInp?.value) || (inv - cost);
       const marg = inv > 0 ? ((prof / inv) * 100).toFixed(1) : '0.0';
+      const pend = Math.max(0, inv - coll);
+
+      if (pendingDisp) {
+        pendingDisp.textContent = `${currLabel} ${pend.toFixed(2)}`;
+        pendingDisp.style.color = pend > 0.02 ? '#f59e0b' : '#10b981';
+      }
       if (marginDisp) {
         marginDisp.textContent = `${marg}%`;
         marginDisp.style.color = prof >= 0 ? '#10b981' : '#ef4444';
@@ -16731,6 +17857,29 @@ class FinanceApp {
         const inv = Number(invInp.value) || 0;
         const cost = Number(costInp?.value) || 0;
         if (profitInp) profitInp.value = (inv - cost).toFixed(2);
+        updateCalc();
+      };
+    }
+    if (collectedInp) {
+      collectedInp.oninput = updateCalc;
+    }
+    if (billsInp) {
+      billsInp.oninput = () => {
+        const b = Number(billsInp.value) || 0;
+        const e = Number(expInp?.value) || 0;
+        if (costInp) costInp.value = (b + e).toFixed(2);
+        const inv = Number(invInp?.value) || 0;
+        if (profitInp) profitInp.value = (inv - (b + e)).toFixed(2);
+        updateCalc();
+      };
+    }
+    if (expInp) {
+      expInp.oninput = () => {
+        const b = Number(billsInp?.value) || 0;
+        const e = Number(expInp.value) || 0;
+        if (costInp) costInp.value = (b + e).toFixed(2);
+        const inv = Number(invInp?.value) || 0;
+        if (profitInp) profitInp.value = (inv - (b + e)).toFixed(2);
         updateCalc();
       };
     }
@@ -16772,6 +17921,8 @@ class FinanceApp {
           manual_financials: manualEnabled,
           manual_invoiced: manualEnabled ? Number(invInp?.value || 0) : undefined,
           manual_collected: manualEnabled ? Number(document.getElementById('edit-prj-collected')?.value || 0) : undefined,
+          manual_bills: manualEnabled ? Number(billsInp?.value || 0) : undefined,
+          manual_expenses: manualEnabled ? Number(expInp?.value || 0) : undefined,
           manual_cost: manualEnabled ? Number(costInp?.value || 0) : undefined,
           manual_profit: manualEnabled ? Number(profitInp?.value || 0) : undefined,
           manual_margin: manualEnabled ? (marginDisp?.textContent?.replace('%', '') || '0.0') : undefined

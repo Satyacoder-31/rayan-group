@@ -837,6 +837,24 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             // v2026_clean_v50: Update all credit notes prefix from CN-RG- to CN-REC-
             $pdo->exec("UPDATE finance_credit_notes SET credit_note_no = REPLACE(credit_note_no, 'CN-RG-', 'CN-REC-'), data_json = REPLACE(data_json, 'CN-RG-', 'CN-REC-') WHERE credit_note_no LIKE 'CN-RG-%' OR data_json LIKE '%CN-RG-%'");
 
+            // v2026_clean_v52: Ensure Max Al Wahda project financials are synchronized with exact audited ledger figures
+            $pdo->exec("UPDATE finance_projects SET 
+                contract_value = 388098.69,
+                approved_budget = 388098.69,
+                data_json = JSON_SET(
+                    data_json,
+                    '$.contract_value', 388098.69,
+                    '$.approved_budget', 388098.69,
+                    '$.manual_invoiced', 406736.51,
+                    '$.manual_collected', 312798.68,
+                    '$.manual_bills', 316571.79,
+                    '$.manual_expenses', 0.00,
+                    '$.manual_cost', 316571.79,
+                    '$.manual_profit', 90164.72,
+                    '$.manual_margin', '22.2'
+                )
+            WHERE id = 'prj-mvr35qo2' OR code = 'PRJ-RG-MAX-2026' OR name LIKE '%Max - Al Wahda%'");
+
             if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
                 foreach ($data['credit_notes'] as &$cnItem) {
                     if (!empty($cnItem['credit_note_no']) && strpos($cnItem['credit_note_no'], 'CN-RG-') === 0) {
@@ -844,6 +862,23 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     }
                 }
                 unset($cnItem);
+            }
+
+            if (!empty($data['projects']) && is_array($data['projects'])) {
+                foreach ($data['projects'] as &$pItem) {
+                    if (($pItem['id'] ?? '') === 'prj-mvr35qo2' || ($pItem['code'] ?? '') === 'PRJ-RG-MAX-2026' || stripos($pItem['name'] ?? '', 'Max - Al Wahda') !== false) {
+                        $pItem['contract_value'] = 388098.69;
+                        $pItem['approved_budget'] = 388098.69;
+                        $pItem['manual_invoiced'] = 406736.51;
+                        $pItem['manual_collected'] = 312798.68;
+                        $pItem['manual_bills'] = 316571.79;
+                        $pItem['manual_expenses'] = 0.00;
+                        $pItem['manual_cost'] = 316571.79;
+                        $pItem['manual_profit'] = 90164.72;
+                        $pItem['manual_margin'] = '22.2';
+                    }
+                }
+                unset($pItem);
             }
 
             if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
