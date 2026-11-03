@@ -912,9 +912,39 @@ class FinanceApp {
       }
     });
 
-    // 2. Auto-align credit notes with current invoices
+    // 2. Auto-align credit notes with current invoices and canonical serials
+    const canonicalCnMap = {
+      'cn-1793469085069': { no: 'CN-REC-2023-001', date: '2023-02-26' },
+      'cn-1793469103087': { no: 'CN-REC-2023-002', date: '2023-03-12' },
+      'cn-1793469132205': { no: 'CN-REC-2023-003', date: '2023-03-30' },
+      'cn-1793469162750': { no: 'CN-REC-2023-004', date: '2023-08-08' },
+      'cn-1793470427362': { no: 'CN-REC-2023-005', date: '2023-09-04' },
+      'cn-1793469117238': { no: 'CN-REC-2024-001', date: '2024-03-15' },
+      'cn-1793471514325': { no: 'CN-REC-2024-002', date: '2024-03-19' },
+      'cn-1793507654484': { no: 'CN-REC-2024-003', date: '2024-05-01' },
+      'cn-1793507678569': { no: 'CN-REC-2024-004', date: '2024-05-04' },
+      'cn-1793508062030': { no: 'CN-REC-2024-005', date: '2024-05-06' },
+      'cn-1793508484416': { no: 'CN-REC-2024-006', date: '2024-05-11' },
+      'cn-1793508603092': { no: 'CN-REC-2024-007', date: '2024-06-06' },
+      'cn-1793510889507': { no: 'CN-REC-2024-008', date: '2024-06-16' },
+      'cn-1793509397983': { no: 'CN-REC-2024-009', date: '2024-10-10' },
+      'cn-1793555201785': { no: 'CN-REC-2025-001', date: '2025-06-15' },
+      'cn-1793511081739': { no: 'CN-REC-2025-002', date: '2025-08-18' },
+      'cn-1793511132931': { no: 'CN-REC-2025-003', date: '2025-08-19' },
+      'cn-1793512121832': { no: 'CN-REC-2025-004', date: '2025-11-26' },
+      'cn-1793511975271': { no: 'CN-REC-2025-005', date: '2025-11-26' },
+      'cn-1793512002192': { no: 'CN-REC-2025-006', date: '2025-11-26' },
+      'cn-1793555759783': { no: 'CN-REC-2026-001', date: '2026-02-15' },
+      'cn-1793640088617': { no: 'CN-REC-2026-002', date: '2026-08-26' },
+      'cn-1793559377825': { no: 'CN-REC-2026-003', date: '2026-09-08' },
+      'cn-1793598612346': { no: 'CN-REC-2026-004', date: '2026-10-01' },
+      'cn-1793598632285': { no: 'CN-REC-2026-005', date: '2026-10-13' }
+    };
     (this.db.credit_notes || []).forEach(cn => {
-      if (cn.credit_note_no && cn.credit_note_no.startsWith('CN-RG-')) {
+      if (canonicalCnMap[cn.id]) {
+        cn.credit_note_no = canonicalCnMap[cn.id].no;
+        if (!cn.date) cn.date = canonicalCnMap[cn.id].date;
+      } else if (cn.credit_note_no && cn.credit_note_no.startsWith('CN-RG-')) {
         cn.credit_note_no = cn.credit_note_no.replace('CN-RG-', 'CN-REC-');
       }
       const matchedInv = (this.db.invoices || []).find(i => this.matchInvoiceRef(i, cn.invoice_no || cn.ref_invoice_no, cn.invoice_id));
@@ -925,6 +955,9 @@ class FinanceApp {
         if (matchedInv.customer_name) {
           cn.customer_name = matchedInv.customer_name;
           cn.customer_id = matchedInv.customer_id || cn.customer_id;
+        }
+        if (!cn.date) {
+          cn.date = matchedInv.invoice_date || matchedInv.date;
         }
       }
     });
@@ -986,7 +1019,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v52';
+    const CURRENT_DB_VERSION = 'v2026_clean_v53';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2637,19 +2670,28 @@ class FinanceApp {
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
-  getNextCreditNoteNumber() {
+  getNextCreditNoteNumber(targetDate) {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const notes = (this.db?.credit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
-    let maxSeq = 100;
+    let yr = '2026';
+    if (targetDate) {
+      try {
+        const d = new Date(targetDate);
+        if (!isNaN(d.getTime())) yr = String(d.getFullYear());
+      } catch (e) {}
+    } else {
+      yr = String(new Date().getFullYear());
+    }
+    const prefix = isIndia ? `CN-ASH-${yr}` : `CN-REC-${yr}`;
+    let maxSeq = 0;
     notes.forEach(n => {
       const nNo = n.credit_note_no || '';
-      const m = nNo.match(/CN-.*-(\d+)/i) || nNo.match(/(\d{3,})$/);
+      const m = nNo.match(new RegExp(`${prefix}-(\\d+)`, 'i')) || nNo.match(new RegExp(`CN-[A-Z]+-${yr}-(\\d+)`, 'i'));
       if (m) {
         const num = parseInt(m[1], 10);
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = isIndia ? 'CN-ASH-2026' : 'CN-REC-2026';
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
@@ -4268,6 +4310,9 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   extractSerialNum(str) {
     if (!str) return 0;
+    // Compound year + sequence key for documents like CN-REC-2024-005, BILL-RG-2026-1001, etc.
+    const mYearSeq = String(str).match(/[-/](\d{4})[-/](\d+)$/);
+    if (mYearSeq) return parseInt(mYearSeq[1], 10) * 1000000 + parseInt(mYearSeq[2], 10);
     const mEnd = String(str).match(/[-/](\d+)$/);
     if (mEnd) return parseInt(mEnd[1], 10);
     const m = String(str).match(/(\d{4,6})/);
@@ -6212,6 +6257,9 @@ class FinanceApp {
                 <th id="th-cn-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Credit Note #">
                   Credit Note # <span id="cn-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.cnSort === 'serial-asc' ? '▲' : (this.cnSort === 'serial-desc' ? '▼' : '↕')}</span>
                 </th>
+                <th id="th-cn-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                  Date <span id="cn-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.cnSort === 'date-asc' ? '▲' : (this.cnSort === 'date-desc' ? '▼' : '↕')}</span>
+                </th>
                 <th>Invoice Ref</th>
                 <th id="th-cn-customer" style="white-space:nowrap; min-width:200px; cursor:pointer; user-select:none;" title="Click to sort by Customer">
                   Customer <span id="cn-sort-icon-customer" style="color:#38bdf8; font-size:0.75rem;">${this.cnSort === 'name-asc' ? '▲' : (this.cnSort === 'name-desc' ? '▼' : '↕')}</span>
@@ -6238,6 +6286,7 @@ class FinanceApp {
     const cnCount = document.getElementById('cn-showing-count');
     const cnTbody = document.getElementById('credit-notes-tbody');
     const thCnSerial = document.getElementById('th-cn-serial');
+    const thCnDate = document.getElementById('th-cn-date');
     const thCnCustomer = document.getElementById('th-cn-customer');
     const thCnAmount = document.getElementById('th-cn-amount');
 
@@ -6251,6 +6300,7 @@ class FinanceApp {
         if (!q) return true;
         const haystack = [
           cn.credit_note_no,
+          cn.date,
           cn.invoice_no,
           cn.ref_invoice_no,
           cn.customer_name,
@@ -6272,9 +6322,11 @@ class FinanceApp {
 
       // Update header sort icons
       const iconSerial = document.getElementById('cn-sort-icon-serial');
+      const iconDate = document.getElementById('cn-sort-icon-date');
       const iconCustomer = document.getElementById('cn-sort-icon-customer');
       const iconAmount = document.getElementById('cn-sort-icon-amount');
       if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
       if (iconCustomer) iconCustomer.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
       if (iconAmount) iconAmount.textContent = sMode === 'amount-asc' ? '▲' : (sMode === 'amount-desc' ? '▼' : '↕');
     };
@@ -6285,6 +6337,13 @@ class FinanceApp {
     if (thCnSerial) {
       thCnSerial.onclick = () => {
         this.cnSort = (this.cnSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
+        if (cnSort) cnSort.value = this.cnSort;
+        updateCnFilter();
+      };
+    }
+    if (thCnDate) {
+      thCnDate.onclick = () => {
+        this.cnSort = (this.cnSort === 'date-desc') ? 'date-asc' : 'date-desc';
         if (cnSort) cnSort.value = this.cnSort;
         updateCnFilter();
       };
@@ -6315,7 +6374,7 @@ class FinanceApp {
 
   renderCreditNoteRows(creditNotes, query = '') {
     if (!creditNotes.length) {
-      return `<tr><td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+      return `<tr><td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
         <div style="font-size:1.6rem; margin-bottom:0.4rem;">🔍</div>
         <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No credit notes found ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
         <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Create Credit Note" or click "Cr. Note" next to any invoice to issue a credit note.</div>
@@ -6325,6 +6384,7 @@ class FinanceApp {
     return creditNotes.map(cn => `
       <tr>
         <td><strong style="color:#38bdf8; font-family:monospace;">${cn.credit_note_no}</strong></td>
+        <td style="white-space:nowrap; font-size:0.8rem; color:#94a3b8;">${this.formatDate(cn.date || cn.issue_date || '')}</td>
         <td><code>${cn.invoice_no}</code></td>
         <td style="white-space:nowrap;"><span class="fin-customer-cell">${cn.customer_name}</span></td>
         <td><span style="font-size:0.75rem;">${cn.reason}</span></td>
@@ -17352,13 +17412,16 @@ class FinanceApp {
         tax = Math.round((totalCredit - taxable) * 100) / 100;
       }
 
+      const cnDate = inv.invoice_date || new Date().toISOString().split('T')[0];
       const payload = {
         credit_note: {
           id: 'cn-' + Date.now(),
-          credit_note_no: this.getNextCreditNoteNumber(),
+          credit_note_no: this.getNextCreditNoteNumber(cnDate),
           company_id: inv.company_id || this.activeCompanyId,
           currency: isIndia ? 'INR' : 'AED',
           currency_symbol: currSym,
+          date: cnDate,
+          issue_date: cnDate,
           invoice_id: inv.id,
           invoice_no: inv.invoice_no,
           customer_id: inv.customer_id,

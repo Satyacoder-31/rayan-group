@@ -834,8 +834,61 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_vendor_payments WHERE vendor_name LIKE '%PINK CITY%' OR id IN ('pay-1793369661067', 'pay-1793290968855') OR voucher_no IN ('PV-RG-2026-101', 'PV-RG-2026-102')");
             $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 316571.79, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 316571.79, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793641982443' OR vendor_invoice_no = 'HLN/PO/0526/2025' OR bill_no = 'BILL-RG-2026-1001'");
 
-            // v2026_clean_v50: Update all credit notes prefix from CN-RG- to CN-REC-
-            $pdo->exec("UPDATE finance_credit_notes SET credit_note_no = REPLACE(credit_note_no, 'CN-RG-', 'CN-REC-'), data_json = REPLACE(data_json, 'CN-RG-', 'CN-REC-') WHERE credit_note_no LIKE 'CN-RG-%' OR data_json LIKE '%CN-RG-%'");
+            // v2026_clean_v50 & v53: Chronological serial numbering of credit notes per year (2023, 2024, 2025, 2026) and add note_date field
+            try {
+                $pdo->exec("ALTER TABLE finance_credit_notes ADD COLUMN note_date DATE NULL AFTER status");
+            } catch (Exception $e) {}
+
+            $cnSerialMap = [
+                // Year 2023 (5 Credit Notes)
+                ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'new_no' => 'CN-REC-2023-001'],
+                ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'new_no' => 'CN-REC-2023-002'],
+                ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'new_no' => 'CN-REC-2023-003'],
+                ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'new_no' => 'CN-REC-2023-004'],
+                ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'new_no' => 'CN-REC-2023-005'],
+
+                // Year 2024 (9 Credit Notes)
+                ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'new_no' => 'CN-REC-2024-001'],
+                ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'new_no' => 'CN-REC-2024-002'],
+                ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'new_no' => 'CN-REC-2024-003'],
+                ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'new_no' => 'CN-REC-2024-004'],
+                ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'new_no' => 'CN-REC-2024-005'],
+                ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'new_no' => 'CN-REC-2024-006'],
+                ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'new_no' => 'CN-REC-2024-007'],
+                ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'new_no' => 'CN-REC-2024-008'],
+                ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'new_no' => 'CN-REC-2024-009'],
+
+                // Year 2025 (6 Credit Notes)
+                ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'new_no' => 'CN-REC-2025-001'],
+                ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'new_no' => 'CN-REC-2025-002'],
+                ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'new_no' => 'CN-REC-2025-003'],
+                ['id' => 'cn-1793512121832', 'inv' => 'REC-RG-INV-44008', 'date' => '2025-11-26', 'new_no' => 'CN-REC-2025-004'],
+                ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'new_no' => 'CN-REC-2025-005'],
+                ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'new_no' => 'CN-REC-2025-006'],
+
+                // Year 2026 (5 Credit Notes)
+                ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'new_no' => 'CN-REC-2026-001'],
+                ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'new_no' => 'CN-REC-2026-002'],
+                ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'new_no' => 'CN-REC-2026-003'],
+                ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'new_no' => 'CN-REC-2026-004'],
+                ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'new_no' => 'CN-REC-2026-005']
+            ];
+
+            foreach ($cnSerialMap as $cnEntry) {
+                try {
+                    $upStmt = $pdo->prepare("UPDATE finance_credit_notes SET 
+                        credit_note_no = :new_no,
+                        note_date = :dt,
+                        data_json = JSON_SET(data_json, '$.credit_note_no', :new_no, '$.date', :dt, '$.issue_date', :dt, '$.note_date', :dt)
+                        WHERE id = :id OR invoice_no = :inv");
+                    $upStmt->execute([
+                        ':new_no' => $cnEntry['new_no'],
+                        ':dt' => $cnEntry['date'],
+                        ':id' => $cnEntry['id'],
+                        ':inv' => $cnEntry['inv']
+                    ]);
+                } catch (Exception $e) {}
+            }
 
             // v2026_clean_v52: Ensure Max Al Wahda project financials are synchronized with exact audited ledger figures
             $pdo->exec("UPDATE finance_projects SET 
@@ -856,8 +909,22 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             WHERE id = 'prj-mvr35qo2' OR code = 'PRJ-RG-MAX-2026' OR name LIKE '%Max - Al Wahda%'");
 
             if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+                $cnMapById = [];
+                $cnMapByInv = [];
+                foreach ($cnSerialMap as $m) {
+                    $cnMapById[$m['id']] = $m;
+                    $cnMapByInv[$m['inv']] = $m;
+                }
                 foreach ($data['credit_notes'] as &$cnItem) {
-                    if (!empty($cnItem['credit_note_no']) && strpos($cnItem['credit_note_no'], 'CN-RG-') === 0) {
+                    $cId = $cnItem['id'] ?? '';
+                    $invN = $cnItem['invoice_no'] ?? ($cnItem['ref_invoice_no'] ?? '');
+                    $matched = $cnMapById[$cId] ?? ($cnMapByInv[$invN] ?? null);
+                    if ($matched) {
+                        $cnItem['credit_note_no'] = $matched['new_no'];
+                        $cnItem['date'] = $matched['date'];
+                        $cnItem['issue_date'] = $matched['date'];
+                        $cnItem['note_date'] = $matched['date'];
+                    } elseif (!empty($cnItem['credit_note_no']) && strpos($cnItem['credit_note_no'], 'CN-RG-') === 0) {
                         $cnItem['credit_note_no'] = str_replace('CN-RG-', 'CN-REC-', $cnItem['credit_note_no']);
                     }
                 }
@@ -3635,9 +3702,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($cn['id'])) $cn['id'] = 'cn-' . round(microtime(true) * 1000);
                 if (empty($cn['company_id'])) $cn['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
                 if (empty($cn['currency'])) $cn['currency'] = ($cn['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                $cnDate = !empty($cn['date']) ? $cn['date'] : (!empty($cn['issue_date']) ? $cn['issue_date'] : date('Y-m-d'));
+                $cn['date'] = $cnDate;
+                $cn['issue_date'] = $cnDate;
+                $cn['note_date'] = $cnDate;
+                $cnYear = date('Y', strtotime($cnDate));
                 if (empty($cn['credit_note_no'])) {
-                    $prefix = ($cn['company_id'] === 'ashaz-eng-in') ? 'CN-ASH' : 'CN-REC-2026';
-                    $cn['credit_note_no'] = $prefix . '-' . rand(100, 999);
+                    $prefix = ($cn['company_id'] === 'ashaz-eng-in') ? "CN-ASH-{$cnYear}" : "CN-REC-{$cnYear}";
+                    $maxSeq = 0;
+                    if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
+                        foreach ($db['credit_notes'] as $existingCn) {
+                            $exNo = $existingCn['credit_note_no'] ?? '';
+                            if (preg_match('/' . preg_quote($prefix, '/') . '-(\d+)/i', $exNo, $mSeq)) {
+                                $sNum = intval($mSeq[1]);
+                                if ($sNum > $maxSeq) $maxSeq = $sNum;
+                            }
+                        }
+                    }
+                    $cn['credit_note_no'] = sprintf("%s-%03d", $prefix, $maxSeq + 1);
                 }
                 if (empty($cn['status'])) $cn['status'] = 'applied';
                 if (!isset($db['credit_notes']) || !is_array($db['credit_notes'])) $db['credit_notes'] = [];
