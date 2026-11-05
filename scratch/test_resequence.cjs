@@ -19,3 +19,4 @@ sorted.forEach((r, i) => {
   }
 });
 console.log(`Total renumbered: ${sorted.length}, Final sequence: REC-RV-${seq - 1}`);
+

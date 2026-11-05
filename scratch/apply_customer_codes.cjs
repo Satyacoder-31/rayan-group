@@ -44,3 +44,4 @@ const DEFAULT_CUSTOMER_SERIAL_MAP = {
     console.log(filepath, 'updated customer codes:', changed);
   }
 });
+

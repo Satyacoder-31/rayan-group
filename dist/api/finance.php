@@ -2332,6 +2332,13 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
 
                     // Resequence customer receipts starting strictly from REC-RV-44001
                     if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+                        foreach ($data['customer_receipts'] as &$rFix) {
+                            if (isset($rFix['receipt_date']) && strpos($rFix['receipt_date'], '0006-') === 0) {
+                                $rFix['receipt_date'] = str_replace('0006-', '2026-', $rFix['receipt_date']);
+                            }
+                        }
+                        unset($rFix);
+
                         usort($data['customer_receipts'], function($a, $b) {
                             $dA = $a['receipt_date'] ?? ($a['date'] ?? '');
                             $dB = $b['receipt_date'] ?? ($b['date'] ?? '');
@@ -2359,13 +2366,13 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
 
                     // Resequence customer codes to CUST-REC-1001 through CUST-REC-1023
                     $canonicalCustCodeMap = [
-                        'cust-morganti' => 'CUST-REC-1001',
-                        'cust-buildara' => 'CUST-REC-1002',
+                        'cust-hiprofile' => 'CUST-REC-1001',
+                        'cust-morganti' => 'CUST-REC-1002',
                         'cust-hln' => 'CUST-REC-1003',
                         'cust-ironbeam' => 'CUST-REC-1004',
-                        'cust-sadeco' => 'CUST-REC-1005',
+                        'cust-alisons' => 'CUST-REC-1005',
                         'cust-ayat' => 'CUST-REC-1006',
-                        'cust-hiprofile' => 'CUST-REC-1007',
+                        'cust-almuluki' => 'CUST-REC-1007',
                         'cust-luminar' => 'CUST-REC-1008',
                         'cust-alex' => 'CUST-REC-1009',
                         'cust-magma' => 'CUST-REC-1010',
@@ -2374,11 +2381,13 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         'cust-pggc' => 'CUST-REC-1013',
                         'cust-hayat' => 'CUST-REC-1014',
                         'cust-focustech' => 'CUST-REC-1015',
-                        'cust-alisons' => 'CUST-REC-1016',
-                        'cust-almuluki' => 'CUST-REC-1017',
+                        'cust-buildara' => 'CUST-REC-1016',
+                        'cust-sadeco' => 'CUST-REC-1017',
                         'cust-remaya' => 'CUST-REC-1018',
+                        'cust-1792419616536' => 'CUST-REC-1019',
                         'cust-whitecrescent' => 'CUST-REC-1019',
                         'cust-zorawar' => 'CUST-REC-1020',
+                        'cust-1793515703667' => 'CUST-REC-1021',
                         'cust-brook' => 'CUST-REC-1021',
                         'cust-solidmarble' => 'CUST-REC-1022',
                         'cust-specon' => 'CUST-REC-1023'
@@ -2388,14 +2397,12 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             $cid = $c['id'] ?? '';
                             if (isset($canonicalCustCodeMap[$cid])) {
                                 $targetCode = $canonicalCustCodeMap[$cid];
-                                if (empty($c['code']) || (strpos($c['code'], 'CUST-') === 0 && strpos($c['code'], 'CUST-REC-') !== 0)) {
-                                    $c['code'] = $targetCode;
-                                    if ($pdo) {
-                                        try {
-                                            $pdo->prepare("UPDATE finance_customers SET code = ?, data_json = JSON_SET(data_json, '$.code', ?) WHERE id = ?")
-                                                ->execute([$targetCode, $targetCode, $cid]);
-                                        } catch (Exception $e) {}
-                                    }
+                                $c['code'] = $targetCode;
+                                if ($pdo) {
+                                    try {
+                                        $pdo->prepare("UPDATE finance_customers SET code = ?, data_json = JSON_SET(data_json, '$.code', ?) WHERE id = ?")
+                                            ->execute([$targetCode, $targetCode, $cid]);
+                                    } catch (Exception $e) {}
                                 }
                             }
                         }
