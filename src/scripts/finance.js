@@ -20004,7 +20004,7 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Tax Invoice Title & Metadata) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem;">
-              <div style="max-width:60%;">
+              <div style="max-width:50%; flex-shrink:1;">
                 <div style="margin-bottom:0.4rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
@@ -20017,34 +20017,34 @@ class FinanceApp {
                 ${this.getRayanDynamicVerificationCode({ ...inv, invoice_no: inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : (inv.id || 'REC-RG-INV-44049')) }, 'invoice')}
               </div>
 
-              <div style="text-align:right;">
+              <div style="text-align:right; flex-shrink:0;">
                 <div style="font-size:1.85rem; font-weight:900; color:#111827; letter-spacing:-0.01em; line-height:1; margin-bottom:4px;">
                   TAX INVOICE
                 </div>
-                <div style="font-size:0.95rem; font-weight:700; color:#1f2937; margin-bottom:8px;">
+                <div style="font-size:0.95rem; font-weight:700; color:#1f2937; margin-bottom:8px; white-space:nowrap;">
                   # ${inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : 'REC-RG-INV-44049')}
                 </div>
 
                 <div style="font-size:0.8rem; color:#374151; line-height:1.45;">
-                  <table style="margin-left:auto; border-collapse:collapse; text-align:right;">
+                  <table style="margin-left:auto; border-collapse:collapse; text-align:right; white-space:nowrap;">
                     <tr>
-                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Order# :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">
+                      <td class="fin-doc-nowrap" style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">Order# :</td>
+                      <td class="fin-doc-nowrap" style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">
                         <span>${poRef || '—'}</span>
                         <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditOrderNumber('${inv.id || inv.invoice_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Order Number">✏️</button>
                       </td>
                     </tr>
                     <tr>
-                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Invoice Date :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">${formattedDate}</td>
+                      <td class="fin-doc-nowrap" style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">Invoice Date :</td>
+                      <td class="fin-doc-nowrap" style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">${formattedDate}</td>
                     </tr>
                     <tr>
-                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Terms :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
+                      <td class="fin-doc-nowrap" style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">Terms :</td>
+                      <td class="fin-doc-nowrap" style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">${inv.payment_terms ? `${inv.payment_terms} Days Net` : 'Due on Receipt'}</td>
                     </tr>
                     <tr>
-                      <td style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap;">Due Date :</td>
-                      <td style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap;">${formattedDueDate}</td>
+                      <td class="fin-doc-nowrap" style="color:#6b7280; padding-right:12px; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">Due Date :</td>
+                      <td class="fin-doc-nowrap" style="font-weight:600; color:#111827; padding-bottom:3px; white-space:nowrap !important; word-break:keep-all !important;">${formattedDueDate}</td>
                     </tr>
                   </table>
                 </div>
@@ -20077,15 +20077,15 @@ class FinanceApp {
             <div class="fin-doc-table-wrapper" style="margin-top:0.6rem; margin-bottom:0.6rem;">
               <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.78rem; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
                 <colgroup>
-                  <col style="width:5%;">   <!-- Sr. No -->
-                  <col style="width:31%;">  <!-- Description -->
-                  <col style="width:6%;">   <!-- Unit -->
-                  <col style="width:6%;">   <!-- Qty -->
-                  <col style="width:6%;">   <!-- WD% -->
-                  <col style="width:11%;">  <!-- Project Price -->
-                  <col style="width:11%;">  <!-- Invoice Amount -->
-                  <col style="width:10%;">  <!-- VAT 5% -->
-                  <col style="width:14%;">  <!-- Total Amount -->
+                  <col style="width:4.5%;">  <!-- Sr. No -->
+                  <col style="width:26.5%;"> <!-- Description -->
+                  <col style="width:5%;">    <!-- Unit -->
+                  <col style="width:5%;">    <!-- Qty -->
+                  <col style="width:6%;">    <!-- WD% -->
+                  <col style="width:11%;">   <!-- Project Price -->
+                  <col style="width:11%;">   <!-- Invoice Amount -->
+                  <col style="width:9%;">    <!-- VAT 5% -->
+                  <col style="width:22%;">   <!-- Total Amount -->
                 </colgroup>
                 <thead>
                   <tr style="background:#ffffff; border-bottom:1.5px solid #111827; font-weight:700; font-size:0.75rem;">
@@ -20156,11 +20156,11 @@ class FinanceApp {
                         <td style="border:1px solid #111827; padding:5px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word; line-height:1.35;">${itemName}</td>
                         <td style="border:1px solid #111827; padding:5px 3px; text-align:center; color:#111827; font-weight:600;">${uom}</td>
                         <td style="border:1px solid #111827; padding:5px 3px; text-align:center; color:#111827; font-weight:600;">${qty.toFixed(1)}</td>
-                        <td style="border:1px solid #111827; padding:5px 3px; text-align:center; color:#111827; font-weight:600;">${wdPct}%</td>
-                        <td style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td style="border:1px solid #111827; padding:5px 6px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-doc-nowrap" style="border:1px solid #111827; padding:5px 3px; text-align:center; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important;">${wdPct}%</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${curr.trim()} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     `;
     }).join('')}
@@ -20444,7 +20444,7 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Receipt Voucher Title & Metadata) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
-              <div style="max-width:60%;">
+              <div style="max-width:50%; flex-shrink:1;">
                 <div style="margin-bottom:0.75rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
@@ -20457,30 +20457,30 @@ class FinanceApp {
                 ${this.getRayanDynamicVerificationCode(rec, 'receipt')}
               </div>
 
-              <div style="text-align:right;">
+              <div style="text-align:right; flex-shrink:0;">
                 <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                   RECEIPT VOUCHER
                 </div>
-                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px; white-space:nowrap;">
                   # ${rec.receipt_no || 'REC-RV-1001'}
                 </div>
 
-                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Against Invoice :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Advance on Account')}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Against Invoice :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${rec.ref_invoice_no || (rec.allocations && rec.allocations[0] ? rec.allocations[0].invoice_no : 'Advance on Account')}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Receipt Date :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Receipt Date :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${formattedDate}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Payment Mode :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Payment Mode :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Ref / Instrument # :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${rec.reference_no || rec.cheque_no || 'Direct Settlement'}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Ref / Instrument # :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${rec.reference_no || rec.cheque_no || 'Direct Settlement'}</td>
                   </tr>
                 </table>
               </div>
@@ -24219,7 +24219,7 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Credit Note Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
-              <div style="max-width:60%;">
+              <div style="max-width:50%; flex-shrink:1;">
                 <div style="margin-bottom:0.75rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
@@ -24232,29 +24232,29 @@ class FinanceApp {
                 ${this.getRayanDynamicVerificationCode(cn, 'credit_note')}
               </div>
 
-              <div style="text-align:right;">
+              <div style="text-align:right; flex-shrink:0;">
                 <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                   TAX CREDIT NOTE
                 </div>
                 <div style="font-size:0.95rem; font-family:'Amiri', serif; font-weight:700; color:#374151; margin-top:3px; margin-bottom:2px;">
                   إشعار دائن ضريبي
                 </div>
-                <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:12px;">
+                <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:12px; white-space:nowrap;">
                   # ${cn.credit_note_no || 'CN-REC-2026-350'}
                 </div>
 
-                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Credit Note Date :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Credit Note Date :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${formattedDate}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Original Tax Invoice :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#0284c7;">${linkedInvNo}${linkedInvDate ? ` (${linkedInvDate})` : ''}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Original Tax Invoice :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#0284c7; white-space:nowrap !important; word-break:keep-all !important;">${linkedInvNo}${linkedInvDate ? ` (${linkedInvDate})` : ''}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Ledger Adjustment :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a;">CREDITED TO RECEIVABLES ✓</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Ledger Adjustment :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a; white-space:nowrap !important; word-break:keep-all !important;">CREDITED TO RECEIVABLES ✓</td>
                   </tr>
                 </table>
               </div>
@@ -24528,7 +24528,7 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: Debit Note Title & Meta) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
-              <div style="max-width:60%;">
+              <div style="max-width:50%; flex-shrink:1;">
                 <div style="margin-bottom:0.75rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
@@ -24541,26 +24541,26 @@ class FinanceApp {
                 ${this.getRayanDynamicVerificationCode(dn, 'debit_note')}
               </div>
 
-              <div style="text-align:right;">
+              <div style="text-align:right; flex-shrink:0;">
                 <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                   DEBIT NOTE
                 </div>
-                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px; white-space:nowrap;">
                   # ${dn.debit_note_no || 'DN-RG-2026-001'}
                 </div>
 
-                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Date :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Date :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${formattedDate}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Linked Bill Ref :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${dn.bill_no || 'Direct Supplier Debit'}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Linked Bill Ref :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${dn.bill_no || 'Direct Supplier Debit'}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Adjustment Status :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a;">APPLIED TO LEDGER ✓</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Adjustment Status :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#16a34a; white-space:nowrap !important; word-break:keep-all !important;">APPLIED TO LEDGER ✓</td>
                   </tr>
                 </table>
               </div>

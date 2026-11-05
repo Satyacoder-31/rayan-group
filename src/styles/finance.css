@@ -2821,6 +2821,16 @@ body.fin-doc-open .fin-app-wrapper {
   box-sizing: border-box;
 }
 
+.fin-doc-nowrap,
+.fin-document-paper td.fin-doc-nowrap,
+.fin-document-paper th.fin-doc-nowrap,
+.fin-document-paper td.fin-cell-num,
+.fin-document-paper th.fin-cell-num {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+}
+
 @media screen and (max-width: 680px) {
   .fin-doc-table-wrapper table {
     min-width: 600px !important;
@@ -3938,6 +3948,18 @@ body.fin-doc-open .fin-app-wrapper {
   .fin-document-paper td {
     word-break: break-word !important;
     box-sizing: border-box !important;
+  }
+
+  .fin-doc-nowrap,
+  .fin-document-paper td.fin-doc-nowrap,
+  .fin-document-paper th.fin-doc-nowrap,
+  .fin-document-paper td.fin-cell-num,
+  .fin-document-paper th.fin-cell-num,
+  .fin-document-paper td[style*="white-space:nowrap"],
+  .fin-document-paper td[style*="white-space: nowrap"] {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
   }
 
   .doc-sign-card {
