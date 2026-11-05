@@ -1175,7 +1175,7 @@ class FinanceApp {
         status: payload.project.status || 'In Progress',
         ...payload.project
       };
-      const idx = this.db.projects.findIndex(p => p.id === newPrj.id || (p.code && p.code.toLowerCase() === newPrj.code.toLowerCase()));
+      const idx = this.db.projects.findIndex(p => p.id === newPrj.id);
       if (idx >= 0) {
         this.db.projects[idx] = { ...this.db.projects[idx], ...newPrj };
       } else {
@@ -7919,7 +7919,7 @@ class FinanceApp {
 
   renderProjectsTab(root) {
     this._prjFilter = this._prjFilter || { search: '', status: 'all', sort: 'date-desc' };
-    const allProjects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const allProjects = (this.db?.projects || []).filter(p => this.matchesActiveCompany(p.company_id));
 
     const q = (this._prjFilter.search || '').trim().toLowerCase();
     const stFilter = (this._prjFilter.status || 'all').toLowerCase();
@@ -17968,7 +17968,7 @@ class FinanceApp {
         project: {
           id: prj.id,
           code: document.getElementById('edit-prj-code').value.trim() || prj.code,
-          company_id: prj.company_id || this.activeCompanyId || 'rayan-corp-uae',
+          company_id: prj.company_id || 'rayan-corp-uae',
           name: document.getElementById('edit-prj-name').value.trim(),
           client: clientName,
           client_name: clientName,
@@ -17998,6 +17998,7 @@ class FinanceApp {
           this.saveCustomerProjectLink(clientName, payload.project.id, payload.project.name);
           this.saveProjectRecommendation(payload.project.name);
         }
+        if (this._prjFilter) this._prjFilter.status = 'all';
         this.closeModal('modal-edit-project');
         this.showNotification(`Project "${payload.project.name}" (${payload.project.code}) updated successfully.`, 'success');
         if (this.activeTab === 'projects') {
