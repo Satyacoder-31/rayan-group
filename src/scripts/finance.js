@@ -20682,6 +20682,7 @@ class FinanceApp {
     const formattedDate = po.date ? this.formatDate(po.date) : '23 Jun 2026';
     const amountInWords = this.formatAmountInWords(po.amount_in_words || totalVal, curr);
     if (po.amount_in_words) po.amount_in_words = amountInWords;
+    const paymentTermsClause = po.payment_terms_detail || (po.payment_terms ? `${po.payment_terms} as per commercial procurement agreement.` : '50% advance upon order confirmation; remaining 50% upon client inspection and certification.');
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -20704,6 +20705,9 @@ class FinanceApp {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700;" onclick="window.finApp.openEditPOModal('${po.id || po.po_no}')">
+              ✏️ Edit Purchase Order
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
@@ -20725,7 +20729,7 @@ class FinanceApp {
 
             <!-- Header Section (Left: Logo & Company, Right: PO Title & Metadata) -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
-              <div style="max-width:60%;">
+              <div style="max-width:50%; flex-shrink:1;">
                 <div style="margin-bottom:0.75rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
                 </div>
@@ -20738,30 +20742,33 @@ class FinanceApp {
                 ${this.getRayanDynamicVerificationCode(po, 'po')}
               </div>
 
-              <div style="text-align:right;">
+              <div style="text-align:right; flex-shrink:0;">
                 <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                   PURCHASE ORDER
                 </div>
-                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
+                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px; white-space:nowrap;">
                   # ${po.po_no || 'LPO/BD/2026/12'}
                 </div>
 
-                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">PO Date :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">PO Date :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${formattedDate}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Payment Terms :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${po.payment_terms || 'PDC30'}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Payment Terms :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">
+                      <span>${po.payment_terms || 'PDC30'}</span>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOPaymentTerms('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Payment Terms">✏️</button>
+                    </td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Internal Ref (iRef) :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${po.iref || '2026-KGN-SUB'}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Internal Ref (iRef) :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${po.iref || '2026-KGN-SUB'}</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 8px; color:#6b7280;">Responsible Person :</td>
-                    <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${po.responsible_person || 'Mohammad Suhel'}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Responsible Person :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${po.responsible_person || 'Mohammad Suhel'}</td>
                   </tr>
                 </table>
               </div>
@@ -20800,21 +20807,21 @@ class FinanceApp {
             <div class="fin-doc-table-wrapper" style="margin-top:1rem; margin-bottom:1rem;">
               <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
                 <colgroup>
-                  <col style="width:5%;">   <!-- Sr. No -->
-                  <col style="width:43%;">  <!-- Description & Scope -->
-                  <col style="width:6%;">   <!-- Unit -->
-                  <col style="width:6%;">   <!-- Qty -->
-                  <col style="width:12%;">  <!-- Unit Price -->
-                  <col style="width:11%;">  <!-- VAT 5% -->
-                  <col style="width:17%;">  <!-- Total Amount -->
+                  <col style="width:4.5%;">  <!-- Sr. No -->
+                  <col style="width:41.5%;"> <!-- Description & Scope -->
+                  <col style="width:6%;">    <!-- Unit -->
+                  <col style="width:6%;">    <!-- Qty -->
+                  <col style="width:11%;">   <!-- Unit Price -->
+                  <col style="width:10%;">   <!-- VAT 5% -->
+                  <col style="width:21%;">   <!-- Total Amount -->
                 </colgroup>
                 <thead>
                   <tr style="background:#ffffff; color:#111827; border-bottom:1.5px solid #111827;">
-                    <th style="border:1px solid #111827; padding:5px 4px; width:5%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:4.5%; text-align:center; vertical-align:middle;">
                       <div>Sr. No.</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 8px; width:43%; vertical-align:middle; text-align:left;">
+                    <th style="border:1px solid #111827; padding:5px 8px; width:41.5%; vertical-align:middle; text-align:left;">
                       <div>Description &amp; Scope</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
                     </th>
@@ -20826,15 +20833,15 @@ class FinanceApp {
                       <div>Qty</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:12%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 6px; width:11%; text-align:right; vertical-align:middle;">
                       <div>Unit Price</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">السعر</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:11%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 6px; width:10%; text-align:right; vertical-align:middle;">
                       <div>VAT 5%</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:17%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 8px; width:21%; text-align:right; vertical-align:middle;">
                       <div>Total Amount</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
                     </th>
@@ -20867,9 +20874,9 @@ class FinanceApp {
                       </td>
                       <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600;">${item.unit || item.uom || 'Sqm'}</td>
                       <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600;">${itemQty}</td>
-                      <td style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${itemUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;">${itemVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${curr.trim()} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   `;
       }).join('')}
@@ -20881,7 +20888,7 @@ class FinanceApp {
                         Total In Words : ${amountInWords}
                       </div>
                       <div style="font-size:0.75rem; color:#4b5563; margin-top:4px;">
-                        <strong>Site Location:</strong> Al Foah Mall - Alain • Working Hours: 8:00 AM – 6:00 PM
+                        <strong>Site Location:</strong> ${po.site_location || 'Al Foah Mall - Alain'} • Working Hours: 8:00 AM – 6:00 PM
                       </div>
                     </td>
                     <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">Sub-Total EX-VAT</td>
@@ -20893,7 +20900,7 @@ class FinanceApp {
                   </tr>
                   <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
                     <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Total Incl. VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -20902,7 +20909,7 @@ class FinanceApp {
             <!-- Notes Section Below Items -->
             <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
               <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
-              <div style="color:#4b5563;">Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.</div>
+              <div style="color:#4b5563;">${po.notes || 'Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.'}</div>
             </div>
 
             <!-- Contact & Company Details Below Notes -->
@@ -20936,51 +20943,51 @@ class FinanceApp {
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section Page 2 -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem; border-bottom:1.5px solid #111827; padding-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1.25rem; border-bottom:1.5px solid #111827; padding-bottom:8px;">
               <div style="display:flex; align-items:center; gap:10px;">
-                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:38px; width:auto; display:block;">
+                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:36px; width:auto; display:block;">
                 <div>
                   <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
-                  <div style="font-size:0.75rem; color:#4b5563;">General Terms &amp; Conditions of Procurement Specification</div>
+                  <div style="font-size:0.72rem; color:#4b5563;">General Terms &amp; Conditions of Procurement Specification</div>
                 </div>
               </div>
               <div style="text-align:right;">
-                <div style="font-family:'Outfit', sans-serif; font-size:1.1rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
-                <div style="font-size:0.82rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'LPO/BD/2026/12'}</div>
+                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
+                <div style="font-size:0.80rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'LPO/BD/2026/12'}</div>
               </div>
             </div>
 
-            <!-- Structured Modern Terms Grid (Articles 1 to 20) -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; font-size:0.75rem; color:#374151; line-height:1.55;">
+            <!-- Structured Modern Terms Grid (Articles 1 to 20 - Compact Legal Specification) -->
+            <div class="fin-po-terms-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1.15rem; font-size:0.62rem; color:#374151; line-height:1.38;">
               <div>
-                <p style="margin:0 0 8px 0;"><strong>1. The Order:</strong> Entered into with ${compName} for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing.</p>
-                <p style="margin:0 0 8px 0;"><strong>2. Prices:</strong> Final and not subject to escalation under any circumstances.</p>
-                <p style="margin:0 0 8px 0;"><strong>3. Identification of Material:</strong> All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities &amp; descriptions.</p>
-                <p style="margin:0 0 8px 0;"><strong>4. Packing &amp; Protection:</strong> Materials must be protected individually against damage, transit shock, and environmental degradation.</p>
-                <p style="margin:0 0 8px 0;"><strong>5. Delivery of Goods/Services:</strong> As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization.</p>
-                <p style="margin:0 0 8px 0;"><strong>6. Performance Guarantee:</strong> Supplier shall submit a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise.</p>
-                <p style="margin:0 0 8px 0;"><strong>7. Receipt &amp; Acceptance:</strong> Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense.</p>
-                <p style="margin:0 0 8px 0;"><strong>8. Rejection of Goods/Services:</strong> RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties.</p>
-                <p style="margin:0 0 8px 0;"><strong>9. Cancellation of Order:</strong> Right reserved to cancel for non-delivery by stipulated date without liability.</p>
-                <p style="margin:0 0 8px 0;"><strong>10. Invoicing Regulations:</strong> Tax invoices must be submitted within 14 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details.</p>
+                <p style="margin:0 0 5px 0;"><strong>1. The Order:</strong> Entered into with ${compName} for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing.</p>
+                <p style="margin:0 0 5px 0;"><strong>2. Prices:</strong> Final and not subject to escalation under any circumstances.</p>
+                <p style="margin:0 0 5px 0;"><strong>3. Identification of Material:</strong> All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities &amp; descriptions.</p>
+                <p style="margin:0 0 5px 0;"><strong>4. Packing &amp; Protection:</strong> Materials must be protected individually against damage, transit shock, and environmental degradation.</p>
+                <p style="margin:0 0 5px 0;"><strong>5. Delivery of Goods/Services:</strong> As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization.</p>
+                <p style="margin:0 0 5px 0;"><strong>6. Performance Guarantee:</strong> Supplier shall submit a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise.</p>
+                <p style="margin:0 0 5px 0;"><strong>7. Receipt &amp; Acceptance:</strong> Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense.</p>
+                <p style="margin:0 0 5px 0;"><strong>8. Rejection of Goods/Services:</strong> RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties.</p>
+                <p style="margin:0 0 5px 0;"><strong>9. Cancellation of Order:</strong> Right reserved to cancel for non-delivery by stipulated date without liability.</p>
+                <p style="margin:0 0 5px 0;"><strong>10. Invoicing Regulations:</strong> Tax invoices must be submitted within 14 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details.</p>
               </div>
 
               <div>
-                <p style="margin:0 0 8px 0;"><strong>11. Delay Penalties:</strong> 1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%.</p>
-                <p style="margin:0 0 8px 0;"><strong>12. Risk Purchase:</strong> Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier.</p>
-                <p style="margin:0 0 8px 0;"><strong>13. Warranty:</strong> Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges.</p>
-                <p style="margin:0 0 8px 0;"><strong>14. Termination:</strong> Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items.</p>
-                <p style="margin:0 0 8px 0;"><strong>15. Force Majeure:</strong> Relieves obligations during duration of qualifying events with prompt written notification.</p>
-                <p style="margin:0 0 8px 0;"><strong>16. Taxes &amp; Banking:</strong> All taxes, duties, and banking charges borne by Seller unless expressly exempted.</p>
-                <p style="margin:0 0 8px 0;"><strong>17. Indemnity:</strong> Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches.</p>
-                <p style="margin:0 0 8px 0;"><strong>18. Governing Law:</strong> Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts.</p>
-                <p style="margin:0 0 8px 0;"><strong>19. Payment Term:</strong> 50% advance upon order confirmation; remaining 50% upon client inspection and certification.</p>
-                <p style="margin:0 0 8px 0;"><strong>20. Invoice Requirements:</strong> Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO.</p>
+                <p style="margin:0 0 5px 0;"><strong>11. Delay Penalties:</strong> 1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%.</p>
+                <p style="margin:0 0 5px 0;"><strong>12. Risk Purchase:</strong> Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier.</p>
+                <p style="margin:0 0 5px 0;"><strong>13. Warranty:</strong> Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges.</p>
+                <p style="margin:0 0 5px 0;"><strong>14. Termination:</strong> Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items.</p>
+                <p style="margin:0 0 5px 0;"><strong>15. Force Majeure:</strong> Relieves obligations during duration of qualifying events with prompt written notification.</p>
+                <p style="margin:0 0 5px 0;"><strong>16. Taxes &amp; Banking:</strong> All taxes, duties, and banking charges borne by Seller unless expressly exempted.</p>
+                <p style="margin:0 0 5px 0;"><strong>17. Indemnity:</strong> Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches.</p>
+                <p style="margin:0 0 5px 0;"><strong>18. Governing Law:</strong> Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts.</p>
+                <p style="margin:0 0 5px 0;"><strong>19. Payment Term:</strong> <span id="po-term-19-val">${paymentTermsClause}</span> <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOPaymentTerms('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 3px; vertical-align:middle;" title="Edit Payment Term">✏️</button></p>
+                <p style="margin:0 0 5px 0;"><strong>20. Invoice Requirements:</strong> Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO.</p>
               </div>
             </div>
 
             <!-- Contact & Company Details Below Terms (Page 2) -->
-            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
+            <div style="margin-top:1.25rem; font-size:0.78rem; color:#4b5563; line-height:1.45;">
               <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
               <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
               <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
@@ -20990,7 +20997,7 @@ class FinanceApp {
             </div>
 
             <!-- Fixed System Generated Footer (Page 2) -->
-            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+            <div style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
               <div style="flex:1; text-align:center; letter-spacing:0.01em;">
                 This is a system-generated purchase order and does not require a signature or stamp.
               </div>
@@ -23346,14 +23353,17 @@ class FinanceApp {
       }
     ];
 
+    const currentShortTerms = po.payment_terms || 'PDC30';
+    const currentDetailTerms = po.payment_terms_detail || (po.payment_terms ? `${po.payment_terms} as agreed in commercial specifications.` : '50% advance upon order confirmation; remaining 50% upon client inspection and certification.');
+
     const modalHtml = `
-      <div class="fin-modal-backdrop open" id="modal-edit-po">
-        <div class="fin-modal-dialog" style="max-width:680px;">
+      <div class="fin-modal-backdrop open" id="modal-edit-po" style="z-index:100010;">
+        <div class="fin-modal-dialog" style="max-width:720px;">
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">✏️ Edit Purchase Order (${po.po_no})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-po')">&times;</button>
           </div>
-          <div class="fin-modal-body">
+          <div class="fin-modal-body" style="max-height:80vh; overflow-y:auto;">
             <form id="edit-po-form">
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
@@ -23373,7 +23383,45 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Expected Delivery Date</label>
-                  <input type="date" id="edit-po-delivery" class="fin-form-input" value="${po.expected_delivery || ''}" required>
+                  <input type="date" id="edit-po-delivery" class="fin-form-input" value="${po.expected_delivery || ''}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Terms (Header Tag) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-po-payment-terms" class="fin-form-input" list="edit-po-terms-presets" value="${currentShortTerms.replace(/"/g, '&quot;')}" required placeholder="e.g. PDC30, 30 Days Net, 50% Advance">
+                  <datalist id="edit-po-terms-presets">
+                    <option value="PDC30">
+                    <option value="30 Days Net">
+                    <option value="60 Days Net">
+                    <option value="50% Advance / 50% Completion">
+                    <option value="100% Advance">
+                    <option value="Cash on Delivery (COD)">
+                    <option value="Letter of Credit (LC)">
+                  </datalist>
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed on Page 1 Header Metadata</div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Internal Ref (iRef)</label>
+                  <input type="text" id="edit-po-iref" class="fin-form-input" value="${po.iref || '2026-KGN-SUB'}">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Article 19: Payment Terms Specification (Page 2 Contract Clause)</label>
+                <textarea id="edit-po-payment-detail" class="fin-form-input" rows="3" style="line-height:1.4; font-size:0.80rem;" placeholder="Enter specific commercial payment term clause for specification terms...">${currentDetailTerms}</textarea>
+                <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed under Article 19 on Specification Sheet</div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Responsible Person / Contact</label>
+                  <input type="text" id="edit-po-person" class="fin-form-input" value="${po.responsible_person || 'Mohammad Suhel'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Site / Delivery Location</label>
+                  <input type="text" id="edit-po-site" class="fin-form-input" value="${po.site_location || po.ship_to_address || 'Al Foah Mall - Alain'}">
                 </div>
               </div>
 
@@ -23395,6 +23443,11 @@ class FinanceApp {
                   <label class="fin-form-label">Total Value (${currLabel})</label>
                   <input type="text" id="edit-po-total" class="fin-form-input" readonly value="${currSym}${Number(po.total_value || po.grand_total || 0).toFixed(2)}" style="font-weight:700; color:#38bdf8;">
                 </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Notes &amp; Special Conditions</label>
+                <textarea id="edit-po-notes" class="fin-form-input" rows="2" style="line-height:1.4; font-size:0.80rem;">${po.notes || 'Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.'}</textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -23439,6 +23492,13 @@ class FinanceApp {
       po.project_name = document.getElementById('edit-po-prj').value.trim();
       po.date = document.getElementById('edit-po-date').value;
       po.expected_delivery = document.getElementById('edit-po-delivery').value;
+      po.payment_terms = document.getElementById('edit-po-payment-terms').value.trim();
+      po.payment_terms_detail = document.getElementById('edit-po-payment-detail').value.trim();
+      po.iref = document.getElementById('edit-po-iref').value.trim();
+      po.responsible_person = document.getElementById('edit-po-person').value.trim();
+      po.site_location = document.getElementById('edit-po-site').value.trim();
+      po.ship_to_address = po.site_location;
+      po.notes = document.getElementById('edit-po-notes').value.trim();
       po.subtotal = subtotal;
       po.subtotal_ex_vat = subtotal;
       po.tax_total = tax;
@@ -23461,8 +23521,84 @@ class FinanceApp {
       ];
 
       await this.syncApi('update_po', { po });
-      alert(`Purchase Order ${po.po_no} updated successfully.`);
       this.closeModal('modal-edit-po');
+      this.showNotification(`Purchase Order ${po.po_no} updated successfully.`, 'success');
+      if (document.getElementById('fin-doc-print-modal')) {
+        this.openPOPrintModal(po.id || po.po_no);
+      }
+      this.renderActiveTab();
+    };
+  }
+
+  // 6B. QUICK EDIT PO PAYMENT TERMS (DIRECT FROM PO PREVIEW)
+  quickEditPOPaymentTerms(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) {
+      alert('Purchase Order not found.');
+      return;
+    }
+
+    const currentShort = po.payment_terms || 'PDC30';
+    const currentDetail = po.payment_terms_detail || (po.payment_terms ? `${po.payment_terms} as agreed in commercial specifications.` : '50% advance upon order confirmation; remaining 50% upon client inspection and certification.');
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-quick-po-terms" style="z-index:100020;">
+        <div class="fin-modal-dialog" style="max-width:540px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">💳 Edit PO Payment Terms (# ${po.po_no})</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-quick-po-terms')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="quick-po-terms-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Payment Terms Header (Page 1 Summary) <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="quick-po-short-terms" class="fin-form-input" list="quick-po-terms-presets" value="${currentShort.replace(/"/g, '&quot;')}" required placeholder="e.g. PDC30, 30 Days Net, 50% Advance">
+                <datalist id="quick-po-terms-presets">
+                  <option value="PDC30">
+                  <option value="30 Days Net">
+                  <option value="60 Days Net">
+                  <option value="50% Advance / 50% Completion">
+                  <option value="100% Advance">
+                  <option value="Cash on Delivery (COD)">
+                  <option value="Letter of Credit (LC)">
+                </datalist>
+                <div style="font-size:0.72rem; color:#64748b; margin-top:3px;">Printed on Page 1 metadata table</div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Article 19: Payment Term Clause (Page 2 Contract Specification)</label>
+                <textarea id="quick-po-detail-terms" class="fin-form-input" rows="4" style="line-height:1.45; font-size:0.82rem;" placeholder="Enter legal payment clause for terms & conditions...">${currentDetail}</textarea>
+                <div style="font-size:0.72rem; color:#64748b; margin-top:3px;">Full commercial clause printed under Article 19 on Specification Sheet</div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-quick-po-terms')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Save Payment Terms &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    let existingQuick = document.getElementById('modal-quick-po-terms');
+    if (existingQuick) existingQuick.remove();
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = modalHtml;
+    document.body.appendChild(wrapper.firstElementChild);
+
+    document.getElementById('quick-po-terms-form').onsubmit = async (e) => {
+      e.preventDefault();
+      po.payment_terms = document.getElementById('quick-po-short-terms').value.trim();
+      po.payment_terms_detail = document.getElementById('quick-po-detail-terms').value.trim();
+
+      await this.syncApi('update_po', { po });
+      this.closeModal('modal-quick-po-terms');
+      const el = document.getElementById('modal-quick-po-terms');
+      if (el) el.remove();
+
+      this.showNotification(`Payment Terms for PO ${po.po_no} updated successfully.`, 'success');
+      this.openPOPrintModal(po.id || po.po_no);
       this.renderActiveTab();
     };
   }

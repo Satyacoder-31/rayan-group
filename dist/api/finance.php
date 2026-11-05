@@ -4110,15 +4110,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'update_po':
             $po = $body['po'] ?? [];
-            if (!empty($po) && isset($db['purchase_orders'])) {
+            if (!empty($po)) {
+                if (!isset($db['purchase_orders'])) $db['purchase_orders'] = [];
                 $targetId = $po['id'] ?? $po['po_no'] ?? '';
+                $found = false;
                 foreach ($db['purchase_orders'] as &$existingPO) {
                     if (($existingPO['id'] ?? '') === $targetId || ($existingPO['po_no'] ?? '') === $targetId) {
                         $existingPO = array_merge($existingPO, $po);
+                        $found = true;
                         break;
                     }
                 }
                 unset($existingPO);
+                if (!$found) {
+                    $db['purchase_orders'][] = $po;
+                }
                 $addAuditLog('update', 'po', $po['po_no'] ?? '', 'Updated purchase order ' . ($po['po_no'] ?? ''));
             }
             break;

@@ -2831,6 +2831,22 @@ body.fin-doc-open .fin-app-wrapper {
   overflow-wrap: normal !important;
 }
 
+/* Purchase Order Terms & Conditions Grid (Compact Specification Format) */
+.fin-po-terms-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.15rem;
+  font-size: 0.62rem !important;
+  color: #374151;
+  line-height: 1.38 !important;
+}
+
+.fin-po-terms-grid p {
+  margin: 0 0 5px 0 !important;
+  font-size: 0.62rem !important;
+  line-height: 1.38 !important;
+}
+
 @media screen and (max-width: 680px) {
   .fin-doc-table-wrapper table {
     min-width: 600px !important;
@@ -4090,6 +4106,23 @@ body.fin-doc-open .fin-app-wrapper {
     page-break-before: always;
     break-before: page;
     margin-top: 0 !important;
+  }
+
+  .fin-po-terms-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.9rem !important;
+    font-size: 0.58rem !important;
+    color: #374151 !important;
+    line-height: 1.32 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .fin-po-terms-grid p {
+    margin: 0 0 3.5px 0 !important;
+    font-size: 0.58rem !important;
+    line-height: 1.32 !important;
   }
 
   .rayan-computer-generated-notice {
