@@ -202,7 +202,7 @@
   "customers": [
     {
       "id": "cust-pggc",
-      "code": "CUST-PGGC",
+      "code": "CUST-REC-1013",
       "company_id": "rayan-corp-uae",
       "name": "M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
       "contact_person": "Mr. Arshad Alam Shaikh",
@@ -220,7 +220,7 @@
     },
     {
       "id": "cust-hiprofile",
-      "code": "CUST-HIPROFILE",
+      "code": "CUST-REC-1007",
       "company_id": "rayan-corp-uae",
       "name": "M/S HI PROFILE GENERAL MAINTENANCE LLC",
       "contact_person": "Operations Manager",
@@ -238,7 +238,7 @@
     },
     {
       "id": "cust-morganti",
-      "code": "CUST-MORGANTI",
+      "code": "CUST-REC-1001",
       "company_id": "rayan-corp-uae",
       "name": "M/S MORGANTI GCC l UAE",
       "contact_person": "Mr. Sanjeeb Das",
@@ -256,7 +256,7 @@
     },
     {
       "id": "cust-hayat",
-      "code": "CUST-HAYAT",
+      "code": "CUST-REC-1014",
       "company_id": "rayan-corp-uae",
       "name": "M/S HAYAT COMMUNICATIONS LLC",
       "contact_person": "Procurement Dept",
@@ -274,7 +274,7 @@
     },
     {
       "id": "cust-focustech",
-      "code": "CUST-FOCUSTECH",
+      "code": "CUST-REC-1015",
       "company_id": "rayan-corp-uae",
       "name": "M/S FOCUS TECH LLC",
       "contact_person": "Commercial Manager",
@@ -292,7 +292,7 @@
     },
     {
       "id": "cust-alisons",
-      "code": "CUST-ALISONS",
+      "code": "CUST-REC-1016",
       "company_id": "rayan-corp-uae",
       "name": "M/S ALI & SONS CO. LLC",
       "contact_person": "Projects Division",
@@ -310,7 +310,7 @@
     },
     {
       "id": "cust-almuluki",
-      "code": "CUST-ALMULUKI",
+      "code": "CUST-REC-1017",
       "company_id": "rayan-corp-uae",
       "name": "M/S AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
       "contact_person": "Mr. Tariq",
@@ -328,7 +328,7 @@
     },
     {
       "id": "cust-hln",
-      "code": "CUST-HLN",
+      "code": "CUST-REC-1003",
       "company_id": "rayan-corp-uae",
       "name": "M/S HLN TECHNICAL SERVICES LLC",
       "contact_person": "Mr. Linto Antony",
@@ -347,7 +347,7 @@
     },
     {
       "id": "cust-toprock",
-      "code": "CUST-TOPROCK",
+      "code": "CUST-REC-1011",
       "company_id": "rayan-corp-uae",
       "name": "M/S TOP ROCK INTERIORS LLC.",
       "contact_person": "Mr. Shahil",
@@ -371,7 +371,7 @@
     },
     {
       "id": "cust-alex",
-      "code": "CUST-ALEX",
+      "code": "CUST-REC-1009",
       "company_id": "rayan-corp-uae",
       "name": "MR. ALEX (PRIVATE RESIDENCE / VILLA)",
       "contact_person": "Mr. Alex",
@@ -389,7 +389,7 @@
     },
     {
       "id": "cust-mapout",
-      "code": "CUST-MAPOUT",
+      "code": "CUST-REC-1012",
       "company_id": "rayan-corp-uae",
       "name": "M/S MAP OUT DECOR TECHNICAL SERVICES LLC",
       "contact_person": "Mr. Sujith Surendran",
@@ -407,7 +407,7 @@
     },
     {
       "id": "cust-remaya",
-      "code": "CUST-REMAYA",
+      "code": "CUST-REC-1018",
       "company_id": "rayan-corp-uae",
       "name": "M/S REMAYA INTERNATIONAL COMPANY L.L.C",
       "contact_person": "Mr. Naushad Alam",
@@ -425,7 +425,7 @@
     },
     {
       "id": "cust-ayat",
-      "code": "CUST-AYAT",
+      "code": "CUST-REC-1006",
       "company_id": "rayan-corp-uae",
       "name": "M/S AYAT TECHNICAL SERVICES EST.",
       "contact_person": "Mr. Syed Omer Quadri",
@@ -443,7 +443,7 @@
     },
     {
       "id": "cust-whitecrescent",
-      "code": "CUST-WHITECRESCENT",
+      "code": "CUST-REC-1019",
       "company_id": "rayan-corp-uae",
       "name": "M/S WHITE CRESCENT GROUP L.L.C",
       "contact_person": "Procurement Officer",
@@ -461,7 +461,7 @@
     },
     {
       "id": "cust-zorawar",
-      "code": "CUST-ZORAWAR",
+      "code": "CUST-REC-1020",
       "company_id": "rayan-corp-uae",
       "name": "M/S ZORAWAR INTERIOR DECORATION LLC",
       "contact_person": "Mr. Zorawar Singh",
@@ -479,7 +479,7 @@
     },
     {
       "id": "cust-brook",
-      "code": "CUST-BROOK",
+      "code": "CUST-REC-1021",
       "company_id": "rayan-corp-uae",
       "name": "M/S BROOK AND RIPPLES SWIMMING POOLS LLC",
       "contact_person": "Operations Head",
@@ -497,7 +497,7 @@
     },
     {
       "id": "cust-ironbeam",
-      "code": "CUST-IRONBEAM",
+      "code": "CUST-REC-1004",
       "company_id": "rayan-corp-uae",
       "name": "M/S IRON BEAM GENERAL CONTRACTING LLC",
       "contact_person": "Engr. Tariq Mahmoud",
@@ -515,7 +515,7 @@
     },
     {
       "id": "cust-solidmarble",
-      "code": "CUST-SOLIDMARBLE",
+      "code": "CUST-REC-1022",
       "company_id": "rayan-corp-uae",
       "name": "M/S SOLID MARBLE INDUSTRIES LLC",
       "contact_person": "Sales Manager",
@@ -533,7 +533,7 @@
     },
     {
       "id": "cust-specon",
-      "code": "CUST-SPECON",
+      "code": "CUST-REC-1023",
       "company_id": "rayan-corp-uae",
       "name": "M/S SPECON DESIGN INTERIOR & EVENTS LLC",
       "contact_person": "Creative Director",
@@ -551,7 +551,7 @@
     },
     {
       "id": "cust-magma",
-      "code": "CUST-MAGMA",
+      "code": "CUST-REC-1010",
       "company_id": "rayan-corp-uae",
       "name": "M/S MAGMA WASTE TREATMENT SERVICES SOLE PROPRIETORSHIP LLC",
       "contact_person": "Mr. Faisal",
@@ -569,7 +569,7 @@
     },
     {
       "id": "cust-luminar",
-      "code": "CUST-LUMINAR",
+      "code": "CUST-REC-1008",
       "company_id": "rayan-corp-uae",
       "name": "M/S LUMINAR ENGINEERING AND DECOR LLC OPC",
       "contact_person": "Managing Director",
@@ -587,7 +587,7 @@
     },
     {
       "id": "cust-buildara",
-      "code": "CUST-BUILDARA",
+      "code": "CUST-REC-1002",
       "company_id": "rayan-corp-uae",
       "name": "M/S BUILDARA GENERAL CONTRACTING LLC",
       "contact_person": "Mr. Sooraj Kumar",
@@ -606,7 +606,7 @@
     },
     {
       "id": "cust-sadeco",
-      "code": "CUST-SADECO",
+      "code": "CUST-REC-1005",
       "company_id": "rayan-corp-uae",
       "name": "M/S SADECO DECOR LLC",
       "contact_person": "Operations Manager",

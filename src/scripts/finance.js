@@ -863,6 +863,42 @@ class FinanceApp {
       });
     }
 
+    // 0b3. Normalize customer receipt voucher numbers to REC-RV-44xxx sequence starting strictly at REC-RV-44001 (REC-ASH-44xxx for India)
+    if (Array.isArray(this.db.customer_receipts) && this.db.customer_receipts.length > 0) {
+      const sortedReceipts = [...this.db.customer_receipts].sort((a, b) => {
+        const dA = a.receipt_date || a.date || '';
+        const dB = b.receipt_date || b.date || '';
+        if (dA !== dB) return dA.localeCompare(dB);
+        return String(a.id || '').localeCompare(String(b.id || ''));
+      });
+
+      let nextRecSeq = 44001;
+      let nextAshSeq = 44001;
+      sortedReceipts.forEach(rcp => {
+        const isInd = (rcp.company_id === 'ashaz-eng-in') || (rcp.currency === 'INR');
+        const prefix = isInd ? 'REC-ASH' : 'REC-RV';
+        const targetNo = isInd ? `${prefix}-${nextAshSeq++}` : `${prefix}-${nextRecSeq++}`;
+        const oldNo = rcp.receipt_no;
+        if (rcp.receipt_no !== targetNo) {
+          rcp.receipt_no = targetNo;
+          if (Array.isArray(this.db.cash_vouchers)) {
+            this.db.cash_vouchers.forEach(cv => {
+              if (cv.receipt_id === rcp.id || (oldNo && cv.voucher_no === `CV-${oldNo}`)) {
+                cv.voucher_no = `CV-${targetNo}`;
+              }
+            });
+          }
+          if (Array.isArray(this.db.bank_transfers)) {
+            this.db.bank_transfers.forEach(bt => {
+              if (bt.receipt_id === rcp.id || (oldNo && bt.reference_no === `WIRE-${oldNo}`)) {
+                bt.reference_no = `WIRE-${targetNo}`;
+              }
+            });
+          }
+        }
+      });
+    }
+
     (this.db.projects || []).forEach(prj => {
       if (CUST_ALIAS_MAP[prj.customer_id]) {
         prj.customer_id = CUST_ALIAS_MAP[prj.customer_id];
@@ -904,6 +940,43 @@ class FinanceApp {
         dedupCusts.push(c);
       }
       this.db.customers = dedupCusts;
+    }
+
+    // 0c2. Ensure customer codes follow sequential CUST-REC-1001 through CUST-REC-1023
+    const DEFAULT_CUSTOMER_SERIAL_MAP = {
+      'cust-morganti': 'CUST-REC-1001',
+      'cust-buildara': 'CUST-REC-1002',
+      'cust-hln': 'CUST-REC-1003',
+      'cust-ironbeam': 'CUST-REC-1004',
+      'cust-sadeco': 'CUST-REC-1005',
+      'cust-ayat': 'CUST-REC-1006',
+      'cust-hiprofile': 'CUST-REC-1007',
+      'cust-luminar': 'CUST-REC-1008',
+      'cust-alex': 'CUST-REC-1009',
+      'cust-magma': 'CUST-REC-1010',
+      'cust-toprock': 'CUST-REC-1011',
+      'cust-mapout': 'CUST-REC-1012',
+      'cust-pggc': 'CUST-REC-1013',
+      'cust-hayat': 'CUST-REC-1014',
+      'cust-focustech': 'CUST-REC-1015',
+      'cust-alisons': 'CUST-REC-1016',
+      'cust-almuluki': 'CUST-REC-1017',
+      'cust-remaya': 'CUST-REC-1018',
+      'cust-whitecrescent': 'CUST-REC-1019',
+      'cust-zorawar': 'CUST-REC-1020',
+      'cust-brook': 'CUST-REC-1021',
+      'cust-solidmarble': 'CUST-REC-1022',
+      'cust-specon': 'CUST-REC-1023'
+    };
+    if (Array.isArray(this.db.customers)) {
+      this.db.customers.forEach(c => {
+        if (DEFAULT_CUSTOMER_SERIAL_MAP[c.id]) {
+          const defaultCode = DEFAULT_CUSTOMER_SERIAL_MAP[c.id];
+          if (!c.code || (c.code.startsWith('CUST-') && !c.code.startsWith('CUST-REC-'))) {
+            c.code = defaultCode;
+          }
+        }
+      });
     }
 
     // 0d. Auto-align invoice customer_id with actual registered customer by normalized customer_name
@@ -2585,12 +2658,17 @@ class FinanceApp {
   }
 
   getNextReceiptNumber() {
-    const receipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    let maxSeq = 44025;
+    const isInd = this.activeCompanyId === 'ashaz-eng-in';
+    const prefix = isInd ? 'REC-ASH' : 'REC-RV';
+    const receipts = (this.db?.customer_receipts || []).filter(r => {
+      const rInd = (r.company_id === 'ashaz-eng-in') || (r.currency === 'INR');
+      return isInd ? rInd : !rInd;
+    });
+    let maxSeq = 44000;
 
     receipts.forEach(rcp => {
       const rcpNo = rcp.receipt_no || '';
-      const recMatch = rcpNo.match(/REC-RV-(\d+)/i);
+      const recMatch = rcpNo.match(/(?:REC-RV|REC-ASH)-(\d+)/i);
       if (recMatch) {
         const num = parseInt(recMatch[1], 10);
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
@@ -2603,7 +2681,7 @@ class FinanceApp {
       }
     });
 
-    return `REC-RV-${maxSeq + 1}`;
+    return `${prefix}-${maxSeq + 1}`;
   }
 
   isUaeEntity(companyId) {
@@ -2713,7 +2791,7 @@ class FinanceApp {
       try {
         const d = new Date(targetDate);
         if (!isNaN(d.getTime())) yr = String(d.getFullYear());
-      } catch (e) {}
+      } catch (e) { }
     } else {
       yr = String(new Date().getFullYear());
     }
@@ -4956,7 +5034,7 @@ class FinanceApp {
       return custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
     };
 
-    this.custSort = this.custSort || 'name-asc';
+    this.custSort = this.custSort || 'serial-asc';
     const sortedInitialCustomers = this.sortRecords(customers, this.custSort, {
       num: 'code',
       name: 'name',
@@ -4997,10 +5075,10 @@ class FinanceApp {
             <option value="settled">Fully Settled (Zero Balance)</option>
           </select>
           <select id="cust-filter-sort" class="fin-select-pill" title="Order Customers">
-            <option value="name-asc" ${this.custSort === 'name-asc' ? 'selected' : ''}>🔤 Name (A to Z)</option>
-            <option value="name-desc" ${this.custSort === 'name-desc' ? 'selected' : ''}>🔤 Name (Z to A)</option>
             <option value="serial-asc" ${this.custSort === 'serial-asc' ? 'selected' : ''}>🔢 Customer Code (Ascending)</option>
             <option value="serial-desc" ${this.custSort === 'serial-desc' ? 'selected' : ''}>🔢 Customer Code (Descending)</option>
+            <option value="name-asc" ${this.custSort === 'name-asc' ? 'selected' : ''}>🔤 Name (A to Z)</option>
+            <option value="name-desc" ${this.custSort === 'name-desc' ? 'selected' : ''}>🔤 Name (Z to A)</option>
             <option value="due-desc" ${this.custSort === 'due-desc' ? 'selected' : ''}>⚠️ Outstanding Dues (Highest First)</option>
             <option value="due-asc" ${this.custSort === 'due-asc' ? 'selected' : ''}>⚠️ Outstanding Dues (Lowest First)</option>
             <option value="invoiced-desc" ${this.custSort === 'invoiced-desc' ? 'selected' : ''}>💰 Total Invoiced (Highest First)</option>
@@ -8069,27 +8147,27 @@ class FinanceApp {
         ` : `
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap:1.5rem;">
             ${filtered.map(prj => {
-              const ledger = this.getProjectLedgerData(prj.id);
-              if (!ledger) return '';
+      const ledger = this.getProjectLedgerData(prj.id);
+      if (!ledger) return '';
 
-              const isProfit = ledger.netProfit >= 0;
-              const profitColor = isProfit ? '#10b981' : '#ef4444';
-              const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
+      const isProfit = ledger.netProfit >= 0;
+      const profitColor = isProfit ? '#10b981' : '#ef4444';
+      const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
 
-              const normStatus = (prj.status || 'Active').toLowerCase();
-              const isClosed = normStatus === 'closed' || normStatus === 'completed';
-              const isOnHold = normStatus === 'on hold';
-              const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
-              const badgeStyle = isClosed
-                ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
-                : isOnHold
-                  ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
-                  : isPlanning
-                    ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
-                    : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
-              const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
+      const normStatus = (prj.status || 'Active').toLowerCase();
+      const isClosed = normStatus === 'closed' || normStatus === 'completed';
+      const isOnHold = normStatus === 'on hold';
+      const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
+      const badgeStyle = isClosed
+        ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
+        : isOnHold
+          ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
+          : isPlanning
+            ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
+            : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
+      const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
 
-              return `
+      return `
                 <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:14px; padding:1.4rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.25);">
                   <div>
                     <!-- Header -->
@@ -8181,7 +8259,7 @@ class FinanceApp {
                   </div>
                 </div>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         `}
       </div>
@@ -15243,9 +15321,9 @@ class FinanceApp {
                   </thead>
                   <tbody>
                     ${ledger.prjInvoices.length > 0 ? ledger.prjInvoices.map(inv => {
-                      const invPaid = Number(inv.amount_paid) || 0;
-                      const invDue = Number(inv.balance_due) || 0;
-                      return `
+      const invPaid = Number(inv.amount_paid) || 0;
+      const invDue = Number(inv.balance_due) || 0;
+      return `
                         <tr style="border-bottom:1px solid #e2e8f0;">
                           <td style="padding:6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
                           <td style="padding:6px; font-weight:700; color:#0f172a;">
@@ -15258,7 +15336,7 @@ class FinanceApp {
                           <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `;
-                    }).join('') : `
+    }).join('') : `
                       <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.03);">
                         <td style="padding:6px; color:#64748b;">${this.formatDate(prj.start_date || '2025-08-09')}</td>
                         <td style="padding:6px; font-weight:700; color:#0284c7;">${prj.code || 'PRJ'}-BILLING</td>
@@ -15776,10 +15854,10 @@ class FinanceApp {
                   </thead>
                   <tbody>
                     ${displayLedgers.map(l => {
-                      const p = l.prj;
-                      const norm = (p.status || 'Active').toLowerCase();
-                      const isClosed = norm.includes('closed') || norm.includes('completed');
-                      return `
+      const p = l.prj;
+      const norm = (p.status || 'Active').toLowerCase();
+      const isClosed = norm.includes('closed') || norm.includes('completed');
+      return `
                         <tr style="border-bottom:1px solid #e2e8f0;">
                           <td style="padding:6px; font-weight:700; font-family:monospace; color:#0284c7;">${p.code || 'PRJ'}</td>
                           <td style="padding:6px;">
@@ -15804,7 +15882,7 @@ class FinanceApp {
                           </td>
                         </tr>
                       `;
-                    }).join('')}
+    }).join('')}
                   </tbody>
                   <tfoot>
                     <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:3px double #0f172a;">
@@ -21093,7 +21171,7 @@ class FinanceApp {
           parsed[tmplKey] = newTemplateObj;
           localStorage.setItem('rayan_po_terms_templates', JSON.stringify(parsed));
         } catch (e) { }
-        this.syncApi('save_po_terms_template', { key: tmplKey, template: newTemplateObj }).catch(() => {});
+        this.syncApi('save_po_terms_template', { key: tmplKey, template: newTemplateObj }).catch(() => { });
       }
 
       await this.syncApi('update_po', { po });

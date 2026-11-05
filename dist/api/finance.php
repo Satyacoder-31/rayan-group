@@ -764,9 +764,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             }
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-1792414691494', 'cust-1792415585310', 'cust-1792320284603', 'cust-whitecrescent')");
 
-            // Ensure canonical customer details are fully updated
+            // Ensure canonical customer details are fully updated without forcing slug codes
             $pdo->exec("UPDATE finance_customers SET 
-                code = 'CUST-TOPROCK',
                 name = 'M/S TOP ROCK INTERIORS LLC.',
                 contact_person = 'Mr. Shahil',
                 salutation = 'Mr.',
@@ -781,7 +780,6 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             WHERE id = 'cust-toprock'");
 
             $pdo->exec("UPDATE finance_customers SET 
-                code = 'CUST-HLN',
                 name = 'M/S HLN TECHNICAL SERVICES LLC',
                 contact_person = 'Mr. Linto Antony',
                 salutation = 'Mr.',
@@ -796,7 +794,6 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             WHERE id = 'cust-hln'");
 
             $pdo->exec("UPDATE finance_customers SET 
-                code = 'CUST-BUILDARA',
                 name = 'M/S BUILDARA GENERAL CONTRACTING LLC',
                 contact_person = 'Mr. Sooraj Kumar',
                 salutation = 'Mr.',
@@ -1433,7 +1430,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             if (stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
                 if (($c['trn'] ?? '') !== '100360644700003' || ($c['phone'] ?? '') !== '+971 502131834' || ($c['contact_person'] ?? '') !== 'Mr. Shahil') {
                     $c['id'] = 'cust-toprock';
-                    $c['code'] = 'CUST-TOPROCK';
+                    if (empty($c['code']) || $c['code'] === 'CUST-TOPROCK') $c['code'] = 'CUST-REC-1011';
                     $c['customer_type'] = 'Business';
                     $c['name'] = 'M/S TOP ROCK INTERIORS LLC.';
                     $c['display_name'] = 'M/S TOP ROCK INTERIORS LLC.';
@@ -1456,7 +1453,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             }
             if (stripos($c['name'] ?? '', 'HLN TECHNICAL') !== false) {
                 $c['id'] = 'cust-hln';
-                $c['code'] = 'CUST-HLN';
+                if (empty($c['code']) || $c['code'] === 'CUST-HLN') $c['code'] = 'CUST-REC-1003';
                 $c['name'] = 'M/S HLN TECHNICAL SERVICES LLC';
                 $c['display_name'] = 'M/S HLN TECHNICAL SERVICES LLC';
                 $c['contact_person'] = 'Mr. Linto Antony';
@@ -1468,7 +1465,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             }
             if (stripos($c['name'] ?? '', 'BUILDARA') !== false) {
                 $c['id'] = 'cust-buildara';
-                $c['code'] = 'CUST-BUILDARA';
+                if (empty($c['code']) || $c['code'] === 'CUST-BUILDARA') $c['code'] = 'CUST-REC-1002';
                 $c['name'] = 'M/S BUILDARA GENERAL CONTRACTING LLC';
                 $c['display_name'] = 'M/S BUILDARA GENERAL CONTRACTING LLC';
                 $c['contact_person'] = 'Mr. Sooraj Kumar';
@@ -2333,6 +2330,78 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     }
                     unset($cn);
 
+                    // Resequence customer receipts starting strictly from REC-RV-44001
+                    if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+                        usort($data['customer_receipts'], function($a, $b) {
+                            $dA = $a['receipt_date'] ?? ($a['date'] ?? '');
+                            $dB = $b['receipt_date'] ?? ($b['date'] ?? '');
+                            if ($dA !== $dB) return strcmp($dA, $dB);
+                            return strcmp(strval($a['id'] ?? ''), strval($b['id'] ?? ''));
+                        });
+                        $nextRecSeq = 44001;
+                        $nextAshSeq = 44001;
+                        foreach ($data['customer_receipts'] as &$rcp) {
+                            $isInd = (($rcp['company_id'] ?? '') === 'ashaz-eng-in') || (($rcp['currency'] ?? '') === 'INR');
+                            $oldNo = $rcp['receipt_no'] ?? '';
+                            $targetNo = $isInd ? ('REC-ASH-' . $nextAshSeq++) : ('REC-RV-' . $nextRecSeq++);
+                            if (($rcp['receipt_no'] ?? '') !== $targetNo) {
+                                $rcp['receipt_no'] = $targetNo;
+                                if ($pdo) {
+                                    try {
+                                        $pdo->prepare("UPDATE finance_receipts SET receipt_no = ?, data_json = JSON_SET(data_json, '$.receipt_no', ?) WHERE id = ? OR receipt_no = ?")
+                                            ->execute([$targetNo, $targetNo, $rcp['id'] ?? '', $oldNo]);
+                                    } catch (Exception $e) {}
+                                }
+                            }
+                        }
+                        unset($rcp);
+                    }
+
+                    // Resequence customer codes to CUST-REC-1001 through CUST-REC-1023
+                    $canonicalCustCodeMap = [
+                        'cust-morganti' => 'CUST-REC-1001',
+                        'cust-buildara' => 'CUST-REC-1002',
+                        'cust-hln' => 'CUST-REC-1003',
+                        'cust-ironbeam' => 'CUST-REC-1004',
+                        'cust-sadeco' => 'CUST-REC-1005',
+                        'cust-ayat' => 'CUST-REC-1006',
+                        'cust-hiprofile' => 'CUST-REC-1007',
+                        'cust-luminar' => 'CUST-REC-1008',
+                        'cust-alex' => 'CUST-REC-1009',
+                        'cust-magma' => 'CUST-REC-1010',
+                        'cust-toprock' => 'CUST-REC-1011',
+                        'cust-mapout' => 'CUST-REC-1012',
+                        'cust-pggc' => 'CUST-REC-1013',
+                        'cust-hayat' => 'CUST-REC-1014',
+                        'cust-focustech' => 'CUST-REC-1015',
+                        'cust-alisons' => 'CUST-REC-1016',
+                        'cust-almuluki' => 'CUST-REC-1017',
+                        'cust-remaya' => 'CUST-REC-1018',
+                        'cust-whitecrescent' => 'CUST-REC-1019',
+                        'cust-zorawar' => 'CUST-REC-1020',
+                        'cust-brook' => 'CUST-REC-1021',
+                        'cust-solidmarble' => 'CUST-REC-1022',
+                        'cust-specon' => 'CUST-REC-1023'
+                    ];
+                    if (!empty($data['customers']) && is_array($data['customers'])) {
+                        foreach ($data['customers'] as &$c) {
+                            $cid = $c['id'] ?? '';
+                            if (isset($canonicalCustCodeMap[$cid])) {
+                                $targetCode = $canonicalCustCodeMap[$cid];
+                                if (empty($c['code']) || (strpos($c['code'], 'CUST-') === 0 && strpos($c['code'], 'CUST-REC-') !== 0)) {
+                                    $c['code'] = $targetCode;
+                                    if ($pdo) {
+                                        try {
+                                            $pdo->prepare("UPDATE finance_customers SET code = ?, data_json = JSON_SET(data_json, '$.code', ?) WHERE id = ?")
+                                                ->execute([$targetCode, $targetCode, $cid]);
+                                        } catch (Exception $e) {}
+                                    }
+                                }
+                            }
+                        }
+                        unset($c);
+                    }
+
                     // Complete Canonical Projects Hydration & Restoration (13 Projects)
                     $canonicalProjectsList = [
                         [
@@ -2652,7 +2721,7 @@ function syncFromRelationalTables($pdo, &$data) {
     try {
         $syncMapping = [
             ['table' => 'finance_invoices', 'key' => 'invoices', 'id_fields' => ['id', 'invoice_no'], 'order' => 'invoice_date DESC'],
-            ['table' => 'finance_customers', 'key' => 'customers', 'id_fields' => ['id', 'code', 'name'], 'order' => 'name ASC'],
+            ['table' => 'finance_customers', 'key' => 'customers', 'id_fields' => ['id'], 'order' => 'name ASC'],
             ['table' => 'finance_receipts', 'key' => 'customer_receipts', 'id_fields' => ['id', 'receipt_no'], 'order' => 'receipt_date DESC'],
             ['table' => 'finance_purchase_bills', 'key' => 'purchase_bills', 'id_fields' => ['id', 'bill_no'], 'order' => 'bill_date DESC'],
             ['table' => 'finance_vendor_payments', 'key' => 'vendor_payments', 'id_fields' => ['id', 'voucher_no'], 'order' => 'payment_date DESC'],
@@ -4967,12 +5036,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $foundIdx = -1;
                 foreach ($db['customers'] as $idx => $exC) {
-                    $matchId = (!empty($oldId) && ($exC['id'] ?? '') === $oldId) || (($exC['id'] ?? '') === $cust['id']);
-                    $matchCode = (!empty($oldCode) && strcasecmp($exC['code'] ?? '', $oldCode) === 0) || (!empty($cust['code']) && strcasecmp($exC['code'] ?? '', $cust['code']) === 0);
-                    $matchName = (!empty($oldName) && strcasecmp($exC['name'] ?? '', $oldName) === 0);
-                    if ($matchId || $matchCode || $matchName) {
+                    if ((!empty($oldId) && ($exC['id'] ?? '') === $oldId) || (($exC['id'] ?? '') === $cust['id'])) {
                         $foundIdx = $idx;
                         break;
+                    }
+                }
+                if ($foundIdx === -1 && !empty($oldCode)) {
+                    foreach ($db['customers'] as $idx => $exC) {
+                        if (strcasecmp($exC['code'] ?? '', $oldCode) === 0) {
+                            $foundIdx = $idx;
+                            break;
+                        }
+                    }
+                }
+                if ($foundIdx === -1 && !empty($oldName)) {
+                    foreach ($db['customers'] as $idx => $exC) {
+                        if (strcasecmp($exC['name'] ?? '', $oldName) === 0) {
+                            $foundIdx = $idx;
+                            break;
+                        }
                     }
                 }
 
