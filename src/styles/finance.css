@@ -2847,6 +2847,113 @@ body.fin-doc-open .fin-app-wrapper {
   line-height: 1.38 !important;
 }
 
+/* Purchase Order Terms Editor Modal & Cards */
+.fin-terms-editor-dialog {
+  max-width: 980px !important;
+  width: 96% !important;
+}
+
+.fin-terms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--fin-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 1rem;
+}
+
+.fin-terms-grid-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .fin-terms-grid-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fin-term-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fin-term-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.fin-term-card.highlight {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3) !important;
+  background: rgba(14, 165, 233, 0.08) !important;
+}
+
+.fin-term-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fin-term-num-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.fin-term-title-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.fin-term-title-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.fin-term-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 0.76rem;
+  line-height: 1.42;
+  padding: 6px 8px;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 54px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.fin-term-textarea:focus {
+  outline: none;
+  border-color: #38bdf8;
+  background: rgba(0, 0, 0, 0.45);
+}
+
 @media screen and (max-width: 680px) {
   .fin-doc-table-wrapper table {
     min-width: 600px !important;

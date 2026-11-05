@@ -4129,6 +4129,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             break;
 
+        case 'save_po_terms_template':
+            $templateKey = $body['key'] ?? '';
+            $template = $body['template'] ?? [];
+            if (!empty($templateKey) && !empty($template)) {
+                if (!isset($db['po_terms_templates'])) $db['po_terms_templates'] = [];
+                $db['po_terms_templates'][$templateKey] = $template;
+                $addAuditLog('update', 'settings', $templateKey, 'Saved PO terms template for ' . $templateKey);
+            }
+            break;
+
+        case 'delete_po_terms_template':
+            $templateKey = $body['key'] ?? '';
+            if (!empty($templateKey) && isset($db['po_terms_templates'][$templateKey])) {
+                unset($db['po_terms_templates'][$templateKey]);
+                $addAuditLog('delete', 'settings', $templateKey, 'Deleted PO terms template for ' . $templateKey);
+            }
+            break;
+
         case 'update_credit_note':
             $cn = $body['credit_note'] ?? [];
             if (!empty($cn) && isset($db['credit_notes'])) {

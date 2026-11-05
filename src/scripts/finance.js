@@ -7781,6 +7781,7 @@ class FinanceApp {
         <td style="white-space:nowrap;">
           <button type="button" class="fin-btn-row-action" onclick="window.finApp.openPOPrintModal('${po.id}')" title="Print Official Purchase Order">Print / View</button>
           <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPOModal('${po.id}')" title="Edit Purchase Order">Edit</button>
+          <button type="button" class="fin-btn-row-action" style="color:#a855f7;" onclick="window.finApp.openPOTermsModal('${po.id}')" title="Customize Terms & Conditions (20 Articles)">Terms</button>
           <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePO('${po.id}')" title="Delete Purchase Order">Delete</button>
         </td>
       </tr>
@@ -20648,6 +20649,458 @@ class FinanceApp {
     }
   }
 
+  // --------------------------------------------------------------------------
+  // PURCHASE ORDER TERMS & CONDITIONS TEMPLATES & EDITOR (ALL 20 ARTICLES)
+  // --------------------------------------------------------------------------
+  getDefaultPOTemplates() {
+    return {
+      rayan_uae: {
+        id: 'rayan_uae',
+        name: '🏢 Rayan Engineering LLC SPC (UAE Standard - Abu Dhabi Law)',
+        company_name: 'RAYAN ENGINEERING AND CONTRACTING LLC SPC',
+        terms: [
+          { num: 1, title: 'The Order', text: 'Entered into with RAYAN ENGINEERING AND CONTRACTING LLC SPC for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing.' },
+          { num: 2, title: 'Prices', text: 'Final and not subject to escalation under any circumstances.' },
+          { num: 3, title: 'Identification of Material', text: 'All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities & descriptions.' },
+          { num: 4, title: 'Packing & Protection', text: 'Materials must be protected individually against damage, transit shock, and environmental degradation.' },
+          { num: 5, title: 'Delivery of Goods/Services', text: 'As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization.' },
+          { num: 6, title: 'Performance Guarantee', text: 'Supplier shall submit a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise.' },
+          { num: 7, title: 'Receipt & Acceptance', text: 'Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier\'s risk and expense.' },
+          { num: 8, title: 'Rejection of Goods/Services', text: 'RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties.' },
+          { num: 9, title: 'Cancellation of Order', text: 'Right reserved to cancel for non-delivery by stipulated date without liability.' },
+          { num: 10, title: 'Invoicing Regulations', text: 'Tax invoices must be submitted within 14 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details.' },
+          { num: 11, title: 'Delay Penalties', text: '1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%.' },
+          { num: 12, title: 'Risk Purchase', text: 'Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier.' },
+          { num: 13, title: 'Warranty', text: 'Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges.' },
+          { num: 14, title: 'Termination', text: 'Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items.' },
+          { num: 15, title: 'Force Majeure', text: 'Relieves obligations during duration of qualifying events with prompt written notification.' },
+          { num: 16, title: 'Taxes & Banking', text: 'All taxes, duties, and banking charges borne by Seller unless expressly exempted.' },
+          { num: 17, title: 'Indemnity', text: 'Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches.' },
+          { num: 18, title: 'Governing Law', text: 'Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts.' },
+          { num: 19, title: 'Payment Term', text: '50% advance upon order confirmation; remaining 50% upon client inspection and certification.' },
+          { num: 20, title: 'Invoice Requirements', text: 'Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO.' }
+        ]
+      },
+      ashaz_india: {
+        id: 'ashaz_india',
+        name: '🏢 Ashaz Engineering Pvt Ltd (India Standard - GST & Mumbai Law)',
+        company_name: 'ASHAZ ENGINEERING PRIVATE LIMITED',
+        terms: [
+          { num: 1, title: 'The Order', text: 'Entered into with ASHAZ ENGINEERING PRIVATE LIMITED for procurement, supply and installation of materials described herein.' },
+          { num: 2, title: 'Prices', text: 'Firm and fixed, free of price escalation for the entire execution duration.' },
+          { num: 3, title: 'Identification of Material', text: 'All consignments must display PO reference and dispatch challan quoting valid HSN codes.' },
+          { num: 4, title: 'Packing & Protection', text: 'Goods must be safely packed to endure transit conditions and climate handling across Indian routes.' },
+          { num: 5, title: 'Delivery of Goods/Services', text: 'Delivery as per agreed site schedule. Partial deliveries require prior written approval.' },
+          { num: 6, title: 'Performance Guarantee', text: 'Supplier shall submit a 10% performance security in approved bank guarantee format where applicable.' },
+          { num: 7, title: 'Receipt & Acceptance', text: 'Subject to technical QA inspection and verification by ASHAZ site engineers.' },
+          { num: 8, title: 'Rejection of Goods/Services', text: 'Rejection of defective goods entails immediate replacement or recovery with penalty.' },
+          { num: 9, title: 'Cancellation of Order', text: 'Reserved right to cancel for unexcused supply delays beyond agreed delivery timeline.' },
+          { num: 10, title: 'Invoicing Regulations', text: 'Valid GST Tax Invoice compliant with Section 31 of CGST Act, stating GSTIN, HSN, and e-Way Bill.' },
+          { num: 11, title: 'Delay Penalties', text: 'Liquidated damages at 0.5% per week of delay up to a ceiling limit of 10% of total order value.' },
+          { num: 12, title: 'Risk Purchase', text: 'ASHAZ reserves the right to procure balance materials at supplier risk and risk differential cost.' },
+          { num: 13, title: 'Warranty', text: 'Defect-free warranty for 12 months from installation or 18 months from delivery against manufacturing defects.' },
+          { num: 14, title: 'Termination', text: 'Buyer may terminate with 30 days written notice for contractual default or project convenience.' },
+          { num: 15, title: 'Force Majeure', text: 'Unforeseen statutory, labor, or natural disruptions relieve performance with immediate written notice.' },
+          { num: 16, title: 'Taxes & Banking', text: 'Indian GST levied as per statutory law; bank collection charges on supplier account.' },
+          { num: 17, title: 'Indemnity', text: 'Comprehensive indemnity protecting Buyer against IP claims, workman compensation, and site liabilities.' },
+          { num: 18, title: 'Governing Law', text: 'Laws of Republic of India; exclusive jurisdiction vested in courts of Mumbai, Maharashtra.' },
+          { num: 19, title: 'Payment Term', text: '30 Days Net from submission of certified bill and material gate receipt.' },
+          { num: 20, title: 'Invoice Requirements', text: 'Original tax invoice in triplicate with gate pass, delivery challan, and test certificates.' }
+        ]
+      },
+      rayan_properties: {
+        id: 'rayan_properties',
+        name: '🏢 Rayan Properties (Facility Management & Safety)',
+        company_name: 'RAYAN PROPERTIES',
+        terms: [
+          { num: 1, title: 'The Order', text: 'Service & supply order issued by RAYAN PROPERTIES for property maintenance and asset management operations.' },
+          { num: 2, title: 'Prices', text: 'All-inclusive contracted rates inclusive of labor, supervision, tools, and consumable supplies.' },
+          { num: 3, title: 'Identification of Material', text: 'Delivery notes must reference property name, unit/tower number, and supervisor work order ID.' },
+          { num: 4, title: 'Packing & Protection', text: 'Materials protected against weather, dust, and site wear inside active residential/commercial premises.' },
+          { num: 5, title: 'Delivery of Goods/Services', text: 'On-site work execution must comply with property management quiet hours and building permits.' },
+          { num: 6, title: 'Performance Guarantee', text: 'Contractor guarantees full compliance with Abu Dhabi Municipality and Civil Defense safety norms.' },
+          { num: 7, title: 'Receipt & Acceptance', text: 'Final handover certified only after facility manager walkthrough and client sign-off.' },
+          { num: 8, title: 'Rejection of Goods/Services', text: 'Unapproved workmanship must be rectified within 48 hours at contractor sole cost.' },
+          { num: 9, title: 'Cancellation of Order', text: 'Right to terminate immediately for safety violations, damage to common property, or permit defaults.' },
+          { num: 10, title: 'Invoicing Regulations', text: 'Monthly statement with approved maintenance tickets, job completion forms, and valid VAT tax invoice.' },
+          { num: 11, title: 'Delay Penalties', text: '1.5% per week of order value for delays impacting tenant occupancy or common facility handover.' },
+          { num: 12, title: 'Risk Purchase', text: 'Immediate alternative service contractor engagement charged against vendor pending balances.' },
+          { num: 13, title: 'Warranty', text: 'Comprehensive labor and parts guarantee for minimum 6 months from handover of works.' },
+          { num: 14, title: 'Termination', text: 'Termination upon 14 days written notice for performance default without penalty to Buyer.' },
+          { num: 15, title: 'Force Majeure', text: 'Standard force majeure events excused upon immediate notification to building administration.' },
+          { num: 16, title: 'Taxes & Banking', text: 'Subject to UAE FTA regulations; payments via electronic bank transfer to corporate account.' },
+          { num: 17, title: 'Indemnity', text: 'Contractor indemnifies Owner & Property Manager for any property damage or third-party claims.' },
+          { num: 18, title: 'Governing Law', text: 'Laws of the Emirate of Abu Dhabi and UAE federal laws; Abu Dhabi Judicial Department.' },
+          { num: 19, title: 'Payment Term', text: '30 Days from facility manager verification and invoice approval.' },
+          { num: 20, title: 'Invoice Requirements', text: 'Work completion certificates, security gate passes, and stamped commercial invoice.' }
+        ]
+      },
+      subcontractor_works: {
+        id: 'subcontractor_works',
+        name: '🏗️ Subcontractor & Specialist Works Agreement',
+        company_name: 'RAYAN ENGINEERING AND CONTRACTING LLC SPC',
+        terms: [
+          { num: 1, title: 'The Order', text: 'Subcontract order issued by RAYAN ENGINEERING AND CONTRACTING LLC SPC for execution of specialized site packages.' },
+          { num: 2, title: 'Prices', text: 'Fixed turnkey rate; includes site supervision, labor camp welfare, tools, scaffolding, and PPE.' },
+          { num: 3, title: 'Identification of Material', text: 'Materials marked per shop drawings and engineering submittals approved by consultant.' },
+          { num: 4, title: 'Packing & Protection', text: 'Finished work protected against trades damage until final formal employer handover.' },
+          { num: 5, title: 'Delivery of Goods/Services', text: 'Execution strictly adheres to project baseline program and milestones specified by Main Contractor.' },
+          { num: 6, title: 'Performance Guarantee', text: 'Subcontractor provides 10% performance bond and 5% retention held until DLP expiry.' },
+          { num: 7, title: 'Receipt & Acceptance', text: 'Works subject to Inspection Request (WIR/MIR) approval by Main Contractor & Supervising Consultant.' },
+          { num: 8, title: 'Rejection of Goods/Services', text: 'Defective installations rejected under Non-Conformance Report (NCR) must be rectified within 24 hours.' },
+          { num: 9, title: 'Cancellation of Order', text: 'Termination for default if Subcontractor fails to mobilize adequate manpower within 3 days of notice.' },
+          { num: 10, title: 'Invoicing Regulations', text: 'Interim payment applications submitted monthly against measured progress certified by PM.' },
+          { num: 11, title: 'Delay Penalties', text: 'Liquidated delay damages of AED 1,000 per calendar day of unapproved project milestone overrun.' },
+          { num: 12, title: 'Risk Purchase', text: 'Main Contractor may deploy supplement labor at Subcontractor expense + 15% supervisory markup.' },
+          { num: 13, title: 'Warranty', text: '12 Months Defect Liability Period (DLP) covering all materials, equipment, and installation craft.' },
+          { num: 14, title: 'Termination', text: 'Termination for convenience upon 7 days written notice with valuation of executed work only.' },
+          { num: 15, title: 'Force Majeure', text: 'Relieves performance during qualifying events with immediate formal notification to PM.' },
+          { num: 16, title: 'Taxes & Banking', text: 'VAT compliant invoices; electronic payments via registered corporate account.' },
+          { num: 17, title: 'Indemnity', text: 'Subcontractor indemnifies Main Contractor against labor accidents, third-party damage, and statutory fines.' },
+          { num: 18, title: 'Governing Law', text: 'Laws of Abu Dhabi and UAE federal construction laws; Abu Dhabi Commercial Court.' },
+          { num: 19, title: 'Payment Term', text: 'Back-to-Back payment terms: 30 days following certification and receipt of funds from Client.' },
+          { num: 20, title: 'Invoice Requirements', text: 'Approved Measurement Sheet, WIR sign-off, consultant certification, and original VAT invoice.' }
+        ]
+      },
+      materials_fast: {
+        id: 'materials_fast',
+        name: '📦 Standard Materials Supply & Fast Procurement',
+        company_name: 'RAYAN ENGINEERING AND CONTRACTING LLC SPC',
+        terms: [
+          { num: 1, title: 'The Order', text: 'Direct procurement order for supply and prompt delivery of certified construction materials.' },
+          { num: 2, title: 'Prices', text: 'Net delivered price to designated project store, inclusive of offloading and transport.' },
+          { num: 3, title: 'Identification of Material', text: 'Every bundle/pallet marked with brand, batch number, production date, and PO number.' },
+          { num: 4, title: 'Packing & Protection', text: 'Moisture-proof and transit-secure packaging suitable for UAE weather.' },
+          { num: 5, title: 'Delivery of Goods/Services', text: 'Delivery within agreed turnaround days; delivery note signed by Storekeeper required.' },
+          { num: 6, title: 'Performance Guarantee', text: 'Manufacturer quality certificate (MTC/COC) furnished with consignment in lieu of bond.' },
+          { num: 7, title: 'Receipt & Acceptance', text: 'Acceptance conditional upon QC storekeeper verification and random lab sampling.' },
+          { num: 8, title: 'Rejection of Goods/Services', text: 'Damaged or off-spec items collected by Supplier within 48 hours without demurrage.' },
+          { num: 9, title: 'Cancellation of Order', text: 'Cancellation without liability if dispatch date missed by more than 48 hours.' },
+          { num: 10, title: 'Invoicing Regulations', text: 'Tax invoice submitted with signed storekeeper delivery receipt and MTC documents.' },
+          { num: 11, title: 'Delay Penalties', text: '1% per day of delay on unfulfilled supply value up to maximum 10%.' },
+          { num: 12, title: 'Risk Purchase', text: 'Right to buy from local spot market; difference charged back to Supplier ledger.' },
+          { num: 13, title: 'Warranty', text: 'Standard manufacturer replacement warranty against defective material.' },
+          { num: 14, title: 'Termination', text: 'Buyer may cancel undelivered balance at any time without penalty.' },
+          { num: 15, title: 'Force Majeure', text: 'Acts of God and closed transport arteries relieve supply obligations with notice.' },
+          { num: 16, title: 'Taxes & Banking', text: '5% UAE VAT explicitly stated; payment by company cheque or wire transfer.' },
+          { num: 17, title: 'Indemnity', text: 'Supplier indemnifies Buyer against patent infringement and transport accidents.' },
+          { num: 18, title: 'Governing Law', text: 'Laws of Abu Dhabi, UAE.' },
+          { num: 19, title: 'Payment Term', text: 'PDC 30 Days from confirmed site store delivery.' },
+          { num: 20, title: 'Invoice Requirements', text: 'Delivery note signed by authorized storekeeper and stamped invoice.' }
+        ]
+      }
+    };
+  }
+
+  getPOTermsTemplates() {
+    const defaults = this.getDefaultPOTemplates();
+    let localSaved = {};
+    try {
+      const stored = localStorage.getItem('rayan_po_terms_templates');
+      if (stored) localSaved = JSON.parse(stored);
+    } catch (e) { }
+
+    const dbSaved = this.db?.po_terms_templates || {};
+    return { ...defaults, ...localSaved, ...dbSaved };
+  }
+
+  getPOTermsForPO(po) {
+    if (!po) return this.getDefaultPOTemplates().rayan_uae.terms;
+
+    // 1. If PO already has explicitly customized terms
+    if (Array.isArray(po.custom_terms) && po.custom_terms.length > 0) {
+      return po.custom_terms;
+    }
+
+    const templates = this.getPOTermsTemplates();
+
+    // 2. If PO has terms_template_id
+    if (po.terms_template_id && templates[po.terms_template_id]?.terms) {
+      return templates[po.terms_template_id].terms;
+    }
+
+    // 3. Check for vendor-specific template
+    const vend = (po.supplier_name || po.vendor_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+    if (vend && templates[vend]?.terms) {
+      return templates[vend].terms;
+    }
+
+    // 4. Default based on Company / Jurisdiction
+    const isIndia = (po.currency === 'INR') || ((po.company_id || this.activeCompanyId) === 'ashaz-eng-in');
+    if (isIndia && templates.ashaz_india) {
+      return templates.ashaz_india.terms;
+    }
+    if ((po.company_id || this.activeCompanyId) === 'rayan-properties-uae' && templates.rayan_properties) {
+      return templates.rayan_properties.terms;
+    }
+
+    const baseTerms = JSON.parse(JSON.stringify(templates.rayan_uae.terms));
+    if (po.payment_terms_detail) {
+      const t19 = baseTerms.find(t => t.num === 19);
+      if (t19) t19.text = po.payment_terms_detail;
+    }
+    return baseTerms;
+  }
+
+  openPOTermsModal(poId, focusTermNum = null) {
+    let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) {
+      po = (this.db?.purchase_orders || []).find(p => p.po_no === 'LPO/BD/2026/12') || (this.db?.purchase_orders || [])[0] || {};
+    }
+
+    const curr = po.currency || 'AED';
+    const isIndia = curr === 'INR' || po.company_id === 'ashaz-eng-in';
+    const comp = (this.db?.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) || {};
+    let compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    if (comp.id === 'rayan-properties-uae') compName = 'RAYAN PROPERTIES';
+    else if (comp.id === 'ashaz-eng-in') compName = 'ASHAZ ENGINEERING PRIVATE LIMITED';
+    else if (comp.name) compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
+
+    const supplierName = po.supplier_name || po.vendor_name || 'Registered Supplier';
+    const allTemplates = this.getPOTermsTemplates();
+    const currentTerms = JSON.parse(JSON.stringify(this.getPOTermsForPO(po)));
+
+    const renderCard = (t) => `
+      <div class="fin-term-card" id="term-card-${t.num}" data-num="${t.num}" data-text="${(t.title + ' ' + t.text).toLowerCase().replace(/"/g, '&quot;')}">
+        <div class="fin-term-card-header">
+          <span class="fin-term-num-badge">Art. ${t.num}</span>
+          <input type="text" class="fin-term-title-input" id="term-title-${t.num}" value="${(t.title || '').replace(/"/g, '&quot;')}" placeholder="Clause Title">
+          ${t.num > 20 ? `<button type="button" onclick="this.closest('.fin-term-card').remove(); window.finApp.reindexPOTermCards();" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem;" title="Delete Article">🗑️</button>` : ''}
+        </div>
+        <textarea class="fin-term-textarea" id="term-text-${t.num}" rows="3" placeholder="Enter terms specification clause...">${t.text || ''}</textarea>
+      </div>
+    `;
+
+    const templateOptions = Object.keys(allTemplates).map(k => {
+      const tmpl = allTemplates[k];
+      return `<option value="${k}">${tmpl.name || k}</option>`;
+    }).join('');
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-po-terms" style="z-index:100030;">
+        <div class="fin-modal-dialog fin-terms-editor-dialog">
+          <div class="fin-modal-header" style="border-bottom:1px solid var(--fin-border); padding:1rem 1.25rem;">
+            <div>
+              <h3 class="fin-modal-title" style="display:flex; align-items:center; gap:8px;">
+                <span>📜</span>
+                <span>Purchase Order Terms &amp; Conditions Specification</span>
+              </h3>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                PO #<strong style="color:#38bdf8;">${po.po_no || 'LPO/BD/2026/12'}</strong> &bull; Company: <strong style="color:#f8fafc;">${compName}</strong> &bull; Vendor: <strong style="color:#f8fafc;">${supplierName}</strong>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-po-terms')">&times;</button>
+          </div>
+
+          <div class="fin-modal-body" style="max-height:74vh; overflow-y:auto; padding:1.25rem;">
+            <!-- Top Controls Toolbar -->
+            <div class="fin-terms-toolbar">
+              <div class="fin-terms-presets-group">
+                <label style="font-size:0.78rem; font-weight:700; color:#94a3b8; white-space:nowrap;">📋 Preset / Template:</label>
+                <select id="po-terms-template-select" class="fin-form-input" style="padding:5px 8px; font-size:0.78rem;">
+                  <option value="current">Current Terms (${currentTerms.length} Articles)</option>
+                  ${templateOptions}
+                </select>
+                <button type="button" id="btn-apply-terms-template" class="fin-btn-quick" style="padding:4px 10px; font-size:0.75rem; white-space:nowrap; color:#38bdf8; border-color:#38bdf8;">
+                  Apply Template
+                </button>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:240px; justify-content:flex-end;">
+                <input type="text" id="terms-search-filter" class="fin-form-input" style="padding:5px 10px; font-size:0.78rem; max-width:280px;" placeholder="🔍 Filter clauses (e.g. warranty, payment)...">
+                <button type="button" id="btn-reset-default-terms" class="fin-btn-quick" style="padding:4px 10px; font-size:0.75rem; white-space:nowrap; color:#e2e8f0;">
+                  ↺ Reset
+                </button>
+              </div>
+            </div>
+
+            <!-- Articles Grid (2 Columns, matching Page 2 layout) -->
+            <div id="po-terms-cards-container" class="fin-terms-grid-editor">
+              ${currentTerms.map(t => renderCard(t)).join('')}
+            </div>
+
+            <!-- Add Extra Article Button -->
+            <div style="margin-top:1rem; display:flex; justify-content:flex-start;">
+              <button type="button" id="btn-add-term-article" class="fin-btn-quick" style="color:#a855f7; border-color:#a855f7; font-weight:700; font-size:0.78rem;">
+                + Add Additional Article
+              </button>
+            </div>
+
+            <!-- Save as Company / Vendor Default Template Option -->
+            <div style="background:rgba(255, 255, 255, 0.04); border:1px solid rgba(255, 255, 255, 0.1); border-radius:8px; padding:10px 14px; margin-top:1rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:0.80rem; color:#f8fafc; cursor:pointer; margin:0;">
+                <input type="checkbox" id="po-terms-save-as-company-template" style="width:16px; height:16px; accent-color:#0284c7;">
+                <span><strong>Save these terms as default template for company / vendor:</strong></span>
+              </label>
+              <div style="flex:1; min-width:220px; max-width:380px;">
+                <input type="text" id="po-terms-template-company-name" class="fin-form-input" style="padding:5px 8px; font-size:0.78rem;" value="${(supplierName !== 'Registered Supplier' ? supplierName : compName).replace(/"/g, '&quot;')}" placeholder="Company or Supplier Name">
+              </div>
+            </div>
+          </div>
+
+          <div class="fin-modal-footer" style="padding:1rem 1.25rem; border-top:1px solid var(--fin-border); display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:0.72rem; color:#94a3b8;">
+              💡 Edits are scaled automatically to fit Page 2 cleanly without page overflow.
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-po-terms')">Cancel</button>
+              <button type="button" id="btn-save-po-terms" class="fin-btn-quick primary" style="font-weight:700; padding:6px 16px;">
+                💾 Save &amp; Apply Terms &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    let existingModal = document.getElementById('modal-po-terms');
+    if (existingModal) existingModal.remove();
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = modalHtml;
+    document.body.appendChild(wrapper.firstElementChild);
+
+    // Wire up events
+    const container = document.getElementById('po-terms-cards-container');
+    const templateSelect = document.getElementById('po-terms-template-select');
+    const applyBtn = document.getElementById('btn-apply-terms-template');
+    const resetBtn = document.getElementById('btn-reset-default-terms');
+    const filterInput = document.getElementById('terms-search-filter');
+    const addBtn = document.getElementById('btn-add-term-article');
+    const saveBtn = document.getElementById('btn-save-po-terms');
+
+    // 1. Template selection
+    const applyTemplate = (key) => {
+      let termsToLoad = null;
+      if (key === 'current') {
+        termsToLoad = currentTerms;
+      } else if (allTemplates[key]?.terms) {
+        termsToLoad = allTemplates[key].terms;
+      }
+      if (termsToLoad) {
+        container.innerHTML = termsToLoad.map(t => renderCard(t)).join('');
+      }
+    };
+
+    applyBtn.onclick = () => applyTemplate(templateSelect.value);
+    templateSelect.onchange = () => applyTemplate(templateSelect.value);
+
+    // 2. Reset to default
+    resetBtn.onclick = () => {
+      if (confirm('Reset all 20 terms to corporate default specifications?')) {
+        const defaultKey = isIndia ? 'ashaz_india' : 'rayan_uae';
+        applyTemplate(defaultKey);
+        templateSelect.value = defaultKey;
+      }
+    };
+
+    // 3. Search filter
+    filterInput.oninput = (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const cards = container.querySelectorAll('.fin-term-card');
+      cards.forEach(card => {
+        const text = card.getAttribute('data-text') || '';
+        const tVal = (card.querySelector('.fin-term-title-input')?.value || '').toLowerCase();
+        const bVal = (card.querySelector('.fin-term-textarea')?.value || '').toLowerCase();
+        if (!q || text.includes(q) || tVal.includes(q) || bVal.includes(q)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    };
+
+    // 4. Add article
+    addBtn.onclick = () => {
+      const cards = container.querySelectorAll('.fin-term-card');
+      const nextNum = cards.length + 1;
+      const newCardHtml = renderCard({ num: nextNum, title: `Special Clause ${nextNum}`, text: '' });
+      container.insertAdjacentHTML('beforeend', newCardHtml);
+      const newCard = document.getElementById(`term-card-${nextNum}`);
+      if (newCard) {
+        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        newCard.querySelector('.fin-term-title-input')?.focus();
+      }
+    };
+
+    // 5. Save & Apply
+    saveBtn.onclick = async () => {
+      const cards = container.querySelectorAll('.fin-term-card');
+      const updatedTerms = [];
+      cards.forEach((card, idx) => {
+        const num = idx + 1;
+        const title = card.querySelector('.fin-term-title-input')?.value.trim() || `Article ${num}`;
+        const text = card.querySelector('.fin-term-textarea')?.value.trim() || '';
+        updatedTerms.push({ num, title, text });
+      });
+
+      po.custom_terms = updatedTerms;
+      const t19 = updatedTerms.find(t => t.num === 19);
+      if (t19 && t19.text) {
+        po.payment_terms_detail = t19.text;
+      }
+
+      // If user wants to save as company / vendor template
+      const saveAsTemplate = document.getElementById('po-terms-save-as-company-template')?.checked;
+      const companyTmplName = document.getElementById('po-terms-template-company-name')?.value.trim();
+      if (saveAsTemplate && companyTmplName) {
+        const tmplKey = companyTmplName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        if (!this.db.po_terms_templates) this.db.po_terms_templates = {};
+        const newTemplateObj = {
+          id: tmplKey,
+          name: `🏢 ${companyTmplName} Standard Terms`,
+          company_name: companyTmplName,
+          terms: updatedTerms
+        };
+        this.db.po_terms_templates[tmplKey] = newTemplateObj;
+        try {
+          const stored = localStorage.getItem('rayan_po_terms_templates');
+          const parsed = stored ? JSON.parse(stored) : {};
+          parsed[tmplKey] = newTemplateObj;
+          localStorage.setItem('rayan_po_terms_templates', JSON.stringify(parsed));
+        } catch (e) { }
+        this.syncApi('save_po_terms_template', { key: tmplKey, template: newTemplateObj }).catch(() => {});
+      }
+
+      await this.syncApi('update_po', { po });
+      this.closeModal('modal-po-terms');
+      const el = document.getElementById('modal-po-terms');
+      if (el) el.remove();
+
+      this.showNotification(`✅ Terms & Conditions updated for PO ${po.po_no}!`, 'success');
+
+      if (document.getElementById('fin-doc-print-modal')) {
+        this.openPOPrintModal(po.id || po.po_no);
+      }
+      this.renderActiveTab();
+    };
+
+    // 6. If focusTermNum is given, scroll and highlight
+    if (focusTermNum) {
+      setTimeout(() => {
+        const targetCard = document.getElementById(`term-card-${focusTermNum}`);
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetCard.classList.add('highlight');
+          targetCard.querySelector('.fin-term-textarea')?.focus();
+          setTimeout(() => targetCard.classList.remove('highlight'), 3000);
+        }
+      }, 150);
+    }
+  }
+
+  reindexPOTermCards() {
+    const container = document.getElementById('po-terms-cards-container');
+    if (!container) return;
+    const cards = container.querySelectorAll('.fin-term-card');
+    cards.forEach((card, idx) => {
+      const num = idx + 1;
+      card.id = `term-card-${num}`;
+      card.setAttribute('data-num', num);
+      const badge = card.querySelector('.fin-term-num-badge');
+      if (badge) badge.textContent = `Art. ${num}`;
+    });
+  }
+
   // 3. PURCHASE ORDER PRINT MODAL (2 Full Pages)
   openPOPrintModal(poId, isVerifiedScan = false) {
     let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
@@ -20684,6 +21137,20 @@ class FinanceApp {
     if (po.amount_in_words) po.amount_in_words = amountInWords;
     const paymentTermsClause = po.payment_terms_detail || (po.payment_terms ? `${po.payment_terms} as per commercial procurement agreement.` : '50% advance upon order confirmation; remaining 50% upon client inspection and certification.');
 
+    // Dynamic Terms calculation (Articles 1 - 20+)
+    const poTerms = this.getPOTermsForPO(po);
+    const halfTerms = Math.ceil(poTerms.length / 2);
+    const col1Terms = poTerms.slice(0, halfTerms);
+    const col2Terms = poTerms.slice(halfTerms);
+
+    const renderTermsCol = (items) => items.map(t => `
+      <p style="margin:0 0 5px 0;">
+        <strong>${t.num ? t.num + '. ' : ''}${t.title}:</strong>
+        <span id="po-term-val-${t.num}">${t.text}</span>
+        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 3px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
+      </p>
+    `).join('');
+
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
         <div class="fin-doc-toolbar">
@@ -20705,6 +21172,9 @@ class FinanceApp {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700;" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')">
+              📜 Edit Terms &amp; Conditions
+            </button>
             <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700;" onclick="window.finApp.openEditPOModal('${po.id || po.po_no}')">
               ✏️ Edit Purchase Order
             </button>
@@ -20948,7 +21418,10 @@ class FinanceApp {
                 <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:36px; width:auto; display:block;">
                 <div>
                   <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
-                  <div style="font-size:0.72rem; color:#4b5563;">General Terms &amp; Conditions of Procurement Specification</div>
+                  <div style="font-size:0.72rem; color:#4b5563; display:flex; align-items:center; gap:8px;">
+                    <span>General Terms &amp; Conditions of Procurement Specification</span>
+                    <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:4px; font-size:0.62rem; font-weight:700; padding:2px 7px; cursor:pointer;" title="Edit all 20 terms for this company / order">✏️ Edit Terms</button>
+                  </div>
                 </div>
               </div>
               <div style="text-align:right;">
@@ -20957,32 +21430,14 @@ class FinanceApp {
               </div>
             </div>
 
-            <!-- Structured Modern Terms Grid (Articles 1 to 20 - Compact Legal Specification) -->
+            <!-- Structured Modern Terms Grid (Articles 1 to 20+ - Compact Legal Specification) -->
             <div class="fin-po-terms-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1.15rem; font-size:0.62rem; color:#374151; line-height:1.38;">
               <div>
-                <p style="margin:0 0 5px 0;"><strong>1. The Order:</strong> Entered into with ${compName} for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing.</p>
-                <p style="margin:0 0 5px 0;"><strong>2. Prices:</strong> Final and not subject to escalation under any circumstances.</p>
-                <p style="margin:0 0 5px 0;"><strong>3. Identification of Material:</strong> All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities &amp; descriptions.</p>
-                <p style="margin:0 0 5px 0;"><strong>4. Packing &amp; Protection:</strong> Materials must be protected individually against damage, transit shock, and environmental degradation.</p>
-                <p style="margin:0 0 5px 0;"><strong>5. Delivery of Goods/Services:</strong> As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization.</p>
-                <p style="margin:0 0 5px 0;"><strong>6. Performance Guarantee:</strong> Supplier shall submit a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise.</p>
-                <p style="margin:0 0 5px 0;"><strong>7. Receipt &amp; Acceptance:</strong> Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense.</p>
-                <p style="margin:0 0 5px 0;"><strong>8. Rejection of Goods/Services:</strong> RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties.</p>
-                <p style="margin:0 0 5px 0;"><strong>9. Cancellation of Order:</strong> Right reserved to cancel for non-delivery by stipulated date without liability.</p>
-                <p style="margin:0 0 5px 0;"><strong>10. Invoicing Regulations:</strong> Tax invoices must be submitted within 14 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details.</p>
+                ${renderTermsCol(col1Terms)}
               </div>
 
               <div>
-                <p style="margin:0 0 5px 0;"><strong>11. Delay Penalties:</strong> 1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%.</p>
-                <p style="margin:0 0 5px 0;"><strong>12. Risk Purchase:</strong> Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier.</p>
-                <p style="margin:0 0 5px 0;"><strong>13. Warranty:</strong> Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges.</p>
-                <p style="margin:0 0 5px 0;"><strong>14. Termination:</strong> Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items.</p>
-                <p style="margin:0 0 5px 0;"><strong>15. Force Majeure:</strong> Relieves obligations during duration of qualifying events with prompt written notification.</p>
-                <p style="margin:0 0 5px 0;"><strong>16. Taxes &amp; Banking:</strong> All taxes, duties, and banking charges borne by Seller unless expressly exempted.</p>
-                <p style="margin:0 0 5px 0;"><strong>17. Indemnity:</strong> Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches.</p>
-                <p style="margin:0 0 5px 0;"><strong>18. Governing Law:</strong> Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts.</p>
-                <p style="margin:0 0 5px 0;"><strong>19. Payment Term:</strong> <span id="po-term-19-val">${paymentTermsClause}</span> <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOPaymentTerms('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 3px; vertical-align:middle;" title="Edit Payment Term">✏️</button></p>
-                <p style="margin:0 0 5px 0;"><strong>20. Invoice Requirements:</strong> Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO.</p>
+                ${renderTermsCol(col2Terms)}
               </div>
             </div>
 
@@ -23414,6 +23869,16 @@ class FinanceApp {
                 <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed under Article 19 on Specification Sheet</div>
               </div>
 
+              <div style="background:rgba(255, 255, 255, 0.04); border:1px solid rgba(255, 255, 255, 0.1); border-radius:8px; padding:10px 14px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-weight:700; font-size:0.82rem; color:#f8fafc;">📜 General Terms &amp; Conditions (Articles 1 – 20)</div>
+                  <div style="font-size:0.72rem; color:#94a3b8;">Customize legal terms for this specific company or choose from corporate presets</div>
+                </div>
+                <button type="button" class="fin-btn-quick" style="color:#38bdf8; border-color:#38bdf8; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')">
+                  Edit Terms &rarr;
+                </button>
+              </div>
+
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Responsible Person / Contact</label>
@@ -23591,6 +24056,10 @@ class FinanceApp {
       e.preventDefault();
       po.payment_terms = document.getElementById('quick-po-short-terms').value.trim();
       po.payment_terms_detail = document.getElementById('quick-po-detail-terms').value.trim();
+      if (Array.isArray(po.custom_terms)) {
+        const t19 = po.custom_terms.find(t => t.num === 19);
+        if (t19) t19.text = po.payment_terms_detail;
+      }
 
       await this.syncApi('update_po', { po });
       this.closeModal('modal-quick-po-terms');
@@ -24879,3 +25348,4 @@ if (document.readyState === 'loading') {
 } else {
   startFinanceApp();
 }
+
