@@ -828,6 +828,41 @@ class FinanceApp {
         cn.credit_note_no = cn.credit_note_no.replace('CN-RG-', 'CN-REC-');
       }
     });
+
+    // 0b2. Normalize vendor payment voucher numbers to PV-REC-44xxx sequence (continuous across years, PV-ASH-44xxx for India)
+    if (Array.isArray(this.db.vendor_payments) && this.db.vendor_payments.length > 0) {
+      const sorted = [...this.db.vendor_payments].sort((a, b) => {
+        const dA = a.payment_date || a.date || '';
+        const dB = b.payment_date || b.date || '';
+        if (dA !== dB) return dA.localeCompare(dB);
+        return String(a.id || '').localeCompare(String(b.id || ''));
+      });
+
+      let nextRecSeq = 44001;
+      let nextAshSeq = 44001;
+      sorted.forEach(pay => {
+        const isInd = (pay.company_id === 'ashaz-eng-in') || (pay.currency === 'INR');
+        const curNo = String(pay.voucher_no || '').trim();
+        const m = curNo.match(/^PV-(?:REC|ASH)-(\d{5,})$/);
+        if (m) {
+          const num = parseInt(m[1], 10);
+          if (isInd && num >= nextAshSeq) nextAshSeq = num + 1;
+          else if (!isInd && num >= nextRecSeq) nextRecSeq = num + 1;
+        }
+      });
+
+      let assignRec = 44001;
+      let assignAsh = 44001;
+      sorted.forEach(pay => {
+        const isInd = (pay.company_id === 'ashaz-eng-in') || (pay.currency === 'INR');
+        const prefix = isInd ? 'PV-ASH' : 'PV-REC';
+        const curNo = String(pay.voucher_no || '').trim();
+        if (!curNo || curNo.startsWith('PV-RG-') || curNo.includes('2026') || !curNo.match(/^PV-(?:REC|ASH)-\d{5}$/)) {
+          pay.voucher_no = isInd ? `${prefix}-${assignAsh++}` : `${prefix}-${assignRec++}`;
+        }
+      });
+    }
+
     (this.db.projects || []).forEach(prj => {
       if (CUST_ALIAS_MAP[prj.customer_id]) {
         prj.customer_id = CUST_ALIAS_MAP[prj.customer_id];
@@ -1019,7 +1054,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v53';
+    const CURRENT_DB_VERSION = 'v2026_clean_v54';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2656,18 +2691,18 @@ class FinanceApp {
 
   getNextPaymentVoucherNumber() {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
-    const payments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id) && this.matchesActivePeriod(p.payment_date));
-    let maxSeq = 100;
+    const payments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id));
+    let maxSeq = 44000;
     payments.forEach(p => {
       const pNo = p.voucher_no || '';
-      const m = pNo.match(/PV-.*-(\d+)/i) || pNo.match(/(\d{3,})$/);
+      const m = pNo.match(/PV-(?:REC|ASH)-(\d+)/i) || pNo.match(/(\d{5,})$/);
       if (m) {
         const num = parseInt(m[1], 10);
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = isIndia ? 'PV-ASH-2026' : 'PV-RG-2026';
-    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+    const prefix = isIndia ? 'PV-ASH' : 'PV-REC';
+    return `${prefix}-${maxSeq + 1}`;
   }
 
   getNextCreditNoteNumber(targetDate) {
@@ -23375,7 +23410,7 @@ class FinanceApp {
     let pay = (this.db?.vendor_payments || []).find(p => p.id === paymentId || p.voucher_no === paymentId);
     if (!pay) {
       pay = (this.db?.vendor_payments || [])[0] || {
-        voucher_no: 'PV-RG-2026-001',
+        voucher_no: 'PV-REC-44001',
         payment_date: new Date().toISOString().split('T')[0],
         vendor_name: 'Vendor Disbursement',
         payment_mode: 'Online',
@@ -23484,7 +23519,7 @@ class FinanceApp {
                   PAYMENT VOUCHER
                 </div>
                 <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px;">
-                  # ${pay.voucher_no || 'PV-RG-2026-001'}
+                  # ${pay.voucher_no || 'PV-REC-44001'}
                 </div>
 
                 <!-- Meta Details -->
@@ -23704,9 +23739,16 @@ class FinanceApp {
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Voucher # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-pay-vouch-no" class="fin-form-input" value="${pay.voucher_no || 'PV-REC-44001'}" required placeholder="PV-REC-44001">
+                </div>
+                <div class="fin-form-group">
                   <label class="fin-form-label">Payment Date <span style="color:#ef4444;">*</span></label>
                   <input type="date" id="edit-pay-date" class="fin-form-input" value="${pay.payment_date || ''}" required>
                 </div>
+              </div>
+
+              <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Disbursement Channel</label>
                   <select id="edit-pay-mode" class="fin-form-select">
@@ -23717,27 +23759,26 @@ class FinanceApp {
                     <option value="Petty Cash" ${pay.payment_mode === 'Petty Cash' || pay.payment_mode === 'Cash' ? 'selected' : ''}>Petty Cash</option>
                   </select>
                 </div>
-              </div>
-
-              <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Amount Disbursed (${currLabel}) <span style="color:#ef4444;">*</span></label>
                   <input type="number" id="edit-pay-amount" class="fin-form-input" value="${pay.amount_paid || 0}" min="0.01" step="any" required>
                 </div>
+              </div>
+
+              <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Bank UTR / Cheque Ref #</label>
                   <input type="text" id="edit-pay-ref" class="fin-form-input" value="${pay.reference_no || ''}" required>
                 </div>
-              </div>
-
-              <div class="fin-form-group">
-                <label class="fin-form-label">Disbursing Account / Source Bank</label>
-                <select id="edit-pay-account" class="fin-form-select">
-                  <option value="ADCB Corporate Account (AED 1092847291)" ${(!pay.source_account || pay.source_account.includes('ADCB')) ? 'selected' : ''}>ADCB Corporate Account (AED 1092847291)</option>
-                  <option value="First Abu Dhabi Bank (FAB) Ops (AED 8829104821)" ${pay.source_account && pay.source_account.includes('FAB') ? 'selected' : ''}>FAB Operations Account (AED 8829104821)</option>
-                  <option value="Emirates NBD Corporate (AED 472910385)" ${pay.source_account && pay.source_account.includes('NBD') ? 'selected' : ''}>Emirates NBD Corporate (AED 472910385)</option>
-                  <option value="Corporate Petty Cash / Treasury" ${pay.source_account && pay.source_account.includes('Petty') ? 'selected' : ''}>Corporate Petty Cash / Treasury</option>
-                </select>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Disbursing Account / Source Bank</label>
+                  <select id="edit-pay-account" class="fin-form-select">
+                    <option value="ADCB Corporate Account (AED 1092847291)" ${(!pay.source_account || pay.source_account.includes('ADCB')) ? 'selected' : ''}>ADCB Corporate Account (AED 1092847291)</option>
+                    <option value="First Abu Dhabi Bank (FAB) Ops (AED 8829104821)" ${pay.source_account && pay.source_account.includes('FAB') ? 'selected' : ''}>FAB Operations Account (AED 8829104821)</option>
+                    <option value="Emirates NBD Corporate (AED 472910385)" ${pay.source_account && pay.source_account.includes('NBD') ? 'selected' : ''}>Emirates NBD Corporate (AED 472910385)</option>
+                    <option value="Corporate Petty Cash / Treasury" ${pay.source_account && pay.source_account.includes('Petty') ? 'selected' : ''}>Corporate Petty Cash / Treasury</option>
+                  </select>
+                </div>
               </div>
 
               ${allocations.length > 0 ? `
@@ -23768,6 +23809,7 @@ class FinanceApp {
 
     document.getElementById('edit-pay-form').onsubmit = async (e) => {
       e.preventDefault();
+      pay.voucher_no = document.getElementById('edit-pay-vouch-no')?.value.trim() || pay.voucher_no;
       pay.vendor_name = document.getElementById('edit-pay-vend').value.trim();
       pay.payment_date = document.getElementById('edit-pay-date').value;
       pay.payment_mode = document.getElementById('edit-pay-mode').value;

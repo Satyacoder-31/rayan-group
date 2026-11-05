@@ -829,9 +829,9 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             WHERE invoice_no = 'REC-RG-INV-44050' OR id = 'inv-rec-rg-inv-44050'");
             $pdo->exec("DELETE FROM finance_projects WHERE id IN ('prj-dpa-01', 'prj-1793293174613', 'prj-1793293174359', 'prj-1793293174181', 'prj-1793293174006', 'prj-1793293173653', 'prj-1793293172695', 'prj-1793293172111', 'prj-1793293172304', 'prj-1793293136777')");
 
-            // v2026_clean_v48 & v49: Purge all Pink City Ceramic dummy bills/payments & ensure HLN bill and payment are linked and marked paid
-            $pdo->exec("DELETE FROM finance_purchase_bills WHERE vendor_name LIKE '%PINK CITY%' OR id LIKE 'bill-1793293%' OR vendor_invoice_no IN ('PC-26-0950', 'PC-26-3152')");
-            $pdo->exec("DELETE FROM finance_vendor_payments WHERE vendor_name LIKE '%PINK CITY%' OR id IN ('pay-1793369661067', 'pay-1793290968855') OR voucher_no IN ('PV-RG-2026-101', 'PV-RG-2026-102')");
+            // v2026_clean_v48 & v49: Purge specific dummy test bills/payments & ensure HLN bill and payment are linked and marked paid
+            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id LIKE 'bill-1793293%' OR vendor_invoice_no IN ('PC-26-0950', 'PC-26-3152')");
+            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-1793369661067', 'pay-1793290968855') OR voucher_no IN ('PV-RG-2026-101', 'PV-RG-2026-102')");
             $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 316571.79, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 316571.79, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793641982443' OR vendor_invoice_no = 'HLN/PO/0526/2025' OR bill_no = 'BILL-RG-2026-1001'");
 
             // v2026_clean_v50 & v53: Chronological serial numbering of credit notes per year (2023, 2024, 2025, 2026) and add note_date field
@@ -1261,7 +1261,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     $vName = $p['vendor_name'] ?? '';
                     $vNo = $p['voucher_no'] ?? '';
                     $id = $p['id'] ?? '';
-                    return stripos($vName, 'PINK CITY') === false && !in_array($vNo, ['PV-RG-2026-101', 'PV-RG-2026-102']) && !in_array($id, ['pay-1793369661067', 'pay-1793290968855']);
+                    return !in_array($vNo, ['PV-RG-2026-101', 'PV-RG-2026-102']) && !in_array($id, ['pay-1793369661067', 'pay-1793290968855']);
                 }));
                 foreach ($data['vendor_payments'] as &$hp) {
                     if (($hp['id'] ?? '') === 'pay-1793642108024' || ($hp['voucher_no'] ?? '') === 'PV-RG-2026-103') {
@@ -1941,7 +1941,32 @@ function recalculateAllFinanceBalances(&$data) {
         unset($pb);
     }
     if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        $nextRecSeq = 44001;
+        $nextAshSeq = 44001;
+        foreach ($data['vendor_payments'] as $vp) {
+            $curNo = $vp['voucher_no'] ?? '';
+            if (preg_match('/^PV-(?:REC|ASH)-(\d{5,})$/', $curNo, $m)) {
+                $num = intval($m[1]);
+                $isInd = (($vp['company_id'] ?? '') === 'ashaz-eng-in') || (($vp['currency'] ?? '') === 'INR');
+                if ($isInd && $num >= $nextAshSeq) $nextAshSeq = $num + 1;
+                else if (!$isInd && $num >= $nextRecSeq) $nextRecSeq = $num + 1;
+            }
+        }
+        $assignRec = 44001;
+        $assignAsh = 44001;
         foreach ($data['vendor_payments'] as &$vp) {
+            $curNo = $vp['voucher_no'] ?? '';
+            if (empty($curNo) || strpos($curNo, 'PV-RG-') === 0 || strpos($curNo, '2026') !== false || !preg_match('/^PV-(?:REC|ASH)-\d{5}$/', $curNo)) {
+                $isInd = (($vp['company_id'] ?? '') === 'ashaz-eng-in') || (($vp['currency'] ?? '') === 'INR');
+                $prefix = $isInd ? 'PV-ASH' : 'PV-REC';
+                $vp['voucher_no'] = $isInd ? ($prefix . '-' . $assignAsh++) : ($prefix . '-' . $assignRec++);
+                if (isset($pdo) && $pdo && !empty($vp['id'])) {
+                    try {
+                        $stmt = $pdo->prepare("UPDATE finance_vendor_payments SET voucher_no = :vNo, data_json = JSON_SET(data_json, '$.voucher_no', :vNo) WHERE id = :id");
+                        $stmt->execute([':vNo' => $vp['voucher_no'], ':id' => $vp['id']]);
+                    } catch (Exception $e) {}
+                }
+            }
             if (!empty($vp['vendor_name'])) $vp['vendor_name'] = formatCompanyNamePhp($vp['vendor_name']);
             if (!empty($vp['party_name'])) $vp['party_name'] = formatCompanyNamePhp($vp['party_name']);
         }
@@ -4095,15 +4120,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'update_payment':
             $pay = $body['payment'] ?? [];
-            if (!empty($pay) && isset($db['vendor_payments'])) {
+            if (!empty($pay)) {
+                if (!isset($db['vendor_payments'])) $db['vendor_payments'] = [];
                 $targetId = $pay['id'] ?? $pay['voucher_no'] ?? '';
+                $found = false;
                 foreach ($db['vendor_payments'] as &$existingP) {
                     if (($existingP['id'] ?? '') === $targetId || ($existingP['voucher_no'] ?? '') === $targetId) {
                         $existingP = array_merge($existingP, $pay);
+                        $found = true;
                         break;
                     }
                 }
                 unset($existingP);
+                if (!$found) {
+                    $db['vendor_payments'][] = $pay;
+                }
                 $addAuditLog('update', 'payment', $pay['voucher_no'] ?? '', 'Updated vendor payment voucher ' . ($pay['voucher_no'] ?? ''));
             }
             break;
@@ -4643,8 +4674,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pay['currency'] = ($pay['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
                 }
                 if (empty($pay['voucher_no'])) {
-                    $prefix = ($pay['company_id'] === 'ashaz-eng-in') ? 'PV-ASH' : 'PV-RG-2026';
-                    $pay['voucher_no'] = $prefix . '-' . rand(100, 999);
+                    $prefix = ($pay['company_id'] === 'ashaz-eng-in') ? 'PV-ASH' : 'PV-REC';
+                    $maxSeq = 44000;
+                    if (!empty($db['vendor_payments']) && is_array($db['vendor_payments'])) {
+                        foreach ($db['vendor_payments'] as $vp) {
+                            $vNo = $vp['voucher_no'] ?? '';
+                            if (preg_match('/PV-(?:REC|ASH)-(\d+)/i', $vNo, $m)) {
+                                $num = intval($m[1]);
+                                if ($num > $maxSeq) $maxSeq = $num;
+                            }
+                        }
+                    }
+                    $pay['voucher_no'] = $prefix . '-' . ($maxSeq + 1);
                 }
 
                 $amtPaid = floatval($pay['amount_paid'] ?? 0);
