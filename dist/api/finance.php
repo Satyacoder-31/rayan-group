@@ -1180,6 +1180,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $data['projects'] = array_values(array_filter($data['projects'], function($p) {
                 return ($p['id'] ?? '') !== 'prj-mvr2yfnl';
             }));
+            $changed = true;
 
             // v2026_clean_v52: Ensure Max Al Wahda project financials are synchronized with exact audited ledger figures
             $pdo->exec("UPDATE finance_projects SET 
