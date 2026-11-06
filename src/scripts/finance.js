@@ -1122,6 +1122,15 @@ class FinanceApp {
       }
     });
 
+    // Auto-normalize Cafe Bateel contract value to match exact verified tax invoice & receipts (AED 34,615.27)
+    (this.db.projects || []).forEach(p => {
+      if (p.id === 'prj-bateel-yas' || p.code === 'PRJ-REC-TRI-2024' || (p.name && p.name.includes('Cafe Bateel'))) {
+        p.code = 'PRJ-REC-TRI-2024';
+        p.contract_value = 34615.27;
+        p.approved_budget = 34615.27;
+      }
+    });
+
     // 3. Recalculate all balances
     (this.db.invoices || []).forEach(inv => this.recalculateInvoiceBalance(inv));
     (this.db.purchase_bills || []).forEach(bill => this.recalculateBillBalance(bill));

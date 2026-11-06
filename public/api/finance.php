@@ -959,18 +959,18 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 ],
                 [
                     'id' => 'prj-bateel-yas',
-                    'code' => 'PRJ-REC-TRI-2026',
+                    'code' => 'PRJ-REC-TRI-2024',
                     'company_id' => 'rayan-corp-uae',
                     'name' => 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi',
                     'client' => 'M/S TOP ROCK INTERIORS LLC.',
                     'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
                     'client_id' => 'cust-toprock',
-                    'contract_value' => 3529.31,
-                    'approved_budget' => 3529.31,
+                    'contract_value' => 34615.27,
+                    'approved_budget' => 34615.27,
                     'currency' => 'AED',
                     'status' => 'Closed',
-                    'start_date' => '2026-04-17',
-                    'target_completion' => '2026-04-23',
+                    'start_date' => '2024-06-27',
+                    'target_completion' => '2024-07-15',
                     'site_location' => 'Yas Mall, Abu Dhabi, UAE',
                     'description' => 'Turnkey luxury cafe fit-out, joinery, and decorative ceiling works.',
                     'manual_financials' => false
@@ -1228,6 +1228,36 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     '$.manual_margin', '22.2'
                 )
             WHERE id = 'prj-mvr35qo2' OR code = 'PRJ-RG-MAX-2026' OR name LIKE '%Max - Al Wahda%'");
+
+            // v2026_clean_v57: Synchronize Cafe Bateel project contract_value and approved_budget to exact verified 34615.27
+            $pdo->exec("UPDATE finance_projects SET 
+                code = 'PRJ-REC-TRI-2024',
+                contract_value = 34615.27,
+                approved_budget = 34615.27,
+                start_date = '2024-06-27',
+                target_completion = '2024-07-15',
+                data_json = JSON_SET(
+                    data_json,
+                    '$.code', 'PRJ-REC-TRI-2024',
+                    '$.contract_value', 34615.27,
+                    '$.approved_budget', 34615.27,
+                    '$.start_date', '2024-06-27',
+                    '$.target_completion', '2024-07-15'
+                )
+            WHERE id = 'prj-bateel-yas' OR code IN ('PRJ-REC-TRI-2024', 'PRJ-REC-TRI-2026') OR name LIKE '%Cafe Bateel%'");
+
+            if (!empty($data['projects']) && is_array($data['projects'])) {
+                foreach ($data['projects'] as &$pItem) {
+                    if (($pItem['id'] ?? '') === 'prj-bateel-yas' || ($pItem['code'] ?? '') === 'PRJ-REC-TRI-2024' || stripos($pItem['name'] ?? '', 'Cafe Bateel') !== false) {
+                        $pItem['code'] = 'PRJ-REC-TRI-2024';
+                        $pItem['contract_value'] = 34615.27;
+                        $pItem['approved_budget'] = 34615.27;
+                        $pItem['start_date'] = '2024-06-27';
+                        $pItem['target_completion'] = '2024-07-15';
+                    }
+                }
+                unset($pItem);
+            }
 
             if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
                 $cnMapById = [];
@@ -2111,6 +2141,13 @@ function recalculateAllFinanceBalances(&$data) {
     }
     if (!empty($data['projects']) && is_array($data['projects'])) {
         foreach ($data['projects'] as &$prj) {
+            if (($prj['id'] ?? '') === 'prj-bateel-yas' || ($prj['code'] ?? '') === 'PRJ-REC-TRI-2024' || stripos($prj['name'] ?? '', 'Cafe Bateel') !== false) {
+                $prj['code'] = 'PRJ-REC-TRI-2024';
+                $prj['contract_value'] = 34615.27;
+                $prj['approved_budget'] = 34615.27;
+                $prj['start_date'] = '2024-06-27';
+                $prj['target_completion'] = '2024-07-15';
+            }
             if (!empty($prj['client_name'])) $prj['client_name'] = formatCompanyNamePhp($prj['client_name']);
             if (!empty($prj['client'])) $prj['client'] = formatCompanyNamePhp($prj['client']);
         }
@@ -2579,18 +2616,18 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         ],
                         [
                             'id' => 'prj-bateel-yas',
-                            'code' => 'PRJ-REC-TRI-2026',
+                            'code' => 'PRJ-REC-TRI-2024',
                             'company_id' => 'rayan-corp-uae',
                             'name' => 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi',
                             'client' => 'M/S TOP ROCK INTERIORS LLC.',
                             'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
                             'client_id' => 'cust-toprock',
-                            'contract_value' => 3529.31,
-                            'approved_budget' => 3529.31,
+                            'contract_value' => 34615.27,
+                            'approved_budget' => 34615.27,
                             'currency' => 'AED',
                             'status' => 'Closed',
-                            'start_date' => '2026-04-17',
-                            'target_completion' => '2026-04-23',
+                            'start_date' => '2024-06-27',
+                            'target_completion' => '2024-07-15',
                             'site_location' => 'Yas Mall, Abu Dhabi, UAE',
                             'description' => 'Turnkey luxury cafe fit-out, joinery, and decorative ceiling works.',
                             'manual_financials' => false
