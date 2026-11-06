@@ -1883,6 +1883,70 @@ function recalculateAllFinanceBalances(&$data) {
         unset($inv);
     }
 
+    $bMap = [
+        'bill-1793641982443' => 'BILL-REC-1001',
+        'bill-1793890119965' => 'BILL-REC-1002',
+        'bill-1793893193964' => 'BILL-REC-1003',
+        'bill-1793894214538' => 'BILL-REC-1004',
+        'bill-1793894942719' => 'BILL-REC-1005',
+        'bill-1793897332945' => 'BILL-REC-1006',
+        'bill-1793898700774' => 'BILL-REC-1007',
+        'bill-1793896178476' => 'BILL-REC-1008',
+        'bill-1793945504650' => 'BILL-REC-1009',
+        'bill-1793947339219' => 'BILL-REC-1010'
+    ];
+    $vpMap = [
+        'pay-1793642108024' => 'PV-REC-44001',
+        'pay-1793890308989' => 'PV-REC-44002',
+        'pay-1793894011459' => 'PV-REC-44003',
+        'pay-1793894232210' => 'PV-REC-44004',
+        'pay-1793894993039' => 'PV-REC-44005',
+        'pay-1793898169781' => 'PV-REC-44006'
+    ];
+
+    if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+        foreach ($data['purchase_bills'] as &$pbItem) {
+            $pbId = $pbItem['id'] ?? '';
+            if (isset($bMap[$pbId])) {
+                $pbItem['bill_no'] = $bMap[$pbId];
+            } elseif (!empty($pbItem['bill_no']) && (strpos($pbItem['bill_no'], 'BILL-RG-2026-') === 0 || strpos($pbItem['bill_no'], 'BILL-RG-') === 0)) {
+                $pbItem['bill_no'] = preg_replace('/^BILL-RG-(?:202\d-)?/', 'BILL-REC-', $pbItem['bill_no']);
+            }
+        }
+        unset($pbItem);
+    }
+
+    if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        foreach ($data['vendor_payments'] as &$vpItem) {
+            $vpId = $vpItem['id'] ?? '';
+            if (isset($vpMap[$vpId])) {
+                $vpItem['voucher_no'] = $vpMap[$vpId];
+            }
+            if (($vpItem['id'] ?? '') === 'pay-1793642108024' || ($vpItem['voucher_no'] ?? '') === 'PV-REC-44001') {
+                $vpItem['allocations'] = [
+                    [
+                        'bill_id' => 'bill-1793641982443',
+                        'bill_no' => 'BILL-REC-1001',
+                        'vendor_invoice_no' => 'HLN/PO/0526/2025',
+                        'amount_allocated' => 316571.79
+                    ]
+                ];
+            }
+            if (!empty($vpItem['allocations']) && is_array($vpItem['allocations'])) {
+                foreach ($vpItem['allocations'] as &$alItem) {
+                    $alBid = $alItem['bill_id'] ?? '';
+                    if (isset($bMap[$alBid])) {
+                        $alItem['bill_no'] = $bMap[$alBid];
+                    } elseif (!empty($alItem['bill_no']) && (strpos($alItem['bill_no'], 'BILL-RG-2026-') === 0 || strpos($alItem['bill_no'], 'BILL-RG-') === 0)) {
+                        $alItem['bill_no'] = preg_replace('/^BILL-RG-(?:202\d-)?/', 'BILL-REC-', $alItem['bill_no']);
+                    }
+                }
+                unset($alItem);
+            }
+        }
+        unset($vpItem);
+    }
+
     $debitNotes = $data['debit_notes'] ?? [];
     $payments = $data['vendor_payments'] ?? [];
     if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
