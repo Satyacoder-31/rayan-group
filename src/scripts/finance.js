@@ -14279,8 +14279,8 @@ class FinanceApp {
                   ` : ''}
                   ${invoices.map(i => `
                     <tr>
-                      <td><strong>${i.invoice_no}</strong></td>
-                      <td>${this.formatDate(i.invoice_date)}</td>
+                      <td style="white-space:nowrap;"><strong style="font-family:monospace; font-size:0.82rem;">${i.invoice_no}</strong></td>
+                      <td style="white-space:nowrap;">${this.formatDate(i.invoice_date)}</td>
                       <td>${this.formatDate(i.due_date)}</td>
                       <td>${this.formatCurrency(i.grand_total)}</td>
                       <td style="color:#10b981;">${this.formatCurrency((i.amount_paid && i.amount_paid > 0.02) ? i.amount_paid : 0)}</td>
@@ -14710,34 +14710,42 @@ class FinanceApp {
                       <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
                         <thead>
                           <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
-                            <th style="padding:4px 6px; text-align:left; width:11%;">Date</th>
-                            <th style="padding:4px 6px; text-align:left; width:17%;">Invoice #</th>
-                            <th style="padding:4px 6px; text-align:left; width:34%;">Project / Scope Narration</th>
-                            <th style="padding:4px 6px; text-align:right; width:12%;">Billed (${curr})</th>
-                            <th style="padding:4px 6px; text-align:right; width:12%;">Paid (${curr})</th>
-                            <th style="padding:4px 6px; text-align:right; width:14%;">Balance Due</th>
+                            <th style="padding:4px 6px; text-align:left; width:11%; white-space:nowrap;">Date</th>
+                            <th style="padding:4px 6px; text-align:left; width:22%; white-space:nowrap;">Invoice #</th>
+                            <th style="padding:4px 6px; text-align:left; width:29%;">Project / Scope Narration</th>
+                            <th style="padding:4px 6px; text-align:right; width:12%; white-space:nowrap;">Billed (${curr})</th>
+                            <th style="padding:4px 6px; text-align:right; width:12%; white-space:nowrap;">Paid (${curr})</th>
+                            <th style="padding:4px 6px; text-align:right; width:14%; white-space:nowrap;">Balance Due</th>
                           </tr>
                         </thead>
                         <tbody>
                           ${item.unbilledOpening > 0 ? `
                             <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.04);">
-                              <td style="padding:4px 6px; color:#64748b;">${this.formatDate(item.customer.created_at || '2025-04-01')}</td>
-                              <td style="padding:4px 6px; font-weight:700; color:#0284c7;">OPENING-BALANCE</td>
+                              <td style="padding:4px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(item.customer.created_at || '2025-04-01')}</td>
+                              <td style="padding:4px 6px; font-weight:700; color:#0284c7; white-space:nowrap; font-size:0.69rem;">OPENING-BALANCE</td>
                               <td style="padding:4px 6px; color:#475569;">Brought-forward verified accounts receivable balance</td>
-                              <td style="padding:4px 6px; text-align:right; font-weight:600;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td style="padding:4px 6px; text-align:right; color:#64748b;">0.00</td>
-                              <td style="padding:4px 6px; text-align:right; font-weight:800; color:#dc2626;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td style="padding:4px 6px; text-align:right; font-weight:600; white-space:nowrap;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td style="padding:4px 6px; text-align:right; color:#64748b; white-space:nowrap;">0.00</td>
+                              <td style="padding:4px 6px; text-align:right; font-weight:800; color:#dc2626; white-space:nowrap;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           ` : ''}
                           ${item.invoices.map(inv => {
       const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
       const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
+      const st = String(inv.status || 'unpaid').toLowerCase();
+      const badgeBg = st === 'paid'
+        ? 'background:#ecfdf5; color:#059669; border:1px solid rgba(5,150,105,0.25);'
+        : (st === 'partially_paid'
+          ? 'background:#f0f9ff; color:#0284c7; border:1px solid rgba(2,132,199,0.25);'
+          : (st.includes('credit')
+            ? 'background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.25);'
+            : 'background:#fef2f2; color:#dc2626; border:1px solid rgba(220,38,38,0.25);'));
       return `
                               <tr style="border-bottom:1px solid #e2e8f0;">
-                                <td style="padding:4px 6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
-                                <td style="padding:4px 6px; font-weight:700; color:#0f172a;">
-                                  ${inv.invoice_no}
-                                  <span style="font-size:0.62rem; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:2px; ${inv.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : (inv.status === 'partially_paid' ? 'background:#f0f9ff; color:#0284c7;' : 'background:#fef2f2; color:#dc2626;')}">${inv.status}</span>
+                                <td style="padding:4px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                                <td style="padding:4px 6px; color:#0f172a; white-space:nowrap;">
+                                  <span style="font-size:0.69rem; font-weight:700; color:#0f172a; white-space:nowrap; letter-spacing:-0.01em; display:inline-block;">${inv.invoice_no}</span>
+                                  <span style="font-size:0.58rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:3px; vertical-align:middle; white-space:nowrap; ${badgeBg}">${inv.status}</span>
                                 </td>
                                 <td style="padding:4px 6px; color:#334155; word-break:break-word;">
                                   ${inv.project_name || inv.notes || 'Commercial Contracting &amp; Fit-Out Services'}
@@ -15118,39 +15126,47 @@ class FinanceApp {
                 <table style="width:100%; border-collapse:collapse; font-size:0.74rem; table-layout:fixed;">
                   <thead>
                     <tr style="background:#0f172a; color:#ffffff;">
-                      <th style="padding:6px; text-align:left; width:12%;">Date</th>
-                      <th style="padding:6px; text-align:left; width:17%;">Invoice #</th>
-                      <th style="padding:6px; text-align:left; width:33%;">Project Narration</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Billed (${curr})</th>
-                      <th style="padding:6px; text-align:right; width:12%;">Paid (${curr})</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Balance Due</th>
+                      <th style="padding:6px; text-align:left; width:11%; white-space:nowrap;">Date</th>
+                      <th style="padding:6px; text-align:left; width:22%; white-space:nowrap;">Invoice #</th>
+                      <th style="padding:6px; text-align:left; width:28%;">Project Narration</th>
+                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Billed (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Paid (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Balance Due</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${unbilledOpening > 0 ? `
                       <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.04);">
-                        <td style="padding:6px; color:#64748b;">${this.formatDate(cust.created_at || '2025-04-01')}</td>
-                        <td style="padding:6px; font-weight:700; color:#0284c7;">OPENING-BALANCE</td>
+                        <td style="padding:6px; color:#64748b; white-space:nowrap;">${this.formatDate(cust.created_at || '2025-04-01')}</td>
+                        <td style="padding:6px 4px; font-weight:700; color:#0284c7; white-space:nowrap; font-size:0.69rem;">OPENING-BALANCE</td>
                         <td style="padding:6px; color:#475569;">Brought-forward verified accounts receivable balance</td>
-                        <td style="padding:6px; text-align:right; font-weight:600;">${unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:6px; text-align:right; color:#64748b;">0.00</td>
-                        <td style="padding:6px; text-align:right; font-weight:800; color:#dc2626;">${unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; font-weight:600; white-space:nowrap;">${unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; color:#64748b; white-space:nowrap;">0.00</td>
+                        <td style="padding:6px; text-align:right; font-weight:800; color:#dc2626; white-space:nowrap;">${unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       </tr>
                     ` : ''}
                     ${invoices.map(inv => {
       const invPaid = (inv.amount_paid && inv.amount_paid > 0.02) ? Number(inv.amount_paid) : 0;
       const invDue = (inv.balance_due && inv.balance_due > 0.02) ? Number(inv.balance_due) : 0;
+      const st = String(inv.status || 'unpaid').toLowerCase();
+      const badgeBg = st === 'paid'
+        ? 'background:#ecfdf5; color:#059669; border:1px solid rgba(5,150,105,0.25);'
+        : (st === 'partially_paid'
+          ? 'background:#f0f9ff; color:#0284c7; border:1px solid rgba(2,132,199,0.25);'
+          : (st.includes('credit')
+            ? 'background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.25);'
+            : 'background:#fef2f2; color:#dc2626; border:1px solid rgba(220,38,38,0.25);'));
       return `
                         <tr style="border-bottom:1px solid #e2e8f0;">
-                          <td style="padding:6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
-                          <td style="padding:6px; font-weight:700; color:#0f172a;">
-                            ${inv.invoice_no}
-                            <span style="font-size:0.62rem; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:2px; ${inv.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : (inv.status === 'partially_paid' ? 'background:#f0f9ff; color:#0284c7;' : 'background:#fef2f2; color:#dc2626;')}">${inv.status}</span>
+                          <td style="padding:6px; color:#64748b; white-space:nowrap;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                          <td style="padding:6px 4px; color:#0f172a; white-space:nowrap;">
+                            <span style="font-size:0.69rem; font-weight:700; color:#0f172a; white-space:nowrap; letter-spacing:-0.01em; display:inline-block;">${inv.invoice_no}</span>
+                            <span style="font-size:0.58rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:3px; vertical-align:middle; white-space:nowrap; ${badgeBg}">${inv.status}</span>
                           </td>
                           <td style="padding:6px; color:#334155; word-break:break-word;">${inv.project_name || inv.notes || 'Contracting Services'}</td>
-                          <td style="padding:6px; text-align:right; font-weight:600; color:#0f172a;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:600; color:#0f172a; white-space:nowrap;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a; white-space:nowrap;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'}; white-space:nowrap;">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `;
     }).join('')}
@@ -15398,39 +15414,47 @@ class FinanceApp {
                 <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
                   <thead>
                     <tr style="background:#0f172a; color:#ffffff;">
-                      <th style="padding:6px; text-align:left; width:12%;">Date</th>
-                      <th style="padding:6px; text-align:left; width:16%;">Invoice #</th>
-                      <th style="padding:6px; text-align:left; width:34%;">Scope Description</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Billed (${curr})</th>
-                      <th style="padding:6px; text-align:right; width:12%;">Collected</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Pending Due</th>
+                      <th style="padding:6px; text-align:left; width:11%; white-space:nowrap;">Date</th>
+                      <th style="padding:6px; text-align:left; width:22%; white-space:nowrap;">Invoice #</th>
+                      <th style="padding:6px; text-align:left; width:28%;">Scope Description</th>
+                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Billed (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Collected</th>
+                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Pending Due</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${ledger.prjInvoices.length > 0 ? ledger.prjInvoices.map(inv => {
       const invPaid = Number(inv.amount_paid) || 0;
       const invDue = Number(inv.balance_due) || 0;
+      const st = String(inv.status || 'unpaid').toLowerCase();
+      const badgeBg = st === 'paid'
+        ? 'background:#ecfdf5; color:#059669; border:1px solid rgba(5,150,105,0.25);'
+        : (st === 'partially_paid'
+          ? 'background:#f0f9ff; color:#0284c7; border:1px solid rgba(2,132,199,0.25);'
+          : (st.includes('credit')
+            ? 'background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.25);'
+            : 'background:#fef2f2; color:#dc2626; border:1px solid rgba(220,38,38,0.25);'));
       return `
                         <tr style="border-bottom:1px solid #e2e8f0;">
-                          <td style="padding:6px; color:#64748b;">${this.formatDate(inv.invoice_date || inv.date)}</td>
-                          <td style="padding:6px; font-weight:700; color:#0f172a;">
-                            ${inv.invoice_no}
-                            <span style="font-size:0.62rem; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:2px; ${inv.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : (inv.status === 'partially_paid' ? 'background:#f0f9ff; color:#0284c7;' : 'background:#fef2f2; color:#dc2626;')}">${inv.status}</span>
+                          <td style="padding:6px; color:#64748b; white-space:nowrap;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                          <td style="padding:6px 4px; color:#0f172a; white-space:nowrap;">
+                            <span style="font-size:0.69rem; font-weight:700; color:#0f172a; white-space:nowrap; letter-spacing:-0.01em; display:inline-block;">${inv.invoice_no}</span>
+                            <span style="font-size:0.58rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:3px; vertical-align:middle; white-space:nowrap; ${badgeBg}">${inv.status}</span>
                           </td>
                           <td style="padding:6px; color:#334155; word-break:break-word;">${inv.project_name || inv.notes || inv.line_items?.[0]?.description || 'Contracting & Fitout Works'}</td>
-                          <td style="padding:6px; text-align:right; font-weight:700; color:#0f172a;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:700; color:#0f172a; white-space:nowrap;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a; white-space:nowrap;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'}; white-space:nowrap;">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `;
     }).join('') : `
                       <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.03);">
-                        <td style="padding:6px; color:#64748b;">${this.formatDate(prj.start_date || '2025-08-09')}</td>
-                        <td style="padding:6px; font-weight:700; color:#0284c7;">${prj.code || 'PRJ'}-BILLING</td>
+                        <td style="padding:6px; color:#64748b; white-space:nowrap;">${this.formatDate(prj.start_date || '2025-08-09')}</td>
+                        <td style="padding:6px 4px; font-weight:700; color:#0284c7; white-space:nowrap; font-size:0.69rem;">${prj.code || 'PRJ'}-BILLING</td>
                         <td style="padding:6px; color:#334155;">${prj.name} • Certified contract progress billing</td>
-                        <td style="padding:6px; text-align:right; font-weight:700; color:#0f172a;">${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a;">${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:6px; text-align:right; font-weight:800; color:${ledger.pendingDue > 0.02 ? '#dc2626' : '#16a34a'};">${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; font-weight:700; color:#0f172a; white-space:nowrap;">${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a; white-space:nowrap;">${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:6px; text-align:right; font-weight:800; color:${ledger.pendingDue > 0.02 ? '#dc2626' : '#16a34a'}; white-space:nowrap;">${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       </tr>
                     `}
                   </tbody>
@@ -15457,39 +15481,39 @@ class FinanceApp {
                   <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
                     <thead>
                       <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
-                        <th style="padding:5px 6px; text-align:left; width:16%;">Receipt #</th>
-                        <th style="padding:5px 6px; text-align:left; width:13%;">Date</th>
+                        <th style="padding:5px 6px; text-align:left; width:17%; white-space:nowrap;">Receipt #</th>
+                        <th style="padding:5px 6px; text-align:left; width:12%; white-space:nowrap;">Date</th>
                         <th style="padding:5px 6px; text-align:left; width:15%;">Payment Mode</th>
                         <th style="padding:5px 6px; text-align:left; width:28%;">Bank / Wire Ref</th>
                         <th style="padding:5px 6px; text-align:left; width:14%;">Allocation</th>
-                        <th style="padding:5px 6px; text-align:right; width:14%;">Amount Received</th>
+                        <th style="padding:5px 6px; text-align:right; width:14%; white-space:nowrap;">Amount Received</th>
                       </tr>
                     </thead>
                     <tbody>
                       ${ledger.prjReceipts.length > 0 ? ledger.prjReceipts.map(r => `
                         <tr style="border-bottom:1px solid #e2e8f0;">
-                          <td style="padding:5px 6px; font-weight:700; color:#0f172a;">${r.receipt_no}</td>
-                          <td style="padding:5px 6px; color:#64748b;">${this.formatDate(r.receipt_date)}</td>
+                          <td style="padding:5px 6px; font-weight:700; font-size:0.69rem; color:#0f172a; white-space:nowrap;">${r.receipt_no}</td>
+                          <td style="padding:5px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(r.receipt_date)}</td>
                           <td style="padding:5px 6px; color:#334155;">${r.payment_mode || 'Bank Wire'}</td>
                           <td style="padding:5px 6px; font-family:monospace; color:#475569;">${r.reference_no || 'ADCB Direct Wire'}</td>
                           <td style="padding:5px 6px; color:#0284c7; font-weight:600;">${r.allocated_invoices?.[0]?.invoice_no || 'Project Account'}</td>
-                          <td style="padding:5px 6px; text-align:right; font-weight:800; color:#16a34a;">${currSym}${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:5px 6px; text-align:right; font-weight:800; color:#16a34a; white-space:nowrap;">${currSym}${Number(r.amount_received || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `).join('') : `
                         <tr style="border-bottom:1px solid #e2e8f0;">
-                          <td style="padding:5px 6px; font-weight:700; color:#0f172a;">REC-RV-PROJECT</td>
-                          <td style="padding:5px 6px; color:#64748b;">${this.formatDate(prj.target_completion || '2026-10-04')}</td>
+                          <td style="padding:5px 6px; font-weight:700; font-size:0.69rem; color:#0f172a; white-space:nowrap;">REC-RV-PROJECT</td>
+                          <td style="padding:5px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(prj.target_completion || '2026-10-04')}</td>
                           <td style="padding:5px 6px; color:#334155;">Bank Transfer / Wire</td>
                           <td style="padding:5px 6px; font-family:monospace; color:#475569;">Abu Dhabi Commercial Bank (ADCB)</td>
                           <td style="padding:5px 6px; color:#0284c7; font-weight:600;">Direct Project Inflows</td>
-                          <td style="padding:5px 6px; text-align:right; font-weight:800; color:#16a34a;">${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:5px 6px; text-align:right; font-weight:800; color:#16a34a; white-space:nowrap;">${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `}
                     </tbody>
                     <tfoot>
                       <tr style="background:#f8fafc; font-weight:800; border-top:1px solid #cbd5e1;">
                         <td colspan="5" style="padding:5px 6px; text-align:right; text-transform:uppercase;">Total Collections Received:</td>
-                        <td style="padding:5px 6px; text-align:right; color:#16a34a; font-weight:800;">${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 6px; text-align:right; color:#16a34a; font-weight:800; white-space:nowrap;">${currSym}${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -15507,37 +15531,37 @@ class FinanceApp {
                 <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
                   <thead>
                     <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
-                      <th style="padding:5px 6px; text-align:left; width:13%;">Bill Date</th>
-                      <th style="padding:5px 6px; text-align:left; width:16%;">Bill # / PO Ref</th>
-                      <th style="padding:5px 6px; text-align:left; width:25%;">Vendor / Subcontractor</th>
+                      <th style="padding:5px 6px; text-align:left; width:12%; white-space:nowrap;">Bill Date</th>
+                      <th style="padding:5px 6px; text-align:left; width:18%; white-space:nowrap;">Bill # / PO Ref</th>
+                      <th style="padding:5px 6px; text-align:left; width:24%;">Vendor / Subcontractor</th>
                       <th style="padding:5px 6px; text-align:left; width:22%;">Scope Description</th>
-                      <th style="padding:5px 6px; text-align:right; width:12%;">Bill Amount</th>
-                      <th style="padding:5px 6px; text-align:right; width:12%;">Status</th>
+                      <th style="padding:5px 6px; text-align:right; width:12%; white-space:nowrap;">Bill Amount</th>
+                      <th style="padding:5px 6px; text-align:right; width:12%; white-space:nowrap;">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${ledger.prjBills.length > 0 ? ledger.prjBills.map(b => `
                       <tr style="border-bottom:1px solid #e2e8f0;">
-                        <td style="padding:5px 6px; color:#64748b;">${this.formatDate(b.bill_date || b.date)}</td>
-                        <td style="padding:5px 6px; font-weight:700; color:#0f172a;">
-                          ${b.bill_no || b.bill_number}
-                          ${b.vendor_invoice_no ? `<div style="font-size:0.62rem; color:#64748b; font-family:monospace;">Ref: ${b.vendor_invoice_no}</div>` : ''}
+                        <td style="padding:5px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(b.bill_date || b.date)}</td>
+                        <td style="padding:5px 6px; color:#0f172a; white-space:nowrap;">
+                          <span style="font-size:0.69rem; font-weight:700; white-space:nowrap;">${b.bill_no || b.bill_number}</span>
+                          ${b.vendor_invoice_no ? `<div style="font-size:0.60rem; color:#64748b; font-family:monospace; white-space:nowrap;">Ref: ${b.vendor_invoice_no}</div>` : ''}
                         </td>
                         <td style="padding:5px 6px; font-weight:600; color:#334155;">${this.formatCompanyName(b.vendor_name)}</td>
                         <td style="padding:5px 6px; color:#64748b; word-break:break-word;">${b.project_name || b.notes || b.items?.[0]?.description || 'Project Materials & Subcontractor Works'}</td>
-                        <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c;">${currSym}${Number(b.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:5px 6px; text-align:right;">
+                        <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c; white-space:nowrap;">${currSym}${Number(b.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 6px; text-align:right; white-space:nowrap;">
                           <span style="font-size:0.62rem; padding:2px 6px; border-radius:3px; font-weight:700; ${b.status === 'paid' ? 'background:#ecfdf5; color:#059669;' : 'background:#fef2f2; color:#dc2626;'}">${(b.status || 'UNPAID').toUpperCase()}</span>
                         </td>
                       </tr>
                     `).join('') : (ledger.billsCost > 0 ? `
                       <tr style="border-bottom:1px solid #e2e8f0;">
-                        <td style="padding:5px 6px; color:#64748b;">${this.formatDate(prj.target_completion || '2026-10-04')}</td>
-                        <td style="padding:5px 6px; font-weight:700; color:#0f172a;">BILL-REC-1001<div style="font-size:0.62rem; color:#64748b; font-family:monospace;">Ref: HLN/PO/0526/2025</div></td>
+                        <td style="padding:5px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(prj.target_completion || '2026-10-04')}</td>
+                        <td style="padding:5px 6px; color:#0f172a; white-space:nowrap;"><span style="font-size:0.69rem; font-weight:700;">BILL-REC-1001</span><div style="font-size:0.60rem; color:#64748b; font-family:monospace; white-space:nowrap;">Ref: HLN/PO/0526/2025</div></td>
                         <td style="padding:5px 6px; font-weight:600; color:#334155;">M/S HLN TECHNICAL SERVICES LLC</td>
                         <td style="padding:5px 6px; color:#64748b;">All project materials and employee salary payments paid through company account</td>
-                        <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c;">${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td style="padding:5px 6px; text-align:right;"><span style="font-size:0.62rem; padding:2px 6px; border-radius:3px; font-weight:700; background:#ecfdf5; color:#059669;">PAID</span></td>
+                        <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c; white-space:nowrap;">${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 6px; text-align:right; white-space:nowrap;"><span style="font-size:0.62rem; padding:2px 6px; border-radius:3px; font-weight:700; background:#ecfdf5; color:#059669;">PAID</span></td>
                       </tr>
                     ` : `
                       <tr><td colspan="6" style="padding:8px; text-align:center; color:#94a3b8; font-style:italic;">No direct supplier bills linked to this project account.</td></tr>
@@ -15546,7 +15570,7 @@ class FinanceApp {
                   <tfoot>
                     <tr style="background:#f8fafc; font-weight:800; border-top:1px solid #cbd5e1;">
                       <td colspan="4" style="padding:5px 6px; text-align:right; text-transform:uppercase;">Total Subcontractor &amp; Material Bills:</td>
-                      <td style="padding:5px 6px; text-align:right; color:#ea580c; font-weight:800;">${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:5px 6px; text-align:right; color:#ea580c; font-weight:800; white-space:nowrap;">${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td></td>
                     </tr>
                   </tfoot>
