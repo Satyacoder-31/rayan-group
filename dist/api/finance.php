@@ -1229,35 +1229,102 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 )
             WHERE id = 'prj-mvr35qo2' OR code = 'PRJ-RG-MAX-2026' OR name LIKE '%Max - Al Wahda%'");
 
-            // v2026_clean_v57: Synchronize Cafe Bateel project contract_value and approved_budget to exact verified 34615.27
-            $pdo->exec("UPDATE finance_projects SET 
-                code = 'PRJ-REC-TRI-2024',
-                contract_value = 34615.27,
-                approved_budget = 34615.27,
-                start_date = '2024-06-27',
-                target_completion = '2024-07-15',
-                data_json = JSON_SET(
-                    data_json,
-                    '$.code', 'PRJ-REC-TRI-2024',
-                    '$.contract_value', 34615.27,
-                    '$.approved_budget', 34615.27,
-                    '$.start_date', '2024-06-27',
-                    '$.target_completion', '2024-07-15'
-                )
-            WHERE id = 'prj-bateel-yas' OR code IN ('PRJ-REC-TRI-2024', 'PRJ-REC-TRI-2026') OR name LIKE '%Cafe Bateel%'");
+            // Migration v58: Ensure Hayat Property # 12 and Cafe Bateel are distinct independent projects and not continuously overwritten
+            try {
+                $chkMig58 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'hayat_bateel_split_v58'")->fetchColumn();
+                if (!$chkMig58) {
+                    // 1. Cafe Bateel project
+                    $bateelPrj = [
+                        'id' => 'prj-bateel-yas',
+                        'code' => 'PRJ-REC-TRI-2024',
+                        'company_id' => 'rayan-corp-uae',
+                        'name' => 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi',
+                        'client' => 'M/S TOP ROCK INTERIORS LLC.',
+                        'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                        'client_id' => 'cust-toprock',
+                        'contract_value' => 34615.27,
+                        'approved_budget' => 34615.27,
+                        'currency' => 'AED',
+                        'status' => 'Closed',
+                        'start_date' => '2024-06-27',
+                        'target_completion' => '2024-07-15',
+                        'site_location' => 'Yas Mall, Abu Dhabi, UAE',
+                        'description' => 'Turnkey luxury cafe fit-out, joinery, and decorative ceiling works.',
+                        'manual_financials' => false
+                    ];
+                    $stmtBateel = $pdo->prepare("REPLACE INTO finance_projects (id, code, company_id, name, client, contract_value, approved_budget, currency, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :client, :contract_value, :approved_budget, :currency, :status, :data_json, NOW())");
+                    $stmtBateel->execute([
+                        ':id' => $bateelPrj['id'],
+                        ':code' => $bateelPrj['code'],
+                        ':company_id' => $bateelPrj['company_id'],
+                        ':name' => $bateelPrj['name'],
+                        ':client' => $bateelPrj['client'],
+                        ':contract_value' => $bateelPrj['contract_value'],
+                        ':approved_budget' => $bateelPrj['approved_budget'],
+                        ':currency' => $bateelPrj['currency'],
+                        ':status' => $bateelPrj['status'],
+                        ':data_json' => json_encode($bateelPrj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
 
-            if (!empty($data['projects']) && is_array($data['projects'])) {
-                foreach ($data['projects'] as &$pItem) {
-                    if (($pItem['id'] ?? '') === 'prj-bateel-yas' || ($pItem['code'] ?? '') === 'PRJ-REC-TRI-2024' || stripos($pItem['name'] ?? '', 'Cafe Bateel') !== false) {
-                        $pItem['code'] = 'PRJ-REC-TRI-2024';
-                        $pItem['contract_value'] = 34615.27;
-                        $pItem['approved_budget'] = 34615.27;
-                        $pItem['start_date'] = '2024-06-27';
-                        $pItem['target_completion'] = '2024-07-15';
+                    // 2. Hayat Property # 12 project
+                    $hayatPrj = [
+                        'id' => 'prj-rec-3-hp-2024',
+                        'code' => 'PRJ-REC-3-HP-2024',
+                        'company_id' => 'rayan-corp-uae',
+                        'name' => 'Project # Hayat Property # 12 , Dubai',
+                        'client' => 'M/S HAYAT COMMUNICATIONS LLC',
+                        'client_name' => 'M/S HAYAT COMMUNICATIONS LLC',
+                        'client_id' => 'cust-hayat',
+                        'contract_value' => 136972.50,
+                        'approved_budget' => 136972.50,
+                        'currency' => 'AED',
+                        'status' => 'Closed',
+                        'start_date' => '2023-12-30',
+                        'target_completion' => '2025-08-19',
+                        'site_location' => 'Dubai, UAE',
+                        'description' => 'Turnkey interior fitout, joinery, and MEP works for Hayat Property #12 Dubai.',
+                        'manual_financials' => false
+                    ];
+                    $stmtHayat = $pdo->prepare("REPLACE INTO finance_projects (id, code, company_id, name, client, contract_value, approved_budget, currency, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :client, :contract_value, :approved_budget, :currency, :status, :data_json, NOW())");
+                    $stmtHayat->execute([
+                        ':id' => $hayatPrj['id'],
+                        ':code' => $hayatPrj['code'],
+                        ':company_id' => $hayatPrj['company_id'],
+                        ':name' => $hayatPrj['name'],
+                        ':client' => $hayatPrj['client'],
+                        ':contract_value' => $hayatPrj['contract_value'],
+                        ':approved_budget' => $hayatPrj['approved_budget'],
+                        ':currency' => $hayatPrj['currency'],
+                        ':status' => $hayatPrj['status'],
+                        ':data_json' => json_encode($hayatPrj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
+
+                    // Link Hayat invoices to prj-rec-3-hp-2024
+                    $pdo->exec("UPDATE finance_invoices SET project_id = 'prj-rec-3-hp-2024', project_name = 'Project # Hayat Property # 12 , Dubai', data_json = JSON_SET(data_json, '$.project_id', 'prj-rec-3-hp-2024', '$.project_name', 'Project # Hayat Property # 12 , Dubai') WHERE invoice_no IN ('REC-RG-INV-1011', 'REC-RG-INV-1027', 'REC-RG-INV-44001', 'REC-RG-INV-44003')");
+
+                    // Ensure Cafe Bateel bill BILL-REC-1008 is linked to prj-bateel-yas
+                    $pdo->exec("UPDATE finance_purchase_bills SET project_id = 'prj-bateel-yas', project_name = 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi', data_json = JSON_SET(data_json, '$.project_id', 'prj-bateel-yas', '$.project_name', 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi') WHERE bill_no = 'BILL-REC-1008' OR id = 'bill-1793896178476'");
+
+                    if (!empty($data['projects']) && is_array($data['projects'])) {
+                        $foundBateel = false;
+                        $foundHayat = false;
+                        foreach ($data['projects'] as &$p) {
+                            if (($p['id'] ?? '') === 'prj-bateel-yas') {
+                                $p = $bateelPrj;
+                                $foundBateel = true;
+                            } elseif (($p['id'] ?? '') === 'prj-rec-3-hp-2024' || ($p['code'] ?? '') === 'PRJ-REC-3-HP-2024') {
+                                $p = $hayatPrj;
+                                $foundHayat = true;
+                            }
+                        }
+                        unset($p);
+                        if (!$foundBateel) array_unshift($data['projects'], $bateelPrj);
+                        if (!$foundHayat) array_unshift($data['projects'], $hayatPrj);
                     }
+
+                    $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('hayat_bateel_split_v58', 'completed', NOW())");
                 }
-                unset($pItem);
-            }
+            } catch (Exception $e) {}
 
             if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
                 $cnMapById = [];
@@ -2141,13 +2208,6 @@ function recalculateAllFinanceBalances(&$data) {
     }
     if (!empty($data['projects']) && is_array($data['projects'])) {
         foreach ($data['projects'] as &$prj) {
-            if (($prj['id'] ?? '') === 'prj-bateel-yas' || ($prj['code'] ?? '') === 'PRJ-REC-TRI-2024' || stripos($prj['name'] ?? '', 'Cafe Bateel') !== false) {
-                $prj['code'] = 'PRJ-REC-TRI-2024';
-                $prj['contract_value'] = 34615.27;
-                $prj['approved_budget'] = 34615.27;
-                $prj['start_date'] = '2024-06-27';
-                $prj['target_completion'] = '2024-07-15';
-            }
             if (!empty($prj['client_name'])) $prj['client_name'] = formatCompanyNamePhp($prj['client_name']);
             if (!empty($prj['client'])) $prj['client'] = formatCompanyNamePhp($prj['client']);
         }
