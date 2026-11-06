@@ -1018,6 +1018,17 @@ class FinanceApp {
       }
     });
 
+    // Purge fake CN-REC-018, fake payment-out vouchers, and fake test bills
+    if (this.db.credit_notes) {
+      this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== 'cn-1793512121832' && c.credit_note_no !== 'CN-REC-018' && (c.invoice_no || '') !== 'REC-RG-INV-44008');
+    }
+    if (this.db.vendor_payments) {
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => !['PV-REC-44006', 'PV-REC-44007'].includes(p.voucher_no) && !['pay-1793985851677', 'pay-1793980815744'].includes(p.id));
+    }
+    if (this.db.purchase_bills) {
+      this.db.purchase_bills = this.db.purchase_bills.filter(b => b.bill_no !== 'BILL-REC-1007' && b.id !== 'bill-1793985810710');
+    }
+
     // 2. Auto-align credit notes with continuous chronological serial sequence (No year: CN-REC-001 to CN-REC-025)
     const canonicalCnMap = {
       'cn-1793469085069': { no: 'CN-REC-001', date: '2023-02-26' },
@@ -1037,7 +1048,6 @@ class FinanceApp {
       'cn-1793555201785': { no: 'CN-REC-015', date: '2025-06-15' },
       'cn-1793511081739': { no: 'CN-REC-016', date: '2025-08-18' },
       'cn-1793511132931': { no: 'CN-REC-017', date: '2025-08-19' },
-      'cn-1793512121832': { no: 'CN-REC-018', date: '2025-11-26' },
       'cn-1793511975271': { no: 'CN-REC-019', date: '2025-11-26' },
       'cn-1793512002192': { no: 'CN-REC-020', date: '2025-11-26' },
       'cn-1793555759783': { no: 'CN-REC-021', date: '2026-02-15' },
@@ -1095,8 +1105,7 @@ class FinanceApp {
       'pay-1793890308989': 'PV-REC-44002',
       'pay-1793894011459': 'PV-REC-44003',
       'pay-1793894232210': 'PV-REC-44004',
-      'pay-1793894993039': 'PV-REC-44005',
-      'pay-1793898169781': 'PV-REC-44006'
+      'pay-1793894993039': 'PV-REC-44005'
     };
     (this.db.vendor_payments || []).forEach(vp => {
       if (vpRenameMap[vp.id]) {
@@ -1170,7 +1179,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v56';
+    const CURRENT_DB_VERSION = 'v2026_clean_v57';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -15609,8 +15618,8 @@ class FinanceApp {
                     </thead>
                     <tbody>
                       ${ledger.prjCreditNotes.map(cn => {
-                        const cnAmt = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
-                        return `
+      const cnAmt = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
+      return `
                           <tr style="border-bottom:1px solid #e2e8f0;">
                             <td style="padding:6px; color:#64748b; white-space:nowrap;">${this.formatDate(cn.credit_note_date || cn.date)}</td>
                             <td style="padding:6px 4px; font-weight:700; color:#9333ea; white-space:nowrap;">
@@ -15622,7 +15631,7 @@ class FinanceApp {
                             <td style="padding:6px; text-align:right; font-weight:800; color:#9333ea; white-space:nowrap;">-${currSym}${cnAmt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                           </tr>
                         `;
-                      }).join('')}
+    }).join('')}
                     </tbody>
                     <tfoot>
                       <tr style="background:#faf5ff; font-weight:800; border-top:1px solid #d8b4fe;">

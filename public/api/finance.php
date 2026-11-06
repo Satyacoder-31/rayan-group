@@ -502,11 +502,12 @@ if (!$dataFile) {
 function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if (!$data || !is_array($data)) return;
 
-    $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003'];
-    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681'];
+    $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710', 'bill-rec-1007'];
+    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744', 'pv-rec-44007', 'pv-rec-44006'];
+    $dummyCnIds = ['cn-1793512121832', 'cn-rec-018'];
     $dummyDnIds = ['dn-rg-001'];
     $dummyExpIds = ['exp-rg-001', 'exp-rg-002', 'exp-rg-003'];
-    $dummyPoIds = [];
+    $dummyPoIds = ['po-cust-1793985810709', 'lpo-hln-2025-44'];
     $dummyDocIds = ['doc-001', 'doc-002', 'doc-003', 'doc-004'];
     $dummyVendorIds = ['vend-001', 'vend-002', 'vend-003', 'vend-004'];
     $dummyCustIds = ['cust-004', 'cust-005', 'cust-kgc-alias'];
@@ -642,8 +643,10 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
     if ($pdo) {
         try {
-            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003')");
-            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681')");
+            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710') OR bill_no = 'BILL-REC-1007'");
+            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744') OR voucher_no IN ('PV-REC-44007', 'PV-REC-44006')");
+            $pdo->exec("DELETE FROM finance_credit_notes WHERE id IN ('cn-1793512121832') OR credit_note_no = 'CN-REC-018' OR invoice_no = 'REC-RG-INV-44008'");
+            $pdo->exec("DELETE FROM finance_purchase_orders WHERE id IN ('po-cust-1793985810709') OR po_no = 'LPO-HLN-2025-44'");
             $pdo->exec("DELETE FROM finance_debit_notes WHERE id IN ('dn-rg-001')");
             $pdo->exec("DELETE FROM finance_expenses WHERE id IN ('exp-rg-001', 'exp-rg-002', 'exp-rg-003')");
             $pdo->exec("DELETE FROM finance_documents WHERE id IN ('doc-001', 'doc-002', 'doc-003', 'doc-004')");
@@ -856,8 +859,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 ['id' => 'pay-1793890308989', 'new_no' => 'PV-REC-44002'],
                 ['id' => 'pay-1793894011459', 'new_no' => 'PV-REC-44003'],
                 ['id' => 'pay-1793894232210', 'new_no' => 'PV-REC-44004'],
-                ['id' => 'pay-1793894993039', 'new_no' => 'PV-REC-44005'],
-                ['id' => 'pay-1793898169781', 'new_no' => 'PV-REC-44006']
+                ['id' => 'pay-1793894993039', 'new_no' => 'PV-REC-44005']
             ];
             foreach ($vpSerialMap as $vpEntry) {
                 try {
@@ -892,7 +894,6 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'new_no' => 'CN-REC-015'],
                 ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'new_no' => 'CN-REC-016'],
                 ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'new_no' => 'CN-REC-017'],
-                ['id' => 'cn-1793512121832', 'inv' => 'REC-RG-INV-44008', 'date' => '2025-11-26', 'new_no' => 'CN-REC-018'],
                 ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'new_no' => 'CN-REC-019'],
                 ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'new_no' => 'CN-REC-020'],
 
@@ -1545,6 +1546,13 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 $inv['project_name'] = 'The New Dubai Police Academy @ Al Rowaiyah, Dubai';
                 $changed = true;
             }
+            if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44008' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-44008') {
+                $inv['amount_credited'] = 0.00;
+                $inv['amount_paid'] = 5000.00;
+                $inv['balance_due'] = 0.00;
+                $inv['status'] = 'paid';
+                $changed = true;
+            }
         }
         unset($inv);
     }
@@ -1569,6 +1577,14 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     }
 
     if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+        $orig = count($data['credit_notes']);
+        $data['credit_notes'] = array_values(array_filter($data['credit_notes'], function($cn) use ($dummyCnIds) {
+            $id = strtolower(trim($cn['id'] ?? ''));
+            $no = strtolower(trim($cn['credit_note_no'] ?? ''));
+            $inv = strtoupper(trim($cn['invoice_no'] ?? ($cn['ref_invoice_no'] ?? '')));
+            if (in_array($id, $dummyCnIds) || in_array($no, $dummyCnIds) || $inv === 'REC-RG-INV-44008') return false;
+            return true;
+        }));
         foreach ($data['credit_notes'] as &$cn) {
             if (!empty($cn['credit_note_no']) && strpos($cn['credit_note_no'], 'CN-RG-') === 0) {
                 $cn['credit_note_no'] = str_replace('CN-RG-', 'CN-REC-', $cn['credit_note_no']);
@@ -1576,6 +1592,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             }
         }
         unset($cn);
+        if (count($data['credit_notes']) !== $orig) $changed = true;
     }
 
     if (!empty($data['vendors']) && is_array($data['vendors'])) {
@@ -2030,8 +2047,7 @@ function recalculateAllFinanceBalances(&$data) {
         'pay-1793890308989' => 'PV-REC-44002',
         'pay-1793894011459' => 'PV-REC-44003',
         'pay-1793894232210' => 'PV-REC-44004',
-        'pay-1793894993039' => 'PV-REC-44005',
-        'pay-1793898169781' => 'PV-REC-44006'
+        'pay-1793894993039' => 'PV-REC-44005'
     ];
 
     if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
@@ -2500,7 +2516,6 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'no' => 'CN-REC-015'],
                         ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'no' => 'CN-REC-016'],
                         ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'no' => 'CN-REC-017'],
-                        ['id' => 'cn-1793512121832', 'inv' => 'REC-RG-INV-44008', 'date' => '2025-11-26', 'no' => 'CN-REC-018'],
                         ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'no' => 'CN-REC-019'],
                         ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'no' => 'CN-REC-020'],
 
@@ -2513,36 +2528,6 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
 
                     if (!isset($data['credit_notes']) || !is_array($data['credit_notes'])) {
                         $data['credit_notes'] = [];
-                    }
-
-                    // Ensure REC-RG-INV-44008 is present in credit notes list
-                    $has44008 = false;
-                    foreach ($data['credit_notes'] as $cItem) {
-                        if (($cItem['id'] ?? '') === 'cn-1793512121832' || ($cItem['invoice_no'] ?? '') === 'REC-RG-INV-44008') {
-                            $has44008 = true;
-                            break;
-                        }
-                    }
-                    if (!$has44008) {
-                        $data['credit_notes'][] = [
-                            'id' => 'cn-1793512121832',
-                            'credit_note_no' => 'CN-REC-018',
-                            'company_id' => 'rayan-corp-uae',
-                            'currency' => 'AED',
-                            'currency_symbol' => 'AED ',
-                            'invoice_id' => 'inv-rec-rg-inv-44008',
-                            'invoice_no' => 'REC-RG-INV-44008',
-                            'ref_invoice_no' => 'REC-RG-INV-44008',
-                            'customer_id' => 'cust-hln',
-                            'customer_name' => 'M/S HLN TECHNICAL SERVICES LLC',
-                            'reason' => 'REC-RG-INV-44008 cancelled for accounting purposes',
-                            'taxable_amount' => 8212.23,
-                            'tax_amount' => 410.61,
-                            'total_credit_amount' => 8622.84,
-                            'status' => 'applied',
-                            'date' => '2025-11-26',
-                            'issue_date' => '2025-11-26'
-                        ];
                     }
 
                     $canonById = [];
@@ -2945,11 +2930,11 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         } catch (Exception $e) {}
                     }
 
-                    // Reconcile 5 purchase bills with 5 exact payment-out vouchers (PV-REC-44001 to PV-REC-44005)
+                    // Reconcile 5 purchase bills with 5 exact payment-out vouchers (PV-REC-44001 to PV-REC-44005) & purge fake entries (v66)
                     try {
                         $chkPVI = null;
                         if ($pdo) {
-                            $chkPVI = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_5_payouts_v65'")->fetchColumn();
+                            $chkPVI = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_purge_fake_entries_v66'")->fetchColumn();
                         }
                         if (!$chkPVI) {
                             $cPayments = [
@@ -3071,6 +3056,56 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             ];
 
                             $data['vendor_payments'] = $cPayments;
+
+                            // Purge fake CN-REC-018
+                            if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+                                $data['credit_notes'] = array_values(array_filter($data['credit_notes'], function($c) {
+                                    $id = $c['id'] ?? '';
+                                    $no = $c['credit_note_no'] ?? '';
+                                    $inv = $c['invoice_no'] ?? ($c['ref_invoice_no'] ?? '');
+                                    return $id !== 'cn-1793512121832' && $no !== 'CN-REC-018' && $inv !== 'REC-RG-INV-44008';
+                                }));
+                            }
+
+                            // Purge fake BILL-REC-1007
+                            if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+                                $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) {
+                                    $id = $b['id'] ?? '';
+                                    $no = $b['bill_no'] ?? '';
+                                    return $id !== 'bill-1793985810710' && $no !== 'BILL-REC-1007';
+                                }));
+                                foreach ($data['purchase_bills'] as &$bRef) {
+                                    if (($bRef['bill_no'] ?? '') === 'BILL-REC-1006') {
+                                        $bRef['amount_paid'] = 0.00;
+                                        $bRef['balance_due'] = round(floatval($bRef['grand_total'] ?? 9902.52), 2);
+                                        $bRef['status'] = 'unpaid';
+                                    }
+                                }
+                                unset($bRef);
+                            }
+
+                            // Purge fake PO LPO-HLN-2025-44
+                            if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {
+                                $data['purchase_orders'] = array_values(array_filter($data['purchase_orders'], function($p) {
+                                    $id = $p['id'] ?? '';
+                                    $no = $p['po_no'] ?? '';
+                                    return $id !== 'po-cust-1793985810709' && $no !== 'LPO-HLN-2025-44';
+                                }));
+                            }
+
+                            // Reset REC-RG-INV-44008
+                            if (!empty($data['invoices']) && is_array($data['invoices'])) {
+                                foreach ($data['invoices'] as &$invRef) {
+                                    if (($invRef['invoice_no'] ?? '') === 'REC-RG-INV-44008' || ($invRef['id'] ?? '') === 'inv-rec-rg-inv-44008') {
+                                        $invRef['amount_credited'] = 0.00;
+                                        $invRef['amount_paid'] = 5000.00;
+                                        $invRef['balance_due'] = 0.00;
+                                        $invRef['status'] = 'paid';
+                                    }
+                                }
+                                unset($invRef);
+                            }
+
                             if ($pdo) {
                                 $pdo->exec("DELETE FROM finance_vendor_payments");
                                 $stmtVp = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :vno, :cid, :vid, :vname, :pdate, :pmode, :refno, :amt, :curr, :json, NOW())");
@@ -3089,7 +3124,12 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                         ':json' => json_encode($cp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                                     ]);
                                 }
-                                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_5_payouts_v65', 'completed', NOW())");
+                                $pdo->exec("DELETE FROM finance_credit_notes WHERE id = 'cn-1793512121832' OR credit_note_no = 'CN-REC-018' OR invoice_no = 'REC-RG-INV-44008'");
+                                $pdo->exec("DELETE FROM finance_purchase_bills WHERE bill_no = 'BILL-REC-1007' OR id = 'bill-1793985810710'");
+                                $pdo->exec("DELETE FROM finance_purchase_orders WHERE po_no = 'LPO-HLN-2025-44' OR id = 'po-cust-1793985810709'");
+                                $pdo->exec("UPDATE finance_invoices SET amount_credited = 0.00, amount_paid = 5000.00, balance_due = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44008'");
+                                $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 0.00, balance_due = 9902.52, status = 'unpaid' WHERE bill_no = 'BILL-REC-1006'");
+                                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_purge_fake_entries_v66', 'completed', NOW())");
                             }
                         }
                     } catch (Exception $e) {}
@@ -3473,10 +3513,13 @@ function syncToRelationalTables($pdo, &$data) {
         // 4. Purchase Bills
         if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_id, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bill_no, :vendor_invoice_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_id, :bill_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :approval_status, :data_json, NOW())");
+            $validPbIds = [];
             foreach ($data['purchase_bills'] as $b) {
                 if (empty($b['bill_no'])) continue;
+                $pbid = $b['id'] ?? ('bill-' . $b['bill_no']);
+                $validPbIds[] = $pbid;
                 $stmt->execute([
-                    ':id' => $b['id'] ?? ('bill-' . $b['bill_no']),
+                    ':id' => $pbid,
                     ':bill_no' => $b['bill_no'],
                     ':vendor_invoice_no' => $b['vendor_invoice_no'] ?? '',
                     ':company_id' => $b['company_id'] ?? 'rayan-corp-uae',
@@ -3496,15 +3539,23 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($b, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
+            if (!empty($validPbIds)) {
+                $inClause = implode(',', array_fill(0, count($validPbIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_purchase_bills WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validPbIds);
+            }
         }
 
         // 5. Vendor Payments
         if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :voucher_no, :company_id, :vendor_id, :vendor_name, :payment_date, :payment_mode, :reference_no, :amount_paid, :currency, :data_json, NOW())");
+            $validVpIds = [];
             foreach ($data['vendor_payments'] as $vp) {
                 if (empty($vp['voucher_no'])) continue;
+                $vpid = $vp['id'] ?? ('pay-' . $vp['voucher_no']);
+                $validVpIds[] = $vpid;
                 $stmt->execute([
-                    ':id' => $vp['id'] ?? ('pay-' . $vp['voucher_no']),
+                    ':id' => $vpid,
                     ':voucher_no' => $vp['voucher_no'],
                     ':company_id' => $vp['company_id'] ?? 'rayan-corp-uae',
                     ':vendor_id' => $vp['vendor_id'] ?? '',
@@ -3516,6 +3567,11 @@ function syncToRelationalTables($pdo, &$data) {
                     ':currency' => $vp['currency'] ?? 'AED',
                     ':data_json' => json_encode($vp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
+            }
+            if (!empty($validVpIds)) {
+                $inClause = implode(',', array_fill(0, count($validVpIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_vendor_payments WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validVpIds);
             }
         }
 
@@ -3621,10 +3677,13 @@ function syncToRelationalTables($pdo, &$data) {
         // 10. Purchase Orders
         if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_purchase_orders (id, po_no, company_id, po_date, supplier_name, supplier_trn, project_name, grand_total, currency, status, data_json, updated_at) VALUES (:id, :po_no, :company_id, :po_date, :supplier_name, :supplier_trn, :project_name, :grand_total, :currency, :status, :data_json, NOW())");
+            $validPoIds = [];
             foreach ($data['purchase_orders'] as $po) {
                 if (empty($po['po_no'])) continue;
+                $poid = $po['id'] ?? ('po-' . $po['po_no']);
+                $validPoIds[] = $poid;
                 $stmt->execute([
-                    ':id' => $po['id'] ?? ('po-' . $po['po_no']),
+                    ':id' => $poid,
                     ':po_no' => $po['po_no'],
                     ':company_id' => $po['company_id'] ?? 'rayan-corp-uae',
                     ':po_date' => !empty($po['date']) ? $po['date'] : date('Y-m-d'),
@@ -3637,16 +3696,24 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($po, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
+            if (!empty($validPoIds)) {
+                $inClause = implode(',', array_fill(0, count($validPoIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_purchase_orders WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validPoIds);
+            }
         }
 
         // 11. Credit Notes
         if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, company_id, invoice_id, invoice_no, customer_id, customer_name, total_credit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :credit_note_no, :company_id, :invoice_id, :invoice_no, :customer_id, :customer_name, :total_credit_amount, :currency, :reason, :status, :data_json, NOW())");
+            $validCnIds = [];
             foreach ($data['credit_notes'] as $cn) {
                 $no = $cn['credit_note_no'] ?? $cn['id'] ?? '';
                 if (empty($no)) continue;
+                $cid = $cn['id'] ?? ('cn-' . $no);
+                $validCnIds[] = $cid;
                 $stmt->execute([
-                    ':id' => $cn['id'] ?? ('cn-' . $no),
+                    ':id' => $cid,
                     ':credit_note_no' => $no,
                     ':company_id' => $cn['company_id'] ?? 'rayan-corp-uae',
                     ':invoice_id' => $cn['invoice_id'] ?? '',
@@ -3660,16 +3727,24 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($cn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
+            if (!empty($validCnIds)) {
+                $inClause = implode(',', array_fill(0, count($validCnIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_credit_notes WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validCnIds);
+            }
         }
 
         // 12. Debit Notes
         if (!empty($data['debit_notes']) && is_array($data['debit_notes'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_debit_notes (id, debit_note_no, company_id, bill_no, vendor_name, note_date, total_debit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :debit_note_no, :company_id, :bill_no, :vendor_name, :note_date, :total_debit_amount, :currency, :reason, :status, :data_json, NOW())");
+            $validDnIds = [];
             foreach ($data['debit_notes'] as $dn) {
                 $no = $dn['debit_note_no'] ?? $dn['id'] ?? '';
                 if (empty($no)) continue;
+                $did = $dn['id'] ?? ('dn-' . $no);
+                $validDnIds[] = $did;
                 $stmt->execute([
-                    ':id' => $dn['id'] ?? ('dn-' . $no),
+                    ':id' => $did,
                     ':debit_note_no' => $no,
                     ':company_id' => $dn['company_id'] ?? 'rayan-corp-uae',
                     ':bill_no' => $dn['bill_no'] ?? '',
@@ -3681,6 +3756,11 @@ function syncToRelationalTables($pdo, &$data) {
                     ':status' => $dn['status'] ?? 'issued',
                     ':data_json' => json_encode($dn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
+            }
+            if (!empty($validDnIds)) {
+                $inClause = implode(',', array_fill(0, count($validDnIds), '?'));
+                $stmtClean = $pdo->prepare("DELETE FROM finance_debit_notes WHERE id NOT IN ($inClause)");
+                $stmtClean->execute($validDnIds);
             }
         }
 
