@@ -1227,7 +1227,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v58';
+    const CURRENT_DB_VERSION = 'v2026_clean_v59';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -8027,13 +8027,25 @@ class FinanceApp {
       const cleanDoc = docPName.replace(/[^a-z0-9]/g, '');
       if (cleanDoc && cleanPrj && (cleanDoc.includes(cleanPrj) || cleanPrj.includes(cleanDoc))) return true;
 
+      // GUARD: If the document explicitly specifies a project_id or project_name pointing to a DIFFERENT project,
+      // never allow fallback keyword heuristics to hijack it!
+      if (doc.project_id && doc.project_id !== prjId && doc.project_id.toLowerCase() !== prjCode) {
+        const otherPrj = (this.db?.projects || []).find(p => p.id === doc.project_id || (p.code && p.code.toLowerCase() === doc.project_id.toLowerCase()));
+        if (otherPrj && otherPrj.id !== prjId) return false;
+      }
+      if (docPName) {
+        const otherPrj = (this.db?.projects || []).find(p => p.id !== prjId && ((p.name && p.name.toLowerCase().trim() === docPName) || (p.code && p.code.toLowerCase().trim() === docPName)));
+        if (otherPrj) return false;
+      }
+
       const docAll = (docPName + ' ' + (doc.subject || '') + ' ' + (doc.notes || '') + ' ' + (doc.description || '') + ' ' + (doc.vendor_invoice_no || '') + ' ' + (doc.po_no || '') + ' ' + (doc.po_reference || '') + ' ' + (doc.item_description || '')).toLowerCase();
       if (prjCode.includes('max') || prjName.includes('max')) {
         if (docAll.includes('max') || (docAll.includes('wahda') && !docAll.includes('commercial tower'))) return true;
         if (isBill && (doc.vendor_invoice_no === 'HLN/PO/0526/2025' || (doc.vendor_name || '').toLowerCase().includes('hln'))) return true;
       }
       if (prjCode.includes('yok') || prjName.includes('yateem')) {
-        if (docAll.includes('yateem') || docAll.includes('khalidiyah') || (doc.po_no && doc.po_no.includes('LPO/BD/2026/12')) || (doc.po_reference && doc.po_reference.includes('LPO/BD/2026/12'))) return true;
+        if (docAll.includes('arab bank') || docAll.includes('sector e-25')) return false;
+        if (docAll.includes('yateem') || docAll.includes('khalidiyah') || (docAll.includes('lpo/bd/2026/12') && (docAll.includes('civil') || docAll.includes('interior')))) return true;
       }
       if (prjCode.includes('dpa') || prjName.includes('police academy')) {
         if (docAll.includes('police academy') || docAll.includes('rowaiyah')) return true;
@@ -8047,8 +8059,9 @@ class FinanceApp {
       if (prjCode.includes('hp') || prjName.includes('hayat') || prjName.includes('property')) {
         if (docAll.includes('hayat property') || docAll.includes('property # 12') || docAll.includes('property 12') || docAll.includes('podull/106322') || docAll.includes('podull/107329') || docAll.includes('sodul/108640')) return true;
       }
-      if (prjCode.includes('bd') || prjName.includes('sector e-25') || prjName.includes('commercial & residential')) {
-        if (docAll.includes('sector e-25') || docAll.includes('residential tower')) return true;
+      if (prjCode.includes('ab') || prjCode.includes('bd') || prjName.includes('arab bank') || prjName.includes('sector e-25') || prjName.includes('commercial & residential')) {
+        if (docAll.includes('yateem') || docAll.includes('khalidiyah')) return false;
+        if (docAll.includes('arab bank') || docAll.includes('sector e-25') || docAll.includes('residential tower') || (docAll.includes('lpo/bd/2026/12') && !docAll.includes('civil') && !docAll.includes('interior'))) return true;
       }
       if (prjCode.includes('toby') || prjName.includes('toby')) {
         if (docAll.includes('toby') || docAll.includes('toby\'s')) return true;
