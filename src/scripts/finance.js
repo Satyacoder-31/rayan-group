@@ -712,28 +712,11 @@ class FinanceApp {
           paid += Number(alloc.amount_allocated) || 0;
         }
       });
+      // Also match direct payment if payment explicitly references this bill
+      if (pay.bill_id === billId || (pay.bill_no && pay.bill_no === billNo) || (pay.ref_bill_no && pay.ref_bill_no === billNo)) {
+        paid += Number(pay.amount_paid) || 0;
+      }
     });
-    if (paid === 0) {
-      const vId = bill.vendor_id || '';
-      const vName = (bill.vendor_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      payments.forEach(pay => {
-        const pvId = pay.vendor_id || '';
-        const pvName = (pay.vendor_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const matches = (vId && vId === pvId) || (vName && vName === pvName);
-        if (matches) {
-          const payAmt = Number(pay.amount_paid) || 0;
-          let hasAllocForOther = false;
-          (pay.allocations || []).forEach(al => {
-            if (al.bill_id !== billId && al.bill_no !== billNo && al.vendor_invoice_no !== bill.vendor_invoice_no) {
-              hasAllocForOther = true;
-            }
-          });
-          if (!hasAllocForOther && payAmt > 0) {
-            paid += Math.min(payAmt, grand);
-          }
-        }
-      });
-    }
     if (paid === 0 && Number(bill.amount_paid) > 0.02) {
       paid = Number(bill.amount_paid);
     }
@@ -8025,18 +8008,33 @@ class FinanceApp {
     const prjExpenses = expenses.filter(e => isDocLinked(e, false));
     const prjPOs = pos.filter(po => isDocLinked(po, false));
 
-    const invNos = new Set(prjInvoices.map(i => i.invoice_no));
-    const invIds = new Set(prjInvoices.map(i => i.id));
+    const invNos = new Set(prjInvoices.map(i => (i.invoice_no || '').trim().toLowerCase()));
+    const invIds = new Set(prjInvoices.map(i => (i.id || '').trim().toLowerCase()));
     const prjReceipts = receipts.filter(r => {
       if (isDocLinked(r, false)) return true;
       const allocs = r.allocations || r.allocated_invoices;
       if (allocs && Array.isArray(allocs)) {
-        return allocs.some(ai => (ai.invoice_no && invNos.has(ai.invoice_no)) || (ai.invoice_id && invIds.has(ai.invoice_id)));
+        return allocs.some(ai => (ai.invoice_no && invNos.has(ai.invoice_no.trim().toLowerCase())) || (ai.invoice_id && invIds.has(ai.invoice_id.trim().toLowerCase())));
       }
       return false;
     });
 
+    // Credit notes linked to project or project invoices
+    const prjCreditNotes = (this.db?.credit_notes || []).filter(cn => {
+      if (cn.status === 'void') return false;
+      if (isDocLinked(cn, false)) return true;
+      const cnInvNo = (cn.invoice_no || cn.ref_invoice_no || '').trim().toLowerCase();
+      const cnInvId = (cn.invoice_id || '').trim().toLowerCase();
+      if (cnInvNo && invNos.has(cnInvNo)) return true;
+      if (cnInvId && invIds.has(cnInvId)) return true;
+      return false;
+    });
+
     const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+    const autoCreditedFromInvs = prjInvoices.reduce((s, i) => s + (Number(i.amount_credited) || 0), 0);
+    const autoCreditedFromNotes = prjCreditNotes.reduce((s, cn) => s + (Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0))), 0);
+    const autoCredited = Math.max(autoCreditedFromInvs, autoCreditedFromNotes);
+
     const autoCollectedFromInvs = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
     const autoCollectedFromReceipts = prjReceipts.reduce((s, r) => s + (Number(r.amount_received) || 0), 0);
     const autoCollected = Math.max(autoCollectedFromInvs, autoCollectedFromReceipts);
@@ -8045,19 +8043,25 @@ class FinanceApp {
     const autoBillsPaid = prjBills.reduce((s, b) => s + Math.min(Number(b.amount_paid) || 0, Number(b.grand_total) || 0), 0);
     const autoExpensesCost = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
     const autoCost = autoBillsCost + autoExpensesCost;
-    const autoProfit = autoInvoiced - autoCost;
-    const autoMargin = autoInvoiced > 0 ? ((autoProfit / autoInvoiced) * 100).toFixed(1) : '0.0';
 
     const isManual = prj.manual_financials === true;
     const invoiced = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
+    const credited = isManual ? Number(prj.manual_credited ?? 0) : autoCredited;
+    const netInvoiced = Math.max(0, invoiced - credited);
     const collected = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
-    const pendingDue = Math.max(0, invoiced - collected);
+
+    // True pending balance from client:
+    // (Invoiced - Credited - Collected), perfectly aligned with sum of invoice balance_dues
+    const autoPendingDue = prjInvoices.length > 0
+      ? prjInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0)
+      : Math.max(0, invoiced - credited - collected);
+    const pendingDue = isManual ? Math.max(0, invoiced - credited - collected) : Math.max(0, Math.round(autoPendingDue * 100) / 100);
 
     const billsCost = isManual && prj.manual_bills !== undefined ? Number(prj.manual_bills) : autoBillsCost;
     const siteExpenses = isManual && prj.manual_expenses !== undefined ? Number(prj.manual_expenses) : autoExpensesCost;
     const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses)) : (billsCost + siteExpenses);
-    const netProfit = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (invoiced - totalCost)) : (invoiced - totalCost);
-    const profitMargin = invoiced > 0 ? ((netProfit / invoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
+    const netProfit = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (netInvoiced - totalCost)) : (netInvoiced - totalCost);
+    const profitMargin = netInvoiced > 0 ? ((netProfit / netInvoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
     const cashPosition = collected - (autoBillsPaid + siteExpenses);
 
     return {
@@ -8066,6 +8070,8 @@ class FinanceApp {
       currSym,
       isManual,
       invoiced,
+      credited,
+      netInvoiced,
       collected,
       pendingDue,
       billsCost,
@@ -8076,6 +8082,7 @@ class FinanceApp {
       cashPosition,
       autoBillsPaid,
       prjInvoices,
+      prjCreditNotes,
       prjReceipts,
       prjBills,
       prjExpenses,
@@ -8288,6 +8295,7 @@ class FinanceApp {
                       <div>
                         <span style="color:#94a3b8; display:block; font-size:0.7rem;">Invoiced Revenue:</span>
                         <strong style="color:#38bdf8; font-size:0.92rem;">${this.formatCurrency(ledger.invoiced)}</strong>
+                        ${ledger.credited > 0.01 ? `<div style="font-size:0.65rem; color:#c084fc; margin-top:2px;" title="Total sales credit notes applied to project invoices">Cr. Notes: -${this.formatCurrency(ledger.credited)}</div>` : ''}
                       </div>
                       <div>
                         <span style="color:#94a3b8; display:block; font-size:0.7rem;">Customer Collections:</span>
@@ -8298,6 +8306,7 @@ class FinanceApp {
                         <strong style="color:${ledger.pendingDue > 0.02 ? '#f59e0b' : '#10b981'}; font-size:0.92rem; font-weight:800;">
                           ${this.formatCurrency(ledger.pendingDue)} ${ledger.pendingDue <= 0.02 ? '<span style="font-size:0.65rem; color:#10b981; font-weight:600;">(Settled)</span>' : ''}
                         </strong>
+                        ${ledger.credited > 0.01 ? `<div style="font-size:0.63rem; color:#94a3b8; margin-top:2px;">(Net of ${this.formatCurrency(ledger.credited)} Cr. Notes)</div>` : ''}
                       </div>
                       <div style="background:rgba(239,68,68,0.06); padding:6px 8px; border-radius:6px; border:1px solid rgba(239,68,68,0.18);">
                         <span style="color:#fb923c; display:block; font-size:0.7rem; font-weight:700;">Total Costs &amp; Expenses:</span>
@@ -13806,11 +13815,39 @@ class FinanceApp {
         }
       };
 
+      // Immediately register in local database and persistent storage so it is never lost
+      if (!this.db.purchase_bills) this.db.purchase_bills = [];
+      const localBill = payload.bill;
+      const existingIdx = this.db.purchase_bills.findIndex(b => b.id === localBill.id || b.bill_no === localBill.bill_no);
+      if (existingIdx >= 0) {
+        this.db.purchase_bills[existingIdx] = localBill;
+      } else {
+        this.db.purchase_bills.unshift(localBill);
+      }
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) { }
+
       const res = await this.syncApi('create_bill', payload);
-      if (res && res.success) {
-        alert(`Purchase Bill ${res.bill?.bill_no || billNo} recorded successfully in ${currLabel}.`);
-        this.closeModal('modal-bill');
-        this.switchTab('bills');
+      if (res && res.bill) {
+        const synIdx = this.db.purchase_bills.findIndex(b => b.id === res.bill.id || b.bill_no === res.bill.bill_no);
+        if (synIdx >= 0) {
+          this.db.purchase_bills[synIdx] = res.bill;
+        } else {
+          this.db.purchase_bills.unshift(res.bill);
+        }
+      }
+      this.normalizeAllBalances();
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) { }
+
+      this.closeModal('modal-bill');
+      this.switchTab('bills');
+      if (typeof this.showNotification === 'function') {
+        this.showNotification(`Purchase Bill ${res?.bill?.bill_no || billNo} recorded successfully in ${currLabel}.`, 'success');
+      } else {
+        alert(`Purchase Bill ${res?.bill?.bill_no || billNo} recorded successfully in ${currLabel}.`);
       }
     };
   }
@@ -15375,7 +15412,9 @@ class FinanceApp {
                 <div style="background:#f0f9ff; border:1px solid #bae6fd; border-top:3px solid #0284c7; border-radius:6px; padding:0.65rem 0.65rem;">
                   <div style="font-size:0.65rem; font-weight:700; color:#0369a1; text-transform:uppercase;">Invoiced Revenue</div>
                   <div style="font-size:1.05rem; font-weight:800; color:#0284c7; margin-top:3px;">${currSym}${ledger.invoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-                  <div style="font-size:0.62rem; color:#0284c7; margin-top:2px;">Total Client Billings</div>
+                  <div style="font-size:0.62rem; color:#0284c7; margin-top:2px;">
+                    ${ledger.credited > 0.01 ? `<span style="color:#7c3aed; font-weight:700;">Less Cr. Notes: -${currSym}${ledger.credited.toFixed(2)}</span>` : 'Total Client Billings'}
+                  </div>
                 </div>
                 <!-- 2. Collections Received -->
                 <div style="background:#f0fdf4; border:1px solid #86efac; border-top:3px solid #16a34a; border-radius:6px; padding:0.65rem 0.65rem;">
@@ -15387,7 +15426,7 @@ class FinanceApp {
                 <div style="background:#fef2f2; border:1px solid #fca5a5; border-top:3px solid #dc2626; border-radius:6px; padding:0.65rem 0.65rem;">
                   <div style="font-size:0.65rem; font-weight:700; color:#b91c1c; text-transform:uppercase;">Pending From Client</div>
                   <div style="font-size:1.05rem; font-weight:900; color:#dc2626; margin-top:3px;">${currSym}${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-                  <div style="font-size:0.62rem; color:#b91c1c; margin-top:2px;">${ledger.pendingDue > 0.01 ? 'Outstanding Receivable' : 'Fully Settled'}</div>
+                  <div style="font-size:0.62rem; color:#b91c1c; margin-top:2px;">${ledger.pendingDue > 0.01 ? (ledger.credited > 0.01 ? `Net of Cr. Notes (${currSym}${ledger.credited.toFixed(2)})` : 'Outstanding Receivable') : 'Fully Settled'}</div>
                 </div>
                 <!-- 4. Direct Costs / Expenses -->
                 <div style="background:#fff7ed; border:1px solid #fed7aa; border-top:3px solid #ea580c; border-radius:6px; padding:0.65rem 0.65rem;">
@@ -15465,9 +15504,68 @@ class FinanceApp {
                       <td style="padding:6px; text-align:right; color:#16a34a;">${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td style="padding:6px; text-align:right; color:#dc2626;">${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                     </tr>
+                    ${ledger.credited > 0.01 ? `
+                    <tr style="background:#faf5ff; font-weight:700; border-top:1px dashed #d8b4fe; font-size:0.68rem;">
+                      <td colspan="3" style="padding:4px 6px; text-align:right; color:#9333ea; text-transform:uppercase;">Less Applied Credit Notes:</td>
+                      <td style="padding:4px 6px; text-align:right; color:#9333ea;">-${ledger.credited.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td colspan="2" style="padding:4px 6px; text-align:right; color:#64748b; font-style:italic;">Adjusted against invoice balances</td>
+                    </tr>
+                    <tr style="background:#f1f5f9; font-weight:800; border-top:1px solid #cbd5e1; font-size:0.71rem;">
+                      <td colspan="3" style="padding:5px 6px; text-align:right; color:#0f172a; text-transform:uppercase;">Net Project Billings &amp; Due:</td>
+                      <td style="padding:5px 6px; text-align:right; color:#0284c7;">${ledger.netInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:5px 6px; text-align:right; color:#16a34a;">${ledger.collected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:5px 6px; text-align:right; color:#dc2626; font-size:0.75rem;">${ledger.pendingDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    ` : ''}
                   </tfoot>
                 </table>
               </div>
+
+              <!-- SECTION 1B: SALES CREDIT NOTES & ADJUSTMENTS -->
+              ${(ledger.prjCreditNotes && ledger.prjCreditNotes.length > 0) ? `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem 0;">
+                  <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#9333ea; margin:0; text-transform:uppercase;">
+                    1B. Sales Credit Notes &amp; Receivable Adjustments
+                  </h4>
+                  <span style="font-size:0.72rem; color:#64748b;">${ledger.prjCreditNotes.length} credit note(s) applied</span>
+                </div>
+                <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                    <thead>
+                      <tr style="background:#581c87; color:#ffffff;">
+                        <th style="padding:6px; text-align:left; width:12%; white-space:nowrap;">Date</th>
+                        <th style="padding:6px; text-align:left; width:22%; white-space:nowrap;">Credit Note #</th>
+                        <th style="padding:6px; text-align:left; width:20%; white-space:nowrap;">Ref. Invoice #</th>
+                        <th style="padding:6px; text-align:left; width:30%;">Reason / Adjustment Purpose</th>
+                        <th style="padding:6px; text-align:right; width:16%; white-space:nowrap;">Credit Amount (${curr})</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${ledger.prjCreditNotes.map(cn => {
+                        const cnAmt = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
+                        return `
+                          <tr style="border-bottom:1px solid #e2e8f0;">
+                            <td style="padding:6px; color:#64748b; white-space:nowrap;">${this.formatDate(cn.credit_note_date || cn.date)}</td>
+                            <td style="padding:6px 4px; font-weight:700; color:#9333ea; white-space:nowrap;">
+                              <span style="font-size:0.69rem; font-weight:700; white-space:nowrap; letter-spacing:-0.01em;">${cn.credit_note_no}</span>
+                              <span style="font-size:0.58rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:3px; background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.25); vertical-align:middle; white-space:nowrap;">APPLIED</span>
+                            </td>
+                            <td style="padding:6px; color:#0f172a; font-family:monospace; font-weight:600; white-space:nowrap;">${cn.ref_invoice_no || cn.invoice_no || '—'}</td>
+                            <td style="padding:6px; color:#475569; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cn.adjustment_reason || cn.reason || 'Deduction / settlement adjustment'}</td>
+                            <td style="padding:6px; text-align:right; font-weight:800; color:#9333ea; white-space:nowrap;">-${currSym}${cnAmt.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                    <tfoot>
+                      <tr style="background:#faf5ff; font-weight:800; border-top:1px solid #d8b4fe;">
+                        <td colspan="4" style="padding:6px; text-align:right; text-transform:uppercase; color:#6b21a8;">Total Credit Notes Deducted:</td>
+                        <td style="padding:6px; text-align:right; color:#9333ea; font-weight:800; white-space:nowrap;">-${currSym}${ledger.credited.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              ` : ''}
 
               <!-- SECTION 2: CLIENT COLLECTIONS & RECEIPTS -->
               ${(ledger.prjReceipts.length > 0 || ledger.collected > 0) ? `

@@ -2082,29 +2082,9 @@ function recalculateAllFinanceBalances(&$data) {
                         }
                     }
                 }
-            }
-            if ($paid == 0.0) {
-                $vId = $b['vendor_id'] ?? '';
-                $vName = formatCompanyNamePhp($b['vendor_name'] ?? '');
-                foreach ($payments as $pay) {
-                    $pvId = $pay['vendor_id'] ?? '';
-                    $pvName = formatCompanyNamePhp($pay['vendor_name'] ?? '');
-                    $matches = (!empty($vId) && $vId === $pvId) || (!empty($vName) && $vName === $pvName);
-                    if ($matches) {
-                        $payAmt = floatval($pay['amount_paid'] ?? 0);
-                        $hasAllocForOther = false;
-                        if (!empty($pay['allocations']) && is_array($pay['allocations'])) {
-                            foreach ($pay['allocations'] as $al) {
-                                if (($al['bill_id'] ?? '') !== $bId && ($al['bill_no'] ?? '') !== $bNo && ($al['vendor_invoice_no'] ?? '') !== ($b['vendor_invoice_no'] ?? '')) {
-                                    $hasAllocForOther = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!$hasAllocForOther && $payAmt > 0) {
-                            $paid += min($payAmt, $grand);
-                        }
-                    }
+                // Also match direct payment if payment explicitly references this bill
+                if (($pay['bill_id'] ?? '') === $bId || (!empty($pay['bill_no']) && $pay['bill_no'] === $bNo) || (!empty($pay['ref_bill_no']) && $pay['ref_bill_no'] === $bNo)) {
+                    $paid += floatval($pay['amount_paid'] ?? 0);
                 }
             }
             if ($paid == 0.0 && floatval($b['amount_paid'] ?? 0) > 0.02) {
@@ -4662,6 +4642,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $addAuditLog('create', 'bill', $bill['bill_no'] ?? '', 'Created purchase bill for ' . ($bill['vendor_name'] ?? ''));
+                $response['bill'] = $bill;
+
+                if ($pdo) {
+                    try {
+                        $stmtPB = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_id, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bill_no, :vendor_invoice_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_id, :bill_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :approval_status, :data_json, NOW())");
+                        $stmtPB->execute([
+                            ':id' => $bill['id'],
+                            ':bill_no' => $bill['bill_no'],
+                            ':vendor_invoice_no' => $bill['vendor_invoice_no'] ?? '',
+                            ':company_id' => $bill['company_id'] ?? 'rayan-corp-uae',
+                            ':vendor_id' => $bill['vendor_id'] ?? '',
+                            ':vendor_name' => $bill['vendor_name'] ?? '',
+                            ':project_id' => $bill['project_id'] ?? '',
+                            ':project_name' => $bill['project_name'] ?? '',
+                            ':po_id' => $bill['po_id'] ?? '',
+                            ':bill_date' => $bill['bill_date'] ?? date('Y-m-d'),
+                            ':due_date' => $bill['due_date'] ?? date('Y-m-d'),
+                            ':grand_total' => floatval($bill['grand_total'] ?? 0),
+                            ':amount_paid' => floatval($bill['amount_paid'] ?? 0),
+                            ':balance_due' => floatval($bill['balance_due'] ?? $bill['grand_total'] ?? 0),
+                            ':currency' => $bill['currency'] ?? 'AED',
+                            ':status' => $bill['status'] ?? 'unpaid',
+                            ':approval_status' => $bill['approval_status'] ?? 'approved',
+                            ':data_json' => json_encode($bill, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("Bill PDO save error: " . $e->getMessage());
+                    }
+                }
             }
             break;
 
