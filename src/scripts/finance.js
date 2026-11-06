@@ -8083,8 +8083,21 @@ class FinanceApp {
     };
   }
 
+  parseProjectSequence(code) {
+    if (!code) return 999999;
+    const parts = String(code).split('-');
+    for (const p of parts) {
+      if (/^\d+$/.test(p)) {
+        const n = parseInt(p, 10);
+        if (n < 2000) return n; // Filter out year components (2023, 2024, 2025, 2026...)
+      }
+    }
+    const anyNum = String(code).match(/\d+/);
+    return anyNum ? parseInt(anyNum[0], 10) : 999999;
+  }
+
   renderProjectsTab(root) {
-    this._prjFilter = this._prjFilter || { search: '', status: 'all', sort: 'date-desc' };
+    this._prjFilter = this._prjFilter || { search: '', status: 'all', sort: 'seq-desc' };
     const allProjects = (this.db?.projects || []).filter(p => this.matchesActiveCompany(p.company_id));
 
     const q = (this._prjFilter.search || '').trim().toLowerCase();
@@ -8093,9 +8106,10 @@ class FinanceApp {
     let filtered = allProjects.filter(p => {
       if (stFilter !== 'all') {
         const pStatus = (p.status || 'Active').toLowerCase();
-        if (stFilter === 'active' && !(pStatus === 'active' || pStatus === 'in progress')) return false;
+        if (stFilter === 'active' && !(pStatus === 'active' || pStatus === 'in progress' || pStatus === 'active / site phase')) return false;
         if (stFilter === 'closed' && !(pStatus === 'closed' || pStatus === 'completed')) return false;
         if (stFilter === 'on hold' && !pStatus.includes('hold')) return false;
+        if (stFilter === 'cancelled' && !(pStatus.includes('cancel') || pStatus.includes('void'))) return false;
         if (stFilter === 'planning' && !(pStatus.includes('plan') || pStatus.includes('tender'))) return false;
       }
       if (q) {
@@ -8111,8 +8125,21 @@ class FinanceApp {
       return true;
     });
 
-    const sortMode = this._prjFilter.sort || 'date-desc';
+    const sortMode = this._prjFilter.sort || 'seq-desc';
     filtered.sort((a, b) => {
+      if (sortMode === 'seq-desc') {
+        const diff = this.parseProjectSequence(b.code) - this.parseProjectSequence(a.code);
+        if (diff !== 0) return diff;
+        return (b.code || '').localeCompare(a.code || '');
+      }
+      if (sortMode === 'seq-asc') {
+        const diff = this.parseProjectSequence(a.code) - this.parseProjectSequence(b.code);
+        if (diff !== 0) return diff;
+        return (a.code || '').localeCompare(b.code || '');
+      }
+      if (sortMode === 'date-desc') {
+        return new Date(b.start_date || '1970-01-01') - new Date(a.start_date || '1970-01-01');
+      }
       if (sortMode === 'date-asc') {
         return new Date(a.start_date || '1970-01-01') - new Date(b.start_date || '1970-01-01');
       }
@@ -8137,6 +8164,8 @@ class FinanceApp {
         const lB = this.getProjectLedgerData(b.id);
         return (lB?.netProfit || 0) - (lA?.netProfit || 0);
       }
+      const diff = this.parseProjectSequence(b.code) - this.parseProjectSequence(a.code);
+      if (diff !== 0) return diff;
       return new Date(b.start_date || '1970-01-01') - new Date(a.start_date || '1970-01-01');
     });
 
@@ -8172,9 +8201,12 @@ class FinanceApp {
               <option value="active" ${stFilter === 'active' ? 'selected' : ''}>Active / In Progress</option>
               <option value="closed" ${stFilter === 'closed' ? 'selected' : ''}>Closed / Completed</option>
               <option value="on hold" ${stFilter === 'on hold' ? 'selected' : ''}>On Hold</option>
+              <option value="cancelled" ${stFilter === 'cancelled' ? 'selected' : ''}>Cancelled</option>
               <option value="planning" ${stFilter === 'planning' ? 'selected' : ''}>Planning / Tender</option>
             </select>
-            <select id="prj-filter-sort" class="fin-form-select" style="max-width:210px; padding-top:6px; padding-bottom:6px; font-size:0.82rem;">
+            <select id="prj-filter-sort" class="fin-form-select" style="max-width:240px; padding-top:6px; padding-bottom:6px; font-size:0.82rem;">
+              <option value="seq-desc" ${sortMode === 'seq-desc' ? 'selected' : ''}>Sequence # (High &rarr; Low: 117, 116...)</option>
+              <option value="seq-asc" ${sortMode === 'seq-asc' ? 'selected' : ''}>Sequence # (Low &rarr; High: 1, 2, 3...)</option>
               <option value="date-desc" ${sortMode === 'date-desc' ? 'selected' : ''}>Date (Newest first)</option>
               <option value="date-asc" ${sortMode === 'date-asc' ? 'selected' : ''}>Date (Oldest first)</option>
               <option value="name-asc" ${sortMode === 'name-asc' ? 'selected' : ''}>Project Name (A &rarr; Z)</option>
@@ -8207,17 +8239,20 @@ class FinanceApp {
       const profitLabel = isProfit ? 'Net Profit' : 'Net Loss';
 
       const normStatus = (prj.status || 'Active').toLowerCase();
+      const isCancelled = normStatus.includes('cancel') || normStatus.includes('void');
       const isClosed = normStatus === 'closed' || normStatus === 'completed';
       const isOnHold = normStatus === 'on hold';
       const isPlanning = normStatus.includes('planning') || normStatus.includes('tender');
-      const badgeStyle = isClosed
-        ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
-        : isOnHold
-          ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
-          : isPlanning
-            ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
-            : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
-      const statusLabel = isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE'));
+      const badgeStyle = isCancelled
+        ? 'background:rgba(239,68,68,0.18); color:#ef4444; border:1px solid rgba(239,68,68,0.35);'
+        : isClosed
+          ? 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'
+          : isOnHold
+            ? 'background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35);'
+            : isPlanning
+              ? 'background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);'
+              : 'background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.35);';
+      const statusLabel = isCancelled ? 'CANCELLED' : (isClosed ? 'CLOSED' : (isOnHold ? 'ON HOLD' : (isPlanning ? 'PLANNING' : 'ACTIVE')));
 
       return `
                 <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:14px; padding:1.4rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.25);">
@@ -8234,8 +8269,8 @@ class FinanceApp {
                       </div>
                       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem; flex-shrink:0;">
                         <span class="fin-badge" style="${badgeStyle}; font-size:0.72rem; font-weight:700; letter-spacing:0.5px; padding:4px 10px; border-radius:6px;">${statusLabel}</span>
-                        <button type="button" class="fin-btn-row-action" style="font-size:0.72rem; padding:3px 9px; border-radius:4px; ${isClosed ? 'color:#10b981; border:1px solid rgba(16,185,129,0.35); background:rgba(16,185,129,0.08);' : 'color:#cbd5e1; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.04);'}" onclick="window.finApp.toggleProjectStatus('${prj.id}')" title="Quick toggle project active / closed status">
-                          ${isClosed ? '▶ Mark Active' : '✓ Mark Closed'}
+                        <button type="button" class="fin-btn-row-action" style="font-size:0.72rem; padding:3px 9px; border-radius:4px; ${isClosed || isCancelled ? 'color:#10b981; border:1px solid rgba(16,185,129,0.35); background:rgba(16,185,129,0.08);' : 'color:#cbd5e1; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.04);'}" onclick="window.finApp.toggleProjectStatus('${prj.id}')" title="Quick toggle project active / closed status">
+                          ${isCancelled ? '▶ Reactivate' : (isClosed ? '▶ Mark Active' : '✓ Mark Closed')}
                         </button>
                       </div>
                     </div>
@@ -17724,6 +17759,7 @@ class FinanceApp {
                     <option value="Active / Site Phase">Active / Site Phase</option>
                     <option value="Completed">Completed</option>
                     <option value="On Hold">On Hold</option>
+                    <option value="Cancelled">Cancelled</option>
                   </select>
                 </div>
               </div>
@@ -17895,6 +17931,7 @@ class FinanceApp {
                     <option value="Active" ${normStatus === 'active' || normStatus === 'in progress' ? 'selected' : ''}>Active / In Progress</option>
                     <option value="Closed" ${normStatus === 'closed' || normStatus === 'completed' ? 'selected' : ''}>Closed / Completed</option>
                     <option value="On Hold" ${normStatus === 'on hold' ? 'selected' : ''}>On Hold</option>
+                    <option value="Cancelled" ${normStatus.includes('cancel') || normStatus.includes('void') ? 'selected' : ''}>Cancelled</option>
                     <option value="Planning" ${normStatus.includes('plan') || normStatus.includes('tender') ? 'selected' : ''}>Planning / Tender</option>
                   </select>
                 </div>

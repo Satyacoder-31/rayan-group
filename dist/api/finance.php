@@ -1908,6 +1908,21 @@ function formatCompanyNamePhp($name) {
     return 'M/S ' . $clean;
 }
 
+function parseProjectSequencePhp($code) {
+    if (empty($code)) return 999999;
+    $parts = explode('-', (string)$code);
+    foreach ($parts as $p) {
+        if (ctype_digit($p)) {
+            $n = intval($p);
+            if ($n < 2000) return $n;
+        }
+    }
+    if (preg_match('/(\d+)/', (string)$code, $m)) {
+        return intval($m[1]);
+    }
+    return 999999;
+}
+
 function recalculateAllFinanceBalances(&$data) {
     if (!$data || !is_array($data)) return;
 
@@ -2212,6 +2227,13 @@ function recalculateAllFinanceBalances(&$data) {
             if (!empty($prj['client'])) $prj['client'] = formatCompanyNamePhp($prj['client']);
         }
         unset($prj);
+
+        usort($data['projects'], function($a, $b) {
+            $seqA = parseProjectSequencePhp($a['code'] ?? '');
+            $seqB = parseProjectSequencePhp($b['code'] ?? '');
+            if ($seqA !== $seqB) return $seqB - $seqA; // High to Low sequence (117, 116, 115...)
+            return strcasecmp($b['code'] ?? '', $a['code'] ?? '');
+        });
     }
     if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
         foreach ($data['credit_notes'] as &$cn) {
