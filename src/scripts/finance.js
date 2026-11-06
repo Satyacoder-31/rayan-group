@@ -763,6 +763,8 @@ class FinanceApp {
         bill.status = 'partially_paid';
       } else if (debited > 0) {
         bill.status = 'partially_debited';
+      } else {
+        bill.status = 'unpaid';
       }
     }
     return bal;
