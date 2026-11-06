@@ -412,6 +412,15 @@ class FinanceApp {
 
       merged[key] = Array.from(map.values()).filter(item => !isBlacklisted(item));
 
+      if (key === 'projects') {
+        merged.projects = (merged.projects || []).map(p => {
+          if (!p.lpo_no && (p.po_reference || p.lpo_number || p.po_no)) {
+            p.lpo_no = p.po_reference || p.lpo_number || p.po_no;
+          }
+          return p;
+        });
+      }
+
       if (key === 'bank_accounts') {
         merged.bank_accounts = merged.bank_accounts.filter(b => {
           if (!b) return false;
@@ -1162,7 +1171,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v54';
+    const CURRENT_DB_VERSION = 'v2026_clean_v55';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -8269,6 +8278,7 @@ class FinanceApp {
                       <div style="flex-grow:1; min-width:0;">
                         <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.35rem;">
                           <span style="font-size:0.75rem; color:#38bdf8; font-weight:700; font-family:monospace; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:4px; border:1px solid rgba(56,189,248,0.25);">${prj.code || 'PRJ-PROJ'}</span>
+                          ${(prj.lpo_no || prj.po_reference) ? `<span style="font-size:0.68rem; color:#a78bfa; background:rgba(167,139,250,0.12); padding:2px 7px; border-radius:4px; border:1px solid rgba(167,139,250,0.3); font-weight:600; font-family:monospace;" title="Client LPO / Work Order Ref">📋 LPO: ${prj.lpo_no || prj.po_reference}</span>` : ''}
                           ${ledger.isManual ? '<span style="font-size:0.68rem; color:#f59e0b; background:rgba(245,158,11,0.12); padding:2px 7px; border-radius:4px; border:1px solid rgba(245,158,11,0.3); font-weight:600;">⚡ Manual P&amp;L</span>' : '<span style="font-size:0.68rem; color:#94a3b8; background:rgba(255,255,255,0.06); padding:2px 7px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);">📊 Auto-Tracked</span>'}
                         </div>
                         <h3 style="font-family:var(--fin-font-heading); font-size:1.15rem; color:#f8fafc; margin:0 0 0.35rem; line-height:1.35; word-break:break-word;">${prj.name}</h3>
@@ -13446,6 +13456,65 @@ class FinanceApp {
       if (prjHint) {
         prjHint.textContent = `${p.name} (${p.code || ''}) linked to bill`;
       }
+
+      // Auto-populate Linked Purchase Order / LPO Number from selected Project
+      const poInp = document.getElementById('bill-po-sel');
+      const poBdg = document.getElementById('bill-po-badge');
+      const poHnt = document.getElementById('bill-po-hint');
+      if (poInp) {
+        const projectLpo = (p.lpo_no || p.po_reference || p.lpo_number || p.po_no || p.client_po_ref || '').trim();
+        if (projectLpo) {
+          poInp.value = projectLpo;
+          const matchingPo = pos.find(po => (po.po_no || '').toLowerCase() === projectLpo.toLowerCase());
+          if (matchingPo) {
+            poInp.setAttribute('data-po-id', matchingPo.id);
+          } else {
+            poInp.removeAttribute('data-po-id');
+          }
+          if (poBdg) {
+            poBdg.textContent = `✓ Project LPO: ${projectLpo}`;
+            poBdg.style.color = '#10b981';
+          }
+          if (poHnt) {
+            poHnt.textContent = `Auto-linked Project LPO #${projectLpo} from ${p.name}`;
+          }
+        } else {
+          // Check matching PO in pos for this project
+          const matchingPo = pos.find(po =>
+            (po.project_id && po.project_id === p.id) ||
+            (po.project_name && (
+              po.project_name.toLowerCase() === p.name.toLowerCase() ||
+              p.name.toLowerCase().includes(po.project_name.toLowerCase()) ||
+              po.project_name.toLowerCase().includes(p.name.toLowerCase())
+            ))
+          );
+          if (matchingPo && matchingPo.po_no) {
+            poInp.value = matchingPo.po_no;
+            poInp.setAttribute('data-po-id', matchingPo.id);
+            if (poBdg) {
+              poBdg.textContent = `✓ Project PO: ${matchingPo.po_no}`;
+              poBdg.style.color = '#10b981';
+            }
+            if (poHnt) {
+              poHnt.textContent = `Auto-linked PO #${matchingPo.po_no} from ${p.name}`;
+            }
+          } else {
+            // Check regex in name or description
+            const lpoMatch = (p.name + ' ' + (p.description || '')).match(/(?:LPO|PO)\s*(?:NO\.?|#)?\s*([A-Za-z0-9\-._/]{3,})/i);
+            if (lpoMatch && lpoMatch[1]) {
+              const detectedLpo = lpoMatch[1].trim();
+              poInp.value = detectedLpo;
+              if (poBdg) {
+                poBdg.textContent = `✓ Detected LPO: ${detectedLpo}`;
+                poBdg.style.color = '#10b981';
+              }
+              if (poHnt) {
+                poHnt.textContent = `Auto-linked LPO #${detectedLpo} from ${p.name}`;
+              }
+            }
+          }
+        }
+      }
     };
 
     if (prjInput && prjDropdown) {
@@ -14643,49 +14712,49 @@ class FinanceApp {
                   <span style="font-size:0.7rem; color:#64748b;">Showing ${filteredList.length} of ${allCount} Clients</span>
                 </div>
 
-                <div class="fin-doc-table-wrapper" style="margin:0;">
-                  <table style="width:100%; border-collapse:collapse; font-size:0.74rem; table-layout:fixed;">
+                <div class="fin-doc-table-wrapper" style="margin:0; overflow-x:auto;">
+                  <table style="width:100%; border-collapse:collapse; font-size:0.65rem; table-layout:fixed; box-sizing:border-box;">
                     <thead>
                       <tr style="background:#0f172a; color:#ffffff;">
-                        <th style="padding:6px 4px; text-align:center; width:3%; border:1px solid #0f172a;">#</th>
-                        <th style="padding:6px 6px; text-align:left; width:24%; border:1px solid #0f172a;">Client / Debtor Name</th>
-                        <th style="padding:6px 4px; text-align:left; width:10%; border:1px solid #0f172a; white-space:nowrap;">Tax ID (TRN / GSTIN)</th>
-                        <th style="padding:6px 4px; text-align:left; width:8%; border:1px solid #0f172a;">Supply Place</th>
-                        <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Billed (${curr})</th>
-                        <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Paid (${curr})</th>
-                        <th style="padding:6px 4px; text-align:right; width:6%; border:1px solid #0f172a; white-space:nowrap;">CN (${curr})</th>
-                        <th style="padding:6px 4px; text-align:right; width:12%; border:1px solid #0f172a; white-space:nowrap;">Outstanding Due</th>
-                        <th style="padding:6px 4px; text-align:center; width:15%; border:1px solid #0f172a;">Status</th>
+                        <th style="padding:5px 2px; text-align:center; width:3%; border:1px solid #0f172a; font-size:0.63rem;">#</th>
+                        <th style="padding:5px 4px; text-align:left; width:22%; border:1px solid #0f172a; font-size:0.63rem;">Client / Debtor Name</th>
+                        <th style="padding:5px 3px; text-align:left; width:12%; border:1px solid #0f172a; font-size:0.62rem;">Tax ID (${isIndia ? 'GSTIN' : 'TRN'})</th>
+                        <th style="padding:5px 3px; text-align:left; width:8%; border:1px solid #0f172a; font-size:0.62rem;">Place</th>
+                        <th style="padding:5px 3px; text-align:right; width:11%; border:1px solid #0f172a; font-size:0.63rem; white-space:nowrap;">Billed (${curr})</th>
+                        <th style="padding:5px 3px; text-align:right; width:11%; border:1px solid #0f172a; font-size:0.63rem; white-space:nowrap;">Paid (${curr})</th>
+                        <th style="padding:5px 3px; text-align:right; width:9%; border:1px solid #0f172a; font-size:0.63rem; white-space:nowrap;">CN (${curr})</th>
+                        <th style="padding:5px 3px; text-align:right; width:12%; border:1px solid #0f172a; font-size:0.63rem; white-space:nowrap;">Outstanding Due</th>
+                        <th style="padding:5px 2px; text-align:center; width:12%; border:1px solid #0f172a; font-size:0.63rem;">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       ${filteredList.map((item, idx) => `
                         <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom:1px solid #e2e8f0;">
-                          <td style="padding:6px 4px; text-align:center; color:#64748b; font-weight:600; border:1px solid #e2e8f0;">${idx + 1}</td>
-                          <td style="padding:6px 6px; font-weight:700; color:#0f172a; border:1px solid #e2e8f0; word-break:break-word;">
+                          <td style="padding:5px 2px; text-align:center; color:#64748b; font-weight:600; border:1px solid #e2e8f0; font-size:0.62rem;">${idx + 1}</td>
+                          <td style="padding:5px 4px; font-weight:700; color:#0f172a; border:1px solid #e2e8f0; word-break:break-word; font-size:0.66rem; line-height:1.25;">
                             ${item.customer.name}
-                            ${item.customer.contact_person ? `<div style="font-size:0.65rem; color:#64748b; font-weight:400;">Attn: ${item.customer.contact_person} ${item.customer.phone ? `(${item.customer.phone})` : ''}</div>` : ''}
+                            ${item.customer.contact_person ? `<div style="font-size:0.58rem; color:#64748b; font-weight:400; line-height:1.2; margin-top:1px;">Attn: ${item.customer.contact_person} ${item.customer.phone ? `(${item.customer.phone})` : ''}</div>` : ''}
                           </td>
-                          <td style="padding:6px 4px; color:#475569; font-family:monospace; font-size:0.68rem; border:1px solid #e2e8f0; word-break:break-all;">
+                          <td style="padding:5px 3px; color:#475569; font-family:monospace; font-size:0.60rem; letter-spacing:-0.02em; border:1px solid #e2e8f0; word-break:break-all; overflow:hidden;">
                             ${item.customer.trn || item.customer.gstin || '—'}
                           </td>
-                          <td style="padding:6px 4px; color:#475569; border:1px solid #e2e8f0; word-break:break-word;">
-                            ${item.customer.place_of_supply || 'Abu Dhabi, UAE'}
+                          <td style="padding:5px 3px; color:#475569; border:1px solid #e2e8f0; word-break:break-word; font-size:0.62rem; line-height:1.2;">
+                            ${(item.customer.place_of_supply || 'Abu Dhabi, UAE').replace(', United Arab Emirates', '').replace(', UAE', '')}
                           </td>
-                          <td style="padding:6px 4px; text-align:right; color:#0f172a; font-weight:600; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                          <td style="padding:5px 3px; text-align:right; color:#0f172a; font-weight:600; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums; font-size:0.65rem;">
                             ${item.billed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="padding:6px 4px; text-align:right; color:#16a34a; font-weight:700; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                          <td style="padding:5px 3px; text-align:right; color:#16a34a; font-weight:700; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums; font-size:0.65rem;">
                             ${item.paid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="padding:6px 4px; text-align:right; color:#ca8a04; font-weight:600; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                          <td style="padding:5px 3px; text-align:right; color:#ca8a04; font-weight:600; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums; font-size:0.65rem;">
                             ${item.cnTotal > 0 ? item.cnTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
                           </td>
-                          <td style="padding:6px 4px; text-align:right; font-weight:800; color:${item.due > 0.02 ? '#dc2626' : '#16a34a'}; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                          <td style="padding:5px 3px; text-align:right; font-weight:800; color:${item.due > 0.02 ? '#dc2626' : '#16a34a'}; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums; font-size:0.66rem;">
                             ${item.due.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="padding:5px 4px; text-align:center; border:1px solid #e2e8f0; white-space:nowrap;">
-                            <span style="display:inline-block; padding:2px 8px; font-size:0.62rem; font-weight:700; border-radius:3px; background:${item.statusBg}; color:${item.statusColor}; border:1px solid ${item.statusBorder}; white-space:nowrap;">
+                          <td style="padding:4px 2px; text-align:center; border:1px solid #e2e8f0; white-space:nowrap; overflow:hidden;">
+                            <span style="display:inline-block; padding:1.5px 5px; font-size:0.56rem; font-weight:700; border-radius:3px; background:${item.statusBg}; color:${item.statusColor}; border:1px solid ${item.statusBorder}; white-space:nowrap; line-height:1.2;">
                               ${item.status}
                             </span>
                           </td>
@@ -14694,22 +14763,22 @@ class FinanceApp {
                     </tbody>
                     <tfoot>
                       <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:3px double #0f172a;">
-                        <td colspan="4" style="padding:8px 6px; text-align:right; text-transform:uppercase; font-size:0.75rem; color:#0f172a; border:1px solid #cbd5e1;">
+                        <td colspan="4" style="padding:6px 4px; text-align:right; text-transform:uppercase; font-size:0.68rem; color:#0f172a; border:1px solid #cbd5e1;">
                           Grand Total (All Clients):
                         </td>
-                        <td style="padding:8px 4px; text-align:right; font-size:0.75rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        <td style="padding:6px 3px; text-align:right; font-size:0.68rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 4px; text-align:right; font-size:0.75rem; color:#16a34a; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        <td style="padding:6px 3px; text-align:right; font-size:0.68rem; color:#16a34a; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 4px; text-align:right; font-size:0.75rem; color:#ca8a04; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        <td style="padding:6px 3px; text-align:right; font-size:0.68rem; color:#ca8a04; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalCN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 4px; text-align:right; font-size:0.80rem; color:#dc2626; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                        <td style="padding:6px 3px; text-align:right; font-size:0.70rem; color:#dc2626; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 3px; text-align:center; font-size:0.68rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap;">
+                        <td style="padding:6px 2px; text-align:center; font-size:0.62rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap;">
                           ${overallRecoveryPct}% Rec.
                         </td>
                       </tr>
@@ -14743,27 +14812,27 @@ class FinanceApp {
                     </div>
 
                     <!-- Client Invoices Table -->
-                    <div class="fin-doc-table-wrapper" style="margin:0;">
-                      <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                    <div class="fin-doc-table-wrapper" style="margin:0; overflow-x:auto;">
+                      <table style="width:100%; border-collapse:collapse; font-size:0.68rem; table-layout:fixed; box-sizing:border-box;">
                         <thead>
                           <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">
-                            <th style="padding:4px 6px; text-align:left; width:11%; white-space:nowrap;">Date</th>
-                            <th style="padding:4px 6px; text-align:left; width:22%; white-space:nowrap;">Invoice #</th>
-                            <th style="padding:4px 6px; text-align:left; width:29%;">Project / Scope Narration</th>
-                            <th style="padding:4px 6px; text-align:right; width:12%; white-space:nowrap;">Billed (${curr})</th>
-                            <th style="padding:4px 6px; text-align:right; width:12%; white-space:nowrap;">Paid (${curr})</th>
-                            <th style="padding:4px 6px; text-align:right; width:14%; white-space:nowrap;">Balance Due</th>
+                            <th style="padding:4px; text-align:left; width:11%; white-space:nowrap; font-size:0.63rem;">Date</th>
+                            <th style="padding:4px; text-align:left; width:24%; white-space:nowrap; font-size:0.63rem;">Invoice #</th>
+                            <th style="padding:4px; text-align:left; width:27%; font-size:0.63rem;">Project / Scope Narration</th>
+                            <th style="padding:4px; text-align:right; width:12%; white-space:nowrap; font-size:0.63rem;">Billed (${curr})</th>
+                            <th style="padding:4px; text-align:right; width:12%; white-space:nowrap; font-size:0.63rem;">Paid (${curr})</th>
+                            <th style="padding:4px; text-align:right; width:14%; white-space:nowrap; font-size:0.63rem;">Balance Due</th>
                           </tr>
                         </thead>
                         <tbody>
                           ${item.unbilledOpening > 0 ? `
                             <tr style="border-bottom:1px solid #e2e8f0; background:rgba(56,189,248,0.04);">
-                              <td style="padding:4px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(item.customer.created_at || '2025-04-01')}</td>
-                              <td style="padding:4px 6px; font-weight:700; color:#0284c7; white-space:nowrap; font-size:0.69rem;">OPENING-BALANCE</td>
-                              <td style="padding:4px 6px; color:#475569;">Brought-forward verified accounts receivable balance</td>
-                              <td style="padding:4px 6px; text-align:right; font-weight:600; white-space:nowrap;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td style="padding:4px 6px; text-align:right; color:#64748b; white-space:nowrap;">0.00</td>
-                              <td style="padding:4px 6px; text-align:right; font-weight:800; color:#dc2626; white-space:nowrap;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td style="padding:4px; color:#64748b; white-space:nowrap; font-size:0.63rem;">${this.formatDate(item.customer.created_at || '2025-04-01')}</td>
+                              <td style="padding:4px; font-weight:700; color:#0284c7; white-space:nowrap; font-size:0.65rem;">OPENING-BALANCE</td>
+                              <td style="padding:4px; color:#475569; font-size:0.64rem;">Brought-forward verified accounts receivable balance</td>
+                              <td style="padding:4px; text-align:right; font-weight:600; white-space:nowrap; font-size:0.65rem;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td style="padding:4px; text-align:right; color:#64748b; white-space:nowrap; font-size:0.65rem;">0.00</td>
+                              <td style="padding:4px; text-align:right; font-weight:800; color:#dc2626; white-space:nowrap; font-size:0.66rem;">${item.unbilledOpening.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           ` : ''}
                           ${item.invoices.map(inv => {
@@ -14779,21 +14848,21 @@ class FinanceApp {
             : 'background:#fef2f2; color:#dc2626; border:1px solid rgba(220,38,38,0.25);'));
       return `
                               <tr style="border-bottom:1px solid #e2e8f0;">
-                                <td style="padding:4px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(inv.invoice_date || inv.date)}</td>
-                                <td style="padding:4px 6px; color:#0f172a; white-space:nowrap;">
-                                  <span style="font-size:0.69rem; font-weight:700; color:#0f172a; white-space:nowrap; letter-spacing:-0.01em; display:inline-block;">${inv.invoice_no}</span>
-                                  <span style="font-size:0.58rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:3px; vertical-align:middle; white-space:nowrap; ${badgeBg}">${inv.status}</span>
+                                <td style="padding:4px; color:#64748b; white-space:nowrap; font-size:0.63rem;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                                <td style="padding:4px; color:#0f172a; white-space:nowrap;">
+                                  <span style="font-size:0.65rem; font-weight:700; color:#0f172a; white-space:nowrap; letter-spacing:-0.01em; display:inline-block;">${inv.invoice_no}</span>
+                                  <span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 3.5px; border-radius:3px; margin-left:3px; vertical-align:middle; white-space:nowrap; ${badgeBg}">${inv.status}</span>
                                 </td>
-                                <td style="padding:4px 6px; color:#334155; word-break:break-word;">
+                                <td style="padding:4px; color:#334155; word-break:break-word; font-size:0.64rem; line-height:1.25;">
                                   ${inv.project_name || inv.notes || 'Commercial Contracting &amp; Fit-Out Services'}
                                 </td>
-                                <td style="padding:4px 6px; text-align:right; font-weight:600; color:#0f172a;">
+                                <td style="padding:4px; text-align:right; font-weight:600; color:#0f172a; font-size:0.65rem; white-space:nowrap; font-variant-numeric:tabular-nums;">
                                   ${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </td>
-                                <td style="padding:4px 6px; text-align:right; font-weight:700; color:#16a34a;">
+                                <td style="padding:4px; text-align:right; font-weight:700; color:#16a34a; font-size:0.65rem; white-space:nowrap; font-variant-numeric:tabular-nums;">
                                   ${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </td>
-                                <td style="padding:4px 6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'};">
+                                <td style="padding:4px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'}; font-size:0.66rem; white-space:nowrap; font-variant-numeric:tabular-nums;">
                                   ${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </td>
                               </tr>
@@ -15450,15 +15519,15 @@ class FinanceApp {
                 <span style="font-size:0.72rem; color:#64748b;">${ledger.prjInvoices.length} invoice(s) registered</span>
               </div>
               <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
-                <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.68rem; table-layout:fixed; box-sizing:border-box;">
                   <thead>
                     <tr style="background:#0f172a; color:#ffffff;">
-                      <th style="padding:6px; text-align:left; width:11%; white-space:nowrap;">Date</th>
-                      <th style="padding:6px; text-align:left; width:22%; white-space:nowrap;">Invoice #</th>
-                      <th style="padding:6px; text-align:left; width:28%;">Scope Description</th>
-                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Billed (${curr})</th>
-                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Collected</th>
-                      <th style="padding:6px; text-align:right; width:13%; white-space:nowrap;">Pending Due</th>
+                      <th style="padding:5px 4px; text-align:left; width:11%; white-space:nowrap; font-size:0.63rem;">Date</th>
+                      <th style="padding:5px 4px; text-align:left; width:24%; white-space:nowrap; font-size:0.63rem;">Invoice #</th>
+                      <th style="padding:5px 4px; text-align:left; width:26%; font-size:0.63rem;">Scope Description</th>
+                      <th style="padding:5px 4px; text-align:right; width:13%; white-space:nowrap; font-size:0.63rem;">Billed (${curr})</th>
+                      <th style="padding:5px 4px; text-align:right; width:13%; white-space:nowrap; font-size:0.63rem;">Collected</th>
+                      <th style="padding:5px 4px; text-align:right; width:13%; white-space:nowrap; font-size:0.63rem;">Pending Due</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -15475,15 +15544,15 @@ class FinanceApp {
             : 'background:#fef2f2; color:#dc2626; border:1px solid rgba(220,38,38,0.25);'));
       return `
                         <tr style="border-bottom:1px solid #e2e8f0;">
-                          <td style="padding:6px; color:#64748b; white-space:nowrap;">${this.formatDate(inv.invoice_date || inv.date)}</td>
-                          <td style="padding:6px 4px; color:#0f172a; white-space:nowrap;">
-                            <span style="font-size:0.69rem; font-weight:700; color:#0f172a; white-space:nowrap; letter-spacing:-0.01em; display:inline-block;">${inv.invoice_no}</span>
-                            <span style="font-size:0.58rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 4px; border-radius:3px; margin-left:3px; vertical-align:middle; white-space:nowrap; ${badgeBg}">${inv.status}</span>
+                          <td style="padding:5px 4px; color:#64748b; white-space:nowrap; font-size:0.63rem;">${this.formatDate(inv.invoice_date || inv.date)}</td>
+                          <td style="padding:5px 4px; color:#0f172a; white-space:nowrap;">
+                            <span style="font-size:0.65rem; font-weight:700; color:#0f172a; white-space:nowrap; letter-spacing:-0.01em; display:inline-block;">${inv.invoice_no}</span>
+                            <span style="font-size:0.55rem; font-weight:700; text-transform:uppercase; display:inline-block; padding:1px 3.5px; border-radius:3px; margin-left:3px; vertical-align:middle; white-space:nowrap; ${badgeBg}">${inv.status}</span>
                           </td>
-                          <td style="padding:6px; color:#334155; word-break:break-word;">${inv.project_name || inv.notes || inv.line_items?.[0]?.description || 'Contracting & Fitout Works'}</td>
-                          <td style="padding:6px; text-align:right; font-weight:700; color:#0f172a; white-space:nowrap;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td style="padding:6px; text-align:right; font-weight:700; color:#16a34a; white-space:nowrap;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td style="padding:6px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'}; white-space:nowrap;">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:5px 4px; color:#334155; word-break:break-word; font-size:0.64rem; line-height:1.25;">${inv.project_name || inv.notes || inv.line_items?.[0]?.description || 'Contracting & Fitout Works'}</td>
+                          <td style="padding:5px 4px; text-align:right; font-weight:700; color:#0f172a; white-space:nowrap; font-size:0.65rem; font-variant-numeric:tabular-nums;">${Number(inv.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:5px 4px; text-align:right; font-weight:700; color:#16a34a; white-space:nowrap; font-size:0.65rem; font-variant-numeric:tabular-nums;">${invPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td style="padding:5px 4px; text-align:right; font-weight:800; color:${invDue > 0.02 ? '#dc2626' : '#16a34a'}; white-space:nowrap; font-size:0.66rem; font-variant-numeric:tabular-nums;">${invDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `;
     }).join('') : `
@@ -17886,9 +17955,15 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-group">
-                <label class="fin-form-label">Project Title / Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="new-prj-name" class="fin-form-input" required placeholder="e.g. Dubai Police Academy Expansion Directorate">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Title / Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="new-prj-name" class="fin-form-input" required placeholder="e.g. Dubai Police Academy Expansion Directorate">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client LPO # / Work Order Ref</label>
+                  <input type="text" id="new-prj-lpo" class="fin-form-input" placeholder="e.g. LPO/BD/2026/12, PO-701102, or 26-R3-378" style="font-family:monospace; font-weight:600; color:#38bdf8;">
+                </div>
               </div>
 
               <div class="fin-form-grid-2">
@@ -17955,6 +18030,7 @@ class FinanceApp {
       const clientName = document.getElementById('new-prj-client').value.trim();
       const matchedCust = customers.find(c => c.name.toLowerCase() === clientName.toLowerCase() || c.name.toLowerCase().includes(clientName.toLowerCase()));
 
+      const lpoValue = (document.getElementById('new-prj-lpo')?.value || '').trim();
       const payload = {
         project: {
           id: 'prj-' + Date.now().toString(36),
@@ -17964,6 +18040,8 @@ class FinanceApp {
           client: clientName,
           client_name: clientName,
           client_id: matchedCust?.id || null,
+          lpo_no: lpoValue,
+          po_reference: lpoValue,
           contract_value: Number(document.getElementById('new-prj-contract').value) || 0,
           approved_budget: Number(document.getElementById('new-prj-budget').value) || 0,
           currency: this.activeCurrency || 'AED',
@@ -18059,10 +18137,16 @@ class FinanceApp {
                 </div>
               </div>
 
-              <!-- Row 2: Title / Name -->
-              <div class="fin-form-group" style="margin-bottom:1rem;">
-                <label class="fin-form-label">Project Title / Name <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="edit-prj-name" class="fin-form-input" required value="${prj.name || ''}" placeholder="e.g. Yateem Optician Khalidiyah Mall Fitout">
+              <!-- Row 2: Title & LPO Ref -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Title / Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-prj-name" class="fin-form-input" required value="${prj.name || ''}" placeholder="e.g. Yateem Optician Khalidiyah Mall Fitout">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client LPO # / Work Order Ref</label>
+                  <input type="text" id="edit-prj-lpo" class="fin-form-input" value="${prj.lpo_no || prj.po_reference || prj.po_no || ''}" placeholder="e.g. LPO/BD/2026/12, PO-701102, or 26-R3-378" style="font-family:monospace; font-weight:600; color:#38bdf8;">
+                </div>
               </div>
 
               <!-- Row 3: Client & Location -->
@@ -18284,6 +18368,7 @@ class FinanceApp {
       const matchedCust = customers.find(c => c.name.toLowerCase() === clientName.toLowerCase() || c.name.toLowerCase().includes(clientName.toLowerCase()));
       const manualEnabled = toggle?.checked || false;
 
+      const lpoValue = (document.getElementById('edit-prj-lpo')?.value || '').trim();
       const payload = {
         project: {
           id: prj.id,
@@ -18293,6 +18378,8 @@ class FinanceApp {
           client: clientName,
           client_name: clientName,
           client_id: matchedCust?.id || prj.client_id || null,
+          lpo_no: lpoValue,
+          po_reference: lpoValue,
           contract_value: Number(document.getElementById('edit-prj-contract').value) || 0,
           approved_budget: Number(document.getElementById('edit-prj-budget').value) || 0,
           currency: prj.currency || this.activeCurrency || 'AED',
@@ -22593,6 +22680,70 @@ class FinanceApp {
       }
     }
 
+    const applyEditProjectData = (found) => {
+      if (!found || !found.id) {
+        editPrjInput.value = 'General Corporate Overhead';
+        editPrjInput.removeAttribute('data-prj-id');
+        if (editPrjBadge) {
+          editPrjBadge.textContent = 'General Overhead';
+          editPrjBadge.style.color = '#94a3b8';
+        }
+        if (editPrjHint) editPrjHint.textContent = 'General Corporate Overhead selected';
+        return;
+      }
+      editPrjInput.value = found.name;
+      editPrjInput.setAttribute('data-prj-id', found.id);
+      if (editPrjBadge) {
+        editPrjBadge.textContent = `✓ ${found?.code || 'Registered Project'}`;
+        editPrjBadge.style.color = '#10b981';
+      }
+      if (editPrjHint) editPrjHint.textContent = `${editPrjInput.value} linked to bill`;
+
+      // Auto-populate Linked Purchase Order / LPO Number from selected Project
+      const editPoInp = document.getElementById('edit-bill-po-sel');
+      const editPoBdg = document.getElementById('edit-bill-po-badge');
+      const editPoHnt = document.getElementById('edit-bill-po-hint');
+      if (editPoInp) {
+        const projectLpo = (found.lpo_no || found.po_reference || found.lpo_number || found.po_no || found.client_po_ref || '').trim();
+        if (projectLpo) {
+          editPoInp.value = projectLpo;
+          const matchingPo = pos.find(po => (po.po_no || '').toLowerCase() === projectLpo.toLowerCase());
+          if (matchingPo) {
+            editPoInp.setAttribute('data-po-id', matchingPo.id);
+          } else {
+            editPoInp.removeAttribute('data-po-id');
+          }
+          if (editPoBdg) {
+            editPoBdg.textContent = `✓ Project LPO: ${projectLpo}`;
+            editPoBdg.style.color = '#10b981';
+          }
+          if (editPoHnt) {
+            editPoHnt.textContent = `Auto-linked Project LPO #${projectLpo} from ${found.name}`;
+          }
+        } else {
+          const matchingPo = pos.find(po =>
+            (po.project_id && po.project_id === found.id) ||
+            (po.project_name && (
+              po.project_name.toLowerCase() === found.name.toLowerCase() ||
+              found.name.toLowerCase().includes(po.project_name.toLowerCase()) ||
+              po.project_name.toLowerCase().includes(found.name.toLowerCase())
+            ))
+          );
+          if (matchingPo && matchingPo.po_no) {
+            editPoInp.value = matchingPo.po_no;
+            editPoInp.setAttribute('data-po-id', matchingPo.id);
+            if (editPoBdg) {
+              editPoBdg.textContent = `✓ Project PO: ${matchingPo.po_no}`;
+              editPoBdg.style.color = '#10b981';
+            }
+            if (editPoHnt) {
+              editPoHnt.textContent = `Auto-linked PO #${matchingPo.po_no} from ${found.name}`;
+            }
+          }
+        }
+      }
+    };
+
     if (editPrjInput && editPrjDropdown) {
       const showEditPrjRecommendations = () => {
         const val = editPrjInput.value.trim().toLowerCase();
@@ -22616,22 +22767,10 @@ class FinanceApp {
           e.preventDefault();
           const prjId = item.getAttribute('data-id');
           if (!prjId) {
-            editPrjInput.value = 'General Corporate Overhead';
-            editPrjInput.removeAttribute('data-prj-id');
-            if (editPrjBadge) {
-              editPrjBadge.textContent = 'General Overhead';
-              editPrjBadge.style.color = '#94a3b8';
-            }
-            if (editPrjHint) editPrjHint.textContent = 'General Corporate Overhead selected';
+            applyEditProjectData(null);
           } else {
             const found = projects.find(p => p.id === prjId);
-            editPrjInput.value = found ? found.name : item.getAttribute('data-name');
-            editPrjInput.setAttribute('data-prj-id', prjId);
-            if (editPrjBadge) {
-              editPrjBadge.textContent = `✓ ${found?.code || 'Registered Project'}`;
-              editPrjBadge.style.color = '#10b981';
-            }
-            if (editPrjHint) editPrjHint.textContent = `${editPrjInput.value} linked to bill`;
+            applyEditProjectData(found || { id: prjId, name: item.getAttribute('data-name') });
           }
           editPrjDropdown.classList.remove('open');
         };
@@ -22656,12 +22795,7 @@ class FinanceApp {
         );
 
         if (found) {
-          editPrjInput.setAttribute('data-prj-id', found.id);
-          if (editPrjBadge) {
-            editPrjBadge.textContent = `✓ ${found.code || 'Registered Project'}`;
-            editPrjBadge.style.color = '#10b981';
-          }
-          if (editPrjHint) editPrjHint.textContent = `${found.name} linked to bill`;
+          applyEditProjectData(found);
         } else {
           editPrjInput.removeAttribute('data-prj-id');
           if (editPrjBadge) {

@@ -810,7 +810,9 @@
       "target_completion": "2027-06-28",
       "site_location": "Alain, UAE",
       "description": "Civil and fit-out works at Foah Mall Alain.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO-IB-2026-004",
+      "po_reference": "LPO-IB-2026-004"
     },
     {
       "id": "prj-toby-kiosk",
@@ -828,7 +830,9 @@
       "target_completion": "2026-10-31",
       "site_location": "Yas Mall, Abu Dhabi, UAE",
       "description": "Supply and apply of cement screeding 100mm high.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO/SD/2026/09",
+      "po_reference": "LPO/SD/2026/09"
     },
     {
       "id": "prj-bateel-yas",
@@ -846,7 +850,9 @@
       "target_completion": "2026-04-23",
       "site_location": "Yas Mall, Abu Dhabi, UAE",
       "description": "Turnkey luxury cafe fit-out, joinery, and decorative ceiling works.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO-TRI-2024-88",
+      "po_reference": "LPO-TRI-2024-88"
     },
     {
       "id": "prj-chipotle-mbz",
@@ -864,7 +870,9 @@
       "target_completion": "2026-03-31",
       "site_location": "MBZ City, Abu Dhabi, UAE",
       "description": "Fit-out and MEP contracting for Chipotle restaurant outlet.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "MOD.0022025",
+      "po_reference": "MOD.0022025"
     },
     {
       "id": "prj-toprock-police-01",
@@ -882,7 +890,9 @@
       "target_completion": "2026-12-31",
       "site_location": "Al Rowaiyah, Dubai, UAE",
       "description": "Partition wall lining, acoustic rockwool insulation, and ceiling systems for Dubai Police Academy Building.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO-DPA-2026-01",
+      "po_reference": "LPO-DPA-2026-01"
     },
     {
       "id": "prj-mvr3cdaw",
@@ -900,7 +910,9 @@
       "target_completion": "2026-05-30",
       "site_location": "Al Bateen Tower, Abu Dhabi, UAE",
       "description": "Gypsum Partition & Wall Cladding Works @ AON Insurance Office.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO-AYAT-2026-14",
+      "po_reference": "LPO-AYAT-2026-14"
     },
     {
       "id": "prj-mvr35qo2",
@@ -925,7 +937,9 @@
       "manual_expenses": 0,
       "manual_cost": 316571.79,
       "manual_profit": 90164.72,
-      "manual_margin": "22.2"
+      "manual_margin": "22.2",
+      "lpo_no": "LPO-HLN-2025-44",
+      "po_reference": "LPO-HLN-2025-44"
     },
     {
       "id": "prj-edc-dalma",
@@ -943,7 +957,9 @@
       "target_completion": "2026-08-30",
       "site_location": "Dalma Mall & Madinati Mall, Abu Dhabi, UAE",
       "description": "Fit-out and civil works for Emirates Driving Company testing & training centers.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO-EDC-2026-22",
+      "po_reference": "LPO-EDC-2026-22"
     },
     {
       "id": "prj-specon-rak",
@@ -961,7 +977,9 @@
       "target_completion": "2026-09-30",
       "site_location": "Ras Al Khaimah, UAE",
       "description": "Interior design, gypsum partitions, and exhibition joinery contracting.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "26-R3-378",
+      "po_reference": "26-R3-378"
     },
     {
       "id": "prj-pggc-ad",
@@ -979,7 +997,9 @@
       "target_completion": "2026-07-31",
       "site_location": "Abu Dhabi, UAE",
       "description": "General maintenance, civil finishing, and fit-out contracting.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO-PGGC-2026-99",
+      "po_reference": "LPO-PGGC-2026-99"
     },
     {
       "id": "prj-wald-rak",
@@ -997,7 +1017,9 @@
       "target_completion": "2026-11-30",
       "site_location": "Waldorf Astoria, Ras Al Khaimah, UAE",
       "description": "Luxury hotel guestroom and suite renovation, gypsum and joinery package.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO-WALD-2026-11",
+      "po_reference": "LPO-WALD-2026-11"
     },
     {
       "id": "prj-bd-03",
@@ -1015,7 +1037,9 @@
       "target_completion": "2026-12-31",
       "site_location": "Sector E-25, Abu Dhabi, UAE",
       "description": "Multi-floor commercial tower interior fit-out, acoustic drywalls, and finishes.",
-      "manual_financials": false
+      "manual_financials": false,
+      "lpo_no": "LPO/BD/2026/12",
+      "po_reference": "LPO/BD/2026/12"
     },
     {
       "id": "prj-yok-02",
@@ -1033,6 +1057,28 @@
       "target_completion": "2026-10-31",
       "site_location": "Khalidiyah Mall, Abu Dhabi, UAE",
       "description": "Optical retail showroom fit-out and joinery contracting.",
+      "manual_financials": false,
+      "lpo_no": "LPO/BD/2026/12Civil & Interior",
+      "po_reference": "LPO/BD/2026/12Civil & Interior"
+    },
+    {
+      "id": "prj-mina-palace",
+      "code": "PRJ-REC-1-MP-2023",
+      "company_id": "rayan-corp-uae",
+      "name": "Project # Mina Palace Laundry Refurbishment Work",
+      "client": "M/S HI PROFILE GENERAL MAINTENANCE LLC",
+      "client_name": "M/S HI PROFILE GENERAL MAINTENANCE LLC",
+      "client_id": "cust-hiprofile",
+      "lpo_no": "PO NO.701102",
+      "po_reference": "PO NO.701102",
+      "contract_value": 48300,
+      "approved_budget": 48300,
+      "currency": "AED",
+      "status": "Closed",
+      "start_date": "2023-04-10",
+      "target_completion": "2023-05-15",
+      "site_location": "Mina Palace, Abu Dhabi, UAE",
+      "description": "LPO NO. PO NO.701102 - Mina Palace Laundry Refurbishment Work",
       "manual_financials": false
     }
   ],
