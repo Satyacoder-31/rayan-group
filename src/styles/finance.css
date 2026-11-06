@@ -3953,7 +3953,8 @@ body.fin-doc-open .fin-app-wrapper {
   .fin-filter-group,
   .fin-table-actions,
   .doc-qr-scan-hint,
-  .fin-sidebar-backdrop {
+  .fin-sidebar-backdrop,
+  #fin-clean-print-frame {
     display: none !important;
   }
 
@@ -4017,7 +4018,7 @@ body.fin-doc-open .fin-app-wrapper {
     margin: 0 auto !important;
     padding: 6mm 10mm 4mm 10mm !important;
     width: 100% !important;
-    min-width: 680px !important;
+    min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     min-height: auto !important;
@@ -4025,11 +4026,18 @@ body.fin-doc-open .fin-app-wrapper {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #0f172a !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     page-break-after: auto !important;
     break-after: auto !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .fin-document-paper,
+  .fin-document-paper * {
+    box-sizing: border-box !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -4047,24 +4055,30 @@ body.fin-doc-open .fin-app-wrapper {
     margin-bottom: 0.5rem !important;
   }
 
-  .fin-doc-table-wrapper table {
+  .fin-doc-table-wrapper table,
+  .fin-document-paper table[style*="width:100%"],
+  .fin-document-paper table[style*="width: 100%"],
+  .fin-document-paper table.fin-data-table {
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
-  }
-
-  .fin-document-paper * {
     box-sizing: border-box !important;
   }
 
-  .fin-document-paper table {
-    width: 100% !important;
-    max-width: 100% !important;
-    table-layout: fixed !important;
+  /* CRITICAL: Header metadata tables (Order#, Date, Terms, Due Date, Ref, etc.) MUST NOT expand to 100% */
+  .fin-document-paper table[style*="margin-left:auto"],
+  .fin-document-paper table[style*="margin-left: auto"],
+  .fin-document-paper .fin-doc-meta-table,
+  .fin-document-paper div[style*="text-align:right"] table,
+  .fin-document-paper div[style*="text-align: right"] table {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    table-layout: auto !important;
+    margin-left: auto !important;
     border-collapse: collapse !important;
-    box-sizing: border-box !important;
   }
 
   .fin-document-paper th,

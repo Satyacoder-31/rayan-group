@@ -4453,18 +4453,14 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   extractSerialNum(str) {
     if (!str) return 0;
-    const strClean = String(str).trim();
-    // Special match for project codes like PRJ-REC-116-YOK-2026 or PRJ-REC-99-PGGC-2023
-    const mPrj = strClean.match(/PRJ-(?:REC|RG|ASH)-(\d+)/i);
-    if (mPrj) return parseInt(mPrj[1], 10);
     // Compound year + sequence key for documents like CN-REC-2024-005, BILL-REC-1001, etc.
-    const mYearSeq = strClean.match(/[-/](\d{4})[-/](\d+)$/);
+    const mYearSeq = String(str).match(/[-/](\d{4})[-/](\d+)$/);
     if (mYearSeq) return parseInt(mYearSeq[1], 10) * 1000000 + parseInt(mYearSeq[2], 10);
-    const mEnd = strClean.match(/[-/](\d+)$/);
+    const mEnd = String(str).match(/[-/](\d+)$/);
     if (mEnd) return parseInt(mEnd[1], 10);
-    const m = strClean.match(/(\d{4,6})/);
+    const m = String(str).match(/(\d{4,6})/);
     if (m) return parseInt(m[1], 10);
-    const m2 = strClean.match(/(\d+)/);
+    const m2 = String(str).match(/(\d+)/);
     return m2 ? parseInt(m2[1], 10) : 0;
   }
 
@@ -8008,36 +8004,9 @@ class FinanceApp {
     };
 
     const prjInvoices = invoices.filter(i => isDocLinked(i, false));
-    prjInvoices.sort((a, b) => {
-      const sA = this.extractSerialNum(a.invoice_no || a.id);
-      const sB = this.extractSerialNum(b.invoice_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.invoice_date || a.date || 0).getTime() - new Date(b.invoice_date || b.date || 0).getTime();
-    });
-
     const prjBills = bills.filter(b => isDocLinked(b, true));
-    prjBills.sort((a, b) => {
-      const sA = this.extractSerialNum(a.bill_no || a.id);
-      const sB = this.extractSerialNum(b.bill_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.bill_date || a.date || 0).getTime() - new Date(b.bill_date || b.date || 0).getTime();
-    });
-
     const prjExpenses = expenses.filter(e => isDocLinked(e, false));
-    prjExpenses.sort((a, b) => {
-      const sA = this.extractSerialNum(a.expense_no || a.id);
-      const sB = this.extractSerialNum(b.expense_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.expense_date || a.date || 0).getTime() - new Date(b.expense_date || b.date || 0).getTime();
-    });
-
     const prjPOs = pos.filter(po => isDocLinked(po, false));
-    prjPOs.sort((a, b) => {
-      const sA = this.extractSerialNum(a.po_no || a.id);
-      const sB = this.extractSerialNum(b.po_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.po_date || a.date || 0).getTime() - new Date(b.po_date || b.date || 0).getTime();
-    });
 
     const invNos = new Set(prjInvoices.map(i => (i.invoice_no || '').trim().toLowerCase()));
     const invIds = new Set(prjInvoices.map(i => (i.id || '').trim().toLowerCase()));
@@ -8049,12 +8018,6 @@ class FinanceApp {
       }
       return false;
     });
-    prjReceipts.sort((a, b) => {
-      const sA = this.extractSerialNum(a.receipt_no || a.id);
-      const sB = this.extractSerialNum(b.receipt_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.receipt_date || a.date || 0).getTime() - new Date(b.receipt_date || b.date || 0).getTime();
-    });
 
     // Credit notes linked to project or project invoices
     const prjCreditNotes = (this.db?.credit_notes || []).filter(cn => {
@@ -8065,12 +8028,6 @@ class FinanceApp {
       if (cnInvNo && invNos.has(cnInvNo)) return true;
       if (cnInvId && invIds.has(cnInvId)) return true;
       return false;
-    });
-    prjCreditNotes.sort((a, b) => {
-      const sA = this.extractSerialNum(a.credit_note_no || a.id);
-      const sB = this.extractSerialNum(b.credit_note_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.credit_note_date || a.date || 0).getTime() - new Date(b.credit_note_date || b.date || 0).getTime();
     });
 
     const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
@@ -14412,7 +14369,7 @@ class FinanceApp {
   }
 
   // 6A. CONSOLIDATED MASTER STATEMENT OF ACCOUNT (ALL CLIENTS & DEBTORS)
-  openConsolidatedCustomerSOA(filter = 'all', sortMode = 'serial-asc') {
+  openConsolidatedCustomerSOA(filter = 'all') {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const curr = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
@@ -14472,38 +14429,6 @@ class FinanceApp {
       const cInvs = allInvoices.filter(i => isDocForCust(i));
       const cCNs = allCreditNotes.filter(cn => isDocForCust(cn));
       const cReceipts = allReceipts.filter(r => isDocForCust(r));
-
-      // Sort invoices, receipts, and credit notes serial-wise
-      const sortDocList = (list, numProp, dateProp) => {
-        list.sort((a, b) => {
-          if (sortMode === 'serial-desc') {
-            const sA = this.extractSerialNum(a[numProp] || a.id);
-            const sB = this.extractSerialNum(b[numProp] || b.id);
-            if (sB !== sA) return sB - sA;
-            return new Date(b[dateProp] || b.date || 0).getTime() - new Date(a[dateProp] || a.date || 0).getTime();
-          }
-          if (sortMode === 'date-asc') {
-            const tA = new Date(a[dateProp] || a.date || 0).getTime();
-            const tB = new Date(b[dateProp] || b.date || 0).getTime();
-            if (tA !== tB) return tA - tB;
-            return this.extractSerialNum(a[numProp] || a.id) - this.extractSerialNum(b[numProp] || b.id);
-          }
-          if (sortMode === 'date-desc') {
-            const tA = new Date(a[dateProp] || a.date || 0).getTime();
-            const tB = new Date(b[dateProp] || b.date || 0).getTime();
-            if (tB !== tA) return tB - tA;
-            return this.extractSerialNum(b[numProp] || b.id) - this.extractSerialNum(a[numProp] || a.id);
-          }
-          // Default: serial-asc (low -> high sequential)
-          const sA = this.extractSerialNum(a[numProp] || a.id);
-          const sB = this.extractSerialNum(b[numProp] || b.id);
-          if (sA !== sB) return sA - sB;
-          return new Date(a[dateProp] || a.date || 0).getTime() - new Date(b[dateProp] || b.date || 0).getTime();
-        });
-      };
-      sortDocList(cInvs, 'invoice_no', 'invoice_date');
-      sortDocList(cReceipts, 'receipt_no', 'receipt_date');
-      sortDocList(cCNs, 'credit_note_no', 'credit_note_date');
 
       const hasOpeningInvoice = cInvs.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
       const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
@@ -14598,15 +14523,9 @@ class FinanceApp {
             </div>
             <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
               <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Filter:</span>
-              <button type="button" class="fin-doc-pill-btn ${filter === 'all' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('all', '${sortMode}')">All Clients (${allCount})</button>
-              <button type="button" class="fin-doc-pill-btn ${filter === 'outstanding' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('outstanding', '${sortMode}')">Pending Dues (${outstandingCount})</button>
-              <button type="button" class="fin-doc-pill-btn ${filter === 'settled' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('settled', '${sortMode}')">Fully Settled (${settledCount})</button>
-            </div>
-            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
-              <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Sort:</span>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-asc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedCustomerSOA('${filter}', 'serial-asc')" title="Sequential serial numbers (Low → High)">🔢 Serial (Asc)</button>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-desc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedCustomerSOA('${filter}', 'serial-desc')" title="Reverse serial numbers (High → Low)">🔢 Serial (Desc)</button>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'date-asc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedCustomerSOA('${filter}', 'date-asc')" title="Earliest date first">📅 Date</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'all' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('all')">All Clients (${allCount})</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'outstanding' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('outstanding')">Pending Dues (${outstandingCount})</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'settled' ? 'active' : ''}" style="font-size:0.7rem; padding:2px 8px;" onclick="window.finApp.openConsolidatedCustomerSOA('settled')">Fully Settled (${settledCount})</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -15003,7 +14922,6 @@ class FinanceApp {
 
       let status = due <= 0.02 && billed > 0 ? 'Settled' : (due > 0.02 && paid > 0.02 ? 'Partially Paid' : (due > 0.02 ? 'Pending / Due' : 'Active'));
       const recoveryPct = billed > 0 ? Math.min(100, Math.round(((paid + cnTotal) / billed) * 100)) : 100;
-      cInvs.sort((a, b) => this.extractSerialNum(a.invoice_no || a.id) - this.extractSerialNum(b.invoice_no || b.id));
 
       return { customer: c, billed, paid, cnTotal, due, recoveryPct, status, invoices: cInvs };
     });
@@ -15072,7 +14990,7 @@ class FinanceApp {
   }
 
   // 6D. SINGLE CUSTOMER OFFICIAL SOA PRINT DOCUMENT
-  openCustomerSOADocument(custId, sortMode = 'serial-asc') {
+  openCustomerSOADocument(custId) {
     const CUST_ALIAS_MAP = {
       'cust-1792414691494': 'cust-toprock',
       'cust-1792415585310': 'cust-hln',
@@ -15112,38 +15030,6 @@ class FinanceApp {
     const receipts = (this.db?.customer_receipts || []).filter(r => r.status !== 'void' && isDocForThisCust(r));
     const creditNotes = (this.db?.credit_notes || []).filter(cn => cn.status !== 'void' && isDocForThisCust(cn));
 
-    // Sort documents strictly serial-wise
-    const sortFn = (list, numProp, dateProp) => {
-      list.sort((a, b) => {
-        if (sortMode === 'serial-desc') {
-          const sA = this.extractSerialNum(a[numProp] || a.id);
-          const sB = this.extractSerialNum(b[numProp] || b.id);
-          if (sB !== sA) return sB - sA;
-          return new Date(b[dateProp] || b.date || 0).getTime() - new Date(a[dateProp] || a.date || 0).getTime();
-        }
-        if (sortMode === 'date-desc') {
-          const tA = new Date(a[dateProp] || a.date || 0).getTime();
-          const tB = new Date(b[dateProp] || b.date || 0).getTime();
-          if (tB !== tA) return tB - tA;
-          return this.extractSerialNum(b[numProp] || b.id) - this.extractSerialNum(a[numProp] || a.id);
-        }
-        if (sortMode === 'date-asc') {
-          const tA = new Date(a[dateProp] || a.date || 0).getTime();
-          const tB = new Date(b[dateProp] || b.date || 0).getTime();
-          if (tA !== tB) return tA - tB;
-          return this.extractSerialNum(a[numProp] || a.id) - this.extractSerialNum(b[numProp] || b.id);
-        }
-        // default: serial-asc (1 -> 9 sequential)
-        const sA = this.extractSerialNum(a[numProp] || a.id);
-        const sB = this.extractSerialNum(b[numProp] || b.id);
-        if (sA !== sB) return sA - sB;
-        return new Date(a[dateProp] || a.date || 0).getTime() - new Date(b[dateProp] || b.date || 0).getTime();
-      });
-    };
-    sortFn(invoices, 'invoice_no', 'invoice_date');
-    sortFn(receipts, 'receipt_no', 'receipt_date');
-    sortFn(creditNotes, 'credit_note_no', 'credit_note_date');
-
     const hasOpeningInvoice = invoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
     const unbilledOpening = hasOpeningInvoice ? 0 : (Number(cust.opening_balance) || 0);
 
@@ -15172,12 +15058,6 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">Customer SOA</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
-            </div>
-            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); margin-left:0.5rem;">
-              <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Sort:</span>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-asc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openCustomerSOADocument('${cust.id}', 'serial-asc')" title="Sequential serial numbers (Low → High)">🔢 Serial (Asc)</button>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-desc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openCustomerSOADocument('${cust.id}', 'serial-desc')" title="Reverse serial numbers (High → Low)">🔢 Serial (Desc)</button>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'date-asc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openCustomerSOADocument('${cust.id}', 'date-asc')" title="Earliest date first">📅 Date</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -15399,7 +15279,7 @@ class FinanceApp {
   }
 
   // 6E. DEDICATED PROJECT STATEMENT OF ACCOUNT (PROJECT SOA)
-  openProjectSOADocument(projectId, sortMode = 'serial-asc') {
+  openProjectSOADocument(projectId) {
     const prj = (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
     if (!prj) {
       this.showNotification('Project account not found.', 'error');
@@ -15407,45 +15287,6 @@ class FinanceApp {
     }
     const ledger = this.getProjectLedgerData(prj.id);
     if (!ledger) return;
-
-    // Active sort ordering for Project SOA document tables
-    const sortedInvoices = [...ledger.prjInvoices];
-    const sortedReceipts = [...ledger.prjReceipts];
-    const sortedCreditNotes = [...ledger.prjCreditNotes];
-    const sortedBills = [...ledger.prjBills];
-
-    const sortFn = (list, numProp, dateProp) => {
-      list.sort((a, b) => {
-        if (sortMode === 'serial-desc') {
-          const sA = this.extractSerialNum(a[numProp] || a.id);
-          const sB = this.extractSerialNum(b[numProp] || b.id);
-          if (sB !== sA) return sB - sA;
-          return new Date(b[dateProp] || b.date || 0).getTime() - new Date(a[dateProp] || a.date || 0).getTime();
-        }
-        if (sortMode === 'date-desc') {
-          const tA = new Date(a[dateProp] || a.date || 0).getTime();
-          const tB = new Date(b[dateProp] || b.date || 0).getTime();
-          if (tB !== tA) return tB - tA;
-          return this.extractSerialNum(b[numProp] || b.id) - this.extractSerialNum(a[numProp] || a.id);
-        }
-        if (sortMode === 'date-asc') {
-          const tA = new Date(a[dateProp] || a.date || 0).getTime();
-          const tB = new Date(b[dateProp] || b.date || 0).getTime();
-          if (tA !== tB) return tA - tB;
-          return this.extractSerialNum(a[numProp] || a.id) - this.extractSerialNum(b[numProp] || b.id);
-        }
-        // default: serial-asc (1 -> 9 sequential)
-        const sA = this.extractSerialNum(a[numProp] || a.id);
-        const sB = this.extractSerialNum(b[numProp] || b.id);
-        if (sA !== sB) return sA - sB;
-        return new Date(a[dateProp] || a.date || 0).getTime() - new Date(b[dateProp] || b.date || 0).getTime();
-      });
-    };
-
-    sortFn(sortedInvoices, 'invoice_no', 'invoice_date');
-    sortFn(sortedReceipts, 'receipt_no', 'receipt_date');
-    sortFn(sortedCreditNotes, 'credit_note_no', 'credit_note_date');
-    sortFn(sortedBills, 'bill_no', 'bill_date');
 
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const curr = ledger.curr;
@@ -15488,12 +15329,6 @@ class FinanceApp {
               ${cust ? `<button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">Customer SOA</button>` : ''}
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openProjectSOADocument('${prj.id}')">Project SOA</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedProjectsSOA()">Master Projects SOA</button>
-            </div>
-            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); margin-left:0.5rem;">
-              <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Sort:</span>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-asc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openProjectSOADocument('${prj.id}', 'serial-asc')" title="Sequential serial numbers (Low → High)">🔢 Serial (Asc)</button>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-desc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openProjectSOADocument('${prj.id}', 'serial-desc')" title="Reverse serial numbers (High → Low)">🔢 Serial (Desc)</button>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'date-asc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openProjectSOADocument('${prj.id}', 'date-asc')" title="Earliest date first">📅 Date</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -15627,7 +15462,7 @@ class FinanceApp {
                     </tr>
                   </thead>
                   <tbody>
-                    ${sortedInvoices.length > 0 ? sortedInvoices.map(inv => {
+                    ${ledger.prjInvoices.length > 0 ? ledger.prjInvoices.map(inv => {
       const invPaid = Number(inv.amount_paid) || 0;
       const invDue = Number(inv.balance_due) || 0;
       const st = String(inv.status || 'unpaid').toLowerCase();
@@ -15687,12 +15522,12 @@ class FinanceApp {
               </div>
 
               <!-- SECTION 1B: SALES CREDIT NOTES & ADJUSTMENTS -->
-              ${(sortedCreditNotes && sortedCreditNotes.length > 0) ? `
+              ${(ledger.prjCreditNotes && ledger.prjCreditNotes.length > 0) ? `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem 0;">
                   <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#9333ea; margin:0; text-transform:uppercase;">
                     1B. Sales Credit Notes &amp; Receivable Adjustments
                   </h4>
-                  <span style="font-size:0.72rem; color:#64748b;">${sortedCreditNotes.length} credit note(s) applied</span>
+                  <span style="font-size:0.72rem; color:#64748b;">${ledger.prjCreditNotes.length} credit note(s) applied</span>
                 </div>
                 <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
                   <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
@@ -15706,7 +15541,7 @@ class FinanceApp {
                       </tr>
                     </thead>
                     <tbody>
-                      ${sortedCreditNotes.map(cn => {
+                      ${ledger.prjCreditNotes.map(cn => {
                         const cnAmt = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
                         return `
                           <tr style="border-bottom:1px solid #e2e8f0;">
@@ -15733,12 +15568,12 @@ class FinanceApp {
               ` : ''}
 
               <!-- SECTION 2: CLIENT COLLECTIONS & RECEIPTS -->
-              ${(sortedReceipts.length > 0 || ledger.collected > 0) ? `
+              ${(ledger.prjReceipts.length > 0 || ledger.collected > 0) ? `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.4rem 0;">
                   <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase;">
                     2. Client Collections &amp; Inward Payments
                   </h4>
-                  <span style="font-size:0.72rem; color:#64748b;">${sortedReceipts.length || 1} payment record(s)</span>
+                  <span style="font-size:0.72rem; color:#64748b;">${ledger.prjReceipts.length || 1} payment record(s)</span>
                 </div>
                 <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
                   <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
@@ -15753,7 +15588,7 @@ class FinanceApp {
                       </tr>
                     </thead>
                     <tbody>
-                      ${sortedReceipts.length > 0 ? sortedReceipts.map(r => `
+                      ${ledger.prjReceipts.length > 0 ? ledger.prjReceipts.map(r => `
                         <tr style="border-bottom:1px solid #e2e8f0;">
                           <td style="padding:5px 6px; font-weight:700; font-size:0.69rem; color:#0f172a; white-space:nowrap;">${r.receipt_no}</td>
                           <td style="padding:5px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(r.receipt_date)}</td>
@@ -15788,7 +15623,7 @@ class FinanceApp {
                 <h4 style="font-family:'Outfit', sans-serif; font-size:0.85rem; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase;">
                   3. Direct Subcontractor &amp; Supplier Purchase Bills
                 </h4>
-                <span style="font-size:0.72rem; color:#64748b;">${sortedBills.length || (ledger.billsCost > 0 ? 1 : 0)} record(s)</span>
+                <span style="font-size:0.72rem; color:#64748b;">${ledger.prjBills.length || (ledger.billsCost > 0 ? 1 : 0)} record(s)</span>
               </div>
               <div class="fin-doc-table-wrapper" style="margin:0 0 1.15rem 0;">
                 <table style="width:100%; border-collapse:collapse; font-size:0.72rem; table-layout:fixed;">
@@ -15803,7 +15638,7 @@ class FinanceApp {
                     </tr>
                   </thead>
                   <tbody>
-                    ${sortedBills.length > 0 ? sortedBills.map(b => `
+                    ${ledger.prjBills.length > 0 ? ledger.prjBills.map(b => `
                       <tr style="border-bottom:1px solid #e2e8f0;">
                         <td style="padding:5px 6px; color:#64748b; white-space:nowrap;">${this.formatDate(b.bill_date || b.date)}</td>
                         <td style="padding:5px 6px; color:#0f172a; white-space:nowrap;">
@@ -16067,7 +15902,7 @@ class FinanceApp {
   }
 
   // 6G. MASTER CONSOLIDATED PROJECTS PORTFOLIO STATEMENT OF ACCOUNT (SOA)
-  openConsolidatedProjectsSOA(filter = 'all', sortMode = 'serial-asc') {
+  openConsolidatedProjectsSOA(filter = 'all') {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const curr = isIndia ? 'INR' : 'AED';
     const currSym = isIndia ? '₹' : 'AED ';
@@ -16085,16 +15920,6 @@ class FinanceApp {
     const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Al Wahda Commercial Tower, Abu Dhabi, United Arab Emirates');
 
     const allProjects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    allProjects.sort((a, b) => {
-      const sA = this.extractSerialNum(a.code || a.id);
-      const sB = this.extractSerialNum(b.code || b.id);
-      if (sortMode === 'serial-desc') {
-        if (sA !== sB) return sB - sA;
-        return (b.name || '').localeCompare(a.name || '');
-      }
-      if (sA !== sB) return sA - sB;
-      return (a.name || '').localeCompare(b.name || '');
-    });
 
     const projectLedgers = allProjects.map(p => this.getProjectLedgerData(p.id)).filter(Boolean);
 
@@ -16135,15 +15960,10 @@ class FinanceApp {
             </div>
             <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
               <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Filter:</span>
-              <button type="button" class="fin-doc-pill-btn ${filter === 'all' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('all', '${sortMode}')">All (${projectLedgers.length})</button>
-              <button type="button" class="fin-doc-pill-btn ${filter === 'active' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('active', '${sortMode}')">Active</button>
-              <button type="button" class="fin-doc-pill-btn ${filter === 'closed' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('closed', '${sortMode}')">Closed</button>
-              <button type="button" class="fin-doc-pill-btn ${filter === 'pending' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('pending', '${sortMode}')">Pending Due</button>
-            </div>
-            <div style="display:inline-flex; align-items:center; gap:0.35rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
-              <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Sort:</span>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-asc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('${filter}', 'serial-asc')" title="Sequential serial numbers (Low → High)">🔢 Serial (Asc)</button>
-              <button type="button" class="fin-doc-pill-btn ${sortMode === 'serial-desc' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('${filter}', 'serial-desc')" title="Reverse serial numbers (High → Low)">🔢 Serial (Desc)</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'all' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('all')">All (${projectLedgers.length})</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'active' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('active')">Active</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'closed' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('closed')">Closed</button>
+              <button type="button" class="fin-doc-pill-btn ${filter === 'pending' ? 'active' : ''}" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.openConsolidatedProjectsSOA('pending')">Pending Due</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -16384,19 +16204,7 @@ class FinanceApp {
     if (!vend) return;
 
     const bills = (this.db?.purchase_bills || []).filter(b => (b.vendor_id === vend.id || (vend.name && b.vendor_name && b.vendor_name.toLowerCase() === vend.name.toLowerCase())) && b.status !== 'void');
-    bills.sort((a, b) => {
-      const sA = this.extractSerialNum(a.bill_no || a.id);
-      const sB = this.extractSerialNum(b.bill_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.bill_date || a.date || 0).getTime() - new Date(b.bill_date || b.date || 0).getTime();
-    });
     const payments = (this.db?.vendor_payments || []).filter(p => p.vendor_id === vend.id || (vend.name && p.vendor_name && p.vendor_name.toLowerCase() === vend.name.toLowerCase()));
-    payments.sort((a, b) => {
-      const sA = this.extractSerialNum(a.voucher_no || a.payment_no || a.id);
-      const sB = this.extractSerialNum(b.voucher_no || b.payment_no || b.id);
-      if (sA !== sB) return sA - sB;
-      return new Date(a.date || a.payment_date || 0).getTime() - new Date(b.date || b.payment_date || 0).getTime();
-    });
 
     const totalBilled = bills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
     const totalPaid = bills.reduce((s, b) => s + (Number(b.amount_paid) || 0), 0);
@@ -18657,189 +18465,34 @@ class FinanceApp {
   }
 
   printDocument() {
-    const modalPaper = document.querySelector('#fin-doc-print-modal .fin-document-paper') ||
-      document.querySelector('.fin-document-paper');
-
-    if (!modalPaper) {
-      window.print();
-      return;
+    // Clean up any legacy print iframe if present
+    const legacyFrame = document.getElementById('fin-clean-print-frame');
+    if (legacyFrame) {
+      try { legacyFrame.remove(); } catch (e) { }
     }
 
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+    // Add print classes to body so print CSS targets official document cleanly
+    document.body.classList.add('fin-doc-open');
+    document.body.classList.add('fin-printing-now');
 
-    if (isMobile) {
-      // On mobile devices, mobile browsers often block or squeeze iframe prints to device-width.
-      // Temporarily expand the viewport to 1024px so mobile browser prints with PC-scale desktop layout!
-      const metaViewport = document.querySelector('meta[name="viewport"]');
-      const originalViewport = metaViewport ? metaViewport.getAttribute('content') : '';
+    const cleanup = () => {
+      document.body.classList.remove('fin-printing-now');
+    };
 
-      if (metaViewport) {
-        metaViewport.setAttribute('content', 'width=1024, initial-scale=0.75');
-      }
+    window.addEventListener('afterprint', cleanup, { once: true });
 
-      document.body.classList.add('fin-doc-open');
-      document.body.classList.add('fin-printing-now');
-
-      const cleanupMobilePrint = () => {
-        document.body.classList.remove('fin-printing-now');
-        if (metaViewport && originalViewport) {
-          metaViewport.setAttribute('content', originalViewport);
-        }
-      };
-
-      window.addEventListener('afterprint', cleanupMobilePrint, { once: true });
+    // RequestAnimationFrame ensures DOM paints all active print-ready states before invoking native print
+    requestAnimationFrame(() => {
       setTimeout(() => {
         try {
           window.print();
         } catch (e) {
-          console.error('Print failed:', e);
+          console.error('Print invocation failed:', e);
         } finally {
-          setTimeout(cleanupMobilePrint, 2500);
+          setTimeout(cleanup, 2500);
         }
-      }, 150);
-      return;
-    }
-
-    // On desktop, use a clean isolated iframe with full desktop A4 styling
-    try {
-      let printFrame = document.getElementById('fin-clean-print-frame');
-      if (!printFrame) {
-        printFrame = document.createElement('iframe');
-        printFrame.id = 'fin-clean-print-frame';
-        printFrame.style.position = 'fixed';
-        printFrame.style.top = '-9999px';
-        printFrame.style.left = '-9999px';
-        printFrame.style.width = '1024px';
-        printFrame.style.height = '1448px';
-        printFrame.style.border = '0';
-        printFrame.style.opacity = '0';
-        printFrame.style.pointerEvents = 'none';
-        document.body.appendChild(printFrame);
-      }
-
-      const frameDoc = printFrame.contentDocument || printFrame.contentWindow.document;
-      frameDoc.open();
-      frameDoc.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=1024, initial-scale=1">
-  <title>${document.title || 'Official Document'}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    @page {
-      size: A4 portrait;
-      margin: 5mm 8mm 5mm 8mm;
-    }
-    * {
-      box-sizing: border-box !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    html, body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #ffffff !important;
-      background-color: #ffffff !important;
-      color: #111827 !important;
-      width: 100% !important;
-      height: auto !important;
-      overflow: visible !important;
-      font-size: 11px !important;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    .fin-document-paper {
-      margin: 0 auto !important;
-      box-shadow: none !important;
-      border: none !important;
-      outline: none !important;
-      border-radius: 0 !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      min-height: auto !important;
-      padding: 6mm 10mm 4mm 10mm !important;
-      box-sizing: border-box !important;
-      background: #ffffff !important;
-      position: relative !important;
-      overflow: hidden !important;
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-    .fin-doc-table-scroll-hint {
-      display: none !important;
-    }
-    .fin-doc-table-wrapper {
-      overflow: visible !important;
-      overflow-x: visible !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      margin: 0.5rem 0 !important;
-    }
-    table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-      table-layout: fixed !important;
-    }
-    thead, tbody, tfoot, tr, td, th {
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-    tfoot, tfoot tr {
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-    .rayan-doc-watermark {
-      position: absolute !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      opacity: 0.16 !important;
-      pointer-events: none !important;
-      z-index: 10 !important;
-      display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
-      user-select: none !important;
-    }
-    .rayan-doc-watermark img {
-      width: 138px !important;
-      max-width: 138px !important;
-      height: auto !important;
-      display: block !important;
-      object-fit: contain !important;
-    }
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-  </style>
-</head>
-<body>
-  ${modalPaper.outerHTML}
-</body>
-</html>`);
-      frameDoc.close();
-
-      setTimeout(() => {
-        try {
-          printFrame.contentWindow.focus();
-          printFrame.contentWindow.print();
-        } catch (e) {
-          window.print();
-        }
-      }, 250);
-    } catch (e) {
-      document.body.classList.add('fin-doc-open');
-      document.body.classList.add('fin-printing-now');
-      setTimeout(() => {
-        window.print();
-        setTimeout(() => {
-          document.body.classList.remove('fin-printing-now');
-        }, 500);
-      }, 60);
-    }
+      }, 70);
+    });
   }
 
   openInvoiceDetail(id) {
@@ -19181,7 +18834,7 @@ class FinanceApp {
 
           <div style="margin-top:2rem; display:flex; justify-content:flex-end; gap:0.75rem;" class="no-print">
             <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-wire-advice')">Close</button>
-            <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Wire Advice</button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Wire Advice</button>
           </div>
         </div>
       </div>
@@ -19457,7 +19110,7 @@ class FinanceApp {
 
           <div style="margin-top:2rem; display:flex; justify-content:flex-end; gap:0.75rem;" class="no-print">
             <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-voucher-print')">Close</button>
-            <button type="button" class="fin-btn-quick primary" onclick="window.print()">🖨️ Print Petty Cash Voucher</button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Petty Cash Voucher</button>
           </div>
         </div>
       </div>
@@ -20755,6 +20408,7 @@ class FinanceApp {
     .fin-doc-table-scroll-hint { display: none !important; }
     .fin-doc-table-wrapper { overflow: visible !important; width: 100% !important; }
     table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
+    table[style*="margin-left:auto"], table[style*="margin-left: auto"] { width: auto !important; table-layout: auto !important; margin-left: auto !important; }
     @media print {
       @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
       body { background: #fff; padding: 0; }
@@ -25547,6 +25201,7 @@ class FinanceApp {
     .fin-doc-table-scroll-hint { display: none !important; }
     .fin-doc-table-wrapper { overflow: visible !important; width: 100% !important; }
     table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
+    table[style*="margin-left:auto"], table[style*="margin-left: auto"] { width: auto !important; table-layout: auto !important; margin-left: auto !important; }
     @media print {
       @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
       body { background: #fff; padding: 0; }
