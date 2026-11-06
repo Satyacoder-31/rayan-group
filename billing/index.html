@@ -78,9 +78,34 @@
         margin: 0 !important;
         padding: 0 !important;
         border: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #site-preloader, .site-preloader, #custom-cursor, #cursor-dot {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        position: absolute !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      body.fin-doc-open .fin-app-wrapper,
+      body.fin-printing-now .fin-app-wrapper,
+      body:has(#fin-modal-container:not(:empty)) .fin-app-wrapper,
+      body:has(.fin-doc-modal-backdrop) .fin-app-wrapper,
+      body:has(.fin-modal-backdrop.open) .fin-app-wrapper {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
       }
       #main-content, #finance-portal-root, #fin-modal-container, .fin-doc-modal-backdrop, #fin-doc-print-modal, .fin-doc-viewport {
         display: block !important;
+        position: static !important;
         overflow: visible !important;
         height: auto !important;
         min-height: 0 !important;
@@ -92,17 +117,30 @@
         padding: 0 !important;
         margin: 0 !important;
         width: 100% !important;
+        float: none !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
       }
       .fin-document-paper {
+        display: block !important;
+        position: relative !important;
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
         border-radius: 0 !important;
         margin: 0 auto !important;
+        padding: 6mm 10mm 4mm 10mm !important;
         width: 100% !important;
         max-width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
         background: #ffffff !important;
         background-color: #ffffff !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
       }
     }
   </style>

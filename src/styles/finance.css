@@ -3929,6 +3929,26 @@ body.fin-doc-open .fin-app-wrapper {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+  }
+
+  /* Completely eradicate preloader, custom cursor & floating non-print elements */
+  #site-preloader,
+  .site-preloader,
+  #custom-cursor,
+  #cursor-dot {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    position: absolute !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* 3. Hide non-printable app navigation, header chrome & floating elements */
@@ -4006,6 +4026,9 @@ body.fin-doc-open .fin-app-wrapper {
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
+    min-height: 0 !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
   }
 
   .fin-document-paper {
@@ -4021,12 +4044,14 @@ body.fin-doc-open .fin-app-wrapper {
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    min-height: auto !important;
+    min-height: 0 !important;
     height: auto !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #0f172a !important;
     overflow: visible !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
     page-break-after: auto !important;
     break-after: auto !important;
     page-break-inside: auto !important;
@@ -4267,18 +4292,33 @@ body.fin-doc-open .fin-app-wrapper {
     margin: 5mm 8mm 5mm 8mm;
   }
 
-  .fin-document-paper table,
-  .fin-document-paper thead,
-  .fin-document-paper tbody,
-  .fin-document-paper tfoot,
-  .fin-document-paper tr,
-  .fin-document-paper td,
-  .fin-document-paper th {
+  .fin-document-paper table {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .fin-document-paper thead {
+    display: table-header-group !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  .fin-document-paper tfoot,
+  .fin-document-paper tbody {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .fin-document-paper tfoot {
+    display: table-footer-group !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .fin-document-paper tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
   .fin-document-paper tfoot tr {
     page-break-inside: avoid !important;
     break-inside: avoid !important;

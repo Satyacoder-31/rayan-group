@@ -14545,7 +14545,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:880px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 10mm 8mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:880px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-before:avoid; break-before:avoid; page-break-inside:auto; break-inside:auto; flex-shrink:0; min-height:0; height:auto; position:relative; overflow:visible;">
 
             <!-- Watermark -->
             ${this.getRayanWatermark()}
@@ -14647,45 +14647,45 @@ class FinanceApp {
                   <table style="width:100%; border-collapse:collapse; font-size:0.74rem; table-layout:fixed;">
                     <thead>
                       <tr style="background:#0f172a; color:#ffffff;">
-                        <th style="padding:6px 6px; text-align:center; width:4%; border:1px solid #0f172a;">#</th>
-                        <th style="padding:6px 8px; text-align:left; width:31%; border:1px solid #0f172a;">Client / Debtor Name</th>
-                        <th style="padding:6px 6px; text-align:left; width:15%; border:1px solid #0f172a;">Tax ID (TRN / GSTIN)</th>
-                        <th style="padding:6px 6px; text-align:left; width:11%; border:1px solid #0f172a;">Supply Place</th>
-                        <th style="padding:6px 6px; text-align:right; width:10%; border:1px solid #0f172a;">Billed (${curr})</th>
-                        <th style="padding:6px 6px; text-align:right; width:10%; border:1px solid #0f172a;">Paid (${curr})</th>
-                        <th style="padding:6px 6px; text-align:right; width:7%; border:1px solid #0f172a;">CN (${curr})</th>
-                        <th style="padding:6px 6px; text-align:right; width:12%; border:1px solid #0f172a;">Outstanding Due</th>
-                        <th style="padding:6px 6px; text-align:center; width:10%; border:1px solid #0f172a;">Status</th>
+                        <th style="padding:6px 4px; text-align:center; width:3%; border:1px solid #0f172a;">#</th>
+                        <th style="padding:6px 6px; text-align:left; width:26%; border:1px solid #0f172a;">Client / Debtor Name</th>
+                        <th style="padding:6px 4px; text-align:left; width:13%; border:1px solid #0f172a; white-space:nowrap;">Tax ID (TRN / GSTIN)</th>
+                        <th style="padding:6px 4px; text-align:left; width:10%; border:1px solid #0f172a;">Supply Place</th>
+                        <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Billed (${curr})</th>
+                        <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Paid (${curr})</th>
+                        <th style="padding:6px 4px; text-align:right; width:7%; border:1px solid #0f172a; white-space:nowrap;">CN (${curr})</th>
+                        <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Outstanding Due</th>
+                        <th style="padding:6px 4px; text-align:center; width:8%; border:1px solid #0f172a;">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       ${filteredList.map((item, idx) => `
                         <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom:1px solid #e2e8f0;">
                           <td style="padding:6px 4px; text-align:center; color:#64748b; font-weight:600; border:1px solid #e2e8f0;">${idx + 1}</td>
-                          <td style="padding:6px 8px; font-weight:700; color:#0f172a; border:1px solid #e2e8f0; word-break:break-word;">
+                          <td style="padding:6px 6px; font-weight:700; color:#0f172a; border:1px solid #e2e8f0; word-break:break-word;">
                             ${item.customer.name}
                             ${item.customer.contact_person ? `<div style="font-size:0.65rem; color:#64748b; font-weight:400;">Attn: ${item.customer.contact_person} ${item.customer.phone ? `(${item.customer.phone})` : ''}</div>` : ''}
                           </td>
-                          <td style="padding:6px 6px; color:#475569; font-family:monospace; font-size:0.7rem; border:1px solid #e2e8f0;">
+                          <td style="padding:6px 4px; color:#475569; font-family:monospace; font-size:0.68rem; border:1px solid #e2e8f0; word-break:break-all;">
                             ${item.customer.trn || item.customer.gstin || '—'}
                           </td>
-                          <td style="padding:6px 6px; color:#475569; border:1px solid #e2e8f0; word-break:break-word;">
+                          <td style="padding:6px 4px; color:#475569; border:1px solid #e2e8f0; word-break:break-word;">
                             ${item.customer.place_of_supply || 'Abu Dhabi, UAE'}
                           </td>
-                          <td style="padding:6px 6px; text-align:right; color:#0f172a; font-weight:600; border:1px solid #e2e8f0;">
+                          <td style="padding:6px 4px; text-align:right; color:#0f172a; font-weight:600; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
                             ${item.billed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="padding:6px 6px; text-align:right; color:#16a34a; font-weight:700; border:1px solid #e2e8f0;">
+                          <td style="padding:6px 4px; text-align:right; color:#16a34a; font-weight:700; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
                             ${item.paid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="padding:6px 6px; text-align:right; color:#ca8a04; font-weight:600; border:1px solid #e2e8f0;">
+                          <td style="padding:6px 4px; text-align:right; color:#ca8a04; font-weight:600; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
                             ${item.cnTotal > 0 ? item.cnTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
                           </td>
-                          <td style="padding:6px 6px; text-align:right; font-weight:800; color:${item.due > 0.02 ? '#dc2626' : '#16a34a'}; border:1px solid #e2e8f0;">
+                          <td style="padding:6px 4px; text-align:right; font-weight:800; color:${item.due > 0.02 ? '#dc2626' : '#16a34a'}; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
                             ${item.due.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="padding:6px 4px; text-align:center; border:1px solid #e2e8f0;">
-                            <span style="display:inline-block; padding:2px 6px; font-size:0.65rem; font-weight:700; border-radius:4px; background:${item.statusBg}; color:${item.statusColor}; border:1px solid ${item.statusBorder}; white-space:nowrap;">
+                          <td style="padding:5px 2px; text-align:center; border:1px solid #e2e8f0;">
+                            <span style="display:inline-block; padding:1.5px 4px; font-size:0.60rem; font-weight:700; border-radius:3px; background:${item.statusBg}; color:${item.statusColor}; border:1px solid ${item.statusBorder}; white-space:nowrap; letter-spacing:-0.01em;">
                               ${item.status}
                             </span>
                           </td>
@@ -14694,22 +14694,22 @@ class FinanceApp {
                     </tbody>
                     <tfoot>
                       <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #0f172a; border-bottom:3px double #0f172a;">
-                        <td colspan="4" style="padding:8px 8px; text-align:right; text-transform:uppercase; font-size:0.75rem; color:#0f172a; border:1px solid #cbd5e1;">
+                        <td colspan="4" style="padding:8px 6px; text-align:right; text-transform:uppercase; font-size:0.75rem; color:#0f172a; border:1px solid #cbd5e1;">
                           Grand Total (All Clients):
                         </td>
-                        <td style="padding:8px 6px; text-align:right; font-size:0.78rem; color:#0f172a; border:1px solid #cbd5e1;">
+                        <td style="padding:8px 4px; text-align:right; font-size:0.75rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 6px; text-align:right; font-size:0.78rem; color:#16a34a; border:1px solid #cbd5e1;">
+                        <td style="padding:8px 4px; text-align:right; font-size:0.75rem; color:#16a34a; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 6px; text-align:right; font-size:0.78rem; color:#ca8a04; border:1px solid #cbd5e1;">
+                        <td style="padding:8px 4px; text-align:right; font-size:0.75rem; color:#ca8a04; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalCN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 6px; text-align:right; font-size:0.85rem; color:#dc2626; border:1px solid #cbd5e1;">
+                        <td style="padding:8px 4px; text-align:right; font-size:0.80rem; color:#dc2626; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 4px; text-align:center; font-size:0.7rem; color:#0f172a; border:1px solid #cbd5e1;">
+                        <td style="padding:8px 2px; text-align:center; font-size:0.68rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap;">
                           ${overallRecoveryPct}% Rec.
                         </td>
                       </tr>
@@ -14976,7 +14976,7 @@ class FinanceApp {
     @media print {
       @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: auto !important; break-inside: auto !important; }
     }
   </style>
 </head>
@@ -15071,7 +15071,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:860px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 10mm 8mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:860px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-before:avoid; break-before:avoid; page-break-inside:auto; break-inside:auto; flex-shrink:0; min-height:0; height:auto; position:relative; overflow:visible;">
 
             ${this.getRayanWatermark()}
 
@@ -15345,7 +15345,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:890px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 10mm 8mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:890px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-before:avoid; break-before:avoid; page-break-inside:auto; break-inside:auto; flex-shrink:0; min-height:0; height:auto; position:relative; overflow:visible;">
 
             ${this.getRayanWatermark()}
 
@@ -15980,7 +15980,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:10mm 12mm 10mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:920px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 10mm 8mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:920px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-before:avoid; break-before:avoid; page-break-inside:auto; break-inside:auto; flex-shrink:0; min-height:0; height:auto; position:relative; overflow:visible;">
 
             ${this.getRayanWatermark()}
 
@@ -16050,15 +16050,15 @@ class FinanceApp {
                 <table style="width:100%; border-collapse:collapse; font-size:0.71rem; table-layout:fixed;">
                   <thead>
                     <tr style="background:#0f172a; color:#ffffff;">
-                      <th style="padding:6px; text-align:left; width:13%;">Code</th>
-                      <th style="padding:6px; text-align:left; width:26%;">Project Title &amp; Client</th>
-                      <th style="padding:6px; text-align:left; width:9%;">Status</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Invoiced (${curr})</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Collected</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Pending Due</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Direct Cost</th>
-                      <th style="padding:6px; text-align:right; width:13%;">Net Profit</th>
-                      <th style="padding:6px; text-align:center; width:8%;">SOA</th>
+                      <th style="padding:6px; text-align:left; width:11%;">Code</th>
+                      <th style="padding:6px; text-align:left; width:23%;">Project Title &amp; Client</th>
+                      <th style="padding:6px; text-align:left; width:8%;">Status</th>
+                      <th style="padding:6px; text-align:right; width:11%;">Invoiced (${curr})</th>
+                      <th style="padding:6px; text-align:right; width:11%;">Collected</th>
+                      <th style="padding:6px; text-align:right; width:11%;">Pending Due</th>
+                      <th style="padding:6px; text-align:right; width:11%;">Direct Cost</th>
+                      <th style="padding:6px; text-align:right; width:11%;">Net Profit</th>
+                      <th style="padding:6px; text-align:center; width:3%;">SOA</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -18471,6 +18471,20 @@ class FinanceApp {
       try { legacyFrame.remove(); } catch (e) { }
     }
 
+    // Reset all scroll positions so Chrome print does not shift the top header off-screen
+    try {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      const mc = document.getElementById('main-content');
+      if (mc) mc.scrollTop = 0;
+      const pr = document.getElementById('finance-portal-root');
+      if (pr) pr.scrollTop = 0;
+      document.querySelectorAll('.fin-doc-viewport, .fin-main-content, #fin-doc-print-modal, .fin-modal-dialog, .fin-modal-body').forEach(el => {
+        el.scrollTop = 0;
+      });
+    } catch (e) { }
+
     // Add print classes to body so print CSS targets official document cleanly
     document.body.classList.add('fin-doc-open');
     document.body.classList.add('fin-printing-now');
@@ -20801,7 +20815,7 @@ class FinanceApp {
     @media print {
       @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: auto !important; break-inside: auto !important; }
     }
   </style>
 </head>
@@ -23500,7 +23514,7 @@ class FinanceApp {
     @media print {
       @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: auto !important; break-inside: auto !important; }
     }
   </style>
 </head>
@@ -23824,7 +23838,7 @@ class FinanceApp {
     @media print {
       @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: auto !important; break-inside: auto !important; }
     }
   </style>
 </head>
@@ -25476,7 +25490,7 @@ class FinanceApp {
     @media print {
       @page { size: A4 portrait; margin: 6mm 8mm; }
       body { background: #fff; padding: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 4mm !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; page-break-before: avoid !important; break-before: avoid !important; page-break-inside: auto !important; break-inside: auto !important; }
     }
   </style>
 </head>
