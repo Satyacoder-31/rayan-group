@@ -14545,7 +14545,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 10mm 8mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:880px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-before:avoid; break-before:avoid; page-break-inside:auto; break-inside:auto; flex-shrink:0; min-height:0; height:auto; position:relative; overflow:visible;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 10mm 8mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:960px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-before:avoid; break-before:avoid; page-break-inside:auto; break-inside:auto; flex-shrink:0; min-height:0; height:auto; position:relative; overflow:visible;">
 
             <!-- Watermark -->
             ${this.getRayanWatermark()}
@@ -14648,14 +14648,14 @@ class FinanceApp {
                     <thead>
                       <tr style="background:#0f172a; color:#ffffff;">
                         <th style="padding:6px 4px; text-align:center; width:3%; border:1px solid #0f172a;">#</th>
-                        <th style="padding:6px 6px; text-align:left; width:26%; border:1px solid #0f172a;">Client / Debtor Name</th>
-                        <th style="padding:6px 4px; text-align:left; width:13%; border:1px solid #0f172a; white-space:nowrap;">Tax ID (TRN / GSTIN)</th>
-                        <th style="padding:6px 4px; text-align:left; width:10%; border:1px solid #0f172a;">Supply Place</th>
+                        <th style="padding:6px 6px; text-align:left; width:24%; border:1px solid #0f172a;">Client / Debtor Name</th>
+                        <th style="padding:6px 4px; text-align:left; width:10%; border:1px solid #0f172a; white-space:nowrap;">Tax ID (TRN / GSTIN)</th>
+                        <th style="padding:6px 4px; text-align:left; width:8%; border:1px solid #0f172a;">Supply Place</th>
                         <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Billed (${curr})</th>
                         <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Paid (${curr})</th>
-                        <th style="padding:6px 4px; text-align:right; width:7%; border:1px solid #0f172a; white-space:nowrap;">CN (${curr})</th>
-                        <th style="padding:6px 4px; text-align:right; width:11%; border:1px solid #0f172a; white-space:nowrap;">Outstanding Due</th>
-                        <th style="padding:6px 4px; text-align:center; width:8%; border:1px solid #0f172a;">Status</th>
+                        <th style="padding:6px 4px; text-align:right; width:6%; border:1px solid #0f172a; white-space:nowrap;">CN (${curr})</th>
+                        <th style="padding:6px 4px; text-align:right; width:12%; border:1px solid #0f172a; white-space:nowrap;">Outstanding Due</th>
+                        <th style="padding:6px 4px; text-align:center; width:15%; border:1px solid #0f172a;">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -14684,8 +14684,8 @@ class FinanceApp {
                           <td style="padding:6px 4px; text-align:right; font-weight:800; color:${item.due > 0.02 ? '#dc2626' : '#16a34a'}; border:1px solid #e2e8f0; white-space:nowrap; font-variant-numeric:tabular-nums;">
                             ${item.due.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="padding:5px 2px; text-align:center; border:1px solid #e2e8f0;">
-                            <span style="display:inline-block; padding:1.5px 4px; font-size:0.60rem; font-weight:700; border-radius:3px; background:${item.statusBg}; color:${item.statusColor}; border:1px solid ${item.statusBorder}; white-space:nowrap; letter-spacing:-0.01em;">
+                          <td style="padding:5px 4px; text-align:center; border:1px solid #e2e8f0; white-space:nowrap;">
+                            <span style="display:inline-block; padding:2px 8px; font-size:0.62rem; font-weight:700; border-radius:3px; background:${item.statusBg}; color:${item.statusColor}; border:1px solid ${item.statusBorder}; white-space:nowrap;">
                               ${item.status}
                             </span>
                           </td>
@@ -14709,7 +14709,7 @@ class FinanceApp {
                         <td style="padding:8px 4px; text-align:right; font-size:0.80rem; color:#dc2626; border:1px solid #cbd5e1; white-space:nowrap; font-variant-numeric:tabular-nums;">
                           ${totalDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
-                        <td style="padding:8px 2px; text-align:center; font-size:0.68rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap;">
+                        <td style="padding:8px 3px; text-align:center; font-size:0.68rem; color:#0f172a; border:1px solid #cbd5e1; white-space:nowrap;">
                           ${overallRecoveryPct}% Rec.
                         </td>
                       </tr>
@@ -16050,15 +16050,15 @@ class FinanceApp {
                 <table style="width:100%; border-collapse:collapse; font-size:0.71rem; table-layout:fixed;">
                   <thead>
                     <tr style="background:#0f172a; color:#ffffff;">
-                      <th style="padding:6px; text-align:left; width:11%;">Code</th>
-                      <th style="padding:6px; text-align:left; width:23%;">Project Title &amp; Client</th>
-                      <th style="padding:6px; text-align:left; width:8%;">Status</th>
-                      <th style="padding:6px; text-align:right; width:11%;">Invoiced (${curr})</th>
-                      <th style="padding:6px; text-align:right; width:11%;">Collected</th>
-                      <th style="padding:6px; text-align:right; width:11%;">Pending Due</th>
-                      <th style="padding:6px; text-align:right; width:11%;">Direct Cost</th>
-                      <th style="padding:6px; text-align:right; width:11%;">Net Profit</th>
-                      <th style="padding:6px; text-align:center; width:3%;">SOA</th>
+                      <th style="padding:6px 4px; text-align:left; width:10%;">Code</th>
+                      <th style="padding:6px; text-align:left; width:22%;">Project Title &amp; Client</th>
+                      <th style="padding:6px 4px; text-align:left; width:10%;">Status</th>
+                      <th style="padding:6px 4px; text-align:right; width:11%;">Invoiced (${curr})</th>
+                      <th style="padding:6px 4px; text-align:right; width:11%;">Collected</th>
+                      <th style="padding:6px 4px; text-align:right; width:11%;">Pending Due</th>
+                      <th style="padding:6px 4px; text-align:right; width:11%;">Direct Cost</th>
+                      <th style="padding:6px 4px; text-align:right; width:11%;">Net Profit</th>
+                      <th style="padding:6px 4px; text-align:center; width:3%;">SOA</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -18485,12 +18485,25 @@ class FinanceApp {
       });
     } catch (e) { }
 
+    // Force light color-scheme on document and meta tag so Chrome print canvas renders pure white (removes dark border)
+    const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+    const originalColorScheme = metaColorScheme ? metaColorScheme.getAttribute('content') : 'dark';
+    if (metaColorScheme) metaColorScheme.setAttribute('content', 'light');
+    document.documentElement.style.colorScheme = 'light';
+    document.body.style.colorScheme = 'light';
+    const originalTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', 'light');
+
     // Add print classes to body so print CSS targets official document cleanly
     document.body.classList.add('fin-doc-open');
     document.body.classList.add('fin-printing-now');
 
     const cleanup = () => {
       document.body.classList.remove('fin-printing-now');
+      if (metaColorScheme) metaColorScheme.setAttribute('content', originalColorScheme);
+      document.documentElement.style.colorScheme = '';
+      document.body.style.colorScheme = '';
+      document.documentElement.setAttribute('data-theme', originalTheme);
     };
 
     window.addEventListener('afterprint', cleanup, { once: true });

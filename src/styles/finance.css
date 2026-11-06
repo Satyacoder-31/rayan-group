@@ -3899,9 +3899,11 @@ body.fin-doc-open .fin-app-wrapper {
    OFFICIAL NATIVE PRINT SYSTEM (PDF & PHYSICAL PRINTER READY)
    ========================================================================== */
 @media print {
-  /* 1. Global Page & Canvas Reset */
-  html, body {
+  /* 1. Global Page & Canvas Reset - Force Light Color Scheme (eliminates dark-mode #121212 canvas border) */
+  :root, html, body {
+    color-scheme: light !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -3909,6 +3911,9 @@ body.fin-doc-open .fin-app-wrapper {
     height: auto !important;
     min-height: 0 !important;
     width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -3919,6 +3924,7 @@ body.fin-doc-open .fin-app-wrapper {
   #fin-modal-container {
     display: block !important;
     width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
@@ -3926,9 +3932,11 @@ body.fin-doc-open .fin-app-wrapper {
     position: static !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: transparent !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     box-shadow: none !important;
     border: none !important;
+    outline: none !important;
     page-break-before: avoid !important;
     break-before: avoid !important;
   }
@@ -4038,10 +4046,10 @@ body.fin-doc-open .fin-app-wrapper {
     border: none !important;
     outline: none !important;
     border-radius: 0 !important;
-    margin: 0 auto !important;
-    padding: 6mm 10mm 4mm 10mm !important;
+    margin: 0 !important;
+    padding: 3mm 4mm 3mm 4mm !important;
     width: 100% !important;
-    min-width: 0 !important;
+    min-width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     min-height: 0 !important;
@@ -4289,7 +4297,7 @@ body.fin-doc-open .fin-app-wrapper {
   /* 10. Standard A4 Page Setup with side-bleed protection & single-page fit */
   @page {
     size: A4 portrait;
-    margin: 5mm 8mm 5mm 8mm;
+    margin: 3mm 5mm 3mm 5mm;
   }
 
   .fin-document-paper table {
