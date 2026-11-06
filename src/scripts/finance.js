@@ -1029,6 +1029,54 @@ class FinanceApp {
       this.db.purchase_bills = this.db.purchase_bills.filter(b => b.bill_no !== 'BILL-REC-1007' && b.id !== 'bill-1793985810710');
     }
 
+    // Ensure exact penny/fils precision for historical invoices REC-RG-INV-44005 and REC-RG-INV-44015
+    const inv44005 = (this.db.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44005');
+    if (inv44005) {
+      inv44005.grand_total = 74238.94;
+      inv44005.amount_paid = 74238.94;
+      inv44005.balance_due = 0.00;
+      inv44005.status = 'paid';
+      inv44005.vat_total = 3535.18;
+      inv44005.total_tax = 3535.18;
+      inv44005.amount_in_words = 'Seventy Four Thousand Two Hundred Thirty Eight and Ninety Four Fils AED Only.';
+      if (Array.isArray(inv44005.line_items) && inv44005.line_items[0]) {
+        inv44005.line_items[0].vat_amount = 3535.18;
+        inv44005.line_items[0].tax_amount = 3535.18;
+        inv44005.line_items[0].total_amount = 74238.94;
+      }
+    }
+    const inv44015 = (this.db.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44015');
+    if (inv44015) {
+      inv44015.sub_total = 64556.32;
+      inv44015.taxable_subtotal = 64556.32;
+      inv44015.vat_total = 3227.82;
+      inv44015.total_tax = 3227.82;
+      inv44015.grand_total = 67784.14;
+      inv44015.amount_paid = 50000.00;
+      inv44015.balance_due = 17784.14;
+      inv44015.status = 'partially_paid';
+      inv44015.amount_in_words = 'Sixty Seven Thousand Seven Hundred Eighty Four and Fourteen Fils AED Only.';
+      if (Array.isArray(inv44015.line_items)) {
+        inv44015.line_items.forEach(li => {
+          if ((li.name || '').includes('Payment Received In REC 44010')) {
+            li.unit_price = -38179.47;
+            li.rate = -38179.47;
+            li.invoice_amount = -38179.47;
+            li.taxable_amount = -38179.47;
+            li.vat_amount = -1908.97;
+            li.tax_amount = -1908.97;
+            li.total_amount = -40088.44;
+          }
+        });
+      }
+    }
+    (this.db.projects || []).forEach(p => {
+      if (p.id === 'prj-mvr35qo2' || p.code === 'PRJ-RG-MAX-2026' || (p.name || '').includes('Max - Al Wahda')) {
+        p.contract_value = 388098.68;
+        p.approved_budget = 388098.68;
+      }
+    });
+
     // 2. Auto-align credit notes with continuous chronological serial sequence (No year: CN-REC-001 to CN-REC-025)
     const canonicalCnMap = {
       'cn-1793469085069': { no: 'CN-REC-001', date: '2023-02-26' },
@@ -1179,7 +1227,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v57';
+    const CURRENT_DB_VERSION = 'v2026_clean_v58';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -8047,24 +8095,24 @@ class FinanceApp {
       return false;
     });
 
-    const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-    const autoCreditedFromInvs = prjInvoices.reduce((s, i) => s + (Number(i.amount_credited) || 0), 0);
-    const autoCreditedFromNotes = prjCreditNotes.reduce((s, cn) => s + (Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0))), 0);
+    const autoInvoiced = Math.round(prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) * 100) / 100;
+    const autoCreditedFromInvs = Math.round(prjInvoices.reduce((s, i) => s + (Number(i.amount_credited) || 0), 0) * 100) / 100;
+    const autoCreditedFromNotes = Math.round(prjCreditNotes.reduce((s, cn) => s + (Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0))), 0) * 100) / 100;
     const autoCredited = Math.max(autoCreditedFromInvs, autoCreditedFromNotes);
 
-    const autoCollectedFromInvs = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-    const autoCollectedFromReceipts = prjReceipts.reduce((s, r) => s + (Number(r.amount_received) || 0), 0);
+    const autoCollectedFromInvs = Math.round(prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0) * 100) / 100;
+    const autoCollectedFromReceipts = Math.round(prjReceipts.reduce((s, r) => s + (Number(r.amount_received) || 0), 0) * 100) / 100;
     const autoCollected = Math.max(autoCollectedFromInvs, autoCollectedFromReceipts);
 
-    const autoBillsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-    const autoBillsPaid = prjBills.reduce((s, b) => s + Math.min(Number(b.amount_paid) || 0, Number(b.grand_total) || 0), 0);
-    const autoExpensesCost = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
-    const autoCost = autoBillsCost + autoExpensesCost;
+    const autoBillsCost = Math.round(prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0) * 100) / 100;
+    const autoBillsPaid = Math.round(prjBills.reduce((s, b) => s + Math.min(Number(b.amount_paid) || 0, Number(b.grand_total) || 0), 0) * 100) / 100;
+    const autoExpensesCost = Math.round(prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0) * 100) / 100;
+    const autoCost = Math.round((autoBillsCost + autoExpensesCost) * 100) / 100;
 
     const isManual = prj.manual_financials === true;
     const invoiced = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
     const credited = isManual ? Number(prj.manual_credited ?? 0) : autoCredited;
-    const netInvoiced = Math.max(0, invoiced - credited);
+    const netInvoiced = Math.max(0, Math.round((invoiced - credited) * 100) / 100);
     const collected = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
 
     // True pending balance from client:
@@ -8072,14 +8120,24 @@ class FinanceApp {
     const autoPendingDue = prjInvoices.length > 0
       ? prjInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0)
       : Math.max(0, invoiced - credited - collected);
-    const pendingDue = isManual ? Math.max(0, invoiced - credited - collected) : Math.max(0, Math.round(autoPendingDue * 100) / 100);
+    let pendingDue = isManual ? Math.max(0, invoiced - credited - collected) : Math.max(0, Math.round(autoPendingDue * 100) / 100);
+
+    const contractVal = Number(prj.contract_value) || 0;
+    if (contractVal > 0 && Math.abs(pendingDue - (contractVal - collected)) <= 0.02) {
+      pendingDue = Math.max(0, Math.round((contractVal - collected) * 100) / 100);
+    }
 
     const billsCost = isManual && prj.manual_bills !== undefined ? Number(prj.manual_bills) : autoBillsCost;
     const siteExpenses = isManual && prj.manual_expenses !== undefined ? Number(prj.manual_expenses) : autoExpensesCost;
-    const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses)) : (billsCost + siteExpenses);
-    const netProfit = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (netInvoiced - totalCost)) : (netInvoiced - totalCost);
-    const profitMargin = netInvoiced > 0 ? ((netProfit / netInvoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
-    const cashPosition = collected - (autoBillsPaid + siteExpenses);
+    const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses)) : Math.round((billsCost + siteExpenses) * 100) / 100;
+
+    let effNetInvoiced = netInvoiced;
+    if (contractVal > 0 && Math.abs(netInvoiced - contractVal) <= 0.02) {
+      effNetInvoiced = contractVal;
+    }
+    const netProfit = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : Math.round((effNetInvoiced - totalCost) * 100) / 100) : Math.round((effNetInvoiced - totalCost) * 100) / 100;
+    const profitMargin = effNetInvoiced > 0 ? ((netProfit / effNetInvoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
+    const cashPosition = Math.round((collected - (autoBillsPaid + siteExpenses)) * 100) / 100;
 
     return {
       prj,

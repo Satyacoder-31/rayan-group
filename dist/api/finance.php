@@ -1052,8 +1052,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     'client' => 'M/S HLN TECHNICAL SERVICES LLC',
                     'client_name' => 'M/S HLN TECHNICAL SERVICES LLC',
                     'client_id' => 'cust-hln',
-                    'contract_value' => 388098.69,
-                    'approved_budget' => 388098.69,
+                    'contract_value' => 388098.68,
+                    'approved_budget' => 388098.68,
                     'currency' => 'AED',
                     'status' => 'Closed',
                     'start_date' => '2025-08-09',
@@ -1240,12 +1240,12 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
             // v2026_clean_v52: Ensure Max Al Wahda project financials are synchronized with exact audited ledger figures
             $pdo->exec("UPDATE finance_projects SET 
-                contract_value = 388098.69,
-                approved_budget = 388098.69,
+                contract_value = 388098.68,
+                approved_budget = 388098.68,
                 data_json = JSON_SET(
                     data_json,
-                    '$.contract_value', 388098.69,
-                    '$.approved_budget', 388098.69,
+                    '$.contract_value', 388098.68,
+                    '$.approved_budget', 388098.68,
                     '$.manual_invoiced', 406736.51,
                     '$.manual_collected', 312798.68,
                     '$.manual_bills', 316571.79,
@@ -1381,8 +1381,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             if (!empty($data['projects']) && is_array($data['projects'])) {
                 foreach ($data['projects'] as &$pItem) {
                     if (($pItem['id'] ?? '') === 'prj-mvr35qo2' || ($pItem['code'] ?? '') === 'PRJ-RG-MAX-2026' || stripos($pItem['name'] ?? '', 'Max - Al Wahda') !== false) {
-                        $pItem['contract_value'] = 388098.69;
-                        $pItem['approved_budget'] = 388098.69;
+                        $pItem['contract_value'] = 388098.68;
+                        $pItem['approved_budget'] = 388098.68;
                         $pItem['manual_invoiced'] = 406736.51;
                         $pItem['manual_collected'] = 312798.68;
                         $pItem['manual_bills'] = 316571.79;
@@ -2762,8 +2762,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             'client' => 'M/S HLN TECHNICAL SERVICES LLC',
                             'client_name' => 'M/S HLN TECHNICAL SERVICES LLC',
                             'client_id' => 'cust-hln',
-                            'contract_value' => 388098.69,
-                            'approved_budget' => 388098.69,
+                            'contract_value' => 388098.68,
+                            'approved_budget' => 388098.68,
                             'currency' => 'AED',
                             'status' => 'Closed',
                             'start_date' => '2025-08-09',
@@ -3131,6 +3131,72 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 0.00, balance_due = 9902.52, status = 'unpaid' WHERE bill_no = 'BILL-REC-1006'");
                                 $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_purge_fake_entries_v66', 'completed', NOW())");
                             }
+                        }
+                    } catch (Exception $e) {}
+                    // Migration v67: Fix 1-fils discrepancy for REC-RG-INV-44005 and REC-RG-INV-44015
+                    try {
+                        $chkMig67 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_fils_mismatch_v67'")->fetchColumn();
+                        if (!$chkMig67) {
+                            if (!empty($data['invoices']) && is_array($data['invoices'])) {
+                                foreach ($data['invoices'] as &$inv) {
+                                    if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44005') {
+                                        $inv['grand_total'] = 74238.94;
+                                        $inv['amount_paid'] = 74238.94;
+                                        $inv['balance_due'] = 0.00;
+                                        $inv['status'] = 'paid';
+                                        $inv['vat_total'] = 3535.18;
+                                        $inv['total_tax'] = 3535.18;
+                                        $inv['amount_in_words'] = 'Seventy Four Thousand Two Hundred Thirty Eight and Ninety Four Fils AED Only.';
+                                        if (!empty($inv['line_items']) && is_array($inv['line_items'])) {
+                                            foreach ($inv['line_items'] as &$li) {
+                                                $li['vat_amount'] = 3535.18;
+                                                $li['tax_amount'] = 3535.18;
+                                                $li['total_amount'] = 74238.94;
+                                            }
+                                            unset($li);
+                                        }
+                                    }
+                                    if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44015') {
+                                        $inv['sub_total'] = 64556.32;
+                                        $inv['taxable_subtotal'] = 64556.32;
+                                        $inv['vat_total'] = 3227.82;
+                                        $inv['total_tax'] = 3227.82;
+                                        $inv['grand_total'] = 67784.14;
+                                        $inv['amount_paid'] = 50000.00;
+                                        $inv['balance_due'] = 17784.14;
+                                        $inv['status'] = 'partially_paid';
+                                        $inv['amount_in_words'] = 'Sixty Seven Thousand Seven Hundred Eighty Four and Fourteen Fils AED Only.';
+                                        if (!empty($inv['line_items']) && is_array($inv['line_items'])) {
+                                            foreach ($inv['line_items'] as &$li) {
+                                                if (stripos($li['name'] ?? '', 'Payment Received In REC 44010') !== false) {
+                                                    $li['unit_price'] = -38179.47;
+                                                    $li['rate'] = -38179.47;
+                                                    $li['invoice_amount'] = -38179.47;
+                                                    $li['taxable_amount'] = -38179.47;
+                                                    $li['vat_amount'] = -1908.97;
+                                                    $li['tax_amount'] = -1908.97;
+                                                    $li['total_amount'] = -40088.44;
+                                                }
+                                            }
+                                            unset($li);
+                                        }
+                                    }
+                                }
+                                unset($inv);
+                            }
+                            if (!empty($data['projects']) && is_array($data['projects'])) {
+                                foreach ($data['projects'] as &$p) {
+                                    if (($p['id'] ?? '') === 'prj-mvr35qo2' || ($p['code'] ?? '') === 'PRJ-RG-MAX-2026' || stripos($p['name'] ?? '', 'Max - Al Wahda') !== false) {
+                                        $p['contract_value'] = 388098.68;
+                                        $p['approved_budget'] = 388098.68;
+                                    }
+                                }
+                                unset($p);
+                            }
+                            $pdo->exec("UPDATE finance_invoices SET grand_total = 74238.94, amount_paid = 74238.94, balance_due = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44005'");
+                            $pdo->exec("UPDATE finance_invoices SET grand_total = 67784.14, amount_paid = 50000.00, balance_due = 17784.14, status = 'partially_paid' WHERE invoice_no = 'REC-RG-INV-44015'");
+                            $pdo->exec("UPDATE finance_projects SET contract_value = 388098.68, approved_budget = 388098.68 WHERE id = 'prj-mvr35qo2' OR code = 'PRJ-RG-MAX-2026' OR name LIKE '%Max - Al Wahda%'");
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_fils_mismatch_v67', 'completed', NOW())");
                         }
                     } catch (Exception $e) {}
                     recalculateAllFinanceBalances($data);
