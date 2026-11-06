@@ -1446,16 +1446,6 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     if (isset($vpMap[$pId])) {
                         $hp['voucher_no'] = $vpMap[$pId];
                     }
-                    if (($hp['id'] ?? '') === 'pay-1793642108024' || ($hp['voucher_no'] ?? '') === 'PV-RG-2026-103' || ($hp['voucher_no'] ?? '') === 'PV-REC-44001' || ($hp['voucher_no'] ?? '') === 'PV-REC-44002') {
-                        $hp['allocations'] = [
-                            [
-                                'bill_id' => 'bill-1793641982443',
-                                'bill_no' => 'BILL-REC-1001',
-                                'vendor_invoice_no' => 'HLN/PO/0526/2025',
-                                'amount_allocated' => 316571.79
-                            ]
-                        ];
-                    }
                     if (!empty($hp['allocations']) && is_array($hp['allocations'])) {
                         foreach ($hp['allocations'] as &$al) {
                             $alBid = $al['bill_id'] ?? '';
@@ -1498,6 +1488,153 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             }
             $pdo->exec("UPDATE finance_bank_accounts SET balance = 0.00, data_json = JSON_SET(data_json, '$.balance', 0) WHERE id = 'bank-adcb-uae' AND balance = 183092.72");
             $pdo->exec("DELETE FROM finance_bank_accounts WHERE id = 'bank-fab-uae'");
+
+            // Reconcile 5 purchase bills with 5 exact payment-out vouchers (PV-REC-44001 to PV-REC-44005)
+            try {
+                $chkPVI = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_5_payouts_v63'")->fetchColumn();
+                if (!$chkPVI) {
+                    $cPayments = [
+                        [
+                            'id' => 'pay-1793974452744',
+                            'voucher_no' => 'PV-REC-44001',
+                            'company_id' => 'rayan-corp-uae',
+                            'currency' => 'AED',
+                            'currency_symbol' => 'AED ',
+                            'vendor_id' => 'vend-mw3q187t',
+                            'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                            'payment_date' => '2023-09-13',
+                            'payment_mode' => 'Online',
+                            'reference_no' => 'Cash / Bank Transfer',
+                            'amount_paid' => 47231.00,
+                            'allocations' => [
+                                [
+                                    'bill_id' => 'bill-1793974433713',
+                                    'bill_no' => 'BILL-REC-1001',
+                                    'vendor_invoice_no' => 'General',
+                                    'amount_allocated' => 47231.00
+                                ]
+                            ],
+                            'notes' => 'Disbursement against General',
+                            'created_at' => '2026-11-06T14:14:12.744Z'
+                        ],
+                        [
+                            'id' => 'pay-1793974978543',
+                            'voucher_no' => 'PV-REC-44002',
+                            'company_id' => 'rayan-corp-uae',
+                            'currency' => 'AED',
+                            'currency_symbol' => 'AED ',
+                            'vendor_id' => 'vend-mw3q187t',
+                            'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                            'payment_date' => '2023-07-06',
+                            'payment_mode' => 'Online',
+                            'reference_no' => 'Cash / Bank Transfer',
+                            'amount_paid' => 18500.00,
+                            'allocations' => [
+                                [
+                                    'bill_id' => 'bill-1793974961216',
+                                    'bill_no' => 'BILL-REC-1002',
+                                    'vendor_invoice_no' => 'General',
+                                    'amount_allocated' => 18500.00
+                                ]
+                            ],
+                            'notes' => 'Disbursement against General',
+                            'created_at' => '2026-11-06T14:22:58.543Z'
+                        ],
+                        [
+                            'id' => 'pay-1793975240000',
+                            'voucher_no' => 'PV-REC-44003',
+                            'company_id' => 'rayan-corp-uae',
+                            'currency' => 'AED',
+                            'currency_symbol' => 'AED ',
+                            'vendor_id' => 'vend-mw3q187t',
+                            'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                            'payment_date' => '2024-11-15',
+                            'payment_mode' => 'Online',
+                            'reference_no' => 'Cash / Bank Transfer',
+                            'amount_paid' => 110000.00,
+                            'allocations' => [
+                                [
+                                    'bill_id' => 'bill-1793975224831',
+                                    'bill_no' => 'BILL-REC-1003',
+                                    'vendor_invoice_no' => 'General',
+                                    'amount_allocated' => 110000.00
+                                ]
+                            ],
+                            'notes' => 'Disbursement against General',
+                            'created_at' => '2026-11-06T14:35:00.000Z'
+                        ],
+                        [
+                            'id' => 'pay-1793976417852',
+                            'voucher_no' => 'PV-REC-44004',
+                            'company_id' => 'rayan-corp-uae',
+                            'currency' => 'AED',
+                            'currency_symbol' => 'AED ',
+                            'vendor_id' => 'vend-mw3q187t',
+                            'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                            'payment_date' => '2024-10-12',
+                            'payment_mode' => 'Online',
+                            'reference_no' => 'Cash / Bank Transfer',
+                            'amount_paid' => 129864.48,
+                            'allocations' => [
+                                [
+                                    'bill_id' => 'bill-1793975959757',
+                                    'bill_no' => 'BILL-REC-1004',
+                                    'vendor_invoice_no' => 'General',
+                                    'amount_allocated' => 129864.48
+                                ]
+                            ],
+                            'notes' => 'Disbursement against General',
+                            'created_at' => '2026-11-06T14:46:57.852Z'
+                        ],
+                        [
+                            'id' => 'pay-1793976590000',
+                            'voucher_no' => 'PV-REC-44005',
+                            'company_id' => 'rayan-corp-uae',
+                            'currency' => 'AED',
+                            'currency_symbol' => 'AED ',
+                            'vendor_id' => 'vend-mw3q187t',
+                            'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                            'payment_date' => '2024-03-22',
+                            'payment_mode' => 'Online',
+                            'reference_no' => 'Cash / Bank Transfer',
+                            'amount_paid' => 99.01,
+                            'allocations' => [
+                                [
+                                    'bill_id' => 'bill-1793976570260',
+                                    'bill_no' => 'BILL-REC-1005',
+                                    'vendor_invoice_no' => 'General',
+                                    'amount_allocated' => 99.01
+                                ]
+                            ],
+                            'notes' => 'Disbursement against General',
+                            'created_at' => '2026-11-06T14:55:00.000Z'
+                        ]
+                    ];
+
+                    $data['vendor_payments'] = $cPayments;
+
+                    // Sync to finance_vendor_payments table
+                    $pdo->exec("DELETE FROM finance_vendor_payments");
+                    $stmtVp = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :vno, :cid, :vid, :vname, :pdate, :pmode, :refno, :amt, :curr, :json, NOW())");
+                    foreach ($cPayments as $cp) {
+                        $stmtVp->execute([
+                            ':id' => $cp['id'],
+                            ':vno' => $cp['voucher_no'],
+                            ':cid' => $cp['company_id'],
+                            ':vid' => $cp['vendor_id'],
+                            ':vname' => $cp['vendor_name'],
+                            ':pdate' => $cp['payment_date'],
+                            ':pmode' => $cp['payment_mode'],
+                            ':refno' => $cp['reference_no'],
+                            ':amt' => $cp['amount_paid'],
+                            ':curr' => $cp['currency'],
+                            ':json' => json_encode($cp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    }
+
+                    $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_5_payouts_v63', 'completed', NOW())");
+                }
+            } catch (Exception $e) {}
         } catch (Exception $e) {}
     }
 
@@ -2062,16 +2199,6 @@ function recalculateAllFinanceBalances(&$data) {
             if (isset($vpMap[$vpId])) {
                 $vpItem['voucher_no'] = $vpMap[$vpId];
             }
-            if (($vpItem['id'] ?? '') === 'pay-1793642108024' || ($vpItem['voucher_no'] ?? '') === 'PV-REC-44001') {
-                $vpItem['allocations'] = [
-                    [
-                        'bill_id' => 'bill-1793641982443',
-                        'bill_no' => 'BILL-REC-1001',
-                        'vendor_invoice_no' => 'HLN/PO/0526/2025',
-                        'amount_allocated' => 316571.79
-                    ]
-                ];
-            }
             if (!empty($vpItem['allocations']) && is_array($vpItem['allocations'])) {
                 foreach ($vpItem['allocations'] as &$alItem) {
                     $alBid = $alItem['bill_id'] ?? '';
@@ -2101,11 +2228,8 @@ function recalculateAllFinanceBalances(&$data) {
                     foreach ($pay['allocations'] as $alloc) {
                         $allocBillId = $alloc['bill_id'] ?? '';
                         $allocBillNo = $alloc['bill_no'] ?? '';
-                        $allocInvNo = $alloc['vendor_invoice_no'] ?? ($alloc['supplier_invoice_no'] ?? '');
                         if (($allocBillId && $allocBillId === $bId) || 
-                            ($allocBillNo && $allocBillNo === $bNo) || 
-                            (!empty($b['vendor_invoice_no']) && $allocInvNo && $allocInvNo === $b['vendor_invoice_no']) ||
-                            (!empty($b['vendor_invoice_no']) && $allocBillNo && $allocBillNo === $b['vendor_invoice_no'])) {
+                            ($allocBillNo && $allocBillNo === $bNo)) {
                             $paid += floatval($alloc['amount_allocated'] ?? 0);
                         }
                     }
@@ -2115,7 +2239,7 @@ function recalculateAllFinanceBalances(&$data) {
                     $paid += floatval($pay['amount_paid'] ?? 0);
                 }
             }
-            if ($paid == 0.0 && floatval($b['amount_paid'] ?? 0) > 0.02) {
+            if (empty($payments) && $paid == 0.0 && floatval($b['amount_paid'] ?? 0) > 0.02) {
                 $paid = round(floatval($b['amount_paid']), 2);
             }
             if ($paid <= 0.02) {
@@ -5106,7 +5230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // 1. Target specific bill first if requested
                     if (!empty($targetBillId)) {
                         foreach ($db['purchase_bills'] as &$tb) {
-                            if (($tb['id'] ?? '') === $targetBillId || ($tb['bill_no'] ?? '') === $targetBillId || ($tb['vendor_invoice_no'] ?? '') === $targetBillId) {
+                            if (($tb['id'] ?? '') === $targetBillId || ($tb['bill_no'] ?? '') === $targetBillId) {
                                 $bBal = floatval($tb['balance_due'] ?? ($tb['grand_total'] ?? 0));
                                 $toAlloc = min($unallocated, $bBal);
                                 if ($toAlloc > 0) {
@@ -5166,8 +5290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ($pay['allocations'] as $alloc) {
                         foreach ($db['purchase_bills'] as &$b) {
                             if (($b['id'] ?? '') === ($alloc['bill_id'] ?? '') || 
-                                ($b['bill_no'] ?? '') === ($alloc['bill_no'] ?? '') ||
-                                (!empty($b['vendor_invoice_no']) && ($alloc['vendor_invoice_no'] ?? '') === $b['vendor_invoice_no'])) {
+                                ($b['bill_no'] ?? '') === ($alloc['bill_no'] ?? '')) {
                                 $allocAmt = floatval($alloc['amount_allocated'] ?? 0);
                                 $b['amount_paid'] = floatval($b['amount_paid'] ?? 0) + $allocAmt;
                                 $b['balance_due'] = max(0, round(floatval($b['grand_total'] ?? 0) - $b['amount_paid'], 2));

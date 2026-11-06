@@ -713,11 +713,8 @@ class FinanceApp {
       (pay.allocations || []).forEach(alloc => {
         const allocBillId = alloc.bill_id || '';
         const allocBillNo = alloc.bill_no || '';
-        const allocInvNo = alloc.vendor_invoice_no || alloc.supplier_invoice_no || '';
         if ((allocBillId && allocBillId === billId) ||
-          (allocBillNo && allocBillNo === billNo) ||
-          (bill.vendor_invoice_no && allocInvNo && allocInvNo === bill.vendor_invoice_no) ||
-          (bill.vendor_invoice_no && allocBillNo && allocBillNo === bill.vendor_invoice_no)) {
+          (allocBillNo && allocBillNo === billNo)) {
           paid += Number(alloc.amount_allocated) || 0;
         }
       });
@@ -726,7 +723,7 @@ class FinanceApp {
         paid += Number(pay.amount_paid) || 0;
       }
     });
-    if (paid === 0 && Number(bill.amount_paid) > 0.02) {
+    if ((!payments || payments.length === 0) && paid === 0 && Number(bill.amount_paid) > 0.02) {
       paid = Number(bill.amount_paid);
     }
     paid = Math.round(paid * 100) / 100;
@@ -1171,7 +1168,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v55';
+    const CURRENT_DB_VERSION = 'v2026_clean_v56';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -11940,7 +11937,7 @@ class FinanceApp {
   }
 
   openBillPrintModal(billId, isVerifiedScan = false) {
-    let bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId || b.vendor_invoice_no === billId);
+    let bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
     if (!bill) {
       bill = (this.db?.purchase_bills || [])[0] || {};
     }
@@ -13931,7 +13928,7 @@ class FinanceApp {
 
     let targetBill = null;
     if (preselectBillId) {
-      targetBill = bills.find(b => b.id === preselectBillId || b.bill_no === preselectBillId || b.vendor_invoice_no === preselectBillId);
+      targetBill = bills.find(b => b.id === preselectBillId || b.bill_no === preselectBillId);
     }
 
     const modalHtml = `
@@ -14044,8 +14041,7 @@ class FinanceApp {
       if (targetBill) {
         const targetInp = curInputs.find(inp =>
           inp.getAttribute('data-bill-id') === targetBill.id ||
-          inp.getAttribute('data-bill-no') === targetBill.bill_no ||
-          inp.getAttribute('data-bill-inv-no') === targetBill.vendor_invoice_no
+          inp.getAttribute('data-bill-no') === targetBill.bill_no
         );
         if (targetInp) {
           const max = Number(targetInp.getAttribute('data-max')) || amt;
@@ -14230,7 +14226,7 @@ class FinanceApp {
 
       if (Array.isArray(allocations) && this.db.purchase_bills) {
         allocations.forEach(alloc => {
-          const b = this.db.purchase_bills.find(x => x.id === alloc.bill_id || x.bill_no === alloc.bill_no || (alloc.vendor_invoice_no && x.vendor_invoice_no === alloc.vendor_invoice_no));
+          const b = this.db.purchase_bills.find(x => x.id === alloc.bill_id || x.bill_no === alloc.bill_no);
           if (b) {
             const allocAmt = Number(alloc.amount_allocated) || 0;
             b.amount_paid = (Number(b.amount_paid) || 0) + allocAmt;
