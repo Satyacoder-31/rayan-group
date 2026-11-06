@@ -1152,12 +1152,12 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     'client' => 'M/S BUILDARA GENERAL CONTRACTING LLC',
                     'client_name' => 'M/S BUILDARA GENERAL CONTRACTING LLC',
                     'client_id' => 'cust-buildara',
-                    'contract_value' => 11970.00,
-                    'approved_budget' => 11970.00,
+                    'contract_value' => 59850.00,
+                    'approved_budget' => 59850.00,
                     'currency' => 'AED',
                     'status' => 'Active',
-                    'start_date' => '2026-09-01',
-                    'target_completion' => '2026-10-31',
+                    'start_date' => '2026-09-14',
+                    'target_completion' => '2026-11-10',
                     'site_location' => 'Khalidiyah Mall, Abu Dhabi, UAE',
                     'description' => 'Optical retail showroom fit-out and joinery contracting.',
                     'manual_financials' => false
@@ -2001,6 +2001,9 @@ function recalculateAllFinanceBalances(&$data) {
             if ($paid <= 0.02) {
                 $paid = 0.0;
             }
+            if ($paid > $grand) {
+                $paid = $grand;
+            }
             $b['amount_paid'] = $paid;
 
             $debited = 0.0;
@@ -2769,12 +2772,12 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             'client' => 'M/S BUILDARA GENERAL CONTRACTING LLC',
                             'client_name' => 'M/S BUILDARA GENERAL CONTRACTING LLC',
                             'client_id' => 'cust-buildara',
-                            'contract_value' => 11970.00,
-                            'approved_budget' => 11970.00,
+                            'contract_value' => 59850.00,
+                            'approved_budget' => 59850.00,
                             'currency' => 'AED',
                             'status' => 'Active',
-                            'start_date' => '2026-09-01',
-                            'target_completion' => '2026-10-31',
+                            'start_date' => '2026-09-14',
+                            'target_completion' => '2026-11-10',
                             'site_location' => 'Khalidiyah Mall, Abu Dhabi, UAE',
                             'description' => 'Optical retail showroom fit-out and joinery contracting.',
                             'manual_financials' => false

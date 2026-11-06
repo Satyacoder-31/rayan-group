@@ -738,6 +738,7 @@ class FinanceApp {
       paid = Number(bill.amount_paid);
     }
     paid = Math.round(paid * 100) / 100;
+    paid = Math.min(paid, grand);
     if (paid <= 0.02) {
       paid = 0;
     }
@@ -7958,11 +7959,11 @@ class FinanceApp {
     const curr = isIndia ? 'INR' : (prj.currency || this.activeCurrency || 'AED');
     const currSym = curr === 'INR' ? '₹' : 'AED ';
 
-    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId && b.status !== 'void');
-    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId && e.status !== 'void');
-    const receipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId && r.status !== 'void');
-    const pos = (this.db?.purchase_orders || []).filter(po => (po.company_id || 'rayan-corp-uae') === this.activeCompanyId && po.status !== 'void');
+    const invoices = (this.db?.invoices || []).filter(i => this.matchesActiveCompany(i.company_id) && i.status !== 'void');
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id) && b.status !== 'void');
+    const expenses = (this.db?.expenses || []).filter(e => this.matchesActiveCompany(e.company_id) && e.status !== 'void');
+    const receipts = (this.db?.customer_receipts || []).filter(r => this.matchesActiveCompany(r.company_id) && r.status !== 'void');
+    const pos = (this.db?.purchase_orders || []).filter(po => this.matchesActiveCompany(po.company_id) && po.status !== 'void');
 
     const prjId = prj.id;
     const prjCode = (prj.code || '').toLowerCase().trim();
@@ -7978,13 +7979,13 @@ class FinanceApp {
       const cleanDoc = docPName.replace(/[^a-z0-9]/g, '');
       if (cleanDoc && cleanPrj && (cleanDoc.includes(cleanPrj) || cleanPrj.includes(cleanDoc))) return true;
 
-      const docAll = (docPName + ' ' + (doc.notes || '') + ' ' + (doc.description || '') + ' ' + (doc.vendor_invoice_no || '')).toLowerCase();
+      const docAll = (docPName + ' ' + (doc.subject || '') + ' ' + (doc.notes || '') + ' ' + (doc.description || '') + ' ' + (doc.vendor_invoice_no || '') + ' ' + (doc.po_no || '') + ' ' + (doc.po_reference || '') + ' ' + (doc.item_description || '')).toLowerCase();
       if (prjCode.includes('max') || prjName.includes('max')) {
         if (docAll.includes('max') || (docAll.includes('wahda') && !docAll.includes('commercial tower'))) return true;
         if (isBill && (doc.vendor_invoice_no === 'HLN/PO/0526/2025' || (doc.vendor_name || '').toLowerCase().includes('hln'))) return true;
       }
       if (prjCode.includes('yok') || prjName.includes('yateem')) {
-        if (docAll.includes('yateem') || docAll.includes('khalidiyah')) return true;
+        if (docAll.includes('yateem') || docAll.includes('khalidiyah') || (doc.po_no && doc.po_no.includes('LPO/BD/2026/12')) || (doc.po_reference && doc.po_reference.includes('LPO/BD/2026/12'))) return true;
       }
       if (prjCode.includes('dpa') || prjName.includes('police academy')) {
         if (docAll.includes('police academy') || docAll.includes('rowaiyah')) return true;
@@ -8022,10 +8023,12 @@ class FinanceApp {
     const prjPOs = pos.filter(po => isDocLinked(po, false));
 
     const invNos = new Set(prjInvoices.map(i => i.invoice_no));
+    const invIds = new Set(prjInvoices.map(i => i.id));
     const prjReceipts = receipts.filter(r => {
       if (isDocLinked(r, false)) return true;
-      if (r.allocated_invoices && Array.isArray(r.allocated_invoices)) {
-        return r.allocated_invoices.some(ai => invNos.has(ai.invoice_no));
+      const allocs = r.allocations || r.allocated_invoices;
+      if (allocs && Array.isArray(allocs)) {
+        return allocs.some(ai => (ai.invoice_no && invNos.has(ai.invoice_no)) || (ai.invoice_id && invIds.has(ai.invoice_id)));
       }
       return false;
     });
@@ -8036,20 +8039,20 @@ class FinanceApp {
     const autoCollected = Math.max(autoCollectedFromInvs, autoCollectedFromReceipts);
 
     const autoBillsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-    const autoBillsPaid = prjBills.reduce((s, b) => s + (Number(b.amount_paid) || 0), 0);
+    const autoBillsPaid = prjBills.reduce((s, b) => s + Math.min(Number(b.amount_paid) || 0, Number(b.grand_total) || 0), 0);
     const autoExpensesCost = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
     const autoCost = autoBillsCost + autoExpensesCost;
     const autoProfit = autoInvoiced - autoCost;
     const autoMargin = autoInvoiced > 0 ? ((autoProfit / autoInvoiced) * 100).toFixed(1) : '0.0';
 
     const isManual = prj.manual_financials === true;
-    const invoiced = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : (autoInvoiced > 0 ? autoInvoiced : Number(prj.contract_value || 0));
+    const invoiced = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
     const collected = isManual ? Number(prj.manual_collected ?? prj.contract_value ?? 0) : autoCollected;
     const pendingDue = Math.max(0, invoiced - collected);
 
     const billsCost = isManual && prj.manual_bills !== undefined ? Number(prj.manual_bills) : autoBillsCost;
     const siteExpenses = isManual && prj.manual_expenses !== undefined ? Number(prj.manual_expenses) : autoExpensesCost;
-    const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses)) : (autoCost > 0 ? autoCost : Number(prj.approved_budget || 0));
+    const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses)) : (billsCost + siteExpenses);
     const netProfit = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : (invoiced - totalCost)) : (invoiced - totalCost);
     const profitMargin = invoiced > 0 ? ((netProfit / invoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
     const cashPosition = collected - (autoBillsPaid + siteExpenses);
@@ -17839,18 +17842,13 @@ class FinanceApp {
       return;
     }
     const customers = this.db?.customers || [];
-    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const expenses = (this.db?.expenses || []).filter(e => (e.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const ledger = this.getProjectLedgerData(prj.id);
 
     // Auto-calculated figures for reference or default
-    const prjInvoices = invoices.filter(i => (i.project_id === prj.id || (i.project_name && i.project_name.toLowerCase() === prj.name.toLowerCase())) && i.status !== 'void');
-    const autoInvoiced = prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-    const autoCollected = prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0);
-    const prjBills = bills.filter(b => b.project_id === prj.id && b.status !== 'void');
-    const materialsCost = prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-    const prjExpenses = expenses.filter(e => e.project_id === prj.id);
-    const siteExpenses = prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+    const autoInvoiced = ledger ? ledger.prjInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0) : 0;
+    const autoCollected = ledger ? ledger.collected : 0;
+    const materialsCost = ledger ? ledger.billsCost : 0;
+    const siteExpenses = ledger ? ledger.siteExpenses : 0;
     const autoCost = materialsCost + siteExpenses;
     const autoProfit = autoInvoiced - autoCost;
 
@@ -17859,7 +17857,7 @@ class FinanceApp {
     const initialCollected = prj.manual_collected !== undefined ? Number(prj.manual_collected) : (isManual ? Number(prj.contract_value || 0) : autoCollected);
     const initialBills = prj.manual_bills !== undefined ? Number(prj.manual_bills) : materialsCost;
     const initialExpenses = prj.manual_expenses !== undefined ? Number(prj.manual_expenses) : siteExpenses;
-    const initialCost = prj.manual_cost !== undefined ? Number(prj.manual_cost) : (isManual ? Number(prj.approved_budget || 0) : (initialBills + initialExpenses || autoCost));
+    const initialCost = prj.manual_cost !== undefined ? Number(prj.manual_cost) : (isManual ? Number(prj.manual_cost || 0) : (initialBills + initialExpenses));
     const initialProfit = prj.manual_profit !== undefined ? Number(prj.manual_profit) : (initialInvoiced - initialCost);
     const initialMargin = initialInvoiced > 0 ? ((initialProfit / initialInvoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
     const initialPending = Math.max(0, initialInvoiced - initialCollected);
