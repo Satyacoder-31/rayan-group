@@ -1026,33 +1026,33 @@ class FinanceApp {
       }
     });
 
-    // 2. Auto-align credit notes with current invoices and canonical serials
+    // 2. Auto-align credit notes with continuous chronological serial sequence (No year: CN-REC-001 to CN-REC-025)
     const canonicalCnMap = {
-      'cn-1793469085069': { no: 'CN-REC-2023-001', date: '2023-02-26' },
-      'cn-1793469103087': { no: 'CN-REC-2023-002', date: '2023-03-12' },
-      'cn-1793469132205': { no: 'CN-REC-2023-003', date: '2023-03-30' },
-      'cn-1793469162750': { no: 'CN-REC-2023-004', date: '2023-08-08' },
-      'cn-1793470427362': { no: 'CN-REC-2023-005', date: '2023-09-04' },
-      'cn-1793469117238': { no: 'CN-REC-2024-001', date: '2024-03-15' },
-      'cn-1793471514325': { no: 'CN-REC-2024-002', date: '2024-03-19' },
-      'cn-1793507654484': { no: 'CN-REC-2024-003', date: '2024-05-01' },
-      'cn-1793507678569': { no: 'CN-REC-2024-004', date: '2024-05-04' },
-      'cn-1793508062030': { no: 'CN-REC-2024-005', date: '2024-05-06' },
-      'cn-1793508484416': { no: 'CN-REC-2024-006', date: '2024-05-11' },
-      'cn-1793508603092': { no: 'CN-REC-2024-007', date: '2024-06-06' },
-      'cn-1793510889507': { no: 'CN-REC-2024-008', date: '2024-06-16' },
-      'cn-1793509397983': { no: 'CN-REC-2024-009', date: '2024-10-10' },
-      'cn-1793555201785': { no: 'CN-REC-2025-001', date: '2025-06-15' },
-      'cn-1793511081739': { no: 'CN-REC-2025-002', date: '2025-08-18' },
-      'cn-1793511132931': { no: 'CN-REC-2025-003', date: '2025-08-19' },
-      'cn-1793512121832': { no: 'CN-REC-2025-004', date: '2025-11-26' },
-      'cn-1793511975271': { no: 'CN-REC-2025-005', date: '2025-11-26' },
-      'cn-1793512002192': { no: 'CN-REC-2025-006', date: '2025-11-26' },
-      'cn-1793555759783': { no: 'CN-REC-2026-001', date: '2026-02-15' },
-      'cn-1793640088617': { no: 'CN-REC-2026-002', date: '2026-08-26' },
-      'cn-1793559377825': { no: 'CN-REC-2026-003', date: '2026-09-08' },
-      'cn-1793598612346': { no: 'CN-REC-2026-004', date: '2026-10-01' },
-      'cn-1793598632285': { no: 'CN-REC-2026-005', date: '2026-10-13' }
+      'cn-1793469085069': { no: 'CN-REC-001', date: '2023-02-26' },
+      'cn-1793469103087': { no: 'CN-REC-002', date: '2023-03-12' },
+      'cn-1793469132205': { no: 'CN-REC-003', date: '2023-03-30' },
+      'cn-1793469162750': { no: 'CN-REC-004', date: '2023-08-08' },
+      'cn-1793470427362': { no: 'CN-REC-005', date: '2023-09-04' },
+      'cn-1793469117238': { no: 'CN-REC-006', date: '2024-03-15' },
+      'cn-1793471514325': { no: 'CN-REC-007', date: '2024-03-19' },
+      'cn-1793507654484': { no: 'CN-REC-008', date: '2024-05-01' },
+      'cn-1793507678569': { no: 'CN-REC-009', date: '2024-05-04' },
+      'cn-1793508062030': { no: 'CN-REC-010', date: '2024-05-06' },
+      'cn-1793508484416': { no: 'CN-REC-011', date: '2024-05-11' },
+      'cn-1793508603092': { no: 'CN-REC-012', date: '2024-06-06' },
+      'cn-1793510889507': { no: 'CN-REC-013', date: '2024-06-16' },
+      'cn-1793509397983': { no: 'CN-REC-014', date: '2024-10-10' },
+      'cn-1793555201785': { no: 'CN-REC-015', date: '2025-06-15' },
+      'cn-1793511081739': { no: 'CN-REC-016', date: '2025-08-18' },
+      'cn-1793511132931': { no: 'CN-REC-017', date: '2025-08-19' },
+      'cn-1793512121832': { no: 'CN-REC-018', date: '2025-11-26' },
+      'cn-1793511975271': { no: 'CN-REC-019', date: '2025-11-26' },
+      'cn-1793512002192': { no: 'CN-REC-020', date: '2025-11-26' },
+      'cn-1793555759783': { no: 'CN-REC-021', date: '2026-02-15' },
+      'cn-1793640088617': { no: 'CN-REC-022', date: '2026-08-26' },
+      'cn-1793559377825': { no: 'CN-REC-023', date: '2026-09-08' },
+      'cn-1793598612346': { no: 'CN-REC-024', date: '2026-10-01' },
+      'cn-1793598632285': { no: 'CN-REC-025', date: '2026-10-13' }
     };
     (this.db.credit_notes || []).forEach(cn => {
       if (canonicalCnMap[cn.id]) {
@@ -2792,20 +2792,11 @@ class FinanceApp {
   getNextCreditNoteNumber(targetDate) {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const notes = (this.db?.credit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
-    let yr = '2026';
-    if (targetDate) {
-      try {
-        const d = new Date(targetDate);
-        if (!isNaN(d.getTime())) yr = String(d.getFullYear());
-      } catch (e) { }
-    } else {
-      yr = String(new Date().getFullYear());
-    }
-    const prefix = isIndia ? `CN-ASH-${yr}` : `CN-REC-${yr}`;
+    const prefix = isIndia ? 'CN-ASH' : 'CN-REC';
     let maxSeq = 0;
     notes.forEach(n => {
       const nNo = n.credit_note_no || '';
-      const m = nNo.match(new RegExp(`${prefix}-(\\d+)`, 'i')) || nNo.match(new RegExp(`CN-[A-Z]+-${yr}-(\\d+)`, 'i'));
+      const m = nNo.match(/CN-(?:REC|ASH)-(?:202\d-)?(\d+)/i) || nNo.match(/(\d+)$/);
       if (m) {
         const num = parseInt(m[1], 10);
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
@@ -4101,6 +4092,10 @@ class FinanceApp {
     const overdueTotal = overdueInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
 
+    // Recent Invoices & Recent Purchase Bills (Strictly sorted chronologically newest first)
+    const recentInvoices = [...invoices].sort((a, b) => new Date(b.invoice_date || b.date || 0) - new Date(a.invoice_date || a.date || 0)).slice(0, 5);
+    const recentBills = [...bills].sort((a, b) => new Date(b.bill_date || b.date || 0) - new Date(a.bill_date || a.date || 0)).slice(0, 5);
+
     root.innerHTML = `
       <!-- 8 Key Financial Metric Summary Cards -->
       <div class="fin-summary-grid">
@@ -4259,7 +4254,7 @@ class FinanceApp {
                 </tr>
               </thead>
               <tbody>
-                ${invoices.slice(0, 5).map(inv => `
+                ${recentInvoices.map(inv => `
                   <tr>
                     <td><strong>${inv.invoice_no}</strong></td>
                     <td style="white-space:nowrap;"><span class="fin-customer-cell">${inv.customer_name}</span></td>
@@ -4300,7 +4295,7 @@ class FinanceApp {
                 </tr>
               </thead>
               <tbody>
-                ${bills.slice(0, 5).map(b => `
+                ${recentBills.map(b => `
                   <tr>
                     <td style="white-space:nowrap;"><strong>${b.bill_no}</strong></td>
                     <td style="white-space:nowrap; min-width:200px;"><span class="fin-customer-cell">${b.vendor_name}</span></td>
@@ -24835,7 +24830,7 @@ class FinanceApp {
 
     if (!cn) {
       cn = (this.db?.credit_notes || [])[0] || {
-        credit_note_no: 'CN-REC-2026-350',
+        credit_note_no: 'CN-REC-001',
         invoice_no: 'REC-RG-INV-44024',
         customer_name: 'M/S ZORAWAR INTERIOR DECORATION LLC',
         customer_trn: '100511370700003',
@@ -24971,7 +24966,7 @@ class FinanceApp {
                   إشعار دائن ضريبي
                 </div>
                 <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:12px; white-space:nowrap;">
-                  # ${cn.credit_note_no || 'CN-REC-2026-350'}
+                  # ${cn.credit_note_no || 'CN-REC-001'}
                 </div>
 
                 <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">

@@ -837,38 +837,35 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             } catch (Exception $e) {}
 
             $cnSerialMap = [
-                // Year 2023 (5 Credit Notes)
-                ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'new_no' => 'CN-REC-2023-001'],
-                ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'new_no' => 'CN-REC-2023-002'],
-                ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'new_no' => 'CN-REC-2023-003'],
-                ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'new_no' => 'CN-REC-2023-004'],
-                ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'new_no' => 'CN-REC-2023-005'],
+                // 25 Credit Notes in continuous chronological serial order (No year prefix, pure sequence CN-REC-001 to CN-REC-025)
+                ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'new_no' => 'CN-REC-001'],
+                ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'new_no' => 'CN-REC-002'],
+                ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'new_no' => 'CN-REC-003'],
+                ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'new_no' => 'CN-REC-004'],
+                ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'new_no' => 'CN-REC-005'],
 
-                // Year 2024 (9 Credit Notes)
-                ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'new_no' => 'CN-REC-2024-001'],
-                ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'new_no' => 'CN-REC-2024-002'],
-                ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'new_no' => 'CN-REC-2024-003'],
-                ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'new_no' => 'CN-REC-2024-004'],
-                ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'new_no' => 'CN-REC-2024-005'],
-                ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'new_no' => 'CN-REC-2024-006'],
-                ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'new_no' => 'CN-REC-2024-007'],
-                ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'new_no' => 'CN-REC-2024-008'],
-                ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'new_no' => 'CN-REC-2024-009'],
+                ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'new_no' => 'CN-REC-006'],
+                ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'new_no' => 'CN-REC-007'],
+                ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'new_no' => 'CN-REC-008'],
+                ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'new_no' => 'CN-REC-009'],
+                ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'new_no' => 'CN-REC-010'],
+                ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'new_no' => 'CN-REC-011'],
+                ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'new_no' => 'CN-REC-012'],
+                ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'new_no' => 'CN-REC-013'],
+                ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'new_no' => 'CN-REC-014'],
 
-                // Year 2025 (6 Credit Notes)
-                ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'new_no' => 'CN-REC-2025-001'],
-                ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'new_no' => 'CN-REC-2025-002'],
-                ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'new_no' => 'CN-REC-2025-003'],
-                ['id' => 'cn-1793512121832', 'inv' => 'REC-RG-INV-44008', 'date' => '2025-11-26', 'new_no' => 'CN-REC-2025-004'],
-                ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'new_no' => 'CN-REC-2025-005'],
-                ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'new_no' => 'CN-REC-2025-006'],
+                ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'new_no' => 'CN-REC-015'],
+                ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'new_no' => 'CN-REC-016'],
+                ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'new_no' => 'CN-REC-017'],
+                ['id' => 'cn-1793512121832', 'inv' => 'REC-RG-INV-44008', 'date' => '2025-11-26', 'new_no' => 'CN-REC-018'],
+                ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'new_no' => 'CN-REC-019'],
+                ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'new_no' => 'CN-REC-020'],
 
-                // Year 2026 (5 Credit Notes)
-                ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'new_no' => 'CN-REC-2026-001'],
-                ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'new_no' => 'CN-REC-2026-002'],
-                ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'new_no' => 'CN-REC-2026-003'],
-                ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'new_no' => 'CN-REC-2026-004'],
-                ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'new_no' => 'CN-REC-2026-005']
+                ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'new_no' => 'CN-REC-021'],
+                ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'new_no' => 'CN-REC-022'],
+                ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'new_no' => 'CN-REC-023'],
+                ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'new_no' => 'CN-REC-024'],
+                ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'new_no' => 'CN-REC-025']
             ];
 
             foreach ($cnSerialMap as $cnEntry) {
@@ -2239,40 +2236,36 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             'security' => 'Unsecured Director Advance'
                         ]);
                     }
-                                        // Migration v53: Canonical serial sequence for credit notes per year
+                                        // Migration v55: Continuous chronological sequence for credit notes (No year prefix: CN-REC-001 to CN-REC-025)
                     $cnCanonicalList = [
-                        // Year 2023 (5 Credit Notes)
-                        ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'no' => 'CN-REC-2023-001'],
-                        ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'no' => 'CN-REC-2023-002'],
-                        ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'no' => 'CN-REC-2023-003'],
-                        ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'no' => 'CN-REC-2023-004'],
-                        ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'no' => 'CN-REC-2023-005'],
+                        ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'no' => 'CN-REC-001'],
+                        ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'no' => 'CN-REC-002'],
+                        ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'no' => 'CN-REC-003'],
+                        ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'no' => 'CN-REC-004'],
+                        ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'no' => 'CN-REC-005'],
 
-                        // Year 2024 (9 Credit Notes)
-                        ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'no' => 'CN-REC-2024-001'],
-                        ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'no' => 'CN-REC-2024-002'],
-                        ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'no' => 'CN-REC-2024-003'],
-                        ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'no' => 'CN-REC-2024-004'],
-                        ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'no' => 'CN-REC-2024-005'],
-                        ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'no' => 'CN-REC-2024-006'],
-                        ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'no' => 'CN-REC-2024-007'],
-                        ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'no' => 'CN-REC-2024-008'],
-                        ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'no' => 'CN-REC-2024-009'],
+                        ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'no' => 'CN-REC-006'],
+                        ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'no' => 'CN-REC-007'],
+                        ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'no' => 'CN-REC-008'],
+                        ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'no' => 'CN-REC-009'],
+                        ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'no' => 'CN-REC-010'],
+                        ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'no' => 'CN-REC-011'],
+                        ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'no' => 'CN-REC-012'],
+                        ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'no' => 'CN-REC-013'],
+                        ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'no' => 'CN-REC-014'],
 
-                        // Year 2025 (6 Credit Notes)
-                        ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'no' => 'CN-REC-2025-001'],
-                        ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'no' => 'CN-REC-2025-002'],
-                        ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'no' => 'CN-REC-2025-003'],
-                        ['id' => 'cn-1793512121832', 'inv' => 'REC-RG-INV-44008', 'date' => '2025-11-26', 'no' => 'CN-REC-2025-004'],
-                        ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'no' => 'CN-REC-2025-005'],
-                        ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'no' => 'CN-REC-2025-006'],
+                        ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'no' => 'CN-REC-015'],
+                        ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'no' => 'CN-REC-016'],
+                        ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'no' => 'CN-REC-017'],
+                        ['id' => 'cn-1793512121832', 'inv' => 'REC-RG-INV-44008', 'date' => '2025-11-26', 'no' => 'CN-REC-018'],
+                        ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'no' => 'CN-REC-019'],
+                        ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'no' => 'CN-REC-020'],
 
-                        // Year 2026 (5 Credit Notes)
-                        ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'no' => 'CN-REC-2026-001'],
-                        ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'no' => 'CN-REC-2026-002'],
-                        ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'no' => 'CN-REC-2026-003'],
-                        ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'no' => 'CN-REC-2026-004'],
-                        ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'no' => 'CN-REC-2026-005']
+                        ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'no' => 'CN-REC-021'],
+                        ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'no' => 'CN-REC-022'],
+                        ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'no' => 'CN-REC-023'],
+                        ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'no' => 'CN-REC-024'],
+                        ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'no' => 'CN-REC-025']
                     ];
 
                     if (!isset($data['credit_notes']) || !is_array($data['credit_notes'])) {
@@ -2290,7 +2283,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     if (!$has44008) {
                         $data['credit_notes'][] = [
                             'id' => 'cn-1793512121832',
-                            'credit_note_no' => 'CN-REC-2025-004',
+                            'credit_note_no' => 'CN-REC-018',
                             'company_id' => 'rayan-corp-uae',
                             'currency' => 'AED',
                             'currency_symbol' => 'AED ',
@@ -4509,12 +4502,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cn['note_date'] = $cnDate;
                 $cnYear = date('Y', strtotime($cnDate));
                 if (empty($cn['credit_note_no'])) {
-                    $prefix = ($cn['company_id'] === 'ashaz-eng-in') ? "CN-ASH-{$cnYear}" : "CN-REC-{$cnYear}";
+                    $prefix = ($cn['company_id'] === 'ashaz-eng-in') ? "CN-ASH" : "CN-REC";
                     $maxSeq = 0;
                     if (!empty($db['credit_notes']) && is_array($db['credit_notes'])) {
                         foreach ($db['credit_notes'] as $existingCn) {
                             $exNo = $existingCn['credit_note_no'] ?? '';
-                            if (preg_match('/' . preg_quote($prefix, '/') . '-(\d+)/i', $exNo, $mSeq)) {
+                            if (preg_match('/' . preg_quote($prefix, '/') . '-(?:202\d-)?(\d+)/i', $exNo, $mSeq)) {
                                 $sNum = intval($mSeq[1]);
                                 if ($sNum > $maxSeq) $maxSeq = $sNum;
                             }

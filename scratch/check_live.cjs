@@ -5,3 +5,4 @@ async function check() {
   console.log('Live billing bundle:', m ? m[0] : 'not found');
 }
 check();
+
