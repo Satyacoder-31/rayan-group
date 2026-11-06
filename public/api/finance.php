@@ -829,7 +829,42 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             // v2026_clean_v48 & v49: Purge specific dummy test bills/payments & ensure HLN bill and payment are linked and marked paid
             $pdo->exec("DELETE FROM finance_purchase_bills WHERE id LIKE 'bill-1793293%' OR vendor_invoice_no IN ('PC-26-0950', 'PC-26-3152')");
             $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-1793369661067', 'pay-1793290968855') OR voucher_no IN ('PV-RG-2026-101', 'PV-RG-2026-102')");
-            $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 316571.79, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 316571.79, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793641982443' OR vendor_invoice_no = 'HLN/PO/0526/2025' OR bill_no = 'BILL-RG-2026-1001'");
+            $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 316571.79, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 316571.79, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793641982443' OR vendor_invoice_no = 'HLN/PO/0526/2025' OR bill_no = 'BILL-REC-1001' OR bill_no = 'BILL-RG-2026-1001'");
+
+            // Migration v56: Re-align purchase bills to BILL-REC-1001+ (no year prefix) and vendor payments to PV-REC-44001+ (strictly sequential)
+            $billSerialMap = [
+                ['id' => 'bill-1793641982443', 'new_no' => 'BILL-REC-1001'],
+                ['id' => 'bill-1793890119965', 'new_no' => 'BILL-REC-1002'],
+                ['id' => 'bill-1793893193964', 'new_no' => 'BILL-REC-1003'],
+                ['id' => 'bill-1793894214538', 'new_no' => 'BILL-REC-1004'],
+                ['id' => 'bill-1793894942719', 'new_no' => 'BILL-REC-1005'],
+                ['id' => 'bill-1793897332945', 'new_no' => 'BILL-REC-1006'],
+                ['id' => 'bill-1793898700774', 'new_no' => 'BILL-REC-1007'],
+                ['id' => 'bill-1793896178476', 'new_no' => 'BILL-REC-1008'],
+                ['id' => 'bill-1793945504650', 'new_no' => 'BILL-REC-1009'],
+                ['id' => 'bill-1793947339219', 'new_no' => 'BILL-REC-1010']
+            ];
+            foreach ($billSerialMap as $bEntry) {
+                try {
+                    $pdo->prepare("UPDATE finance_purchase_bills SET bill_no = :bNo, data_json = JSON_SET(data_json, '$.bill_no', :bNo) WHERE id = :id OR bill_no = :oldNo")
+                        ->execute([':bNo' => $bEntry['new_no'], ':id' => $bEntry['id'], ':oldNo' => str_replace('BILL-REC-', 'BILL-RG-2026-', $bEntry['new_no'])]);
+                } catch (Exception $e) {}
+            }
+
+            $vpSerialMap = [
+                ['id' => 'pay-1793642108024', 'new_no' => 'PV-REC-44001'],
+                ['id' => 'pay-1793890308989', 'new_no' => 'PV-REC-44002'],
+                ['id' => 'pay-1793894011459', 'new_no' => 'PV-REC-44003'],
+                ['id' => 'pay-1793894232210', 'new_no' => 'PV-REC-44004'],
+                ['id' => 'pay-1793894993039', 'new_no' => 'PV-REC-44005'],
+                ['id' => 'pay-1793898169781', 'new_no' => 'PV-REC-44006']
+            ];
+            foreach ($vpSerialMap as $vpEntry) {
+                try {
+                    $pdo->prepare("UPDATE finance_vendor_payments SET voucher_no = :vNo, data_json = JSON_SET(data_json, '$.voucher_no', :vNo) WHERE id = :id")
+                        ->execute([':vNo' => $vpEntry['new_no'], ':id' => $vpEntry['id']]);
+                } catch (Exception $e) {}
+            }
 
             // v2026_clean_v50 & v53: Chronological serial numbering of credit notes per year (2023, 2024, 2025, 2026) and add note_date field
             try {
@@ -1236,12 +1271,29 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
             if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
                 $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) {
-                    $vName = $b['vendor_name'] ?? '';
                     $invNo = $b['vendor_invoice_no'] ?? '';
                     $id = $b['id'] ?? '';
-                    return stripos($vName, 'PINK CITY') === false && stripos($invNo, 'PC-') === false && strpos($id, 'bill-1793293') !== 0;
+                    return !in_array($invNo, ['PC-26-0950', 'PC-26-3152']) && strpos($id, 'bill-1793293') !== 0;
                 }));
+                $bMap = [
+                    'bill-1793641982443' => 'BILL-REC-1001',
+                    'bill-1793890119965' => 'BILL-REC-1002',
+                    'bill-1793893193964' => 'BILL-REC-1003',
+                    'bill-1793894214538' => 'BILL-REC-1004',
+                    'bill-1793894942719' => 'BILL-REC-1005',
+                    'bill-1793897332945' => 'BILL-REC-1006',
+                    'bill-1793898700774' => 'BILL-REC-1007',
+                    'bill-1793896178476' => 'BILL-REC-1008',
+                    'bill-1793945504650' => 'BILL-REC-1009',
+                    'bill-1793947339219' => 'BILL-REC-1010'
+                ];
                 foreach ($data['purchase_bills'] as &$hb) {
+                    $bId = $hb['id'] ?? '';
+                    if (isset($bMap[$bId])) {
+                        $hb['bill_no'] = $bMap[$bId];
+                    } elseif (!empty($hb['bill_no']) && strpos($hb['bill_no'], 'BILL-RG-') === 0) {
+                        $hb['bill_no'] = preg_replace('/^BILL-RG-(?:202\d-)?/', 'BILL-REC-', $hb['bill_no']);
+                    }
                     if (($hb['id'] ?? '') === 'bill-1793641982443' || ($hb['vendor_invoice_no'] ?? '') === 'HLN/PO/0526/2025') {
                         $hb['amount_paid'] = 316571.79;
                         $hb['balance_due'] = 0.00;
@@ -1252,21 +1304,43 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             }
             if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
                 $data['vendor_payments'] = array_values(array_filter($data['vendor_payments'], function($p) {
-                    $vName = $p['vendor_name'] ?? '';
                     $vNo = $p['voucher_no'] ?? '';
                     $id = $p['id'] ?? '';
                     return !in_array($vNo, ['PV-RG-2026-101', 'PV-RG-2026-102']) && !in_array($id, ['pay-1793369661067', 'pay-1793290968855']);
                 }));
+                $vpMap = [
+                    'pay-1793642108024' => 'PV-REC-44001',
+                    'pay-1793890308989' => 'PV-REC-44002',
+                    'pay-1793894011459' => 'PV-REC-44003',
+                    'pay-1793894232210' => 'PV-REC-44004',
+                    'pay-1793894993039' => 'PV-REC-44005',
+                    'pay-1793898169781' => 'PV-REC-44006'
+                ];
                 foreach ($data['vendor_payments'] as &$hp) {
-                    if (($hp['id'] ?? '') === 'pay-1793642108024' || ($hp['voucher_no'] ?? '') === 'PV-RG-2026-103') {
+                    $pId = $hp['id'] ?? '';
+                    if (isset($vpMap[$pId])) {
+                        $hp['voucher_no'] = $vpMap[$pId];
+                    }
+                    if (($hp['id'] ?? '') === 'pay-1793642108024' || ($hp['voucher_no'] ?? '') === 'PV-RG-2026-103' || ($hp['voucher_no'] ?? '') === 'PV-REC-44001' || ($hp['voucher_no'] ?? '') === 'PV-REC-44002') {
                         $hp['allocations'] = [
                             [
                                 'bill_id' => 'bill-1793641982443',
-                                'bill_no' => 'BILL-RG-2026-1001',
+                                'bill_no' => 'BILL-REC-1001',
                                 'vendor_invoice_no' => 'HLN/PO/0526/2025',
                                 'amount_allocated' => 316571.79
                             ]
                         ];
+                    }
+                    if (!empty($hp['allocations']) && is_array($hp['allocations'])) {
+                        foreach ($hp['allocations'] as &$al) {
+                            $alBid = $al['bill_id'] ?? '';
+                            if (isset($bMap[$alBid])) {
+                                $al['bill_no'] = $bMap[$alBid];
+                            } elseif (!empty($al['bill_no']) && strpos($al['bill_no'], 'BILL-RG-') === 0) {
+                                $al['bill_no'] = preg_replace('/^BILL-RG-(?:202\d-)?/', 'BILL-REC-', $al['bill_no']);
+                            }
+                        }
+                        unset($al);
                     }
                 }
                 unset($hp);
@@ -1935,31 +2009,27 @@ function recalculateAllFinanceBalances(&$data) {
         unset($pb);
     }
     if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        $vpMap = [
+            'pay-1793642108024' => 'PV-REC-44001',
+            'pay-1793890308989' => 'PV-REC-44002',
+            'pay-1793894011459' => 'PV-REC-44003',
+            'pay-1793894232210' => 'PV-REC-44004',
+            'pay-1793894993039' => 'PV-REC-44005',
+            'pay-1793898169781' => 'PV-REC-44006'
+        ];
         $nextRecSeq = 44001;
         $nextAshSeq = 44001;
-        foreach ($data['vendor_payments'] as $vp) {
+        foreach ($data['vendor_payments'] as &$vp) {
+            $pId = $vp['id'] ?? '';
+            if (isset($vpMap[$pId])) {
+                $vp['voucher_no'] = $vpMap[$pId];
+            }
             $curNo = $vp['voucher_no'] ?? '';
             if (preg_match('/^PV-(?:REC|ASH)-(\d{5,})$/', $curNo, $m)) {
                 $num = intval($m[1]);
                 $isInd = (($vp['company_id'] ?? '') === 'ashaz-eng-in') || (($vp['currency'] ?? '') === 'INR');
                 if ($isInd && $num >= $nextAshSeq) $nextAshSeq = $num + 1;
                 else if (!$isInd && $num >= $nextRecSeq) $nextRecSeq = $num + 1;
-            }
-        }
-        $assignRec = 44001;
-        $assignAsh = 44001;
-        foreach ($data['vendor_payments'] as &$vp) {
-            $curNo = $vp['voucher_no'] ?? '';
-            if (empty($curNo) || strpos($curNo, 'PV-RG-') === 0 || strpos($curNo, '2026') !== false || !preg_match('/^PV-(?:REC|ASH)-\d{5}$/', $curNo)) {
-                $isInd = (($vp['company_id'] ?? '') === 'ashaz-eng-in') || (($vp['currency'] ?? '') === 'INR');
-                $prefix = $isInd ? 'PV-ASH' : 'PV-REC';
-                $vp['voucher_no'] = $isInd ? ($prefix . '-' . $assignAsh++) : ($prefix . '-' . $assignRec++);
-                if (isset($pdo) && $pdo && !empty($vp['id'])) {
-                    try {
-                        $stmt = $pdo->prepare("UPDATE finance_vendor_payments SET voucher_no = :vNo, data_json = JSON_SET(data_json, '$.voucher_no', :vNo) WHERE id = :id");
-                        $stmt->execute([':vNo' => $vp['voucher_no'], ':id' => $vp['id']]);
-                    } catch (Exception $e) {}
-                }
             }
             if (!empty($vp['vendor_name'])) $vp['vendor_name'] = formatCompanyNamePhp($vp['vendor_name']);
             if (!empty($vp['party_name'])) $vp['party_name'] = formatCompanyNamePhp($vp['party_name']);
@@ -4333,8 +4403,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $bill['currency'] = ($bill['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
                 }
                 if (empty($bill['bill_no'])) {
-                    $prefix = ($bill['company_id'] === 'ashaz-eng-in') ? 'BILL-ASH' : 'BILL-RG-2026';
-                    $bill['bill_no'] = $prefix . '-' . rand(100, 999);
+                    $prefix = ($bill['company_id'] === 'ashaz-eng-in') ? 'BILL-ASH' : 'BILL-REC';
+                    $maxSeq = 1000;
+                    if (!empty($db['purchase_bills']) && is_array($db['purchase_bills'])) {
+                        foreach ($db['purchase_bills'] as $exB) {
+                            $exNo = $exB['bill_no'] ?? '';
+                            if (preg_match('/BILL-(?:REC|RG|ASH)-(?:202\d-)?(\d+)/i', $exNo, $bm)) {
+                                $bNum = intval($bm[1]);
+                                if ($bNum > $maxSeq) $maxSeq = $bNum;
+                            }
+                        }
+                    }
+                    $bill['bill_no'] = sprintf("%s-%04d", $prefix, $maxSeq + 1);
                 }
                 if (empty($bill['approval_status'])) {
                     $bill['approval_status'] = 'approved';

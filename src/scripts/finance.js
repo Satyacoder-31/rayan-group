@@ -1076,6 +1076,51 @@ class FinanceApp {
       }
     });
 
+    // Auto-normalize Purchase Bills: BILL-RG-2026- -> BILL-REC- (No year prefix, sequential BILL-REC-1001+)
+    const billRenameMap = {
+      'bill-1793641982443': 'BILL-REC-1001',
+      'bill-1793890119965': 'BILL-REC-1002',
+      'bill-1793893193964': 'BILL-REC-1003',
+      'bill-1793894214538': 'BILL-REC-1004',
+      'bill-1793894942719': 'BILL-REC-1005',
+      'bill-1793897332945': 'BILL-REC-1006',
+      'bill-1793898700774': 'BILL-REC-1007',
+      'bill-1793896178476': 'BILL-REC-1008',
+      'bill-1793945504650': 'BILL-REC-1009',
+      'bill-1793947339219': 'BILL-REC-1010'
+    };
+    (this.db.purchase_bills || []).forEach(b => {
+      if (billRenameMap[b.id]) {
+        b.bill_no = billRenameMap[b.id];
+      } else if (b.bill_no && (b.bill_no.startsWith('BILL-RG-2026-') || b.bill_no.startsWith('BILL-RG-'))) {
+        b.bill_no = b.bill_no.replace(/^BILL-RG-(?:202\d-)?/, 'BILL-REC-');
+      }
+    });
+
+    // Auto-align Vendor Payments allocations & resequence vouchers strictly starting at PV-REC-44001
+    const vpRenameMap = {
+      'pay-1793642108024': 'PV-REC-44001',
+      'pay-1793890308989': 'PV-REC-44002',
+      'pay-1793894011459': 'PV-REC-44003',
+      'pay-1793894232210': 'PV-REC-44004',
+      'pay-1793894993039': 'PV-REC-44005',
+      'pay-1793898169781': 'PV-REC-44006'
+    };
+    (this.db.vendor_payments || []).forEach(vp => {
+      if (vpRenameMap[vp.id]) {
+        vp.voucher_no = vpRenameMap[vp.id];
+      }
+      if (Array.isArray(vp.allocations)) {
+        vp.allocations.forEach(al => {
+          if (billRenameMap[al.bill_id]) {
+            al.bill_no = billRenameMap[al.bill_id];
+          } else if (al.bill_no && al.bill_no.startsWith('BILL-RG-')) {
+            al.bill_no = al.bill_no.replace(/^BILL-RG-(?:202\d-)?/, 'BILL-REC-');
+          }
+        });
+      }
+    });
+
     // 3. Recalculate all balances
     (this.db.invoices || []).forEach(inv => this.recalculateInvoiceBalance(inv));
     (this.db.purchase_bills || []).forEach(bill => this.recalculateBillBalance(bill));
@@ -2743,18 +2788,18 @@ class FinanceApp {
 
   getNextBillNumber() {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
-    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id) && this.matchesActivePeriod(b.bill_date));
-    let maxSeq = 100;
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    let maxSeq = 1000;
     bills.forEach(b => {
       const bNo = b.bill_no || '';
-      const m = bNo.match(/BILL-.*-(\d+)/i) || bNo.match(/(\d{3,})$/);
+      const m = bNo.match(/BILL-(?:REC|RG|ASH)-(?:202\d-)?(\d+)/i) || bNo.match(/(\d{4,})$/);
       if (m) {
         const num = parseInt(m[1], 10);
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = isIndia ? 'BILL-ASH-2026' : 'BILL-RG-2026';
-    return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+    const prefix = isIndia ? 'BILL-ASH' : 'BILL-REC';
+    return `${prefix}-${maxSeq + 1}`;
   }
 
   getNextExpenseNumber() {
@@ -4424,7 +4469,7 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   extractSerialNum(str) {
     if (!str) return 0;
-    // Compound year + sequence key for documents like CN-REC-2024-005, BILL-RG-2026-1001, etc.
+    // Compound year + sequence key for documents like CN-REC-2024-005, BILL-REC-1001, etc.
     const mYearSeq = String(str).match(/[-/](\d{4})[-/](\d+)$/);
     if (mYearSeq) return parseInt(mYearSeq[1], 10) * 1000000 + parseInt(mYearSeq[2], 10);
     const mEnd = String(str).match(/[-/](\d+)$/);
@@ -11897,7 +11942,7 @@ class FinanceApp {
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>📑</span>
-              <span>Official Purchase Bill — ${bill.bill_no || 'BILL-RG-2026-1001'}</span>
+              <span>Official Purchase Bill — ${bill.bill_no || 'BILL-REC-1001'}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
@@ -11969,7 +12014,7 @@ class FinanceApp {
                     فاتورة شراء معتمدة
                   </div>
                   <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:8px;">
-                    # ${bill.bill_no || 'BILL-RG-2026-1001'}
+                    # ${bill.bill_no || 'BILL-REC-1001'}
                   </div>
                   <div style="margin-bottom:8px;">
                     <span style="background:${statusBg}; color:${statusColor}; border:1px solid ${statusColor}44; padding:2px 10px; border-radius:4px; font-weight:800; font-size:0.76rem; letter-spacing:0.04em;">
@@ -15447,7 +15492,7 @@ class FinanceApp {
                     `).join('') : (ledger.billsCost > 0 ? `
                       <tr style="border-bottom:1px solid #e2e8f0;">
                         <td style="padding:5px 6px; color:#64748b;">${this.formatDate(prj.target_completion || '2026-10-04')}</td>
-                        <td style="padding:5px 6px; font-weight:700; color:#0f172a;">BILL-RG-2026-1001<div style="font-size:0.62rem; color:#64748b; font-family:monospace;">Ref: HLN/PO/0526/2025</div></td>
+                        <td style="padding:5px 6px; font-weight:700; color:#0f172a;">BILL-REC-1001<div style="font-size:0.62rem; color:#64748b; font-family:monospace;">Ref: HLN/PO/0526/2025</div></td>
                         <td style="padding:5px 6px; font-weight:600; color:#334155;">M/S HLN TECHNICAL SERVICES LLC</td>
                         <td style="padding:5px 6px; color:#64748b;">All project materials and employee salary payments paid through company account</td>
                         <td style="padding:5px 6px; text-align:right; font-weight:700; color:#ea580c;">${currSym}${ledger.billsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
@@ -15685,7 +15730,7 @@ class FinanceApp {
         ]);
       });
     } else if (ledger.billsCost > 0) {
-      rows.push(['BILL-RG-2026-1001', prj.target_completion || '', 'M/S HLN TECHNICAL SERVICES LLC', 'HLN/PO/0526/2025', 'Direct Project Materials & Works', ledger.billsCost, ledger.billsCost, 0, 'PAID']);
+      rows.push(['BILL-REC-1001', prj.target_completion || '', 'M/S HLN TECHNICAL SERVICES LLC', 'HLN/PO/0526/2025', 'Direct Project Materials & Works', ledger.billsCost, ledger.billsCost, 0, 'PAID']);
     }
 
     const csvContent = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
