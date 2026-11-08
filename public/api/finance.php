@@ -3220,7 +3220,16 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 }
                             }
                         }
-                        if (!$chkMig68 || !$has1001) {
+                        $hasCN1 = false;
+                        if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
+                            foreach ($data['credit_notes'] as $cnCheck) {
+                                if (($cnCheck['credit_note_no'] ?? '') === 'CN-REC-001') {
+                                    $hasCN1 = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!$chkMig68 || !$has1001 || !$hasCN1) {
                             $canonicalPGGCInvoices = [
                                 [
                                     'id' => 'inv-rec-rg-inv-1001',
@@ -3581,7 +3590,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             }
 
                             // Insert into $data['credit_notes']
-                            $stmtCN = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, note_date, invoice_no, customer_id, customer_name, taxable_amount, tax_amount, total_credit_amount, currency, status, reason, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                            $stmtCN = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, company_id, invoice_id, invoice_no, customer_id, customer_name, total_credit_amount, currency, reason, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                             foreach ($canonicalPGGCCreditNotes as $rCN) {
                                 $cNo = strtoupper(trim($rCN['credit_note_no'] ?? ''));
                                 $cId = strtolower(trim($rCN['id'] ?? ''));
@@ -3592,11 +3601,11 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 }));
                                 $data['credit_notes'][] = $rCN;
                                 $stmtCN->execute([
-                                    $rCN['id'], $rCN['credit_note_no'], $rCN['note_date'] ?? date('Y-m-d'),
-                                    $rCN['invoice_no'] ?? '', $rCN['customer_id'] ?? '', $rCN['customer_name'] ?? '',
-                                    floatval($rCN['taxable_amount'] ?? 0), floatval($rCN['tax_amount'] ?? 0),
+                                    $rCN['id'], $rCN['credit_note_no'], $rCN['company_id'] ?? 'rayan-corp-uae',
+                                    $rCN['invoice_id'] ?? '', $rCN['invoice_no'] ?? '',
+                                    $rCN['customer_id'] ?? '', $rCN['customer_name'] ?? '',
                                     floatval($rCN['total_credit_amount'] ?? 0), $rCN['currency'] ?? 'AED',
-                                    $rCN['status'] ?? 'applied', $rCN['reason'] ?? '',
+                                    $rCN['reason'] ?? '', $rCN['status'] ?? 'applied',
                                     json_encode($rCN, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                                 ]);
                             }
