@@ -14324,7 +14324,7 @@ class FinanceApp {
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-payment')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Disburse &amp; Release Voucher (${currLabel}) &rarr;</button>
+                <button type="submit" id="pay-submit-btn" class="fin-btn-quick primary">Disburse &amp; Release Voucher (${currLabel}) &rarr;</button>
               </div>
             </form>
           </div>
@@ -14468,151 +14468,169 @@ class FinanceApp {
 
     document.getElementById('record-payment-form').onsubmit = async (e) => {
       e.preventDefault();
+      if (this._isSubmittingPayment) return;
       const amountPaid = Number(amountInp.value);
       if (!amountPaid || amountPaid <= 0) {
         alert('Please enter a valid disbursement amount.');
         return;
       }
 
-      // Collect allocations
-      const allocations = [];
-      let totalAllocated = 0;
-      document.querySelectorAll('.pay-alloc-input').forEach(inp => {
-        const val = Number(inp.value) || 0;
-        if (val > 0) {
-          allocations.push({
-            bill_id: inp.getAttribute('data-bill-id'),
-            bill_no: inp.getAttribute('data-bill-no'),
-            vendor_invoice_no: inp.getAttribute('data-bill-inv-no'),
-            amount_allocated: val
-          });
-          totalAllocated += val;
-        }
-      });
+      const submitBtn = document.getElementById('pay-submit-btn');
+      this._isSubmittingPayment = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.innerHTML = '⏳ Recording Payment...';
+      }
 
-      // Automatic fallback if allocations is empty or under-allocated
-      let unalloc = Math.round((amountPaid - totalAllocated) * 100) / 100;
-      if (unalloc > 0) {
-        if (targetBill) {
-          const existingAlloc = allocations.find(a => a.bill_id === targetBill.id);
-          const maxBill = Number(targetBill.balance_due > 0 ? targetBill.balance_due : targetBill.grand_total) || amountPaid;
-          const canAlloc = Math.min(unalloc, maxBill);
-          if (existingAlloc) {
-            existingAlloc.amount_allocated += canAlloc;
-          } else if (canAlloc > 0) {
+      try {
+        // Collect allocations
+        const allocations = [];
+        let totalAllocated = 0;
+        document.querySelectorAll('.pay-alloc-input').forEach(inp => {
+          const val = Number(inp.value) || 0;
+          if (val > 0) {
             allocations.push({
-              bill_id: targetBill.id,
-              bill_no: targetBill.bill_no,
-              vendor_invoice_no: targetBill.vendor_invoice_no,
-              amount_allocated: canAlloc
+              bill_id: inp.getAttribute('data-bill-id'),
+              bill_no: inp.getAttribute('data-bill-no'),
+              vendor_invoice_no: inp.getAttribute('data-bill-inv-no'),
+              amount_allocated: val
             });
+            totalAllocated += val;
           }
-          unalloc -= canAlloc;
-        }
+        });
 
+        // Automatic fallback if allocations is empty or under-allocated
+        let unalloc = Math.round((amountPaid - totalAllocated) * 100) / 100;
         if (unalloc > 0) {
-          const vId = vendSel.value;
-          const openBills = bills.filter(b => b.vendor_id === vId && (Number(b.balance_due) > 0 || b.id === targetBill?.id));
-          for (const ob of openBills) {
-            if (unalloc <= 0) break;
-            const existingAlloc = allocations.find(a => a.bill_id === ob.id);
-            const curAlloc = existingAlloc ? existingAlloc.amount_allocated : 0;
-            const bBal = Math.max(0, (Number(ob.balance_due) || 0) - curAlloc);
-            if (bBal > 0) {
-              const take = Math.min(unalloc, bBal);
-              if (existingAlloc) {
-                existingAlloc.amount_allocated += take;
-              } else {
-                allocations.push({
-                  bill_id: ob.id,
-                  bill_no: ob.bill_no,
-                  vendor_invoice_no: ob.vendor_invoice_no,
-                  amount_allocated: take
-                });
+          if (targetBill) {
+            const existingAlloc = allocations.find(a => a.bill_id === targetBill.id);
+            const maxBill = Number(targetBill.balance_due > 0 ? targetBill.balance_due : targetBill.grand_total) || amountPaid;
+            const canAlloc = Math.min(unalloc, maxBill);
+            if (existingAlloc) {
+              existingAlloc.amount_allocated += canAlloc;
+            } else if (canAlloc > 0) {
+              allocations.push({
+                bill_id: targetBill.id,
+                bill_no: targetBill.bill_no,
+                vendor_invoice_no: targetBill.vendor_invoice_no,
+                amount_allocated: canAlloc
+              });
+            }
+            unalloc -= canAlloc;
+          }
+
+          if (unalloc > 0) {
+            const vId = vendSel.value;
+            const openBills = bills.filter(b => b.vendor_id === vId && (Number(b.balance_due) > 0 || b.id === targetBill?.id));
+            for (const ob of openBills) {
+              if (unalloc <= 0) break;
+              const existingAlloc = allocations.find(a => a.bill_id === ob.id);
+              const curAlloc = existingAlloc ? existingAlloc.amount_allocated : 0;
+              const bBal = Math.max(0, (Number(ob.balance_due) || 0) - curAlloc);
+              if (bBal > 0) {
+                const take = Math.min(unalloc, bBal);
+                if (existingAlloc) {
+                  existingAlloc.amount_allocated += take;
+                } else {
+                  allocations.push({
+                    bill_id: ob.id,
+                    bill_no: ob.bill_no,
+                    vendor_invoice_no: ob.vendor_invoice_no,
+                    amount_allocated: take
+                  });
+                }
+                unalloc -= take;
               }
-              unalloc -= take;
             }
           }
         }
-      }
 
-      const vend = vendors.find(v => v.id === vendSel.value) || (targetBill ? { id: targetBill.vendor_id, name: targetBill.vendor_name } : null);
-      const voucherNo = this.getNextPaymentVoucherNumber();
+        const vend = vendors.find(v => v.id === vendSel.value) || (targetBill ? { id: targetBill.vendor_id, name: targetBill.vendor_name } : null);
+        const voucherNo = this.getNextPaymentVoucherNumber();
 
-      const payModeVal = document.getElementById('pay-mode').value;
-      let srcVaultId = null;
-      let srcVaultName = null;
-      if (payModeVal.toLowerCase().includes('cash') || payModeVal.toLowerCase().includes('petty') || payModeVal.toLowerCase().includes('wallet')) {
-        const vSel = document.getElementById('pay-vault-sel');
-        srcVaultId = vSel ? vSel.value : 'cash-mw5esv3w';
-        const optText = vSel?.selectedOptions?.[0]?.textContent || '';
-        srcVaultName = optText ? optText.split('(')[0].trim() : 'RAYAN E-Wallets';
-      }
-
-      const payload = {
-        preselect_bill_id: targetBill ? targetBill.id : null,
-        payment: {
-          id: 'pay-' + Date.now(),
-          voucher_no: voucherNo,
-          company_id: this.activeCompanyId,
-          currency: isIndia ? 'INR' : 'AED',
-          currency_symbol: currSym,
-          vendor_id: vend ? vend.id : null,
-          vendor_name: this.formatCompanyName(vend ? vend.name : ''),
-          payment_date: document.getElementById('pay-date').value,
-          payment_mode: payModeVal,
-          source_vault_id: srcVaultId,
-          source_vault_name: srcVaultName,
-          reference_no: document.getElementById('pay-ref').value,
-          amount_paid: amountPaid,
-          allocations,
-          notes: document.getElementById('pay-notes').value,
-          created_at: new Date().toISOString()
+        const payModeVal = document.getElementById('pay-mode').value;
+        let srcVaultId = null;
+        let srcVaultName = null;
+        if (payModeVal.toLowerCase().includes('cash') || payModeVal.toLowerCase().includes('petty') || payModeVal.toLowerCase().includes('wallet')) {
+          const vSel = document.getElementById('pay-vault-sel');
+          srcVaultId = vSel ? vSel.value : 'cash-mw5esv3w';
+          const optText = vSel?.selectedOptions?.[0]?.textContent || '';
+          srcVaultName = optText ? optText.split('(')[0].trim() : 'RAYAN E-Wallets';
         }
-      };
 
-      // 1. Instant Optimistic Local Database Update
-      if (!this.db.vendor_payments) this.db.vendor_payments = [];
-      this.db.vendor_payments.unshift(payload.payment);
-
-      if (Array.isArray(allocations) && this.db.purchase_bills) {
-        allocations.forEach(alloc => {
-          const b = this.db.purchase_bills.find(x => x.id === alloc.bill_id || x.bill_no === alloc.bill_no);
-          if (b) {
-            const allocAmt = Number(alloc.amount_allocated) || 0;
-            b.amount_paid = (Number(b.amount_paid) || 0) + allocAmt;
-            b.balance_due = Math.max(0, Math.round(((Number(b.grand_total) || 0) - b.amount_paid) * 100) / 100);
-            b.status = b.balance_due <= 0.01 ? 'paid' : 'partially_paid';
+        const payload = {
+          preselect_bill_id: targetBill ? targetBill.id : null,
+          payment: {
+            id: 'pay-' + Date.now(),
+            voucher_no: voucherNo,
+            company_id: this.activeCompanyId,
+            currency: isIndia ? 'INR' : 'AED',
+            currency_symbol: currSym,
+            vendor_id: vend ? vend.id : null,
+            vendor_name: this.formatCompanyName(vend ? vend.name : ''),
+            payment_date: document.getElementById('pay-date').value,
+            payment_mode: payModeVal,
+            source_vault_id: srcVaultId,
+            source_vault_name: srcVaultName,
+            reference_no: document.getElementById('pay-ref').value,
+            amount_paid: amountPaid,
+            allocations,
+            notes: document.getElementById('pay-notes').value,
+            created_at: new Date().toISOString()
           }
-        });
-      }
+        };
 
-      // 2. Route vendor payment to Cash & Bank
-      this.routeVendorPaymentToCashAndBank(payload.payment, this.db);
+        // 1. Instant Optimistic Local Database Update
+        if (!this.db.vendor_payments) this.db.vendor_payments = [];
+        this.db.vendor_payments.unshift(payload.payment);
 
-      // 3. Normalize all balances & save to local cache
-      this.normalizeAllBalances();
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (err) { }
-
-      // 4. Close modal and re-render UI immediately
-      this.closeModal('modal-payment');
-      this.renderActiveTab();
-
-      // 5. Sync with backend API
-      const res = await this.syncApi('record_payment', payload);
-      if (res && res.success) {
-        if (res.data) {
-          this.db = this.mergeWithSeedData(res.data);
-          this.normalizeAllBalances();
-          try {
-            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-          } catch (err) { }
-          this.renderActiveTab();
+        if (Array.isArray(allocations) && this.db.purchase_bills) {
+          allocations.forEach(alloc => {
+            const b = this.db.purchase_bills.find(x => x.id === alloc.bill_id || x.bill_no === alloc.bill_no);
+            if (b) {
+              const allocAmt = Number(alloc.amount_allocated) || 0;
+              b.amount_paid = (Number(b.amount_paid) || 0) + allocAmt;
+              b.balance_due = Math.max(0, Math.round(((Number(b.grand_total) || 0) - b.amount_paid) * 100) / 100);
+              b.status = b.balance_due <= 0.01 ? 'paid' : 'partially_paid';
+            }
+          });
         }
-        this.showNotification(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`, 'success');
-        this.openPaymentPrintModal(res.payment?.id || payload.payment.id);
+
+        // 2. Route vendor payment to Cash & Bank
+        this.routeVendorPaymentToCashAndBank(payload.payment, this.db);
+
+        // 3. Normalize all balances & save to local cache
+        this.normalizeAllBalances();
+        try {
+          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        } catch (err) { }
+
+        // 4. Close modal and re-render UI immediately
+        this.closeModal('modal-payment');
+        this.renderActiveTab();
+
+        // 5. Sync with backend API
+        const res = await this.syncApi('record_payment', payload);
+        if (res && res.success) {
+          if (res.data) {
+            this.db = this.mergeWithSeedData(res.data);
+            this.normalizeAllBalances();
+            try {
+              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+            } catch (err) { }
+            this.renderActiveTab();
+          }
+          this.showNotification(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`, 'success');
+          this.openPaymentPrintModal(res.payment?.id || payload.payment.id);
+        }
+      } finally {
+        this._isSubmittingPayment = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerHTML = `Disburse &amp; Release Voucher (${currLabel}) &rarr;`;
+        }
       }
     };
   }
@@ -19206,7 +19224,7 @@ class FinanceApp {
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-bank-transfer')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary">Post Bank Wire &rarr;</button>
+                <button type="submit" id="bt-submit-btn" class="fin-btn-quick primary">Post Bank Wire &rarr;</button>
               </div>
             </form>
           </div>
@@ -19241,6 +19259,7 @@ class FinanceApp {
 
     document.getElementById('bank-transfer-form').onsubmit = async (e) => {
       e.preventDefault();
+      if (this._isSubmittingBt) return;
       const srcId = document.getElementById('bt-source').value;
       const srcBank = banks.find(b => b.id === srcId);
       const type = document.getElementById('bt-type').value;
@@ -19257,106 +19276,123 @@ class FinanceApp {
       const trfDate = document.getElementById('bt-date').value;
       const purpose = document.getElementById('bt-purpose').value.trim();
 
-      if (type === 'bank_to_cash') {
-        const dstVaultId = btDstVaultEl ? btDstVaultEl.value : 'cash-mw5esv3w';
-        const dVault = registers.find(r => r.id === dstVaultId);
+      const submitBtn = document.getElementById('bt-submit-btn');
+      this._isSubmittingBt = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.innerHTML = '⏳ Executing Transfer...';
+      }
 
-        const payload = {
-          source_bank_id: srcId,
-          destination_vault_id: dstVaultId,
-          amount: amt,
-          currency: srcBank?.currency || (isIndia ? 'INR' : 'AED'),
-          date: trfDate,
-          transfer_date: trfDate,
-          reference_no: refNo,
-          custodian: srcBank?.signatory || 'Arshad Alam Shaikh',
-          purpose: purpose || `Cash withdrawal from ${srcBank?.bank_name} to replenish ${dVault?.register_name || 'RAYAN E-Wallets'}`,
-          company_id: this.activeCompanyId || 'rayan-corp-uae'
-        };
+      try {
+        if (type === 'bank_to_cash') {
+          const dstVaultId = btDstVaultEl ? btDstVaultEl.value : 'cash-mw5esv3w';
+          const dVault = registers.find(r => r.id === dstVaultId);
 
-        if (srcBank) srcBank.balance = (Number(srcBank.balance) || 0) - amt;
-        if (dVault) {
-          dVault.balance = (Number(dVault.balance) || 0) + amt;
-          dVault.last_replenished = trfDate;
+          const payload = {
+            source_bank_id: srcId,
+            destination_vault_id: dstVaultId,
+            amount: amt,
+            currency: srcBank?.currency || (isIndia ? 'INR' : 'AED'),
+            date: trfDate,
+            transfer_date: trfDate,
+            reference_no: refNo,
+            custodian: srcBank?.signatory || 'Arshad Alam Shaikh',
+            purpose: purpose || `Cash withdrawal from ${srcBank?.bank_name} to replenish ${dVault?.register_name || 'RAYAN E-Wallets'}`,
+            company_id: this.activeCompanyId || 'rayan-corp-uae'
+          };
+
+          if (srcBank) srcBank.balance = (Number(srcBank.balance) || 0) - amt;
+          if (dVault) {
+            dVault.balance = (Number(dVault.balance) || 0) + amt;
+            dVault.last_replenished = trfDate;
+          }
+
+          const wireId = `wire-wdl-${Date.now()}`;
+          const voucherId = `cv-wdl-${Date.now() + 1}`;
+          const vNum = Math.floor(1000 + Math.random() * 9000);
+
+          if (!this.db.bank_transfers) this.db.bank_transfers = [];
+          if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+
+          this.db.bank_transfers.unshift({
+            id: wireId,
+            company_id: payload.company_id,
+            reference_no: refNo,
+            date: trfDate,
+            transfer_date: trfDate,
+            counterparty: `${dVault?.register_name || 'RAYAN E-Wallets'} (Cash Vault)`,
+            source_account_id: srcBank?.id,
+            source_bank: srcBank ? `${srcBank.bank_name} (${srcBank.currency})` : 'Corporate Account',
+            destination_account_id: dVault?.id,
+            destination_vault: dVault?.register_name,
+            type: 'bank_to_cash',
+            type_label: 'Bank Withdrawal to E-Wallet',
+            amount: amt,
+            currency: payload.currency,
+            purpose: payload.purpose,
+            status: 'Cleared',
+            created_at: new Date().toISOString()
+          });
+
+          this.db.cash_vouchers.unshift({
+            id: voucherId,
+            company_id: payload.company_id,
+            voucher_no: `CV-WDL-${vNum}`,
+            date: trfDate,
+            register_id: dVault?.id || 'cash-mw5esv3w',
+            register_name: dVault?.register_name || 'RAYAN E-Wallets',
+            type: 'inflow',
+            category: 'Bank Cash Withdrawal / E-Wallet Replenishment',
+            purpose: `Cash withdrawal from ${srcBank?.bank_name} to replenish ${dVault?.register_name || 'RAYAN E-Wallets'}: ${payload.purpose}`,
+            payee: srcBank?.bank_name || 'Corporate Bank Account',
+            custodian: payload.custodian,
+            amount: amt,
+            currency: payload.currency,
+            reference_no: refNo,
+            status: 'Approved',
+            created_at: new Date().toISOString()
+          });
+
+          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+
+          await this.syncApi('transfer_bank_to_wallet', payload);
+          this.closeModal('modal-bank-transfer');
+          this.activeTab = 'bank_accounts';
+          this.renderActiveTab();
+          this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${srcBank?.bank_name} to ${dVault?.register_name}!`, 'success');
+          return;
         }
 
-        const wireId = `wire-wdl-${Date.now()}`;
-        const voucherId = `cv-wdl-${Date.now() + 1}`;
-        const vNum = Math.floor(1000 + Math.random() * 9000);
-
-        if (!this.db.bank_transfers) this.db.bank_transfers = [];
-        if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
-
-        this.db.bank_transfers.unshift({
-          id: wireId,
-          company_id: payload.company_id,
+        const transferData = {
+          id: `wire-${Date.now().toString(36)}`,
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
           reference_no: refNo,
           date: trfDate,
-          transfer_date: trfDate,
-          counterparty: `${dVault?.register_name || 'RAYAN E-Wallets'} (Cash Vault)`,
-          source_account_id: srcBank?.id,
+          counterparty: document.getElementById('bt-counterparty').value.trim(),
+          source_account_id: srcId,
           source_bank: srcBank ? `${srcBank.bank_name} (${srcBank.currency})` : 'Corporate Account',
-          destination_account_id: dVault?.id,
-          destination_vault: dVault?.register_name,
-          type: 'bank_to_cash',
-          type_label: 'Bank Withdrawal to E-Wallet',
+          type,
+          type_label: typeLabels[type] || 'Bank Wire',
           amount: amt,
-          currency: payload.currency,
-          purpose: payload.purpose,
-          status: 'Cleared',
-          created_at: new Date().toISOString()
-        });
+          currency: srcBank?.currency || (isIndia ? 'INR' : 'AED'),
+          purpose: purpose,
+          status: document.getElementById('bt-status').value
+        };
 
-        this.db.cash_vouchers.unshift({
-          id: voucherId,
-          company_id: payload.company_id,
-          voucher_no: `CV-WDL-${vNum}`,
-          date: trfDate,
-          register_id: dVault?.id || 'cash-mw5esv3w',
-          register_name: dVault?.register_name || 'RAYAN E-Wallets',
-          type: 'inflow',
-          category: 'Bank Cash Withdrawal / E-Wallet Replenishment',
-          purpose: `Cash withdrawal from ${srcBank?.bank_name} to replenish ${dVault?.register_name || 'RAYAN E-Wallets'}: ${payload.purpose}`,
-          payee: srcBank?.bank_name || 'Corporate Bank Account',
-          custodian: payload.custodian,
-          amount: amt,
-          currency: payload.currency,
-          reference_no: refNo,
-          status: 'Approved',
-          created_at: new Date().toISOString()
-        });
-
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
-
-        await this.syncApi('transfer_bank_to_wallet', payload);
+        await this.syncApi('record_bank_transfer', { transfer: transferData });
         this.closeModal('modal-bank-transfer');
         this.activeTab = 'bank_accounts';
         this.renderActiveTab();
-        this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${srcBank?.bank_name} to ${dVault?.register_name}!`, 'success');
-        return;
+        this.showNotification(`Wire transfer ${transferData.reference_no} recorded successfully!`, 'success');
+      } finally {
+        this._isSubmittingBt = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerHTML = 'Post Bank Wire &rarr;';
+        }
       }
-
-      const transferData = {
-        id: `wire-${Date.now().toString(36)}`,
-        company_id: this.activeCompanyId || 'rayan-corp-uae',
-        reference_no: refNo,
-        date: trfDate,
-        counterparty: document.getElementById('bt-counterparty').value.trim(),
-        source_account_id: srcId,
-        source_bank: srcBank ? `${srcBank.bank_name} (${srcBank.currency})` : 'Corporate Account',
-        type,
-        type_label: typeLabels[type] || 'Bank Wire',
-        amount: amt,
-        currency: srcBank?.currency || (isIndia ? 'INR' : 'AED'),
-        purpose: purpose,
-        status: document.getElementById('bt-status').value
-      };
-
-      await this.syncApi('record_bank_transfer', { transfer: transferData });
-      this.closeModal('modal-bank-transfer');
-      this.activeTab = 'bank_accounts';
-      this.renderActiveTab();
-      this.showNotification(`Wire transfer ${transferData.reference_no} recorded successfully!`, 'success');
     };
   }
 
@@ -19491,7 +19527,7 @@ class FinanceApp {
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
                 <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-bank-to-wallet')">Cancel</button>
-                <button type="submit" class="fin-btn-quick primary" style="background:linear-gradient(135deg, #0d9488, #00e5d2); color:#042f2e; font-weight:800; border:none;">
+                <button type="submit" id="btw-submit-btn" class="fin-btn-quick primary" style="background:linear-gradient(135deg, #0d9488, #00e5d2); color:#042f2e; font-weight:800; border:none;">
                   Confirm Withdrawal to Rayan Wallet &rarr;
                 </button>
               </div>
@@ -19564,6 +19600,7 @@ class FinanceApp {
 
     document.getElementById('bank-to-wallet-form').onsubmit = async (e) => {
       e.preventDefault();
+      if (this._isSubmittingBtw) return;
       const sBankId = srcEl.value;
       const dVaultId = dstEl.value;
       const amt = parseFloat(amtEl.value) || 0;
@@ -19599,63 +19636,80 @@ class FinanceApp {
         company_id: this.activeCompanyId || 'rayan-corp-uae'
       };
 
-      // Optimistic local update
-      sBank.balance = (Number(sBank.balance) || 0) - amt;
-      dVault.balance = (Number(dVault.balance) || 0) + amt;
-      dVault.last_replenished = wDate;
+      const submitBtn = document.getElementById('btw-submit-btn');
+      this._isSubmittingBtw = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.innerHTML = '⏳ Processing Withdrawal...';
+      }
 
-      const wireId = `wire-wdl-${Date.now()}`;
-      const voucherId = `cv-wdl-${Date.now() + 1}`;
-      const vNum = Math.floor(1000 + Math.random() * 9000);
+      try {
+        // Optimistic local update
+        sBank.balance = (Number(sBank.balance) || 0) - amt;
+        dVault.balance = (Number(dVault.balance) || 0) + amt;
+        dVault.last_replenished = wDate;
 
-      if (!this.db.bank_transfers) this.db.bank_transfers = [];
-      if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+        const wireId = `wire-wdl-${Date.now()}`;
+        const voucherId = `cv-wdl-${Date.now() + 1}`;
+        const vNum = Math.floor(1000 + Math.random() * 9000);
 
-      this.db.bank_transfers.unshift({
-        id: wireId,
-        company_id: payload.company_id,
-        reference_no: refNo,
-        date: wDate,
-        transfer_date: wDate,
-        counterparty: `${dVault.register_name} (Cash Vault)`,
-        source_account_id: sBank.id,
-        source_bank: `${sBank.bank_name} (${sBank.currency || currency})`,
-        destination_account_id: dVault.id,
-        destination_vault: dVault.register_name,
-        type: 'bank_to_cash',
-        type_label: 'Bank Withdrawal to E-Wallet',
-        amount: amt,
-        currency: payload.currency,
-        purpose: purpose,
-        status: 'Cleared',
-        created_at: new Date().toISOString()
-      });
+        if (!this.db.bank_transfers) this.db.bank_transfers = [];
+        if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
 
-      this.db.cash_vouchers.unshift({
-        id: voucherId,
-        company_id: payload.company_id,
-        voucher_no: `CV-WDL-${vNum}`,
-        date: wDate,
-        register_id: dVault.id,
-        register_name: dVault.register_name,
-        type: 'inflow',
-        category: 'Bank Cash Withdrawal / E-Wallet Replenishment',
-        purpose: `Cash withdrawal from ${sBank.bank_name} to replenish ${dVault.register_name}: ${purpose}`,
-        payee: sBank.bank_name,
-        custodian: custodian,
-        amount: amt,
-        currency: payload.currency,
-        reference_no: refNo,
-        status: 'Approved',
-        created_at: new Date().toISOString()
-      });
+        this.db.bank_transfers.unshift({
+          id: wireId,
+          company_id: payload.company_id,
+          reference_no: refNo,
+          date: wDate,
+          transfer_date: wDate,
+          counterparty: `${dVault.register_name} (Cash Vault)`,
+          source_account_id: sBank.id,
+          source_bank: `${sBank.bank_name} (${sBank.currency || currency})`,
+          destination_account_id: dVault.id,
+          destination_vault: dVault.register_name,
+          type: 'bank_to_cash',
+          type_label: 'Bank Withdrawal to E-Wallet',
+          amount: amt,
+          currency: payload.currency,
+          purpose: purpose,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        });
 
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+        this.db.cash_vouchers.unshift({
+          id: voucherId,
+          company_id: payload.company_id,
+          voucher_no: `CV-WDL-${vNum}`,
+          date: wDate,
+          register_id: dVault.id,
+          register_name: dVault.register_name,
+          type: 'inflow',
+          category: 'Bank Cash Withdrawal / E-Wallet Replenishment',
+          purpose: `Cash withdrawal from ${sBank.bank_name} to replenish ${dVault.register_name}: ${purpose}`,
+          payee: sBank.bank_name,
+          custodian: custodian,
+          amount: amt,
+          currency: payload.currency,
+          reference_no: refNo,
+          status: 'Approved',
+          created_at: new Date().toISOString()
+        });
 
-      await this.syncApi('transfer_bank_to_wallet', payload);
-      this.closeModal('modal-bank-to-wallet');
-      this.renderActiveTab();
-      this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${sBank.bank_name} to ${dVault.register_name}!`, 'success');
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+
+        await this.syncApi('transfer_bank_to_wallet', payload);
+        this.closeModal('modal-bank-to-wallet');
+        this.renderActiveTab();
+        this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${sBank.bank_name} to ${dVault.register_name}!`, 'success');
+      } finally {
+        this._isSubmittingBtw = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerHTML = 'Confirm Withdrawal to Rayan Wallet &rarr;';
+        }
+      }
     };
   }
 
@@ -26026,7 +26080,7 @@ class FinanceApp {
     this.renderActiveTab();
     this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
 
-    const res = await this.syncApi('delete_payment', { payment_id: payId, id: payId, voucher_no: label });
+    const res = await this.syncApi('delete_payment', { payment_id: payId, id: payId });
     if (res && res.data) {
       this.db = this.mergeWithSeedData(res.data);
       this.normalizeAllBalances();
@@ -26083,7 +26137,6 @@ class FinanceApp {
       }
       const vNo = cb.getAttribute('data-voucher');
       if (vNo) {
-        if (!selectedIds.includes(vNo)) selectedIds.push(vNo);
         idSet.add(vNo);
       }
     });
@@ -26134,7 +26187,6 @@ class FinanceApp {
       }
       const vNo = cb.getAttribute('data-voucher');
       if (vNo) {
-        if (!visibleIds.includes(vNo)) visibleIds.push(vNo);
         idSet.add(vNo);
       }
     });
