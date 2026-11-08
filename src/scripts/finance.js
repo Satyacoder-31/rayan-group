@@ -1254,17 +1254,10 @@ class FinanceApp {
     // Auto-align Vendor Payments allocations & resequence vouchers strictly starting at PV-REC-44001
     const vpRenameMap = {
       'pay-1793642108024': 'PV-REC-44001',
-      'pay-1793974452744': 'PV-REC-44001',
       'pay-1793890308989': 'PV-REC-44002',
-      'pay-1793974978543': 'PV-REC-44002',
       'pay-1793894011459': 'PV-REC-44003',
-      'pay-1793975240000': 'PV-REC-44003',
       'pay-1793894232210': 'PV-REC-44004',
-      'pay-1793976417852': 'PV-REC-44004',
-      'pay-1793894993039': 'PV-REC-44005',
-      'pay-1793976590000': 'PV-REC-44005',
-      'pay-1793898169781': 'PV-REC-44006',
-      'pay-1793977952016': 'PV-REC-44006'
+      'pay-1793894993039': 'PV-REC-44005'
     };
     (this.db.vendor_payments || []).forEach(vp => {
       if (vpRenameMap[vp.id]) {
@@ -5911,7 +5904,6 @@ class FinanceApp {
             <table class="fin-data-table">
               <thead>
                 <tr>
-                  <th style="width:36px; text-align:center;"><input type="checkbox" id="pay-check-all-tab" title="Select All" onchange="window.finApp.toggleSelectAllPayments(this.checked)"></th>
                   <th>Voucher #</th>
                   <th>Date</th>
                   <th>Vendor</th>
@@ -5924,7 +5916,7 @@ class FinanceApp {
               <tbody>
                 ${payments.length === 0 ? `
                   <tr>
-                    <td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
                       <div style="font-size:1.6rem; margin-bottom:0.4rem;">📤</div>
                       <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No vendor payments recorded yet</div>
                       <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Vendor Payment" to disburse funds to a supplier.</div>
@@ -5932,7 +5924,6 @@ class FinanceApp {
                   </tr>
                 ` : payments.map(p => `
                   <tr>
-                    <td style="width:36px; text-align:center;"><input type="checkbox" class="pay-row-check" value="${p.id}" data-voucher="${p.voucher_no || ''}" onchange="window.finApp.onPaymentCheckChange()"></td>
                     <td><strong>${p.voucher_no}</strong></td>
                     <td>${this.formatDate(p.payment_date)}</td>
                     <td><strong>${p.vendor_name}</strong></td>
@@ -5949,7 +5940,7 @@ class FinanceApp {
                     <td style="white-space:nowrap;">
                       <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print &amp; View Official Payment Voucher">Print / View</button>
                       <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')" title="Edit Payment Voucher">✏️ Edit</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#ef4444; font-weight:700;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -12292,7 +12283,10 @@ class FinanceApp {
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              ${(() => {
+                const linkedPay = (this.db?.vendor_payments || []).find(p => (p.allocations || []).some(a => a.bill_id === bill.id || a.bill_no === bill.bill_no));
+                return `<button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal('${linkedPay ? (linkedPay.id || linkedPay.voucher_no) : ''}')">Payment Voucher</button>`;
+              })()}
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openBillPrintModal('${bill.id || ''}')">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
@@ -25581,27 +25575,33 @@ class FinanceApp {
     const label = pay ? pay.voucher_no : payId;
     if (!confirm(`Are you sure you want to delete payment voucher ${label}?`)) return;
 
-    // 1. Immediately remove from local database & recalculate balances
+    const idSet = new Set([payId, label, pay?.id, pay?.voucher_no].filter(Boolean));
     if (this.db.vendor_payments) {
-      this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== payId && p.voucher_no !== payId && p.id !== label && p.voucher_no !== label);
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => !idSet.has(p.id) && !idSet.has(p.voucher_no));
     }
     if (this.db.bank_transfers) {
-      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.payment_id !== payId && t.payment_id !== label);
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => !idSet.has(t.payment_id));
     }
     if (this.db.cash_vouchers) {
-      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => cv.payment_id !== payId && cv.payment_id !== label);
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id));
     }
     this.normalizeAllBalances();
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     } catch (e) { }
 
-    // 2. Re-render UI immediately
     this.renderActiveTab();
     this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
 
-    // 3. Persist deletion to backend server
-    await this.syncApi('delete_payment', { payment_id: payId, id: payId, voucher_no: label });
+    const res = await this.syncApi('delete_payment', { payment_id: payId, id: payId, voucher_no: label });
+    if (res && res.data) {
+      this.db = this.mergeWithSeedData(res.data);
+      this.normalizeAllBalances();
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) { }
+      this.renderActiveTab();
+    }
   }
 
   toggleSelectAllPayments(checked) {
@@ -25641,15 +25641,27 @@ class FinanceApp {
 
   async deleteSelectedPayments() {
     const rowChecks = document.querySelectorAll('.pay-row-check');
-    const selectedIds = Array.from(rowChecks).filter(cb => cb.checked).map(cb => cb.value);
+    const selectedIds = [];
+    const idSet = new Set();
+    Array.from(rowChecks).filter(cb => cb.checked).forEach(cb => {
+      if (cb.value) {
+        selectedIds.push(cb.value);
+        idSet.add(cb.value);
+      }
+      const vNo = cb.getAttribute('data-voucher');
+      if (vNo) {
+        if (!selectedIds.includes(vNo)) selectedIds.push(vNo);
+        idSet.add(vNo);
+      }
+    });
     if (!selectedIds.length) {
       this.showNotification('Please select at least one payment voucher to delete.', 'warning');
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected payment voucher(s)?`)) return;
+    const count = Array.from(rowChecks).filter(cb => cb.checked).length;
+    if (!confirm(`Are you sure you want to delete ${count} selected payment voucher(s)? This will unlink payments and restore bills to unpaid.`)) return;
 
-    const idSet = new Set(selectedIds);
     if (this.db.vendor_payments) {
       this.db.vendor_payments = this.db.vendor_payments.filter(p => !idSet.has(p.id) && !idSet.has(p.voucher_no));
     }
@@ -25665,22 +25677,42 @@ class FinanceApp {
     } catch (e) { }
 
     this.renderActiveTab();
-    this.showNotification(`Successfully deleted ${selectedIds.length} payment voucher(s).`, 'success');
+    this.showNotification(`Successfully deleted ${count} payment voucher(s).`, 'success');
 
-    await this.syncApi('bulk_delete_payments', { payment_ids: selectedIds });
+    const res = await this.syncApi('bulk_delete_payments', { payment_ids: selectedIds });
+    if (res && res.data) {
+      this.db = this.mergeWithSeedData(res.data);
+      this.normalizeAllBalances();
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) { }
+      this.renderActiveTab();
+    }
   }
 
   async deleteAllVisiblePayments() {
     const rowChecks = document.querySelectorAll('.pay-row-check');
-    const visibleIds = Array.from(rowChecks).map(cb => cb.value);
+    const visibleIds = [];
+    const idSet = new Set();
+    Array.from(rowChecks).forEach(cb => {
+      if (cb.value) {
+        visibleIds.push(cb.value);
+        idSet.add(cb.value);
+      }
+      const vNo = cb.getAttribute('data-voucher');
+      if (vNo) {
+        if (!visibleIds.includes(vNo)) visibleIds.push(vNo);
+        idSet.add(vNo);
+      }
+    });
     if (!visibleIds.length) {
       this.showNotification('No payment vouchers are currently listed to delete.', 'info');
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete ALL ${visibleIds.length} listed payment voucher(s) in one click? This action will unlink payments from purchase bills.`)) return;
+    const count = rowChecks.length;
+    if (!confirm(`Are you sure you want to delete ALL ${count} listed payment voucher(s) in one click? This action will unlink payments and restore purchase bills to unpaid.`)) return;
 
-    const idSet = new Set(visibleIds);
     if (this.db.vendor_payments) {
       this.db.vendor_payments = this.db.vendor_payments.filter(p => !idSet.has(p.id) && !idSet.has(p.voucher_no));
     }
@@ -25696,9 +25728,17 @@ class FinanceApp {
     } catch (e) { }
 
     this.renderActiveTab();
-    this.showNotification(`Successfully deleted all ${visibleIds.length} payment voucher(s).`, 'success');
+    this.showNotification(`Successfully deleted all ${count} payment voucher(s).`, 'success');
 
-    await this.syncApi('bulk_delete_payments', { payment_ids: visibleIds });
+    const res = await this.syncApi('bulk_delete_payments', { payment_ids: visibleIds });
+    if (res && res.data) {
+      this.db = this.mergeWithSeedData(res.data);
+      this.normalizeAllBalances();
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) { }
+      this.renderActiveTab();
+    }
   }
 
   async deleteReceipt(receiptId) {

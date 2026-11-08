@@ -2366,27 +2366,23 @@ function recalculateAllFinanceBalances(&$data) {
 function reconcileAllPaymentRecordsPhp(&$data, $pdo) {
     if (!$data || !is_array($data)) return;
 
-    // 1. Purge canonical vouchers from deleted_vendor_payments setting
-    $canonicalVpIds = [
-        'PV-REC-44001', 'PV-REC-44002', 'PV-REC-44003', 'PV-REC-44004', 'PV-REC-44005', 'PV-REC-44006',
-        'pay-1793642108024', 'pay-1793974452744',
-        'pay-1793890308989', 'pay-1793974978543',
-        'pay-1793894011459', 'pay-1793975240000',
-        'pay-1793894232210', 'pay-1793976417852',
-        'pay-1793894993039', 'pay-1793976590000',
-        'pay-1793898169781', 'pay-1793977952016'
-    ];
-    $canonicalVpSet = array_flip(array_map('strtolower', $canonicalVpIds));
+    if ($pdo) {
+        try {
+            $migCheck = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_all_payment_records_v75'")->fetchColumn();
+            if ($migCheck === 'completed') return;
+        } catch (Exception $e) {}
+    }
+
+    // Retrieve deleted payment vouchers blacklist to strictly respect user deletions
+    $deletedVpSet = [];
     if ($pdo) {
         try {
             $rawDel = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'deleted_vendor_payments'")->fetchColumn();
             if ($rawDel) {
                 $curDel = json_decode($rawDel, true) ?: [];
-                $filteredDel = array_values(array_filter($curDel, function($id) use ($canonicalVpSet) {
-                    return !isset($canonicalVpSet[strtolower($id)]);
-                }));
-                $stmtDel = $pdo->prepare("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('deleted_vendor_payments', :val, NOW())");
-                $stmtDel->execute([':val' => json_encode($filteredDel)]);
+                foreach ($curDel as $dVal) {
+                    $deletedVpSet[strtolower(trim($dVal))] = true;
+                }
             }
         } catch (Exception $e) {}
     }
@@ -2543,6 +2539,11 @@ function reconcileAllPaymentRecordsPhp(&$data, $pdo) {
         $data['vendor_payments'] = [];
     }
     foreach ($canonicalVendorPayments as $cPay) {
+        $cIdLower = strtolower(trim($cPay['id']));
+        $cVNoLower = strtolower(trim($cPay['voucher_no']));
+        if (isset($deletedVpSet[$cIdLower]) || isset($deletedVpSet[$cVNoLower])) {
+            continue; // Strictly skip any voucher deleted by user!
+        }
         $found = false;
         foreach ($data['vendor_payments'] as &$vp) {
             if (($vp['id'] ?? '') === $cPay['id'] || ($vp['voucher_no'] ?? '') === $cPay['voucher_no']) {
@@ -2561,22 +2562,29 @@ function reconcileAllPaymentRecordsPhp(&$data, $pdo) {
         return strcmp($b['voucher_no'] ?? '', $a['voucher_no'] ?? '');
     });
 
-    // 3. Mark the 6 purchase bills BILL-REC-1001 to BILL-REC-1006 as paid
+    // 3. Mark purchase bills BILL-REC-1001 to BILL-REC-1006 as paid ONLY IF linked payment is NOT deleted
     $paidBills = [
-        'BILL-REC-1001' => 47231.00,
-        'BILL-REC-1002' => 18500.00,
-        'BILL-REC-1003' => 110000.00,
-        'BILL-REC-1004' => 129864.48,
-        'BILL-REC-1005' => 99.01,
-        'BILL-REC-1006' => 9902.52
+        'BILL-REC-1001' => ['amt' => 47231.00, 'vp' => 'pv-rec-44001'],
+        'BILL-REC-1002' => ['amt' => 18500.00, 'vp' => 'pv-rec-44002'],
+        'BILL-REC-1003' => ['amt' => 110000.00, 'vp' => 'pv-rec-44003'],
+        'BILL-REC-1004' => ['amt' => 129864.48, 'vp' => 'pv-rec-44004'],
+        'BILL-REC-1005' => ['amt' => 99.01, 'vp' => 'pv-rec-44005'],
+        'BILL-REC-1006' => ['amt' => 9902.52, 'vp' => 'pv-rec-44006']
     ];
     if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
         foreach ($data['purchase_bills'] as &$pb) {
             $bNo = $pb['bill_no'] ?? '';
             if (isset($paidBills[$bNo])) {
-                $pb['amount_paid'] = $paidBills[$bNo];
-                $pb['balance_due'] = 0.00;
-                $pb['status'] = 'paid';
+                $vpKey = $paidBills[$bNo]['vp'];
+                if (isset($deletedVpSet[$vpKey])) {
+                    $pb['amount_paid'] = 0.00;
+                    $pb['balance_due'] = floatval($pb['grand_total'] ?? 0);
+                    $pb['status'] = 'unpaid';
+                } else {
+                    $pb['amount_paid'] = $paidBills[$bNo]['amt'];
+                    $pb['balance_due'] = 0.00;
+                    $pb['status'] = 'paid';
+                }
             }
         }
         unset($pb);
@@ -2986,6 +2994,21 @@ function reconcileAllPaymentRecordsPhp(&$data, $pdo) {
         }
     }
     unset($cv);
+
+    // Purge duplicate cash voucher cv-pay-pay-1794147893176 and restore Rayan E-Wallets
+    if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+        $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($cv) {
+            $id = $cv['id'] ?? '';
+            $vNo = $cv['voucher_no'] ?? '';
+            return $id !== 'cv-pay-pay-1794147893176' && $vNo !== 'CV-PV-REC-44006' && $vNo !== 'CV-PV-REC-44001';
+        }));
+    }
+    if ($pdo) {
+        try {
+            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id = 'cv-pay-pay-1794147893176' OR voucher_no = 'CV-PV-REC-44006' OR voucher_no = 'CV-PV-REC-44001'");
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_all_payment_records_v75', 'completed', NOW())");
+        } catch (Exception $e) {}
+    }
 }
 
 function loadFinanceDb($pdo, $dataFile, $candidates) {
@@ -3020,32 +3043,22 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         if ($posB === false) $posB = 999;
                         return $posA - $posB;
                     });
-                    // Retrieve deleted payment vouchers blacklist to prevent resurrection (exempting canonical project vouchers)
+                    // Retrieve deleted payment vouchers blacklist to prevent resurrection
                     $deletedVpList = [];
-                    $canonicalVpExempt = [
-                        'pv-rec-44001' => true, 'pv-rec-44002' => true, 'pv-rec-44003' => true,
-                        'pv-rec-44004' => true, 'pv-rec-44005' => true, 'pv-rec-44006' => true,
-                        'pay-1793642108024' => true, 'pay-1793974452744' => true,
-                        'pay-1793890308989' => true, 'pay-1793974978543' => true,
-                        'pay-1793894011459' => true, 'pay-1793975240000' => true,
-                        'pay-1793894232210' => true, 'pay-1793976417852' => true,
-                        'pay-1793894993039' => true, 'pay-1793976590000' => true,
-                        'pay-1793898169781' => true, 'pay-1793977952016' => true
-                    ];
                     try {
                         $rawDel = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'deleted_vendor_payments'")->fetchColumn();
                         if ($rawDel) {
-                            $curDelArr = json_decode($rawDel, true) ?: [];
-                            $deletedVpList = array_values(array_filter($curDelArr, function($x) use ($canonicalVpExempt) {
-                                return !isset($canonicalVpExempt[strtolower($x)]);
-                            }));
+                            $deletedVpList = json_decode($rawDel, true) ?: [];
                         }
                     } catch (Exception $e) {}
                     if (!empty($deletedVpList) && !empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
-                        $delSet = array_flip($deletedVpList);
+                        $delSet = [];
+                        foreach ($deletedVpList as $dVal) {
+                            $delSet[strtolower(trim($dVal))] = true;
+                        }
                         $data['vendor_payments'] = array_values(array_filter($data['vendor_payments'], function($p) use ($delSet) {
-                            $id = $p['id'] ?? '';
-                            $no = $p['voucher_no'] ?? '';
+                            $id = strtolower(trim($p['id'] ?? ''));
+                            $no = strtolower(trim($p['voucher_no'] ?? ''));
                             return !isset($delSet[$id]) && !isset($delSet[$no]);
                         }));
                     }
@@ -4709,7 +4722,15 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     } catch (Exception $e) {
                         error_log('Migration v73 error: ' . $e->getMessage());
                     }
-                    reconcileAllPaymentRecordsPhp($data, $pdo);
+                    // Only execute reconciliation migration v75 once if not completed
+                    if ($pdo) {
+                        try {
+                            $chkMig = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_all_payment_records_v75'")->fetchColumn();
+                            if ($chkMig !== 'completed') {
+                                reconcileAllPaymentRecordsPhp($data, $pdo);
+                            }
+                        } catch (Exception $e) {}
+                    }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     saveFinanceDb($pdo, $dataFile, $data, $candidates);
@@ -4773,26 +4794,16 @@ function syncFromRelationalTables($pdo, &$data) {
         ];
 
         $deletedVpList = [];
-        $canonicalVpExempt = [
-            'pv-rec-44001' => true, 'pv-rec-44002' => true, 'pv-rec-44003' => true,
-            'pv-rec-44004' => true, 'pv-rec-44005' => true, 'pv-rec-44006' => true,
-            'pay-1793642108024' => true, 'pay-1793974452744' => true,
-            'pay-1793890308989' => true, 'pay-1793974978543' => true,
-            'pay-1793894011459' => true, 'pay-1793975240000' => true,
-            'pay-1793894232210' => true, 'pay-1793976417852' => true,
-            'pay-1793894993039' => true, 'pay-1793976590000' => true,
-            'pay-1793898169781' => true, 'pay-1793977952016' => true
-        ];
         try {
             $rawDel = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'deleted_vendor_payments'")->fetchColumn();
             if ($rawDel) {
-                $curDelArr = json_decode($rawDel, true) ?: [];
-                $deletedVpList = array_values(array_filter($curDelArr, function($x) use ($canonicalVpExempt) {
-                    return !isset($canonicalVpExempt[strtolower($x)]);
-                }));
+                $deletedVpList = json_decode($rawDel, true) ?: [];
             }
         } catch (Exception $e) {}
-        $delSet = array_flip($deletedVpList);
+        $delSet = [];
+        foreach ($deletedVpList as $dVal) {
+            $delSet[strtolower(trim($dVal))] = true;
+        }
 
         foreach ($syncMapping as $m) {
             try {
@@ -4812,8 +4823,8 @@ function syncFromRelationalTables($pdo, &$data) {
                         $obj = json_decode($r['data_json'], true);
                         if (!$obj) continue;
                         if ($k === 'vendor_payments' && !empty($delSet)) {
-                            $objId = $obj['id'] ?? '';
-                            $objNo = $obj['voucher_no'] ?? '';
+                            $objId = strtolower(trim($obj['id'] ?? ''));
+                            $objNo = strtolower(trim($obj['voucher_no'] ?? ''));
                             if (isset($delSet[$objId]) || isset($delSet[$objNo])) {
                                 continue;
                             }
@@ -5643,7 +5654,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_state') {
         echo json_encode([
             'success' => true,
-            'version_tag' => 'v74_all_payment_records_reconciled',
+            'version_tag' => 'v75_permanent_payment_deletion_and_ewallet_fix',
             'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
             'data' => $db
         ]);
@@ -6139,6 +6150,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (Exception $e) {}
                 }
                 recalculateAllFinanceBalances($db);
+                if ($pdo && !empty($db['purchase_bills']) && is_array($db['purchase_bills'])) {
+                    try {
+                        $stmtUpdBill = $pdo->prepare("UPDATE finance_purchase_bills SET amount_paid = :amt, balance_due = :bal, status = :st, data_json = :dj WHERE id = :id OR bill_no = :bno");
+                        foreach ($db['purchase_bills'] as $pb) {
+                            $stmtUpdBill->execute([
+                                ':amt' => floatval($pb['amount_paid'] ?? 0),
+                                ':bal' => floatval($pb['balance_due'] ?? 0),
+                                ':st' => $pb['status'] ?? 'unpaid',
+                                ':dj' => json_encode($pb, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                                ':id' => $pb['id'] ?? '',
+                                ':bno' => $pb['bill_no'] ?? ''
+                            ]);
+                        }
+                    } catch (Exception $e) {}
+                }
+                saveFinanceDb($pdo, $dataFile, $db, $candidates);
                 $addAuditLog('delete', 'payment', $payId, 'Deleted vendor payment ' . $payId);
             }
             break;
@@ -6195,6 +6222,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (Exception $e) {}
                 }
                 recalculateAllFinanceBalances($db);
+                if ($pdo && !empty($db['purchase_bills']) && is_array($db['purchase_bills'])) {
+                    try {
+                        $stmtUpdBill = $pdo->prepare("UPDATE finance_purchase_bills SET amount_paid = :amt, balance_due = :bal, status = :st, data_json = :dj WHERE id = :id OR bill_no = :bno");
+                        foreach ($db['purchase_bills'] as $pb) {
+                            $stmtUpdBill->execute([
+                                ':amt' => floatval($pb['amount_paid'] ?? 0),
+                                ':bal' => floatval($pb['balance_due'] ?? 0),
+                                ':st' => $pb['status'] ?? 'unpaid',
+                                ':dj' => json_encode($pb, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                                ':id' => $pb['id'] ?? '',
+                                ':bno' => $pb['bill_no'] ?? ''
+                            ]);
+                        }
+                    } catch (Exception $e) {}
+                }
+                saveFinanceDb($pdo, $dataFile, $db, $candidates);
                 $addAuditLog('delete', 'payment', implode(', ', $payIds), 'Bulk deleted ' . count($payIds) . ' vendor payments');
             }
             break;
