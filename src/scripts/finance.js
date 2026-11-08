@@ -1030,7 +1030,7 @@ class FinanceApp {
       this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== 'cn-1793512121832' && c.credit_note_no !== 'CN-REC-018' && (c.invoice_no || '') !== 'REC-RG-INV-44008');
     }
     if (this.db.vendor_payments) {
-      this.db.vendor_payments = this.db.vendor_payments.filter(p => !['PV-REC-44006', 'PV-REC-44007'].includes(p.voucher_no) && !['pay-1793985851677', 'pay-1793980815744'].includes(p.id));
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => !['pay-1793985851677', 'pay-1793980815744'].includes(p.id));
     }
     if (this.db.purchase_bills) {
       this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== 'bill-1793985810710');
@@ -1111,8 +1111,8 @@ class FinanceApp {
       this.db.cash_vouchers = this.db.cash_vouchers.filter(v => {
         const no = (v.voucher_no || '').toUpperCase();
         const amt = Number(v.amount) || 0;
-        if (no === 'CV-PV-REC-44006' || (no.includes('44006') && no.includes('PV'))) return false;
-        if (amt === 7863.97 && v.type === 'outflow') return false;
+        if (no === 'CV-PV-REC-44006' && amt === 7863.97) return false;
+        if (amt === 7863.97 && v.type === 'outflow' && no.includes('44006')) return false;
         return true;
       });
     }
@@ -1334,7 +1334,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v66';
+    const CURRENT_DB_VERSION = 'v2026_clean_v67';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -24485,14 +24485,25 @@ class FinanceApp {
 
   // 11. OFFICIAL VENDOR PAYMENT VOUCHER PRINT MODAL (Website View & PDF Ready)
   openPaymentPrintModal(paymentId, isVerifiedScan = false) {
-    let pay = (this.db?.vendor_payments || []).find(p => p.id === paymentId || p.voucher_no === paymentId);
+    let pay = null;
+    if (paymentId) {
+      const pIdStr = String(paymentId).trim();
+      const pIdNorm = pIdStr.toLowerCase();
+      pay = (this.db?.vendor_payments || []).find(p => p.id === pIdStr || p.voucher_no === pIdStr || (p.voucher_no || '').toLowerCase() === pIdNorm || (p.id || '').toLowerCase() === pIdNorm);
+      if (!pay) {
+        pay = (this.db?.vendor_payments || []).find(p => (p.allocations || []).some(a => a.bill_id === pIdStr || a.bill_no === pIdStr || (a.bill_no || '').toLowerCase() === pIdNorm));
+      }
+    }
+    if (!pay && !paymentId) {
+      pay = (this.db?.vendor_payments || [])[0];
+    }
     if (!pay) {
-      pay = (this.db?.vendor_payments || [])[0] || {
-        voucher_no: 'PV-REC-44001',
+      pay = {
+        voucher_no: paymentId || 'PV-REC-44001',
         payment_date: new Date().toISOString().split('T')[0],
         vendor_name: 'Vendor Disbursement',
         payment_mode: 'Online',
-        reference_no: 'ADCB-FT-00000',
+        reference_no: 'Cash / Bank Transfer',
         amount_paid: 0,
         allocations: [],
         notes: 'Corporate vendor disbursement voucher.'

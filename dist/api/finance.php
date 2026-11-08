@@ -503,7 +503,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if (!$data || !is_array($data)) return;
 
     $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710'];
-    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744', 'pv-rec-44007', 'pv-rec-44006'];
+    $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744'];
     $dummyCnIds = ['cn-1793512121832', 'cn-rec-018'];
     $dummyDnIds = ['dn-rg-001'];
     $dummyExpIds = ['exp-rg-001', 'exp-rg-002', 'exp-rg-003'];
@@ -644,7 +644,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if ($pdo) {
         try {
             $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710')");
-            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744') OR voucher_no IN ('PV-REC-44007', 'PV-REC-44006')");
+            $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744')");
             $pdo->exec("DELETE FROM finance_credit_notes WHERE id IN ('cn-1793512121832') OR credit_note_no = 'CN-REC-018' OR invoice_no = 'REC-RG-INV-44008'");
             $pdo->exec("DELETE FROM finance_purchase_orders WHERE id IN ('po-cust-1793985810709') OR po_no = 'LPO-HLN-2025-44'");
             $pdo->exec("DELETE FROM finance_debit_notes WHERE id IN ('dn-rg-001')");
@@ -1450,11 +1450,17 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 }));
                 $vpMap = [
                     'pay-1793642108024' => 'PV-REC-44001',
+                    'pay-1793974452744' => 'PV-REC-44001',
                     'pay-1793890308989' => 'PV-REC-44002',
+                    'pay-1793974978543' => 'PV-REC-44002',
                     'pay-1793894011459' => 'PV-REC-44003',
+                    'pay-1793975240000' => 'PV-REC-44003',
                     'pay-1793894232210' => 'PV-REC-44004',
+                    'pay-1793976417852' => 'PV-REC-44004',
                     'pay-1793894993039' => 'PV-REC-44005',
-                    'pay-1793898169781' => 'PV-REC-44006'
+                    'pay-1793976590000' => 'PV-REC-44005',
+                    'pay-1793898169781' => 'PV-REC-44006',
+                    'pay-1793977952016' => 'PV-REC-44006'
                 ];
                 foreach ($data['vendor_payments'] as &$hp) {
                     $pId = $hp['id'] ?? '';
@@ -2079,10 +2085,17 @@ function recalculateAllFinanceBalances(&$data) {
     ];
     $vpMap = [
         'pay-1793642108024' => 'PV-REC-44001',
+        'pay-1793974452744' => 'PV-REC-44001',
         'pay-1793890308989' => 'PV-REC-44002',
+        'pay-1793974978543' => 'PV-REC-44002',
         'pay-1793894011459' => 'PV-REC-44003',
+        'pay-1793975240000' => 'PV-REC-44003',
         'pay-1793894232210' => 'PV-REC-44004',
-        'pay-1793894993039' => 'PV-REC-44005'
+        'pay-1793976417852' => 'PV-REC-44004',
+        'pay-1793894993039' => 'PV-REC-44005',
+        'pay-1793976590000' => 'PV-REC-44005',
+        'pay-1793898169781' => 'PV-REC-44006',
+        'pay-1793977952016' => 'PV-REC-44006'
     ];
 
     if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
@@ -2228,11 +2241,17 @@ function recalculateAllFinanceBalances(&$data) {
     if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
         $vpMap = [
             'pay-1793642108024' => 'PV-REC-44001',
+            'pay-1793974452744' => 'PV-REC-44001',
             'pay-1793890308989' => 'PV-REC-44002',
+            'pay-1793974978543' => 'PV-REC-44002',
             'pay-1793894011459' => 'PV-REC-44003',
+            'pay-1793975240000' => 'PV-REC-44003',
             'pay-1793894232210' => 'PV-REC-44004',
+            'pay-1793976417852' => 'PV-REC-44004',
             'pay-1793894993039' => 'PV-REC-44005',
-            'pay-1793898169781' => 'PV-REC-44006'
+            'pay-1793976590000' => 'PV-REC-44005',
+            'pay-1793898169781' => 'PV-REC-44006',
+            'pay-1793977952016' => 'PV-REC-44006'
         ];
         $nextRecSeq = 44001;
         $nextAshSeq = 44001;
@@ -3878,6 +3897,130 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                     } catch (Exception $e) {
                         error_log('Migration v72 error: ' . $e->getMessage());
+                    }
+
+                    // Migration v73: Restore and persist PV-REC-44006 vendor payout for BILL-REC-1006 (Cafe Bateel @ Yas Mall)
+                    try {
+                        $chkMig73 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'restore_pv_rec_44006_v73'")->fetchColumn();
+                        if (!$chkMig73) {
+                            $targetPayId = 'pay-1793977952016';
+                            $targetBillId = 'bill-1793977952016';
+                            $targetBillNo = 'BILL-REC-1006';
+                            $payAmount = 9902.52;
+
+                            // 1. Ensure vendor_payments has PV-REC-44006
+                            if (!isset($data['vendor_payments']) || !is_array($data['vendor_payments'])) {
+                                $data['vendor_payments'] = [];
+                            }
+                            $hasPay44006 = false;
+                            foreach ($data['vendor_payments'] as &$vp) {
+                                if (($vp['voucher_no'] ?? '') === 'PV-REC-44006' || ($vp['id'] ?? '') === $targetPayId) {
+                                    $vp['id'] = $targetPayId;
+                                    $vp['voucher_no'] = 'PV-REC-44006';
+                                    $vp['amount_paid'] = $payAmount;
+                                    $vp['payment_date'] = '2024-07-15';
+                                    $vp['payment_mode'] = 'Online';
+                                    $vp['reference_no'] = 'Cash / Bank Transfer';
+                                    $vp['vendor_id'] = 'vend-mw3q187t';
+                                    $vp['vendor_name'] = 'M/S GENERAL ESPENSES FOR THE PROJECT';
+                                    $vp['allocations'] = [
+                                        [
+                                            'bill_id' => $targetBillId,
+                                            'bill_no' => $targetBillNo,
+                                            'vendor_invoice_no' => 'General',
+                                            'amount_allocated' => $payAmount
+                                        ]
+                                    ];
+                                    $hasPay44006 = true;
+                                    break;
+                                }
+                            }
+                            unset($vp);
+
+                            if (!$hasPay44006) {
+                                $newPay44006 = [
+                                    'id' => $targetPayId,
+                                    'voucher_no' => 'PV-REC-44006',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'vendor_id' => 'vend-mw3q187t',
+                                    'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                                    'payment_date' => '2024-07-15',
+                                    'payment_mode' => 'Online',
+                                    'reference_no' => 'Cash / Bank Transfer',
+                                    'amount_paid' => $payAmount,
+                                    'allocations' => [
+                                        [
+                                            'bill_id' => $targetBillId,
+                                            'bill_no' => $targetBillNo,
+                                            'vendor_invoice_no' => 'General',
+                                            'amount_allocated' => $payAmount
+                                        ]
+                                    ],
+                                    'notes' => 'Disbursement against General',
+                                    'created_at' => '2026-11-08T10:00:00.000Z'
+                                ];
+                                $data['vendor_payments'][] = $newPay44006;
+                            }
+
+                            // 2. Mark BILL-REC-1006 as paid in memory
+                            if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+                                foreach ($data['purchase_bills'] as &$b) {
+                                    if (($b['id'] ?? '') === $targetBillId || ($b['bill_no'] ?? '') === $targetBillNo) {
+                                        $b['amount_paid'] = $payAmount;
+                                        $b['balance_due'] = 0.00;
+                                        $b['status'] = 'paid';
+                                    }
+                                }
+                                unset($b);
+                            }
+
+                            if ($pdo) {
+                                $payJson = json_encode([
+                                    'id' => $targetPayId,
+                                    'voucher_no' => 'PV-REC-44006',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'vendor_id' => 'vend-mw3q187t',
+                                    'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                                    'payment_date' => '2024-07-15',
+                                    'payment_mode' => 'Online',
+                                    'reference_no' => 'Cash / Bank Transfer',
+                                    'amount_paid' => $payAmount,
+                                    'allocations' => [
+                                        [
+                                            'bill_id' => $targetBillId,
+                                            'bill_no' => $targetBillNo,
+                                            'vendor_invoice_no' => 'General',
+                                            'amount_allocated' => $payAmount
+                                        ]
+                                    ],
+                                    'notes' => 'Disbursement against General',
+                                    'created_at' => '2026-11-08T10:00:00.000Z'
+                                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+                                $stmtInsPay = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, payment_date, amount_paid, payment_mode, reference_no, data_json, updated_at) VALUES (:id, :voucher_no, :company_id, :vendor_id, :payment_date, :amount_paid, :payment_mode, :reference_no, :data_json, NOW())");
+                                $stmtInsPay->execute([
+                                    ':id' => $targetPayId,
+                                    ':voucher_no' => 'PV-REC-44006',
+                                    ':company_id' => 'rayan-corp-uae',
+                                    ':vendor_id' => 'vend-mw3q187t',
+                                    ':payment_date' => '2024-07-15',
+                                    ':amount_paid' => $payAmount,
+                                    ':payment_mode' => 'Online',
+                                    ':reference_no' => 'Cash / Bank Transfer',
+                                    ':data_json' => $payJson
+                                ]);
+
+                                $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 9902.52, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 9902.52, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793977952016' OR bill_no = 'BILL-REC-1006'");
+
+                                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('restore_pv_rec_44006_v73', 'completed', NOW())");
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log('Migration v73 error: ' . $e->getMessage());
                     }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
