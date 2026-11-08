@@ -1084,6 +1084,17 @@ class FinanceApp {
       }
     });
 
+    // Purge duplicate/fake vouchers
+    if (Array.isArray(this.db.cash_vouchers)) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(v => {
+        const no = (v.voucher_no || '').toUpperCase();
+        const amt = Number(v.amount) || 0;
+        if (no === 'CV-PV-REC-44006' || (no.includes('44006') && no.includes('PV'))) return false;
+        if (amt === 7863.97 && v.type === 'outflow') return false;
+        return true;
+      });
+    }
+
     // Reconcile RAYAN E-Wallets and petty cash vouchers
     if (Array.isArray(this.db.cash_in_hand)) {
       let rayanWallet = this.db.cash_in_hand.find(r => r.id === 'cash-mw5esv3w' || (r.register_name && r.register_name.toLowerCase().includes('rayan e-wallet')));
@@ -1106,7 +1117,7 @@ class FinanceApp {
       // Ensure customer cash collection receipts route into RAYAN E-Wallets
       if (Array.isArray(this.db.cash_vouchers)) {
         this.db.cash_vouchers.forEach(cv => {
-          if (cv.voucher_no === 'CV-REC-RV-44064' || cv.voucher_no === 'CV-REC-RV-44093') {
+          if (cv.voucher_no === 'CV-REC-RV-44064' || cv.voucher_no === 'CV-REC-RV-44093' || (cv.category === 'Customer Cash Collection' && cv.type === 'inflow')) {
             cv.register_id = rayanWallet.id;
             cv.register_name = rayanWallet.register_name;
           }
@@ -1288,7 +1299,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v62';
+    const CURRENT_DB_VERSION = 'v2026_clean_v63';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -1883,6 +1894,17 @@ class FinanceApp {
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       } catch (e) {}
       return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'update_cash_voucher' && payload.voucher) {
+      if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+      const cv = payload.voucher;
+      const targetId = payload.id || cv.id;
+      const idx = this.db.cash_vouchers.findIndex(v => v.id === targetId || v.voucher_no === targetId);
+      if (idx >= 0) this.db.cash_vouchers[idx] = { ...this.db.cash_vouchers[idx], ...cv };
+      this.normalizeAllBalances();
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, voucher: cv };
     }
 
     if (action === 'delete_cash_voucher' && payload.id) {
@@ -6994,7 +7016,14 @@ class FinanceApp {
 
   renderCashInHandTab(root) {
     const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
-    const vouchers = (this.db?.cash_vouchers || []).filter(v => (v.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const vouchers = (this.db?.cash_vouchers || [])
+      .filter(v => (v.company_id || 'rayan-corp-uae') === this.activeCompanyId)
+      .sort((a, b) => {
+        const dA = a.date || '';
+        const dB = b.date || '';
+        if (dA !== dB) return dB.localeCompare(dA);
+        return (b.voucher_no || '').localeCompare(a.voucher_no || '');
+      });
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const totalCash = registers.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
@@ -7079,6 +7108,7 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
+                <th style="width:45px; text-align:center;">#</th>
                 <th>Voucher #</th>
                 <th>Date</th>
                 <th>Register Vault</th>
@@ -7087,23 +7117,24 @@ class FinanceApp {
                 <th>Disbursed To / Payee</th>
                 <th style="text-align:right;">Amount</th>
                 <th>Status</th>
-                <th style="text-align:center;">Actions</th>
+                <th style="text-align:center; min-width:120px;">Actions</th>
               </tr>
             </thead>
             <tbody>
               ${vouchers.length === 0 ? `
                 <tr>
-                  <td colspan="9" style="text-align:center; padding:2rem; color:#94a3b8;">
+                  <td colspan="10" style="text-align:center; padding:2rem; color:#94a3b8;">
                     No petty cash vouchers logged yet. Click <strong>"Record Cash Voucher"</strong> above to issue a voucher.
                   </td>
                 </tr>
-              ` : vouchers.map(v => {
+              ` : vouchers.map((v, idx) => {
       const isInflow = v.type === 'inflow';
       const color = isInflow ? '#10b981' : '#fb923c';
       const sign = isInflow ? '+' : '-';
       const isTransfer = v.category === 'Inter-Vault Petty Cash Transfer';
       return `
                   <tr>
+                    <td style="text-align:center; color:#94a3b8; font-weight:700;">${idx + 1}</td>
                     <td><strong>${v.voucher_no}</strong></td>
                     <td>${this.formatDate(v.date)}</td>
                     <td>${v.register_name || 'Petty Cash Vault'}</td>
@@ -7120,7 +7151,8 @@ class FinanceApp {
                     <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(v.amount)}</strong></td>
                     <td><span class="fin-badge fin-badge-paid">${v.status || 'Approved'}</span></td>
                     <td style="text-align:center;">
-                      <div style="display:inline-flex; gap:4px;">
+                      <div style="display:inline-flex; gap:5px; align-items:center;">
+                        <button type="button" class="fin-btn-card-action" title="Edit Cash Voucher" onclick="window.finApp.openEditCashVoucherModal('${v.id}')" style="border-color:#38bdf8; color:#38bdf8;">✏️ Edit</button>
                         <button type="button" class="fin-btn-card-action" title="Print Cash Voucher" onclick="window.finApp.printCashVoucher('${v.id}')">🖨️</button>
                         <button type="button" class="fin-btn-card-action danger" title="Delete Voucher" onclick="window.finApp.deleteCashVoucher('${v.id}')">🗑️</button>
                       </div>
@@ -19604,6 +19636,127 @@ class FinanceApp {
       this.activeTab = 'cash_in_hand';
       this.renderActiveTab();
       this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${srcVault.register_name} to ${dstVault.register_name}!`, 'success');
+    };
+  }
+
+  // 6. EDIT CASH VOUCHER MODAL
+  openEditCashVoucherModal(voucherId) {
+    const v = (this.db?.cash_vouchers || []).find(x => x.id === voucherId || x.voucher_no === voucherId);
+    if (!v) {
+      alert('Voucher not found.');
+      return;
+    }
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-cash-voucher">
+        <div class="fin-modal-dialog" style="max-width:580px;">
+          <div class="fin-modal-header">
+            <div>
+              <h3 class="fin-modal-title">✏️ Edit Cash Voucher (${v.voucher_no})</h3>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Update voucher details, register vault, or transaction amounts</div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-cash-voucher')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-cash-voucher-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Cash Register Vault <span style="color:#ef4444;">*</span></label>
+                  <select id="ecv-vault" class="fin-form-select" required>
+                    ${registers.map(r => `<option value="${r.id}" ${r.id === v.register_id || r.register_name === v.register_name ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transaction Type</label>
+                  <select id="ecv-type" class="fin-form-select">
+                    <option value="inflow" ${v.type === 'inflow' ? 'selected' : ''}>Collection / Inflow (Cash In)</option>
+                    <option value="outflow" ${v.type === 'outflow' ? 'selected' : ''}>Expense / Disbursal (Cash Out)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Voucher Number <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ecv-vouch-no" class="fin-form-input" required value="${v.voucher_no || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Voucher Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="ecv-date" class="fin-form-input" required value="${v.date || ''}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Amount (${v.currency || (isIndia ? 'INR' : 'AED')}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="ecv-amount" class="fin-form-input" required step="any" min="0.01" value="${v.amount || 0}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Category</label>
+                  <input type="text" id="ecv-category" class="fin-form-input" value="${v.category || 'Customer Cash Collection'}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payee / Recipient <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ecv-payee" class="fin-form-input" required value="${v.payee || ''}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Custodian / Approver</label>
+                  <input type="text" id="ecv-custodian" class="fin-form-input" value="${v.custodian || 'Arshad Alam Shaikh'}">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Purpose / Notes <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ecv-purpose" class="fin-form-input" required value="${v.purpose || ''}">
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-cash-voucher')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary" style="background:linear-gradient(135deg, #0284c7, #0ea5e9); font-weight:700;">Save Changes &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('edit-cash-voucher-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const vaultId = document.getElementById('ecv-vault').value;
+      const vault = registers.find(r => r.id === vaultId);
+
+      const updatedVoucher = {
+        ...v,
+        voucher_no: document.getElementById('ecv-vouch-no').value.trim(),
+        date: document.getElementById('ecv-date').value,
+        register_id: vaultId,
+        register_name: vault ? vault.register_name : v.register_name,
+        type: document.getElementById('ecv-type').value,
+        amount: parseFloat(document.getElementById('ecv-amount').value) || 0,
+        category: document.getElementById('ecv-category').value.trim(),
+        payee: document.getElementById('ecv-payee').value.trim(),
+        custodian: document.getElementById('ecv-custodian').value.trim(),
+        purpose: document.getElementById('ecv-purpose').value.trim()
+      };
+
+      const idx = (this.db.cash_vouchers || []).findIndex(x => x.id === v.id || x.voucher_no === v.voucher_no);
+      if (idx >= 0) {
+        this.db.cash_vouchers[idx] = updatedVoucher;
+      }
+
+      this.normalizeAllBalances();
+      await this.syncApi('update_cash_voucher', { id: v.id, voucher: updatedVoucher });
+      this.closeModal('modal-edit-cash-voucher');
+      this.activeTab = 'cash_in_hand';
+      this.renderActiveTab();
+      this.showNotification(`Cash voucher ${updatedVoucher.voucher_no} updated successfully!`, 'success');
     };
   }
 

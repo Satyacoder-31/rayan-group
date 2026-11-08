@@ -3683,6 +3683,20 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     } catch (Exception $e) {
                         error_log('Migration v69 error: ' . $e->getMessage());
                     }
+
+                    // Migration v70: Purge duplicate voucher CV-PV-REC-44006 and re-verify RAYAN E-Wallets routing
+                    try {
+                        if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+                            $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($v) {
+                                $vNo = $v['voucher_no'] ?? '';
+                                $amt = floatval($v['amount'] ?? 0);
+                                if ($vNo === 'CV-PV-REC-44006' || (stripos($vNo, '44006') !== false && stripos($vNo, 'PV') !== false)) return false;
+                                if ($amt == 7863.97 && ($v['type'] ?? '') === 'outflow') return false;
+                                return true;
+                            }));
+                        }
+                        $pdo->exec("DELETE FROM finance_cash_vouchers WHERE voucher_no = 'CV-PV-REC-44006' OR (voucher_no LIKE '%44006%' AND voucher_no LIKE '%PV%') OR (amount = 7863.97 AND type = 'outflow')");
+                    } catch (Exception $e) {}
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     try {
@@ -6759,6 +6773,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             array_unshift($db['cash_vouchers'], $outVoucher, $inVoucher);
             $addAuditLog('transfer', 'cash_in_hand', $sourceVault['register_name'], "Transferred {$amt} {$currency} from {$sourceVault['register_name']} to {$destVault['register_name']}");
+            break;
+
+        case 'update_cash_voucher':
+            $cv = $body['voucher'] ?? $body['cash_voucher'] ?? [];
+            $vId = $body['id'] ?? ($cv['id'] ?? '');
+            if (!empty($vId) && !empty($db['cash_vouchers'])) {
+                foreach ($db['cash_vouchers'] as &$existing) {
+                    if (($existing['id'] ?? '') === $vId || ($existing['voucher_no'] ?? '') === $vId) {
+                        $existing = array_merge($existing, $cv);
+                        if (!empty($cv['voucher_no'])) $existing['voucher_no'] = $cv['voucher_no'];
+                        if (!empty($cv['date'])) $existing['date'] = $cv['date'];
+                        if (!empty($cv['register_id'])) $existing['register_id'] = $cv['register_id'];
+                        if (!empty($cv['register_name'])) $existing['register_name'] = $cv['register_name'];
+                        if (isset($cv['amount'])) $existing['amount'] = floatval($cv['amount']);
+                        if (!empty($cv['type'])) $existing['type'] = $cv['type'];
+                        if (!empty($cv['category'])) $existing['category'] = $cv['category'];
+                        if (!empty($cv['payee'])) $existing['payee'] = $cv['payee'];
+                        if (!empty($cv['custodian'])) $existing['custodian'] = $cv['custodian'];
+                        if (!empty($cv['purpose'])) $existing['purpose'] = $cv['purpose'];
+                        if (!empty($cv['status'])) $existing['status'] = $cv['status'];
+                        break;
+                    }
+                }
+                unset($existing);
+
+                // Recalculate vault balances
+                if (!empty($db['cash_in_hand'])) {
+                    $vaultMap = [];
+                    foreach ($db['cash_in_hand'] as &$cih) {
+                        $vaultMap[$cih['id']] = 0.0;
+                    }
+                    unset($cih);
+                    foreach ($db['cash_vouchers'] as $vItem) {
+                        $regId = $vItem['register_id'] ?? '';
+                        $amtVal = floatval($vItem['amount'] ?? 0);
+                        $typeVal = $vItem['type'] ?? 'outflow';
+                        if (isset($vaultMap[$regId])) {
+                            if ($typeVal === 'inflow') {
+                                $vaultMap[$regId] += $amtVal;
+                            } else {
+                                $vaultMap[$regId] -= $amtVal;
+                            }
+                        }
+                    }
+                    foreach ($db['cash_in_hand'] as &$cih) {
+                        $regId = $cih['id'] ?? '';
+                        if ($regId === 'cash-mw5esv3w' || (isset($vaultMap[$regId]) && $vaultMap[$regId] != 0.0)) {
+                            $cih['balance'] = round($vaultMap[$regId] ?? 0.0, 2);
+                        }
+                    }
+                    unset($cih);
+                }
+
+                $addAuditLog('update', 'cash_voucher', $cv['voucher_no'] ?? $vId, 'Updated cash voucher ' . ($cv['voucher_no'] ?? $vId));
+            }
             break;
 
         case 'record_cheque':
