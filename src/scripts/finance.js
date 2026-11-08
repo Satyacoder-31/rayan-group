@@ -1299,7 +1299,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v63';
+    const CURRENT_DB_VERSION = 'v2026_clean_v64';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2036,16 +2036,28 @@ class FinanceApp {
     const companyId = receipt.company_id || this.activeCompanyId || 'rayan-corp-uae';
     const currency = receipt.currency || (companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
 
-    if (modeLower.includes('cash')) {
-      let reg = db.cash_in_hand.find(r => r.id === 'cash-mw5esv3w')
-        || db.cash_in_hand.find(r => r.company_id === companyId && (r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))))
-        || db.cash_in_hand.find(r => r.company_id === companyId);
+    if (modeLower.includes('cash') || modeLower.includes('wallet')) {
+      let reg = null;
+      if (receipt.deposit_vault_id) {
+        reg = db.cash_in_hand.find(r => r.id === receipt.deposit_vault_id);
+      }
+      if (!reg) {
+        reg = db.cash_in_hand.find(r => r.id === 'cash-mw5esv3w')
+          || db.cash_in_hand.find(r => r.company_id === companyId && (r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))))
+          || db.cash_in_hand.find(r => r.company_id === companyId);
+      }
       if (!reg) {
         reg = db.cash_in_hand.find(r => (currency === 'INR' ? r.id.includes('mumbai') : (r.id.includes('wallet') || r.id.includes('dubai')))) || db.cash_in_hand[0];
       }
 
       const existingCv = db.cash_vouchers.find(v => v.receipt_id === receipt.id || v.voucher_no === `CV-${receipt.receipt_no}`);
-      if (!existingCv) {
+      if (existingCv) {
+        existingCv.register_id = reg?.id || 'cash-mw5esv3w';
+        existingCv.register_name = reg?.register_name || reg?.name || 'RAYAN E-Wallets';
+        existingCv.amount = amt;
+        existingCv.date = receipt.receipt_date || existingCv.date;
+        existingCv.payee = receipt.customer_name || existingCv.payee;
+      } else {
         if (reg) {
           reg.balance = (Number(reg.balance) || 0) + amt;
           reg.last_replenished = receipt.receipt_date || new Date().toISOString().split('T')[0];
@@ -2152,24 +2164,38 @@ class FinanceApp {
     const companyId = payment.company_id || this.activeCompanyId || 'rayan-corp-uae';
     const currency = payment.currency || (companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
 
-    if (modeLower.includes('cash')) {
-      let reg = db.cash_in_hand.find(r => r.company_id === companyId);
+    if (modeLower.includes('cash') || modeLower.includes('petty') || modeLower.includes('wallet')) {
+      let reg = null;
+      if (payment.source_vault_id) {
+        reg = db.cash_in_hand.find(r => r.id === payment.source_vault_id);
+      }
       if (!reg) {
-        reg = db.cash_in_hand.find(r => (currency === 'INR' ? r.id.includes('mumbai') : r.id.includes('dubai'))) || db.cash_in_hand[0];
+        reg = db.cash_in_hand.find(r => r.id === 'cash-mw5esv3w')
+          || db.cash_in_hand.find(r => r.company_id === companyId && (r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))))
+          || db.cash_in_hand.find(r => r.company_id === companyId);
+      }
+      if (!reg) {
+        reg = db.cash_in_hand.find(r => (currency === 'INR' ? r.id.includes('mumbai') : (r.id.includes('wallet') || r.id.includes('dubai')))) || db.cash_in_hand[0];
       }
       if (reg) {
         reg.balance = Math.max(0, (Number(reg.balance) || 0) - amt);
       }
       const existingCv = db.cash_vouchers.find(v => v.payment_id === payment.id || v.voucher_no === `CV-${payment.voucher_no}`);
-      if (!existingCv) {
+      if (existingCv) {
+        existingCv.register_id = reg?.id || 'cash-mw5esv3w';
+        existingCv.register_name = reg?.register_name || reg?.name || 'RAYAN E-Wallets';
+        existingCv.amount = amt;
+        existingCv.date = payment.payment_date || existingCv.date;
+        existingCv.payee = payment.vendor_name || existingCv.payee;
+      } else {
         db.cash_vouchers.unshift({
           id: `cv-pay-${payment.id || Date.now()}`,
           payment_id: payment.id,
           voucher_no: `CV-${payment.voucher_no}`,
           company_id: companyId,
-          register_id: reg?.id || 'cash-dubai-reg',
-          register_name: reg?.register_name || reg?.name || 'Main Cash Register',
-          custodian: reg?.custodian || 'Cashier',
+          register_id: reg?.id || 'cash-mw5esv3w',
+          register_name: reg?.register_name || reg?.name || 'RAYAN E-Wallets',
+          custodian: reg?.custodian || 'Cashier / Petty Cash Custodian',
           date: payment.payment_date || new Date().toISOString().split('T')[0],
           type: 'outflow',
           category: 'Supplier Disbursement',
@@ -12771,6 +12797,16 @@ class FinanceApp {
                     <input type="text" id="rec-cashier" class="fin-form-input" value="${this.currentUser?.name || 'Accounts Staff'}">
                   </div>
                 </div>
+                <div class="fin-form-group" style="margin-top:0.6rem;">
+                  <label class="fin-form-label">Deposit Destination (E-Wallet / Cash Register) <span style="color:#ef4444;">*</span></label>
+                  <select id="rec-cash-vault" class="fin-form-select">
+                    ${(this.db?.cash_in_hand || []).map(cv => `<option value="${cv.id}" ${(cv.id === 'cash-mw5esv3w' || cv.is_primary) ? 'selected' : ''}>${cv.register_name} (Current Balance: ${defaultCurrency === 'INR' ? '₹' : 'AED '}${Number(cv.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })})</option>`).join('')}
+                  </select>
+                  <div style="font-size:0.75rem; color:#10b981; margin-top:4px; display:flex; align-items:center; gap:4px;">
+                    <span>⚡</span>
+                    <span>Received cash will be deposited directly into this E-Wallet register balance.</span>
+                  </div>
+                </div>
               </div>
 
               <!-- Datalist of Recommended & Saved Banks -->
@@ -13103,12 +13139,20 @@ class FinanceApp {
         bankName = document.getElementById('rec-online-bank').value.trim() || 'Abu Dhabi Commercial Bank (ADCB)';
         chequeDate = document.getElementById('rec-online-date').value;
         paymentType = document.getElementById('rec-online-channel').value;
-      } else if (mode === 'Cash') {
+      }
+
+      let depositVaultId = null;
+      let depositVaultName = null;
+      if (mode === 'Cash') {
         refNo = document.getElementById('rec-cash-slip').value.trim();
         cashLocation = document.getElementById('rec-cash-location').value.trim();
         cashBearer = document.getElementById('rec-cash-bearer').value.trim();
         cashier = document.getElementById('rec-cashier').value.trim();
-        bankName = cashLocation;
+        const vSel = document.getElementById('rec-cash-vault');
+        depositVaultId = vSel ? vSel.value : 'cash-mw5esv3w';
+        const optText = vSel?.selectedOptions?.[0]?.textContent || '';
+        depositVaultName = optText ? optText.split('(')[0].trim() : 'RAYAN E-Wallets';
+        bankName = depositVaultName || cashLocation;
         paymentType = 'Official Cash Tender';
       }
 
@@ -13141,6 +13185,8 @@ class FinanceApp {
           currency: currency,
           payment_mode: mode,
           payment_type: paymentType,
+          deposit_vault_id: depositVaultId,
+          deposit_vault_name: depositVaultName,
           reference_no: refNo,
           cheque_no: chequeNo,
           cheque_date: chequeDate || document.getElementById('rec-date').value,
@@ -14126,6 +14172,7 @@ class FinanceApp {
     const currSym = isIndia ? '₹' : 'AED ';
     const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
     const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    const cashVaults = (this.db?.cash_in_hand || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
 
     let targetBill = null;
     if (preselectBillId) {
@@ -14162,8 +14209,21 @@ class FinanceApp {
                     <option value="Corporate Cheque">Corporate Cheque</option>
                     <option value="Security Cheque">Security Cheque</option>
                     <option value="International Wire">International Wire</option>
+                    <option value="Petty Cash / E-Wallet (RAYAN E-Wallets)">Petty Cash / E-Wallet (RAYAN E-Wallets)</option>
                     <option value="Petty Cash">Petty Cash</option>
                   </select>
+                </div>
+              </div>
+
+              <!-- Deduct From Cash Vault / E-Wallet Container -->
+              <div id="pay-vault-container" class="fin-form-group" style="display:none; margin-top:0.4rem;">
+                <label class="fin-form-label">Deduct From Cash Vault / E-Wallet <span style="color:#ef4444;">*</span></label>
+                <select id="pay-vault-sel" class="fin-form-select">
+                  ${cashVaults.map(cv => `<option value="${cv.id}" ${(cv.id === 'cash-mw5esv3w' || cv.is_primary) ? 'selected' : ''}>${cv.register_name} (Available: ${currSym}${Number(cv.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })})</option>`).join('')}
+                </select>
+                <div style="font-size:0.75rem; color:#f59e0b; margin-top:4px; display:flex; align-items:center; gap:4px;">
+                  <span>⚡</span>
+                  <span>Payment amount will be deducted directly from this E-Wallet register balance.</span>
                 </div>
               </div>
 
@@ -14205,6 +14265,15 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    const payModeSel = document.getElementById('pay-mode');
+    const payVaultCont = document.getElementById('pay-vault-container');
+    if (payModeSel && payVaultCont) {
+      payModeSel.addEventListener('change', (e) => {
+        const val = (e.target.value || '').toLowerCase();
+        payVaultCont.style.display = (val.includes('cash') || val.includes('petty') || val.includes('wallet')) ? '' : 'none';
+      });
+    }
 
     const vendSel = document.getElementById('pay-vend-sel');
     const billsList = document.getElementById('pay-bills-list');
@@ -14401,6 +14470,17 @@ class FinanceApp {
 
       const vend = vendors.find(v => v.id === vendSel.value) || (targetBill ? { id: targetBill.vendor_id, name: targetBill.vendor_name } : null);
       const voucherNo = this.getNextPaymentVoucherNumber();
+
+      const payModeVal = document.getElementById('pay-mode').value;
+      let srcVaultId = null;
+      let srcVaultName = null;
+      if (payModeVal.toLowerCase().includes('cash') || payModeVal.toLowerCase().includes('petty') || payModeVal.toLowerCase().includes('wallet')) {
+        const vSel = document.getElementById('pay-vault-sel');
+        srcVaultId = vSel ? vSel.value : 'cash-mw5esv3w';
+        const optText = vSel?.selectedOptions?.[0]?.textContent || '';
+        srcVaultName = optText ? optText.split('(')[0].trim() : 'RAYAN E-Wallets';
+      }
+
       const payload = {
         preselect_bill_id: targetBill ? targetBill.id : null,
         payment: {
@@ -14412,7 +14492,9 @@ class FinanceApp {
           vendor_id: vend ? vend.id : null,
           vendor_name: this.formatCompanyName(vend ? vend.name : ''),
           payment_date: document.getElementById('pay-date').value,
-          payment_mode: document.getElementById('pay-mode').value,
+          payment_mode: payModeVal,
+          source_vault_id: srcVaultId,
+          source_vault_name: srcVaultName,
           reference_no: document.getElementById('pay-ref').value,
           amount_paid: amountPaid,
           allocations,
@@ -23674,6 +23756,9 @@ class FinanceApp {
     const currSym = isIndia ? '₹' : 'AED ';
     const customers = (this.db?.customers || []).filter(c => !c.company_id || c.company_id === (rcp.company_id || this.activeCompanyId));
     const allocations = Array.isArray(rcp.allocations) ? rcp.allocations : [];
+    const cashVaults = (this.db?.cash_in_hand || []).filter(v => !v.company_id || v.company_id === (rcp.company_id || this.activeCompanyId));
+
+    const isCurrentCash = (rcp.payment_mode || '').toLowerCase().includes('cash');
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-receipt">
@@ -23710,7 +23795,7 @@ class FinanceApp {
                     <option value="Cheque" ${rcp.payment_mode === 'Cheque' ? 'selected' : ''}>Cheque</option>
                     <option value="Security Cheque" ${rcp.payment_mode === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
                     <option value="Bank Wire" ${rcp.payment_mode === 'Bank Wire' ? 'selected' : ''}>Direct Bank Wire</option>
-                    <option value="Cash" ${rcp.payment_mode === 'Cash' ? 'selected' : ''}>Cash Deposit</option>
+                    <option value="Cash" ${rcp.payment_mode === 'Cash' || rcp.payment_mode === 'Cash Deposit' ? 'selected' : ''}>Cash Deposit (RAYAN E-Wallets)</option>
                   </select>
                 </div>
               </div>
@@ -23726,7 +23811,20 @@ class FinanceApp {
                 </div>
               </div>
 
-              <div class="fin-form-group">
+              <!-- Deposit Destination E-Wallet Selector for Cash Mode -->
+              <div id="edit-rcp-vault-container" class="fin-form-group" style="${isCurrentCash ? '' : 'display:none;'}">
+                <label class="fin-form-label">Deposit Destination (E-Wallet / Cash Register) <span style="color:#ef4444;">*</span></label>
+                <select id="edit-rcp-vault" class="fin-form-select">
+                  ${cashVaults.map(cv => `<option value="${cv.id}" ${(rcp.deposit_vault_id === cv.id || (!rcp.deposit_vault_id && (cv.id === 'cash-mw5esv3w' || cv.is_primary))) ? 'selected' : ''}>${cv.register_name} (Current Balance: ${currSym}${Number(cv.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })})</option>`).join('')}
+                </select>
+                <div style="font-size:0.75rem; color:#10b981; margin-top:4px; display:flex; align-items:center; gap:4px;">
+                  <span>⚡</span>
+                  <span>Received cash will be deposited directly into this E-Wallet register balance.</span>
+                </div>
+              </div>
+
+              <!-- Remitting Bank for Non-Cash Modes -->
+              <div id="edit-rcp-bank-container" class="fin-form-group" style="${isCurrentCash ? 'display:none;' : ''}">
                 <label class="fin-form-label">Remitting / Drawee Bank Name</label>
                 <input type="text" id="edit-rcp-bank" class="fin-form-input" list="rec-banks-list" value="${rcp.bank_name || ''}" placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)">
               </div>
@@ -23773,6 +23871,17 @@ class FinanceApp {
       });
     }
 
+    const editRcpModeSel = document.getElementById('edit-rcp-mode');
+    const editRcpVaultCont = document.getElementById('edit-rcp-vault-container');
+    const editRcpBankCont = document.getElementById('edit-rcp-bank-container');
+    if (editRcpModeSel && editRcpVaultCont && editRcpBankCont) {
+      editRcpModeSel.addEventListener('change', (e) => {
+        const isCashSelected = (e.target.value || '').toLowerCase().includes('cash');
+        editRcpVaultCont.style.display = isCashSelected ? '' : 'none';
+        editRcpBankCont.style.display = isCashSelected ? 'none' : '';
+      });
+    }
+
     document.getElementById('edit-receipt-form').onsubmit = async (e) => {
       e.preventDefault();
       const oldRcpNo = (rcp.receipt_no || '').trim();
@@ -23792,14 +23901,28 @@ class FinanceApp {
       rcp.payment_mode = document.getElementById('edit-rcp-mode').value;
       rcp.amount_received = Number(document.getElementById('edit-rcp-amount').value) || 0;
       rcp.reference_no = document.getElementById('edit-rcp-ref').value.trim();
-      const editBank = document.getElementById('edit-rcp-bank').value.trim();
-      if (editBank) {
-        rcp.bank_name = editBank;
-        try { localStorage.setItem('fin_last_used_bank', editBank); } catch (err) { }
-        if (!this.db.saved_banks) this.db.saved_banks = [];
-        if (!this.db.saved_banks.includes(editBank)) this.db.saved_banks.unshift(editBank);
+
+      const isCashSubmitted = (rcp.payment_mode || '').toLowerCase().includes('cash');
+      if (isCashSubmitted) {
+        const vaultSel = document.getElementById('edit-rcp-vault');
+        rcp.deposit_vault_id = vaultSel ? vaultSel.value : 'cash-mw5esv3w';
+        const optText = vaultSel?.selectedOptions?.[0]?.textContent || '';
+        rcp.deposit_vault_name = optText ? optText.split('(')[0].trim() : 'RAYAN E-Wallets';
+        rcp.bank_name = rcp.deposit_vault_name;
+      } else {
+        const editBank = document.getElementById('edit-rcp-bank').value.trim();
+        if (editBank) {
+          rcp.bank_name = editBank;
+          try { localStorage.setItem('fin_last_used_bank', editBank); } catch (err) { }
+          if (!this.db.saved_banks) this.db.saved_banks = [];
+          if (!this.db.saved_banks.includes(editBank)) this.db.saved_banks.unshift(editBank);
+        }
       }
       rcp.notes = document.getElementById('edit-rcp-notes').value.trim();
+
+      // Route into cash & bank ledger locally immediately
+      this.routeReceiptToCashAndBank(rcp, this.db);
+      this.normalizeAllBalances();
 
       await this.syncApi('update_receipt', { receipt: rcp, old_receipt_no: oldRcpNo, saved_banks: this.db.saved_banks });
       if (this.db?.customer_receipts) {
@@ -24593,6 +24716,8 @@ class FinanceApp {
     const currSym = isIndia ? '₹' : 'AED ';
     const vendors = (this.db?.vendors || []).filter(v => !v.company_id || v.company_id === (pay.company_id || this.activeCompanyId));
     const allocations = Array.isArray(pay.allocations) ? pay.allocations : [];
+    const cashVaults = (this.db?.cash_in_hand || []).filter(v => !v.company_id || v.company_id === (pay.company_id || this.activeCompanyId));
+    const isCurrentCash = (pay.payment_mode || '').toLowerCase().includes('cash') || (pay.payment_mode || '').toLowerCase().includes('petty') || (pay.payment_mode || '').toLowerCase().includes('wallet');
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-pay">
@@ -24630,12 +24755,25 @@ class FinanceApp {
                     <option value="Corporate Cheque" ${pay.payment_mode === 'Corporate Cheque' || pay.payment_mode === 'Cheque' ? 'selected' : ''}>Corporate Cheque</option>
                     <option value="Security Cheque" ${pay.payment_mode === 'Security Cheque' ? 'selected' : ''}>Security Cheque</option>
                     <option value="International Wire" ${pay.payment_mode === 'International Wire' ? 'selected' : ''}>International Wire</option>
+                    <option value="Petty Cash / E-Wallet (RAYAN E-Wallets)" ${pay.payment_mode && (pay.payment_mode.includes('Wallet') || pay.payment_mode.includes('RAYAN')) ? 'selected' : ''}>Petty Cash / E-Wallet (RAYAN E-Wallets)</option>
                     <option value="Petty Cash" ${pay.payment_mode === 'Petty Cash' || pay.payment_mode === 'Cash' ? 'selected' : ''}>Petty Cash</option>
                   </select>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Amount Disbursed (${currLabel}) <span style="color:#ef4444;">*</span></label>
                   <input type="number" id="edit-pay-amount" class="fin-form-input" value="${pay.amount_paid || 0}" min="0.01" step="any" required>
+                </div>
+              </div>
+
+              <!-- Deduct From Cash Vault / E-Wallet Container -->
+              <div id="edit-pay-vault-container" class="fin-form-group" style="${isCurrentCash ? '' : 'display:none;'}">
+                <label class="fin-form-label">Deduct From Cash Vault / E-Wallet <span style="color:#ef4444;">*</span></label>
+                <select id="edit-pay-vault" class="fin-form-select">
+                  ${cashVaults.map(cv => `<option value="${cv.id}" ${(pay.source_vault_id === cv.id || (!pay.source_vault_id && (cv.id === 'cash-mw5esv3w' || cv.is_primary))) ? 'selected' : ''}>${cv.register_name} (Available: ${currSym}${Number(cv.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })})</option>`).join('')}
+                </select>
+                <div style="font-size:0.75rem; color:#f59e0b; margin-top:3px; display:flex; align-items:center; gap:4px;">
+                  <span>⚡</span>
+                  <span>Payment amount will be deducted directly from this E-Wallet register balance.</span>
                 </div>
               </div>
 
@@ -24681,6 +24819,15 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const editPayModeSel = document.getElementById('edit-pay-mode');
+    const editPayVaultCont = document.getElementById('edit-pay-vault-container');
+    if (editPayModeSel && editPayVaultCont) {
+      editPayModeSel.addEventListener('change', (e) => {
+        const val = (e.target.value || '').toLowerCase();
+        editPayVaultCont.style.display = (val.includes('cash') || val.includes('petty') || val.includes('wallet')) ? '' : 'none';
+      });
+    }
+
     document.getElementById('edit-pay-form').onsubmit = async (e) => {
       e.preventDefault();
       pay.voucher_no = document.getElementById('edit-pay-vouch-no')?.value.trim() || pay.voucher_no;
@@ -24691,6 +24838,18 @@ class FinanceApp {
       pay.amount_paid = Number(document.getElementById('edit-pay-amount').value) || 0;
       pay.reference_no = document.getElementById('edit-pay-ref').value.trim();
       pay.notes = document.getElementById('edit-pay-notes').value.trim();
+
+      const isCashSub = (pay.payment_mode || '').toLowerCase().includes('cash') || (pay.payment_mode || '').toLowerCase().includes('petty') || (pay.payment_mode || '').toLowerCase().includes('wallet');
+      if (isCashSub) {
+        const vSel = document.getElementById('edit-pay-vault');
+        pay.source_vault_id = vSel ? vSel.value : 'cash-mw5esv3w';
+        const optText = vSel?.selectedOptions?.[0]?.textContent || '';
+        pay.source_vault_name = optText ? optText.split('(')[0].trim() : 'RAYAN E-Wallets';
+        pay.source_account = pay.source_vault_name;
+      }
+
+      this.routeVendorPaymentToCashAndBank(pay, this.db);
+      this.normalizeAllBalances();
 
       await this.syncApi('update_payment', { payment: pay });
       if (this.db?.vendor_payments) {

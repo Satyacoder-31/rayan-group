@@ -2277,6 +2277,35 @@ function recalculateAllFinanceBalances(&$data) {
         }
         unset($trn);
     }
+
+    // Synchronize and balance all cash vaults directly from live cash vouchers
+    if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
+        $vaultMap = [];
+        foreach ($data['cash_in_hand'] as &$cih) {
+            $vaultMap[$cih['id']] = 0.0;
+        }
+        unset($cih);
+        if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+            foreach ($data['cash_vouchers'] as $vItem) {
+                $regId = $vItem['register_id'] ?? '';
+                $vAmt = floatval($vItem['amount'] ?? 0);
+                if (isset($vaultMap[$regId])) {
+                    if (($vItem['type'] ?? '') === 'inflow') {
+                        $vaultMap[$regId] += $vAmt;
+                    } else {
+                        $vaultMap[$regId] -= $vAmt;
+                    }
+                }
+            }
+        }
+        foreach ($data['cash_in_hand'] as &$cih) {
+            $regId = $cih['id'] ?? '';
+            if ($regId === 'cash-mw5esv3w' || (isset($vaultMap[$regId]) && $vaultMap[$regId] != 0.0)) {
+                $cih['balance'] = round($vaultMap[$regId] ?? 0.0, 2);
+            }
+        }
+        unset($cih);
+    }
 }
 
 function loadFinanceDb($pdo, $dataFile, $candidates) {
@@ -5260,6 +5289,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (Exception $e) {}
                 }
 
+                // If cash payment mode, route/update cash voucher into selected E-Wallet vault
+                $rcpPayMode = $rcp['payment_mode'] ?? '';
+                if (stripos($rcpPayMode, 'cash') !== false || stripos($rcpPayMode, 'wallet') !== false) {
+                    if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+                    $targetVaultId = $rcp['deposit_vault_id'] ?? 'cash-mw5esv3w';
+                    $targetVaultName = $rcp['deposit_vault_name'] ?? 'RAYAN E-Wallets';
+                    if (!empty($db['cash_in_hand'])) {
+                        foreach ($db['cash_in_hand'] as $cih) {
+                            if (($cih['id'] ?? '') === $targetVaultId) {
+                                $targetVaultName = $cih['register_name'] ?? $targetVaultName;
+                                break;
+                            }
+                        }
+                    }
+                    $cvMatched = false;
+                    foreach ($db['cash_vouchers'] as &$cvItem) {
+                        if (($cvItem['receipt_id'] ?? '') === ($rcp['id'] ?? '') || 
+                            ($cvItem['voucher_no'] ?? '') === ('CV-' . ($rcp['receipt_no'] ?? '')) || 
+                            (!empty($oldRcpNo) && ($cvItem['voucher_no'] ?? '') === ('CV-' . $oldRcpNo))) {
+                            $cvItem['voucher_no'] = 'CV-' . ($rcp['receipt_no'] ?? '');
+                            $cvItem['register_id'] = $targetVaultId;
+                            $cvItem['register_name'] = $targetVaultName;
+                            $cvItem['amount'] = floatval($rcp['amount_received'] ?? 0);
+                            $cvItem['date'] = $rcp['receipt_date'] ?? $cvItem['date'];
+                            $cvItem['payee'] = $rcp['customer_name'] ?? $cvItem['payee'];
+                            $cvMatched = true;
+                            break;
+                        }
+                    }
+                    unset($cvItem);
+                    if (!$cvMatched) {
+                        array_unshift($db['cash_vouchers'], [
+                            'id' => 'cv-rcp-' . ($rcp['id'] ?? uniqid()),
+                            'receipt_id' => $rcp['id'] ?? '',
+                            'voucher_no' => 'CV-' . ($rcp['receipt_no'] ?? uniqid()),
+                            'company_id' => $rcp['company_id'] ?? 'rayan-corp-uae',
+                            'register_id' => $targetVaultId,
+                            'register_name' => $targetVaultName,
+                            'custodian' => $rcp['cashier'] ?? 'Arshad Alam Shaikh',
+                            'date' => $rcp['receipt_date'] ?? date('Y-m-d'),
+                            'type' => 'inflow',
+                            'category' => 'Customer Cash Collection',
+                            'purpose' => $rcp['notes'] ?? ('Cash receipt from ' . ($rcp['customer_name'] ?? 'Customer') . ' for ' . ($rcp['ref_invoice_no'] ?? $rcp['receipt_no'] ?? '')),
+                            'payee' => $rcp['customer_name'] ?? 'Customer',
+                            'amount' => floatval($rcp['amount_received'] ?? 0),
+                            'currency' => $rcp['currency'] ?? 'AED',
+                            'status' => 'Approved',
+                            'created_at' => date('c')
+                        ]);
+                    }
+                }
+
                 recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'receipt', $rcp['receipt_no'] ?? '', 'Updated customer receipt ' . ($rcp['receipt_no'] ?? ''));
             }
@@ -5282,6 +5363,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$found) {
                     $db['vendor_payments'][] = $pay;
                 }
+
+                // If payment mode is Cash / Petty Cash / E-Wallet, update or insert outflow cash voucher
+                $pMode = $pay['payment_mode'] ?? '';
+                if (stripos($pMode, 'cash') !== false || stripos($pMode, 'petty') !== false || stripos($pMode, 'wallet') !== false) {
+                    if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+                    $targetVaultId = $pay['source_vault_id'] ?? 'cash-mw5esv3w';
+                    $targetVaultName = $pay['source_vault_name'] ?? 'RAYAN E-Wallets';
+                    if (!empty($db['cash_in_hand'])) {
+                        foreach ($db['cash_in_hand'] as $cih) {
+                            if (($cih['id'] ?? '') === $targetVaultId) {
+                                $targetVaultName = $cih['register_name'] ?? $targetVaultName;
+                                break;
+                            }
+                        }
+                    }
+                    $cvMatched = false;
+                    foreach ($db['cash_vouchers'] as &$cvItem) {
+                        if (($cvItem['payment_id'] ?? '') === ($pay['id'] ?? '') || ($cvItem['voucher_no'] ?? '') === ('CV-' . ($pay['voucher_no'] ?? ''))) {
+                            $cvItem['register_id'] = $targetVaultId;
+                            $cvItem['register_name'] = $targetVaultName;
+                            $cvItem['amount'] = floatval($pay['amount_paid'] ?? 0);
+                            $cvItem['date'] = $pay['payment_date'] ?? $cvItem['date'];
+                            $cvItem['payee'] = $pay['vendor_name'] ?? $cvItem['payee'];
+                            $cvMatched = true;
+                            break;
+                        }
+                    }
+                    unset($cvItem);
+                    if (!$cvMatched) {
+                        array_unshift($db['cash_vouchers'], [
+                            'id' => 'cv-pay-' . ($pay['id'] ?? uniqid()),
+                            'payment_id' => $pay['id'] ?? '',
+                            'voucher_no' => 'CV-' . ($pay['voucher_no'] ?? ('PV-' . rand(100, 999))),
+                            'company_id' => $pay['company_id'] ?? 'rayan-corp-uae',
+                            'register_id' => $targetVaultId,
+                            'register_name' => $targetVaultName,
+                            'custodian' => 'Cashier / Petty Cash Custodian',
+                            'date' => $pay['payment_date'] ?? date('Y-m-d'),
+                            'type' => 'outflow',
+                            'category' => 'Supplier Disbursement',
+                            'purpose' => $pay['notes'] ?: ('Settlement for ' . ($pay['vendor_name'] ?? 'Vendor') . ' under ' . ($pay['voucher_no'] ?? '')),
+                            'payee' => $pay['vendor_name'] ?? 'Vendor',
+                            'amount' => floatval($pay['amount_paid'] ?? 0),
+                            'currency' => $pay['currency'] ?? 'AED',
+                            'status' => 'Cleared',
+                            'created_at' => date('Y-m-d\TH:i:s\Z')
+                        ]);
+                    }
+                }
+
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'payment', $pay['voucher_no'] ?? '', 'Updated vendor payment voucher ' . ($pay['voucher_no'] ?? ''));
             }
             break;
@@ -5721,16 +5853,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
                     
                     $matchedReg = null;
-                    // Prioritize RAYAN E-Wallets (central primary wallet) for UAE cash collections
-                    foreach ($db['cash_in_hand'] as &$cReg) {
-                        if (($cReg['id'] ?? '') === 'cash-mw5esv3w' || (!empty($cReg['is_primary']) && ($cReg['company_id'] ?? '') === $compRefId) || (stripos($cReg['register_name'] ?? '', 'e-wallet') !== false && ($cReg['company_id'] ?? '') === $compRefId)) {
-                            $cReg['balance'] = floatval($cReg['balance'] ?? 0) + $amtReceived;
-                            $cReg['last_replenished'] = $rcp['receipt_date'] ?? date('Y-m-d');
-                            $matchedReg = $cReg;
-                            break;
+                    $targetVaultId = $rcp['deposit_vault_id'] ?? '';
+                    if (!empty($targetVaultId)) {
+                        foreach ($db['cash_in_hand'] as &$cReg) {
+                            if (($cReg['id'] ?? '') === $targetVaultId) {
+                                $cReg['balance'] = floatval($cReg['balance'] ?? 0) + $amtReceived;
+                                $cReg['last_replenished'] = $rcp['receipt_date'] ?? date('Y-m-d');
+                                $matchedReg = $cReg;
+                                break;
+                            }
                         }
+                        unset($cReg);
                     }
-                    unset($cReg);
+                    if (!$matchedReg) {
+                        // Prioritize RAYAN E-Wallets (central primary wallet) for UAE cash collections
+                        foreach ($db['cash_in_hand'] as &$cReg) {
+                            if (($cReg['id'] ?? '') === 'cash-mw5esv3w' || (!empty($cReg['is_primary']) && ($cReg['company_id'] ?? '') === $compRefId) || (stripos($cReg['register_name'] ?? '', 'e-wallet') !== false && ($cReg['company_id'] ?? '') === $compRefId)) {
+                                $cReg['balance'] = floatval($cReg['balance'] ?? 0) + $amtReceived;
+                                $cReg['last_replenished'] = $rcp['receipt_date'] ?? date('Y-m-d');
+                                $matchedReg = $cReg;
+                                break;
+                            }
+                        }
+                        unset($cReg);
+                    }
 
                     // Fallback to any company register if primary wallet not matched
                     if (!$matchedReg) {
@@ -5746,12 +5892,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $cvExists = false;
-                    foreach ($db['cash_vouchers'] as $cv) {
+                    foreach ($db['cash_vouchers'] as &$cv) {
                         if (($cv['receipt_id'] ?? '') === ($rcp['id'] ?? '') || ($cv['voucher_no'] ?? '') === ('CV-' . ($rcp['receipt_no'] ?? ''))) {
+                            $cv['register_id'] = $matchedReg['id'] ?? 'cash-mw5esv3w';
+                            $cv['register_name'] = $matchedReg['register_name'] ?? 'RAYAN E-Wallets';
+                            $cv['amount'] = $amtReceived;
+                            $cv['date'] = $rcp['receipt_date'] ?? $cv['date'];
+                            $cv['payee'] = $rcp['customer_name'] ?? $cv['payee'];
                             $cvExists = true;
                             break;
                         }
                     }
+                    unset($cv);
                     if (!$cvExists) {
                         array_unshift($db['cash_vouchers'], [
                             'id' => 'cv-rcp-' . ($rcp['id'] ?? uniqid()),
@@ -6012,19 +6164,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'notes' => 'Settled supplier bill for ' . ($pay['vendor_name'] ?? 'Vendor') . ' from personal funds'
                         ]);
                     }
-                } elseif (stripos($payMode, 'Cash') !== false) {
+                } elseif (stripos($payMode, 'Cash') !== false || stripos($payMode, 'Petty') !== false || stripos($payMode, 'Wallet') !== false) {
                     // Petty Cash outflow
                     if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) {
                         $db['cash_vouchers'] = [];
                     }
                     $cvId = 'cv-pay-' . ($pay['id'] ?? round(microtime(true) * 1000));
+                    $targetVaultId = $pay['source_vault_id'] ?? '';
+                    $targetVaultName = $pay['source_vault_name'] ?? '';
+                    if (empty($targetVaultId)) {
+                        $targetVaultId = ($pay['currency'] === 'INR') ? 'cash-mumbai-hq' : 'cash-mw5esv3w';
+                        $targetVaultName = ($pay['currency'] === 'INR') ? 'Mumbai Corporate HQ — Main Cash Vault' : 'RAYAN E-Wallets';
+                    }
+                    if (empty($targetVaultName) && !empty($db['cash_in_hand'])) {
+                        foreach ($db['cash_in_hand'] as $cih) {
+                            if (($cih['id'] ?? '') === $targetVaultId) {
+                                $targetVaultName = $cih['register_name'] ?? 'RAYAN E-Wallets';
+                                break;
+                            }
+                        }
+                    }
                     $cvObj = [
                         'id' => $cvId,
                         'payment_id' => $pay['id'] ?? '',
                         'voucher_no' => 'CV-' . ($pay['voucher_no'] ?? ('PV-' . rand(100, 999))),
                         'company_id' => $pay['company_id'] ?? 'rayan-corp-uae',
-                        'register_id' => ($pay['currency'] === 'INR') ? 'cash-mumbai-reg' : 'cash-dubai-reg',
-                        'register_name' => ($pay['currency'] === 'INR') ? 'Ashaz Engineering Cash Register (Mumbai)' : 'Main Operations Cash Register (Dubai)',
+                        'register_id' => $targetVaultId,
+                        'register_name' => $targetVaultName,
                         'custodian' => 'Cashier / Petty Cash Custodian',
                         'date' => $pay['payment_date'] ?? date('Y-m-d'),
                         'type' => 'outflow',
@@ -6039,7 +6205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     array_unshift($db['cash_vouchers'], $cvObj);
                     if (!empty($db['cash_in_hand']) && is_array($db['cash_in_hand'])) {
                         foreach ($db['cash_in_hand'] as &$cih) {
-                            if (($cih['company_id'] ?? '') === ($pay['company_id'] ?? 'rayan-corp-uae') || ($cih['id'] ?? '') === $cvObj['register_id']) {
+                            if (($cih['id'] ?? '') === $targetVaultId) {
                                 $cih['balance'] = max(0, floatval($cih['balance'] ?? 0) - $amtPaid);
                                 break;
                             }
