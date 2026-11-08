@@ -7988,13 +7988,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $destVault['last_replenished'] = $transferDate;
 
             $wireId = 'wire-wdl-' . round(microtime(true) * 1000);
-            $voucherId = 'cv-wdl-' . (round(microtime(true) * 1000) + 1);
+            $voucherId = 'cv-' . $wireId;
             $trfNum = rand(1000, 9999);
             $voucherNo = 'CV-WDL-' . $trfNum;
 
             // Bank transfer outward wire
             $wireObj = [
                 'id' => $wireId,
+                'voucher_id' => $voucherId,
                 'company_id' => $companyId,
                 'reference_no' => $referenceNo,
                 'date' => $transferDate,
@@ -8017,6 +8018,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Cash voucher inflow
             $voucherObj = [
                 'id' => $voucherId,
+                'wire_id' => $wireId,
                 'company_id' => $companyId,
                 'voucher_no' => $voucherNo,
                 'date' => $transferDate,
@@ -8126,7 +8128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!empty($db['cash_vouchers'])) {
                         $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($cv) use ($refNo, $deletedTrn) {
                             if (!empty($refNo) && ($cv['reference_no'] ?? '') === $refNo) return false;
-                            if (($cv['id'] ?? '') === ('cv-' . ($deletedTrn['id'] ?? ''))) return false;
+                            if (($cv['id'] ?? '') === ('cv-' . ($deletedTrn['id'] ?? '')) || ($cv['wire_id'] ?? '') === ($deletedTrn['id'] ?? '')) return false;
+                            if (!empty($deletedTrn['voucher_id']) && ($cv['id'] ?? '') === $deletedTrn['voucher_id']) return false;
                             return true;
                         }));
                     }
