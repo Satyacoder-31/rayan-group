@@ -49,8 +49,8 @@ async function deploy() {
     console.warn('Webhook warning:', err.message);
   }
 
-  console.log('⏳ Waiting 6 seconds for Hostinger Git pull...');
-  await new Promise(r => setTimeout(r, 6000));
+  console.log('⏳ Waiting 10 seconds for Hostinger Git pull...');
+  await new Promise(r => setTimeout(r, 10000));
 
   console.log('\n⚙️ [4/5] Synchronizing production files to web root...');
   let synced = false;

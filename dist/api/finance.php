@@ -3135,6 +3135,29 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                     ],
                                     'notes' => 'Disbursement against General',
                                     'created_at' => '2026-11-06T14:55:00.000Z'
+                                ],
+                                [
+                                    'id' => 'pay-1793977952016',
+                                    'voucher_no' => 'PV-REC-44006',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'vendor_id' => 'vend-mw3q187t',
+                                    'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                                    'payment_date' => '2024-07-15',
+                                    'payment_mode' => 'Online',
+                                    'reference_no' => 'Cash / Bank Transfer',
+                                    'amount_paid' => 9902.52,
+                                    'allocations' => [
+                                        [
+                                            'bill_id' => 'bill-1793977952016',
+                                            'bill_no' => 'BILL-REC-1006',
+                                            'vendor_invoice_no' => 'General',
+                                            'amount_allocated' => 9902.52
+                                        ]
+                                    ],
+                                    'notes' => 'Disbursement against General',
+                                    'created_at' => '2026-11-08T10:00:00.000Z'
                                 ]
                             ];
 
@@ -3158,9 +3181,9 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 }));
                                 foreach ($data['purchase_bills'] as &$bRef) {
                                     if (($bRef['bill_no'] ?? '') === 'BILL-REC-1006') {
-                                        $bRef['amount_paid'] = 0.00;
-                                        $bRef['balance_due'] = round(floatval($bRef['grand_total'] ?? 9902.52), 2);
-                                        $bRef['status'] = 'unpaid';
+                                        $bRef['amount_paid'] = 9902.52;
+                                        $bRef['balance_due'] = 0.00;
+                                        $bRef['status'] = 'paid';
                                     }
                                 }
                                 unset($bRef);
@@ -3210,7 +3233,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 $pdo->exec("DELETE FROM finance_purchase_bills WHERE id = 'bill-1793985810710'");
                                 $pdo->exec("DELETE FROM finance_purchase_orders WHERE po_no = 'LPO-HLN-2025-44' OR id = 'po-cust-1793985810709'");
                                 $pdo->exec("UPDATE finance_invoices SET amount_credited = 0.00, amount_paid = 5000.00, balance_due = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44008'");
-                                $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 0.00, balance_due = 9902.52, status = 'unpaid' WHERE bill_no = 'BILL-REC-1006'");
+                                $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 9902.52, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 9902.52, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793977952016' OR bill_no = 'BILL-REC-1006'");
                                 $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_purge_fake_entries_v66', 'completed', NOW())");
                             }
                         }
@@ -4022,13 +4045,72 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     } catch (Exception $e) {
                         error_log('Migration v73 error: ' . $e->getMessage());
                     }
+                    // Permanent guarantee: ensure PV-REC-44006 exists and is linked to BILL-REC-1006
+                    if (!isset($data['vendor_payments']) || !is_array($data['vendor_payments'])) {
+                        $data['vendor_payments'] = [];
+                    }
+                    $hasPay44006 = false;
+                    foreach ($data['vendor_payments'] as &$vp) {
+                        if (($vp['voucher_no'] ?? '') === 'PV-REC-44006' || ($vp['id'] ?? '') === 'pay-1793977952016') {
+                            $vp['id'] = 'pay-1793977952016';
+                            $vp['voucher_no'] = 'PV-REC-44006';
+                            $vp['amount_paid'] = 9902.52;
+                            $vp['payment_date'] = '2024-07-15';
+                            $vp['payment_mode'] = 'Online';
+                            $vp['reference_no'] = 'Cash / Bank Transfer';
+                            $vp['vendor_id'] = 'vend-mw3q187t';
+                            $vp['vendor_name'] = 'M/S GENERAL ESPENSES FOR THE PROJECT';
+                            $vp['allocations'] = [
+                                [
+                                    'bill_id' => 'bill-1793977952016',
+                                    'bill_no' => 'BILL-REC-1006',
+                                    'vendor_invoice_no' => 'General',
+                                    'amount_allocated' => 9902.52
+                                ]
+                            ];
+                            $hasPay44006 = true;
+                            break;
+                        }
+                    }
+                    unset($vp);
+                    if (!$hasPay44006) {
+                        $data['vendor_payments'][] = [
+                            'id' => 'pay-1793977952016',
+                            'voucher_no' => 'PV-REC-44006',
+                            'company_id' => 'rayan-corp-uae',
+                            'currency' => 'AED',
+                            'currency_symbol' => 'AED ',
+                            'vendor_id' => 'vend-mw3q187t',
+                            'vendor_name' => 'M/S GENERAL ESPENSES FOR THE PROJECT',
+                            'payment_date' => '2024-07-15',
+                            'payment_mode' => 'Online',
+                            'reference_no' => 'Cash / Bank Transfer',
+                            'amount_paid' => 9902.52,
+                            'allocations' => [
+                                [
+                                    'bill_id' => 'bill-1793977952016',
+                                    'bill_no' => 'BILL-REC-1006',
+                                    'vendor_invoice_no' => 'General',
+                                    'amount_allocated' => 9902.52
+                                ]
+                            ],
+                            'notes' => 'Disbursement against General',
+                            'created_at' => '2026-11-08T10:00:00.000Z'
+                        ];
+                    }
+                    if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+                        foreach ($data['purchase_bills'] as &$bRef) {
+                            if (($bRef['id'] ?? '') === 'bill-1793977952016' || ($bRef['bill_no'] ?? '') === 'BILL-REC-1006') {
+                                $bRef['amount_paid'] = 9902.52;
+                                $bRef['balance_due'] = 0.00;
+                                $bRef['status'] = 'paid';
+                            }
+                        }
+                        unset($bRef);
+                    }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
-                    try {
-                        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                        $stmtSt = $pdo->prepare("UPDATE finance_state SET state_json = ?, updated_at = NOW() WHERE id = 1");
-                        $stmtSt->execute([$json]);
-                    } catch (Exception $e) {}
+                    saveFinanceDb($pdo, $dataFile, $data, $candidates);
                     return $data;
                 }
             }
@@ -4928,6 +5010,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_state') {
         echo json_encode([
             'success' => true,
+            'version_tag' => 'v73_pv_44006_active',
             'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
             'data' => $db
         ]);
