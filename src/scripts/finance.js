@@ -1254,10 +1254,17 @@ class FinanceApp {
     // Auto-align Vendor Payments allocations & resequence vouchers strictly starting at PV-REC-44001
     const vpRenameMap = {
       'pay-1793642108024': 'PV-REC-44001',
+      'pay-1793974452744': 'PV-REC-44001',
       'pay-1793890308989': 'PV-REC-44002',
+      'pay-1793974978543': 'PV-REC-44002',
       'pay-1793894011459': 'PV-REC-44003',
+      'pay-1793975240000': 'PV-REC-44003',
       'pay-1793894232210': 'PV-REC-44004',
-      'pay-1793894993039': 'PV-REC-44005'
+      'pay-1793976417852': 'PV-REC-44004',
+      'pay-1793894993039': 'PV-REC-44005',
+      'pay-1793976590000': 'PV-REC-44005',
+      'pay-1793898169781': 'PV-REC-44006',
+      'pay-1793977952016': 'PV-REC-44006'
     };
     (this.db.vendor_payments || []).forEach(vp => {
       if (vpRenameMap[vp.id]) {
