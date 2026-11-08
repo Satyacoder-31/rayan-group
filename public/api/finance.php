@@ -5654,7 +5654,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_state') {
         echo json_encode([
             'success' => true,
-            'version_tag' => 'v75_permanent_payment_deletion_and_ewallet_fix',
+            'version_tag' => 'v76_bank_to_wallet_cash_withdrawal_feature',
             'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
             'data' => $db
         ]);
@@ -7836,31 +7836,309 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $amt = floatval($trn['amount'] ?? 0);
                 $srcId = $trn['source_account_id'] ?? '';
                 $destId = $trn['destination_account_id'] ?? '';
-                if ($amt > 0 && !empty($db['bank_accounts'])) {
-                    foreach ($db['bank_accounts'] as &$b) {
-                        if (($b['id'] ?? '') === $srcId) {
-                            $b['balance'] = floatval($b['balance'] ?? 0) - $amt;
+
+                if (($trn['type'] ?? '') === 'bank_to_cash') {
+                    // Bank withdrawal to E-Wallet (Cash in hand vault)
+                    $srcBankName = 'Corporate Bank Account';
+                    if ($amt > 0 && !empty($db['bank_accounts'])) {
+                        foreach ($db['bank_accounts'] as &$b) {
+                            if (($b['id'] ?? '') === $srcId) {
+                                $b['balance'] = floatval($b['balance'] ?? 0) - $amt;
+                                $srcBankName = $b['bank_name'] ?? 'Corporate Bank Account';
+                                break;
+                            }
                         }
-                        if (!empty($destId) && ($b['id'] ?? '') === $destId) {
-                            $b['balance'] = floatval($b['balance'] ?? 0) + $amt;
-                        }
+                        unset($b);
                     }
-                    unset($b);
+                    if (empty($destId)) $destId = 'cash-mw5esv3w';
+                    $targetVaultName = 'RAYAN E-Wallets';
+                    if (!empty($db['cash_in_hand'])) {
+                        foreach ($db['cash_in_hand'] as &$cih) {
+                            if (($cih['id'] ?? '') === $destId) {
+                                $cih['balance'] = floatval($cih['balance'] ?? 0) + $amt;
+                                $cih['last_replenished'] = $trn['date'] ?? date('Y-m-d');
+                                $targetVaultName = $cih['register_name'] ?? 'RAYAN E-Wallets';
+                                break;
+                            }
+                        }
+                        unset($cih);
+                    }
+                    if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+                    $cvObj = [
+                        'id' => 'cv-' . $trn['id'],
+                        'company_id' => $trn['company_id'],
+                        'voucher_no' => 'CV-WDL-' . rand(1000, 9999),
+                        'date' => $trn['date'] ?? date('Y-m-d'),
+                        'register_id' => $destId,
+                        'register_name' => $targetVaultName,
+                        'type' => 'inflow',
+                        'category' => 'Bank Cash Withdrawal / E-Wallet Replenishment',
+                        'purpose' => 'Cash withdrawal from ' . $srcBankName . ' to replenish ' . $targetVaultName . ': ' . ($trn['purpose'] ?? 'Petty cash liquidity'),
+                        'payee' => $srcBankName,
+                        'custodian' => $trn['custodian'] ?? 'Arshad Alam Shaikh',
+                        'amount' => $amt,
+                        'currency' => $trn['currency'],
+                        'reference_no' => $trn['reference_no'],
+                        'status' => 'Approved',
+                        'created_at' => date('c')
+                    ];
+                    array_unshift($db['cash_vouchers'], $cvObj);
+                    recalculateAllFinanceBalances($db);
+                } else {
+                    if ($amt > 0 && !empty($db['bank_accounts'])) {
+                        foreach ($db['bank_accounts'] as &$b) {
+                            if (($b['id'] ?? '') === $srcId) {
+                                $b['balance'] = floatval($b['balance'] ?? 0) - $amt;
+                            }
+                            if (!empty($destId) && ($b['id'] ?? '') === $destId) {
+                                $b['balance'] = floatval($b['balance'] ?? 0) + $amt;
+                            }
+                        }
+                        unset($b);
+                    }
                 }
                 $addAuditLog('create', 'bank_transfer', $trn['reference_no'] ?? '', 'Recorded bank wire ' . ($trn['reference_no'] ?? ''));
             }
             break;
 
+        case 'transfer_bank_to_wallet':
+            $sourceBankId = $body['source_bank_id'] ?? $body['source_account_id'] ?? '';
+            $destVaultId = $body['destination_vault_id'] ?? $body['target_vault_id'] ?? 'cash-mw5esv3w';
+            $amt = floatval($body['amount'] ?? 0);
+            $transferDate = !empty($body['date']) ? $body['date'] : (!empty($body['transfer_date']) ? $body['transfer_date'] : date('Y-m-d'));
+            $referenceNo = trim($body['reference_no'] ?? '');
+            $withdrawnBy = trim($body['custodian'] ?? ($body['withdrawn_by'] ?? 'Arshad Alam Shaikh'));
+            $purpose = trim($body['purpose'] ?? 'Cash withdrawal from corporate bank to replenish RAYAN E-Wallets for project disbursements');
+            $companyId = $body['company_id'] ?? 'rayan-corp-uae';
+            $currency = $body['currency'] ?? ($companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+
+            if ($amt <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Invalid withdrawal amount']);
+                exit;
+            }
+
+            if (!isset($db['bank_accounts']) || !is_array($db['bank_accounts'])) $db['bank_accounts'] = [];
+            if (!isset($db['cash_in_hand']) || !is_array($db['cash_in_hand'])) $db['cash_in_hand'] = [];
+            if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) $db['bank_transfers'] = [];
+            if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+
+            // Find source bank account
+            $sourceBank = null;
+            foreach ($db['bank_accounts'] as &$ba) {
+                if (($ba['id'] ?? '') === $sourceBankId || (empty($sourceBankId) && ($ba['company_id'] ?? '') === $companyId)) {
+                    $sourceBank = &$ba;
+                    break;
+                }
+            }
+            unset($ba);
+
+            if (!$sourceBank) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Source bank account not found']);
+                exit;
+            }
+
+            // Find destination cash vault (default to RAYAN E-Wallets)
+            $destVault = null;
+            foreach ($db['cash_in_hand'] as &$cih) {
+                if (($cih['id'] ?? '') === $destVaultId || (empty($destVaultId) && ($cih['id'] ?? '') === 'cash-mw5esv3w')) {
+                    $destVault = &$cih;
+                    break;
+                }
+            }
+            unset($cih);
+
+            if (!$destVault) {
+                foreach ($db['cash_in_hand'] as &$cih) {
+                    if (($cih['company_id'] ?? '') === $companyId && (stripos($cih['register_name'] ?? '', 'wallet') !== false || !empty($cih['is_primary']))) {
+                        $destVault = &$cih;
+                        break;
+                    }
+                }
+                unset($cih);
+            }
+
+            if (!$destVault) {
+                foreach ($db['cash_in_hand'] as &$cih) {
+                    if (($cih['company_id'] ?? '') === $companyId) {
+                        $destVault = &$cih;
+                        break;
+                    }
+                }
+                unset($cih);
+            }
+
+            if (!$destVault) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Destination cash vault not found']);
+                exit;
+            }
+
+            if (empty($referenceNo)) {
+                $refPrefix = (stripos($sourceBank['bank_name'] ?? '', 'ADCB') !== false) ? 'ATM-ADCB' : 'CHQ-WDL';
+                $referenceNo = $refPrefix . '-' . rand(10000, 99999);
+            }
+
+            // Deduct from bank
+            $sourceBank['balance'] = floatval($sourceBank['balance'] ?? 0) - $amt;
+
+            // Credit to cash vault
+            $destVault['balance'] = floatval($destVault['balance'] ?? 0) + $amt;
+            $destVault['last_replenished'] = $transferDate;
+
+            $wireId = 'wire-wdl-' . round(microtime(true) * 1000);
+            $voucherId = 'cv-wdl-' . (round(microtime(true) * 1000) + 1);
+            $trfNum = rand(1000, 9999);
+            $voucherNo = 'CV-WDL-' . $trfNum;
+
+            // Bank transfer outward wire
+            $wireObj = [
+                'id' => $wireId,
+                'company_id' => $companyId,
+                'reference_no' => $referenceNo,
+                'date' => $transferDate,
+                'transfer_date' => $transferDate,
+                'counterparty' => $destVault['register_name'] . ' (Cash Vault)',
+                'source_account_id' => $sourceBank['id'],
+                'source_bank' => $sourceBank['bank_name'] . ' (' . ($sourceBank['currency'] ?? $currency) . ')',
+                'destination_account_id' => $destVault['id'],
+                'destination_vault' => $destVault['register_name'],
+                'type' => 'bank_to_cash',
+                'type_label' => 'Bank Withdrawal to E-Wallet',
+                'amount' => $amt,
+                'currency' => $sourceBank['currency'] ?? $currency,
+                'purpose' => $purpose,
+                'status' => 'Cleared',
+                'created_at' => date('c')
+            ];
+            array_unshift($db['bank_transfers'], $wireObj);
+
+            // Cash voucher inflow
+            $voucherObj = [
+                'id' => $voucherId,
+                'company_id' => $companyId,
+                'voucher_no' => $voucherNo,
+                'date' => $transferDate,
+                'register_id' => $destVault['id'],
+                'register_name' => $destVault['register_name'],
+                'type' => 'inflow',
+                'category' => 'Bank Cash Withdrawal / E-Wallet Replenishment',
+                'purpose' => 'Cash withdrawal from ' . $sourceBank['bank_name'] . ' to replenish ' . $destVault['register_name'] . ': ' . $purpose,
+                'payee' => $sourceBank['bank_name'],
+                'custodian' => $withdrawnBy,
+                'amount' => $amt,
+                'currency' => $currency,
+                'reference_no' => $referenceNo,
+                'status' => 'Approved',
+                'created_at' => date('c')
+            ];
+            array_unshift($db['cash_vouchers'], $voucherObj);
+
+            // Rebalance cash vaults and accounts
+            recalculateAllFinanceBalances($db);
+
+            // Update database tables
+            if ($pdo) {
+                try {
+                    $stmtBa = $pdo->prepare("UPDATE finance_bank_accounts SET balance = :balance, updated_at = NOW() WHERE id = :id");
+                    $stmtBa->execute([':balance' => floatval($sourceBank['balance']), ':id' => $sourceBank['id']]);
+
+                    $stmtCih = $pdo->prepare("UPDATE finance_cash_in_hand SET balance = :balance, last_replenished = :last_replenished, updated_at = NOW() WHERE id = :id");
+                    $stmtCih->execute([':balance' => floatval($destVault['balance']), ':last_replenished' => $transferDate, ':id' => $destVault['id']]);
+
+                    $stmtBt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+                    $stmtBt->execute([
+                        ':id' => $wireObj['id'],
+                        ':company_id' => $wireObj['company_id'],
+                        ':reference_no' => $wireObj['reference_no'],
+                        ':transfer_date' => $wireObj['date'],
+                        ':counterparty' => $wireObj['counterparty'],
+                        ':source_account_id' => $wireObj['source_account_id'],
+                        ':source_bank' => $wireObj['source_bank'],
+                        ':type' => $wireObj['type'],
+                        ':amount' => $wireObj['amount'],
+                        ':currency' => $wireObj['currency'],
+                        ':purpose' => $wireObj['purpose'],
+                        ':status' => $wireObj['status'],
+                        ':data_json' => json_encode($wireObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
+
+                    $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+                    $stmtCv->execute([
+                        ':id' => $voucherObj['id'],
+                        ':company_id' => $voucherObj['company_id'],
+                        ':voucher_no' => $voucherObj['voucher_no'],
+                        ':voucher_date' => $voucherObj['date'],
+                        ':register_name' => $voucherObj['register_name'],
+                        ':custodian' => $voucherObj['custodian'],
+                        ':payee' => $voucherObj['payee'],
+                        ':purpose' => $voucherObj['purpose'],
+                        ':category' => $voucherObj['category'],
+                        ':amount' => $voucherObj['amount'],
+                        ':currency' => $voucherObj['currency'],
+                        ':type' => $voucherObj['type'],
+                        ':status' => $voucherObj['status'],
+                        ':data_json' => json_encode($voucherObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
+                } catch (Exception $e) {
+                    error_log('transfer_bank_to_wallet error: ' . $e->getMessage());
+                }
+            }
+
+            saveFinanceDb($pdo, $dataFile, $db, $candidates);
+            $addAuditLog('create', 'bank_transfer', $referenceNo, 'Withdrew ' . $currency . ' ' . number_format($amt, 2) . ' from ' . $sourceBank['bank_name'] . ' to ' . $destVault['register_name']);
+
+            echo json_encode([
+                'success' => true,
+                'transfer' => $wireObj,
+                'voucher' => $voucherObj,
+                'source_bank' => $sourceBank,
+                'dest_vault' => $destVault
+            ]);
+            exit;
+
         case 'delete_bank_transfer':
             $targetId = $body['id'] ?? '';
             if (!empty($targetId) && !empty($db['bank_transfers'])) {
+                $deletedTrn = null;
+                foreach ($db['bank_transfers'] as $t) {
+                    if (($t['id'] ?? '') === $targetId || ($t['reference_no'] ?? '') === $targetId) {
+                        $deletedTrn = $t;
+                        break;
+                    }
+                }
+                if ($deletedTrn && ($deletedTrn['type'] ?? '') === 'bank_to_cash') {
+                    $amt = floatval($deletedTrn['amount'] ?? 0);
+                    $srcId = $deletedTrn['source_account_id'] ?? '';
+                    $refNo = $deletedTrn['reference_no'] ?? '';
+                    // Refund bank account
+                    if ($amt > 0 && !empty($db['bank_accounts'])) {
+                        foreach ($db['bank_accounts'] as &$ba) {
+                            if (($ba['id'] ?? '') === $srcId) {
+                                $ba['balance'] = floatval($ba['balance'] ?? 0) + $amt;
+                                break;
+                            }
+                        }
+                        unset($ba);
+                    }
+                    // Delete linked cash voucher
+                    if (!empty($db['cash_vouchers'])) {
+                        $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($cv) use ($refNo, $deletedTrn) {
+                            if (!empty($refNo) && ($cv['reference_no'] ?? '') === $refNo) return false;
+                            if (($cv['id'] ?? '') === ('cv-' . ($deletedTrn['id'] ?? ''))) return false;
+                            return true;
+                        }));
+                    }
+                    recalculateAllFinanceBalances($db);
+                }
                 $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($t) use ($targetId) {
-                    return ($t['id'] ?? '') !== $targetId;
+                    return ($t['id'] ?? '') !== $targetId && ($t['reference_no'] ?? '') !== $targetId;
                 }));
                 if ($pdo) {
                     try {
-                        $stmt = $pdo->prepare("DELETE FROM finance_bank_transfers WHERE id = ?");
-                        $stmt->execute([$targetId]);
+                        $stmt = $pdo->prepare("DELETE FROM finance_bank_transfers WHERE id = ? OR reference_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
                     } catch (Exception $e) {}
                 }
                 $addAuditLog('delete', 'bank_transfer', $targetId, 'Deleted wire transfer ' . $targetId);
@@ -7947,6 +8225,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'delete_cash_voucher':
             $targetId = $body['id'] ?? '';
             if (!empty($targetId) && !empty($db['cash_vouchers'])) {
+                $deletedCv = null;
+                foreach ($db['cash_vouchers'] as $cv) {
+                    if (($cv['id'] ?? '') === $targetId || ($cv['voucher_no'] ?? '') === $targetId) {
+                        $deletedCv = $cv;
+                        break;
+                    }
+                }
+                if ($deletedCv && ($deletedCv['category'] ?? '') === 'Bank Cash Withdrawal / E-Wallet Replenishment') {
+                    $amt = floatval($deletedCv['amount'] ?? 0);
+                    $refNo = $deletedCv['reference_no'] ?? '';
+                    // Refund bank balance
+                    if ($amt > 0 && !empty($db['bank_accounts'])) {
+                        foreach ($db['bank_accounts'] as &$ba) {
+                            if (stripos($deletedCv['payee'] ?? '', $ba['bank_name'] ?? '') !== false || stripos($ba['bank_name'] ?? '', $deletedCv['payee'] ?? '') !== false) {
+                                $ba['balance'] = floatval($ba['balance'] ?? 0) + $amt;
+                                break;
+                            }
+                        }
+                        unset($ba);
+                    }
+                    if (!empty($db['bank_transfers'])) {
+                        $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($bt) use ($refNo) {
+                            return empty($refNo) || ($bt['reference_no'] ?? '') !== $refNo;
+                        }));
+                    }
+                }
                 $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($v) use ($targetId) {
                     return ($v['id'] ?? '') !== $targetId && ($v['voucher_no'] ?? '') !== $targetId;
                 }));
@@ -7956,6 +8260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$targetId, $targetId]);
                     } catch (Exception $e) {}
                 }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('delete', 'cash_voucher', $targetId, 'Deleted cash voucher ' . $targetId);
             }
             break;

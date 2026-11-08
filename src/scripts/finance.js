@@ -6981,6 +6981,9 @@ class FinanceApp {
             <div style="padding:0.4rem 0.8rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; font-size:0.78rem; color:#38bdf8;">
               Total Liquidity: <strong style="color:#ffffff;">${this.formatCurrency(totalTreasury)}</strong>
             </div>
+            <button type="button" class="fin-btn-quick" style="border-color:#00e5d2; color:#00e5d2; background:rgba(0,229,210,0.12); font-weight:700;" onclick="window.finApp.openBankToWalletModal()">
+              💸 Bank to Rayan Wallet
+            </button>
             <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openBankTransferModal()">
               ⇄ Record Transfer / Wire
             </button>
@@ -7021,8 +7024,9 @@ class FinanceApp {
                   <div style="color:#60a5fa; margin-top:4px;"><strong>Signatory:</strong> ${b.signatory || 'Authorized Officer'}</div>
                 </div>
                 <div class="fin-bank-card-actions">
-                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddBankAccountModal('${b.id}')">✏️ Edit</button>
+                  <button type="button" class="fin-btn-card-action primary" style="background:rgba(0,229,210,0.15); border:1px solid rgba(0,229,210,0.5); color:#00e5d2; font-weight:700;" onclick="window.finApp.openBankToWalletModal('${b.id}')" title="Withdraw cash from this bank account to RAYAN E-Wallets">💸 To Rayan Wallet</button>
                   <button type="button" class="fin-btn-card-action" onclick="window.finApp.openBankTransferModal('${b.id}')">⇄ Wire Out</button>
+                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddBankAccountModal('${b.id}')">✏️ Edit</button>
                   <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteBankAccount('${b.id}')">🗑️ Remove</button>
                 </div>
               </div>
@@ -7062,8 +7066,10 @@ class FinanceApp {
               ` : transfers.map(t => {
       const isInward = t.type === 'inward';
       const isInter = t.type === 'inter_account';
-      const color = isInward ? '#10b981' : (isInter ? '#38bdf8' : '#fb923c');
+      const isBankWdl = t.type === 'bank_to_cash';
+      const color = isInward ? '#10b981' : (isBankWdl ? '#00e5d2' : (isInter ? '#38bdf8' : '#fb923c'));
       const sign = isInward ? '+' : (isInter ? '⇄' : '-');
+      const typeLabel = t.type_label || (isBankWdl ? 'Bank Withdrawal to E-Wallet' : (isInward ? 'Inward Wire' : 'Outward Remittance'));
       return `
                   <tr>
                     <td><strong>${t.reference_no}</strong></td>
@@ -7073,7 +7079,7 @@ class FinanceApp {
                       ${t.purpose ? `<div style="font-size:0.7rem; color:#94a3b8;">${t.purpose}</div>` : ''}
                     </td>
                     <td>${t.source_bank || 'Corporate Account'}</td>
-                    <td><span style="color:${color}; font-weight:600;">${t.type_label || (isInward ? 'Inward Wire' : 'Outward Remittance')}</span></td>
+                    <td><span style="color:${color}; font-weight:600;">${typeLabel}</span></td>
                     <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(t.amount)}</strong></td>
                     <td><span class="fin-badge ${t.status === 'Cleared' || t.status === 'Completed' ? 'fin-badge-paid' : 'fin-badge-pending'}">${t.status || 'Cleared'}</span></td>
                     <td style="text-align:center;">
@@ -7119,6 +7125,9 @@ class FinanceApp {
             <div style="padding:0.4rem 0.8rem; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:6px; font-size:0.78rem; color:#34d399;">
               Total Cash In Vaults: <strong style="color:#ffffff;">${this.formatCurrency(totalCash)}</strong>
             </div>
+            <button type="button" class="fin-btn-quick" style="border-color:#00e5d2; color:#00e5d2; background:rgba(0,229,210,0.12); font-weight:700;" onclick="window.finApp.openBankToWalletModal()">
+              🏦 Withdraw from Bank
+            </button>
             <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.12);" onclick="window.finApp.openTransferPettyCashModal()">
               💸 Transfer Petty Cash
             </button>
@@ -7160,10 +7169,12 @@ class FinanceApp {
                 </div>
                 <div class="fin-bank-card-actions">
                   ${isPrimary ? `
+                    <button type="button" class="fin-btn-card-action" style="border-color:#00e5d2; color:#00e5d2; font-weight:700; background:rgba(0,229,210,0.12);" onclick="window.finApp.openBankToWalletModal(null, '${r.id}')" title="Withdraw cash from Bank into RAYAN E-Wallets">🏦 Replenish from Bank</button>
                     <button type="button" class="fin-btn-card-action primary" style="background:linear-gradient(135deg, #0284c7, #0ea5e9); color:#ffffff; font-weight:700; border:none;" onclick="window.finApp.openTransferPettyCashModal('${r.id}')" title="Disburse petty cash to project site registers">💸 Transfer to Project</button>
                     <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddCashRegisterModal('${r.id}')">✏️ Edit Vault</button>
                     <button type="button" class="fin-btn-card-action" onclick="window.finApp.openCashEntryModal('${r.id}')">+ Voucher</button>
                   ` : `
+                    <button type="button" class="fin-btn-card-action" style="border-color:#00e5d2; color:#00e5d2;" onclick="window.finApp.openBankToWalletModal(null, '${r.id}')" title="Replenish cash directly from Corporate Bank">🏦 From Bank</button>
                     <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openTransferPettyCashModal(null, '${r.id}')" title="Receive petty cash transfer into this register">📥 Receive Transfer</button>
                     <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddCashRegisterModal('${r.id}')">✏️ Edit Vault</button>
                     <button type="button" class="fin-btn-card-action" onclick="window.finApp.openCashEntryModal('${r.id}')">+ Voucher</button>
@@ -7210,6 +7221,7 @@ class FinanceApp {
       const color = isInflow ? '#10b981' : '#fb923c';
       const sign = isInflow ? '+' : '-';
       const isTransfer = v.category === 'Inter-Vault Petty Cash Transfer';
+      const isBankWdl = v.category === 'Bank Cash Withdrawal / E-Wallet Replenishment' || (v.category && v.category.includes('Replenishment') && (v.purpose || '').toLowerCase().includes('bank'));
       return `
                   <tr>
                     <td style="text-align:center; color:#94a3b8; font-weight:700;">${idx + 1}</td>
@@ -7221,6 +7233,7 @@ class FinanceApp {
                       <div style="font-weight:600; color:#ffffff;">${v.purpose}</div>
                       <div style="font-size:0.7rem; color:#94a3b8; display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                         ${v.category ? `<span>${v.category}</span>` : ''}
+                        ${isBankWdl ? '<span style="font-size:0.68rem; color:#00e5d2; background:rgba(0,229,210,0.15); padding:1px 6px; border-radius:3px; font-weight:700;">🏦 Bank Withdrawal</span>' : ''}
                         ${isTransfer ? '<span style="font-size:0.68rem; color:#38bdf8; background:rgba(56,189,248,0.15); padding:1px 6px; border-radius:3px;">Site Project Transfer</span>' : ''}
                         ${v.project_name ? `<span style="font-size:0.68rem; color:#a78bfa; background:rgba(167,139,250,0.15); padding:1px 6px; border-radius:3px;">${v.project_name}</span>` : ''}
                       </div>
@@ -19112,9 +19125,12 @@ class FinanceApp {
   // 2. RECORD BANK WIRE / TRANSFER MODAL
   openBankTransferModal(sourceBankId = null) {
     const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const defaultPrefix = isIndia ? 'ONL-ASH' : 'FAB-TRN';
     const autoUtr = `${defaultPrefix}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const primaryVault = registers.find(r => r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))) || registers[0];
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-bank-transfer">
@@ -19128,10 +19144,20 @@ class FinanceApp {
               <div class="fin-form-group">
                 <label class="fin-form-label">Transfer Direction / Type <span style="color:#ef4444;">*</span></label>
                 <select id="bt-type" class="fin-form-select">
+                  <option value="bank_to_cash">🏦 Bank to E-Wallet (Cash Withdrawal to RAYAN E-Wallets)</option>
                   <option value="outward">Outward Remittance (Vendor / Overseas Contractor Wire)</option>
                   <option value="inward">Inward Wire (Client Advance / Settlement)</option>
                   <option value="inter_account">Inter-Account Treasury Transfer (Internal)</option>
                 </select>
+              </div>
+
+              <!-- Conditional Destination Vault Group for Bank to E-Wallet -->
+              <div id="bt-vault-group" class="fin-form-group" style="background:rgba(0,229,210,0.06); border:1px solid rgba(0,229,210,0.25); border-radius:6px; padding:0.6rem; margin-bottom:0.75rem;">
+                <label class="fin-form-label" style="color:#00e5d2;">Destination Cash Vault / E-Wallet <span style="color:#ef4444;">*</span></label>
+                <select id="bt-destination-vault" class="fin-form-select">
+                  ${registers.map(r => `<option value="${r.id}" ${primaryVault && r.id === primaryVault.id ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                </select>
+                <div style="font-size:0.72rem; color:#38bdf8; margin-top:3px;">Funds will be credited directly to this vault's live cash-in-hand ledger.</div>
               </div>
 
               <div class="fin-form-grid-2">
@@ -19141,9 +19167,9 @@ class FinanceApp {
                     ${banks.map(b => `<option value="${b.id}" ${b.id === sourceBankId ? 'selected' : ''}>${b.bank_name} (${this.formatCurrency(b.balance)})</option>`).join('')}
                   </select>
                 </div>
-                <div class="fin-form-group">
+                <div class="fin-form-group" id="bt-counterparty-group">
                   <label class="fin-form-label">Counterparty / Beneficiary <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="bt-counterparty" class="fin-form-input" required placeholder="e.g. Siemens Middle East / Client Advance">
+                  <input type="text" id="bt-counterparty" class="fin-form-input" required value="${primaryVault ? primaryVault.register_name : 'RAYAN E-Wallets'}" placeholder="e.g. Siemens Middle East / Client Advance">
                 </div>
               </div>
 
@@ -19190,6 +19216,29 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const btTypeEl = document.getElementById('bt-type');
+    const btVaultGroup = document.getElementById('bt-vault-group');
+    const btCpEl = document.getElementById('bt-counterparty');
+    const btDstVaultEl = document.getElementById('bt-destination-vault');
+
+    btTypeEl.onchange = () => {
+      const isBankToCash = btTypeEl.value === 'bank_to_cash';
+      btVaultGroup.style.display = isBankToCash ? 'block' : 'none';
+      if (isBankToCash) {
+        const v = registers.find(r => r.id === btDstVaultEl.value);
+        if (v && btCpEl) btCpEl.value = `${v.register_name} (Cash Vault)`;
+      }
+    };
+
+    if (btDstVaultEl) {
+      btDstVaultEl.onchange = () => {
+        if (btTypeEl.value === 'bank_to_cash') {
+          const v = registers.find(r => r.id === btDstVaultEl.value);
+          if (v && btCpEl) btCpEl.value = `${v.register_name} (Cash Vault)`;
+        }
+      };
+    }
+
     document.getElementById('bank-transfer-form').onsubmit = async (e) => {
       e.preventDefault();
       const srcId = document.getElementById('bt-source').value;
@@ -19197,24 +19246,109 @@ class FinanceApp {
       const type = document.getElementById('bt-type').value;
 
       const typeLabels = {
+        bank_to_cash: 'Bank Withdrawal to E-Wallet',
         inward: 'Inward Wire (Client Settlement)',
         outward: 'Outward Telegraphic Transfer',
         inter_account: 'Inter-Account Treasury Transfer'
       };
 
+      const amt = parseFloat(document.getElementById('bt-amount').value) || 0;
+      const refNo = document.getElementById('bt-utr').value.trim();
+      const trfDate = document.getElementById('bt-date').value;
+      const purpose = document.getElementById('bt-purpose').value.trim();
+
+      if (type === 'bank_to_cash') {
+        const dstVaultId = btDstVaultEl ? btDstVaultEl.value : 'cash-mw5esv3w';
+        const dVault = registers.find(r => r.id === dstVaultId);
+
+        const payload = {
+          source_bank_id: srcId,
+          destination_vault_id: dstVaultId,
+          amount: amt,
+          currency: srcBank?.currency || (isIndia ? 'INR' : 'AED'),
+          date: trfDate,
+          transfer_date: trfDate,
+          reference_no: refNo,
+          custodian: srcBank?.signatory || 'Arshad Alam Shaikh',
+          purpose: purpose || `Cash withdrawal from ${srcBank?.bank_name} to replenish ${dVault?.register_name || 'RAYAN E-Wallets'}`,
+          company_id: this.activeCompanyId || 'rayan-corp-uae'
+        };
+
+        if (srcBank) srcBank.balance = (Number(srcBank.balance) || 0) - amt;
+        if (dVault) {
+          dVault.balance = (Number(dVault.balance) || 0) + amt;
+          dVault.last_replenished = trfDate;
+        }
+
+        const wireId = `wire-wdl-${Date.now()}`;
+        const voucherId = `cv-wdl-${Date.now() + 1}`;
+        const vNum = Math.floor(1000 + Math.random() * 9000);
+
+        if (!this.db.bank_transfers) this.db.bank_transfers = [];
+        if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+
+        this.db.bank_transfers.unshift({
+          id: wireId,
+          company_id: payload.company_id,
+          reference_no: refNo,
+          date: trfDate,
+          transfer_date: trfDate,
+          counterparty: `${dVault?.register_name || 'RAYAN E-Wallets'} (Cash Vault)`,
+          source_account_id: srcBank?.id,
+          source_bank: srcBank ? `${srcBank.bank_name} (${srcBank.currency})` : 'Corporate Account',
+          destination_account_id: dVault?.id,
+          destination_vault: dVault?.register_name,
+          type: 'bank_to_cash',
+          type_label: 'Bank Withdrawal to E-Wallet',
+          amount: amt,
+          currency: payload.currency,
+          purpose: payload.purpose,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        });
+
+        this.db.cash_vouchers.unshift({
+          id: voucherId,
+          company_id: payload.company_id,
+          voucher_no: `CV-WDL-${vNum}`,
+          date: trfDate,
+          register_id: dVault?.id || 'cash-mw5esv3w',
+          register_name: dVault?.register_name || 'RAYAN E-Wallets',
+          type: 'inflow',
+          category: 'Bank Cash Withdrawal / E-Wallet Replenishment',
+          purpose: `Cash withdrawal from ${srcBank?.bank_name} to replenish ${dVault?.register_name || 'RAYAN E-Wallets'}: ${payload.purpose}`,
+          payee: srcBank?.bank_name || 'Corporate Bank Account',
+          custodian: payload.custodian,
+          amount: amt,
+          currency: payload.currency,
+          reference_no: refNo,
+          status: 'Approved',
+          created_at: new Date().toISOString()
+        });
+
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+
+        await this.syncApi('transfer_bank_to_wallet', payload);
+        this.closeModal('modal-bank-transfer');
+        this.activeTab = 'bank_accounts';
+        this.renderActiveTab();
+        this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${srcBank?.bank_name} to ${dVault?.register_name}!`, 'success');
+        return;
+      }
+
       const transferData = {
         id: `wire-${Date.now().toString(36)}`,
         company_id: this.activeCompanyId || 'rayan-corp-uae',
-        reference_no: document.getElementById('bt-utr').value.trim(),
-        date: document.getElementById('bt-date').value,
+        reference_no: refNo,
+        date: trfDate,
         counterparty: document.getElementById('bt-counterparty').value.trim(),
         source_account_id: srcId,
         source_bank: srcBank ? `${srcBank.bank_name} (${srcBank.currency})` : 'Corporate Account',
         type,
         type_label: typeLabels[type] || 'Bank Wire',
-        amount: parseFloat(document.getElementById('bt-amount').value) || 0,
+        amount: amt,
         currency: srcBank?.currency || (isIndia ? 'INR' : 'AED'),
-        purpose: document.getElementById('bt-purpose').value.trim(),
+        purpose: purpose,
         status: document.getElementById('bt-status').value
       };
 
@@ -19223,6 +19357,305 @@ class FinanceApp {
       this.activeTab = 'bank_accounts';
       this.renderActiveTab();
       this.showNotification(`Wire transfer ${transferData.reference_no} recorded successfully!`, 'success');
+    };
+  }
+
+  // 2B. DEDICATED BANK TO RAYAN WALLET MODAL
+  openBankToWalletModal(sourceBankId = null, targetVaultId = null) {
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currency = isIndia ? 'INR' : 'AED';
+
+    if (banks.length === 0) {
+      alert('Please add a corporate bank account first.');
+      this.openAddBankAccountModal();
+      return;
+    }
+
+    if (registers.length === 0) {
+      alert('Please create a cash register (e.g. RAYAN E-Wallets) first.');
+      this.openAddCashRegisterModal();
+      return;
+    }
+
+    // Default source bank
+    let defaultBank = sourceBankId ? banks.find(b => b.id === sourceBankId) : null;
+    if (!defaultBank) {
+      defaultBank = banks.find(b => (b.bank_name || '').toLowerCase().includes('adcb')) || banks[0];
+    }
+
+    // Default destination vault: RAYAN E-Wallets
+    let defaultVault = targetVaultId ? registers.find(r => r.id === targetVaultId) : null;
+    if (!defaultVault) {
+      defaultVault = registers.find(r => r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))) || registers[0];
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const bankPrefix = (defaultBank.bank_name || '').toLowerCase().includes('adcb') ? 'ATM-ADCB' : 'CHQ-WDL';
+    const autoRef = `${bankPrefix}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-bank-to-wallet">
+        <div class="fin-modal-dialog" style="max-width:620px;">
+          <div class="fin-modal-header" style="border-bottom:1px solid rgba(0,229,210,0.25); padding-bottom:1rem;">
+            <div>
+              <h3 class="fin-modal-title" style="color:#00e5d2; display:flex; align-items:center; gap:8px;">
+                <span>🏦</span> Bank Account to Rayan Wallet
+              </h3>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                Corporate bank cash withdrawal &amp; direct replenishment into RAYAN E-Wallets
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-bank-to-wallet')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="bank-to-wallet-form">
+              <!-- Visual Flow Indicator -->
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:0.75rem; align-items:center; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.9rem; margin-bottom:1.25rem;">
+                <div style="text-align:center;">
+                  <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Source Bank</div>
+                  <div id="btw-src-name" style="font-size:0.85rem; color:#ffffff; font-weight:700; margin-top:2px;">${defaultBank.bank_name}</div>
+                  <div id="btw-src-bal" style="font-size:0.75rem; color:#38bdf8; margin-top:2px;">Bal: ${this.formatCurrency(defaultBank.balance)}</div>
+                </div>
+                <div style="font-size:1.4rem; color:#00e5d2; font-weight:800;">&rarr;</div>
+                <div style="text-align:center;">
+                  <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Destination Vault</div>
+                  <div id="btw-dst-name" style="font-size:0.85rem; color:#00e5d2; font-weight:700; margin-top:2px;">${defaultVault.register_name}</div>
+                  <div id="btw-dst-bal" style="font-size:0.75rem; color:#34d399; margin-top:2px;">Bal: ${this.formatCurrency(defaultVault.balance)}</div>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Source Bank Account <span style="color:#ef4444;">*</span></label>
+                  <select id="btw-source" class="fin-form-select" required>
+                    ${banks.map(b => `<option value="${b.id}" ${b.id === defaultBank.id ? 'selected' : ''}>${b.bank_name} (${this.formatCurrency(b.balance)})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Destination Cash Register / E-Wallet <span style="color:#ef4444;">*</span></label>
+                  <select id="btw-dest" class="fin-form-select" required>
+                    ${registers.map(r => `<option value="${r.id}" ${r.id === defaultVault.id ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Withdrawal Amount (${currency}) <span style="color:#ef4444;">*</span></label>
+                <input type="number" id="btw-amount" class="fin-form-input" required min="1" step="any" placeholder="e.g. 10000 or 20000" style="font-size:1.1rem; font-weight:700; color:#00e5d2;">
+                <!-- Fast preset amount chips -->
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+                  <button type="button" class="fin-btn-card-action btw-chip" data-amt="5000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(0,229,210,0.3); color:#00e5d2;">+5,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action btw-chip" data-amt="10000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(0,229,210,0.3); color:#00e5d2;">+10,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action btw-chip" data-amt="20000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(0,229,210,0.3); color:#00e5d2;">+20,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action btw-chip" data-amt="50000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(0,229,210,0.3); color:#00e5d2;">+50,000 ${currency}</button>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Withdrawal Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="btw-date" class="fin-form-input" required value="${today}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">ATM Slip / Cheque / Ref # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="btw-ref" class="fin-form-input" required value="${autoRef}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Withdrawn By / Authorized Custodian <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="btw-custodian" class="fin-form-input" required value="${defaultBank.signatory || defaultVault.custodian || 'Arshad Alam Shaikh'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Clearance Verification Status</label>
+                  <input type="text" class="fin-form-input" readonly value="Cleared &amp; Deposited in Wallet" style="background:rgba(16,185,129,0.1); color:#34d399; font-weight:700; border-color:rgba(16,185,129,0.3);">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Purpose &amp; Imprest Allocation Notes <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="btw-purpose" class="fin-form-input" required value="Corporate bank cash withdrawal to replenish RAYAN E-Wallets for project disbursements &amp; expenses">
+              </div>
+
+              <!-- Projected Balances Preview -->
+              <div id="btw-projection" style="display:none; background:rgba(0,229,210,0.06); border:1px solid rgba(0,229,210,0.25); border-radius:6px; padding:0.75rem; font-size:0.75rem; margin-top:0.5rem;">
+                <div style="font-weight:700; color:#00e5d2; margin-bottom:4px;">📊 Balance Impact Preview:</div>
+                <div style="display:flex; justify-content:space-between; color:#cbd5e1; gap:10px; flex-wrap:wrap;">
+                  <span id="btw-proj-bank">Bank: ${this.formatCurrency(defaultBank.balance)}</span>
+                  <span id="btw-proj-vault">E-Wallet: ${this.formatCurrency(defaultVault.balance)}</span>
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-bank-to-wallet')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary" style="background:linear-gradient(135deg, #0d9488, #00e5d2); color:#042f2e; font-weight:800; border:none;">
+                  Confirm Withdrawal to Rayan Wallet &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    // Elements & dynamic projection
+    const srcEl = document.getElementById('btw-source');
+    const dstEl = document.getElementById('btw-dest');
+    const amtEl = document.getElementById('btw-amount');
+    const refEl = document.getElementById('btw-ref');
+    const projEl = document.getElementById('btw-projection');
+    const projBankEl = document.getElementById('btw-proj-bank');
+    const projVaultEl = document.getElementById('btw-proj-vault');
+    const srcNameEl = document.getElementById('btw-src-name');
+    const srcBalEl = document.getElementById('btw-src-bal');
+    const dstNameEl = document.getElementById('btw-dst-name');
+    const dstBalEl = document.getElementById('btw-dst-bal');
+
+    const updateProjection = () => {
+      const sBank = banks.find(b => b.id === srcEl.value);
+      const dVault = registers.find(r => r.id === dstEl.value);
+      const val = parseFloat(amtEl.value) || 0;
+
+      if (sBank && srcNameEl) {
+        srcNameEl.textContent = sBank.bank_name;
+        srcBalEl.textContent = `Bal: ${this.formatCurrency(sBank.balance)}`;
+      }
+      if (dVault && dstNameEl) {
+        dstNameEl.textContent = dVault.register_name;
+        dstBalEl.textContent = `Bal: ${this.formatCurrency(dVault.balance)}`;
+      }
+
+      if (val > 0 && sBank && dVault) {
+        projEl.style.display = 'block';
+        const newBankBal = Math.max(0, (Number(sBank.balance) || 0) - val);
+        const newVaultBal = (Number(dVault.balance) || 0) + val;
+        projBankEl.innerHTML = `Bank (${sBank.bank_name}): <strong>${this.formatCurrency(sBank.balance)}</strong> &rarr; <span style="color:#fb923c;">${this.formatCurrency(newBankBal)}</span>`;
+        projVaultEl.innerHTML = `E-Wallet (${dVault.register_name}): <strong>${this.formatCurrency(dVault.balance)}</strong> &rarr; <span style="color:#00e5d2;">${this.formatCurrency(newVaultBal)}</span>`;
+      } else {
+        projEl.style.display = 'none';
+      }
+    };
+
+    srcEl.onchange = () => {
+      const sBank = banks.find(b => b.id === srcEl.value);
+      if (sBank && refEl) {
+        const prefix = (sBank.bank_name || '').toLowerCase().includes('adcb') ? 'ATM-ADCB' : 'CHQ-WDL';
+        refEl.value = `${prefix}-${Math.floor(10000 + Math.random() * 90000)}`;
+      }
+      updateProjection();
+    };
+
+    dstEl.onchange = updateProjection;
+    amtEl.oninput = updateProjection;
+
+    // Amount chips click
+    document.querySelectorAll('.btw-chip').forEach(btn => {
+      btn.onclick = () => {
+        amtEl.value = btn.getAttribute('data-amt');
+        updateProjection();
+        amtEl.focus();
+      };
+    });
+
+    document.getElementById('bank-to-wallet-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const sBankId = srcEl.value;
+      const dVaultId = dstEl.value;
+      const amt = parseFloat(amtEl.value) || 0;
+
+      if (amt <= 0) {
+        alert('Please enter a valid withdrawal amount greater than 0.');
+        return;
+      }
+
+      const sBank = banks.find(b => b.id === sBankId);
+      const dVault = registers.find(r => r.id === dVaultId);
+
+      if (!sBank || !dVault) {
+        alert('Bank account or cash vault could not be found.');
+        return;
+      }
+
+      const refNo = refEl.value.trim();
+      const wDate = document.getElementById('btw-date').value;
+      const custodian = document.getElementById('btw-custodian').value.trim();
+      const purpose = document.getElementById('btw-purpose').value.trim();
+
+      const payload = {
+        source_bank_id: sBankId,
+        destination_vault_id: dVaultId,
+        amount: amt,
+        currency: sBank.currency || currency,
+        date: wDate,
+        transfer_date: wDate,
+        reference_no: refNo,
+        custodian: custodian,
+        purpose: purpose,
+        company_id: this.activeCompanyId || 'rayan-corp-uae'
+      };
+
+      // Optimistic local update
+      sBank.balance = (Number(sBank.balance) || 0) - amt;
+      dVault.balance = (Number(dVault.balance) || 0) + amt;
+      dVault.last_replenished = wDate;
+
+      const wireId = `wire-wdl-${Date.now()}`;
+      const voucherId = `cv-wdl-${Date.now() + 1}`;
+      const vNum = Math.floor(1000 + Math.random() * 9000);
+
+      if (!this.db.bank_transfers) this.db.bank_transfers = [];
+      if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+
+      this.db.bank_transfers.unshift({
+        id: wireId,
+        company_id: payload.company_id,
+        reference_no: refNo,
+        date: wDate,
+        transfer_date: wDate,
+        counterparty: `${dVault.register_name} (Cash Vault)`,
+        source_account_id: sBank.id,
+        source_bank: `${sBank.bank_name} (${sBank.currency || currency})`,
+        destination_account_id: dVault.id,
+        destination_vault: dVault.register_name,
+        type: 'bank_to_cash',
+        type_label: 'Bank Withdrawal to E-Wallet',
+        amount: amt,
+        currency: payload.currency,
+        purpose: purpose,
+        status: 'Cleared',
+        created_at: new Date().toISOString()
+      });
+
+      this.db.cash_vouchers.unshift({
+        id: voucherId,
+        company_id: payload.company_id,
+        voucher_no: `CV-WDL-${vNum}`,
+        date: wDate,
+        register_id: dVault.id,
+        register_name: dVault.register_name,
+        type: 'inflow',
+        category: 'Bank Cash Withdrawal / E-Wallet Replenishment',
+        purpose: `Cash withdrawal from ${sBank.bank_name} to replenish ${dVault.register_name}: ${purpose}`,
+        payee: sBank.bank_name,
+        custodian: custodian,
+        amount: amt,
+        currency: payload.currency,
+        reference_no: refNo,
+        status: 'Approved',
+        created_at: new Date().toISOString()
+      });
+
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+
+      await this.syncApi('transfer_bank_to_wallet', payload);
+      this.closeModal('modal-bank-to-wallet');
+      this.renderActiveTab();
+      this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${sBank.bank_name} to ${dVault.register_name}!`, 'success');
     };
   }
 
