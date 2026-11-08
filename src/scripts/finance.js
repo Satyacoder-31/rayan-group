@@ -1084,6 +1084,60 @@ class FinanceApp {
       }
     });
 
+    // Reconcile RAYAN E-Wallets and petty cash vouchers
+    if (Array.isArray(this.db.cash_in_hand)) {
+      let rayanWallet = this.db.cash_in_hand.find(r => r.id === 'cash-mw5esv3w' || (r.register_name && r.register_name.toLowerCase().includes('rayan e-wallet')));
+      if (!rayanWallet) {
+        rayanWallet = {
+          id: 'cash-mw5esv3w',
+          company_id: 'rayan-corp-uae',
+          register_name: 'RAYAN E-Wallets',
+          location: 'Abu Dhabi, UAE',
+          custodian: 'Arshad Alam Shaikh',
+          currency: 'AED',
+          balance: 14000,
+          is_primary: true,
+          last_replenished: '2026-06-09'
+        };
+        this.db.cash_in_hand.unshift(rayanWallet);
+      }
+      rayanWallet.is_primary = true;
+
+      // Ensure customer cash collection receipts route into RAYAN E-Wallets
+      if (Array.isArray(this.db.cash_vouchers)) {
+        this.db.cash_vouchers.forEach(cv => {
+          if (cv.voucher_no === 'CV-REC-RV-44064' || cv.voucher_no === 'CV-REC-RV-44093') {
+            cv.register_id = rayanWallet.id;
+            cv.register_name = rayanWallet.register_name;
+          }
+        });
+      }
+
+      // Calculate live balances based on vouchers
+      const vaultsMap = {};
+      this.db.cash_in_hand.forEach(v => {
+        vaultsMap[v.id] = 0;
+      });
+      (this.db.cash_vouchers || []).forEach(cv => {
+        const regId = cv.register_id;
+        const amt = Number(cv.amount) || 0;
+        if (vaultsMap[regId] !== undefined) {
+          if (cv.type === 'inflow') {
+            vaultsMap[regId] += amt;
+          } else {
+            vaultsMap[regId] -= amt;
+          }
+        }
+      });
+      this.db.cash_in_hand.forEach(v => {
+        if (v.id === 'cash-mw5esv3w') {
+          v.balance = Math.round((vaultsMap[v.id] || 0) * 100) / 100;
+        } else if (vaultsMap[v.id] !== undefined && vaultsMap[v.id] !== 0) {
+          v.balance = Math.round(vaultsMap[v.id] * 100) / 100;
+        }
+      });
+    }
+
     // 2. Auto-align credit notes with continuous chronological serial sequence (No year: CN-REC-001 to CN-REC-025)
     const canonicalCnMap = {
       'cn-1793469085069': { no: 'CN-REC-001', date: '2023-02-26' },
@@ -1234,7 +1288,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v61';
+    const CURRENT_DB_VERSION = 'v2026_clean_v62';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -1824,6 +1878,13 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, voucher: cv };
     }
 
+    if (action === 'transfer_petty_cash') {
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) {}
+      return { success: true, localOnly: true, data: this.db };
+    }
+
     if (action === 'delete_cash_voucher' && payload.id) {
       if (this.db.cash_vouchers) {
         this.db.cash_vouchers = this.db.cash_vouchers.filter(v => v.id !== payload.id);
@@ -1954,9 +2015,11 @@ class FinanceApp {
     const currency = receipt.currency || (companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
 
     if (modeLower.includes('cash')) {
-      let reg = db.cash_in_hand.find(r => r.company_id === companyId);
+      let reg = db.cash_in_hand.find(r => r.id === 'cash-mw5esv3w')
+        || db.cash_in_hand.find(r => r.company_id === companyId && (r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))))
+        || db.cash_in_hand.find(r => r.company_id === companyId);
       if (!reg) {
-        reg = db.cash_in_hand.find(r => (currency === 'INR' ? r.id.includes('mumbai') : r.id.includes('dubai'))) || db.cash_in_hand[0];
+        reg = db.cash_in_hand.find(r => (currency === 'INR' ? r.id.includes('mumbai') : (r.id.includes('wallet') || r.id.includes('dubai')))) || db.cash_in_hand[0];
       }
 
       const existingCv = db.cash_vouchers.find(v => v.receipt_id === receipt.id || v.voucher_no === `CV-${receipt.receipt_no}`);
@@ -1970,8 +2033,8 @@ class FinanceApp {
           receipt_id: receipt.id,
           voucher_no: `CV-${receipt.receipt_no}`,
           company_id: companyId,
-          register_id: reg?.id || 'cash-dubai-reg',
-          register_name: reg?.register_name || reg?.name || 'Dubai Main Vault',
+          register_id: reg?.id || 'cash-mw5esv3w',
+          register_name: reg?.register_name || reg?.name || 'RAYAN E-Wallets',
           custodian: receipt.cashier || reg?.custodian || 'Cashier',
           date: receipt.receipt_date || new Date().toISOString().split('T')[0],
           type: 'inflow',
@@ -6949,6 +7012,9 @@ class FinanceApp {
             <div style="padding:0.4rem 0.8rem; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:6px; font-size:0.78rem; color:#34d399;">
               Total Cash In Vaults: <strong style="color:#ffffff;">${this.formatCurrency(totalCash)}</strong>
             </div>
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.12);" onclick="window.finApp.openTransferPettyCashModal()">
+              💸 Transfer Petty Cash
+            </button>
             <button type="button" class="fin-btn-quick" style="border-color:#34d399; color:#34d399;" onclick="window.finApp.openAddCashRegisterModal()">
               + Add Cash Vault
             </button>
@@ -6966,14 +7032,16 @@ class FinanceApp {
           </div>
         ` : `
           <div class="fin-bank-grid">
-            ${registers.map(r => `
-              <div class="fin-bank-card">
+            ${registers.map(r => {
+              const isPrimary = r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'));
+              return `
+              <div class="fin-bank-card" style="${isPrimary ? 'border-color:rgba(56,189,248,0.4); box-shadow:0 0 15px rgba(56,189,248,0.1);' : ''}">
                 <div class="fin-bank-card-header">
                   <div>
                     <strong style="font-size:0.95rem; color:#ffffff;">${r.register_name}</strong>
                     <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Location: ${r.location || 'Site Office'}</div>
                   </div>
-                  <span class="fin-bank-badge">Active Imprest</span>
+                  ${isPrimary ? `<span class="fin-bank-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);">⚡ Central Cash Hub</span>` : `<span class="fin-bank-badge">Project Site Imprest</span>`}
                 </div>
                 <div class="fin-bank-balance" style="color:#34d399;">
                   ${this.formatCurrency(r.balance)}
@@ -6984,12 +7052,19 @@ class FinanceApp {
                   <div style="color:#94a3b8; font-size:0.72rem; margin-top:4px;">Weekly audit &amp; dual-signature compliance</div>
                 </div>
                 <div class="fin-bank-card-actions">
-                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddCashRegisterModal('${r.id}')">✏️ Edit Vault</button>
-                  <button type="button" class="fin-btn-card-action" onclick="window.finApp.openCashEntryModal('${r.id}')">+ Voucher</button>
-                  <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteCashRegister('${r.id}')">🗑️ Remove</button>
+                  ${isPrimary ? `
+                    <button type="button" class="fin-btn-card-action primary" style="background:linear-gradient(135deg, #0284c7, #0ea5e9); color:#ffffff; font-weight:700; border:none;" onclick="window.finApp.openTransferPettyCashModal('${r.id}')" title="Disburse petty cash to project site registers">💸 Transfer to Project</button>
+                    <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddCashRegisterModal('${r.id}')">✏️ Edit Vault</button>
+                    <button type="button" class="fin-btn-card-action" onclick="window.finApp.openCashEntryModal('${r.id}')">+ Voucher</button>
+                  ` : `
+                    <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openTransferPettyCashModal(null, '${r.id}')" title="Receive petty cash transfer into this register">📥 Receive Transfer</button>
+                    <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddCashRegisterModal('${r.id}')">✏️ Edit Vault</button>
+                    <button type="button" class="fin-btn-card-action" onclick="window.finApp.openCashEntryModal('${r.id}')">+ Voucher</button>
+                    <button type="button" class="fin-btn-card-action danger" onclick="window.finApp.deleteCashRegister('${r.id}')">🗑️ Remove</button>
+                  `}
                 </div>
               </div>
-            `).join('')}
+            `;}).join('')}
           </div>
         `}
 
@@ -7026,6 +7101,7 @@ class FinanceApp {
       const isInflow = v.type === 'inflow';
       const color = isInflow ? '#10b981' : '#fb923c';
       const sign = isInflow ? '+' : '-';
+      const isTransfer = v.category === 'Inter-Vault Petty Cash Transfer';
       return `
                   <tr>
                     <td><strong>${v.voucher_no}</strong></td>
@@ -7034,7 +7110,11 @@ class FinanceApp {
                     <td>${v.custodian || 'Custodian'}</td>
                     <td>
                       <div style="font-weight:600; color:#ffffff;">${v.purpose}</div>
-                      ${v.category ? `<div style="font-size:0.7rem; color:#94a3b8;">${v.category}</div>` : ''}
+                      <div style="font-size:0.7rem; color:#94a3b8; display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
+                        ${v.category ? `<span>${v.category}</span>` : ''}
+                        ${isTransfer ? '<span style="font-size:0.68rem; color:#38bdf8; background:rgba(56,189,248,0.15); padding:1px 6px; border-radius:3px;">Site Project Transfer</span>' : ''}
+                        ${v.project_name ? `<span style="font-size:0.68rem; color:#a78bfa; background:rgba(167,139,250,0.15); padding:1px 6px; border-radius:3px;">${v.project_name}</span>` : ''}
+                      </div>
                     </td>
                     <td>${v.payee || 'Site Runner'}</td>
                     <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(v.amount)}</strong></td>
@@ -19124,6 +19204,11 @@ class FinanceApp {
   }
 
   async deleteCashRegister(regId) {
+    const reg = (this.db?.cash_in_hand || []).find(r => r.id === regId);
+    if (regId === 'cash-mw5esv3w' || reg?.is_primary || (reg?.register_name && reg.register_name.toLowerCase().includes('wallet'))) {
+      alert('RAYAN E-Wallets is the central primary cash repository and cannot be removed.');
+      return;
+    }
     if (!confirm('Are you sure you want to remove this cash vault register?')) return;
     await this.syncApi('delete_cash_register', { id: regId });
     this.renderActiveTab();
@@ -19260,6 +19345,266 @@ class FinanceApp {
     await this.syncApi('delete_cash_voucher', { id: voucherId });
     this.renderActiveTab();
     this.showNotification('Cash voucher deleted.', 'info');
+  }
+
+  // 5. TRANSFER PETTY CASH MODAL (RAYAN E-Wallets -> Project Registers)
+  openTransferPettyCashModal(sourceVaultId = null, targetVaultId = null) {
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const projects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currency = isIndia ? 'INR' : 'AED';
+
+    if (registers.length < 2) {
+      alert('You need at least 2 cash registers (e.g., RAYAN E-Wallets and a Project Petty Cash Register) to transfer petty cash.');
+      this.openAddCashRegisterModal();
+      return;
+    }
+
+    // Default source vault to RAYAN E-Wallets if available
+    let defaultSource = sourceVaultId ? registers.find(r => r.id === sourceVaultId) : null;
+    if (!defaultSource) {
+      defaultSource = registers.find(r => r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))) || registers[0];
+    }
+
+    // Default target vault
+    let defaultTarget = targetVaultId ? registers.find(r => r.id === targetVaultId) : null;
+    if (!defaultTarget || defaultTarget.id === defaultSource.id) {
+      defaultTarget = registers.find(r => r.id !== defaultSource.id);
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-transfer-petty-cash">
+        <div class="fin-modal-dialog" style="max-width:580px;">
+          <div class="fin-modal-header">
+            <div>
+              <h3 class="fin-modal-title">💸 Transfer Petty Cash to Project Vault</h3>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Disburse funds from central cash e-wallet to site project registers</div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-transfer-petty-cash')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="transfer-petty-cash-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Source Vault (From) <span style="color:#ef4444;">*</span></label>
+                  <select id="tpc-source" class="fin-form-select" required>
+                    ${registers.map(r => `<option value="${r.id}" ${r.id === defaultSource?.id ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                  </select>
+                  <div id="tpc-source-bal-info" style="font-size:0.72rem; color:#38bdf8; margin-top:3px;">
+                    Available balance: <strong>${this.formatCurrency(defaultSource?.balance || 0)}</strong>
+                  </div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Destination Vault (To) <span style="color:#ef4444;">*</span></label>
+                  <select id="tpc-dest" class="fin-form-select" required>
+                    ${registers.map(r => `<option value="${r.id}" ${r.id === defaultTarget?.id ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Linked Project / Site Operation</label>
+                <select id="tpc-project" class="fin-form-select">
+                  <option value="">-- General Site Allocation / Direct Register Replenishment --</option>
+                  ${projects.map(p => `
+                    <option value="${p.id}" data-name="${p.project_name || p.name || ''}" data-client="${p.client_name || ''}">
+                      ${p.project_name || p.name || 'Project'} ${p.client_name ? `(${p.client_name})` : ''}
+                    </option>
+                  `).join('')}
+                </select>
+                <div style="font-size:0.7rem; color:#94a3b8; margin-top:3px;">Selecting a project will automatically associate the disbursement with project job-costing.</div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transfer Amount (${currency}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="tpc-amount" class="fin-form-input" required step="any" min="0.01" placeholder="0.00">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transfer Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="tpc-date" class="fin-form-input" required value="${today}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Disbursed By (Custodian) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="tpc-disbursed" class="fin-form-input" required value="${defaultSource?.custodian || 'Arshad Alam Shaikh'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Received By (Site Custodian/Runner)</label>
+                  <input type="text" id="tpc-received" class="fin-form-input" value="${defaultTarget?.custodian || 'Site Project Runner'}">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Transfer Purpose / Allocation Notes <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="tpc-purpose" class="fin-form-input" required value="Petty cash allocation for site project operations">
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-transfer-petty-cash')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary" style="background:linear-gradient(135deg, #0284c7, #0ea5e9); font-weight:700;">
+                  Confirm &amp; Disburse Petty Cash &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    // Dynamic UI interactions
+    const sourceEl = document.getElementById('tpc-source');
+    const destEl = document.getElementById('tpc-dest');
+    const balInfoEl = document.getElementById('tpc-source-bal-info');
+    const projectEl = document.getElementById('tpc-project');
+    const disbursedEl = document.getElementById('tpc-disbursed');
+    const receivedEl = document.getElementById('tpc-received');
+    const purposeEl = document.getElementById('tpc-purpose');
+
+    const updateSourceBal = () => {
+      const srcVault = registers.find(r => r.id === sourceEl.value);
+      if (srcVault && balInfoEl) {
+        balInfoEl.innerHTML = `Available balance: <strong>${this.formatCurrency(srcVault.balance)}</strong>`;
+        if (disbursedEl && srcVault.custodian) disbursedEl.value = srcVault.custodian;
+      }
+    };
+
+    sourceEl.onchange = updateSourceBal;
+
+    destEl.onchange = () => {
+      const dstVault = registers.find(r => r.id === destEl.value);
+      if (dstVault && receivedEl && dstVault.custodian) {
+        receivedEl.value = dstVault.custodian;
+      }
+    };
+
+    projectEl.onchange = () => {
+      const selectedOpt = projectEl.options[projectEl.selectedIndex];
+      if (!selectedOpt || !selectedOpt.value) return;
+      const pName = selectedOpt.getAttribute('data-name') || '';
+      const pClient = selectedOpt.getAttribute('data-client') || '';
+      purposeEl.value = `Petty cash replenishment for ${pName}`;
+
+      // Smart register matching: find register whose name matches project or client
+      const matchedReg = registers.find(r => {
+        if (r.id === sourceEl.value) return false;
+        const rName = (r.register_name || '').toLowerCase();
+        return (pClient && rName.includes(pClient.toLowerCase())) || (pName && rName.includes(pName.toLowerCase()));
+      });
+      if (matchedReg) {
+        destEl.value = matchedReg.id;
+        if (receivedEl && matchedReg.custodian) receivedEl.value = matchedReg.custodian;
+      }
+    };
+
+    document.getElementById('transfer-petty-cash-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const sId = sourceEl.value;
+      const dId = destEl.value;
+      const amt = parseFloat(document.getElementById('tpc-amount').value) || 0;
+
+      if (amt <= 0) {
+        alert('Please enter a valid transfer amount greater than 0.');
+        return;
+      }
+      if (sId === dId) {
+        alert('Source and destination vaults must be different registers.');
+        return;
+      }
+
+      const srcVault = registers.find(r => r.id === sId);
+      const dstVault = registers.find(r => r.id === dId);
+
+      if (!srcVault || !dstVault) {
+        alert('Selected registers could not be found.');
+        return;
+      }
+
+      if ((Number(srcVault.balance) || 0) < amt) {
+        alert(`Insufficient funds in ${srcVault.register_name}. Current balance is ${this.formatCurrency(srcVault.balance)}, but transfer requires ${this.formatCurrency(amt)}.`);
+        return;
+      }
+
+      const pSel = projectEl.options[projectEl.selectedIndex];
+      const pId = projectEl.value;
+      const pName = pSel ? (pSel.getAttribute('data-name') || '') : '';
+
+      const payload = {
+        source_register_id: sId,
+        destination_register_id: dId,
+        amount: amt,
+        currency: srcVault.currency || currency,
+        date: document.getElementById('tpc-date').value,
+        disbursed_by: disbursedEl.value.trim(),
+        received_by: receivedEl.value.trim(),
+        purpose: purposeEl.value.trim(),
+        project_id: pId,
+        project_name: pName,
+        company_id: this.activeCompanyId || 'rayan-corp-uae'
+      };
+
+      // Local optimistic update
+      srcVault.balance = (Number(srcVault.balance) || 0) - amt;
+      dstVault.balance = (Number(dstVault.balance) || 0) + amt;
+      srcVault.last_replenished = payload.date;
+      dstVault.last_replenished = payload.date;
+
+      const trfNum = Math.floor(1000 + Math.random() * 9000);
+      if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+
+      this.db.cash_vouchers.unshift(
+        {
+          id: `cv-trf-out-${Date.now()}`,
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          voucher_no: `CV-TRF-OUT-${trfNum}`,
+          date: payload.date,
+          register_id: srcVault.id,
+          register_name: srcVault.register_name,
+          type: 'outflow',
+          category: 'Inter-Vault Petty Cash Transfer',
+          purpose: `Transfer to ${dstVault.register_name}${pName ? ` (${pName})` : ''}: ${payload.purpose}`,
+          payee: dstVault.register_name,
+          custodian: payload.disbursed_by,
+          amount: amt,
+          currency: payload.currency,
+          status: 'Approved',
+          project_id: pId,
+          project_name: pName,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: `cv-trf-in-${Date.now() + 1}`,
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          voucher_no: `CV-TRF-IN-${trfNum}`,
+          date: payload.date,
+          register_id: dstVault.id,
+          register_name: dstVault.register_name,
+          type: 'inflow',
+          category: 'Inter-Vault Petty Cash Transfer',
+          purpose: `Replenishment from ${srcVault.register_name}${pName ? ` (${pName})` : ''}: ${payload.purpose}`,
+          payee: srcVault.register_name,
+          custodian: payload.received_by,
+          amount: amt,
+          currency: payload.currency,
+          status: 'Approved',
+          project_id: pId,
+          project_name: pName,
+          created_at: new Date().toISOString()
+        }
+      );
+
+      await this.syncApi('transfer_petty_cash', payload);
+      this.closeModal('modal-transfer-petty-cash');
+      this.activeTab = 'cash_in_hand';
+      this.renderActiveTab();
+      this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${srcVault.register_name} to ${dstVault.register_name}!`, 'success');
+    };
   }
 
   printCashVoucher(voucherId) {

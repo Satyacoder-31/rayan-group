@@ -5984,24 +5984,35 @@
   ],
   "cash_in_hand": [
     {
+      "id": "cash-mw5esv3w",
+      "company_id": "rayan-corp-uae",
+      "register_name": "RAYAN E-Wallets",
+      "location": "Abu Dhabi, UAE",
+      "custodian": "Arshad Alam Shaikh",
+      "currency": "AED",
+      "balance": 14000,
+      "is_primary": true,
+      "last_replenished": "2026-06-09"
+    },
+    {
       "id": "cash-dubai-reg",
       "company_id": "rayan-corp-uae",
-      "register_name": "Dubai Regional Office — Petty Cash Register",
-      "location": "Dubai, UAE",
-      "custodian": "Site Administrative Manager",
+      "register_name": "TOP ROCK INTERIORS LLC PETTY CASH REGISTER",
+      "location": "The New Dubai Police Acadmy",
+      "custodian": "Arshad Alam Shaikh",
       "currency": "AED",
-      "balance": 35000,
-      "last_replenished": "2026-10-21"
+      "balance": 0,
+      "last_replenished": "2026-06-09"
     },
     {
       "id": "cash-ad-solar",
       "company_id": "rayan-corp-uae",
-      "register_name": "Abu Dhabi Solar Farm EPC — Field Petty Cash",
-      "location": "Al Dhafra / Sweihan, UAE",
-      "custodian": "Resident EPC Project Manager",
+      "register_name": "BUILDARA GENERAL CONTRACTING LLC PETTY CASH REGISTER",
+      "location": "Khalidiyah Mall, Abu Dhabi",
+      "custodian": "Arshad Alam Shaikh",
       "currency": "AED",
-      "balance": 45000,
-      "last_replenished": "2026-10-18"
+      "balance": 0,
+      "last_replenished": "2026-11-06"
     },
     {
       "id": "cash-mumbai-hq",
@@ -6073,6 +6084,43 @@
     }
   ],
   "bank_transfers": [],
-  "cash_vouchers": [],
+  "cash_vouchers": [
+    {
+      "id": "cv-rcp-rec-mw5amp7q",
+      "receipt_id": "rec-mw5amp7q",
+      "voucher_no": "CV-REC-RV-44064",
+      "company_id": "rayan-corp-uae",
+      "register_id": "cash-mw5esv3w",
+      "register_name": "RAYAN E-Wallets",
+      "custodian": "Arshad Alam Shaikh",
+      "date": "2026-06-09",
+      "type": "inflow",
+      "category": "Customer Cash Collection",
+      "purpose": "Cash collection from M/S MOBIN AL LISAILI VILLA DUBAI against invoice REC-RG-INV-44064",
+      "payee": "M/S MOBIN AL LISAILI VILLA DUBAI",
+      "amount": 9000,
+      "currency": "AED",
+      "status": "Approved",
+      "created_at": "2026-06-09T10:00:00Z"
+    },
+    {
+      "id": "cv-rcp-rec-mw0m7mcs",
+      "receipt_id": "rec-mw0m7mcs",
+      "voucher_no": "CV-REC-RV-44093",
+      "company_id": "rayan-corp-uae",
+      "register_id": "cash-mw5esv3w",
+      "register_name": "RAYAN E-Wallets",
+      "custodian": "Arshad Alam Shaikh",
+      "date": "2025-11-14",
+      "type": "inflow",
+      "category": "Customer Cash Collection",
+      "purpose": "Cash collection from M/S HLN TECHNICAL SERVICES LLC against invoice REC-RG-INV-44093",
+      "payee": "M/S HLN TECHNICAL SERVICES LLC",
+      "amount": 5000,
+      "currency": "AED",
+      "status": "Approved",
+      "created_at": "2025-11-14T10:00:00Z"
+    }
+  ],
   "loan_transactions": []
 }

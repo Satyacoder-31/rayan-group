@@ -3626,6 +3626,63 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('restore_pggc_invoices_v68', 'completed', NOW())");
                         }
                     } catch (Exception $e) {}
+
+                    // Migration v69: Ensure all cash received flows into RAYAN E-Wallets and reconcile cash vouchers
+                    try {
+                        $chkMig69 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_rayan_ewallet_v69'")->fetchColumn();
+                        if (!$chkMig69) {
+                            if (!isset($data['cash_in_hand']) || !is_array($data['cash_in_hand'])) $data['cash_in_hand'] = [];
+                            if (!isset($data['cash_vouchers']) || !is_array($data['cash_vouchers'])) $data['cash_vouchers'] = [];
+
+                            // Find or create RAYAN E-Wallets
+                            $walletFound = false;
+                            foreach ($data['cash_in_hand'] as &$cih) {
+                                if (($cih['id'] ?? '') === 'cash-mw5esv3w' || stripos($cih['register_name'] ?? '', 'e-wallet') !== false) {
+                                    $cih['id'] = 'cash-mw5esv3w';
+                                    $cih['register_name'] = 'RAYAN E-Wallets';
+                                    $cih['location'] = 'Abu Dhabi, UAE';
+                                    $cih['custodian'] = 'Arshad Alam Shaikh';
+                                    $cih['currency'] = 'AED';
+                                    $cih['is_primary'] = true;
+                                    $cih['balance'] = 14000.00;
+                                    $cih['last_replenished'] = '2026-06-09';
+                                    $walletFound = true;
+                                    break;
+                                }
+                            }
+                            unset($cih);
+
+                            if (!$walletFound) {
+                                array_unshift($data['cash_in_hand'], [
+                                    'id' => 'cash-mw5esv3w',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'register_name' => 'RAYAN E-Wallets',
+                                    'location' => 'Abu Dhabi, UAE',
+                                    'custodian' => 'Arshad Alam Shaikh',
+                                    'currency' => 'AED',
+                                    'balance' => 14000.00,
+                                    'is_primary' => true,
+                                    'last_replenished' => '2026-06-09'
+                                ]);
+                            }
+
+                            // Update cash vouchers CV-REC-RV-44064 and CV-REC-RV-44093 to point to RAYAN E-Wallets
+                            foreach ($data['cash_vouchers'] as &$cvItem) {
+                                if (($cvItem['voucher_no'] ?? '') === 'CV-REC-RV-44064' || ($cvItem['voucher_no'] ?? '') === 'CV-REC-RV-44093') {
+                                    $cvItem['register_id'] = 'cash-mw5esv3w';
+                                    $cvItem['register_name'] = 'RAYAN E-Wallets';
+                                }
+                            }
+                            unset($cvItem);
+
+                            $pdo->exec("UPDATE finance_cash_in_hand SET balance = 14000.00, register_name = 'RAYAN E-Wallets', location = 'Abu Dhabi, UAE', last_replenished = '2026-06-09' WHERE id = 'cash-mw5esv3w'");
+                            $pdo->exec("UPDATE finance_cash_vouchers SET register_name = 'RAYAN E-Wallets' WHERE voucher_no IN ('CV-REC-RV-44064', 'CV-REC-RV-44093')");
+
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_rayan_ewallet_v69', 'completed', NOW())");
+                        }
+                    } catch (Exception $e) {
+                        error_log('Migration v69 error: ' . $e->getMessage());
+                    }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     try {
@@ -5650,8 +5707,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
                     
                     $matchedReg = null;
+                    // Prioritize RAYAN E-Wallets (central primary wallet) for UAE cash collections
                     foreach ($db['cash_in_hand'] as &$cReg) {
-                        if (($cReg['company_id'] ?? '') === $compRefId) {
+                        if (($cReg['id'] ?? '') === 'cash-mw5esv3w' || (!empty($cReg['is_primary']) && ($cReg['company_id'] ?? '') === $compRefId) || (stripos($cReg['register_name'] ?? '', 'e-wallet') !== false && ($cReg['company_id'] ?? '') === $compRefId)) {
                             $cReg['balance'] = floatval($cReg['balance'] ?? 0) + $amtReceived;
                             $cReg['last_replenished'] = $rcp['receipt_date'] ?? date('Y-m-d');
                             $matchedReg = $cReg;
@@ -5659,6 +5717,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                     unset($cReg);
+
+                    // Fallback to any company register if primary wallet not matched
+                    if (!$matchedReg) {
+                        foreach ($db['cash_in_hand'] as &$cReg) {
+                            if (($cReg['company_id'] ?? '') === $compRefId) {
+                                $cReg['balance'] = floatval($cReg['balance'] ?? 0) + $amtReceived;
+                                $cReg['last_replenished'] = $rcp['receipt_date'] ?? date('Y-m-d');
+                                $matchedReg = $cReg;
+                                break;
+                            }
+                        }
+                        unset($cReg);
+                    }
 
                     $cvExists = false;
                     foreach ($db['cash_vouchers'] as $cv) {
@@ -5673,8 +5744,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'receipt_id' => $rcp['id'] ?? '',
                             'voucher_no' => 'CV-' . ($rcp['receipt_no'] ?? uniqid()),
                             'company_id' => $compRefId,
-                            'register_id' => $matchedReg['id'] ?? 'cash-dubai-reg',
-                            'register_name' => $matchedReg['register_name'] ?? $matchedReg['name'] ?? 'Dubai Main Vault',
+                            'register_id' => $matchedReg['id'] ?? 'cash-mw5esv3w',
+                            'register_name' => $matchedReg['register_name'] ?? $matchedReg['name'] ?? 'RAYAN E-Wallets',
                             'custodian' => $rcp['cashier'] ?? $matchedReg['custodian'] ?? 'Cashier',
                             'date' => $rcp['receipt_date'] ?? date('Y-m-d'),
                             'type' => 'inflow',
@@ -6582,6 +6653,112 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $addAuditLog('delete', 'cash_voucher', $targetId, 'Deleted cash voucher ' . $targetId);
             }
+            break;
+
+        case 'transfer_petty_cash':
+            $sourceId = $body['source_register_id'] ?? '';
+            $destId = $body['destination_register_id'] ?? '';
+            $amt = floatval($body['amount'] ?? 0);
+            $transferDate = !empty($body['date']) ? $body['date'] : date('Y-m-d');
+            $disbursedBy = trim($body['disbursed_by'] ?? 'Central Cashier');
+            $receivedBy = trim($body['received_by'] ?? 'Site Custodian');
+            $purpose = trim($body['purpose'] ?? 'Petty Cash Transfer to Project');
+            $projectId = $body['project_id'] ?? '';
+            $projectName = $body['project_name'] ?? '';
+            $companyId = $body['company_id'] ?? 'rayan-corp-uae';
+            $currency = $body['currency'] ?? ($companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+
+            if ($amt <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Invalid transfer amount']);
+                exit;
+            }
+            if ($sourceId === $destId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Source and destination vaults must be different']);
+                exit;
+            }
+
+            if (!isset($db['cash_in_hand']) || !is_array($db['cash_in_hand'])) $db['cash_in_hand'] = [];
+            if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+
+            $sourceVault = null;
+            $destVault = null;
+
+            foreach ($db['cash_in_hand'] as &$r) {
+                if (($r['id'] ?? '') === $sourceId) {
+                    $sourceVault = &$r;
+                }
+                if (($r['id'] ?? '') === $destId) {
+                    $destVault = &$r;
+                }
+            }
+            unset($r);
+
+            if (!$sourceVault || !$destVault) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Source or destination vault not found']);
+                exit;
+            }
+
+            if (floatval($sourceVault['balance'] ?? 0) < $amt) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Insufficient funds in source vault. Available balance: ' . floatval($sourceVault['balance'] ?? 0)]);
+                exit;
+            }
+
+            // Deduct from source and add to destination
+            $sourceVault['balance'] = floatval($sourceVault['balance'] ?? 0) - $amt;
+            $destVault['balance'] = floatval($destVault['balance'] ?? 0) + $amt;
+            $sourceVault['last_replenished'] = $transferDate;
+            $destVault['last_replenished'] = $transferDate;
+
+            $trfRefNum = rand(1000, 9999);
+            $outVoucherNo = 'CV-TRF-OUT-' . $trfRefNum;
+            $inVoucherNo = 'CV-TRF-IN-' . $trfRefNum;
+
+            $outVoucher = [
+                'id' => 'cv-trf-out-' . round(microtime(true) * 1000),
+                'company_id' => $companyId,
+                'voucher_no' => $outVoucherNo,
+                'date' => $transferDate,
+                'register_id' => $sourceVault['id'],
+                'register_name' => $sourceVault['register_name'],
+                'type' => 'outflow',
+                'category' => 'Inter-Vault Petty Cash Transfer',
+                'purpose' => 'Transfer to ' . $destVault['register_name'] . ($projectName ? ' (' . $projectName . ')' : '') . ($purpose ? ': ' . $purpose : ''),
+                'payee' => $destVault['register_name'],
+                'custodian' => $disbursedBy,
+                'amount' => $amt,
+                'currency' => $currency,
+                'status' => 'Approved',
+                'project_id' => $projectId,
+                'project_name' => $projectName,
+                'created_at' => date('c')
+            ];
+
+            $inVoucher = [
+                'id' => 'cv-trf-in-' . (round(microtime(true) * 1000) + 1),
+                'company_id' => $companyId,
+                'voucher_no' => $inVoucherNo,
+                'date' => $transferDate,
+                'register_id' => $destVault['id'],
+                'register_name' => $destVault['register_name'],
+                'type' => 'inflow',
+                'category' => 'Inter-Vault Petty Cash Transfer',
+                'purpose' => 'Replenishment from ' . $sourceVault['register_name'] . ($projectName ? ' (' . $projectName . ')' : '') . ($purpose ? ': ' . $purpose : ''),
+                'payee' => $sourceVault['register_name'],
+                'custodian' => $receivedBy,
+                'amount' => $amt,
+                'currency' => $currency,
+                'status' => 'Approved',
+                'project_id' => $projectId,
+                'project_name' => $projectName,
+                'created_at' => date('c')
+            ];
+
+            array_unshift($db['cash_vouchers'], $outVoucher, $inVoucher);
+            $addAuditLog('transfer', 'cash_in_hand', $sourceVault['register_name'], "Transferred {$amt} {$currency} from {$sourceVault['register_name']} to {$destVault['register_name']}");
             break;
 
         case 'record_cheque':
