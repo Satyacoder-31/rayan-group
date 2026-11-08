@@ -405,6 +405,10 @@ class FinanceApp {
               if (item.line_items && item.line_items.length) {
                 existing.line_items = JSON.parse(JSON.stringify(item.line_items));
               }
+            } else if (!existing && key === 'invoices' && /REC-RG-INV-100[1-4]/i.test(item.invoice_no || '')) {
+              map.set(uniqueKey, JSON.parse(JSON.stringify(item)));
+            } else if (!existing && key === 'credit_notes' && ['CN-REC-001', 'CN-REC-002', 'CN-REC-003', 'CN-REC-006'].includes(item.credit_note_no || '')) {
+              map.set(uniqueKey, JSON.parse(JSON.stringify(item)));
             }
           }
         }
@@ -1230,7 +1234,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v60';
+    const CURRENT_DB_VERSION = 'v2026_clean_v61';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -20186,7 +20190,7 @@ class FinanceApp {
     if (rawPo === '.' || rawPo === '/' || rawPo.toLowerCase() === 'invoice no /' || rawPo.toLowerCase() === 'none') {
       rawPo = '';
     }
-    if (!rawPo && (inv.invoice_no === 'REC-RG-1001' || inv.id === 'inv-rec-rg-1001')) {
+    if (!rawPo && (inv.invoice_no === 'REC-RG-INV-1001' || inv.invoice_no === 'REC-RG-1001' || inv.id === 'inv-rec-rg-inv-1001' || inv.id === 'inv-rec-rg-1001')) {
       rawPo = 'SL-091/2023';
     }
     const poRef = rawPo;
@@ -20625,7 +20629,7 @@ class FinanceApp {
     const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
     if (!inv) return;
     const current = (inv.order_no || inv.order_number || (inv.po_reference && inv.po_reference !== '.' && inv.po_reference !== '/' ? inv.po_reference : '') || inv.lpo_no || '').replace(/^\.\s*/, '');
-    const updated = prompt(`Edit Order Number for Invoice ${inv.invoice_no}:`, current || (inv.invoice_no === 'REC-RG-1001' ? 'SL-091/2023' : ''));
+    const updated = prompt(`Edit Order Number for Invoice ${inv.invoice_no}:`, current || (inv.invoice_no === 'REC-RG-INV-1001' || inv.invoice_no === 'REC-RG-1001' ? 'SL-091/2023' : ''));
     if (updated !== null) {
       const trimmed = updated.trim();
       inv.order_no = trimmed;
@@ -21936,7 +21940,7 @@ class FinanceApp {
     if (cleanOrderNo === '.' || cleanOrderNo === '/' || cleanOrderNo.toLowerCase() === 'invoice no /' || cleanOrderNo.toLowerCase() === 'none') {
       cleanOrderNo = '';
     }
-    if (!cleanOrderNo && (inv.invoice_no === 'REC-RG-1001' || inv.id === 'inv-rec-rg-1001')) {
+    if (!cleanOrderNo && (inv.invoice_no === 'REC-RG-INV-1001' || inv.invoice_no === 'REC-RG-1001' || inv.id === 'inv-rec-rg-inv-1001' || inv.id === 'inv-rec-rg-1001')) {
       cleanOrderNo = 'SL-091/2023';
     }
 

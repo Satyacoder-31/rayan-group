@@ -3208,6 +3208,415 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_fils_mismatch_v67', 'completed', NOW())");
                         }
                     } catch (Exception $e) {}
+                    // Migration v68: Restore missing invoices REC-RG-INV-1001 to 1004 and credit notes CN-REC-001, 002, 003, 006 for M/S PROFESSIONAL GULF
+                    try {
+                        $chkMig68 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'restore_pggc_invoices_v68'")->fetchColumn();
+                        $has1001 = false;
+                        if (!empty($data['invoices']) && is_array($data['invoices'])) {
+                            foreach ($data['invoices'] as $invCheck) {
+                                if (($invCheck['invoice_no'] ?? '') === 'REC-RG-INV-1001' || ($invCheck['id'] ?? '') === 'inv-rec-rg-inv-1001') {
+                                    $has1001 = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!$chkMig68 || !$has1001) {
+                            $canonicalPGGCInvoices = [
+                                [
+                                    'id' => 'inv-rec-rg-inv-1001',
+                                    'invoice_no' => 'REC-RG-INV-1001',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'customer_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'billing_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'contact_person' => 'Mr. Arshad Alam Shaikh',
+                                    'email' => 'info@professionalgulf.com',
+                                    'phone' => '+971 50 587 2866',
+                                    'customer_trn' => '100511370700003',
+                                    'trn' => '100511370700003',
+                                    'tax_regime' => 'trn',
+                                    'tax_type' => 'TRN',
+                                    'tax_number' => '100511370700003',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'place_of_supply' => 'Abu Dhabi',
+                                    'project_id' => 'prj-pggc-ad',
+                                    'project_name' => '1 Maintenance of HVAC units, Mitsubishi 5',
+                                    'po_reference' => 'SL-091/2023',
+                                    'invoice_date' => '2024-02-26',
+                                    'due_date' => '2024-03-27',
+                                    'payment_terms' => 30,
+                                    'payment_terms_label' => 'Net 30 Days',
+                                    'tax_inclusive' => false,
+                                    'line_items' => [
+                                        [
+                                            'sr' => 1,
+                                            'name' => '1 Maintenance of HVAC units, Mitsubishi 5',
+                                            'description' => '1 Maintenance of HVAC units, Mitsubishi 5',
+                                            'unit' => 'Lump Sum',
+                                            'uom' => 'Ls',
+                                            'qty' => 1,
+                                            'unit_price' => 11200.00,
+                                            'rate' => 11200.00,
+                                            'invoice_amount' => 11200.00,
+                                            'taxable_amount' => 11200.00,
+                                            'vat_rate' => 5,
+                                            'vat_amount' => 560.00,
+                                            'total_amount' => 11760.00
+                                        ]
+                                    ],
+                                    'sub_total' => 11200.00,
+                                    'taxable_subtotal' => 11200.00,
+                                    'vat_total' => 560.00,
+                                    'total_tax' => 560.00,
+                                    'grand_total' => 11760.00,
+                                    'amount_paid' => 0.00,
+                                    'amount_credited' => 11760.00,
+                                    'balance_due' => 0.00,
+                                    'status' => 'credited',
+                                    'amount_in_words' => 'Eleven Thousand Seven Hundred Sixty AED Only.',
+                                    'notes' => 'Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.',
+                                    'created_by' => 'Arshad Alam Shaikh',
+                                    'created_at' => '2024-02-26T10:00:00Z',
+                                    'order_no' => 'SL-091/2023',
+                                    'order_number' => 'SL-091/2023',
+                                    'lpo_no' => 'SL-091/2023'
+                                ],
+                                [
+                                    'id' => 'inv-rec-rg-inv-1002',
+                                    'invoice_no' => 'REC-RG-INV-1002',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'customer_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'billing_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'contact_person' => 'Mr. Arshad Alam Shaikh',
+                                    'email' => 'info@professionalgulf.com',
+                                    'phone' => '+971 50 587 2866',
+                                    'customer_trn' => '100511370700003',
+                                    'trn' => '100511370700003',
+                                    'tax_regime' => 'trn',
+                                    'tax_type' => 'TRN',
+                                    'tax_number' => '100511370700003',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'place_of_supply' => 'Abu Dhabi',
+                                    'project_id' => 'prj-pggc-ad',
+                                    'project_name' => 'maintenance of building external area.',
+                                    'po_reference' => '.',
+                                    'invoice_date' => '2024-03-12',
+                                    'due_date' => '2024-04-11',
+                                    'payment_terms' => 30,
+                                    'payment_terms_label' => 'Net 30 Days',
+                                    'tax_inclusive' => false,
+                                    'line_items' => [
+                                        [
+                                            'sr' => 1,
+                                            'name' => 'maintenance of building external area.',
+                                            'description' => 'maintenance of building external area.',
+                                            'unit' => 'Lump Sum',
+                                            'uom' => 'Ls',
+                                            'qty' => 1,
+                                            'unit_price' => 11250.00,
+                                            'rate' => 11250.00,
+                                            'invoice_amount' => 11250.00,
+                                            'taxable_amount' => 11250.00,
+                                            'vat_rate' => 5,
+                                            'vat_amount' => 562.50,
+                                            'total_amount' => 11812.50
+                                        ]
+                                    ],
+                                    'sub_total' => 11250.00,
+                                    'taxable_subtotal' => 11250.00,
+                                    'vat_total' => 562.50,
+                                    'total_tax' => 562.50,
+                                    'grand_total' => 11812.50,
+                                    'amount_paid' => 0.00,
+                                    'amount_credited' => 11812.50,
+                                    'balance_due' => 0.00,
+                                    'status' => 'credited',
+                                    'amount_in_words' => 'Eleven Thousand Eight Hundred Twelve and Fifty Fils AED Only.',
+                                    'notes' => 'Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.',
+                                    'created_by' => 'Arshad Alam Shaikh',
+                                    'created_at' => '2024-03-12T10:00:00Z'
+                                ],
+                                [
+                                    'id' => 'inv-rec-rg-inv-1003',
+                                    'invoice_no' => 'REC-RG-INV-1003',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'customer_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'billing_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'contact_person' => 'Mr. Arshad Alam Shaikh',
+                                    'email' => 'info@professionalgulf.com',
+                                    'phone' => '+971 50 587 2866',
+                                    'customer_trn' => '100511370700003',
+                                    'trn' => '100511370700003',
+                                    'tax_regime' => 'trn',
+                                    'tax_type' => 'TRN',
+                                    'tax_number' => '100511370700003',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'place_of_supply' => 'Abu Dhabi',
+                                    'project_id' => 'prj-pggc-ad',
+                                    'project_name' => 'General Contracting & Fitout Works',
+                                    'po_reference' => '. SL- 108/2023',
+                                    'invoice_date' => '2024-03-15',
+                                    'due_date' => '2024-04-14',
+                                    'payment_terms' => 30,
+                                    'payment_terms_label' => 'Net 30 Days',
+                                    'tax_inclusive' => false,
+                                    'line_items' => [
+                                        [
+                                            'sr' => 1,
+                                            'name' => 'General Contracting & Fitout Works',
+                                            'description' => 'General Contracting & Fitout Works',
+                                            'unit' => 'Lump Sum',
+                                            'uom' => 'Ls',
+                                            'qty' => 1,
+                                            'unit_price' => 3963.75,
+                                            'rate' => 3963.75,
+                                            'invoice_amount' => 3963.75,
+                                            'taxable_amount' => 3963.75,
+                                            'vat_rate' => 5,
+                                            'vat_amount' => 198.19,
+                                            'total_amount' => 4161.94
+                                        ]
+                                    ],
+                                    'sub_total' => 3963.75,
+                                    'taxable_subtotal' => 3963.75,
+                                    'vat_total' => 198.19,
+                                    'total_tax' => 198.19,
+                                    'grand_total' => 4161.94,
+                                    'amount_paid' => 0.00,
+                                    'amount_credited' => 4161.94,
+                                    'balance_due' => 0.00,
+                                    'status' => 'credited',
+                                    'amount_in_words' => 'Four Thousand One Hundred Sixty One and Ninety Four Fils AED Only.',
+                                    'notes' => 'Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.',
+                                    'created_by' => 'Arshad Alam Shaikh',
+                                    'created_at' => '2024-03-15T10:00:00Z'
+                                ],
+                                [
+                                    'id' => 'inv-rec-rg-inv-1004',
+                                    'invoice_no' => 'REC-RG-INV-1004',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'customer_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'billing_address' => 'Mussafah M-36, Abu Dhabi, UAE',
+                                    'contact_person' => 'Mr. Arshad Alam Shaikh',
+                                    'email' => 'info@professionalgulf.com',
+                                    'phone' => '+971 50 587 2866',
+                                    'customer_trn' => '100511370700003',
+                                    'trn' => '100511370700003',
+                                    'tax_regime' => 'trn',
+                                    'tax_type' => 'TRN',
+                                    'tax_number' => '100511370700003',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'place_of_supply' => 'Abu Dhabi',
+                                    'project_id' => 'prj-pggc-ad',
+                                    'project_name' => '2 Maintenance of external window panels',
+                                    'po_reference' => '.',
+                                    'invoice_date' => '2024-03-30',
+                                    'due_date' => '2024-04-29',
+                                    'payment_terms' => 30,
+                                    'payment_terms_label' => 'Net 30 Days',
+                                    'tax_inclusive' => false,
+                                    'line_items' => [
+                                        [
+                                            'sr' => 1,
+                                            'name' => '2 Maintenance of external window panels',
+                                            'description' => '2 Maintenance of external window panels',
+                                            'unit' => 'Lump Sum',
+                                            'uom' => 'Ls',
+                                            'qty' => 1,
+                                            'unit_price' => 3775.00,
+                                            'rate' => 3775.00,
+                                            'invoice_amount' => 3775.00,
+                                            'taxable_amount' => 3775.00,
+                                            'vat_rate' => 5,
+                                            'vat_amount' => 188.75,
+                                            'total_amount' => 3963.75
+                                        ]
+                                    ],
+                                    'sub_total' => 3775.00,
+                                    'taxable_subtotal' => 3775.00,
+                                    'vat_total' => 188.75,
+                                    'total_tax' => 188.75,
+                                    'grand_total' => 3963.75,
+                                    'amount_paid' => 0.00,
+                                    'amount_credited' => 3963.75,
+                                    'balance_due' => 0.00,
+                                    'status' => 'credited',
+                                    'amount_in_words' => 'Three Thousand Nine Hundred Sixty Three and Seventy Five Fils AED Only.',
+                                    'notes' => 'Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.',
+                                    'created_by' => 'Arshad Alam Shaikh',
+                                    'created_at' => '2024-03-30T10:00:00Z'
+                                ]
+                            ];
+
+                            $canonicalPGGCCreditNotes = [
+                                [
+                                    'id' => 'cn-1793469085069',
+                                    'credit_note_no' => 'CN-REC-001',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'invoice_id' => 'inv-rec-rg-inv-1001',
+                                    'invoice_no' => 'REC-RG-INV-1001',
+                                    'ref_invoice_no' => 'REC-RG-INV-1001',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'reason' => 'REC-RG-INV-1001 cancelled for accounting purposes',
+                                    'taxable_amount' => 11200.00,
+                                    'tax_amount' => 560.00,
+                                    'total_credit_amount' => 11760.00,
+                                    'status' => 'applied',
+                                    'date' => '2023-02-26',
+                                    'issue_date' => '2023-02-26',
+                                    'note_date' => '2023-02-26'
+                                ],
+                                [
+                                    'id' => 'cn-1793469103087',
+                                    'credit_note_no' => 'CN-REC-002',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'invoice_id' => 'inv-rec-rg-inv-1002',
+                                    'invoice_no' => 'REC-RG-INV-1002',
+                                    'ref_invoice_no' => 'REC-RG-INV-1002',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'reason' => 'REC-RG-INV-1002 cancelled for accounting purposes',
+                                    'taxable_amount' => 11250.00,
+                                    'tax_amount' => 562.50,
+                                    'total_credit_amount' => 11812.50,
+                                    'status' => 'applied',
+                                    'date' => '2023-03-12',
+                                    'issue_date' => '2023-03-12',
+                                    'note_date' => '2023-03-12'
+                                ],
+                                [
+                                    'id' => 'cn-1793469132205',
+                                    'credit_note_no' => 'CN-REC-003',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'invoice_id' => 'inv-rec-rg-inv-1004',
+                                    'invoice_no' => 'REC-RG-INV-1004',
+                                    'ref_invoice_no' => 'REC-RG-INV-1004',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'reason' => 'REC-RG-INV-1004 cancelled for accounting purposes',
+                                    'taxable_amount' => 3775.00,
+                                    'tax_amount' => 188.75,
+                                    'total_credit_amount' => 3963.75,
+                                    'status' => 'applied',
+                                    'date' => '2023-03-30',
+                                    'issue_date' => '2023-03-30',
+                                    'note_date' => '2023-03-30'
+                                ],
+                                [
+                                    'id' => 'cn-1793469117238',
+                                    'credit_note_no' => 'CN-REC-006',
+                                    'company_id' => 'rayan-corp-uae',
+                                    'currency' => 'AED',
+                                    'currency_symbol' => 'AED ',
+                                    'invoice_id' => 'inv-rec-rg-inv-1003',
+                                    'invoice_no' => 'REC-RG-INV-1003',
+                                    'ref_invoice_no' => 'REC-RG-INV-1003',
+                                    'customer_id' => 'cust-pggc',
+                                    'customer_name' => 'M/S PROFESSIONAL GULF GENERAL CONTRACTING L.L.C',
+                                    'reason' => 'REC-RG-INV-1003 cancelled for accounting purposes',
+                                    'taxable_amount' => 3963.75,
+                                    'tax_amount' => 198.19,
+                                    'total_credit_amount' => 4161.94,
+                                    'status' => 'applied',
+                                    'date' => '2024-03-15',
+                                    'issue_date' => '2024-03-15',
+                                    'note_date' => '2024-03-15'
+                                ]
+                            ];
+
+                            if (!isset($data['invoices']) || !is_array($data['invoices'])) {
+                                $data['invoices'] = [];
+                            }
+                            if (!isset($data['credit_notes']) || !is_array($data['credit_notes'])) {
+                                $data['credit_notes'] = [];
+                            }
+
+                            // Standardize existing 1000 series in $data['invoices']
+                            foreach ($data['invoices'] as &$exInv) {
+                                $mNo = ($exInv['invoice_no'] ?? '');
+                                if (preg_match('/^REC-RG-(\d{4})$/', $mNo, $mMatch)) {
+                                    $exInv['invoice_no'] = 'REC-RG-INV-' . $mMatch[1];
+                                    $exInv['id'] = 'inv-rec-rg-inv-' . $mMatch[1];
+                                }
+                            }
+                            unset($exInv);
+
+                            // Insert into $data['invoices']
+                            $stmtInv = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                            foreach ($canonicalPGGCInvoices as $rInv) {
+                                $rNo = strtoupper(trim($rInv['invoice_no'] ?? ''));
+                                $rId = strtolower(trim($rInv['id'] ?? ''));
+                                $data['invoices'] = array_values(array_filter($data['invoices'], function($it) use ($rNo, $rId) {
+                                    $itNo = strtoupper(trim($it['invoice_no'] ?? ''));
+                                    $itId = strtolower(trim($it['id'] ?? ''));
+                                    return ($itNo !== $rNo && $itId !== $rId && $itNo !== str_replace('-INV-', '-', $rNo) && $itId !== str_replace('-inv-', '-', $rId));
+                                }));
+                                $data['invoices'][] = $rInv;
+                                $stmtInv->execute([
+                                    $rInv['id'], $rInv['invoice_no'], $rInv['company_id'] ?? 'rayan-corp-uae',
+                                    $rInv['customer_id'] ?? '', $rInv['customer_name'] ?? '', $rInv['customer_trn'] ?? '',
+                                    $rInv['invoice_date'] ?? date('Y-m-d'), $rInv['due_date'] ?? date('Y-m-d'),
+                                    floatval($rInv['grand_total'] ?? 0), floatval($rInv['amount_paid'] ?? 0),
+                                    floatval($rInv['balance_due'] ?? 0), $rInv['currency'] ?? 'AED',
+                                    $rInv['status'] ?? 'credited', json_encode($rInv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                                ]);
+                            }
+
+                            // Insert into $data['credit_notes']
+                            $stmtCN = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, note_date, invoice_no, customer_id, customer_name, taxable_amount, tax_amount, total_credit_amount, currency, status, reason, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                            foreach ($canonicalPGGCCreditNotes as $rCN) {
+                                $cNo = strtoupper(trim($rCN['credit_note_no'] ?? ''));
+                                $cId = strtolower(trim($rCN['id'] ?? ''));
+                                $data['credit_notes'] = array_values(array_filter($data['credit_notes'], function($it) use ($cNo, $cId) {
+                                    $itNo = strtoupper(trim($it['credit_note_no'] ?? ''));
+                                    $itId = strtolower(trim($it['id'] ?? ''));
+                                    return ($itNo !== $cNo && $itId !== $cId);
+                                }));
+                                $data['credit_notes'][] = $rCN;
+                                $stmtCN->execute([
+                                    $rCN['id'], $rCN['credit_note_no'], $rCN['note_date'] ?? date('Y-m-d'),
+                                    $rCN['invoice_no'] ?? '', $rCN['customer_id'] ?? '', $rCN['customer_name'] ?? '',
+                                    floatval($rCN['taxable_amount'] ?? 0), floatval($rCN['tax_amount'] ?? 0),
+                                    floatval($rCN['total_credit_amount'] ?? 0), $rCN['currency'] ?? 'AED',
+                                    $rCN['status'] ?? 'applied', $rCN['reason'] ?? '',
+                                    json_encode($rCN, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                                ]);
+                            }
+
+                            // Update customer PGGC
+                            if (!empty($data['customers']) && is_array($data['customers'])) {
+                                foreach ($data['customers'] as &$cItem) {
+                                    if (($cItem['id'] ?? '') === 'cust-pggc') {
+                                        $cItem['total_invoiced'] = 31698.19;
+                                        $cItem['total_paid'] = 0.00;
+                                        $cItem['outstanding_dues'] = 0.00;
+                                    }
+                                }
+                                unset($cItem);
+                            }
+                            $pdo->exec("UPDATE finance_customers SET total_invoiced = 31698.19, total_paid = 0.00, balance = 0.00 WHERE id = 'cust-pggc'");
+
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('restore_pggc_invoices_v68', 'completed', NOW())");
+                        }
+                    } catch (Exception $e) {}
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     try {

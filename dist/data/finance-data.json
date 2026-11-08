@@ -214,8 +214,8 @@
       "status": "active",
       "credit_limit": 15000000,
       "payment_terms": 30,
-      "total_invoiced": 31500,
-      "total_paid": 31500,
+      "total_invoiced": 31698.19,
+      "total_paid": 0,
       "outstanding_dues": 0
     },
     {
@@ -878,8 +878,8 @@
   ],
   "invoices": [
     {
-      "id": "inv-rec-rg-1008",
-      "invoice_no": "REC-RG-1008",
+      "id": "inv-rec-rg-inv-1008",
+      "invoice_no": "REC-RG-INV-1008",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-morganti",
       "customer_name": "MORGANTI GCC l UAE",
@@ -934,8 +934,8 @@
       "created_at": "2024-08-07T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1010",
-      "invoice_no": "REC-RG-1010",
+      "id": "inv-rec-rg-inv-1010",
+      "invoice_no": "REC-RG-INV-1010",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -990,8 +990,8 @@
       "created_at": "2024-01-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1011",
-      "invoice_no": "REC-RG-1011",
+      "id": "inv-rec-rg-inv-1011",
+      "invoice_no": "REC-RG-INV-1011",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -1046,8 +1046,8 @@
       "created_at": "2024-12-30T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1012",
-      "invoice_no": "REC-RG-1012",
+      "id": "inv-rec-rg-inv-1012",
+      "invoice_no": "REC-RG-INV-1012",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-focustech",
       "customer_name": "FOCUS TECH LLC",
@@ -1102,8 +1102,8 @@
       "created_at": "2024-03-19T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1013",
-      "invoice_no": "REC-RG-1013",
+      "id": "inv-rec-rg-inv-1013",
+      "invoice_no": "REC-RG-INV-1013",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-alisons",
       "customer_name": "ALI & SONS CO. LLC",
@@ -1158,8 +1158,8 @@
       "created_at": "2024-03-22T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1014",
-      "invoice_no": "REC-RG-1014",
+      "id": "inv-rec-rg-inv-1014",
+      "invoice_no": "REC-RG-INV-1014",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1214,8 +1214,8 @@
       "created_at": "2024-04-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1015",
-      "invoice_no": "REC-RG-1015",
+      "id": "inv-rec-rg-inv-1015",
+      "invoice_no": "REC-RG-INV-1015",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1270,8 +1270,8 @@
       "created_at": "2024-04-19T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1016",
-      "invoice_no": "REC-RG-1016",
+      "id": "inv-rec-rg-inv-1016",
+      "invoice_no": "REC-RG-INV-1016",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -1326,8 +1326,8 @@
       "created_at": "2024-05-01T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1017",
-      "invoice_no": "REC-RG-1017",
+      "id": "inv-rec-rg-inv-1017",
+      "invoice_no": "REC-RG-INV-1017",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -1382,8 +1382,8 @@
       "created_at": "2024-05-04T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1018",
-      "invoice_no": "REC-RG-1018",
+      "id": "inv-rec-rg-inv-1018",
+      "invoice_no": "REC-RG-INV-1018",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-focustech",
       "customer_name": "FOCUS TECH LLC",
@@ -1438,8 +1438,8 @@
       "created_at": "2024-05-06T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1019",
-      "invoice_no": "REC-RG-1019",
+      "id": "inv-rec-rg-inv-1019",
+      "invoice_no": "REC-RG-INV-1019",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1494,8 +1494,8 @@
       "created_at": "2024-05-09T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1020",
-      "invoice_no": "REC-RG-1020",
+      "id": "inv-rec-rg-inv-1020",
+      "invoice_no": "REC-RG-INV-1020",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hln",
       "customer_name": "M/S HLN TECHNICAL SERVICES LLC",
@@ -1550,8 +1550,8 @@
       "created_at": "2024-05-11T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1021",
-      "invoice_no": "REC-RG-1021",
+      "id": "inv-rec-rg-inv-1021",
+      "invoice_no": "REC-RG-INV-1021",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-focustech",
       "customer_name": "FOCUS TECH LLC",
@@ -1606,8 +1606,8 @@
       "created_at": "2024-06-06T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1022",
-      "invoice_no": "REC-RG-1022",
+      "id": "inv-rec-rg-inv-1022",
+      "invoice_no": "REC-RG-INV-1022",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-toprock",
       "customer_name": "M/S TOP ROCK INTERIORS LLC",
@@ -1662,8 +1662,8 @@
       "created_at": "2024-06-21T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1023",
-      "invoice_no": "REC-RG-1023",
+      "id": "inv-rec-rg-inv-1023",
+      "invoice_no": "REC-RG-INV-1023",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1718,8 +1718,8 @@
       "created_at": "2024-06-07T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1024",
-      "invoice_no": "REC-RG-1024",
+      "id": "inv-rec-rg-inv-1024",
+      "invoice_no": "REC-RG-INV-1024",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-almuluki",
       "customer_name": "AL MULUKI DECOR & GENERAL MAINTENANCE LLC",
@@ -1774,8 +1774,8 @@
       "created_at": "2024-07-06T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1025",
-      "invoice_no": "REC-RG-1025",
+      "id": "inv-rec-rg-inv-1025",
+      "invoice_no": "REC-RG-INV-1025",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-alex",
       "customer_name": "MR. ALEX (PRIVATE RESIDENCE / VILLA)",
@@ -1830,8 +1830,8 @@
       "created_at": "2024-07-22T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1026",
-      "invoice_no": "REC-RG-1026",
+      "id": "inv-rec-rg-inv-1026",
+      "invoice_no": "REC-RG-INV-1026",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-alex",
       "customer_name": "MR. ALEX (PRIVATE RESIDENCE / VILLA)",
@@ -1886,8 +1886,8 @@
       "created_at": "2024-10-10T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1027",
-      "invoice_no": "REC-RG-1027",
+      "id": "inv-rec-rg-inv-1027",
+      "invoice_no": "REC-RG-INV-1027",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hayat",
       "customer_name": "HAYAT COMMUNICATIONS LLC",
@@ -1942,8 +1942,8 @@
       "created_at": "2024-11-15T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1001",
-      "invoice_no": "REC-RG-1001",
+      "id": "inv-rec-rg-inv-1001",
+      "invoice_no": "REC-RG-INV-1001",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -1976,17 +1976,17 @@
           "unit": "Lump Sum",
           "uom": "Ls",
           "qty": 1,
-          "unit_price": 11760,
-          "rate": 11760,
-          "invoice_amount": 11760,
-          "taxable_amount": 11760,
+          "unit_price": 11200,
+          "rate": 11200,
+          "invoice_amount": 11200,
+          "taxable_amount": 11200,
           "vat_rate": 5,
           "vat_amount": 560,
           "total_amount": 11760
         }
       ],
-      "sub_total": 11760,
-      "taxable_subtotal": 11760,
+      "sub_total": 11200,
+      "taxable_subtotal": 11200,
       "vat_total": 560,
       "total_tax": 560,
       "grand_total": 11760,
@@ -1999,11 +1999,12 @@
       "order_no": "SL-091/2023",
       "order_number": "SL-091/2023",
       "lpo_no": "SL-091/2023",
-      "amount_credited": 11760
+      "amount_credited": 11760,
+      "amount_in_words": "Eleven Thousand Seven Hundred Sixty AED Only."
     },
     {
-      "id": "inv-rec-rg-1002",
-      "invoice_no": "REC-RG-1002",
+      "id": "inv-rec-rg-inv-1002",
+      "invoice_no": "REC-RG-INV-1002",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -2036,17 +2037,17 @@
           "unit": "Lump Sum",
           "uom": "Ls",
           "qty": 1,
-          "unit_price": 11812.5,
-          "rate": 11812.5,
-          "invoice_amount": 11812.5,
-          "taxable_amount": 11812.5,
+          "unit_price": 11250,
+          "rate": 11250,
+          "invoice_amount": 11250,
+          "taxable_amount": 11250,
           "vat_rate": 5,
           "vat_amount": 562.5,
           "total_amount": 11812.5
         }
       ],
-      "sub_total": 11812.5,
-      "taxable_subtotal": 11812.5,
+      "sub_total": 11250,
+      "taxable_subtotal": 11250,
       "vat_total": 562.5,
       "total_tax": 562.5,
       "grand_total": 11812.5,
@@ -2056,11 +2057,12 @@
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2024-03-12T10:00:00Z",
-      "amount_credited": 12403.13
+      "amount_credited": 11812.5,
+      "amount_in_words": "Eleven Thousand Eight Hundred Twelve and Fifty Fils AED Only."
     },
     {
-      "id": "inv-rec-rg-1003",
-      "invoice_no": "REC-RG-1003",
+      "id": "inv-rec-rg-inv-1003",
+      "invoice_no": "REC-RG-INV-1003",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -2098,26 +2100,27 @@
           "invoice_amount": 3963.75,
           "taxable_amount": 3963.75,
           "vat_rate": 5,
-          "vat_amount": 188.75,
-          "total_amount": 3963.75
+          "vat_amount": 198.19,
+          "total_amount": 4161.94
         }
       ],
       "sub_total": 3963.75,
       "taxable_subtotal": 3963.75,
-      "vat_total": 188.75,
-      "total_tax": 188.75,
-      "grand_total": 3963.75,
+      "vat_total": 198.19,
+      "total_tax": 198.19,
+      "grand_total": 4161.94,
       "amount_paid": 0,
       "balance_due": 0,
       "status": "credited",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2024-03-15T10:00:00Z",
-      "amount_credited": 4161.94
+      "amount_credited": 4161.94,
+      "amount_in_words": "Four Thousand One Hundred Sixty One and Ninety Four Fils AED Only."
     },
     {
-      "id": "inv-rec-rg-1004",
-      "invoice_no": "REC-RG-1004",
+      "id": "inv-rec-rg-inv-1004",
+      "invoice_no": "REC-RG-INV-1004",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-pggc",
       "customer_name": "PROFESSIONAL GULF GENERAL CONTRACTING L.L.C",
@@ -2150,19 +2153,19 @@
           "unit": "Lump Sum",
           "uom": "Ls",
           "qty": 1,
-          "unit_price": 7927.5,
-          "rate": 7927.5,
-          "invoice_amount": 7927.5,
-          "taxable_amount": 7927.5,
+          "unit_price": 3775,
+          "rate": 3775,
+          "invoice_amount": 3775,
+          "taxable_amount": 3775,
           "vat_rate": 5,
-          "vat_amount": 377.5,
+          "vat_amount": 188.75,
           "total_amount": 3963.75
         }
       ],
-      "sub_total": 7927.5,
-      "taxable_subtotal": 7927.5,
-      "vat_total": 377.5,
-      "total_tax": 377.5,
+      "sub_total": 3775,
+      "taxable_subtotal": 3775,
+      "vat_total": 188.75,
+      "total_tax": 188.75,
       "grand_total": 3963.75,
       "amount_paid": 0,
       "balance_due": 0,
@@ -2170,11 +2173,12 @@
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2024-03-30T10:00:00Z",
-      "amount_credited": 3963.75
+      "amount_credited": 3963.75,
+      "amount_in_words": "Three Thousand Nine Hundred Sixty Three and Seventy Five Fils AED Only."
     },
     {
-      "id": "inv-rec-rg-1005",
-      "invoice_no": "REC-RG-1005",
+      "id": "inv-rec-rg-inv-1005",
+      "invoice_no": "REC-RG-INV-1005",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hiprofile",
       "customer_name": "HI PROFILE GENERAL MAINTENANCE LLC",
@@ -2229,8 +2233,8 @@
       "created_at": "2024-05-08T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1006",
-      "invoice_no": "REC-RG-1006",
+      "id": "inv-rec-rg-inv-1006",
+      "invoice_no": "REC-RG-INV-1006",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hiprofile",
       "customer_name": "HI PROFILE GENERAL MAINTENANCE LLC",
@@ -2285,8 +2289,8 @@
       "created_at": "2024-08-08T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1007",
-      "invoice_no": "REC-RG-1007",
+      "id": "inv-rec-rg-inv-1007",
+      "invoice_no": "REC-RG-INV-1007",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-morganti",
       "customer_name": "MORGANTI GCC l UAE",
@@ -2341,8 +2345,8 @@
       "created_at": "2024-07-17T10:00:00Z"
     },
     {
-      "id": "inv-rec-rg-1009",
-      "invoice_no": "REC-RG-1009",
+      "id": "inv-rec-rg-inv-1009",
+      "invoice_no": "REC-RG-INV-1009",
       "company_id": "rayan-corp-uae",
       "customer_id": "cust-hiprofile",
       "customer_name": "HI PROFILE GENERAL MAINTENANCE LLC",
