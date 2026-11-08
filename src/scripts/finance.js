@@ -283,7 +283,7 @@ class FinanceApp {
       });
 
       if (!incomingArr.length) {
-        if (key === 'customer_receipts') {
+        if (['customer_receipts', 'vendor_payments', 'credit_notes', 'debit_notes', 'expenses', 'bank_transfers', 'cash_vouchers', 'cheques'].includes(key)) {
           merged[key] = [];
         } else {
           merged[key] = seedArr;
@@ -730,9 +730,6 @@ class FinanceApp {
         paid += Number(pay.amount_paid) || 0;
       }
     });
-    if ((!payments || payments.length === 0) && paid === 0 && Number(bill.amount_paid) > 0.02) {
-      paid = Number(bill.amount_paid);
-    }
     paid = Math.round(paid * 100) / 100;
     paid = Math.min(paid, grand);
     if (paid <= 0.02) {
@@ -1334,7 +1331,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v67';
+    const CURRENT_DB_VERSION = 'v2026_clean_v68';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5907,6 +5904,7 @@ class FinanceApp {
             <table class="fin-data-table">
               <thead>
                 <tr>
+                  <th style="width:36px; text-align:center;"><input type="checkbox" id="pay-check-all-tab" title="Select All" onchange="window.finApp.toggleSelectAllPayments(this.checked)"></th>
                   <th>Voucher #</th>
                   <th>Date</th>
                   <th>Vendor</th>
@@ -5919,7 +5917,7 @@ class FinanceApp {
               <tbody>
                 ${payments.length === 0 ? `
                   <tr>
-                    <td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                    <td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
                       <div style="font-size:1.6rem; margin-bottom:0.4rem;">📤</div>
                       <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No vendor payments recorded yet</div>
                       <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Vendor Payment" to disburse funds to a supplier.</div>
@@ -5927,6 +5925,7 @@ class FinanceApp {
                   </tr>
                 ` : payments.map(p => `
                   <tr>
+                    <td style="width:36px; text-align:center;"><input type="checkbox" class="pay-row-check" value="${p.id}" data-voucher="${p.voucher_no || ''}" onchange="window.finApp.onPaymentCheckChange()"></td>
                     <td><strong>${p.voucher_no}</strong></td>
                     <td>${this.formatDate(p.payment_date)}</td>
                     <td><strong>${p.vendor_name}</strong></td>
@@ -5943,7 +5942,7 @@ class FinanceApp {
                     <td style="white-space:nowrap;">
                       <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print &amp; View Official Payment Voucher">Print / View</button>
                       <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')" title="Edit Payment Voucher">✏️ Edit</button>
-                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444; font-weight:700;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -6402,6 +6401,19 @@ class FinanceApp {
               <option value="amount-desc" ${this.paySort === 'amount-desc' ? 'selected' : ''}>💰 Amount (Highest First)</option>
               <option value="amount-asc" ${this.paySort === 'amount-asc' ? 'selected' : ''}>💰 Amount (Lowest First)</option>
             </select>
+            <div id="pay-bulk-actions" style="display:none; align-items:center; gap:0.5rem; margin-left:0.5rem;">
+              <button type="button" id="btn-pay-delete-selected" class="fin-btn-quick" style="background:#ef4444; color:#fff; font-weight:700; border:none; padding:0.42rem 0.95rem; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:0.4rem; box-shadow:0 2px 8px rgba(239,68,68,0.4);" onclick="window.finApp.deleteSelectedPayments()">
+                🗑️ Delete Selected (<span id="pay-selected-count">0</span>)
+              </button>
+              <button type="button" class="fin-btn-quick" style="background:rgba(255,255,255,0.08); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); padding:0.42rem 0.75rem; border-radius:6px; cursor:pointer; font-size:0.8rem;" onclick="window.finApp.clearPaymentSelections()">
+                Cancel
+              </button>
+            </div>
+            ${rawPayments.length > 0 ? `
+              <button type="button" id="btn-pay-delete-all" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); font-weight:600; padding:0.42rem 0.85rem; border-radius:6px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:0.35rem;" onclick="window.finApp.deleteAllVisiblePayments()" title="Delete all currently visible payment vouchers in one click">
+                🗑️ Delete All Filtered
+              </button>
+            ` : ''}
             <div id="pay-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
               Showing <span id="pay-showing-count">${rawPayments.length}</span> of ${rawPayments.length} vouchers
             </div>
@@ -6411,6 +6423,9 @@ class FinanceApp {
             <table class="fin-data-table">
               <thead>
                 <tr>
+                  <th style="width:36px; text-align:center; vertical-align:middle;">
+                    <input type="checkbox" id="pay-check-all" title="Select All Payments" style="cursor:pointer; width:16px; height:16px; accent-color:#00e5d2;" onchange="window.finApp.toggleSelectAllPayments(this.checked)">
+                  </th>
                   <th id="th-pay-serial" style="white-space:nowrap; min-width:130px; cursor:pointer; user-select:none;" title="Click to sort by Voucher #">
                     Voucher # <span id="pay-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.paySort === 'serial-asc' ? '▲' : (this.paySort === 'serial-desc' ? '▼' : '↕')}</span>
                   </th>
@@ -6478,6 +6493,7 @@ class FinanceApp {
 
       if (payTbody) payTbody.innerHTML = this.renderPaymentOutRows(sorted, q);
       if (payCount) payCount.textContent = sorted.length;
+      this.clearPaymentSelections();
 
       // Update header sort icons
       const iconSerial = document.getElementById('pay-sort-icon-serial');
@@ -6533,7 +6549,7 @@ class FinanceApp {
 
   renderPaymentOutRows(payments, query = '') {
     if (!payments.length) {
-      return `<tr><td colspan="7" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+      return `<tr><td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
         <div style="font-size:1.6rem; margin-bottom:0.4rem;">💸</div>
         <div style="font-weight:600; font-size:0.95rem; color:#f1f5f9;">No payment vouchers recorded ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : 'yet'}</div>
         <div style="font-size:0.8rem; margin-top:0.3rem;">Click "+ Record Payment-Out" to disburse a supplier payment.</div>
@@ -6541,7 +6557,10 @@ class FinanceApp {
     }
 
     return payments.map(p => `
-      <tr>
+      <tr data-pay-id="${p.id}">
+        <td style="width:36px; text-align:center; vertical-align:middle;">
+          <input type="checkbox" class="pay-row-check" value="${p.id}" data-voucher="${p.voucher_no || ''}" style="cursor:pointer; width:16px; height:16px; accent-color:#00e5d2;" onchange="window.finApp.onPaymentCheckChange()">
+        </td>
         <td><strong style="color:#38bdf8; font-family:monospace;">${p.voucher_no}</strong></td>
         <td>${this.formatDate(p.payment_date)}</td>
         <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${p.vendor_name}</span></td>
@@ -6558,7 +6577,7 @@ class FinanceApp {
         <td style="white-space:nowrap;">
           <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openPaymentPrintModal('${p.id}')" title="Print &amp; View Official Payment Voucher">Print / View</button>
           <button type="button" class="fin-btn-row-action" style="color:#38bdf8;" onclick="window.finApp.openEditPaymentModal('${p.id}')" title="Edit Payment Voucher">✏️ Edit</button>
-          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
+          <button type="button" class="fin-btn-row-action" style="color:#ef4444; font-weight:700;" onclick="window.finApp.deletePayment('${p.id}')" title="Delete Payment Voucher">🗑️ Delete</button>
         </td>
       </tr>
     `).join('');
@@ -25557,13 +25576,13 @@ class FinanceApp {
 
     // 1. Immediately remove from local database & recalculate balances
     if (this.db.vendor_payments) {
-      this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== payId && p.voucher_no !== payId);
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== payId && p.voucher_no !== payId && p.id !== label && p.voucher_no !== label);
     }
     if (this.db.bank_transfers) {
-      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.payment_id !== payId);
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.payment_id !== payId && t.payment_id !== label);
     }
     if (this.db.cash_vouchers) {
-      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => cv.payment_id !== payId);
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => cv.payment_id !== payId && cv.payment_id !== label);
     }
     this.normalizeAllBalances();
     try {
@@ -25575,7 +25594,104 @@ class FinanceApp {
     this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
 
     // 3. Persist deletion to backend server
-    await this.syncApi('delete_payment', { payment_id: payId, id: payId });
+    await this.syncApi('delete_payment', { payment_id: payId, id: payId, voucher_no: label });
+  }
+
+  toggleSelectAllPayments(checked) {
+    const rowChecks = document.querySelectorAll('.pay-row-check');
+    rowChecks.forEach(cb => {
+      cb.checked = checked;
+    });
+    this.onPaymentCheckChange();
+  }
+
+  onPaymentCheckChange() {
+    const rowChecks = document.querySelectorAll('.pay-row-check');
+    const checked = Array.from(rowChecks).filter(cb => cb.checked);
+    const bulkBar = document.getElementById('pay-bulk-actions');
+    const countSpan = document.getElementById('pay-selected-count');
+    const checkAll = document.getElementById('pay-check-all');
+
+    if (countSpan) countSpan.textContent = checked.length;
+    if (bulkBar) bulkBar.style.display = checked.length > 0 ? 'inline-flex' : 'none';
+    if (checkAll) {
+      checkAll.checked = (rowChecks.length > 0 && checked.length === rowChecks.length);
+      checkAll.indeterminate = (checked.length > 0 && checked.length < rowChecks.length);
+    }
+  }
+
+  clearPaymentSelections() {
+    const checkAll = document.getElementById('pay-check-all');
+    if (checkAll) {
+      checkAll.checked = false;
+      checkAll.indeterminate = false;
+    }
+    const rowChecks = document.querySelectorAll('.pay-row-check');
+    rowChecks.forEach(cb => { cb.checked = false; });
+    const bulkBar = document.getElementById('pay-bulk-actions');
+    if (bulkBar) bulkBar.style.display = 'none';
+  }
+
+  async deleteSelectedPayments() {
+    const rowChecks = document.querySelectorAll('.pay-row-check');
+    const selectedIds = Array.from(rowChecks).filter(cb => cb.checked).map(cb => cb.value);
+    if (!selectedIds.length) {
+      this.showNotification('Please select at least one payment voucher to delete.', 'warning');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected payment voucher(s)?`)) return;
+
+    const idSet = new Set(selectedIds);
+    if (this.db.vendor_payments) {
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => !idSet.has(p.id) && !idSet.has(p.voucher_no));
+    }
+    if (this.db.bank_transfers) {
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => !idSet.has(t.payment_id));
+    }
+    if (this.db.cash_vouchers) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id));
+    }
+    this.normalizeAllBalances();
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) { }
+
+    this.renderActiveTab();
+    this.showNotification(`Successfully deleted ${selectedIds.length} payment voucher(s).`, 'success');
+
+    await this.syncApi('bulk_delete_payments', { payment_ids: selectedIds });
+  }
+
+  async deleteAllVisiblePayments() {
+    const rowChecks = document.querySelectorAll('.pay-row-check');
+    const visibleIds = Array.from(rowChecks).map(cb => cb.value);
+    if (!visibleIds.length) {
+      this.showNotification('No payment vouchers are currently listed to delete.', 'info');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ALL ${visibleIds.length} listed payment voucher(s) in one click? This action will unlink payments from purchase bills.`)) return;
+
+    const idSet = new Set(visibleIds);
+    if (this.db.vendor_payments) {
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => !idSet.has(p.id) && !idSet.has(p.voucher_no));
+    }
+    if (this.db.bank_transfers) {
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => !idSet.has(t.payment_id));
+    }
+    if (this.db.cash_vouchers) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id));
+    }
+    this.normalizeAllBalances();
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) { }
+
+    this.renderActiveTab();
+    this.showNotification(`Successfully deleted all ${visibleIds.length} payment voucher(s).`, 'success');
+
+    await this.syncApi('bulk_delete_payments', { payment_ids: visibleIds });
   }
 
   async deleteReceipt(receiptId) {
