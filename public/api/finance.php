@@ -502,7 +502,7 @@ if (!$dataFile) {
 function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     if (!$data || !is_array($data)) return;
 
-    $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710', 'bill-rec-1007'];
+    $dummyBillIds = ['bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710'];
     $dummyPayIds = ['pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744', 'pv-rec-44007', 'pv-rec-44006'];
     $dummyCnIds = ['cn-1793512121832', 'cn-rec-018'];
     $dummyDnIds = ['dn-rg-001'];
@@ -643,7 +643,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
     if ($pdo) {
         try {
-            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710') OR bill_no = 'BILL-REC-1007'");
+            $pdo->exec("DELETE FROM finance_purchase_bills WHERE id IN ('bill-rg-001', 'bill-rg-002', 'bill-rg-003', 'bill-1793985810710')");
             $pdo->exec("DELETE FROM finance_vendor_payments WHERE id IN ('pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681', 'pay-1793985851677', 'pay-1793980815744') OR voucher_no IN ('PV-REC-44007', 'PV-REC-44006')");
             $pdo->exec("DELETE FROM finance_credit_notes WHERE id IN ('cn-1793512121832') OR credit_note_no = 'CN-REC-018' OR invoice_no = 'REC-RG-INV-44008'");
             $pdo->exec("DELETE FROM finance_purchase_orders WHERE id IN ('po-cust-1793985810709') OR po_no = 'LPO-HLN-2025-44'");
@@ -1409,10 +1409,23 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     'bill-1793894214538' => 'BILL-REC-1004',
                     'bill-1793894942719' => 'BILL-REC-1005',
                     'bill-1793897332945' => 'BILL-REC-1006',
-                    'bill-1793898700774' => 'BILL-REC-1007',
-                    'bill-1793896178476' => 'BILL-REC-1008',
-                    'bill-1793945504650' => 'BILL-REC-1009',
-                    'bill-1793947339219' => 'BILL-REC-1010'
+                    'bill-1793974433713' => 'BILL-REC-1001',
+                    'bill-1793974961216' => 'BILL-REC-1002',
+                    'bill-1793975224831' => 'BILL-REC-1003',
+                    'bill-1793975959757' => 'BILL-REC-1004',
+                    'bill-1793976570260' => 'BILL-REC-1005',
+                    'bill-1793977952016' => 'BILL-REC-1006',
+                    'bill-1793987304049' => 'BILL-REC-1007',
+                    'bill-1793988957412' => 'BILL-REC-1008',
+                    'bill-1793989402508' => 'BILL-REC-1009',
+                    'bill-1793990949767' => 'BILL-REC-1010',
+                    'bill-1793991086279' => 'BILL-REC-1011',
+                    'bill-1793991187391' => 'BILL-REC-1012',
+                    'bill-1793991631974' => 'BILL-REC-1013',
+                    'bill-1793991716204' => 'BILL-REC-1014',
+                    'bill-1793991963995' => 'BILL-REC-1015',
+                    'bill-1793992099603' => 'BILL-REC-1016',
+                    'bill-1794116337896' => 'BILL-REC-1017'
                 ];
                 foreach ($data['purchase_bills'] as &$hb) {
                     $bId = $hb['id'] ?? '';
@@ -2046,10 +2059,23 @@ function recalculateAllFinanceBalances(&$data) {
         'bill-1793894214538' => 'BILL-REC-1004',
         'bill-1793894942719' => 'BILL-REC-1005',
         'bill-1793897332945' => 'BILL-REC-1006',
-        'bill-1793898700774' => 'BILL-REC-1007',
-        'bill-1793896178476' => 'BILL-REC-1008',
-        'bill-1793945504650' => 'BILL-REC-1009',
-        'bill-1793947339219' => 'BILL-REC-1010'
+        'bill-1793974433713' => 'BILL-REC-1001',
+        'bill-1793974961216' => 'BILL-REC-1002',
+        'bill-1793975224831' => 'BILL-REC-1003',
+        'bill-1793975959757' => 'BILL-REC-1004',
+        'bill-1793976570260' => 'BILL-REC-1005',
+        'bill-1793977952016' => 'BILL-REC-1006',
+        'bill-1793987304049' => 'BILL-REC-1007',
+        'bill-1793988957412' => 'BILL-REC-1008',
+        'bill-1793989402508' => 'BILL-REC-1009',
+        'bill-1793990949767' => 'BILL-REC-1010',
+        'bill-1793991086279' => 'BILL-REC-1011',
+        'bill-1793991187391' => 'BILL-REC-1012',
+        'bill-1793991631974' => 'BILL-REC-1013',
+        'bill-1793991716204' => 'BILL-REC-1014',
+        'bill-1793991963995' => 'BILL-REC-1015',
+        'bill-1793992099603' => 'BILL-REC-1016',
+        'bill-1794116337896' => 'BILL-REC-1017'
     ];
     $vpMap = [
         'pay-1793642108024' => 'PV-REC-44001',
@@ -3105,12 +3131,11 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 }));
                             }
 
-                            // Purge fake BILL-REC-1007
+                            // Purge fake bill-1793985810710
                             if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
                                 $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) {
                                     $id = $b['id'] ?? '';
-                                    $no = $b['bill_no'] ?? '';
-                                    return $id !== 'bill-1793985810710' && $no !== 'BILL-REC-1007';
+                                    return $id !== 'bill-1793985810710';
                                 }));
                                 foreach ($data['purchase_bills'] as &$bRef) {
                                     if (($bRef['bill_no'] ?? '') === 'BILL-REC-1006') {
@@ -3163,7 +3188,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                     ]);
                                 }
                                 $pdo->exec("DELETE FROM finance_credit_notes WHERE id = 'cn-1793512121832' OR credit_note_no = 'CN-REC-018' OR invoice_no = 'REC-RG-INV-44008'");
-                                $pdo->exec("DELETE FROM finance_purchase_bills WHERE bill_no = 'BILL-REC-1007' OR id = 'bill-1793985810710'");
+                                $pdo->exec("DELETE FROM finance_purchase_bills WHERE id = 'bill-1793985810710'");
                                 $pdo->exec("DELETE FROM finance_purchase_orders WHERE po_no = 'LPO-HLN-2025-44' OR id = 'po-cust-1793985810709'");
                                 $pdo->exec("UPDATE finance_invoices SET amount_credited = 0.00, amount_paid = 5000.00, balance_due = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44008'");
                                 $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 0.00, balance_due = 9902.52, status = 'unpaid' WHERE bill_no = 'BILL-REC-1006'");
@@ -3726,6 +3751,73 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                         $pdo->exec("DELETE FROM finance_cash_vouchers WHERE voucher_no = 'CV-PV-REC-44006' OR (voucher_no LIKE '%44006%' AND voucher_no LIKE '%PV%') OR (amount = 7863.97 AND type = 'outflow')");
                     } catch (Exception $e) {}
+
+                    // Migration v71: Strictly sequential re-numbering of purchase bills BILL-REC-1001 to BILL-REC-1017 (no gaps)
+                    try {
+                        $chkMig71 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'resequence_purchase_bills_v71'")->fetchColumn();
+                        if (!$chkMig71) {
+                            $canonicalBillsMap = [
+                                'bill-1793974433713' => 'BILL-REC-1001',
+                                'bill-1793974961216' => 'BILL-REC-1002',
+                                'bill-1793975224831' => 'BILL-REC-1003',
+                                'bill-1793975959757' => 'BILL-REC-1004',
+                                'bill-1793976570260' => 'BILL-REC-1005',
+                                'bill-1793977952016' => 'BILL-REC-1006',
+                                'bill-1793987304049' => 'BILL-REC-1007',
+                                'bill-1793988957412' => 'BILL-REC-1008',
+                                'bill-1793989402508' => 'BILL-REC-1009',
+                                'bill-1793990949767' => 'BILL-REC-1010',
+                                'bill-1793991086279' => 'BILL-REC-1011',
+                                'bill-1793991187391' => 'BILL-REC-1012',
+                                'bill-1793991631974' => 'BILL-REC-1013',
+                                'bill-1793991716204' => 'BILL-REC-1014',
+                                'bill-1793991963995' => 'BILL-REC-1015',
+                                'bill-1793992099603' => 'BILL-REC-1016',
+                                'bill-1794116337896' => 'BILL-REC-1017'
+                            ];
+
+                            if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+                                foreach ($data['purchase_bills'] as &$b) {
+                                    $bId = $b['id'] ?? '';
+                                    if (isset($canonicalBillsMap[$bId])) {
+                                        $b['bill_no'] = $canonicalBillsMap[$bId];
+                                    }
+                                }
+                                unset($b);
+                            }
+
+                            if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+                                foreach ($data['vendor_payments'] as &$vp) {
+                                    if (!empty($vp['allocations']) && is_array($vp['allocations'])) {
+                                        foreach ($vp['allocations'] as &$al) {
+                                            $alBid = $al['bill_id'] ?? '';
+                                            if (isset($canonicalBillsMap[$alBid])) {
+                                                $al['bill_no'] = $canonicalBillsMap[$alBid];
+                                            }
+                                        }
+                                        unset($al);
+                                    }
+                                }
+                                unset($vp);
+                            }
+
+                            if ($pdo) {
+                                // 1st pass: Temporary prefix to avoid ANY unique collision
+                                $stmtTmp = $pdo->prepare("UPDATE finance_purchase_bills SET bill_no = CONCAT('TMP-', id) WHERE id = :id");
+                                foreach ($canonicalBillsMap as $bId => $bNo) {
+                                    $stmtTmp->execute([':id' => $bId]);
+                                }
+                                // 2nd pass: Canonical bill_no
+                                $stmtUpdB = $pdo->prepare("UPDATE finance_purchase_bills SET bill_no = :bNo, data_json = JSON_SET(data_json, '$.bill_no', :bNo) WHERE id = :id");
+                                foreach ($canonicalBillsMap as $bId => $bNo) {
+                                    $stmtUpdB->execute([':bNo' => $bNo, ':id' => $bId]);
+                                }
+                                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('resequence_purchase_bills_v71', 'completed', NOW())");
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log('Migration v71 error: ' . $e->getMessage());
+                    }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     try {

@@ -1033,7 +1033,7 @@ class FinanceApp {
       this.db.vendor_payments = this.db.vendor_payments.filter(p => !['PV-REC-44006', 'PV-REC-44007'].includes(p.voucher_no) && !['pay-1793985851677', 'pay-1793980815744'].includes(p.id));
     }
     if (this.db.purchase_bills) {
-      this.db.purchase_bills = this.db.purchase_bills.filter(b => b.bill_no !== 'BILL-REC-1007' && b.id !== 'bill-1793985810710');
+      this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== 'bill-1793985810710');
     }
 
     // Ensure exact penny/fils precision for historical invoices REC-RG-INV-44005 and REC-RG-INV-44015
@@ -1206,10 +1206,23 @@ class FinanceApp {
       'bill-1793894214538': 'BILL-REC-1004',
       'bill-1793894942719': 'BILL-REC-1005',
       'bill-1793897332945': 'BILL-REC-1006',
-      'bill-1793898700774': 'BILL-REC-1007',
-      'bill-1793896178476': 'BILL-REC-1008',
-      'bill-1793945504650': 'BILL-REC-1009',
-      'bill-1793947339219': 'BILL-REC-1010'
+      'bill-1793974433713': 'BILL-REC-1001',
+      'bill-1793974961216': 'BILL-REC-1002',
+      'bill-1793975224831': 'BILL-REC-1003',
+      'bill-1793975959757': 'BILL-REC-1004',
+      'bill-1793976570260': 'BILL-REC-1005',
+      'bill-1793977952016': 'BILL-REC-1006',
+      'bill-1793987304049': 'BILL-REC-1007',
+      'bill-1793988957412': 'BILL-REC-1008',
+      'bill-1793989402508': 'BILL-REC-1009',
+      'bill-1793990949767': 'BILL-REC-1010',
+      'bill-1793991086279': 'BILL-REC-1011',
+      'bill-1793991187391': 'BILL-REC-1012',
+      'bill-1793991631974': 'BILL-REC-1013',
+      'bill-1793991716204': 'BILL-REC-1014',
+      'bill-1793991963995': 'BILL-REC-1015',
+      'bill-1793992099603': 'BILL-REC-1016',
+      'bill-1794116337896': 'BILL-REC-1017'
     };
     (this.db.purchase_bills || []).forEach(b => {
       if (billRenameMap[b.id]) {
@@ -1299,7 +1312,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v64';
+    const CURRENT_DB_VERSION = 'v2026_clean_v65';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
