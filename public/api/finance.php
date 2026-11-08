@@ -3818,6 +3818,67 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     } catch (Exception $e) {
                         error_log('Migration v71 error: ' . $e->getMessage());
                     }
+
+                    // Migration v72: Reconcile BUILDARA cash transfer vouchers 4529 to Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi
+                    try {
+                        $chkMig72 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_buildara_cash_v72'")->fetchColumn();
+                        if (!$chkMig72) {
+                            $yokPrjId = 'prj-yok-02';
+                            $yokPrjName = 'Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi';
+
+                            // 1. Update cash_vouchers in memory
+                            if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+                                foreach ($data['cash_vouchers'] as &$cv) {
+                                    $vNo = $cv['voucher_no'] ?? '';
+                                    if ($vNo === 'CV-TRF-OUT-4529') {
+                                        $cv['project_id'] = $yokPrjId;
+                                        $cv['project_name'] = $yokPrjName;
+                                        $cv['purpose'] = 'Transfer to BUILDARA GENERAL CONTRACTING LLC PETTY CASH REGISTER (' . $yokPrjName . '): Petty Cash';
+                                    } elseif ($vNo === 'CV-TRF-IN-4529') {
+                                        $cv['project_id'] = $yokPrjId;
+                                        $cv['project_name'] = $yokPrjName;
+                                        $cv['purpose'] = 'Replenishment from RAYAN E-Wallets (' . $yokPrjName . '): Petty Cash';
+                                    }
+                                }
+                                unset($cv);
+                            }
+
+                            // 2. Update cash_in_hand in memory
+                            if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
+                                foreach ($data['cash_in_hand'] as &$cih) {
+                                    if (($cih['id'] ?? '') === 'cash-ad-solar') {
+                                        $cih['project_id'] = $yokPrjId;
+                                        $cih['project_name'] = $yokPrjName;
+                                    } elseif (($cih['id'] ?? '') === 'cash-dubai-reg') {
+                                        $cih['project_id'] = 'prj-toprock-police-01';
+                                        $cih['project_name'] = 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai';
+                                    }
+                                }
+                                unset($cih);
+                            }
+
+                            if ($pdo) {
+                                $stmtUpdCv = $pdo->prepare("UPDATE finance_cash_vouchers SET purpose = :purpose, data_json = JSON_SET(data_json, '$.project_id', :pid, '$.project_name', :pname, '$.purpose', :purpose) WHERE voucher_no = :vno");
+                                $stmtUpdCv->execute([
+                                    ':purpose' => 'Transfer to BUILDARA GENERAL CONTRACTING LLC PETTY CASH REGISTER (' . $yokPrjName . '): Petty Cash',
+                                    ':pid' => $yokPrjId,
+                                    ':pname' => $yokPrjName,
+                                    ':vno' => 'CV-TRF-OUT-4529'
+                                ]);
+                                $stmtUpdCv->execute([
+                                    ':purpose' => 'Replenishment from RAYAN E-Wallets (' . $yokPrjName . '): Petty Cash',
+                                    ':pid' => $yokPrjId,
+                                    ':pname' => $yokPrjName,
+                                    ':vno' => 'CV-TRF-IN-4529'
+                                ]);
+                                $pdo->exec("UPDATE finance_cash_in_hand SET data_json = JSON_SET(data_json, '$.project_id', 'prj-yok-02', '$.project_name', '" . addslashes($yokPrjName) . "') WHERE id = 'cash-ad-solar'");
+                                $pdo->exec("UPDATE finance_cash_in_hand SET data_json = JSON_SET(data_json, '$.project_id', 'prj-toprock-police-01', '$.project_name', 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai') WHERE id = 'cash-dubai-reg'");
+                                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_buildara_cash_v72', 'completed', NOW())");
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log('Migration v72 error: ' . $e->getMessage());
+                    }
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     try {
@@ -7051,6 +7112,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (!empty($cv['custodian'])) $existing['custodian'] = $cv['custodian'];
                         if (!empty($cv['purpose'])) $existing['purpose'] = $cv['purpose'];
                         if (!empty($cv['status'])) $existing['status'] = $cv['status'];
+                        if (isset($cv['project_id'])) $existing['project_id'] = $cv['project_id'];
+                        if (isset($cv['project_name'])) $existing['project_name'] = $cv['project_name'];
                         break;
                     }
                 }

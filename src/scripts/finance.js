@@ -1036,6 +1036,28 @@ class FinanceApp {
       this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== 'bill-1793985810710');
     }
 
+    // Auto-reconcile cash registers & transfer vouchers to correct projects
+    (this.db.cash_in_hand || []).forEach(cih => {
+      if (cih.id === 'cash-ad-solar') {
+        cih.project_id = 'prj-yok-02';
+        cih.project_name = 'Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi';
+      } else if (cih.id === 'cash-dubai-reg') {
+        cih.project_id = 'prj-toprock-police-01';
+        cih.project_name = 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai';
+      }
+    });
+    (this.db.cash_vouchers || []).forEach(cv => {
+      if (cv.voucher_no === 'CV-TRF-OUT-4529') {
+        cv.project_id = 'prj-yok-02';
+        cv.project_name = 'Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi';
+        cv.purpose = 'Transfer to BUILDARA GENERAL CONTRACTING LLC PETTY CASH REGISTER (Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi): Petty Cash';
+      } else if (cv.voucher_no === 'CV-TRF-IN-4529') {
+        cv.project_id = 'prj-yok-02';
+        cv.project_name = 'Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi';
+        cv.purpose = 'Replenishment from RAYAN E-Wallets (Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi): Petty Cash';
+      }
+    });
+
     // Ensure exact penny/fils precision for historical invoices REC-RG-INV-44005 and REC-RG-INV-44015
     const inv44005 = (this.db.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44005');
     if (inv44005) {
@@ -1312,7 +1334,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v65';
+    const CURRENT_DB_VERSION = 'v2026_clean_v66';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -7190,10 +7212,10 @@ class FinanceApp {
                     <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(v.amount)}</strong></td>
                     <td><span class="fin-badge fin-badge-paid">${v.status || 'Approved'}</span></td>
                     <td style="text-align:center;">
-                      <div style="display:inline-flex; gap:5px; align-items:center;">
-                        <button type="button" class="fin-btn-card-action" title="Edit Cash Voucher" onclick="window.finApp.openEditCashVoucherModal('${v.id}')" style="border-color:#38bdf8; color:#38bdf8;">✏️ Edit</button>
-                        <button type="button" class="fin-btn-card-action" title="Print Cash Voucher" onclick="window.finApp.printCashVoucher('${v.id}')">🖨️</button>
-                        <button type="button" class="fin-btn-card-action danger" title="Delete Voucher" onclick="window.finApp.deleteCashVoucher('${v.id}')">🗑️</button>
+                                            <div style="display:inline-flex; gap:5px; align-items:center;">
+                        <button type="button" class="fin-btn-card-action" title="Edit Cash Voucher" onclick="window.finApp.openEditCashVoucherModal('${v.id}')" style="border-color:#38bdf8; color:#38bdf8; font-weight:700;">Edit</button>
+                        <button type="button" class="fin-btn-card-action" title="Print Cash Voucher" onclick="window.finApp.printCashVoucher('${v.id}')">Print</button>
+                        <button type="button" class="fin-btn-card-action danger" title="Delete Voucher" onclick="window.finApp.deleteCashVoucher('${v.id}')">Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -19604,12 +19626,39 @@ class FinanceApp {
 
     sourceEl.onchange = updateSourceBal;
 
-    destEl.onchange = () => {
+    const autoMatchProjectForDest = () => {
       const dstVault = registers.find(r => r.id === destEl.value);
-      if (dstVault && receivedEl && dstVault.custodian) {
+      if (!dstVault) return;
+      if (receivedEl && dstVault.custodian) {
         receivedEl.value = dstVault.custodian;
       }
+      // If destination vault is already linked to a project, auto-select it
+      if (dstVault.project_id && projectEl) {
+        projectEl.value = dstVault.project_id;
+      } else {
+        const vName = (dstVault.register_name || '').toLowerCase();
+        const vLoc = (dstVault.location || '').toLowerCase();
+        const matched = projects.find(p => {
+          const cName = (p.client_name || '').toLowerCase();
+          const pName = (p.project_name || p.name || '').toLowerCase();
+          return (cName && vName.includes(cName)) || 
+                 (vName.includes('buildara') && (cName.includes('buildara') || pName.includes('yateem') || pName.includes('khalidiyah'))) ||
+                 (vName.includes('top rock') && (cName.includes('top rock') || pName.includes('police'))) ||
+                 (vLoc && pName.includes(vLoc));
+        });
+        if (matched && projectEl) {
+          projectEl.value = matched.id;
+        }
+      }
+      const selOpt = projectEl ? projectEl.options[projectEl.selectedIndex] : null;
+      if (selOpt && selOpt.value && purposeEl) {
+        const pName = selOpt.getAttribute('data-name') || '';
+        purposeEl.value = `Petty cash replenishment for ${pName}`;
+      }
     };
+
+    destEl.onchange = autoMatchProjectForDest;
+    autoMatchProjectForDest();
 
     projectEl.onchange = () => {
       const selectedOpt = projectEl.options[projectEl.selectedIndex];
@@ -19742,6 +19791,7 @@ class FinanceApp {
       return;
     }
     const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const projects = (this.db?.projects || []).filter(p => (p.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
 
     const modalHtml = `
@@ -19750,7 +19800,7 @@ class FinanceApp {
           <div class="fin-modal-header">
             <div>
               <h3 class="fin-modal-title">✏️ Edit Cash Voucher (${v.voucher_no})</h3>
-              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Update voucher details, register vault, or transaction amounts</div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">Update voucher details, register vault, linked project, or transaction amounts</div>
             </div>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-cash-voucher')">&times;</button>
           </div>
@@ -19806,6 +19856,18 @@ class FinanceApp {
               </div>
 
               <div class="fin-form-group">
+                <label class="fin-form-label">Linked Project / Site Operation</label>
+                <select id="ecv-project" class="fin-form-select">
+                  <option value="">-- No Project Linked / General Operation --</option>
+                  ${projects.map(p => `
+                    <option value="${p.id}" data-name="${p.project_name || p.name || ''}" ${(p.id === v.project_id || (p.project_name || p.name) === v.project_name) ? 'selected' : ''}>
+                      ${p.project_name || p.name || 'Project'} ${p.client_name ? `(${p.client_name})` : ''}
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <div class="fin-form-group">
                 <label class="fin-form-label">Purpose / Notes <span style="color:#ef4444;">*</span></label>
                 <input type="text" id="ecv-purpose" class="fin-form-input" required value="${v.purpose || ''}">
               </div>
@@ -19826,6 +19888,10 @@ class FinanceApp {
       e.preventDefault();
       const vaultId = document.getElementById('ecv-vault').value;
       const vault = registers.find(r => r.id === vaultId);
+      const pSel = document.getElementById('ecv-project');
+      const pOpt = pSel ? pSel.options[pSel.selectedIndex] : null;
+      const pId = pSel ? pSel.value : '';
+      const pName = pOpt && pId ? (pOpt.getAttribute('data-name') || '') : '';
 
       const updatedVoucher = {
         ...v,
@@ -19838,7 +19904,9 @@ class FinanceApp {
         category: document.getElementById('ecv-category').value.trim(),
         payee: document.getElementById('ecv-payee').value.trim(),
         custodian: document.getElementById('ecv-custodian').value.trim(),
-        purpose: document.getElementById('ecv-purpose').value.trim()
+        purpose: document.getElementById('ecv-purpose').value.trim(),
+        project_id: pId,
+        project_name: pName
       };
 
       const idx = (this.db.cash_vouchers || []).findIndex(x => x.id === v.id || x.voucher_no === v.voucher_no);
