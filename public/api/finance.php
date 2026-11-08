@@ -3041,8 +3041,6 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             }));
                         }
                     } catch (Exception $e) {}
-                        if ($rawDel) $deletedVpList = json_decode($rawDel, true) ?: [];
-                    } catch (Exception $e) {}
                     if (!empty($deletedVpList) && !empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
                         $delSet = array_flip($deletedVpList);
                         $data['vendor_payments'] = array_values(array_filter($data['vendor_payments'], function($p) use ($delSet) {
@@ -4793,8 +4791,6 @@ function syncFromRelationalTables($pdo, &$data) {
                     return !isset($canonicalVpExempt[strtolower($x)]);
                 }));
             }
-        } catch (Exception $e) {}
-            if ($rawDel) $deletedVpList = json_decode($rawDel, true) ?: [];
         } catch (Exception $e) {}
         $delSet = array_flip($deletedVpList);
 
