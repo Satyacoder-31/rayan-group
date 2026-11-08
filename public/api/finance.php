@@ -653,7 +653,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_vendors WHERE id IN ('vend-001', 'vend-002', 'vend-003', 'vend-004')");
             $pdo->exec("DELETE FROM finance_customers WHERE id IN ('cust-004', 'cust-005', 'cust-kgc-alias')");
             $pdo->exec("DELETE FROM finance_receipts WHERE id IN ('rec-mvdvmilf', 'rec-mvy61blt') OR receipt_no = 'REC-RV-44073'");
-            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-adcb-44035'");
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-adcb-44035' OR (payment_id IS NOT NULL AND payment_id != '' AND payment_id NOT IN (SELECT id FROM finance_vendor_payments))");
+            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE payment_id IS NOT NULL AND payment_id != '' AND payment_id NOT IN (SELECT id FROM finance_vendor_payments)");
             $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
             $pdo->exec("UPDATE finance_customers SET 
                 trn = '100360644700003', 
@@ -1811,10 +1812,18 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
     }
     $orig = count($data['bank_transfers']);
     $dummyWireRefs = ['wire-adcb-99210', '194651191', 'sbin3409394', 'wire-adcb-44035'];
-    $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) use ($dummyWireIds, $dummyWireRefs) {
+    $validPayIds = [];
+    if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        foreach ($data['vendor_payments'] as $vp) {
+            if (!empty($vp['id'])) $validPayIds[$vp['id']] = true;
+        }
+    }
+    $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) use ($dummyWireIds, $dummyWireRefs, $validPayIds) {
         $id = strtolower(trim($bt['id'] ?? ''));
         $ref = strtolower(trim($bt['reference_no'] ?? ''));
-        return !in_array($id, $dummyWireIds) && !in_array($id, $dummyWireRefs) && !in_array($ref, $dummyWireRefs);
+        if (in_array($id, $dummyWireIds) || in_array($id, $dummyWireRefs) || in_array($ref, $dummyWireRefs)) return false;
+        if (!empty($bt['payment_id']) && !isset($validPayIds[$bt['payment_id']])) return false;
+        return true;
     }));
     if (count($data['bank_transfers']) !== $orig) $changed = true;
 
@@ -4563,10 +4572,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $no = $item['voucher_no'] ?? '';
                     return $id !== $payId && $no !== $payId && $id !== $payNo && $no !== $payNo;
                 }));
+                if (isset($db['bank_transfers']) && is_array($db['bank_transfers'])) {
+                    $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($item) use ($payId, $payNo) {
+                        $pId = $item['payment_id'] ?? '';
+                        return $pId !== $payId && $pId !== $payNo;
+                    }));
+                }
+                if (isset($db['cash_vouchers']) && is_array($db['cash_vouchers'])) {
+                    $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($item) use ($payId, $payNo) {
+                        $pId = $item['payment_id'] ?? '';
+                        return $pId !== $payId && $pId !== $payNo;
+                    }));
+                }
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM finance_vendor_payments WHERE id = ? OR voucher_no = ? OR id = ? OR voucher_no = ?");
                         $stmt->execute([$payId, $payId, $payNo, $payNo]);
+                        $stmtBt = $pdo->prepare("DELETE FROM finance_bank_transfers WHERE payment_id = ? OR payment_id = ?");
+                        $stmtBt->execute([$payId, $payNo]);
+                        $stmtCv = $pdo->prepare("DELETE FROM finance_cash_vouchers WHERE payment_id = ? OR payment_id = ?");
+                        $stmtCv->execute([$payId, $payNo]);
                     } catch (Exception $e) {}
                 }
                 recalculateAllFinanceBalances($db);

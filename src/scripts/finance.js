@@ -536,11 +536,14 @@ class FinanceApp {
 
     if (Array.isArray(this.db.bank_transfers)) {
       const dummyRefs = new Set(['wire-adcb-99210', '194651191', 'sbin3409394', 'wire-adcb-44035', 'wire-01', 'wire-02', 'wire-04', 'wire-05']);
+      const validPayIds = new Set((this.db.vendor_payments || []).map(p => p.id).filter(Boolean));
       this.db.bank_transfers = this.db.bank_transfers.filter(t => {
         if (!t) return false;
         const id = String(t.id || '').toLowerCase();
         const ref = String(t.reference_no || '').toLowerCase();
-        return !dummyRefs.has(id) && !dummyRefs.has(ref);
+        if (dummyRefs.has(id) || dummyRefs.has(ref)) return false;
+        if (t.payment_id && !validPayIds.has(t.payment_id)) return false;
+        return true;
       });
     }
 
@@ -1227,7 +1230,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v59';
+    const CURRENT_DB_VERSION = 'v2026_clean_v60';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -24802,6 +24805,12 @@ class FinanceApp {
     // 1. Immediately remove from local database & recalculate balances
     if (this.db.vendor_payments) {
       this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== payId && p.voucher_no !== payId);
+    }
+    if (this.db.bank_transfers) {
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.payment_id !== payId);
+    }
+    if (this.db.cash_vouchers) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => cv.payment_id !== payId);
     }
     this.normalizeAllBalances();
     try {
