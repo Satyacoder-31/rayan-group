@@ -2182,6 +2182,29 @@ class FinanceApp {
           if (bank) {
             bank.balance = (Number(bank.balance) || 0) + amt;
           }
+          const chqRef = receipt.cheque_no || receipt.reference_no || `CHQ-${receipt.receipt_no}`;
+          const finalRef = chqRef.startsWith('CHQ-') ? chqRef : `CHQ-${chqRef}`;
+          const existingWire = db.bank_transfers.find(w => w.receipt_id === receipt.id || w.reference_no === finalRef || w.reference_no === chqRef);
+          if (!existingWire) {
+            db.bank_transfers.unshift({
+              id: `wire-chq-${receipt.id || Date.now()}`,
+              receipt_id: receipt.id,
+              company_id: companyId,
+              reference_no: finalRef,
+              date: receipt.cheque_date || receipt.receipt_date || new Date().toISOString().split('T')[0],
+              transfer_date: receipt.cheque_date || receipt.receipt_date || new Date().toISOString().split('T')[0],
+              counterparty: this.formatCompanyName(receipt.customer_name),
+              source_account_id: bank ? bank.id : 'bank-adcb-uae',
+              source_bank: bank ? `${bank.bank_name} (${currency})` : 'Abu Dhabi Commercial Bank (ADCB) (AED)',
+              type: 'inward',
+              type_label: 'Inward Cheque Deposit',
+              amount: amt,
+              currency: currency,
+              purpose: receipt.notes || `Cheque clearance for receipt ${receipt.receipt_no}${receipt.ref_invoice_no ? ' against ' + receipt.ref_invoice_no : ''}`,
+              status: 'Cleared',
+              created_at: new Date().toISOString()
+            });
+          }
         }
       }
     } else {
@@ -7355,6 +7378,13 @@ class FinanceApp {
     const outward = cheques.filter(c => c.type === 'outward');
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
 
+    const totalInwardAll = inward.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const inwardCleared = inward.filter(c => c.status === 'Cleared');
+    const totalInwardCleared = inwardCleared.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const inwardPending = inward.filter(c => c.status !== 'Cleared');
+    const totalInwardPending = inwardPending.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const totalOutwardAll = outward.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+
     this.inwardChqSort = this.inwardChqSort || 'serial-desc';
     this.outwardChqSort = this.outwardChqSort || 'serial-desc';
 
@@ -7373,6 +7403,30 @@ class FinanceApp {
     });
 
     root.innerHTML = `
+      <!-- Executive Cheques Portfolio Summary KPIs -->
+      <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-bottom: 1.25rem;">
+        <div class="fin-metric-card">
+          <span class="fin-metric-label">Total Inward Cheques</span>
+          <div class="fin-metric-value" style="color:#38bdf8;">${this.formatCurrency(totalInwardAll)}</div>
+          <span class="fin-metric-sub">${inward.length} Received Instruments (All PDCs &amp; Cheques)</span>
+        </div>
+        <div class="fin-metric-card">
+          <span class="fin-metric-label">Cleared &amp; Deposited in Bank</span>
+          <div class="fin-metric-value" style="color:#10b981;">${this.formatCurrency(totalInwardCleared)}</div>
+          <span class="fin-metric-sub">${inwardCleared.length} Instruments Realized in Bank Account</span>
+        </div>
+        <div class="fin-metric-card">
+          <span class="fin-metric-label">Pending / PDC In Hand</span>
+          <div class="fin-metric-value" style="color:#f59e0b;">${this.formatCurrency(totalInwardPending)}</div>
+          <span class="fin-metric-sub">${inwardPending.length} Instruments Awaiting Deposit / Clearance</span>
+        </div>
+        <div class="fin-metric-card">
+          <span class="fin-metric-label">Outward Cheques (Vendor)</span>
+          <div class="fin-metric-value" style="color:#fb923c;">${this.formatCurrency(totalOutwardAll)}</div>
+          <span class="fin-metric-sub">${outward.length} Disbursals to Suppliers &amp; Contractors</span>
+        </div>
+      </div>
+
       <div class="fin-dash-row-responsive">
         <!-- Inward Cheques -->
         <div class="fin-panel-card">
@@ -7439,6 +7493,19 @@ class FinanceApp {
               <tbody id="inward-cheques-tbody">
                 ${this.renderInwardChequeRows(sortedInitialInward)}
               </tbody>
+              <tfoot id="inward-cheques-tfoot" style="background:rgba(15,23,42,0.9); font-weight:700; border-top:2px solid rgba(56,189,248,0.35);">
+                <tr>
+                  <td colspan="4" style="padding:0.75rem 1rem; color:#f8fafc; font-size:0.85rem;">
+                    <span style="color:#38bdf8; font-weight:800; margin-right:0.4rem;">∑</span> Total Inward Cheques (<span id="inward-footer-count">${inward.length}</span> cheques):
+                  </td>
+                  <td style="text-align:right; padding:0.75rem 1rem; font-size:0.95rem; font-weight:800; color:#10b981;">
+                    <span id="inward-footer-total">${this.formatCurrency(totalInwardAll)}</span>
+                  </td>
+                  <td colspan="2" style="padding:0.75rem 1rem; font-size:0.75rem; color:#94a3b8;">
+                    <span id="inward-footer-breakdown">${inwardCleared.length} Cleared • ${inwardPending.length} Pending</span>
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -7501,6 +7568,19 @@ class FinanceApp {
               <tbody id="outward-cheques-tbody">
                 ${this.renderOutwardChequeRows(sortedInitialOutward)}
               </tbody>
+              <tfoot id="outward-cheques-tfoot" style="background:rgba(15,23,42,0.9); font-weight:700; border-top:2px solid rgba(251,146,60,0.35);">
+                <tr>
+                  <td colspan="4" style="padding:0.75rem 1rem; color:#f8fafc; font-size:0.85rem;">
+                    <span style="color:#fb923c; font-weight:800; margin-right:0.4rem;">∑</span> Total Outward Cheques (<span id="outward-footer-count">${outward.length}</span> cheques):
+                  </td>
+                  <td style="text-align:right; padding:0.75rem 1rem; font-size:0.95rem; font-weight:800; color:#fb923c;">
+                    <span id="outward-footer-total">${this.formatCurrency(totalOutwardAll)}</span>
+                  </td>
+                  <td colspan="2" style="padding:0.75rem 1rem; font-size:0.75rem; color:#94a3b8;">
+                    <span id="outward-footer-breakdown">${outward.length} Issued</span>
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -7545,6 +7625,17 @@ class FinanceApp {
 
       if (inTbody) inTbody.innerHTML = this.renderInwardChequeRows(sorted, q);
       if (inCount) inCount.textContent = sorted.length;
+
+      // Update Inward Footer Totals dynamically
+      const filteredSum = sorted.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+      const filteredCleared = sorted.filter(c => c.status === 'Cleared').length;
+      const filteredPending = sorted.filter(c => c.status !== 'Cleared').length;
+      const ftCount = document.getElementById('inward-footer-count');
+      const ftTotal = document.getElementById('inward-footer-total');
+      const ftBreakdown = document.getElementById('inward-footer-breakdown');
+      if (ftCount) ftCount.textContent = sorted.length;
+      if (ftTotal) ftTotal.textContent = this.formatCurrency(filteredSum);
+      if (ftBreakdown) ftBreakdown.textContent = `${filteredCleared} Cleared • ${filteredPending} Pending`;
 
       // Update header sort icons
       const iconSerial = document.getElementById('inward-sort-icon-serial');
@@ -7631,6 +7722,15 @@ class FinanceApp {
       if (outTbody) outTbody.innerHTML = this.renderOutwardChequeRows(sorted, q);
       if (outCount) outCount.textContent = sorted.length;
 
+      // Update Outward Footer Totals dynamically
+      const filteredOutSum = sorted.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+      const ftOutCount = document.getElementById('outward-footer-count');
+      const ftOutTotal = document.getElementById('outward-footer-total');
+      const ftOutBreakdown = document.getElementById('outward-footer-breakdown');
+      if (ftOutCount) ftOutCount.textContent = sorted.length;
+      if (ftOutTotal) ftOutTotal.textContent = this.formatCurrency(filteredOutSum);
+      if (ftOutBreakdown) ftOutBreakdown.textContent = `${sorted.length} Issued`;
+
       // Update header sort icons
       const iconSerial = document.getElementById('outward-sort-icon-serial');
       const iconParty = document.getElementById('outward-sort-icon-party');
@@ -7693,7 +7793,14 @@ class FinanceApp {
     return inwardList.map(c => `
       <tr>
         <td><strong style="color:#38bdf8; font-family:monospace;">${c.cheque_no}</strong></td>
-        <td>${c.bank_name || '—'}</td>
+        <td>
+          <div style="font-weight:600; color:#f8fafc;">${c.bank_name || '—'}</div>
+          ${(c.bank_account_name || c.status === 'Cleared' || c.status === 'Deposited') ? `
+            <div style="font-size:0.7rem; color:#38bdf8; margin-top:2px; font-weight:500;">
+              🏦 Deposited: ${c.bank_account_name || 'Abu Dhabi Commercial Bank (ADCB)'}
+            </div>
+          ` : ''}
+        </td>
         <td>
           <div style="font-weight:600; color:#ffffff;">${this.formatCompanyName(c.party_name)}</div>
           ${c.notes ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.notes}</div>` : ''}
@@ -7704,11 +7811,11 @@ class FinanceApp {
           ${this.getChequeBadge(c.status)}
         </td>
         <td style="text-align:center;">
-          <div style="display:inline-flex; gap:3px;">
+          <div style="display:inline-flex; gap:4px; align-items:center;">
             ${c.status !== 'Cleared' ? `
-              <button type="button" class="fin-btn-card-action success" title="Clear &amp; Credit Bank" onclick="window.finApp.promptClearCheque('${c.id}', 'inward')">⚡ Clear</button>
+              <button type="button" class="fin-btn-card-action primary" style="background:rgba(16,185,129,0.18); border:1px solid #10b981; color:#34d399; font-weight:700; white-space:nowrap;" title="Deposit Cheque to Corporate Bank Account" onclick="window.finApp.openDepositChequeModal('${c.id}')">🏦 Deposit</button>
             ` : ''}
-            <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
+            <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8;" title="Change Status / Edit" onclick="window.finApp.openUpdateChequeStatusModal('${c.id}')">✏️</button>
             <button type="button" class="fin-btn-card-action danger" title="Delete Cheque" onclick="window.finApp.deleteCheque('${c.id}')">🗑️</button>
           </div>
         </td>
@@ -20611,10 +20718,13 @@ class FinanceApp {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const isInward = type === 'inward';
     const autoChqNo = Math.floor(100000 + Math.random() * 900000).toString();
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === (this.activeCompanyId || 'rayan-corp-uae'));
+    const targetBanks = banks.length > 0 ? banks : (this.db?.bank_accounts || []);
+    const defaultBank = targetBanks.find(b => b.id === 'bank-adcb-uae' || (b.bank_name || '').toLowerCase().includes('adcb')) || targetBanks[0];
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-cheque-entry">
-        <div class="fin-modal-dialog" style="max-width:550px;">
+        <div class="fin-modal-dialog" style="max-width:560px;">
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">${isInward ? '📥 Record Inward Cheque (Receipt)' : '📤 Issue Outward Cheque (Disbursal)'}</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cheque-entry')">&times;</button>
@@ -20634,11 +20744,11 @@ class FinanceApp {
 
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">${isInward ? 'Drawee Bank Name' : 'Issuing Bank Account'} <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">${isInward ? 'Drawee Bank Name (Client Bank)' : 'Issuing Bank Account'} <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="cq-bank" class="fin-form-input" required placeholder="e.g. Abu Dhabi Commercial Bank (ADCB) / First Abu Dhabi Bank (FAB)">
                 </div>
                 <div class="fin-form-group">
-                  <label class="fin-form-label">${isInward ? 'Customer / Issuer' : 'Payee Vendor'} <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">${isInward ? 'Customer / Drawer' : 'Payee Vendor'} <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="cq-party" class="fin-form-input" required placeholder="e.g. Emaar Properties / Siemens">
                 </div>
               </div>
@@ -20655,18 +20765,26 @@ class FinanceApp {
                     <option value="${isInward ? 'In Hand' : 'Issued'}" ${!isInward ? 'selected' : ''}>${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
                     <option value="Deposited">${isInward ? 'Deposited in Bank' : 'Presented for Clearing'}</option>
                     <option value="Security Cheque">🛡️ Security Cheque</option>
-                    <option value="Cleared">⚡ Cleared Directly</option>
+                    <option value="Cleared">⚡ Cleared Directly (Credit Bank)</option>
                   </select>
                 </div>
               </div>
 
               <div class="fin-form-group">
+                <label class="fin-form-label">${isInward ? 'Deposit To Corporate Bank Account' : 'Debit Corporate Bank Account'} <span style="color:#ef4444;">*</span></label>
+                <select id="cq-target-bank" class="fin-form-select" required>
+                  ${targetBanks.map(b => `<option value="${b.id}" ${defaultBank && b.id === defaultBank.id ? 'selected' : ''}>${b.bank_name} — ${b.account_name} (${this.formatCurrency(b.balance)})</option>`).join('')}
+                </select>
+                <span style="font-size:0.72rem; color:#94a3b8;">${isInward ? 'Corporate bank account receiving the funds when deposited/cleared.' : 'Corporate bank account issuing the cheque.'}</span>
+              </div>
+
+              <div class="fin-form-group">
                 <label class="fin-form-label">Notes / Linked Invoice or Project</label>
-                <input type="text" id="cq-notes" class="fin-form-input" placeholder="e.g. PDC for Invoice REC-RG-INV-44023 / AON Project">
+                <input type="text" id="cq-notes" class="fin-form-input" placeholder="e.g. Cheque for Invoice REC-RG-INV-44023 / AON Project">
               </div>
 
               <div style="margin-top:0.6rem; padding:0.6rem 0.8rem; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:6px; font-size:0.75rem; color:#94a3b8; line-height:1.4;">
-                💡 <strong style="color:#38bdf8;">PDC Accounting Notice:</strong> Post-Dated Cheques recorded here are logged as "In Hand" in your <strong>Cheques Register</strong>. The linked sales invoice remains pending until the cheque is deposited and cleared. When the cheque date arrives, click <strong>⚡ Clear</strong> to credit your bank account.
+                💡 <strong style="color:#38bdf8;">Cheque Accounting Notice:</strong> Cheques recorded as "In Hand" or "PDC" remain pending in your <strong>Cheques Register</strong>. When depositing or when clearing arrives, click <strong>🏦 Deposit</strong> to immediately credit your selected corporate bank account and log an audited clearance wire!
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -20683,6 +20801,11 @@ class FinanceApp {
 
     document.getElementById('cheque-entry-form').onsubmit = async (e) => {
       e.preventDefault();
+      const targetBankId = document.getElementById('cq-target-bank')?.value;
+      const targetBank = targetBanks.find(b => b.id === targetBankId) || defaultBank;
+      const chqAmt = parseFloat(document.getElementById('cq-amount').value) || 0;
+      const chqStatus = document.getElementById('cq-status').value;
+
       const chqData = {
         id: `chq-${Date.now().toString(36)}`,
         company_id: this.activeCompanyId || 'rayan-corp-uae',
@@ -20690,28 +20813,226 @@ class FinanceApp {
         cheque_no: document.getElementById('cq-number').value.trim(),
         date: document.getElementById('cq-date').value,
         bank_name: document.getElementById('cq-bank').value.trim(),
+        bank_account_id: targetBankId,
+        bank_account_name: targetBank?.bank_name || 'Abu Dhabi Commercial Bank (ADCB)',
         party_name: document.getElementById('cq-party').value.trim(),
-        amount: parseFloat(document.getElementById('cq-amount').value) || 0,
+        amount: chqAmt,
         currency: isIndia ? 'INR' : 'AED',
-        status: document.getElementById('cq-status').value,
-        notes: document.getElementById('cq-notes').value.trim()
+        status: chqStatus,
+        notes: document.getElementById('cq-notes').value.trim(),
+        created_at: new Date().toISOString()
       };
+
+      if (!this.db.cheques) this.db.cheques = [];
+      this.db.cheques.unshift(chqData);
+
+      // If initially marked Cleared or Deposited, credit/debit bank and create bank_transfers
+      if (chqStatus === 'Cleared' || chqStatus === 'Deposited') {
+        if (targetBank) {
+          if (isInward) targetBank.balance = (Number(targetBank.balance) || 0) + chqAmt;
+          else targetBank.balance = (Number(targetBank.balance) || 0) - chqAmt;
+        }
+        if (isInward) {
+          if (!this.db.bank_transfers) this.db.bank_transfers = [];
+          this.db.bank_transfers.unshift({
+            id: `wire-chq-${chqData.id}`,
+            company_id: chqData.company_id,
+            reference_no: `CHQ-${chqData.cheque_no}`,
+            date: chqData.date,
+            transfer_date: chqData.date,
+            counterparty: this.formatCompanyName(chqData.party_name),
+            source_account_id: targetBankId,
+            source_bank: `${targetBank?.bank_name || 'Abu Dhabi Commercial Bank (ADCB)'} (${chqData.currency})`,
+            type: 'inward',
+            type_label: 'Inward Cheque Deposit',
+            amount: chqAmt,
+            currency: chqData.currency,
+            purpose: chqData.notes || `Cheque #${chqData.cheque_no} deposit from ${chqData.party_name}`,
+            status: 'Cleared',
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+
+      this.normalizeAllBalances();
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
       await this.syncApi('record_cheque', { cheque: chqData });
       this.closeModal('modal-cheque-entry');
       this.activeTab = 'cheques';
       this.renderActiveTab();
-      this.showNotification(`Cheque ${chqData.cheque_no} saved successfully!`, 'success');
+      this.showNotification(`Cheque #${chqData.cheque_no} saved successfully!`, 'success');
+    };
+  }
+
+  // 5a. DEPOSIT CHEQUE MODAL
+  openDepositChequeModal(chequeId) {
+    const chq = (this.db?.cheques || []).find(c => c.id === chequeId);
+    if (!chq) return;
+    const isIndia = (chq.currency === 'INR') || this.activeCompanyId === 'ashaz-eng-in';
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === (chq.company_id || this.activeCompanyId));
+    const targetBanks = banks.length > 0 ? banks : (this.db?.bank_accounts || []);
+    const defaultBank = targetBanks.find(b => (chq.bank_account_id && b.id === chq.bank_account_id) || b.id === 'bank-adcb-uae' || (b.bank_name || '').toLowerCase().includes('adcb')) || targetBanks[0];
+    const defaultDate = new Date().toISOString().split('T')[0];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-deposit-cheque">
+        <div class="fin-modal-dialog" style="max-width:540px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">🏦 Deposit Cheque to Bank Account</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-deposit-cheque')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <!-- Cheque Summary Card -->
+            <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.85rem 1rem; margin-bottom:1.15rem;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem;">
+                <div>
+                  <span style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Cheque Number</span>
+                  <div style="font-size:1.1rem; font-weight:800; color:#38bdf8; font-family:monospace;">#${chq.cheque_no}</div>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Cheque Amount</span>
+                  <div style="font-size:1.15rem; font-weight:800; color:#10b981;">${this.formatCurrency(chq.amount)}</div>
+                </div>
+              </div>
+              <div style="font-size:0.8rem; color:#cbd5e1; border-top:1px solid rgba(255,255,255,0.06); padding-top:0.4rem; display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
+                <div><strong style="color:#94a3b8;">Drawer / Issuer:</strong> ${this.formatCompanyName(chq.party_name)}</div>
+                <div><strong style="color:#94a3b8;">Drawee Bank:</strong> ${chq.bank_name || '—'}</div>
+                <div><strong style="color:#94a3b8;">Instrument Date:</strong> ${this.formatDate(chq.date)}</div>
+                <div><strong style="color:#94a3b8;">Current Status:</strong> ${this.getChequeBadge(chq.status)}</div>
+              </div>
+            </div>
+
+            <form id="deposit-cheque-form">
+              <div class="fin-form-group">
+                <label class="fin-form-label">Deposit To Corporate Bank Account <span style="color:#ef4444;">*</span></label>
+                <select id="dep-bank-id" class="fin-form-select" required>
+                  ${targetBanks.map(b => `
+                    <option value="${b.id}" ${defaultBank && b.id === defaultBank.id ? 'selected' : ''}>
+                      ${b.bank_name} — ${b.account_name} (${this.formatCurrency(b.balance)})
+                    </option>
+                  `).join('')}
+                </select>
+                <span style="font-size:0.72rem; color:#94a3b8;">The deposited cheque amount will be credited directly into this corporate account balance.</span>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Deposit / Settlement Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="dep-date" class="fin-form-input" required value="${defaultDate}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Clearance Action</label>
+                  <select id="dep-action-status" class="fin-form-select">
+                    <option value="Cleared" selected>⚡ Cleared &amp; Realized (Credit Bank Now)</option>
+                    <option value="Deposited">🏦 Deposited / Sent for Collection</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Deposit Slip / Reference #</label>
+                <input type="text" id="dep-ref-no" class="fin-form-input" value="CHQ-${chq.cheque_no}">
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Audit Notes / Deposit Memo</label>
+                <input type="text" id="dep-memo" class="fin-form-input" value="Cheque #${chq.cheque_no} deposit from ${chq.party_name}${chq.notes ? ' (' + chq.notes + ')' : ''}">
+              </div>
+
+              <div style="padding:0.6rem 0.8rem; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:6px; font-size:0.75rem; color:#94a3b8; line-height:1.4; margin-top:0.5rem;">
+                ✅ <strong style="color:#34d399;">Treasury Ledger Integration:</strong> Depositing this cheque logs an inward clearance record under <strong>Recent Bank Wires &amp; Remittance Clearances</strong> and updates your bank statement liquidity immediately.
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-deposit-cheque')">Cancel</button>
+                <button type="submit" class="fin-btn-quick primary">Confirm Bank Deposit &rarr;</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    document.getElementById('deposit-cheque-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const bankId = document.getElementById('dep-bank-id').value;
+      const depDate = document.getElementById('dep-date').value;
+      const newStatus = document.getElementById('dep-action-status').value;
+      const depRef = document.getElementById('dep-ref-no').value.trim() || `CHQ-${chq.cheque_no}`;
+      const depMemo = document.getElementById('dep-memo').value.trim();
+
+      const bank = (this.db?.bank_accounts || []).find(b => b.id === bankId) || defaultBank;
+
+      // Update local state immediately
+      chq.status = newStatus;
+      chq.bank_account_id = bankId;
+      chq.bank_account_name = bank?.bank_name || 'Abu Dhabi Commercial Bank (ADCB)';
+      chq.deposit_date = depDate;
+
+      if (newStatus === 'Cleared' || newStatus === 'Deposited') {
+        if (bank) {
+          bank.balance = (Number(bank.balance) || 0) + (Number(chq.amount) || 0);
+        }
+        if (!this.db.bank_transfers) this.db.bank_transfers = [];
+        const wireId = `wire-chq-${chq.id || chq.cheque_no}`;
+        const existingIdx = this.db.bank_transfers.findIndex(t => t.id === wireId || t.reference_no === depRef);
+        const trfObj = {
+          id: wireId,
+          company_id: chq.company_id || this.activeCompanyId,
+          reference_no: depRef,
+          date: depDate,
+          transfer_date: depDate,
+          counterparty: this.formatCompanyName(chq.party_name),
+          source_account_id: bankId,
+          source_bank: `${bank?.bank_name || 'Abu Dhabi Commercial Bank (ADCB)'} (${chq.currency || 'AED'})`,
+          type: 'inward',
+          type_label: 'Inward Cheque Deposit',
+          amount: Number(chq.amount) || 0,
+          currency: chq.currency || 'AED',
+          purpose: depMemo,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        };
+        if (existingIdx >= 0) {
+          this.db.bank_transfers[existingIdx] = trfObj;
+        } else {
+          this.db.bank_transfers.unshift(trfObj);
+        }
+      }
+
+      this.normalizeAllBalances();
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+
+      await this.syncApi('deposit_cheque', {
+        id: chequeId,
+        cheque_id: chequeId,
+        bank_account_id: bankId,
+        deposit_date: depDate,
+        status: newStatus,
+        reference_no: depRef,
+        notes: depMemo
+      });
+
+      this.closeModal('modal-deposit-cheque');
+      this.renderActiveTab();
+      this.showNotification(`Cheque #${chq.cheque_no} (${this.formatCurrency(chq.amount)}) successfully deposited into ${bank?.bank_name || 'Bank Account'}!`, 'success');
     };
   }
 
   async promptClearCheque(chequeId, type = 'inward') {
+    if (type === 'inward') {
+      this.openDepositChequeModal(chequeId);
+      return;
+    }
     const chq = (this.db?.cheques || []).find(c => c.id === chequeId);
     if (!chq) return;
     const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
 
     if (banks.length === 0) {
-      if (confirm('Mark cheque as Cleared?')) {
+      if (confirm('Mark outward cheque as Cleared?')) {
         await this.syncApi('update_cheque_status', { id: chequeId, status: 'Cleared' });
         this.renderActiveTab();
       }
@@ -20722,13 +21043,13 @@ class FinanceApp {
       <div class="fin-modal-backdrop open" id="modal-clear-cheque">
         <div class="fin-modal-dialog" style="max-width:480px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">⚡ Clear Cheque &amp; Update Bank</h3>
+            <h3 class="fin-modal-title">⚡ Clear Outward Cheque &amp; Debit Bank</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-clear-cheque')">&times;</button>
           </div>
           <div class="fin-modal-body">
             <p style="font-size:0.85rem; color:#cbd5e1; margin-bottom:1rem;">
-              Clearing Cheque <strong>#${chq.cheque_no}</strong> for <strong>${this.formatCurrency(chq.amount)}</strong>.
-              Select which corporate bank account should be ${type === 'inward' ? 'credited' : 'debited'}:
+              Clearing Outward Cheque <strong>#${chq.cheque_no}</strong> for <strong>${this.formatCurrency(chq.amount)}</strong>.
+              Select corporate bank account to debit:
             </p>
             <form id="clear-cheque-form">
               <div class="fin-form-group">
@@ -20752,6 +21073,14 @@ class FinanceApp {
     document.getElementById('clear-cheque-form').onsubmit = async (e) => {
       e.preventDefault();
       const bankAccId = document.getElementById('cc-bank-id').value;
+      const bank = banks.find(b => b.id === bankAccId);
+      if (bank) {
+        bank.balance = (Number(bank.balance) || 0) - (Number(chq.amount) || 0);
+      }
+      chq.status = 'Cleared';
+      chq.bank_account_id = bankAccId;
+      chq.bank_account_name = bank?.bank_name || '';
+
       await this.syncApi('update_cheque_status', {
         id: chequeId,
         status: 'Cleared',
@@ -20759,7 +21088,7 @@ class FinanceApp {
       });
       this.closeModal('modal-clear-cheque');
       this.renderActiveTab();
-      this.showNotification(`Cheque #${chq.cheque_no} cleared and bank account updated!`, 'success');
+      this.showNotification(`Outward Cheque #${chq.cheque_no} cleared and bank account debited!`, 'success');
     };
   }
 
@@ -20793,7 +21122,7 @@ class FinanceApp {
                   <option value="${isInward ? 'In Hand' : 'Issued'}" ${chq.status === 'In Hand' || chq.status === 'Issued' ? 'selected' : ''}>${isInward ? 'In Hand (Under Clearance)' : 'Issued to Vendor'}</option>
                   <option value="Deposited" ${chq.status === 'Deposited' ? 'selected' : ''}>${isInward ? 'Deposited in Bank' : 'Presented for Clearing'}</option>
                   <option value="Security Cheque" ${chq.status === 'Security Cheque' ? 'selected' : ''}>🛡️ Security Cheque</option>
-                  <option value="Cleared" ${chq.status === 'Cleared' ? 'selected' : ''}>⚡ Cleared Directly</option>
+                  <option value="Cleared" ${chq.status === 'Cleared' ? 'selected' : ''}>⚡ Cleared (Realized in Bank)</option>
                   <option value="Returned" ${chq.status === 'Returned' ? 'selected' : ''}>Returned / Cancelled</option>
                   <option value="Bounced" ${chq.status === 'Bounced' ? 'selected' : ''}>❌ Bounced</option>
                 </select>
@@ -20814,11 +21143,12 @@ class FinanceApp {
     document.getElementById('update-cheque-status-form').onsubmit = async (e) => {
       e.preventDefault();
       const newStatus = document.getElementById('chq-new-status').value;
-      if (newStatus === 'Cleared' && chq.status !== 'Cleared') {
+      if (isInward && (newStatus === 'Cleared' || newStatus === 'Deposited') && chq.status !== 'Cleared') {
         this.closeModal('modal-update-cheque-status');
-        this.promptClearCheque(chequeId, chq.type);
+        this.openDepositChequeModal(chequeId);
         return;
       }
+      chq.status = newStatus;
       await this.syncApi('update_cheque_status', { id: chequeId, status: newStatus });
       this.closeModal('modal-update-cheque-status');
       this.renderActiveTab();
@@ -20827,10 +21157,24 @@ class FinanceApp {
   }
 
   async deleteCheque(chequeId) {
-    if (!confirm('Are you sure you want to delete this cheque record?')) return;
-    await this.syncApi('delete_cheque', { id: chequeId });
+    const chq = (this.db?.cheques || []).find(c => c.id === chequeId);
+    const label = chq ? `#${chq.cheque_no}` : chequeId;
+    if (!confirm(`Are you sure you want to delete cheque ${label}?`)) return;
+
+    if (this.db?.cheques) {
+      this.db.cheques = this.db.cheques.filter(c => c.id !== chequeId && c.cheque_no !== chequeId);
+    }
+    if (this.db?.bank_transfers) {
+      const wireId = `wire-chq-${chequeId}`;
+      const chqRef = chq ? `CHQ-${chq.cheque_no}` : '';
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== wireId && (!chqRef || t.reference_no !== chqRef));
+    }
+    this.normalizeAllBalances();
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+    await this.syncApi('delete_cheque', { id: chequeId, cheque_id: chequeId });
     this.renderActiveTab();
-    this.showNotification('Cheque record deleted.', 'info');
+    this.showNotification(`Cheque ${label} deleted successfully.`, 'info');
   }
 
   // 6. ADD / EDIT LOAN FACILITY MODAL

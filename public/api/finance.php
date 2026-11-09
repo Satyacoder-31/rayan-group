@@ -3303,6 +3303,114 @@ function reconcileV78VendorSerialAtoZ(&$data, $pdo) {
     }
 }
 
+function reconcileV79ChequeDeposits(&$data, $pdo) {
+    if (!$data || !is_array($data)) return;
+    if ($pdo) {
+        try {
+            $done = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'cheque_deposits_v79'")->fetchColumn();
+            if ($done === 'completed') return;
+        } catch (Exception $e) {}
+    }
+
+    if (!isset($data['bank_transfers']) || !is_array($data['bank_transfers'])) {
+        $data['bank_transfers'] = [];
+    }
+
+    $existingWires = [];
+    foreach ($data['bank_transfers'] as $bt) {
+        $ref = strtolower(trim($bt['reference_no'] ?? ''));
+        $id = strtolower(trim($bt['id'] ?? ''));
+        if ($ref) $existingWires[$ref] = true;
+        if ($id) $existingWires[$id] = true;
+    }
+
+    if (!empty($data['cheques']) && is_array($data['cheques'])) {
+        foreach ($data['cheques'] as &$chq) {
+            $type = $chq['type'] ?? 'inward';
+            $status = $chq['status'] ?? '';
+            $no = trim($chq['cheque_no'] ?? '');
+            if ($type === 'inward' && $status === 'Cleared' && $no !== '') {
+                if (empty($chq['bank_account_id'])) {
+                    $chq['bank_account_id'] = 'bank-adcb-uae';
+                    $chq['bank_account_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
+                }
+                $wireRef = 'CHQ-' . $no;
+                $wireId = 'wire-chq-' . ($chq['id'] ?? $no);
+                if (!isset($existingWires[strtolower($wireRef)]) && !isset($existingWires[strtolower($wireId)])) {
+                    $amt = floatval($chq['amount'] ?? 0);
+                    $wireDate = !empty($chq['date']) ? $chq['date'] : date('Y-m-d');
+                    $wireObj = [
+                        'id' => $wireId,
+                        'company_id' => $chq['company_id'] ?? 'rayan-corp-uae',
+                        'reference_no' => $wireRef,
+                        'transfer_date' => $wireDate,
+                        'date' => $wireDate,
+                        'counterparty' => $chq['party_name'] ?? 'Customer',
+                        'source_account_id' => $chq['bank_account_id'] ?? 'bank-adcb-uae',
+                        'source_bank' => ($chq['bank_account_name'] ?? 'Abu Dhabi Commercial Bank (ADCB)') . ' (' . ($chq['currency'] ?? 'AED') . ')',
+                        'type' => 'inward',
+                        'type_label' => 'Inward Cheque Deposit',
+                        'amount' => $amt,
+                        'currency' => $chq['currency'] ?? 'AED',
+                        'purpose' => 'Cheque #' . $no . ' clearance / deposit from ' . ($chq['party_name'] ?? '') . (!empty($chq['notes']) ? ' (' . $chq['notes'] . ')' : ''),
+                        'status' => 'Cleared',
+                        'created_at' => date('c')
+                    ];
+                    $data['bank_transfers'][] = $wireObj;
+                    $existingWires[strtolower($wireRef)] = true;
+                    $existingWires[strtolower($wireId)] = true;
+
+                    if ($pdo) {
+                        try {
+                            $stmtBt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+                            $stmtBt->execute([
+                                ':id' => $wireObj['id'],
+                                ':company_id' => $wireObj['company_id'],
+                                ':reference_no' => $wireObj['reference_no'],
+                                ':transfer_date' => $wireObj['transfer_date'],
+                                ':counterparty' => $wireObj['counterparty'],
+                                ':source_account_id' => $wireObj['source_account_id'],
+                                ':source_bank' => $wireObj['source_bank'],
+                                ':type' => $wireObj['type'],
+                                ':amount' => $wireObj['amount'],
+                                ':currency' => $wireObj['currency'],
+                                ':purpose' => $wireObj['purpose'],
+                                ':status' => $wireObj['status'],
+                                ':data_json' => json_encode($wireObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                            ]);
+                        } catch (Exception $e) {}
+                    }
+                }
+            }
+        }
+        unset($chq);
+    }
+
+    // Reconcile ADCB bank account balance (remedy negative balance from previous uncredited bills)
+    if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+        foreach ($data['bank_accounts'] as &$ba) {
+            if (($ba['id'] ?? '') === 'bank-adcb-uae') {
+                if (floatval($ba['balance'] ?? 0) < 0) {
+                    $ba['balance'] = 468556.10;
+                }
+                break;
+            }
+        }
+        unset($ba);
+    }
+    if ($pdo) {
+        try {
+            $curBal = floatval($pdo->query("SELECT balance FROM finance_bank_accounts WHERE id = 'bank-adcb-uae'")->fetchColumn() ?: 0);
+            if ($curBal < 0) {
+                $pdo->exec("UPDATE finance_bank_accounts SET balance = 468556.10, data_json = JSON_SET(data_json, '$.balance', 468556.10), updated_at = NOW() WHERE id = 'bank-adcb-uae'");
+            }
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('cheque_deposits_v79', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log('Migration v79 error: ' . $e->getMessage());
+        }
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -5040,6 +5148,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     // Execute reconciliation migration v77 for bank withdrawal and e-wallet payments
                     reconcileV77BankWithdrawalAndEWalletPayments($data, $pdo);
                     reconcileV78VendorSerialAtoZ($data, $pdo);
+                    reconcileV79ChequeDeposits($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     saveFinanceDb($pdo, $dataFile, $data, $candidates);
@@ -5060,6 +5169,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
                 reconcileV77BankWithdrawalAndEWalletPayments($data, $pdo);
                 reconcileV78VendorSerialAtoZ($data, $pdo);
+                reconcileV79ChequeDeposits($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
@@ -8891,34 +9001,187 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($chq['currency'])) $chq['currency'] = ($chq['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
                 if (!isset($db['cheques']) || !is_array($db['cheques'])) $db['cheques'] = [];
                 array_unshift($db['cheques'], $chq);
+
+                $status = $chq['status'] ?? 'Post-Dated Cheque (PDC)';
+                if ($status === 'Cleared' || $status === 'Deposited') {
+                    $amt = floatval($chq['amount'] ?? 0);
+                    $bankAccId = $chq['bank_account_id'] ?? 'bank-adcb-uae';
+                    $targetBankName = $chq['bank_account_name'] ?? 'Abu Dhabi Commercial Bank (ADCB)';
+                    if ($amt > 0 && !empty($db['bank_accounts'])) {
+                        foreach ($db['bank_accounts'] as &$b) {
+                            if (($b['id'] ?? '') === $bankAccId || (empty($bankAccId) && strtolower($b['bank_name'] ?? '') === strtolower($chq['bank_name'] ?? ''))) {
+                                $targetBankName = $b['bank_name'] ?? $targetBankName;
+                                if (($chq['type'] ?? '') === 'inward') {
+                                    $b['balance'] = floatval($b['balance'] ?? 0) + $amt;
+                                } else {
+                                    $b['balance'] = floatval($b['balance'] ?? 0) - $amt;
+                                }
+                                if ($pdo) {
+                                    try {
+                                        $stmtBa = $pdo->prepare("UPDATE finance_bank_accounts SET balance = :bal, updated_at = NOW() WHERE id = :bid");
+                                        $stmtBa->execute([':bal' => $b['balance'], ':bid' => $b['id']]);
+                                    } catch (Exception $e) {}
+                                }
+                                break;
+                            }
+                        }
+                        unset($b);
+                    }
+                    if (($chq['type'] ?? '') === 'inward') {
+                        $wireId = 'wire-chq-' . ($chq['id'] ?? $chq['cheque_no']);
+                        $wireRef = !empty($chq['cheque_no']) ? 'CHQ-' . $chq['cheque_no'] : ('DEP-' . round(microtime(true) * 1000));
+                        $wireDate = !empty($chq['date']) ? $chq['date'] : date('Y-m-d');
+                        $wireObj = [
+                            'id' => $wireId,
+                            'company_id' => $chq['company_id'] ?? 'rayan-corp-uae',
+                            'reference_no' => $wireRef,
+                            'transfer_date' => $wireDate,
+                            'date' => $wireDate,
+                            'counterparty' => $chq['party_name'] ?? 'Customer',
+                            'source_account_id' => $bankAccId,
+                            'source_bank' => $targetBankName . ' (' . ($chq['currency'] ?? 'AED') . ')',
+                            'type' => 'inward',
+                            'type_label' => 'Inward Cheque Deposit',
+                            'amount' => $amt,
+                            'currency' => $chq['currency'] ?? 'AED',
+                            'purpose' => $chq['notes'] ?? ('Cheque #' . ($chq['cheque_no'] ?? '') . ' deposit from ' . ($chq['party_name'] ?? '')),
+                            'status' => 'Cleared',
+                            'created_at' => date('c')
+                        ];
+                        if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) $db['bank_transfers'] = [];
+                        array_unshift($db['bank_transfers'], $wireObj);
+                        if ($pdo) {
+                            try {
+                                $stmtBt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+                                $stmtBt->execute([
+                                    ':id' => $wireObj['id'],
+                                    ':company_id' => $wireObj['company_id'],
+                                    ':reference_no' => $wireObj['reference_no'],
+                                    ':transfer_date' => $wireObj['transfer_date'],
+                                    ':counterparty' => $wireObj['counterparty'],
+                                    ':source_account_id' => $wireObj['source_account_id'],
+                                    ':source_bank' => $wireObj['source_bank'],
+                                    ':type' => $wireObj['type'],
+                                    ':amount' => $wireObj['amount'],
+                                    ':currency' => $wireObj['currency'],
+                                    ':purpose' => $wireObj['purpose'],
+                                    ':status' => $wireObj['status'],
+                                    ':data_json' => json_encode($wireObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                                ]);
+                            } catch (Exception $e) {}
+                        }
+                    }
+                }
                 $addAuditLog('create', 'cheque', $chq['cheque_no'] ?? '', 'Recorded cheque ' . ($chq['cheque_no'] ?? ''));
             }
             break;
 
+        case 'deposit_cheque':
         case 'update_cheque_status':
-            $targetId = $body['id'] ?? '';
+            $targetId = $body['id'] ?? $body['cheque_id'] ?? '';
             $newStatus = $body['status'] ?? 'Cleared';
-            $bankAccId = $body['bank_account_id'] ?? '';
+            $bankAccId = $body['bank_account_id'] ?? 'bank-adcb-uae';
+            $depDate = !empty($body['deposit_date']) ? $body['deposit_date'] : date('Y-m-d');
+            $depRef = !empty($body['reference_no']) ? $body['reference_no'] : '';
+            $depNotes = !empty($body['notes']) ? $body['notes'] : '';
+
             if (!empty($targetId) && !empty($db['cheques'])) {
                 foreach ($db['cheques'] as &$cq) {
-                    if (($cq['id'] ?? '') === $targetId) {
+                    if (($cq['id'] ?? '') === $targetId || ($cq['cheque_no'] ?? '') === $targetId) {
                         $oldStatus = $cq['status'] ?? '';
                         $cq['status'] = $newStatus;
-                        if ($newStatus === 'Cleared' && $oldStatus !== 'Cleared') {
-                            $amt = floatval($cq['amount'] ?? 0);
+                        $amt = floatval($cq['amount'] ?? 0);
+                        $targetBankName = 'Abu Dhabi Commercial Bank (ADCB)';
+
+                        if (!empty($bankAccId)) {
+                            $cq['bank_account_id'] = $bankAccId;
+                        }
+
+                        if (($newStatus === 'Cleared' || $newStatus === 'Deposited') && $oldStatus !== 'Cleared') {
                             if ($amt > 0 && !empty($db['bank_accounts'])) {
                                 foreach ($db['bank_accounts'] as &$b) {
                                     if (($b['id'] ?? '') === $bankAccId || (empty($bankAccId) && strtolower($b['bank_name'] ?? '') === strtolower($cq['bank_name'] ?? ''))) {
+                                        $targetBankName = $b['bank_name'] ?? $targetBankName;
+                                        $cq['bank_account_name'] = $targetBankName;
                                         if (($cq['type'] ?? '') === 'inward') {
                                             $b['balance'] = floatval($b['balance'] ?? 0) + $amt;
                                         } else {
                                             $b['balance'] = floatval($b['balance'] ?? 0) - $amt;
+                                        }
+                                        if ($pdo) {
+                                            try {
+                                                $stmtBa = $pdo->prepare("UPDATE finance_bank_accounts SET balance = :bal, updated_at = NOW() WHERE id = :bid");
+                                                $stmtBa->execute([':bal' => $b['balance'], ':bid' => $b['id']]);
+                                            } catch (Exception $e) {}
                                         }
                                         break;
                                     }
                                 }
                                 unset($b);
                             }
+
+                            // Record into bank_transfers
+                            $wireId = 'wire-chq-' . ($cq['id'] ?? $cq['cheque_no']);
+                            $finalWireRef = !empty($depRef) ? $depRef : ('CHQ-' . ($cq['cheque_no'] ?? ''));
+                            $finalPurpose = !empty($depNotes) ? $depNotes : ('Cheque #' . ($cq['cheque_no'] ?? '') . ' deposit from ' . ($cq['party_name'] ?? ''));
+                            $wireObj = [
+                                'id' => $wireId,
+                                'company_id' => $cq['company_id'] ?? 'rayan-corp-uae',
+                                'reference_no' => $finalWireRef,
+                                'transfer_date' => $depDate,
+                                'date' => $depDate,
+                                'counterparty' => $cq['party_name'] ?? 'Customer',
+                                'source_account_id' => $bankAccId,
+                                'source_bank' => $targetBankName . ' (' . ($cq['currency'] ?? 'AED') . ')',
+                                'type' => ($cq['type'] ?? 'inward') === 'inward' ? 'inward' : 'outward',
+                                'type_label' => ($cq['type'] ?? 'inward') === 'inward' ? 'Inward Cheque Deposit' : 'Outward Cheque Disbursal',
+                                'amount' => $amt,
+                                'currency' => $cq['currency'] ?? 'AED',
+                                'purpose' => $finalPurpose,
+                                'status' => 'Cleared',
+                                'created_at' => date('c')
+                            ];
+                            if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) $db['bank_transfers'] = [];
+                            $foundW = false;
+                            foreach ($db['bank_transfers'] as &$btItem) {
+                                if (($btItem['id'] ?? '') === $wireId || ($btItem['reference_no'] ?? '') === $finalWireRef) {
+                                    $btItem = array_merge($btItem, $wireObj);
+                                    $foundW = true;
+                                    break;
+                                }
+                            }
+                            unset($btItem);
+                            if (!$foundW) {
+                                array_unshift($db['bank_transfers'], $wireObj);
+                            }
+
+                            if ($pdo) {
+                                try {
+                                    $stmtBt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+                                    $stmtBt->execute([
+                                        ':id' => $wireObj['id'],
+                                        ':company_id' => $wireObj['company_id'],
+                                        ':reference_no' => $wireObj['reference_no'],
+                                        ':transfer_date' => $wireObj['transfer_date'],
+                                        ':counterparty' => $wireObj['counterparty'],
+                                        ':source_account_id' => $wireObj['source_account_id'],
+                                        ':source_bank' => $wireObj['source_bank'],
+                                        ':type' => $wireObj['type'],
+                                        ':amount' => $wireObj['amount'],
+                                        ':currency' => $wireObj['currency'],
+                                        ':purpose' => $wireObj['purpose'],
+                                        ':status' => $wireObj['status'],
+                                        ':data_json' => json_encode($wireObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                                    ]);
+                                } catch (Exception $e) {}
+                            }
+                        }
+
+                        if ($pdo) {
+                            try {
+                                $stmtCq = $pdo->prepare("UPDATE finance_cheques SET status = :st, data_json = JSON_SET(data_json, '$.status', :st, '$.bank_account_id', :bid, '$.bank_account_name', :bname), updated_at = NOW() WHERE id = :id OR cheque_no = :id");
+                                $stmtCq->execute([':st' => $newStatus, ':bid' => $cq['bank_account_id'] ?? '', ':bname' => $cq['bank_account_name'] ?? '', ':id' => $targetId]);
+                            } catch (Exception $e) {}
                         }
                         break;
                     }
@@ -8929,15 +9192,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'delete_cheque':
-            $targetId = $body['id'] ?? '';
+            $targetId = $body['id'] ?? $body['cheque_id'] ?? '';
             if (!empty($targetId) && !empty($db['cheques'])) {
+                $deletedChqNo = '';
+                foreach ($db['cheques'] as $c) {
+                    if (($c['id'] ?? '') === $targetId || ($c['cheque_no'] ?? '') === $targetId) {
+                        $deletedChqNo = $c['cheque_no'] ?? '';
+                        break;
+                    }
+                }
                 $db['cheques'] = array_values(array_filter($db['cheques'], function($c) use ($targetId) {
                     return ($c['id'] ?? '') !== $targetId && ($c['cheque_no'] ?? '') !== $targetId;
                 }));
+                if (!empty($db['bank_transfers'])) {
+                    $wireId = 'wire-chq-' . $targetId;
+                    $refNo = $deletedChqNo ? 'CHQ-' . $deletedChqNo : '';
+                    $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($bt) use ($wireId, $refNo) {
+                        return ($bt['id'] ?? '') !== $wireId && (empty($refNo) || ($bt['reference_no'] ?? '') !== $refNo);
+                    }));
+                }
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM finance_cheques WHERE id = ? OR cheque_no = ?");
                         $stmt->execute([$targetId, $targetId]);
+                        if ($deletedChqNo) {
+                            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-chq-{$targetId}' OR reference_no = 'CHQ-{$deletedChqNo}'");
+                        }
                     } catch (Exception $e) {}
                 }
                 $addAuditLog('delete', 'cheque', $targetId, 'Deleted cheque ' . $targetId);
