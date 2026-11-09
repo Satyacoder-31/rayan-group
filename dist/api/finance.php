@@ -3237,6 +3237,72 @@ function reconcileV77BankWithdrawalAndEWalletPayments(&$data, $pdo) {
     }
 }
 
+function reconcileV78VendorSerialAtoZ(&$data, $pdo) {
+    if (!$data || !is_array($data)) return;
+    if ($pdo) {
+        try {
+            $done = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'vendor_serial_atoz_v78'")->fetchColumn();
+            if ($done === 'completed') return;
+        } catch (Exception $e) {}
+    }
+
+    // Resequence UAE vendors in strictly sequential serial order A to Z (VEN-REC-44001 to VEN-REC-44007)
+    $canonicalVendors = [
+        ['id' => 'vend-mw3swbwl', 'name' => 'M/S AL SOUDA DECOR LLC', 'code' => 'VEN-REC-44001'],
+        ['id' => 'vend-mw3q187t', 'name' => 'M/S GENERAL EXPENSES FOR THE PROJECT', 'code' => 'VEN-REC-44002'],
+        ['id' => 'vend-mw86p574', 'name' => 'M/S HI PROFILE GENERAL MAINTENANCE LLC', 'code' => 'VEN-REC-44003'],
+        ['id' => 'vend-mvzjrpcj', 'name' => 'M/S HLN TECHNICAL SERVICES LLC', 'code' => 'VEN-REC-44004'],
+        ['id' => 'vend-mw87fj64', 'name' => 'M/S MURGANTI GCC  l  UAE', 'code' => 'VEN-REC-44005'],
+        ['id' => 'vend-8334',     'name' => 'M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC', 'code' => 'VEN-REC-44006'],
+        ['id' => 'vend-mvtborpo', 'name' => 'M/S RUBY METAL INDUSTRIES SPC LLC', 'code' => 'VEN-REC-44007'],
+    ];
+
+    $vendMap = [];
+    foreach ($canonicalVendors as $cv) {
+        $vendMap[$cv['id']] = $cv['code'];
+        $vendMap[strtolower(trim($cv['name']))] = $cv['code'];
+        $clean = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $cv['name']));
+        $vendMap[$clean] = $cv['code'];
+    }
+
+    if (!empty($data['vendors']) && is_array($data['vendors'])) {
+        foreach ($data['vendors'] as &$v) {
+            $vId = $v['id'] ?? '';
+            $vName = strtolower(trim($v['name'] ?? ''));
+            $clean = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $v['name'] ?? ''));
+            if (isset($vendMap[$vId])) {
+                $v['code'] = $vendMap[$vId];
+            } elseif (isset($vendMap[$vName])) {
+                $v['code'] = $vendMap[$vName];
+            } elseif (isset($vendMap[$clean])) {
+                $v['code'] = $vendMap[$clean];
+            }
+        }
+        unset($v);
+    }
+
+    if ($pdo) {
+        try {
+            $stmtUpd = $pdo->prepare("UPDATE finance_vendors SET code = :code, data_json = JSON_SET(data_json, '$.code', :code) WHERE id = :id OR name = :name");
+            foreach ($canonicalVendors as $cv) {
+                $stmtUpd->execute([
+                    ':code' => $cv['code'],
+                    ':id' => $cv['id'],
+                    ':name' => $cv['name']
+                ]);
+            }
+
+            // Also heal vendor_id on purchase bills linking to HI PROFILE or MURGANTI
+            $pdo->exec("UPDATE finance_purchase_bills SET vendor_id = 'vend-mw86p574', data_json = JSON_SET(data_json, '$.vendor_id', 'vend-mw86p574') WHERE vendor_name LIKE '%HI PROFILE%'");
+            $pdo->exec("UPDATE finance_purchase_bills SET vendor_id = 'vend-mw87fj64', data_json = JSON_SET(data_json, '$.vendor_id', 'vend-mw87fj64') WHERE vendor_name LIKE '%MURGANTI%'");
+
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('vendor_serial_atoz_v78', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log('Migration v78 error: ' . $e->getMessage());
+        }
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -4973,6 +5039,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     }
                     // Execute reconciliation migration v77 for bank withdrawal and e-wallet payments
                     reconcileV77BankWithdrawalAndEWalletPayments($data, $pdo);
+                    reconcileV78VendorSerialAtoZ($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     syncToRelationalTables($pdo, $data);
                     saveFinanceDb($pdo, $dataFile, $data, $candidates);
@@ -4992,6 +5059,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
             if ($data && is_array($data) && !empty($data['companies'])) {
                 purgeDummyFinanceRecords($pdo, $data, $dataFile, $candidates);
                 reconcileV77BankWithdrawalAndEWalletPayments($data, $pdo);
+                reconcileV78VendorSerialAtoZ($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
@@ -7897,12 +7965,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $vnd['id'] = 'vend-' . round(microtime(true) * 1000);
                 }
                 if (empty($vnd['code'])) {
-                    $words = preg_split('/\s+/', preg_replace('/[^a-zA-Z0-9\s]/', '', $vnd['name']));
-                    $abbr = '';
-                    foreach ($words as $w) {
-                        if (!empty($w)) $abbr .= strtoupper($w[0]);
+                    $prefix = ($vnd['company_id'] ?? '') === 'ashaz-eng-in' ? 'VEN-ASH-' : 'VEN-REC-';
+                    $maxSeq = 44000;
+                    if (!empty($db['vendors'])) {
+                        foreach ($db['vendors'] as $ev) {
+                            if (preg_match('/(\d{4,})/', $ev['code'] ?? '', $m)) {
+                                $n = intval($m[1]);
+                                if ($n > $maxSeq) $maxSeq = $n;
+                            }
+                        }
                     }
-                    $vnd['code'] = 'VEND-' . (substr($abbr, 0, 5) ?: rand(100, 999));
+                    $vnd['code'] = $prefix . ($maxSeq + 1);
                 }
                 if (empty($vnd['company_id'])) {
                     $vnd['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';

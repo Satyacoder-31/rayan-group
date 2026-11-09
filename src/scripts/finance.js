@@ -1280,6 +1280,53 @@ class FinanceApp {
       if (v.company_name) v.company_name = this.formatCompanyName(v.company_name);
       if (v.display_name) v.display_name = this.formatCompanyName(v.display_name);
     });
+
+    // Canonical sequential vendor numbering in alphabetical order (A to Z)
+    const canonicalVendorCodeMap = {
+      'vend-mw3swbwl': 'VEN-REC-44001', // M/S AL SOUDA DECOR LLC
+      'vend-mw3q187t': 'VEN-REC-44002', // M/S GENERAL EXPENSES FOR THE PROJECT
+      'vend-mw86p574': 'VEN-REC-44003', // M/S HI PROFILE GENERAL MAINTENANCE LLC
+      'vend-mvzjrpcj': 'VEN-REC-44004', // M/S HLN TECHNICAL SERVICES LLC
+      'vend-mw87fj64': 'VEN-REC-44005', // M/S MURGANTI GCC  l  UAE
+      'vend-8334':     'VEN-REC-44006', // M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC
+      'vend-mvtborpo': 'VEN-REC-44007'  // M/S RUBY METAL INDUSTRIES SPC LLC
+    };
+    const canonicalVendorNameMap = {
+      'm/s al souda decor llc': 'VEN-REC-44001',
+      'm/s general expenses for the project': 'VEN-REC-44002',
+      'm/s hi profile general maintenance llc': 'VEN-REC-44003',
+      'm/s hln technical services llc': 'VEN-REC-44004',
+      'm/s murganti gcc  l  uae': 'VEN-REC-44005',
+      'm/s murganti gcc | uae': 'VEN-REC-44005',
+      'm/s pink city ceramic and sanitary trading llc spc': 'VEN-REC-44006',
+      'm/s ruby metal industries spc llc': 'VEN-REC-44007'
+    };
+    (this.db.vendors || []).forEach(v => {
+      const vId = v.id || '';
+      const vName = (v.name || '').toLowerCase().trim();
+      const clean = (v.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (canonicalVendorCodeMap[vId]) {
+        v.code = canonicalVendorCodeMap[vId];
+      } else if (canonicalVendorNameMap[vName]) {
+        v.code = canonicalVendorNameMap[vName];
+      } else {
+        for (const [kName, kCode] of Object.entries(canonicalVendorNameMap)) {
+          if (clean === kName.replace(/[^a-z0-9]/g, '')) {
+            v.code = kCode;
+            break;
+          }
+        }
+      }
+    });
+
+    (this.db.purchase_bills || []).forEach(b => {
+      const bName = (b.vendor_name || '').toLowerCase();
+      if (bName.includes('murganti')) {
+        b.vendor_id = 'vend-mw87fj64';
+      } else if (bName.includes('hi profile')) {
+        b.vendor_id = 'vend-mw86p574';
+      }
+    });
     (this.db.invoices || []).forEach(inv => {
       if (inv.customer_name) inv.customer_name = this.formatCompanyName(inv.customer_name);
     });
@@ -4670,6 +4717,22 @@ class FinanceApp {
     return m2 ? parseInt(m2[1], 10) : 0;
   }
 
+  getNextVendorCode() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const prefix = isIndia ? 'VEN-ASH-' : 'VEN-REC-';
+    const vends = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+    let maxSeq = 44000;
+    vends.forEach(v => {
+      const code = v.code || '';
+      const m = code.match(/(\d{4,})/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (num > maxSeq) maxSeq = num;
+      }
+    });
+    return `${prefix}${maxSeq + 1}`;
+  }
+
   sortRecords(list, sortMode = 'serial-desc', fields = {}) {
     const numField = fields.num || 'id';
     const dateField = fields.date || 'date';
@@ -5570,6 +5633,19 @@ class FinanceApp {
             <option value="payables-desc" ${this.vendSort === 'payables-desc' ? 'selected' : ''}>⚠️ Outstanding Payables (Highest First)</option>
             <option value="payables-asc" ${this.vendSort === 'payables-asc' ? 'selected' : ''}>⚠️ Outstanding Payables (Lowest First)</option>
           </select>
+          <select id="vend-filter-cat" class="fin-select-pill" title="Filter by Category">
+            <option value="all">All Categories</option>
+            <option value="Main Contractor">Main Contractor</option>
+            <option value="Subcontracting & Labor">Subcontracting &amp; Labor</option>
+            <option value="Building Materials & Fit-Out">Building Materials &amp; Fit-Out</option>
+            <option value="Structural Steel & TMT">Structural Steel &amp; TMT</option>
+            <option value="Ready-Mix & Bulk Cement">Ready-Mix &amp; Bulk Cement</option>
+            <option value="Electrical & Automation">Electrical &amp; Automation</option>
+            <option value="HVAC & Mechanical">HVAC &amp; Mechanical</option>
+            <option value="Heavy Equipment & Cranes">Heavy Equipment &amp; Cranes</option>
+            <option value="General Supplies">General Supplies</option>
+            <option value="Other">Other</option>
+          </select>
           <div id="vend-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
             Showing <span id="vend-showing-count">${rawVendors.length}</span> of ${rawVendors.length} vendors
           </div>
@@ -5616,10 +5692,20 @@ class FinanceApp {
     const updateVendFilter = () => {
       const q = (vendSearch?.value || '').toLowerCase().trim();
       const sMode = vendSort ? vendSort.value : (this.vendSort || 'name-asc');
+      const catVal = (document.getElementById('vend-filter-cat')?.value || 'all').toLowerCase();
       this.vendSort = sMode;
       if (vendClear) vendClear.style.display = q ? 'block' : 'none';
 
       const filtered = rawVendors.filter(v => {
+        if (catVal !== 'all') {
+          const vCat = (v.category || '').toLowerCase();
+          if (catVal === 'other') {
+            const standard = ['main contractor', 'subcontracting & labor', 'building materials & fit-out', 'structural steel & tmt', 'ready-mix & bulk cement', 'electrical & automation', 'hvac & mechanical', 'heavy equipment & cranes', 'general supplies'];
+            if (standard.includes(vCat)) return false;
+          } else if (vCat !== catVal) {
+            return false;
+          }
+        }
         if (!q) return true;
         const haystack = [
           v.code,
@@ -5657,6 +5743,8 @@ class FinanceApp {
 
     if (vendSearch) vendSearch.oninput = updateVendFilter;
     if (vendSort) vendSort.onchange = updateVendFilter;
+    const vendFilterCat = document.getElementById('vend-filter-cat');
+    if (vendFilterCat) vendFilterCat.onchange = updateVendFilter;
 
     if (thVendCode) {
       thVendCode.onclick = () => {
@@ -17384,6 +17472,7 @@ class FinanceApp {
   // 9. ADD VENDOR MODAL
   openCreateVendorModal() {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const defaultCode = this.getNextVendorCode();
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-add-vend">
         <div class="fin-modal-dialog" style="max-width:650px;">
@@ -17396,7 +17485,7 @@ class FinanceApp {
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Vendor Code</label>
-                  <input type="text" id="new-vend-code" class="fin-form-input" placeholder="e.g. VEND-DANUBE (auto if blank)" style="font-family:monospace; color:#f59e0b; font-weight:700;">
+                  <input type="text" id="new-vend-code" class="fin-form-input" value="${defaultCode}" placeholder="e.g. ${defaultCode}" style="font-family:monospace; color:#f59e0b; font-weight:700;">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Vendor Business Name <span style="color:#ef4444;">*</span></label>
@@ -17408,13 +17497,21 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Category</label>
                   <select id="new-vend-cat" class="fin-form-select">
+                    <option value="Main Contractor" selected>Main Contractor</option>
+                    <option value="Subcontracting & Labor">Subcontracting &amp; Labor</option>
+                    <option value="Building Materials & Fit-Out">Building Materials &amp; Fit-Out</option>
                     <option value="Structural Steel & TMT">Structural Steel &amp; TMT</option>
                     <option value="Ready-Mix & Bulk Cement">Ready-Mix &amp; Bulk Cement</option>
                     <option value="Electrical & Automation">Electrical &amp; Automation</option>
                     <option value="HVAC & Mechanical">HVAC &amp; Mechanical</option>
                     <option value="Heavy Equipment & Cranes">Heavy Equipment &amp; Cranes</option>
-                    <option value="Subcontracting & Labor">Subcontracting &amp; Labor</option>
+                    <option value="General Supplies">General Supplies</option>
+                    <option value="__other__">✎ Other (Please specify...)</option>
                   </select>
+                  <div id="new-vend-custom-group" style="display:none; margin-top:0.45rem;">
+                    <label class="fin-form-label" style="font-size:0.75rem; color:#38bdf8;">Specify Other Category <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="new-vend-custom-cat" class="fin-form-input" placeholder="e.g. Interior Glass & Glazing, Aluminum Fabrication...">
+                  </div>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Contact Person</label>
@@ -17483,13 +17580,31 @@ class FinanceApp {
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
 
+    const catSel = document.getElementById('new-vend-cat');
+    const customGroup = document.getElementById('new-vend-custom-group');
+    const customInput = document.getElementById('new-vend-custom-cat');
+    if (catSel && customGroup) {
+      catSel.addEventListener('change', () => {
+        if (catSel.value === '__other__') {
+          customGroup.style.display = 'block';
+          if (customInput) customInput.focus();
+        } else {
+          customGroup.style.display = 'none';
+        }
+      });
+    }
+
     document.getElementById('add-vend-form').onsubmit = async (e) => {
       e.preventDefault();
       const customCode = (document.getElementById('new-vend-code')?.value || '').trim();
       const vendName = document.getElementById('new-vend-name').value.trim();
-      const codePart = vendName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'VEND';
       const vendId = `vend-${Date.now().toString(36)}`;
-      const vendCode = customCode || `VEND-${codePart}-${Math.floor(100 + Math.random() * 900)}`;
+      const vendCode = customCode || this.getNextVendorCode();
+
+      let selectedCat = document.getElementById('new-vend-cat').value;
+      if (selectedCat === '__other__') {
+        selectedCat = (document.getElementById('new-vend-custom-cat')?.value || '').trim() || 'Other';
+      }
 
       const payload = {
         vendor: {
@@ -17498,7 +17613,7 @@ class FinanceApp {
           name: vendName,
           company_id: this.activeCompanyId || 'rayan-corp-uae',
           status: 'Active',
-          category: document.getElementById('new-vend-cat').value,
+          category: selectedCat,
           contact_person: document.getElementById('new-vend-contact').value.trim(),
           email: document.getElementById('new-vend-email').value.trim(),
           phone: document.getElementById('new-vend-phone').value.trim(),
@@ -26351,6 +26466,20 @@ class FinanceApp {
       return;
     }
     const isIndia = (vend.company_id || this.activeCompanyId) === 'ashaz-eng-in';
+    const standardCats = [
+      'Main Contractor',
+      'Subcontracting & Labor',
+      'Building Materials & Fit-Out',
+      'Structural Steel & TMT',
+      'Ready-Mix & Bulk Cement',
+      'Electrical & Automation',
+      'HVAC & Mechanical',
+      'Heavy Equipment & Cranes',
+      'General Supplies'
+    ];
+    const isCustomCat = Boolean(vend.category && !standardCats.includes(vend.category));
+    const initialCatValue = isCustomCat ? '__other__' : (vend.category || 'Main Contractor');
+    const initialCustomCatText = isCustomCat ? vend.category : '';
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-vend">
@@ -26378,15 +26507,21 @@ class FinanceApp {
                 <div class="fin-form-group">
                   <label class="fin-form-label">Category</label>
                   <select id="edit-vend-cat" class="fin-form-select">
-                    <option value="Structural Steel & TMT" ${vend.category === 'Structural Steel & TMT' ? 'selected' : ''}>Structural Steel &amp; TMT</option>
-                    <option value="Ready-Mix & Bulk Cement" ${vend.category === 'Ready-Mix & Bulk Cement' ? 'selected' : ''}>Ready-Mix &amp; Bulk Cement</option>
-                    <option value="Electrical & Automation" ${vend.category === 'Electrical & Automation' ? 'selected' : ''}>Electrical &amp; Automation</option>
-                    <option value="HVAC & Mechanical" ${vend.category === 'HVAC & Mechanical' ? 'selected' : ''}>HVAC &amp; Mechanical</option>
-                    <option value="Heavy Equipment & Cranes" ${vend.category === 'Heavy Equipment & Cranes' ? 'selected' : ''}>Heavy Equipment &amp; Cranes</option>
-                    <option value="Subcontracting & Labor" ${vend.category === 'Subcontracting & Labor' ? 'selected' : ''}>Subcontracting &amp; Labor</option>
-                    <option value="Building Materials & Fit-Out" ${vend.category === 'Building Materials & Fit-Out' ? 'selected' : ''}>Building Materials &amp; Fit-Out</option>
-                    <option value="General Supplies" ${(!vend.category || vend.category === 'General Supplies') ? 'selected' : ''}>General Supplies</option>
+                    <option value="Main Contractor" ${initialCatValue === 'Main Contractor' ? 'selected' : ''}>Main Contractor</option>
+                    <option value="Subcontracting & Labor" ${initialCatValue === 'Subcontracting & Labor' ? 'selected' : ''}>Subcontracting &amp; Labor</option>
+                    <option value="Building Materials & Fit-Out" ${initialCatValue === 'Building Materials & Fit-Out' ? 'selected' : ''}>Building Materials &amp; Fit-Out</option>
+                    <option value="Structural Steel & TMT" ${initialCatValue === 'Structural Steel & TMT' ? 'selected' : ''}>Structural Steel &amp; TMT</option>
+                    <option value="Ready-Mix & Bulk Cement" ${initialCatValue === 'Ready-Mix & Bulk Cement' ? 'selected' : ''}>Ready-Mix &amp; Bulk Cement</option>
+                    <option value="Electrical & Automation" ${initialCatValue === 'Electrical & Automation' ? 'selected' : ''}>Electrical &amp; Automation</option>
+                    <option value="HVAC & Mechanical" ${initialCatValue === 'HVAC & Mechanical' ? 'selected' : ''}>HVAC &amp; Mechanical</option>
+                    <option value="Heavy Equipment & Cranes" ${initialCatValue === 'Heavy Equipment & Cranes' ? 'selected' : ''}>Heavy Equipment &amp; Cranes</option>
+                    <option value="General Supplies" ${initialCatValue === 'General Supplies' ? 'selected' : ''}>General Supplies</option>
+                    <option value="__other__" ${initialCatValue === '__other__' ? 'selected' : ''}>✎ Other (Please specify...)</option>
                   </select>
+                  <div id="edit-vend-custom-group" style="${isCustomCat ? 'display:block;' : 'display:none;'} margin-top:0.45rem;">
+                    <label class="fin-form-label" style="font-size:0.75rem; color:#38bdf8;">Specify Other Category <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="edit-vend-custom-cat" class="fin-form-input" value="${(initialCustomCatText || '').replace(/"/g, '&quot;')}" placeholder="e.g. Interior Glass & Glazing, Aluminum Fabrication...">
+                  </div>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Contact Person</label>
@@ -26483,6 +26618,21 @@ class FinanceApp {
     `;
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
+
+    const editCatSel = document.getElementById('edit-vend-cat');
+    const editCustomGroup = document.getElementById('edit-vend-custom-group');
+    const editCustomInput = document.getElementById('edit-vend-custom-cat');
+    if (editCatSel && editCustomGroup) {
+      editCatSel.addEventListener('change', () => {
+        if (editCatSel.value === '__other__') {
+          editCustomGroup.style.display = 'block';
+          if (editCustomInput) editCustomInput.focus();
+        } else {
+          editCustomGroup.style.display = 'none';
+        }
+      });
+    }
+
     document.getElementById('edit-vend-form').onsubmit = async (e) => {
       e.preventDefault();
       const oldId = vend.id;
@@ -26491,9 +26641,14 @@ class FinanceApp {
       const newCode = (document.getElementById('edit-vend-code')?.value || '').trim() || oldCode || 'VEND';
       const newName = document.getElementById('edit-vend-name').value.trim();
 
+      let selectedCat = document.getElementById('edit-vend-cat').value;
+      if (selectedCat === '__other__') {
+        selectedCat = (document.getElementById('edit-vend-custom-cat')?.value || '').trim() || 'Other';
+      }
+
       vend.code = newCode;
       vend.name = newName;
-      vend.category = document.getElementById('edit-vend-cat').value;
+      vend.category = selectedCat;
       vend.contact_person = document.getElementById('edit-vend-contact').value.trim();
       vend.email = document.getElementById('edit-vend-email').value.trim();
       vend.phone = document.getElementById('edit-vend-phone').value.trim();
