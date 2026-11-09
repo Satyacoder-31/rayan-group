@@ -386,11 +386,6 @@ class FinanceApp {
         if (item && !isBlacklisted(item)) {
           const uniqueKey = getUniqueKey(item) || `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
           if (!item.id) item.id = uniqueKey;
-          const existing = map.get(uniqueKey);
-          if (existing && Array.isArray(existing.line_items) && existing.line_items.length > (item.line_items?.length || 0)) {
-            // Keep the one with more line items
-            return;
-          }
           map.set(uniqueKey, item);
         }
       });
@@ -405,10 +400,6 @@ class FinanceApp {
               if (item.line_items && item.line_items.length) {
                 existing.line_items = JSON.parse(JSON.stringify(item.line_items));
               }
-            } else if (!existing && key === 'invoices' && /REC-RG-INV-100[1-4]/i.test(item.invoice_no || '')) {
-              map.set(uniqueKey, JSON.parse(JSON.stringify(item)));
-            } else if (!existing && key === 'credit_notes' && ['CN-REC-001', 'CN-REC-002', 'CN-REC-003', 'CN-REC-006'].includes(item.credit_note_no || '')) {
-              map.set(uniqueKey, JSON.parse(JSON.stringify(item)));
             }
           }
         }
@@ -4968,7 +4959,10 @@ class FinanceApp {
       <tr>
         <td style="white-space:nowrap !important; font-family:monospace; font-size:0.86rem; font-weight:700; color:#38bdf8; min-width:180px;">
           ${inv.invoice_no || '—'}
-          ${(inv.lpo_no || inv.po_reference || inv.order_no) ? `<div style="font-size:0.68rem; color:#94a3b8; font-weight:500; font-family:sans-serif;">LPO: ${inv.lpo_no || inv.po_reference || inv.order_no}</div>` : ''}
+          ${(() => {
+            const rawLpo = (inv.lpo_no || inv.po_reference || inv.order_no || '').replace(/^\.\s*/, '').trim();
+            return (rawLpo && rawLpo !== '.' && rawLpo !== '/') ? `<div style="font-size:0.68rem; color:#94a3b8; font-weight:500; font-family:sans-serif;">LPO: ${rawLpo}</div>` : '';
+          })()}
         </td>
         <td style="white-space:nowrap;">${this.formatDate(inv.invoice_date)}</td>
         <td style="white-space:nowrap; min-width:200px;">
@@ -19653,12 +19647,18 @@ class FinanceApp {
         const wireId = `wire-wdl-${Date.now()}`;
         const voucherId = `cv-wdl-${Date.now() + 1}`;
         const vNum = Math.floor(1000 + Math.random() * 9000);
+        const vNo = `CV-WDL-${vNum}`;
+
+        payload.wire_id = wireId;
+        payload.voucher_id = voucherId;
+        payload.voucher_no = vNo;
 
         if (!this.db.bank_transfers) this.db.bank_transfers = [];
         if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
 
         this.db.bank_transfers.unshift({
           id: wireId,
+          voucher_id: voucherId,
           company_id: payload.company_id,
           reference_no: refNo,
           date: wDate,
@@ -19679,8 +19679,9 @@ class FinanceApp {
 
         this.db.cash_vouchers.unshift({
           id: voucherId,
+          wire_id: wireId,
           company_id: payload.company_id,
-          voucher_no: `CV-WDL-${vNum}`,
+          voucher_no: vNo,
           date: wDate,
           register_id: dVault.id,
           register_name: dVault.register_name,
@@ -19698,7 +19699,12 @@ class FinanceApp {
 
         try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
-        await this.syncApi('transfer_bank_to_wallet', payload);
+        const res = await this.syncApi('transfer_bank_to_wallet', payload);
+        if (res && res.data) {
+          this.db = this.mergeWithSeedData(res.data);
+          this.normalizeAllBalances();
+          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+        }
         this.closeModal('modal-bank-to-wallet');
         this.renderActiveTab();
         this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${sBank.bank_name} to ${dVault.register_name}!`, 'success');
@@ -25000,20 +25006,47 @@ class FinanceApp {
       if (!pay) {
         pay = (this.db?.vendor_payments || []).find(p => (p.allocations || []).some(a => a.bill_id === pIdStr || a.bill_no === pIdStr || (a.bill_no || '').toLowerCase() === pIdNorm));
       }
+      if (!pay) {
+        // Also check cash vouchers if payment was disbursed via Rayan Wallet / Cash
+        const cv = (this.db?.cash_vouchers || []).find(c => c.id === pIdStr || c.voucher_no === pIdStr || c.payment_id === pIdStr || (c.voucher_no || '').toLowerCase() === `cv-${pIdNorm}`);
+        if (cv) {
+          pay = {
+            id: cv.payment_id || cv.id,
+            voucher_no: cv.voucher_no ? cv.voucher_no.replace(/^CV-/, '') : pIdStr,
+            company_id: cv.company_id || this.activeCompanyId,
+            vendor_name: cv.payee || 'Vendor Disbursement',
+            payment_date: cv.date || new Date().toISOString().split('T')[0],
+            payment_mode: 'Cash / Rayan Wallet',
+            reference_no: cv.reference_no || 'Cash / Bank Transfer',
+            amount_paid: cv.amount || 0,
+            allocations: [],
+            notes: cv.purpose || 'Disbursement from RAYAN E-Wallets'
+          };
+        }
+      }
     }
     if (!pay && !paymentId) {
       pay = (this.db?.vendor_payments || [])[0];
     }
     if (!pay) {
+      // If paymentId was explicitly passed, look up any bill matching that ID to construct accurate voucher
+      const matchedBill = paymentId ? (this.db?.purchase_bills || []).find(b => b.id === String(paymentId).trim() || b.bill_no === String(paymentId).trim()) : null;
       pay = {
-        voucher_no: paymentId || 'PV-REC-44001',
-        payment_date: new Date().toISOString().split('T')[0],
-        vendor_name: 'Vendor Disbursement',
+        id: paymentId || 'pay-' + Date.now(),
+        voucher_no: matchedBill ? `PV-REC-${matchedBill.bill_no.replace(/[^0-9]/g, '')}` : (paymentId || 'PV-REC-44001'),
+        company_id: matchedBill?.company_id || this.activeCompanyId,
+        payment_date: matchedBill?.bill_date || new Date().toISOString().split('T')[0],
+        vendor_name: matchedBill?.vendor_name || 'Vendor Disbursement',
         payment_mode: 'Online',
         reference_no: 'Cash / Bank Transfer',
-        amount_paid: 0,
-        allocations: [],
-        notes: 'Corporate vendor disbursement voucher.'
+        amount_paid: matchedBill ? (matchedBill.amount_paid || matchedBill.grand_total) : 0,
+        allocations: matchedBill ? [{
+          bill_id: matchedBill.id,
+          bill_no: matchedBill.bill_no,
+          vendor_invoice_no: matchedBill.vendor_invoice_no || 'General',
+          amount_allocated: matchedBill.amount_paid || matchedBill.grand_total
+        }] : [],
+        notes: matchedBill ? `Disbursement against ${matchedBill.bill_no}` : 'Corporate vendor disbursement voucher.'
       };
     }
 

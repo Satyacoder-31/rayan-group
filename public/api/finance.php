@@ -836,93 +836,103 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 316571.79, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 316571.79, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793641982443' OR vendor_invoice_no = 'HLN/PO/0526/2025' OR bill_no = 'BILL-REC-1001' OR bill_no = 'BILL-RG-2026-1001'");
 
             // Migration v56: Re-align purchase bills to BILL-REC-1001+ (no year prefix) and vendor payments to PV-REC-44001+ (strictly sequential)
-            $billSerialMap = [
-                ['id' => 'bill-1793641982443', 'new_no' => 'BILL-REC-1001'],
-                ['id' => 'bill-1793890119965', 'new_no' => 'BILL-REC-1002'],
-                ['id' => 'bill-1793893193964', 'new_no' => 'BILL-REC-1003'],
-                ['id' => 'bill-1793894214538', 'new_no' => 'BILL-REC-1004'],
-                ['id' => 'bill-1793894942719', 'new_no' => 'BILL-REC-1005'],
-                ['id' => 'bill-1793897332945', 'new_no' => 'BILL-REC-1006'],
-                ['id' => 'bill-1793898700774', 'new_no' => 'BILL-REC-1007'],
-                ['id' => 'bill-1793896178476', 'new_no' => 'BILL-REC-1008'],
-                ['id' => 'bill-1793945504650', 'new_no' => 'BILL-REC-1009'],
-                ['id' => 'bill-1793947339219', 'new_no' => 'BILL-REC-1010']
-            ];
-            foreach ($billSerialMap as $bEntry) {
-                try {
-                    $pdo->prepare("UPDATE finance_purchase_bills SET bill_no = :bNo, data_json = JSON_SET(data_json, '$.bill_no', :bNo) WHERE id = :id OR bill_no = :oldNo")
-                        ->execute([':bNo' => $bEntry['new_no'], ':id' => $bEntry['id'], ':oldNo' => str_replace('BILL-REC-', 'BILL-RG-2026-', $bEntry['new_no'])]);
-                } catch (Exception $e) {}
-            }
+            $chkMigVpBill = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'bill_vp_serial_v56'")->fetchColumn();
+            if (!$chkMigVpBill) {
+                $billSerialMap = [
+                    ['id' => 'bill-1793641982443', 'new_no' => 'BILL-REC-1001'],
+                    ['id' => 'bill-1793890119965', 'new_no' => 'BILL-REC-1002'],
+                    ['id' => 'bill-1793893193964', 'new_no' => 'BILL-REC-1003'],
+                    ['id' => 'bill-1793894214538', 'new_no' => 'BILL-REC-1004'],
+                    ['id' => 'bill-1793894942719', 'new_no' => 'BILL-REC-1005'],
+                    ['id' => 'bill-1793897332945', 'new_no' => 'BILL-REC-1006'],
+                    ['id' => 'bill-1793898700774', 'new_no' => 'BILL-REC-1007'],
+                    ['id' => 'bill-1793896178476', 'new_no' => 'BILL-REC-1008'],
+                    ['id' => 'bill-1793945504650', 'new_no' => 'BILL-REC-1009'],
+                    ['id' => 'bill-1793947339219', 'new_no' => 'BILL-REC-1010']
+                ];
+                foreach ($billSerialMap as $bEntry) {
+                    try {
+                        $pdo->prepare("UPDATE finance_purchase_bills SET bill_no = :bNo, data_json = JSON_SET(data_json, '$.bill_no', :bNo) WHERE id = :id OR bill_no = :oldNo")
+                            ->execute([':bNo' => $bEntry['new_no'], ':id' => $bEntry['id'], ':oldNo' => str_replace('BILL-REC-', 'BILL-RG-2026-', $bEntry['new_no'])]);
+                    } catch (Exception $e) {}
+                }
 
-            $vpSerialMap = [
-                ['id' => 'pay-1793642108024', 'new_no' => 'PV-REC-44001'],
-                ['id' => 'pay-1793890308989', 'new_no' => 'PV-REC-44002'],
-                ['id' => 'pay-1793894011459', 'new_no' => 'PV-REC-44003'],
-                ['id' => 'pay-1793894232210', 'new_no' => 'PV-REC-44004'],
-                ['id' => 'pay-1793894993039', 'new_no' => 'PV-REC-44005']
-            ];
-            foreach ($vpSerialMap as $vpEntry) {
-                try {
-                    $pdo->prepare("UPDATE finance_vendor_payments SET voucher_no = :vNo, data_json = JSON_SET(data_json, '$.voucher_no', :vNo) WHERE id = :id")
-                        ->execute([':vNo' => $vpEntry['new_no'], ':id' => $vpEntry['id']]);
-                } catch (Exception $e) {}
+                $vpSerialMap = [
+                    ['id' => 'pay-1793642108024', 'new_no' => 'PV-REC-44001'],
+                    ['id' => 'pay-1793890308989', 'new_no' => 'PV-REC-44002'],
+                    ['id' => 'pay-1793894011459', 'new_no' => 'PV-REC-44003'],
+                    ['id' => 'pay-1793894232210', 'new_no' => 'PV-REC-44004'],
+                    ['id' => 'pay-1793894993039', 'new_no' => 'PV-REC-44005']
+                ];
+                foreach ($vpSerialMap as $vpEntry) {
+                    try {
+                        $pdo->prepare("UPDATE finance_vendor_payments SET voucher_no = :vNo, data_json = JSON_SET(data_json, '$.voucher_no', :vNo) WHERE id = :id")
+                            ->execute([':vNo' => $vpEntry['new_no'], ':id' => $vpEntry['id']]);
+                    } catch (Exception $e) {}
+                }
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('bill_vp_serial_v56', 'completed', NOW())");
             }
 
             // v2026_clean_v50 & v53: Chronological serial numbering of credit notes per year (2023, 2024, 2025, 2026) and add note_date field
-            try {
-                $pdo->exec("ALTER TABLE finance_credit_notes ADD COLUMN note_date DATE NULL AFTER status");
-            } catch (Exception $e) {}
-
-            $cnSerialMap = [
-                // 25 Credit Notes in continuous chronological serial order (No year prefix, pure sequence CN-REC-001 to CN-REC-025)
-                ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'new_no' => 'CN-REC-001'],
-                ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'new_no' => 'CN-REC-002'],
-                ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'new_no' => 'CN-REC-003'],
-                ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'new_no' => 'CN-REC-004'],
-                ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'new_no' => 'CN-REC-005'],
-
-                ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'new_no' => 'CN-REC-006'],
-                ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'new_no' => 'CN-REC-007'],
-                ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'new_no' => 'CN-REC-008'],
-                ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'new_no' => 'CN-REC-009'],
-                ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'new_no' => 'CN-REC-010'],
-                ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'new_no' => 'CN-REC-011'],
-                ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'new_no' => 'CN-REC-012'],
-                ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'new_no' => 'CN-REC-013'],
-                ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'new_no' => 'CN-REC-014'],
-
-                ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'new_no' => 'CN-REC-015'],
-                ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'new_no' => 'CN-REC-016'],
-                ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'new_no' => 'CN-REC-017'],
-                ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'new_no' => 'CN-REC-019'],
-                ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'new_no' => 'CN-REC-020'],
-
-                ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'new_no' => 'CN-REC-021'],
-                ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'new_no' => 'CN-REC-022'],
-                ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'new_no' => 'CN-REC-023'],
-                ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'new_no' => 'CN-REC-024'],
-                ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'new_no' => 'CN-REC-025']
-            ];
-
-            foreach ($cnSerialMap as $cnEntry) {
+            $chkMigCnSerial = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'cn_serial_map_v50'")->fetchColumn();
+            if (!$chkMigCnSerial) {
                 try {
-                    $upStmt = $pdo->prepare("UPDATE finance_credit_notes SET 
-                        credit_note_no = :new_no,
-                        note_date = :dt,
-                        data_json = JSON_SET(data_json, '$.credit_note_no', :new_no, '$.date', :dt, '$.issue_date', :dt, '$.note_date', :dt)
-                        WHERE id = :id OR invoice_no = :inv");
-                    $upStmt->execute([
-                        ':new_no' => $cnEntry['new_no'],
-                        ':dt' => $cnEntry['date'],
-                        ':id' => $cnEntry['id'],
-                        ':inv' => $cnEntry['inv']
-                    ]);
+                    $pdo->exec("ALTER TABLE finance_credit_notes ADD COLUMN note_date DATE NULL AFTER status");
                 } catch (Exception $e) {}
+
+                $cnSerialMap = [
+                    // 25 Credit Notes in continuous chronological serial order (No year prefix, pure sequence CN-REC-001 to CN-REC-025)
+                    ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'new_no' => 'CN-REC-001'],
+                    ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'new_no' => 'CN-REC-002'],
+                    ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'new_no' => 'CN-REC-003'],
+                    ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'new_no' => 'CN-REC-004'],
+                    ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'new_no' => 'CN-REC-005'],
+
+                    ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'new_no' => 'CN-REC-006'],
+                    ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'new_no' => 'CN-REC-007'],
+                    ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'new_no' => 'CN-REC-008'],
+                    ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'new_no' => 'CN-REC-009'],
+                    ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'new_no' => 'CN-REC-010'],
+                    ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'new_no' => 'CN-REC-011'],
+                    ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'new_no' => 'CN-REC-012'],
+                    ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'new_no' => 'CN-REC-013'],
+                    ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'new_no' => 'CN-REC-014'],
+
+                    ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'new_no' => 'CN-REC-015'],
+                    ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'new_no' => 'CN-REC-016'],
+                    ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'new_no' => 'CN-REC-017'],
+                    ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'new_no' => 'CN-REC-019'],
+                    ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'new_no' => 'CN-REC-020'],
+
+                    ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'new_no' => 'CN-REC-021'],
+                    ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'new_no' => 'CN-REC-022'],
+                    ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'new_no' => 'CN-REC-023'],
+                    ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'new_no' => 'CN-REC-024'],
+                    ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'new_no' => 'CN-REC-025']
+                ];
+
+                foreach ($cnSerialMap as $cnEntry) {
+                    try {
+                        $upStmt = $pdo->prepare("UPDATE finance_credit_notes SET 
+                            credit_note_no = :new_no,
+                            note_date = :dt,
+                            data_json = JSON_SET(data_json, '$.credit_note_no', :new_no, '$.date', :dt, '$.issue_date', :dt, '$.note_date', :dt)
+                            WHERE id = :id OR invoice_no = :inv");
+                        $upStmt->execute([
+                            ':new_no' => $cnEntry['new_no'],
+                            ':dt' => $cnEntry['date'],
+                            ':id' => $cnEntry['id'],
+                            ':inv' => $cnEntry['inv']
+                        ]);
+                    } catch (Exception $e) {}
+                }
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('cn_serial_map_v50', 'completed', NOW())");
             }
 
             // v2026_clean_v54: Complete restoration and hydration of all 13 canonical project accounts with distinct IDs and REC codes
-            $canonicalProjectsList = [
+            $chkMigProjects54 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'projects_canonical_v54'")->fetchColumn();
+            if (!$chkMigProjects54) {
+                $canonicalProjectsList = [
                 [
                     'id' => 'prj-mvzme7ho',
                     'code' => 'PRJ-REC-IB-2026',
@@ -1228,34 +1238,40 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 }
             }
 
-            // Remove old duplicated prj-mvr2yfnl to avoid collision with prj-toby-kiosk
-            if ($pdo) {
-                try {
-                    $pdo->exec("DELETE FROM finance_projects WHERE id = 'prj-mvr2yfnl'");
-                } catch (Exception $e) {}
+                // Remove old duplicated prj-mvr2yfnl to avoid collision with prj-toby-kiosk
+                if ($pdo) {
+                    try {
+                        $pdo->exec("DELETE FROM finance_projects WHERE id = 'prj-mvr2yfnl'");
+                    } catch (Exception $e) {}
+                }
+                $data['projects'] = array_values(array_filter($data['projects'], function($p) {
+                    return ($p['id'] ?? '') !== 'prj-mvr2yfnl';
+                }));
+                $changed = true;
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('projects_canonical_v54', 'completed', NOW())");
             }
-            $data['projects'] = array_values(array_filter($data['projects'], function($p) {
-                return ($p['id'] ?? '') !== 'prj-mvr2yfnl';
-            }));
-            $changed = true;
 
             // v2026_clean_v52: Ensure Max Al Wahda project financials are synchronized with exact audited ledger figures
-            $pdo->exec("UPDATE finance_projects SET 
-                contract_value = 388098.68,
-                approved_budget = 388098.68,
-                data_json = JSON_SET(
-                    data_json,
-                    '$.contract_value', 388098.68,
-                    '$.approved_budget', 388098.68,
-                    '$.manual_invoiced', 406736.51,
-                    '$.manual_collected', 312798.68,
-                    '$.manual_bills', 316571.79,
-                    '$.manual_expenses', 0.00,
-                    '$.manual_cost', 316571.79,
-                    '$.manual_profit', 90164.72,
-                    '$.manual_margin', '22.2'
-                )
-            WHERE id = 'prj-mvr35qo2' OR code = 'PRJ-RG-MAX-2026' OR name LIKE '%Max - Al Wahda%'");
+            $chkMax52 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'max_alwahda_financials_v52'")->fetchColumn();
+            if (!$chkMax52) {
+                $pdo->exec("UPDATE finance_projects SET 
+                    contract_value = 388098.68,
+                    approved_budget = 388098.68,
+                    data_json = JSON_SET(
+                        data_json,
+                        '$.contract_value', 388098.68,
+                        '$.approved_budget', 388098.68,
+                        '$.manual_invoiced', 406736.51,
+                        '$.manual_collected', 312798.68,
+                        '$.manual_bills', 316571.79,
+                        '$.manual_expenses', 0.00,
+                        '$.manual_cost', 316571.79,
+                        '$.manual_profit', 90164.72,
+                        '$.manual_margin', '22.2'
+                    )
+                WHERE id = 'prj-mvr35qo2' OR code = 'PRJ-RG-MAX-2026' OR name LIKE '%Max - Al Wahda%'");
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('max_alwahda_financials_v52', 'completed', NOW())");
+            }
 
             // Migration v58: Ensure Hayat Property # 12 and Cafe Bateel are distinct independent projects and not continuously overwritten
             try {
@@ -2069,70 +2085,19 @@ function recalculateAllFinanceBalances(&$data) {
         unset($inv);
     }
 
-    $bMap = [
-        'bill-1793641982443' => 'BILL-REC-1001',
-        'bill-1793890119965' => 'BILL-REC-1002',
-        'bill-1793893193964' => 'BILL-REC-1003',
-        'bill-1793894214538' => 'BILL-REC-1004',
-        'bill-1793894942719' => 'BILL-REC-1005',
-        'bill-1793897332945' => 'BILL-REC-1006',
-        'bill-1793974433713' => 'BILL-REC-1001',
-        'bill-1793974961216' => 'BILL-REC-1002',
-        'bill-1793975224831' => 'BILL-REC-1003',
-        'bill-1793975959757' => 'BILL-REC-1004',
-        'bill-1793976570260' => 'BILL-REC-1005',
-        'bill-1793977952016' => 'BILL-REC-1006',
-        'bill-1793987304049' => 'BILL-REC-1007',
-        'bill-1793988957412' => 'BILL-REC-1008',
-        'bill-1793989402508' => 'BILL-REC-1009',
-        'bill-1793990949767' => 'BILL-REC-1010',
-        'bill-1793991086279' => 'BILL-REC-1011',
-        'bill-1793991187391' => 'BILL-REC-1012',
-        'bill-1793991631974' => 'BILL-REC-1013',
-        'bill-1793991716204' => 'BILL-REC-1014',
-        'bill-1793991963995' => 'BILL-REC-1015',
-        'bill-1793992099603' => 'BILL-REC-1016',
-        'bill-1794116337896' => 'BILL-REC-1017'
-    ];
-    $vpMap = [
-        'pay-1793642108024' => 'PV-REC-44001',
-        'pay-1793974452744' => 'PV-REC-44001',
-        'pay-1793890308989' => 'PV-REC-44002',
-        'pay-1793974978543' => 'PV-REC-44002',
-        'pay-1793894011459' => 'PV-REC-44003',
-        'pay-1793975240000' => 'PV-REC-44003',
-        'pay-1793894232210' => 'PV-REC-44004',
-        'pay-1793976417852' => 'PV-REC-44004',
-        'pay-1793894993039' => 'PV-REC-44005',
-        'pay-1793976590000' => 'PV-REC-44005',
-        'pay-1793898169781' => 'PV-REC-44006',
-        'pay-1793977952016' => 'PV-REC-44006'
-    ];
-
     if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
         foreach ($data['purchase_bills'] as &$pbItem) {
-            $pbId = $pbItem['id'] ?? '';
-            if (isset($bMap[$pbId])) {
-                $pbItem['bill_no'] = $bMap[$pbId];
-            } elseif (!empty($pbItem['bill_no']) && (strpos($pbItem['bill_no'], 'BILL-RG-2026-') === 0 || strpos($pbItem['bill_no'], 'BILL-RG-') === 0)) {
+            if (!empty($pbItem['bill_no']) && (strpos($pbItem['bill_no'], 'BILL-RG-2026-') === 0 || strpos($pbItem['bill_no'], 'BILL-RG-') === 0)) {
                 $pbItem['bill_no'] = preg_replace('/^BILL-RG-(?:202\d-)?/', 'BILL-REC-', $pbItem['bill_no']);
             }
         }
         unset($pbItem);
     }
-
     if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
         foreach ($data['vendor_payments'] as &$vpItem) {
-            $vpId = $vpItem['id'] ?? '';
-            if (isset($vpMap[$vpId])) {
-                $vpItem['voucher_no'] = $vpMap[$vpId];
-            }
             if (!empty($vpItem['allocations']) && is_array($vpItem['allocations'])) {
                 foreach ($vpItem['allocations'] as &$alItem) {
-                    $alBid = $alItem['bill_id'] ?? '';
-                    if (isset($bMap[$alBid])) {
-                        $alItem['bill_no'] = $bMap[$alBid];
-                    } elseif (!empty($alItem['bill_no']) && (strpos($alItem['bill_no'], 'BILL-RG-2026-') === 0 || strpos($alItem['bill_no'], 'BILL-RG-') === 0)) {
+                    if (!empty($alItem['bill_no']) && (strpos($alItem['bill_no'], 'BILL-RG-2026-') === 0 || strpos($alItem['bill_no'], 'BILL-RG-') === 0)) {
                         $alItem['bill_no'] = preg_replace('/^BILL-RG-(?:202\d-)?/', 'BILL-REC-', $alItem['bill_no']);
                     }
                 }
@@ -3519,142 +3484,162 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         ]);
                     }
                                         // Migration v55: Continuous chronological sequence for credit notes (No year prefix: CN-REC-001 to CN-REC-025)
-                    $cnCanonicalList = [
-                        ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'no' => 'CN-REC-001'],
-                        ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'no' => 'CN-REC-002'],
-                        ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'no' => 'CN-REC-003'],
-                        ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'no' => 'CN-REC-004'],
-                        ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'no' => 'CN-REC-005'],
+                    $chkMig55 = $pdo ? $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'credit_notes_seq_v55'")->fetchColumn() : null;
+                    if (!$chkMig55) {
+                        $cnCanonicalList = [
+                            ['id' => 'cn-1793469085069', 'inv' => 'REC-RG-INV-1001', 'date' => '2023-02-26', 'no' => 'CN-REC-001'],
+                            ['id' => 'cn-1793469103087', 'inv' => 'REC-RG-INV-1002', 'date' => '2023-03-12', 'no' => 'CN-REC-002'],
+                            ['id' => 'cn-1793469132205', 'inv' => 'REC-RG-INV-1004', 'date' => '2023-03-30', 'no' => 'CN-REC-003'],
+                            ['id' => 'cn-1793469162750', 'inv' => 'REC-RG-INV-1006', 'date' => '2023-08-08', 'no' => 'CN-REC-004'],
+                            ['id' => 'cn-1793470427362', 'inv' => 'REC-RG-INV-1009', 'date' => '2023-09-04', 'no' => 'CN-REC-005'],
 
-                        ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'no' => 'CN-REC-006'],
-                        ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'no' => 'CN-REC-007'],
-                        ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'no' => 'CN-REC-008'],
-                        ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'no' => 'CN-REC-009'],
-                        ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'no' => 'CN-REC-010'],
-                        ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'no' => 'CN-REC-011'],
-                        ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'no' => 'CN-REC-012'],
-                        ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'no' => 'CN-REC-013'],
-                        ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'no' => 'CN-REC-014'],
+                            ['id' => 'cn-1793469117238', 'inv' => 'REC-RG-INV-1003', 'date' => '2024-03-15', 'no' => 'CN-REC-006'],
+                            ['id' => 'cn-1793471514325', 'inv' => 'REC-RG-INV-1012', 'date' => '2024-03-19', 'no' => 'CN-REC-007'],
+                            ['id' => 'cn-1793507654484', 'inv' => 'REC-RG-INV-1016', 'date' => '2024-05-01', 'no' => 'CN-REC-008'],
+                            ['id' => 'cn-1793507678569', 'inv' => 'REC-RG-INV-1017', 'date' => '2024-05-04', 'no' => 'CN-REC-009'],
+                            ['id' => 'cn-1793508062030', 'inv' => 'REC-RG-INV-1018', 'date' => '2024-05-06', 'no' => 'CN-REC-010'],
+                            ['id' => 'cn-1793508484416', 'inv' => 'REC-RG-INV-1020', 'date' => '2024-05-11', 'no' => 'CN-REC-011'],
+                            ['id' => 'cn-1793508603092', 'inv' => 'REC-RG-INV-1021', 'date' => '2024-06-06', 'no' => 'CN-REC-012'],
+                            ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'no' => 'CN-REC-013'],
+                            ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'no' => 'CN-REC-014'],
 
-                        ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'no' => 'CN-REC-015'],
-                        ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'no' => 'CN-REC-016'],
-                        ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'no' => 'CN-REC-017'],
-                        ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'no' => 'CN-REC-019'],
-                        ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'no' => 'CN-REC-020'],
+                            ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'no' => 'CN-REC-015'],
+                            ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'no' => 'CN-REC-016'],
+                            ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'no' => 'CN-REC-017'],
+                            ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'no' => 'CN-REC-019'],
+                            ['id' => 'cn-1793512002192', 'inv' => 'REC-RG-INV-44013', 'date' => '2025-11-26', 'no' => 'CN-REC-020'],
 
-                        ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'no' => 'CN-REC-021'],
-                        ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'no' => 'CN-REC-022'],
-                        ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'no' => 'CN-REC-023'],
-                        ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'no' => 'CN-REC-024'],
-                        ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'no' => 'CN-REC-025']
-                    ];
+                            ['id' => 'cn-1793555759783', 'inv' => 'REC-RG-INV-44019', 'date' => '2026-02-15', 'no' => 'CN-REC-021'],
+                            ['id' => 'cn-1793640088617', 'inv' => 'REC-RG-INV-44037', 'date' => '2026-08-26', 'no' => 'CN-REC-022'],
+                            ['id' => 'cn-1793559377825', 'inv' => 'REC-RG-INV-44043', 'date' => '2026-09-08', 'no' => 'CN-REC-023'],
+                            ['id' => 'cn-1793598612346', 'inv' => 'REC-RG-INV-44044', 'date' => '2026-10-01', 'no' => 'CN-REC-024'],
+                            ['id' => 'cn-1793598632285', 'inv' => 'REC-RG-INV-44049', 'date' => '2026-10-13', 'no' => 'CN-REC-025']
+                        ];
 
-                    if (!isset($data['credit_notes']) || !is_array($data['credit_notes'])) {
-                        $data['credit_notes'] = [];
-                    }
+                        if (!isset($data['credit_notes']) || !is_array($data['credit_notes'])) {
+                            $data['credit_notes'] = [];
+                        }
 
-                    $canonById = [];
-                    $canonByInv = [];
-                    foreach ($cnCanonicalList as $item) {
-                        $canonById[$item['id']] = $item;
-                        $canonByInv[$item['inv']] = $item;
-                    }
+                        $canonById = [];
+                        $canonByInv = [];
+                        foreach ($cnCanonicalList as $item) {
+                            $canonById[$item['id']] = $item;
+                            $canonByInv[$item['inv']] = $item;
+                        }
 
-                    foreach ($data['credit_notes'] as &$cn) {
-                        $cId = $cn['id'] ?? '';
-                        $invNo = $cn['invoice_no'] ?? ($cn['ref_invoice_no'] ?? '');
-                        $m = $canonById[$cId] ?? ($canonByInv[$invNo] ?? null);
-                        if ($m) {
-                            $cn['credit_note_no'] = $m['no'];
-                            $cn['date'] = $m['date'];
-                            $cn['issue_date'] = $m['date'];
-                        } elseif (!empty($cn['credit_note_no']) && strpos($cn['credit_note_no'], 'CN-RG-') === 0) {
-                            $cn['credit_note_no'] = str_replace('CN-RG-', 'CN-REC-', $cn['credit_note_no']);
+                        foreach ($data['credit_notes'] as &$cn) {
+                            $cId = $cn['id'] ?? '';
+                            $invNo = $cn['invoice_no'] ?? ($cn['ref_invoice_no'] ?? '');
+                            $m = $canonById[$cId] ?? ($canonByInv[$invNo] ?? null);
+                            if ($m) {
+                                $cn['credit_note_no'] = $m['no'];
+                                $cn['date'] = $m['date'];
+                                $cn['issue_date'] = $m['date'];
+                            } elseif (!empty($cn['credit_note_no']) && strpos($cn['credit_note_no'], 'CN-RG-') === 0) {
+                                $cn['credit_note_no'] = str_replace('CN-RG-', 'CN-REC-', $cn['credit_note_no']);
+                            }
+                        }
+                        unset($cn);
+                        if ($pdo) {
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('credit_notes_seq_v55', 'completed', NOW())");
                         }
                     }
-                    unset($cn);
 
                     // Resequence customer receipts starting strictly from REC-RV-44001
-                    if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
-                        foreach ($data['customer_receipts'] as &$rFix) {
-                            if (isset($rFix['receipt_date']) && strpos($rFix['receipt_date'], '0006-') === 0) {
-                                $rFix['receipt_date'] = str_replace('0006-', '2026-', $rFix['receipt_date']);
-                            }
-                        }
-                        unset($rFix);
-
-                        usort($data['customer_receipts'], function($a, $b) {
-                            $dA = $a['receipt_date'] ?? ($a['date'] ?? '');
-                            $dB = $b['receipt_date'] ?? ($b['date'] ?? '');
-                            if ($dA !== $dB) return strcmp($dA, $dB);
-                            return strcmp(strval($a['id'] ?? ''), strval($b['id'] ?? ''));
-                        });
-                        $nextRecSeq = 44001;
-                        $nextAshSeq = 44001;
-                        foreach ($data['customer_receipts'] as &$rcp) {
-                            $isInd = (($rcp['company_id'] ?? '') === 'ashaz-eng-in') || (($rcp['currency'] ?? '') === 'INR');
-                            $oldNo = $rcp['receipt_no'] ?? '';
-                            $targetNo = $isInd ? ('REC-ASH-' . $nextAshSeq++) : ('REC-RV-' . $nextRecSeq++);
-                            if (($rcp['receipt_no'] ?? '') !== $targetNo) {
-                                $rcp['receipt_no'] = $targetNo;
-                                if ($pdo) {
-                                    try {
-                                        $pdo->prepare("UPDATE finance_receipts SET receipt_no = ?, data_json = JSON_SET(data_json, '$.receipt_no', ?) WHERE id = ? OR receipt_no = ?")
-                                            ->execute([$targetNo, $targetNo, $rcp['id'] ?? '', $oldNo]);
-                                    } catch (Exception $e) {}
+                    $chkMig56 = $pdo ? $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'receipts_reseq_v56'")->fetchColumn() : null;
+                    if (!$chkMig56) {
+                        if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+                            foreach ($data['customer_receipts'] as &$rFix) {
+                                if (isset($rFix['receipt_date']) && strpos($rFix['receipt_date'], '0006-') === 0) {
+                                    $rFix['receipt_date'] = str_replace('0006-', '2026-', $rFix['receipt_date']);
                                 }
                             }
+                            unset($rFix);
+
+                            usort($data['customer_receipts'], function($a, $b) {
+                                $dA = $a['receipt_date'] ?? ($a['date'] ?? '');
+                                $dB = $b['receipt_date'] ?? ($b['date'] ?? '');
+                                if ($dA !== $dB) return strcmp($dA, $dB);
+                                return strcmp(strval($a['id'] ?? ''), strval($b['id'] ?? ''));
+                            });
+                            $nextRecSeq = 44001;
+                            $nextAshSeq = 44001;
+                            foreach ($data['customer_receipts'] as &$rcp) {
+                                $isInd = (($rcp['company_id'] ?? '') === 'ashaz-eng-in') || (($rcp['currency'] ?? '') === 'INR');
+                                $oldNo = $rcp['receipt_no'] ?? '';
+                                $targetNo = $isInd ? ('REC-ASH-' . $nextAshSeq++) : ('REC-RV-' . $nextRecSeq++);
+                                if (($rcp['receipt_no'] ?? '') !== $targetNo) {
+                                    $rcp['receipt_no'] = $targetNo;
+                                    if ($pdo) {
+                                        try {
+                                            $pdo->prepare("UPDATE finance_receipts SET receipt_no = ?, data_json = JSON_SET(data_json, '$.receipt_no', ?) WHERE id = ? OR receipt_no = ?")
+                                                ->execute([$targetNo, $targetNo, $rcp['id'] ?? '', $oldNo]);
+                                        } catch (Exception $e) {}
+                                    }
+                                }
+                            }
+                            unset($rcp);
                         }
-                        unset($rcp);
+                        if ($pdo) {
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('receipts_reseq_v56', 'completed', NOW())");
+                        }
                     }
 
                     // Resequence customer codes to CUST-REC-1001 through CUST-REC-1023
-                    $canonicalCustCodeMap = [
-                        'cust-hiprofile' => 'CUST-REC-1001',
-                        'cust-morganti' => 'CUST-REC-1002',
-                        'cust-hln' => 'CUST-REC-1003',
-                        'cust-ironbeam' => 'CUST-REC-1004',
-                        'cust-alisons' => 'CUST-REC-1005',
-                        'cust-ayat' => 'CUST-REC-1006',
-                        'cust-almuluki' => 'CUST-REC-1007',
-                        'cust-luminar' => 'CUST-REC-1008',
-                        'cust-alex' => 'CUST-REC-1009',
-                        'cust-magma' => 'CUST-REC-1010',
-                        'cust-toprock' => 'CUST-REC-1011',
-                        'cust-mapout' => 'CUST-REC-1012',
-                        'cust-pggc' => 'CUST-REC-1013',
-                        'cust-hayat' => 'CUST-REC-1014',
-                        'cust-focustech' => 'CUST-REC-1015',
-                        'cust-buildara' => 'CUST-REC-1016',
-                        'cust-sadeco' => 'CUST-REC-1017',
-                        'cust-remaya' => 'CUST-REC-1018',
-                        'cust-1792419616536' => 'CUST-REC-1019',
-                        'cust-whitecrescent' => 'CUST-REC-1019',
-                        'cust-zorawar' => 'CUST-REC-1020',
-                        'cust-1793515703667' => 'CUST-REC-1021',
-                        'cust-brook' => 'CUST-REC-1021',
-                        'cust-solidmarble' => 'CUST-REC-1022',
-                        'cust-specon' => 'CUST-REC-1023'
-                    ];
-                    if (!empty($data['customers']) && is_array($data['customers'])) {
-                        foreach ($data['customers'] as &$c) {
-                            $cid = $c['id'] ?? '';
-                            if (isset($canonicalCustCodeMap[$cid])) {
-                                $targetCode = $canonicalCustCodeMap[$cid];
-                                $c['code'] = $targetCode;
-                                if ($pdo) {
-                                    try {
-                                        $pdo->prepare("UPDATE finance_customers SET code = ?, data_json = JSON_SET(data_json, '$.code', ?) WHERE id = ?")
-                                            ->execute([$targetCode, $targetCode, $cid]);
-                                    } catch (Exception $e) {}
+                    $chkMig57 = $pdo ? $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'cust_code_seq_v57'")->fetchColumn() : null;
+                    if (!$chkMig57) {
+                        $canonicalCustCodeMap = [
+                            'cust-hiprofile' => 'CUST-REC-1001',
+                            'cust-morganti' => 'CUST-REC-1002',
+                            'cust-hln' => 'CUST-REC-1003',
+                            'cust-ironbeam' => 'CUST-REC-1004',
+                            'cust-alisons' => 'CUST-REC-1005',
+                            'cust-ayat' => 'CUST-REC-1006',
+                            'cust-almuluki' => 'CUST-REC-1007',
+                            'cust-luminar' => 'CUST-REC-1008',
+                            'cust-alex' => 'CUST-REC-1009',
+                            'cust-magma' => 'CUST-REC-1010',
+                            'cust-toprock' => 'CUST-REC-1011',
+                            'cust-mapout' => 'CUST-REC-1012',
+                            'cust-pggc' => 'CUST-REC-1013',
+                            'cust-hayat' => 'CUST-REC-1014',
+                            'cust-focustech' => 'CUST-REC-1015',
+                            'cust-buildara' => 'CUST-REC-1016',
+                            'cust-sadeco' => 'CUST-REC-1017',
+                            'cust-remaya' => 'CUST-REC-1018',
+                            'cust-1792419616536' => 'CUST-REC-1019',
+                            'cust-whitecrescent' => 'CUST-REC-1019',
+                            'cust-zorawar' => 'CUST-REC-1020',
+                            'cust-1793515703667' => 'CUST-REC-1021',
+                            'cust-brook' => 'CUST-REC-1021',
+                            'cust-solidmarble' => 'CUST-REC-1022',
+                            'cust-specon' => 'CUST-REC-1023'
+                        ];
+                        if (!empty($data['customers']) && is_array($data['customers'])) {
+                            foreach ($data['customers'] as &$c) {
+                                $cid = $c['id'] ?? '';
+                                if (isset($canonicalCustCodeMap[$cid])) {
+                                    $targetCode = $canonicalCustCodeMap[$cid];
+                                    $c['code'] = $targetCode;
+                                    if ($pdo) {
+                                        try {
+                                            $pdo->prepare("UPDATE finance_customers SET code = ?, data_json = JSON_SET(data_json, '$.code', ?) WHERE id = ?")
+                                                ->execute([$targetCode, $targetCode, $cid]);
+                                        } catch (Exception $e) {}
+                                    }
                                 }
                             }
+                            unset($c);
                         }
-                        unset($c);
+                        if ($pdo) {
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('cust_code_seq_v57', 'completed', NOW())");
+                        }
                     }
 
                     // Complete Canonical Projects Hydration & Restoration (13 Projects)
-                    $canonicalProjectsList = [
+                    $chkPrjHydrate = $pdo ? $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'projects_hydration_v54'")->fetchColumn() : null;
+                    if (!$chkPrjHydrate) {
+                        $canonicalProjectsList = [
                         [
                             'id' => 'prj-mvzme7ho',
                             'code' => 'PRJ-REC-IB-2026',
@@ -3950,8 +3935,10 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     if ($pdo) {
                         try {
                             $pdo->exec("DELETE FROM finance_projects WHERE id = 'prj-mvr2yfnl'");
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('projects_hydration_v54', 'completed', NOW())");
                         } catch (Exception $e) {}
                     }
+                }
 
                     // Reconcile 5 purchase bills with 5 exact payment-out vouchers (PV-REC-44001 to PV-REC-44005) & purge fake entries (v66 - completed)
                     try {
@@ -4247,25 +4234,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     // Migration v68: Restore missing invoices REC-RG-INV-1001 to 1004 and credit notes CN-REC-001, 002, 003, 006 for M/S PROFESSIONAL GULF
                     try {
                         $chkMig68 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'restore_pggc_invoices_v68'")->fetchColumn();
-                        $has1001 = false;
-                        if (!empty($data['invoices']) && is_array($data['invoices'])) {
-                            foreach ($data['invoices'] as $invCheck) {
-                                if (($invCheck['invoice_no'] ?? '') === 'REC-RG-INV-1001' || ($invCheck['id'] ?? '') === 'inv-rec-rg-inv-1001') {
-                                    $has1001 = true;
-                                    break;
-                                }
-                            }
-                        }
-                        $hasCN1 = false;
-                        if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
-                            foreach ($data['credit_notes'] as $cnCheck) {
-                                if (($cnCheck['credit_note_no'] ?? '') === 'CN-REC-001') {
-                                    $hasCN1 = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!$chkMig68 || !$has1001 || !$hasCN1) {
+                        if ($chkMig68 !== 'completed') {
                             $canonicalPGGCInvoices = [
                                 [
                                     'id' => 'inv-rec-rg-inv-1001',
@@ -4407,7 +4376,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                     'place_of_supply' => 'Abu Dhabi',
                                     'project_id' => 'prj-pggc-ad',
                                     'project_name' => 'General Contracting & Fitout Works',
-                                    'po_reference' => '. SL- 108/2023',
+                                    'po_reference' => 'SL-108/2023',
                                     'invoice_date' => '2024-03-15',
                                     'due_date' => '2024-04-14',
                                     'payment_terms' => 30,
@@ -4604,49 +4573,53 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             }
                             unset($exInv);
 
-                            // Insert into $data['invoices']
+                            // Insert into $data['invoices'] only if missing
+                            $existingInvMap = [];
+                            foreach ($data['invoices'] as $ex) {
+                                if (!empty($ex['invoice_no'])) $existingInvMap[strtoupper(trim($ex['invoice_no']))] = true;
+                                if (!empty($ex['id'])) $existingInvMap[strtolower(trim($ex['id']))] = true;
+                            }
                             $stmtInv = $pdo->prepare("REPLACE INTO finance_invoices (id, invoice_no, company_id, customer_id, customer_name, customer_trn, invoice_date, due_date, grand_total, amount_paid, balance_due, currency, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                             foreach ($canonicalPGGCInvoices as $rInv) {
                                 $rNo = strtoupper(trim($rInv['invoice_no'] ?? ''));
                                 $rId = strtolower(trim($rInv['id'] ?? ''));
-                                $data['invoices'] = array_values(array_filter($data['invoices'], function($it) use ($rNo, $rId) {
-                                    $itNo = strtoupper(trim($it['invoice_no'] ?? ''));
-                                    $itId = strtolower(trim($it['id'] ?? ''));
-                                    return ($itNo !== $rNo && $itId !== $rId && $itNo !== str_replace('-INV-', '-', $rNo) && $itId !== str_replace('-inv-', '-', $rId));
-                                }));
-                                $data['invoices'][] = $rInv;
-                                $stmtInv->execute([
-                                    $rInv['id'], $rInv['invoice_no'], $rInv['company_id'] ?? 'rayan-corp-uae',
-                                    $rInv['customer_id'] ?? '', $rInv['customer_name'] ?? '', $rInv['customer_trn'] ?? '',
-                                    $rInv['invoice_date'] ?? date('Y-m-d'), $rInv['due_date'] ?? date('Y-m-d'),
-                                    floatval($rInv['grand_total'] ?? 0), floatval($rInv['amount_paid'] ?? 0),
-                                    floatval($rInv['balance_due'] ?? 0), $rInv['currency'] ?? 'AED',
-                                    $rInv['status'] ?? 'credited', json_encode($rInv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-                                ]);
+                                if (!isset($existingInvMap[$rNo]) && !isset($existingInvMap[$rId])) {
+                                    $data['invoices'][] = $rInv;
+                                    $stmtInv->execute([
+                                        $rInv['id'], $rInv['invoice_no'], $rInv['company_id'] ?? 'rayan-corp-uae',
+                                        $rInv['customer_id'] ?? '', $rInv['customer_name'] ?? '', $rInv['customer_trn'] ?? '',
+                                        $rInv['invoice_date'] ?? date('Y-m-d'), $rInv['due_date'] ?? date('Y-m-d'),
+                                        floatval($rInv['grand_total'] ?? 0), floatval($rInv['amount_paid'] ?? 0),
+                                        floatval($rInv['balance_due'] ?? 0), $rInv['currency'] ?? 'AED',
+                                        $rInv['status'] ?? 'credited', json_encode($rInv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                                    ]);
+                                }
                             }
 
-                            // Insert into $data['credit_notes']
+                            // Insert into $data['credit_notes'] only if missing
+                            $existingCNMap = [];
+                            foreach ($data['credit_notes'] as $ex) {
+                                if (!empty($ex['credit_note_no'])) $existingCNMap[strtoupper(trim($ex['credit_note_no']))] = true;
+                                if (!empty($ex['id'])) $existingCNMap[strtolower(trim($ex['id']))] = true;
+                            }
                             $stmtCN = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, company_id, invoice_id, invoice_no, customer_id, customer_name, total_credit_amount, currency, reason, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                             foreach ($canonicalPGGCCreditNotes as $rCN) {
                                 $cNo = strtoupper(trim($rCN['credit_note_no'] ?? ''));
                                 $cId = strtolower(trim($rCN['id'] ?? ''));
-                                $data['credit_notes'] = array_values(array_filter($data['credit_notes'], function($it) use ($cNo, $cId) {
-                                    $itNo = strtoupper(trim($it['credit_note_no'] ?? ''));
-                                    $itId = strtolower(trim($it['id'] ?? ''));
-                                    return ($itNo !== $cNo && $itId !== $cId);
-                                }));
-                                $data['credit_notes'][] = $rCN;
-                                $stmtCN->execute([
-                                    $rCN['id'], $rCN['credit_note_no'], $rCN['company_id'] ?? 'rayan-corp-uae',
-                                    $rCN['invoice_id'] ?? '', $rCN['invoice_no'] ?? '',
-                                    $rCN['customer_id'] ?? '', $rCN['customer_name'] ?? '',
-                                    floatval($rCN['total_credit_amount'] ?? 0), $rCN['currency'] ?? 'AED',
-                                    $rCN['reason'] ?? '', $rCN['status'] ?? 'applied',
-                                    json_encode($rCN, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-                                ]);
+                                if (!isset($existingCNMap[$cNo]) && !isset($existingCNMap[$cId])) {
+                                    $data['credit_notes'][] = $rCN;
+                                    $stmtCN->execute([
+                                        $rCN['id'], $rCN['credit_note_no'], $rCN['company_id'] ?? 'rayan-corp-uae',
+                                        $rCN['invoice_id'] ?? '', $rCN['invoice_no'] ?? '',
+                                        $rCN['customer_id'] ?? '', $rCN['customer_name'] ?? '',
+                                        floatval($rCN['total_credit_amount'] ?? 0), $rCN['currency'] ?? 'AED',
+                                        $rCN['reason'] ?? '', $rCN['status'] ?? 'applied',
+                                        json_encode($rCN, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                                    ]);
+                                }
                             }
 
-                            // Update customer PGGC
+                            // Update customer PGGC in memory and in JSON
                             if (!empty($data['customers']) && is_array($data['customers'])) {
                                 foreach ($data['customers'] as &$cItem) {
                                     if (($cItem['id'] ?? '') === 'cust-pggc') {
@@ -4657,7 +4630,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                                 }
                                 unset($cItem);
                             }
-                            $pdo->exec("UPDATE finance_customers SET total_invoiced = 31698.19, total_paid = 0.00, balance = 0.00 WHERE id = 'cust-pggc'");
+                            $pdo->exec("UPDATE finance_customers SET data_json = JSON_SET(data_json, '$.total_invoiced', 31698.19, '$.total_paid', 0.00, '$.balance', 0.00, '$.outstanding_dues', 0.00) WHERE id = 'cust-pggc'");
 
                             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('restore_pggc_invoices_v68', 'completed', NOW())");
                         }
@@ -4722,16 +4695,20 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
 
                     // Migration v70: Purge duplicate voucher CV-PV-REC-44006 and re-verify RAYAN E-Wallets routing
                     try {
-                        if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
-                            $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($v) {
-                                $vNo = $v['voucher_no'] ?? '';
-                                $amt = floatval($v['amount'] ?? 0);
-                                if ($vNo === 'CV-PV-REC-44006' || (stripos($vNo, '44006') !== false && stripos($vNo, 'PV') !== false)) return false;
-                                if ($amt == 7863.97 && ($v['type'] ?? '') === 'outflow') return false;
-                                return true;
-                            }));
+                        $chkMig70 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'purge_dup_voucher_v70'")->fetchColumn();
+                        if (!$chkMig70) {
+                            if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+                                $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($v) {
+                                    $vNo = $v['voucher_no'] ?? '';
+                                    $amt = floatval($v['amount'] ?? 0);
+                                    if ($vNo === 'CV-PV-REC-44006' || (stripos($vNo, '44006') !== false && stripos($vNo, 'PV') !== false)) return false;
+                                    if ($amt == 7863.97 && ($v['type'] ?? '') === 'outflow') return false;
+                                    return true;
+                                }));
+                            }
+                            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE voucher_no = 'CV-PV-REC-44006' OR (voucher_no LIKE '%44006%' AND voucher_no LIKE '%PV%') OR (amount = 7863.97 AND type = 'outflow')");
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('purge_dup_voucher_v70', 'completed', NOW())");
                         }
-                        $pdo->exec("DELETE FROM finance_cash_vouchers WHERE voucher_no = 'CV-PV-REC-44006' OR (voucher_no LIKE '%44006%' AND voucher_no LIKE '%PV%') OR (amount = 7863.97 AND type = 'outflow')");
                     } catch (Exception $e) {}
 
                     // Migration v71: Strictly sequential re-numbering of purchase bills BILL-REC-1001 to BILL-REC-1017 (no gaps)
@@ -5077,11 +5054,11 @@ function syncFromRelationalTables($pdo, &$data) {
                 if ($rows && count($rows) > 0) {
                     $k = $m['key'];
                     if (!isset($data[$k]) || !is_array($data[$k])) $data[$k] = [];
-                    $existing = [];
-                    foreach ($data[$k] as $item) {
+                    $indexMap = [];
+                    foreach ($data[$k] as $idx => $item) {
                         foreach ($m['id_fields'] as $f) {
                             if (!empty($item[$f])) {
-                                $existing[strtolower($item[$f])] = true;
+                                $indexMap[strtolower(trim($item[$f]))] = $idx;
                             }
                         }
                     }
@@ -5094,18 +5071,24 @@ function syncFromRelationalTables($pdo, &$data) {
                                 continue;
                             }
                         }
-                        $found = false;
+                        $foundIdx = -1;
                         foreach ($m['id_fields'] as $f) {
-                            if (!empty($obj[$f]) && isset($existing[strtolower($obj[$f])])) {
-                                $found = true;
-                                break;
+                            if (!empty($obj[$f])) {
+                                $keyVal = strtolower(trim($obj[$f]));
+                                if (isset($indexMap[$keyVal])) {
+                                    $foundIdx = $indexMap[$keyVal];
+                                    break;
+                                }
                             }
                         }
-                        if (!$found) {
-                            array_unshift($data[$k], $obj);
+                        if ($foundIdx >= 0) {
+                            $data[$k][$foundIdx] = array_merge($data[$k][$foundIdx], $obj);
+                        } else {
+                            $newIdx = count($data[$k]);
+                            $data[$k][] = $obj;
                             foreach ($m['id_fields'] as $f) {
                                 if (!empty($obj[$f])) {
-                                    $existing[strtolower($obj[$f])] = true;
+                                    $indexMap[strtolower(trim($obj[$f]))] = $newIdx;
                                 }
                             }
                         }
@@ -7671,11 +7654,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':data_json' => json_encode($pay, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                         ]);
                     } catch (Exception $e) {}
+
+                    // Update MySQL finance_purchase_bills for all allocated bills
+                    if (!empty($pay['allocations'])) {
+                        try {
+                            $stmtUpBill = $pdo->prepare("UPDATE finance_purchase_bills SET amount_paid = :paid, balance_due = :bal, status = :status, data_json = JSON_SET(data_json, '$.amount_paid', :paid, '$.balance_due', :bal, '$.status', :status), updated_at = NOW() WHERE id = :id OR bill_no = :bno");
+                            foreach ($pay['allocations'] as $alloc) {
+                                foreach ($db['purchase_bills'] as $b) {
+                                    if (($b['id'] ?? '') === ($alloc['bill_id'] ?? '') || ($b['bill_no'] ?? '') === ($alloc['bill_no'] ?? '')) {
+                                        $stmtUpBill->execute([
+                                            ':paid' => floatval($b['amount_paid'] ?? 0),
+                                            ':bal' => floatval($b['balance_due'] ?? 0),
+                                            ':status' => $b['status'] ?? 'unpaid',
+                                            ':id' => $b['id'] ?? '',
+                                            ':bno' => $b['bill_no'] ?? ''
+                                        ]);
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (Exception $e) {}
+                    }
+
+                    // Insert cash voucher if payment was from cash / wallet
+                    if (isset($cvObj)) {
+                        try {
+                            $stmtInsCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, voucher_no, company_id, register_id, custodian, voucher_date, type, category, purpose, payee, amount, currency, status, data_json, updated_at) VALUES (:id, :vno, :cid, :rid, :cust, :vdate, :type, :cat, :purp, :payee, :amt, :curr, :status, :json, NOW())");
+                            $stmtInsCv->execute([
+                                ':id' => $cvObj['id'],
+                                ':vno' => $cvObj['voucher_no'],
+                                ':cid' => $cvObj['company_id'],
+                                ':rid' => $cvObj['register_id'],
+                                ':cust' => $cvObj['custodian'],
+                                ':vdate' => $cvObj['date'],
+                                ':type' => $cvObj['type'],
+                                ':cat' => $cvObj['category'],
+                                ':purp' => $cvObj['purpose'],
+                                ':payee' => $cvObj['payee'],
+                                ':amt' => $cvObj['amount'],
+                                ':curr' => $cvObj['currency'],
+                                ':status' => $cvObj['status'],
+                                ':json' => json_encode($cvObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                            ]);
+                        } catch (Exception $e) {}
+                    }
                 }
 
                 // Recalculate all balances across DB
                 recalculateAllFinanceBalances($db);
 
+                $response['payment'] = $pay;
                 $addAuditLog('create', 'payment', $pay['voucher_no'] ?? '', 'Disbursed vendor payment of ' . ($pay['amount_paid'] ?? 0));
             }
             break;
@@ -8313,10 +8341,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $destVault['balance'] = floatval($destVault['balance'] ?? 0) + $amt;
             $destVault['last_replenished'] = $transferDate;
 
-            $wireId = 'wire-wdl-' . round(microtime(true) * 1000);
-            $voucherId = 'cv-' . $wireId;
-            $trfNum = rand(1000, 9999);
-            $voucherNo = 'CV-WDL-' . $trfNum;
+            $wireId = !empty($body['wire_id']) ? $body['wire_id'] : ('wire-wdl-' . round(microtime(true) * 1000));
+            $voucherId = !empty($body['voucher_id']) ? $body['voucher_id'] : ('cv-' . $wireId);
+            $voucherNo = !empty($body['voucher_no']) ? $body['voucher_no'] : ('CV-WDL-' . rand(1000, 9999));
 
             // Bank transfer outward wire
             $wireObj = [
@@ -8339,7 +8366,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'status' => 'Cleared',
                 'created_at' => date('c')
             ];
-            array_unshift($db['bank_transfers'], $wireObj);
+            $btFound = false;
+            if (!empty($db['bank_transfers']) && is_array($db['bank_transfers'])) {
+                foreach ($db['bank_transfers'] as &$exBt) {
+                    if (($exBt['id'] ?? '') === $wireId || (!empty($referenceNo) && ($exBt['reference_no'] ?? '') === $referenceNo)) {
+                        $exBt = array_merge($exBt, $wireObj);
+                        $btFound = true;
+                        break;
+                    }
+                }
+                unset($exBt);
+            }
+            if (!$btFound) {
+                array_unshift($db['bank_transfers'], $wireObj);
+            }
 
             // Cash voucher inflow
             $voucherObj = [
@@ -8361,7 +8401,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'status' => 'Approved',
                 'created_at' => date('c')
             ];
-            array_unshift($db['cash_vouchers'], $voucherObj);
+            $cvFound = false;
+            if (!empty($db['cash_vouchers']) && is_array($db['cash_vouchers'])) {
+                foreach ($db['cash_vouchers'] as &$exCv) {
+                    if (($exCv['id'] ?? '') === $voucherId || ($exCv['voucher_no'] ?? '') === $voucherNo) {
+                        $exCv = array_merge($exCv, $voucherObj);
+                        $cvFound = true;
+                        break;
+                    }
+                }
+                unset($exCv);
+            }
+            if (!$cvFound) {
+                array_unshift($db['cash_vouchers'], $voucherObj);
+            }
 
             // Rebalance cash vaults and accounts
             recalculateAllFinanceBalances($db);
