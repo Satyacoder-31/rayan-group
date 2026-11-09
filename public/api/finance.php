@@ -5150,8 +5150,6 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV78VendorSerialAtoZ($data, $pdo);
                     reconcileV79ChequeDeposits($data, $pdo);
                     recalculateAllFinanceBalances($data);
-                    syncToRelationalTables($pdo, $data);
-                    saveFinanceDb($pdo, $dataFile, $data, $candidates);
                     return $data;
                 }
             }
@@ -5260,7 +5258,12 @@ function syncFromRelationalTables($pdo, &$data) {
                             }
                         }
                         if ($foundIdx >= 0) {
-                            $data[$k][$foundIdx] = array_merge($data[$k][$foundIdx], $obj);
+                            // Primary state in finance_state is authoritative; only backfill missing fields without overwriting user edits
+                            foreach ($obj as $kField => $vField) {
+                                if (!isset($data[$k][$foundIdx][$kField]) || $data[$k][$foundIdx][$kField] === null || $data[$k][$foundIdx][$kField] === '') {
+                                    $data[$k][$foundIdx][$kField] = $vField;
+                                }
+                            }
                         } else {
                             $newIdx = count($data[$k]);
                             $data[$k][] = $obj;
@@ -5438,9 +5441,6 @@ function saveFinanceDb($pdo, $dataFile, &$data, $candidates = []) {
         try {
             $stmt = $pdo->prepare("REPLACE INTO finance_state (id, state_json, updated_at) VALUES (1, :json, NOW())");
             $stmt->execute([':json' => $json]);
-
-            // Sync all relational tables
-            syncToRelationalTables($pdo, $data);
         } catch (Exception $e) {
             error_log("Finance MySQL save error: " . $e->getMessage());
         }
@@ -6427,6 +6427,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                if ($pdo) {
+                    try {
+                        $stmtUpB = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_id, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bill_no, :vendor_invoice_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_id, :bill_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :approval_status, :data_json, NOW())");
+                        $stmtUpB->execute([
+                            ':id' => $bill['id'] ?? ('bill-' . ($bill['bill_no'] ?? '')),
+                            ':bill_no' => $bill['bill_no'] ?? '',
+                            ':vendor_invoice_no' => $bill['vendor_invoice_no'] ?? '',
+                            ':company_id' => $bill['company_id'] ?? 'rayan-corp-uae',
+                            ':vendor_id' => $bill['vendor_id'] ?? '',
+                            ':vendor_name' => $bill['vendor_name'] ?? '',
+                            ':project_id' => $bill['project_id'] ?? '',
+                            ':project_name' => $bill['project_name'] ?? '',
+                            ':po_id' => $bill['po_id'] ?? '',
+                            ':bill_date' => $bill['bill_date'] ?? date('Y-m-d'),
+                            ':due_date' => !empty($bill['due_date']) ? $bill['due_date'] : null,
+                            ':grand_total' => floatval($bill['grand_total'] ?? 0),
+                            ':amount_paid' => floatval($bill['amount_paid'] ?? 0),
+                            ':balance_due' => floatval($bill['balance_due'] ?? 0),
+                            ':currency' => $bill['currency'] ?? 'AED',
+                            ':status' => $bill['status'] ?? 'approved',
+                            ':approval_status' => $bill['approval_status'] ?? 'approved',
+                            ':data_json' => json_encode($bill, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
+
                 $addAuditLog('update', 'bill', $bill['bill_no'] ?? '', 'Updated purchase bill ' . ($bill['bill_no'] ?? ''));
             }
             break;
@@ -6442,6 +6468,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 unset($existingE);
+                if ($pdo) {
+                    try {
+                        $stmtUpExp = $pdo->prepare("REPLACE INTO finance_expenses (id, expense_no, company_id, category, amount, currency, expense_date, payment_mode, vendor_name, description, status, data_json, updated_at) VALUES (:id, :expense_no, :company_id, :category, :amount, :currency, :expense_date, :payment_mode, :vendor_name, :description, :status, :data_json, NOW())");
+                        $stmtUpExp->execute([
+                            ':id' => $exp['id'] ?? ('exp-' . ($exp['expense_no'] ?? '')),
+                            ':expense_no' => $exp['expense_no'] ?? '',
+                            ':company_id' => $exp['company_id'] ?? 'rayan-corp-uae',
+                            ':category' => $exp['category'] ?? '',
+                            ':amount' => floatval($exp['amount'] ?? 0),
+                            ':currency' => $exp['currency'] ?? 'AED',
+                            ':expense_date' => $exp['expense_date'] ?? date('Y-m-d'),
+                            ':payment_mode' => $exp['payment_mode'] ?? 'Cash',
+                            ':vendor_name' => $exp['vendor_name'] ?? '',
+                            ':description' => $exp['description'] ?? '',
+                            ':status' => $exp['status'] ?? 'approved',
+                            ':data_json' => json_encode($exp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('update', 'expense', $exp['expense_no'] ?? '', 'Updated expense claim ' . ($exp['expense_no'] ?? ''));
             }
             break;
@@ -6963,6 +7008,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                if ($pdo) {
+                    try {
+                        $stmtUpP = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :voucher_no, :company_id, :vendor_id, :vendor_name, :payment_date, :payment_mode, :reference_no, :amount_paid, :currency, :data_json, NOW())");
+                        $stmtUpP->execute([
+                            ':id' => $pay['id'] ?? ('pay-' . ($pay['voucher_no'] ?? '')),
+                            ':voucher_no' => $pay['voucher_no'] ?? '',
+                            ':company_id' => $pay['company_id'] ?? 'rayan-corp-uae',
+                            ':vendor_id' => $pay['vendor_id'] ?? '',
+                            ':vendor_name' => $pay['vendor_name'] ?? '',
+                            ':payment_date' => $pay['payment_date'] ?? date('Y-m-d'),
+                            ':payment_mode' => $pay['payment_mode'] ?? 'Bank Transfer',
+                            ':reference_no' => $pay['reference_no'] ?? '',
+                            ':amount_paid' => floatval($pay['amount_paid'] ?? 0),
+                            ':currency' => $pay['currency'] ?? 'AED',
+                            ':data_json' => json_encode($pay, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
+
                 recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'payment', $pay['voucher_no'] ?? '', 'Updated vendor payment voucher ' . ($pay['voucher_no'] ?? ''));
             }
@@ -6984,6 +7048,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unset($existingPO);
                 if (!$found) {
                     $db['purchase_orders'][] = $po;
+                }
+                if ($pdo) {
+                    try {
+                        $stmtUpPo = $pdo->prepare("REPLACE INTO finance_purchase_orders (id, po_no, company_id, vendor_id, vendor_name, project_id, project_name, po_date, total_value, currency, status, data_json, updated_at) VALUES (:id, :po_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_date, :total_value, :currency, :status, :data_json, NOW())");
+                        $stmtUpPo->execute([
+                            ':id' => $po['id'] ?? ('po-' . ($po['po_no'] ?? '')),
+                            ':po_no' => $po['po_no'] ?? '',
+                            ':company_id' => $po['company_id'] ?? 'rayan-corp-uae',
+                            ':vendor_id' => $po['vendor_id'] ?? '',
+                            ':vendor_name' => $po['vendor_name'] ?? ($po['supplier_name'] ?? ''),
+                            ':project_id' => $po['project_id'] ?? '',
+                            ':project_name' => $po['project_name'] ?? '',
+                            ':po_date' => $po['date'] ?? ($po['po_date'] ?? date('Y-m-d')),
+                            ':total_value' => floatval($po['total_value'] ?? ($po['grand_total'] ?? 0)),
+                            ':currency' => $po['currency'] ?? 'AED',
+                            ':status' => $po['status'] ?? 'approved',
+                            ':data_json' => json_encode($po, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
                 }
                 $addAuditLog('update', 'po', $po['po_no'] ?? '', 'Updated purchase order ' . ($po['po_no'] ?? ''));
             }
@@ -7018,6 +7101,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 unset($existingCN);
+                if ($pdo) {
+                    try {
+                        $stmtUpCn = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, company_id, invoice_id, invoice_no, customer_id, customer_name, total_credit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :credit_note_no, :company_id, :invoice_id, :invoice_no, :customer_id, :customer_name, :total_credit_amount, :currency, :reason, :status, :data_json, NOW())");
+                        $stmtUpCn->execute([
+                            ':id' => $cn['id'] ?? ('cn-' . ($cn['credit_note_no'] ?? '')),
+                            ':credit_note_no' => $cn['credit_note_no'] ?? '',
+                            ':company_id' => $cn['company_id'] ?? 'rayan-corp-uae',
+                            ':invoice_id' => $cn['invoice_id'] ?? '',
+                            ':invoice_no' => $cn['invoice_no'] ?? ($cn['ref_invoice_no'] ?? ''),
+                            ':customer_id' => $cn['customer_id'] ?? '',
+                            ':customer_name' => $cn['customer_name'] ?? '',
+                            ':total_credit_amount' => floatval($cn['total_credit_amount'] ?? 0),
+                            ':currency' => $cn['currency'] ?? 'AED',
+                            ':reason' => $cn['reason'] ?? '',
+                            ':status' => $cn['status'] ?? 'applied',
+                            ':data_json' => json_encode($cn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'credit_note', $cn['credit_note_no'] ?? '', 'Updated credit note ' . ($cn['credit_note_no'] ?? ''));
             }
@@ -7034,6 +7136,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 unset($existingDN);
+                if ($pdo) {
+                    try {
+                        $stmtUpDn = $pdo->prepare("REPLACE INTO finance_debit_notes (id, debit_note_no, company_id, bill_id, bill_no, vendor_id, vendor_name, total_debit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :debit_note_no, :company_id, :bill_id, :bill_no, :vendor_id, :vendor_name, :total_debit_amount, :currency, :reason, :status, :data_json, NOW())");
+                        $stmtUpDn->execute([
+                            ':id' => $dn['id'] ?? ('dn-' . ($dn['debit_note_no'] ?? '')),
+                            ':debit_note_no' => $dn['debit_note_no'] ?? '',
+                            ':company_id' => $dn['company_id'] ?? 'rayan-corp-uae',
+                            ':bill_id' => $dn['bill_id'] ?? '',
+                            ':bill_no' => $dn['bill_no'] ?? ($dn['ref_bill_no'] ?? ''),
+                            ':vendor_id' => $dn['vendor_id'] ?? '',
+                            ':vendor_name' => $dn['vendor_name'] ?? '',
+                            ':total_debit_amount' => floatval($dn['total_debit_amount'] ?? 0),
+                            ':currency' => $dn['currency'] ?? 'AED',
+                            ':reason' => $dn['reason'] ?? '',
+                            ':status' => $dn['status'] ?? 'applied',
+                            ':data_json' => json_encode($dn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'debit_note', $dn['debit_note_no'] ?? '', 'Updated debit note ' . ($dn['debit_note_no'] ?? ''));
             }
@@ -9328,6 +9449,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (Exception $e) {
                         error_log("Mock cleanup error: " . $e->getMessage());
                     }
+                    syncToRelationalTables($pdo, $db);
                 }
                 $addAuditLog('sync', 'database', 'all', 'Client synchronized full state');
             }

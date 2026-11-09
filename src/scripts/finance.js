@@ -1434,6 +1434,7 @@ class FinanceApp {
     };
 
     const endpoints = ['/api/finance.php', '/api/finance'];
+    let lastError = null;
     for (const ep of endpoints) {
       try {
         const res = await fetch(ep, {
@@ -1451,8 +1452,14 @@ class FinanceApp {
             } catch (e) { }
             return json;
           }
+          if (json.success) {
+            return json;
+          }
+        } else {
+          lastError = new Error(`Server returned HTTP ${res.status}`);
         }
       } catch (e) {
+        lastError = e;
         console.warn(`Sync attempt to ${ep} offline fallback:`, e);
       }
     }
@@ -1535,9 +1542,14 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, project: newPrj };
     }
 
-    if (action === 'create_invoice' && payload.invoice) {
+    if ((action === 'create_invoice' || action === 'update_invoice') && payload.invoice) {
       if (!this.db.invoices) this.db.invoices = [];
-      const idx = this.db.invoices.findIndex(i => i.id === payload.invoice.id || i.invoice_no === payload.invoice.invoice_no);
+      const idx = this.db.invoices.findIndex(i =>
+        i.id === payload.invoice.id ||
+        i.invoice_no === payload.invoice.invoice_no ||
+        (payload.old_id && i.id === payload.old_id) ||
+        (payload.old_invoice_no && (i.invoice_no || '').toLowerCase() === payload.old_invoice_no.toLowerCase())
+      );
       if (idx >= 0) {
         this.db.invoices[idx] = payload.invoice;
       } else {
@@ -1547,10 +1559,10 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
     }
 
-    if (action === 'record_receipt' && payload.receipt) {
+    if ((action === 'record_receipt' || action === 'update_receipt') && payload.receipt) {
       if (!this.db.customer_receipts) this.db.customer_receipts = [];
       const newRcp = payload.receipt;
-      const idx = this.db.customer_receipts.findIndex(r => r.id === newRcp.id || r.receipt_no === newRcp.receipt_no);
+      const idx = this.db.customer_receipts.findIndex(r => r.id === newRcp.id || r.receipt_no === newRcp.receipt_no || (payload.old_receipt_no && r.receipt_no === payload.old_receipt_no));
       if (idx >= 0) {
         this.db.customer_receipts[idx] = newRcp;
       } else {
@@ -1581,7 +1593,7 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, receipt: newRcp };
     }
 
-    if (action === 'create_bill' && payload.bill) {
+    if ((action === 'create_bill' || action === 'update_bill') && payload.bill) {
       if (!this.db.purchase_bills) this.db.purchase_bills = [];
       const newBill = payload.bill;
       const idx = this.db.purchase_bills.findIndex(b => b.id === newBill.id || b.bill_no === newBill.bill_no);
@@ -1594,7 +1606,7 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, bill: newBill };
     }
 
-    if (action === 'create_expense' && payload.expense) {
+    if ((action === 'create_expense' || action === 'update_expense') && payload.expense) {
       if (!this.db.expenses) this.db.expenses = [];
       const newExp = payload.expense;
       const idx = this.db.expenses.findIndex(e => e.id === newExp.id || e.expense_no === newExp.expense_no);
@@ -1607,7 +1619,7 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, expense: newExp };
     }
 
-    if (action === 'record_payment' && payload.payment) {
+    if ((action === 'record_payment' || action === 'update_payment') && payload.payment) {
       if (!this.db.vendor_payments) this.db.vendor_payments = [];
       const newPay = payload.payment;
       const idx = this.db.vendor_payments.findIndex(p => p.id === newPay.id || p.voucher_no === newPay.voucher_no);
@@ -1632,7 +1644,7 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, payment: newPay };
     }
 
-    if (action === 'create_po' && payload.po) {
+    if ((action === 'create_po' || action === 'update_po') && payload.po) {
       if (!this.db.purchase_orders) this.db.purchase_orders = [];
       const newPo = payload.po;
       const idx = this.db.purchase_orders.findIndex(p => p.id === newPo.id || p.po_no === newPo.po_no);
@@ -1645,22 +1657,57 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db, po: newPo };
     }
 
-    if (action === 'create_credit_note' && payload.credit_note) {
+    if ((action === 'create_credit_note' || action === 'update_credit_note') && payload.credit_note) {
       if (!this.db.credit_notes) this.db.credit_notes = [];
       const newCn = payload.credit_note;
-      this.db.credit_notes.unshift(newCn);
+      const idx = this.db.credit_notes.findIndex(c => c.id === newCn.id || c.credit_note_no === newCn.credit_note_no);
+      if (idx >= 0) {
+        this.db.credit_notes[idx] = newCn;
+      } else {
+        this.db.credit_notes.unshift(newCn);
+      }
       this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, credit_note: newCn };
     }
 
-    if (action === 'create_debit_note' && payload.debit_note) {
+    if ((action === 'create_debit_note' || action === 'update_debit_note') && payload.debit_note) {
       if (!this.db.debit_notes) this.db.debit_notes = [];
       const newDn = payload.debit_note;
-      this.db.debit_notes.unshift(newDn);
+      const idx = this.db.debit_notes.findIndex(d => d.id === newDn.id || d.debit_note_no === newDn.debit_note_no);
+      if (idx >= 0) {
+        this.db.debit_notes[idx] = newDn;
+      } else {
+        this.db.debit_notes.unshift(newDn);
+      }
       this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, debit_note: newDn };
+    }
+
+    if (action === 'update_project' && payload.project) {
+      if (!this.db.projects) this.db.projects = [];
+      const newP = payload.project;
+      const idx = this.db.projects.findIndex(p => p.id === newP.id || p.code === newP.code);
+      if (idx >= 0) {
+        this.db.projects[idx] = { ...this.db.projects[idx], ...newP };
+      } else {
+        this.db.projects.unshift(newP);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, project: newP };
+    }
+
+    if (action === 'update_cash_voucher' && payload.voucher) {
+      if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+      const v = payload.voucher;
+      const idx = this.db.cash_vouchers.findIndex(x => x.id === payload.id || x.id === v.id || x.voucher_no === v.voucher_no);
+      if (idx >= 0) {
+        this.db.cash_vouchers[idx] = { ...this.db.cash_vouchers[idx], ...v };
+      }
+      this.normalizeAllBalances();
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, voucher: v };
     }
 
     // UPDATE / EDIT FALLBACKS
@@ -17566,13 +17613,31 @@ class FinanceApp {
         try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       }
 
-      // 2. Synchronize with backend API
-      await this.syncApi('update_customer', { customer: updatedCust, old_id: oldId, old_code: oldCode, old_name: oldName });
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Customer';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
 
-      this.showNotification(`Customer "${updatedCust.name}" (${updatedCust.code}) updated successfully.`, 'success');
-      this.closeModal('modal-edit-cust');
-      this.closeModal('modal-cust-profile');
-      this.renderActiveTab();
+      try {
+        // 2. Synchronize with backend API
+        await this.syncApi('update_customer', { customer: updatedCust, old_id: oldId, old_code: oldCode, old_name: oldName });
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+        this.showNotification(`Customer "${updatedCust.name}" (${updatedCust.code}) updated successfully.`, 'success');
+        this.closeModal('modal-edit-cust');
+        this.closeModal('modal-cust-profile');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Customer save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save customer to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -18980,23 +19045,50 @@ class FinanceApp {
         }
       };
 
-      const res = await this.syncApi('update_project', payload);
-      if (res && res.success) {
-        if (clientName) {
-          this.saveCustomerProjectLink(clientName, payload.project.id, payload.project.name);
-          this.saveProjectRecommendation(payload.project.name);
-        }
-        if (this._prjFilter) this._prjFilter.status = 'all';
-        this.closeModal('modal-edit-project');
-        this.showNotification(`Project "${payload.project.name}" (${payload.project.code}) updated successfully.`, 'success');
-        if (this.activeTab === 'projects') {
-          const root = document.getElementById('fin-tab-content-root');
-          if (root) this.renderProjectsTab(root);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Project';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
+      if (this.db?.projects) {
+        const idx = this.db.projects.findIndex(p => p.id === payload.project.id || p.code === payload.project.code);
+        if (idx >= 0) this.db.projects[idx] = { ...this.db.projects[idx], ...payload.project };
+        else this.db.projects.unshift(payload.project);
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      }
+
+      try {
+        const res = await this.syncApi('update_project', payload);
+        if (res && res.success) {
+          if (clientName) {
+            this.saveCustomerProjectLink(clientName, payload.project.id, payload.project.name);
+            this.saveProjectRecommendation(payload.project.name);
+          }
+          if (this._prjFilter) this._prjFilter.status = 'all';
+          this.closeModal('modal-edit-project');
+          this.showNotification(`Project "${payload.project.name}" (${payload.project.code}) updated successfully.`, 'success');
+          if (this.activeTab === 'projects') {
+            const root = document.getElementById('fin-tab-content-root');
+            if (root) this.renderProjectsTab(root);
+          } else {
+            this.renderActiveTab();
+          }
         } else {
-          this.renderActiveTab();
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origBtnText;
+          }
+          alert(res?.error || 'Could not update project.');
         }
-      } else {
-        alert(res?.error || 'Could not update project.');
+      } catch (err) {
+        console.error('Project save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save project to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
       }
     };
   }
@@ -20644,17 +20736,34 @@ class FinanceApp {
         project_name: pName
       };
 
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save Changes &rarr;';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
       const idx = (this.db.cash_vouchers || []).findIndex(x => x.id === v.id || x.voucher_no === v.voucher_no);
       if (idx >= 0) {
         this.db.cash_vouchers[idx] = updatedVoucher;
       }
-
       this.normalizeAllBalances();
-      await this.syncApi('update_cash_voucher', { id: v.id, voucher: updatedVoucher });
-      this.closeModal('modal-edit-cash-voucher');
-      this.activeTab = 'cash_in_hand';
-      this.renderActiveTab();
-      this.showNotification(`Cash voucher ${updatedVoucher.voucher_no} updated successfully!`, 'success');
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+      try {
+        await this.syncApi('update_cash_voucher', { id: v.id, voucher: updatedVoucher });
+        this.closeModal('modal-edit-cash-voucher');
+        this.activeTab = 'cash_in_hand';
+        this.renderActiveTab();
+        this.showNotification(`Cash voucher ${updatedVoucher.voucher_no} updated successfully!`, 'success');
+      } catch (err) {
+        console.error('Cash voucher save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save cash voucher to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -24103,7 +24212,15 @@ class FinanceApp {
       // Accurately recalculate invoice balance taking into account both receipts and credit notes
       this.recalculateInvoiceBalance(inv);
 
-      // 1. Immediately replace in memory so UI reflects update without duplicate
+      // Disable submit button and show progress indicator
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Invoice';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
+      // 1. Immediately replace in memory and local cache so UI reflects update without duplicate
       if (this.db?.invoices) {
         const idx = this.db.invoices.findIndex(i =>
           (oldId && i.id === oldId) ||
@@ -24123,37 +24240,46 @@ class FinanceApp {
         try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       }
 
-      // 2. Synchronize with backend API
-      await this.syncApi('update_invoice', {
-        invoice: inv,
-        old_invoice_no: oldInvNo,
-        old_id: oldId,
-        customer_name: newCustName,
-        customer_id: newCustId
-      });
-
-      // 3. Reconcile and normalize balances across all modules after sync returns
-      this.normalizeAllBalances();
-      if (this.db?.invoices) {
-        const idx = this.db.invoices.findIndex(i =>
-          i.id === newId ||
-          (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase()
-        );
-        if (idx >= 0) this.db.invoices[idx] = inv;
-        else this.db.invoices.unshift(inv);
-        this.db.invoices = this.db.invoices.filter((item, index, self) => {
-          if (item === inv) return true;
-          if (oldId && item.id === oldId && item.id !== newId) return false;
-          if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
-          return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
+      try {
+        // 2. Synchronize with backend API
+        await this.syncApi('update_invoice', {
+          invoice: inv,
+          old_invoice_no: oldInvNo,
+          old_id: oldId,
+          customer_name: newCustName,
+          customer_id: newCustId
         });
-        try {
-          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (e) { }
+
+        // 3. Reconcile and normalize balances across all modules after sync returns
+        this.normalizeAllBalances();
+        if (this.db?.invoices) {
+          const idx = this.db.invoices.findIndex(i =>
+            i.id === newId ||
+            (i.invoice_no || '').toLowerCase() === newInvNo.toLowerCase()
+          );
+          if (idx >= 0) this.db.invoices[idx] = inv;
+          else this.db.invoices.unshift(inv);
+          this.db.invoices = this.db.invoices.filter((item, index, self) => {
+            if (item === inv) return true;
+            if (oldId && item.id === oldId && item.id !== newId) return false;
+            if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
+            return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
+          });
+          try {
+            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+          } catch (e) { }
+        }
+        this.showNotification(`Invoice ${inv.invoice_no} updated successfully with ${updatedLineItems.length} items.`, 'success');
+        this.closeModal('modal-edit-invoice');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Invoice save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save invoice to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
       }
-      this.showNotification(`Invoice ${inv.invoice_no} updated successfully with ${updatedLineItems.length} items.`, 'success');
-      this.closeModal('modal-edit-invoice');
-      this.renderActiveTab();
     };
   }
 
@@ -24790,10 +24916,36 @@ class FinanceApp {
         }
       ];
 
-      await this.syncApi('update_bill', { bill });
-      alert(`Purchase Bill ${bill.bill_no} updated successfully.`);
-      this.closeModal('modal-edit-bill');
-      this.renderActiveTab();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Bill';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
+      // Update in memory and local cache immediately
+      if (this.db?.purchase_bills) {
+        const idx = this.db.purchase_bills.findIndex(b => b.id === bill.id || b.bill_no === bill.bill_no);
+        if (idx >= 0) this.db.purchase_bills[idx] = bill;
+        else this.db.purchase_bills.unshift(bill);
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      }
+
+      try {
+        await this.syncApi('update_bill', { bill });
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.showNotification(`Purchase Bill ${bill.bill_no} updated successfully.`, 'success');
+        this.closeModal('modal-edit-bill');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Bill save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save bill to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -24973,20 +25125,38 @@ class FinanceApp {
       }
       rcp.notes = document.getElementById('edit-rcp-notes').value.trim();
 
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Voucher';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
       // Route into cash & bank ledger locally immediately
       this.routeReceiptToCashAndBank(rcp, this.db);
       this.normalizeAllBalances();
-
-      await this.syncApi('update_receipt', { receipt: rcp, old_receipt_no: oldRcpNo, saved_banks: this.db.saved_banks });
       if (this.db?.customer_receipts) {
         const idx = this.db.customer_receipts.findIndex(r => r.id === rcp.id || r.receipt_no === oldRcpNo || r.receipt_no === rcp.receipt_no);
         if (idx >= 0) this.db.customer_receipts[idx] = rcp;
         else this.db.customer_receipts.push(rcp);
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       }
-      this.showNotification(`Payment-In voucher ${rcp.receipt_no} updated successfully.`, 'success');
-      this.closeModal('modal-edit-receipt');
-      this.renderActiveTab();
+
+      try {
+        await this.syncApi('update_receipt', { receipt: rcp, old_receipt_no: oldRcpNo, saved_banks: this.db.saved_banks });
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.showNotification(`Payment-In voucher ${rcp.receipt_no} updated successfully.`, 'success');
+        this.closeModal('modal-edit-receipt');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Receipt save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save payment-in voucher to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -25146,10 +25316,35 @@ class FinanceApp {
         }
       }
 
-      await this.syncApi('update_expense', { expense: exp });
-      alert(`Expense ${exp.expense_no} updated successfully.`);
-      this.closeModal('modal-edit-expense');
-      this.renderActiveTab();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Expense';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
+      if (this.db?.expenses) {
+        const idx = this.db.expenses.findIndex(x => x.id === exp.id || x.expense_no === exp.expense_no);
+        if (idx >= 0) this.db.expenses[idx] = exp;
+        else this.db.expenses.unshift(exp);
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      }
+
+      try {
+        await this.syncApi('update_expense', { expense: exp });
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.showNotification(`Expense ${exp.expense_no} updated successfully.`, 'success');
+        this.closeModal('modal-edit-expense');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Expense save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save expense to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -25939,19 +26134,37 @@ class FinanceApp {
         pay.source_account = pay.source_vault_name;
       }
 
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Voucher';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
       this.routeVendorPaymentToCashAndBank(pay, this.db);
       this.normalizeAllBalances();
-
-      await this.syncApi('update_payment', { payment: pay });
       if (this.db?.vendor_payments) {
         const idx = this.db.vendor_payments.findIndex(p => p.id === pay.id || p.voucher_no === pay.voucher_no);
         if (idx >= 0) this.db.vendor_payments[idx] = pay;
         else this.db.vendor_payments.push(pay);
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       }
-      this.showNotification(`Payment voucher ${pay.voucher_no} updated successfully.`, 'success');
-      this.closeModal('modal-edit-pay');
-      this.renderActiveTab();
+
+      try {
+        await this.syncApi('update_payment', { payment: pay });
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.showNotification(`Payment voucher ${pay.voucher_no} updated successfully.`, 'success');
+        this.closeModal('modal-edit-pay');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Payment save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save payment voucher to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -26151,13 +26364,38 @@ class FinanceApp {
         }
       ];
 
-      await this.syncApi('update_po', { po });
-      this.closeModal('modal-edit-po');
-      this.showNotification(`Purchase Order ${po.po_no} updated successfully.`, 'success');
-      if (document.getElementById('fin-doc-print-modal')) {
-        this.openPOPrintModal(po.id || po.po_no);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Purchase Order';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
       }
-      this.renderActiveTab();
+
+      if (this.db?.purchase_orders) {
+        const idx = this.db.purchase_orders.findIndex(p => p.id === po.id || p.po_no === po.po_no);
+        if (idx >= 0) this.db.purchase_orders[idx] = po;
+        else this.db.purchase_orders.unshift(po);
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      }
+
+      try {
+        await this.syncApi('update_po', { po });
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.closeModal('modal-edit-po');
+        this.showNotification(`Purchase Order ${po.po_no} updated successfully.`, 'success');
+        if (document.getElementById('fin-doc-print-modal')) {
+          this.openPOPrintModal(po.id || po.po_no);
+        }
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('PO save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save purchase order to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -26296,15 +26534,39 @@ class FinanceApp {
       cn.taxable_amount = Math.round((totalCredit / (1 + taxRate)) * 100) / 100;
       cn.tax_amount = Math.round((totalCredit - cn.taxable_amount) * 100) / 100;
 
-      await this.syncApi('update_credit_note', { credit_note: cn });
-      if (linkedInv) {
-        this.recalculateInvoiceBalance(linkedInv);
-        await this.syncApi('update_invoice', { invoice: linkedInv });
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Credit Note';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
       }
-      this.normalizeAllBalances();
-      alert(`Credit Note ${cn.credit_note_no} updated successfully.`);
-      this.closeModal('modal-edit-cn');
-      this.renderActiveTab();
+
+      if (this.db?.credit_notes) {
+        const idx = this.db.credit_notes.findIndex(c => c.id === cn.id || c.credit_note_no === cn.credit_note_no);
+        if (idx >= 0) this.db.credit_notes[idx] = cn;
+        else this.db.credit_notes.unshift(cn);
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      }
+
+      try {
+        await this.syncApi('update_credit_note', { credit_note: cn });
+        if (linkedInv) {
+          this.recalculateInvoiceBalance(linkedInv);
+          await this.syncApi('update_invoice', { invoice: linkedInv });
+        }
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.showNotification(`Credit Note ${cn.credit_note_no} updated successfully.`, 'success');
+        this.closeModal('modal-edit-cn');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Credit note save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save credit note to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -26363,15 +26625,39 @@ class FinanceApp {
       }
       dn.total_debit_amount = totalDebit;
 
-      await this.syncApi('update_debit_note', { debit_note: dn });
-      if (linkedBill) {
-        this.recalculateBillBalance(linkedBill);
-        await this.syncApi('update_bill', { bill: linkedBill });
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Debit Note';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
       }
-      this.normalizeAllBalances();
-      alert(`Debit Note ${dn.debit_note_no} updated successfully.`);
-      this.closeModal('modal-edit-dn');
-      this.renderActiveTab();
+
+      if (this.db?.debit_notes) {
+        const idx = this.db.debit_notes.findIndex(d => d.id === dn.id || d.debit_note_no === dn.debit_note_no);
+        if (idx >= 0) this.db.debit_notes[idx] = dn;
+        else this.db.debit_notes.unshift(dn);
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      }
+
+      try {
+        await this.syncApi('update_debit_note', { debit_note: dn });
+        if (linkedBill) {
+          this.recalculateBillBalance(linkedBill);
+          await this.syncApi('update_bill', { bill: linkedBill });
+        }
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.showNotification(`Debit Note ${dn.debit_note_no} updated successfully.`, 'success');
+        this.closeModal('modal-edit-dn');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Debit note save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save debit note to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -26425,10 +26711,35 @@ class FinanceApp {
       doc.name = document.getElementById('edit-doc-name').value.trim();
       doc.category = document.getElementById('edit-doc-cat').value;
       doc.linked_record = document.getElementById('edit-doc-ref').value.trim() || 'General';
-      await this.syncApi('update_document', { document: doc });
-      alert(`Document "${doc.name}" updated successfully.`);
-      this.closeModal('modal-edit-doc');
-      this.renderActiveTab();
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Document';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
+
+      if (this.db?.documents) {
+        const idx = this.db.documents.findIndex(d => d.id === doc.id);
+        if (idx >= 0) this.db.documents[idx] = doc;
+        else this.db.documents.unshift(doc);
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      }
+
+      try {
+        await this.syncApi('update_document', { document: doc });
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.showNotification(`Document "${doc.name}" updated successfully.`, 'success');
+        this.closeModal('modal-edit-doc');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Document save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save document metadata to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
@@ -27035,12 +27346,30 @@ class FinanceApp {
         try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       }
 
-      // 2. Sync to API
-      await this.syncApi('update_vendor', { vendor: vend, old_id: oldId, old_code: oldCode, old_name: oldName });
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save & Update Vendor Record';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Saving to Database...';
+      }
 
-      this.showNotification(`Vendor "${vend.name}" (${vend.code}) updated successfully.`, 'success');
-      this.closeModal('modal-edit-vend');
-      this.renderActiveTab();
+      try {
+        // 2. Sync to API
+        await this.syncApi('update_vendor', { vendor: vend, old_id: oldId, old_code: oldCode, old_name: oldName });
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+        this.showNotification(`Vendor "${vend.name}" (${vend.code}) updated successfully.`, 'success');
+        this.closeModal('modal-edit-vend');
+        this.renderActiveTab();
+      } catch (err) {
+        console.error('Vendor save error:', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnText;
+        }
+        alert('Failed to save vendor to server: ' + (err.message || 'Unknown network error') + '. Please try again.');
+      }
     };
   }
 
