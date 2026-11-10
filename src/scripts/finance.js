@@ -22730,15 +22730,15 @@ class FinanceApp {
             <div class="fin-doc-table-wrapper" style="margin-top:0.6rem; margin-bottom:0.6rem;">
               <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.78rem; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
                 <colgroup>
-                  <col style="width:4.5%;">  <!-- Sr. No -->
-                  <col style="width:26.5%;"> <!-- Description -->
-                  <col style="width:5%;">    <!-- Unit -->
-                  <col style="width:5%;">    <!-- Qty -->
-                  <col style="width:6%;">    <!-- WD% -->
-                  <col style="width:11%;">   <!-- Project Price -->
-                  <col style="width:11%;">   <!-- Invoice Amount -->
-                  <col style="width:9%;">    <!-- VAT 5% -->
-                  <col style="width:22%;">   <!-- Total Amount -->
+                  <col style="width:4%;">    <!-- Sr. No -->
+                  <col style="width:46%;">   <!-- Description -->
+                  <col style="width:4.5%;">  <!-- Unit -->
+                  <col style="width:4%;">    <!-- Qty -->
+                  <col style="width:4%;">    <!-- WD% -->
+                  <col style="width:9%;">    <!-- Project Price -->
+                  <col style="width:9%;">    <!-- Invoice Amount -->
+                  <col style="width:6.5%;">  <!-- VAT 5% -->
+                  <col style="width:13%;">   <!-- Total Amount -->
                 </colgroup>
                 <thead>
                   <tr style="background:#ffffff; border-bottom:1.5px solid #111827; font-weight:700; font-size:0.75rem;">
@@ -22813,7 +22813,7 @@ class FinanceApp {
                         <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${curr.trim()} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${curr.trim()} ${totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     `;
     }).join('')}
@@ -23930,41 +23930,41 @@ class FinanceApp {
             <div class="fin-doc-table-wrapper" style="margin-top:1rem; margin-bottom:1rem;">
               <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
                 <colgroup>
-                  <col style="width:4.5%;">  <!-- Sr. No -->
-                  <col style="width:41.5%;"> <!-- Description & Scope -->
-                  <col style="width:6%;">    <!-- Unit -->
-                  <col style="width:6%;">    <!-- Qty -->
-                  <col style="width:11%;">   <!-- Unit Price -->
-                  <col style="width:10%;">   <!-- VAT 5% -->
-                  <col style="width:21%;">   <!-- Total Amount -->
+                  <col style="width:4%;">    <!-- Sr. No -->
+                  <col style="width:55%;">   <!-- Description & Scope -->
+                  <col style="width:4.5%;">  <!-- Unit -->
+                  <col style="width:4.5%;">  <!-- Qty -->
+                  <col style="width:10%;">   <!-- Unit Price -->
+                  <col style="width:8%;">    <!-- VAT 5% -->
+                  <col style="width:14%;">   <!-- Total Amount -->
                 </colgroup>
                 <thead>
                   <tr style="background:#ffffff; color:#111827; border-bottom:1.5px solid #111827;">
-                    <th style="border:1px solid #111827; padding:5px 4px; width:4.5%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:4%; text-align:center; vertical-align:middle;">
                       <div>Sr. No.</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 8px; width:41.5%; vertical-align:middle; text-align:left;">
+                    <th style="border:1px solid #111827; padding:5px 8px; width:55%; vertical-align:middle; text-align:left;">
                       <div>Description &amp; Scope</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:6%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:4.5%; text-align:center; vertical-align:middle;">
                       <div>Unit</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:6%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:4.5%; text-align:center; vertical-align:middle;">
                       <div>Qty</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:11%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:10%; text-align:right; vertical-align:middle;">
                       <div>Unit Price</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">السعر</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:10%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:8%; text-align:right; vertical-align:middle;">
                       <div>VAT 5%</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 8px; width:21%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 6px; width:14%; text-align:right; vertical-align:middle;">
                       <div>Total Amount</div>
                       <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
                     </th>
