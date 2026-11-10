@@ -12885,7 +12885,7 @@ class FinanceApp {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:6mm 10mm 4mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -12894,145 +12894,145 @@ class FinanceApp {
             <div style="position:relative; z-index:1;">
 
               <!-- Header Section (Left: Logo & Company, Right: Title & Metadata) -->
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
-                <div style="max-width:60%;">
-                  <div style="margin-bottom:0.75rem;">
-                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1rem;">
+                <div style="max-width:58%;">
+                  <div style="margin-bottom:0.4rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:38px; width:auto; display:block;">
                   </div>
-                  <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                  <div style="font-size:0.76rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:2px; white-space:nowrap;">
                     ${compName}
                   </div>
-                  <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                  <div style="font-size:0.75rem; color:#4b5563; line-height:1.35;">
                     ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                   </div>
-                  <div style="font-size:0.78rem; color:#6b7280; line-height:1.4;">
+                  <div style="font-size:0.74rem; color:#6b7280; line-height:1.35;">
                     ${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, United Arab Emirates'} | Tel: ${compPhone}
                   </div>
                   ${this.getRayanDynamicVerificationCode(bill, 'purchase_bill')}
                 </div>
 
                 <div style="text-align:right;">
-                  <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
+                  <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.6rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
                     PURCHASE BILL
                   </div>
-                  <div style="font-size:0.95rem; font-family:'Amiri', serif; font-weight:700; color:#374151; margin-top:3px; margin-bottom:2px;">
+                  <div style="font-size:0.85rem; font-family:'Amiri', serif; font-weight:700; color:#374151; margin-top:2px; margin-bottom:2px;">
                     فاتورة شراء معتمدة
                   </div>
-                  <div style="font-size:0.90rem; font-weight:800; color:#111827; margin-bottom:8px;">
+                  <div style="font-size:0.84rem; font-weight:800; color:#111827; margin-bottom:5px;">
                     # ${bill.bill_no || 'BILL-REC-1001'}
                   </div>
-                  <div style="margin-bottom:8px;">
-                    <span style="background:${statusBg}; color:${statusColor}; border:1px solid ${statusColor}44; padding:2px 10px; border-radius:4px; font-weight:800; font-size:0.76rem; letter-spacing:0.04em;">
+                  <div style="margin-bottom:6px;">
+                    <span style="background:${statusBg}; color:${statusColor}; border:1px solid ${statusColor}44; padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.72rem; letter-spacing:0.04em;">
                       ${statusLabel}
                     </span>
                   </div>
 
-                  <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right;">
+                  <table style="margin-left:auto; font-size:0.76rem; color:#4b5563; border-collapse:collapse; text-align:right;">
                     <tr>
-                      <td style="padding:1px 8px; color:#6b7280;">Bill Date :</td>
-                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDate}</td>
+                      <td style="padding:1px 6px; color:#6b7280;">Bill Date :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDate}</td>
                     </tr>
                     <tr>
-                      <td style="padding:1px 8px; color:#6b7280;">Payment Due :</td>
-                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${formattedDueDate}</td>
+                      <td style="padding:1px 6px; color:#6b7280;">Payment Due :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDueDate}</td>
                     </tr>
                     <tr>
-                      <td style="padding:1px 8px; color:#6b7280;">Supplier Inv # :</td>
-                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#0284c7;">${bill.vendor_invoice_no || '—'}</td>
+                      <td style="padding:1px 6px; color:#6b7280;">Supplier Inv # :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#0284c7;">${bill.vendor_invoice_no || '—'}</td>
                     </tr>
                     <tr>
-                      <td style="padding:1px 8px; color:#6b7280;">PO Reference :</td>
-                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${bill.po_reference || bill.po_no || 'Direct Bill'}</td>
+                      <td style="padding:1px 6px; color:#6b7280;">PO Reference :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${bill.po_reference || bill.po_no || 'Direct Bill'}</td>
                     </tr>
                     <tr>
-                      <td style="padding:1px 8px; color:#6b7280;">Payment Terms :</td>
-                      <td style="padding:1px 0 1px 8px; font-weight:700; color:#111827;">${bill.payment_terms || 30} Days</td>
+                      <td style="padding:1px 6px; color:#6b7280;">Payment Terms :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${bill.payment_terms || 30} Days</td>
                     </tr>
                   </table>
                 </div>
               </div>
 
               <!-- Vendor & Project Allocation Details (2 Columns) -->
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:1.25rem;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:0.75rem;">
                 <!-- Left: Vendor Details -->
-                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; background:#f9fafb;">
-                  <div style="font-size:0.7rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">
+                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; background:#f9fafb;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">
                     BILL FROM / VENDOR DETAILS (بيانات المورد)
                   </div>
-                  <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                  <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-bottom:2px;">
                     ${this.formatCompanyName(bill.vendor_name || vendor.name || 'Vendor')}
                   </div>
-                  <div style="font-size:0.78rem; color:#4b5563; line-height:1.4;">
+                  <div style="font-size:0.74rem; color:#4b5563; line-height:1.35;">
                     ${vendor.address || 'Industrial Area, Abu Dhabi, United Arab Emirates'}
                   </div>
                   ${(bill.vendor_trn || vendor.trn) ? `
-                    <div style="font-size:0.78rem; color:#111827; font-weight:600; margin-top:3px;">
+                    <div style="font-size:0.74rem; color:#111827; font-weight:600; margin-top:2px;">
                       TRN: <code style="font-family:monospace; background:#e2e8f0; padding:1px 4px; border-radius:3px;">${bill.vendor_trn || vendor.trn}</code>
                     </div>
                   ` : ''}
-                  ${vendor.phone ? `<div style="font-size:0.76rem; color:#4b5563;">Phone: ${vendor.phone}</div>` : ''}
-                  ${vendor.email ? `<div style="font-size:0.76rem; color:#0284c7;">Email: ${vendor.email}</div>` : ''}
+                  ${vendor.phone ? `<div style="font-size:0.72rem; color:#4b5563;">Phone: ${vendor.phone}</div>` : ''}
+                  ${vendor.email ? `<div style="font-size:0.72rem; color:#0284c7;">Email: ${vendor.email}</div>` : ''}
                 </div>
 
                 <!-- Right: Project & Cost Center Allocation -->
-                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; background:#f9fafb;">
-                  <div style="font-size:0.7rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">
+                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; background:#f9fafb;">
+                  <div style="font-size:0.68rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:3px;">
                     PROJECT &amp; COST CENTER ALLOCATION (تخصيص المشروع)
                   </div>
-                  <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                  <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-bottom:2px;">
                     ${bill.project_name || 'Civil Works - Max - Al Wahda Mall, Abu Dhabi'}
                   </div>
-                  <div style="font-size:0.78rem; color:#4b5563; line-height:1.4;">
+                  <div style="font-size:0.74rem; color:#4b5563; line-height:1.35;">
                     Entity: <strong>${compName}</strong>
                   </div>
-                  <div style="font-size:0.78rem; color:#4b5563; margin-top:2px;">
+                  <div style="font-size:0.74rem; color:#4b5563; margin-top:1px;">
                     Procurement Ref: <strong>${bill.po_reference || bill.po_no || bill.vendor_invoice_no || 'Direct Subcontract'}</strong>
                   </div>
-                  <div style="font-size:0.78rem; color:#4b5563;">
+                  <div style="font-size:0.74rem; color:#4b5563;">
                     Approval Status: <strong style="color:#059669; text-transform:uppercase;">${bill.approval_status || 'Approved'}</strong>
                   </div>
                 </div>
               </div>
 
               <!-- Line Items Table -->
-              <div style="margin-bottom:1.25rem;">
-                <table style="width:100%; border-collapse:collapse; font-size:0.8rem; border:1px solid #111827;">
+              <div style="margin-bottom:0.75rem;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.76rem; border:1px solid #111827;">
                   <thead>
                     <tr style="background:#111827; color:#ffffff;">
-                      <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center;">#</th>
-                      <th style="border:1px solid #111827; padding:6px 8px; width:46%; text-align:left;">
+                      <th style="border:1px solid #111827; padding:5px 4px; width:5%; text-align:center;">#</th>
+                      <th style="border:1px solid #111827; padding:5px 6px; width:44%; text-align:left;">
                         <div>Description / Material Particulars</div>
-                        <div style="font-size:0.68rem; font-weight:500; font-family:'Amiri', serif;">بيان المواد والأعمال</div>
+                        <div style="font-size:0.65rem; font-weight:500; font-family:'Amiri', serif;">بيان المواد والأعمال</div>
                       </th>
-                      <th style="border:1px solid #111827; padding:6px 4px; width:10%; text-align:center;">Qty</th>
-                      <th style="border:1px solid #111827; padding:6px 6px; width:13%; text-align:right;">Rate (${curr})</th>
-                      <th style="border:1px solid #111827; padding:6px 4px; width:8%; text-align:right;">Tax %</th>
-                      <th style="border:1px solid #111827; padding:6px 6px; width:18%; text-align:right;">Total (${curr})</th>
+                      <th style="border:1px solid #111827; padding:5px 4px; width:9%; text-align:center;">Qty</th>
+                      <th style="border:1px solid #111827; padding:5px 4px; width:15%; text-align:right;">Rate (${curr})</th>
+                      <th style="border:1px solid #111827; padding:5px 4px; width:9%; text-align:right;">Tax %</th>
+                      <th style="border:1px solid #111827; padding:5px 6px; width:18%; text-align:right;">Total (${curr})</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${lineItems.map((item, idx) => {
       const itemRate = Number(item.unit_price || item.rate || 0);
       const itemQty = Number(item.qty || 1);
-      const itemTaxPct = Number(item.vat_rate || item.tax_rate || item.gst_rate || 5);
+      const itemTaxPct = Number(item.vat_rate || item.tax_rate || item.gst_rate || (isIndia ? 18 : 5));
       const itemTotal = Number(item.total_amount || (itemRate * itemQty * (1 + itemTaxPct / 100)));
       return `
                         <tr style="border-bottom:1px solid #111827; background:#ffffff;">
-                          <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700;">${idx + 1}</td>
-                          <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:600; color:#111827;">
+                          <td style="border:1px solid #111827; padding:4px 4px; text-align:center; font-weight:700;">${idx + 1}</td>
+                          <td style="border:1px solid #111827; padding:4px 6px; text-align:left; font-weight:600; color:#111827;">
                             <div>${item.name || item.description || 'Materials / Subcontracting Works'}</div>
-                            ${item.description && item.description !== item.name ? `<div style="font-size:0.72rem; color:#6b7280; font-weight:400; margin-top:2px;">${item.description}</div>` : ''}
+                            ${item.description && item.description !== item.name ? `<div style="font-size:0.70rem; color:#6b7280; font-weight:400; margin-top:1px;">${item.description}</div>` : ''}
                           </td>
-                          <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:600;">
+                          <td style="border:1px solid #111827; padding:4px 4px; text-align:center; font-weight:600;">
                             ${itemQty} ${item.uom || 'LSUM'}
                           </td>
-                          <td style="border:1px solid #111827; padding:6px 6px; text-align:right; font-variant-numeric:tabular-nums;">
+                          <td style="border:1px solid #111827; padding:4px 4px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">
                             ${itemRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style="border:1px solid #111827; padding:6px 4px; text-align:right; font-variant-numeric:tabular-nums;">
+                          <td style="border:1px solid #111827; padding:4px 4px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">
                             ${itemTaxPct}%
                           </td>
-                          <td style="border:1px solid #111827; padding:6px 6px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap;">
+                          <td style="border:1px solid #111827; padding:4px 6px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap;">
                             ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
@@ -13041,46 +13041,46 @@ class FinanceApp {
                   </tbody>
                   <tfoot>
                     <tr style="background:#f8fafc; border-top:1.5px solid #111827;">
-                      <td colspan="4" rowspan="4" style="border:1px solid #111827; padding:10px 14px; vertical-align:top; background:#f8fafc;">
-                        <div style="font-size:0.80rem; font-weight:700; color:#111827; line-height:1.45; margin-bottom:8px;">
+                      <td colspan="3" rowspan="4" style="border:1px solid #111827; padding:8px 10px; vertical-align:top; background:#f8fafc;">
+                        <div style="font-size:0.75rem; font-weight:700; color:#111827; line-height:1.35; margin-bottom:4px;">
                           Total In Words (المبلغ كتابة) :<br>
                           <span style="font-weight:600; color:#374151;">${amountInWords}</span>
                         </div>
                         ${bill.notes ? `
-                          <div style="font-size:0.75rem; color:#6b7280; border-top:1px dashed #cbd5e1; padding-top:6px; margin-top:6px;">
+                          <div style="font-size:0.70rem; color:#6b7280; border-top:1px dashed #cbd5e1; padding-top:4px; margin-top:4px;">
                             <strong>Notes:</strong> ${bill.notes}
                           </div>
                         ` : ''}
                       </td>
-                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#4b5563; text-align:right; font-size:0.78rem;">Sub-Total:</td>
-                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                      <td colspan="2" style="border:1px solid #111827; padding:4px 8px; font-weight:700; color:#4b5563; text-align:right; font-size:0.75rem; white-space:nowrap !important; word-break:keep-all !important;">Sub-Total:</td>
+                      <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; font-size:0.76rem;">
                         ${taxableSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                     <tr style="background:#f8fafc;">
-                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#4b5563; text-align:right; font-size:0.78rem;">VAT / Tax (5%):</td>
-                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                      <td colspan="2" style="border:1px solid #111827; padding:4px 8px; font-weight:700; color:#4b5563; text-align:right; font-size:0.75rem; white-space:nowrap !important; word-break:keep-all !important;">VAT / Tax (${isIndia ? '18%' : '5%'}):</td>
+                      <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; font-size:0.76rem;">
                         ${taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                     <tr style="background:#eaf3ec;">
-                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Grand Total:</td>
-                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">
+                      <td colspan="2" style="border:1px solid #111827; padding:4px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec; white-space:nowrap !important; word-break:keep-all !important;">Grand Total:</td>
+                      <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; background:#eaf3ec;">
                         ${curr} ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                     <tr style="background:#ffffff;">
-                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#059669; text-align:right; font-size:0.80rem;">Amount Paid:</td>
-                      <td style="border:1px solid #111827; padding:5px 8px; font-weight:800; color:#059669; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                      <td colspan="2" style="border:1px solid #111827; padding:4px 8px; font-weight:700; color:#059669; text-align:right; font-size:0.75rem; white-space:nowrap !important; word-break:keep-all !important;">Amount Paid:</td>
+                      <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:800; color:#059669; text-align:right; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; font-size:0.76rem;">
                         ${curr} ${amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                     <tr style="background:${balanceDue > 0 ? '#fef2f2' : '#f0fdf4'};">
-                      <td colspan="4" style="border:1px solid #111827; padding:6px 14px; font-size:0.78rem; color:#4b5563;">
+                      <td colspan="3" style="border:1px solid #111827; padding:4px 10px; font-size:0.74rem; color:#4b5563; white-space:nowrap !important; word-break:keep-all !important;">
                         Disbursement Status: <strong style="color:${statusColor};">${statusLabel}</strong>
                       </td>
-                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:${balanceDue > 0 ? '#dc2626' : '#059669'}; text-align:right; font-size:0.86rem;">Balance Payable:</td>
-                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:900; color:${balanceDue > 0 ? '#dc2626' : '#059669'}; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;">
+                      <td colspan="2" style="border:1px solid #111827; padding:4px 8px; font-weight:800; color:${balanceDue > 0 ? '#dc2626' : '#059669'}; text-align:right; font-size:0.80rem; white-space:nowrap !important; word-break:keep-all !important;">Balance Payable:</td>
+                      <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:900; color:${balanceDue > 0 ? '#dc2626' : '#059669'}; text-align:right; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; font-size:0.80rem;">
                         ${curr} ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
@@ -13089,23 +13089,21 @@ class FinanceApp {
               </div>
 
               <!-- Compliance & Authorization Note -->
-              <div style="margin-top:1.25rem; font-size:0.78rem; color:#4b5563; line-height:1.5; border-left:3px solid #0099e6; padding-left:10px;">
-                <div style="font-weight:700; color:#111827; font-size:0.82rem; margin-bottom:2px;">Procurement Verification &amp; Tax Compliance</div>
+              <div style="margin-top:0.6rem; font-size:0.72rem; color:#4b5563; line-height:1.4; border-left:3px solid #0099e6; padding-left:8px;">
+                <div style="font-weight:700; color:#111827; font-size:0.76rem; margin-bottom:1px;">Procurement Verification &amp; Tax Compliance</div>
                 <div>This approved purchase bill has been validated against corporate purchase specifications and is certified for vendor settlement in accordance with UAE VAT Federal Decree-Law No. (8) of 2017.</div>
               </div>
 
               <!-- Contact & Company Details -->
-              <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
-                <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
-                <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div style="margin-top:0.6rem; font-size:0.74rem; color:#4b5563; line-height:1.4;">
+                <div style="color:#111827; margin-bottom:1px;">Best wishes</div>
+                <div style="font-weight:700; color:#111827; margin-bottom:1px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
                 <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
-                <div>Hotline : ${compPhone}</div>
-                <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
-                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+                <div>Hotline : ${compPhone} | <a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a> | <a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
               </div>
 
               <!-- System Generated Notice & Page Number Footer -->
-              <div style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="margin-top:0.75rem; padding-top:0.4rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.70rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
                 <div style="flex:1; text-align:center; letter-spacing:0.01em;">
                   This is a system-generated purchase bill and does not require a signature or stamp.
                 </div>
