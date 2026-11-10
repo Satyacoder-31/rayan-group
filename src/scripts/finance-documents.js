@@ -969,117 +969,165 @@ export function registerDocumentModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-wcc-edit">
-        <div class="fin-modal-box" style="max-width:820px; max-height:92vh; overflow-y:auto;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title">
-              <span>📜</span>
-              <span>${isEdit ? 'Edit Work Completion Certificate' : 'Create Work Completion Certificate (شهادة اتمام العمل)'}</span>
-            </h3>
-            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-wcc-edit')">✕</button>
+        <div class="fin-modal-dialog" style="max-width:920px; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">📜</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  ${isEdit ? 'Edit Work Completion Certificate' : 'Create Work Completion Certificate'}
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">Client Handover Sign-Off &amp; Subcontract Certification • شهادة اتمام العمل</p>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-wcc-edit')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; color:#cbd5e1; font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s ease;">&times;</button>
           </div>
-          <form id="form-wcc-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+          <form id="form-wcc-edit" class="fin-modal-body" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" id="wcc-id" value="${cert.id}">
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Certificate / Job Ref # *</label>
-                <input type="text" id="wcc-cert-no" class="fin-input" value="${cert.cert_no || cert.reference_no}" required>
+            <!-- Card 1: Certificate Reference & Timeline -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📋</span>
+                  <span>Certificate Reference &amp; Execution Timeline</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Completion Date *</label>
-                <input type="date" id="wcc-date" class="fin-input" value="${cert.date || new Date().toISOString().split('T')[0]}" required>
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Execution Time</label>
-                <input type="text" id="wcc-time" class="fin-input" value="${cert.time || '6:27 PM'}">
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Client / Subcontractor Name *</label>
-                <input type="text" id="wcc-client-name" class="fin-input" value="${cert.client_name}" required placeholder="M/s IRON BEAM BUILDING CONTRACTING L.L.C">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Main Contractor / Client</label>
-                <input type="text" id="wcc-main-client" class="fin-input" value="${cert.main_client || ''}" placeholder="M/s Emirates Driving Company">
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Certificate / Job Ref # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="wcc-cert-no" class="fin-form-input" value="${cert.cert_no || cert.reference_no}" required style="font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Completion Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="wcc-date" class="fin-form-input" value="${cert.date || new Date().toISOString().split('T')[0]}" required>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Execution Time</label>
+                  <input type="text" id="wcc-time" class="fin-form-input" value="${cert.time || '6:27 PM'}" placeholder="e.g. 6:27 PM">
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Contact Person</label>
-                <input type="text" id="wcc-contact-person" class="fin-input" value="${cert.contact_person || ''}" placeholder="Mr. Mohamed Abuelgasim">
+            <!-- Card 2: Client & Subcontracting Entities -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🏢</span>
+                  <span>Client &amp; Contracting Parties</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Contact Email</label>
-                <input type="email" id="wcc-email" class="fin-input" value="${cert.email || ''}" placeholder="mohamed.a@ironbeam.ae">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Client / Subcontractor Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="wcc-client-name" class="fin-form-input" value="${cert.client_name}" required placeholder="M/s IRON BEAM BUILDING CONTRACTING L.L.C">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Main Contractor / Client</label>
+                  <input type="text" id="wcc-main-client" class="fin-form-input" value="${cert.main_client || ''}" placeholder="M/s Emirates Driving Company">
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Sub-contract Agr / PO Ref</label>
-                <input type="text" id="wcc-subcontract-agreement" class="fin-input" value="${cert.subcontract_agreement || ''}" placeholder="IB-037-136">
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Project Name &amp; Site *</label>
-                <input type="text" id="wcc-project-name" class="fin-input" value="${cert.project_name}" required placeholder="Al Foah Mall Alain">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Scope Description (Short)</label>
-                <input type="text" id="wcc-scope-desc" class="fin-input" value="${cert.scope_description || ''}" placeholder="Total Screed Work 160 Sqm">
-              </div>
-            </div>
-
-            <div class="fin-form-group">
-              <label class="fin-label">Certificate Body &amp; Handover Declarations *</label>
-              <textarea id="wcc-body-text" class="fin-input" rows="6" style="resize:vertical; font-family:inherit; line-height:1.45;" required>${cert.body_text}</textarea>
-            </div>
-
-            <div class="fin-form-group">
-              <label class="fin-label">Client Acceptance Statement</label>
-              <textarea id="wcc-acceptance" class="fin-input" rows="2" style="resize:vertical; font-family:inherit;">${cert.acceptance_statement || ''}</textarea>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; align-items:center;">
-              <div class="fin-form-group">
-                <label class="fin-label">Client Signatory</label>
-                <input type="text" id="wcc-client-sig" class="fin-input" value="${cert.authorized_signatory_client || cert.contact_person || ''}" placeholder="Mr. Mohamed Abuelgasim">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Rayan Authorized Signatory</label>
-                <input type="text" id="wcc-rayan-sig" class="fin-input" value="${cert.authorized_signatory_rayan || 'Eng. Bakhteyar Alam'}" placeholder="Eng. Bakhteyar Alam">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Approval Status</label>
-                <select id="wcc-status" class="fin-select" style="width:100%;">
-                  <option value="Approved" ${cert.status === 'Approved' ? 'selected' : ''}>Approved &amp; Certified</option>
-                  <option value="Pending" ${cert.status === 'Pending' ? 'selected' : ''}>Pending Review</option>
-                  <option value="Draft" ${cert.status === 'Draft' ? 'selected' : ''}>Draft</option>
-                </select>
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Contact Person</label>
+                  <input type="text" id="wcc-contact-person" class="fin-form-input" value="${cert.contact_person || ''}" placeholder="Mr. Mohamed Abuelgasim">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Contact Email</label>
+                  <input type="email" id="wcc-email" class="fin-form-input" value="${cert.email || ''}" placeholder="mohamed.a@ironbeam.ae">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Sub-contract Agr / PO Ref</label>
+                  <input type="text" id="wcc-subcontract-agreement" class="fin-form-input" value="${cert.subcontract_agreement || ''}" placeholder="IB-037-136">
+                </div>
               </div>
             </div>
 
-            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+            <!-- Card 3: Project Location & Scope -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🏗️</span>
+                  <span>Project Location &amp; Scope Overview</span>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Project Name &amp; Site <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="wcc-project-name" class="fin-form-input" value="${cert.project_name}" required placeholder="Al Foah Mall Alain">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Scope Description (Short)</label>
+                  <input type="text" id="wcc-scope-desc" class="fin-form-input" value="${cert.scope_description || ''}" placeholder="Total Screed Work 160 Sqm">
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Handover Declarations & Statements -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📝</span>
+                  <span>Handover Declarations &amp; Scope Details</span>
+                </div>
+              </div>
+              <div class="fin-form-group" style="margin-bottom:1.15rem;">
+                <label class="fin-form-label">Certificate Body &amp; Handover Declarations <span style="color:#ef4444;">*</span></label>
+                <textarea id="wcc-body-text" class="fin-form-textarea" rows="6" style="resize:vertical; font-family:inherit; line-height:1.55;" required>${cert.body_text}</textarea>
+              </div>
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-form-label">Client Acceptance Statement</label>
+                <textarea id="wcc-acceptance" class="fin-form-textarea" rows="2" style="resize:vertical; font-family:inherit; line-height:1.45;">${cert.acceptance_statement || ''}</textarea>
+              </div>
+            </div>
+
+            <!-- Card 5: Dual Signatories & Status -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>✍️</span>
+                  <span>Dual Signatories &amp; Certification Status</span>
+                </div>
+              </div>
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Client Signatory</label>
+                  <input type="text" id="wcc-client-sig" class="fin-form-input" value="${cert.authorized_signatory_client || cert.contact_person || ''}" placeholder="Mr. Mohamed Abuelgasim">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Rayan Authorized Signatory</label>
+                  <input type="text" id="wcc-rayan-sig" class="fin-form-input" value="${cert.authorized_signatory_rayan || 'Eng. Bakhteyar Alam'}" placeholder="Eng. Bakhteyar Alam">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Approval Status</label>
+                  <select id="wcc-status" class="fin-form-select" style="width:100%;">
+                    <option value="Approved" ${cert.status === 'Approved' ? 'selected' : ''}>Approved &amp; Certified</option>
+                    <option value="Pending" ${cert.status === 'Pending' ? 'selected' : ''}>Pending Review</option>
+                    <option value="Draft" ${cert.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 6: Dual Authorization Seals -->
+            <div class="fin-auth-badge-card">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="wcc-inc-stamp" ${cert.include_stamp !== false ? 'checked' : ''}>
                 <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
               </label>
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="wcc-inc-sig" ${cert.include_signature !== false ? 'checked' : ''}>
-                <span>Include Authorized Signature</span>
+                <span>Include Authorized Signatures</span>
               </label>
             </div>
 
-            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+            <div class="fin-modal-footer" style="padding:1.25rem 0 0 0; display:flex; justify-content:flex-end; gap:0.85rem; border-top:1px solid rgba(255,255,255,0.1); background:transparent;">
               <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-wcc-edit')">Cancel</button>
-              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Certificate</button>
+              <button type="submit" class="fin-btn-quick primary">💾 ${isEdit ? 'Save & Update Certificate' : 'Save & Issue Certificate'}</button>
             </div>
           </form>
         </div>
-      </div>
-    `;
+      </div>`;
 
     this.showCustomModal(modalHtml);
 
@@ -1180,107 +1228,148 @@ export function registerDocumentModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-dn-edit">
-        <div class="fin-modal-box" style="max-width:880px; max-height:92vh; overflow-y:auto;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title">
-              <span>🚚</span>
-              <span>${isEdit ? 'Edit Delivery Note' : 'Create Material Delivery Note (إذن تسليم مواد)'}</span>
-            </h3>
-            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-dn-edit')">✕</button>
+        <div class="fin-modal-dialog" style="max-width:960px; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🚚</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  ${isEdit ? 'Edit Material Delivery Note' : 'Create Material Delivery Note'}
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">Official Material Dispatch Voucher &amp; Storekeeper Receipt • إذن تسليم مواد</p>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-dn-edit')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; color:#cbd5e1; font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s ease;">&times;</button>
           </div>
-          <form id="form-dn-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+          <form id="form-dn-edit" class="fin-modal-body" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" id="dn-id" value="${dn.id}">
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Delivery Note # *</label>
-                <input type="text" id="dn-number" class="fin-input" value="${dn.dn_no}" required>
+            <!-- Card 1: Dispatch & Reference Info -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📋</span>
+                  <span>Dispatch &amp; Reference Information</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Dispatch Date *</label>
-                <input type="date" id="dn-date" class="fin-input" value="${dn.date}" required>
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">PO / LPO Reference</label>
-                <input type="text" id="dn-po-ref" class="fin-input" value="${dn.po_reference || ''}" placeholder="PODSUB-2026/0810">
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Consignee / Client Name *</label>
-                <input type="text" id="dn-client-name" class="fin-input" value="${dn.client_name}" required placeholder="M/S TOP ROCK INTERIORS LLC">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Project Name *</label>
-                <input type="text" id="dn-project-name" class="fin-input" value="${dn.project_name}" required placeholder="The New Dubai Police Academy">
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Delivery Note # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="dn-number" class="fin-form-input" value="${dn.dn_no}" required style="font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Dispatch Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="dn-date" class="fin-form-input" value="${dn.date}" required>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">PO / LPO Reference</label>
+                  <input type="text" id="dn-po-ref" class="fin-form-input" value="${dn.po_reference || ''}" placeholder="PODSUB-2026/0810">
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Dispatch Yard / Storage Origin</label>
-                <input type="text" id="dn-dispatch-from" class="fin-input" value="${dn.dispatch_from || ''}" placeholder="Mussafah M-36 Yard">
+            <!-- Card 2: Consignee & Project Delivery Site -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🏢</span>
+                  <span>Consignee &amp; Project Site Details</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Site Delivery Gate / Location *</label>
-                <input type="text" id="dn-site-location" class="fin-input" value="${dn.site_location || ''}" required placeholder="Alrowaiyah, Dubai Gate 2">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Consignee / Client Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="dn-client-name" class="fin-form-input" value="${dn.client_name}" required placeholder="M/S TOP ROCK INTERIORS LLC">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Project Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="dn-project-name" class="fin-form-input" value="${dn.project_name}" required placeholder="The New Dubai Police Academy">
+                </div>
+              </div>
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Dispatch Yard / Storage Origin</label>
+                  <input type="text" id="dn-dispatch-from" class="fin-form-input" value="${dn.dispatch_from || ''}" placeholder="Rayan Central Storage Yard - Mussafah M-36">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Site Delivery Gate / Location <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="dn-site-location" class="fin-form-input" value="${dn.site_location || ''}" required placeholder="Alrowaiyah, Dubai Gate 2">
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Vehicle / Truck Plate #</label>
-                <input type="text" id="dn-vehicle-no" class="fin-input" value="${dn.vehicle_no || ''}" placeholder="AUH-49210">
+            <!-- Card 3: Logistics, Vehicle & Driver Information -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🚛</span>
+                  <span>Logistics, Vehicle &amp; Driver Information</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Driver Name</label>
-                <input type="text" id="dn-driver-name" class="fin-input" value="${dn.driver_name || ''}" placeholder="Abdul Rashid">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Driver Mobile</label>
-                <input type="text" id="dn-driver-contact" class="fin-input" value="${dn.driver_contact || ''}" placeholder="+971 55 819 4022">
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Vehicle / Truck Plate #</label>
+                  <input type="text" id="dn-vehicle-no" class="fin-form-input" value="${dn.vehicle_no || ''}" placeholder="DXB-54219">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Driver Name</label>
+                  <input type="text" id="dn-driver-name" class="fin-form-input" value="${dn.driver_name || ''}" placeholder="Abdul Rashid">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Driver Mobile Contact</label>
+                  <input type="text" id="dn-driver-contact" class="fin-form-input" value="${dn.driver_contact || ''}" placeholder="+971 55 819 4022">
+                </div>
               </div>
             </div>
 
-            <!-- Material Items Dynamic Table -->
-            <div style="margin-top:0.5rem;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
-                <label class="fin-label" style="font-size:0.9rem; font-weight:800; color:#38bdf8;">📦 Delivered Material Items</label>
-                <button type="button" class="fin-btn-quick" style="padding:4px 10px; font-size:0.75rem;" onclick="window.finApp.addDeliveryItemRow()">+ Add Material Item</button>
+            <!-- Card 4: Delivered Material Line Items -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div>
+                  <div class="fin-form-section-title">
+                    <span>📦</span>
+                    <span>Delivered Material Items</span>
+                  </div>
+                  <div class="fin-form-section-desc">Itemize materials, specifications, and verified dispatched quantities</div>
+                </div>
+                <button type="button" class="fin-btn-quick" style="padding:6px 14px; font-size:0.78rem; border-color:#38bdf8; color:#38bdf8; display:flex; align-items:center; gap:0.4rem; font-weight:700;" onclick="window.finApp.addDeliveryItemRow()">
+                  <span>+</span>
+                  <span>Add Material Item</span>
+                </button>
               </div>
-              <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; font-size:0.8rem;" id="table-dn-items">
+
+              <div style="overflow-x:auto; border:1px solid rgba(255,255,255,0.08); border-radius:10px; background:rgba(11,17,30,0.65);">
+                <table class="fin-line-item-table" style="width:100%; border-collapse:collapse; margin:0;" id="table-dn-items">
                   <thead>
-                    <tr style="background:rgba(255,255,255,0.06); text-align:left;">
-                      <th style="padding:6px 8px; width:45%;">Material Description / Specification</th>
-                      <th style="padding:6px 8px; width:12%;">Unit</th>
-                      <th style="padding:6px 8px; width:12%;">Qty Ordered</th>
-                      <th style="padding:6px 8px; width:12%;">Qty Delivered</th>
-                      <th style="padding:6px 8px; width:15%;">Condition / Remarks</th>
-                      <th style="padding:6px 8px; width:4%;"></th>
+                    <tr>
+                      <th style="padding:0.75rem 0.85rem; width:44%;">Material Description / Specification</th>
+                      <th style="padding:0.75rem 0.85rem; width:13%;">Unit</th>
+                      <th style="padding:0.75rem 0.85rem; width:12%; text-align:right;">Qty Ordered</th>
+                      <th style="padding:0.75rem 0.85rem; width:12%; text-align:right;">Qty Delivered</th>
+                      <th style="padding:0.75rem 0.85rem; width:15%;">Condition / Remarks</th>
+                      <th style="padding:0.75rem 0.85rem; width:4%; text-align:center;"></th>
                     </tr>
                   </thead>
                   <tbody id="dn-items-body">
                     ${items.map((item, idx) => `
-                      <tr class="dn-item-row" style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                        <td style="padding:4px 6px;">
-                          <input type="text" class="fin-input dn-item-desc" value="${item.description || ''}" placeholder="Material description" required style="width:100%;">
+                      <tr class="dn-item-row">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="text" class="fin-form-input dn-item-desc" value="${item.description || ''}" placeholder="Material description / specification" required style="width:100%; font-size:0.83rem;">
                         </td>
-                        <td style="padding:4px 6px;">
-                          <input type="text" class="fin-input dn-item-unit" value="${item.unit || 'Nos'}" placeholder="Unit (Sqm, Sheets, Pcs)" style="width:100%;">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="text" class="fin-form-input dn-item-unit" value="${item.unit || 'Nos'}" placeholder="Unit (Sheets, Pcs)" style="width:100%; font-size:0.83rem;">
                         </td>
-                        <td style="padding:4px 6px;">
-                          <input type="number" step="any" class="fin-input dn-item-ordered" value="${item.qty_ordered || 1}" style="width:100%;">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="number" step="any" class="fin-form-input dn-item-ordered" value="${item.qty_ordered || 1}" style="width:100%; text-align:right; font-size:0.83rem; font-weight:600;">
                         </td>
-                        <td style="padding:4px 6px;">
-                          <input type="number" step="any" class="fin-input dn-item-delivered" value="${item.qty_delivered || 1}" style="width:100%;">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="number" step="any" class="fin-form-input dn-item-delivered" value="${item.qty_delivered || 1}" style="width:100%; text-align:right; font-size:0.83rem; font-weight:700; color:#10b981;">
                         </td>
-                        <td style="padding:4px 6px;">
-                          <input type="text" class="fin-input dn-item-remarks" value="${item.remarks || 'Sound Condition'}" style="width:100%;">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="text" class="fin-form-input dn-item-remarks" value="${item.remarks || 'Prime Quality'}" placeholder="Sound Condition" style="width:100%; font-size:0.83rem;">
                         </td>
-                        <td style="padding:4px 6px; text-align:center;">
-                          <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeDeliveryItemRow(this)" title="Remove Item">✕</button>
+                        <td style="padding:0.5rem 0.65rem; text-align:center;">
+                          <button type="button" class="fin-row-del-btn" onclick="window.finApp.removeDeliveryItemRow(this)" title="Remove Item">&times;</button>
                         </td>
                       </tr>
                     `).join('')}
@@ -1289,41 +1378,49 @@ export function registerDocumentModules(FinanceApp) {
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Receiver Name &amp; Designation</label>
-                <input type="text" id="dn-receiver-name" class="fin-input" value="${dn.receiver_name || ''}" placeholder="Site Supervisor Tariq">
+            <!-- Card 5: Receiver & Logistics Verification -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>✍️</span>
+                  <span>Site Receiving &amp; Logistics Verification</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Receiver Emirates ID</label>
-                <input type="text" id="dn-receiver-eid" class="fin-input" value="${dn.receiver_eid || ''}" placeholder="784-1988-4459201-1">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Receiver Name &amp; Designation</label>
+                  <input type="text" id="dn-receiver-name" class="fin-form-input" value="${dn.receiver_name || ''}" placeholder="Site Supervisor Tariq">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Receiver Emirates ID</label>
+                  <input type="text" id="dn-receiver-eid" class="fin-form-input" value="${dn.receiver_eid || ''}" placeholder="784-1988-4459201-1">
+                </div>
+              </div>
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-form-label">Dispatched By &amp; Verification Remarks</label>
+                <input type="text" id="dn-dispatched-by" class="fin-form-input" value="${dn.dispatched_by || 'Logistics Supervisor Rashid Khan'}">
               </div>
             </div>
 
-            <div class="fin-form-group">
-              <label class="fin-label">Dispatched By &amp; Verification Remarks</label>
-              <input type="text" id="dn-dispatched-by" class="fin-input" value="${dn.dispatched_by || 'Logistics Supervisor Rashid Khan'}">
-            </div>
-
-            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+            <!-- Card 6: Dual Authorization Seals -->
+            <div class="fin-auth-badge-card">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="dn-inc-stamp" ${dn.include_stamp !== false ? 'checked' : ''}>
                 <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
               </label>
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="dn-inc-sig" ${dn.include_signature !== false ? 'checked' : ''}>
-                <span>Include Authorized Signature</span>
+                <span>Include Authorized Signatures</span>
               </label>
             </div>
 
-            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+            <div class="fin-modal-footer" style="padding:1.25rem 0 0 0; display:flex; justify-content:flex-end; gap:0.85rem; border-top:1px solid rgba(255,255,255,0.1); background:transparent;">
               <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-dn-edit')">Cancel</button>
-              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Delivery Note</button>
+              <button type="submit" class="fin-btn-quick primary">💾 ${isEdit ? 'Save & Update Delivery Note' : 'Save & Issue Delivery Note'}</button>
             </div>
           </form>
         </div>
-      </div>
-    `;
+      </div>`;
 
     this.showCustomModal(modalHtml);
 
@@ -1393,25 +1490,24 @@ export function registerDocumentModules(FinanceApp) {
     if (!tbody) return;
     const tr = document.createElement('tr');
     tr.className = 'dn-item-row';
-    tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
     tr.innerHTML = `
-      <td style="padding:4px 6px;">
-        <input type="text" class="fin-input dn-item-desc" value="" placeholder="Material description" required style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="text" class="fin-form-input dn-item-desc" value="" placeholder="Material description / specification" required style="width:100%; font-size:0.83rem;">
       </td>
-      <td style="padding:4px 6px;">
-        <input type="text" class="fin-input dn-item-unit" value="Nos" placeholder="Unit" style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="text" class="fin-form-input dn-item-unit" value="Nos" placeholder="Unit (Sheets, Pcs)" style="width:100%; font-size:0.83rem;">
       </td>
-      <td style="padding:4px 6px;">
-        <input type="number" step="any" class="fin-input dn-item-ordered" value="1" style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="number" step="any" class="fin-form-input dn-item-ordered" value="1" style="width:100%; text-align:right; font-size:0.83rem; font-weight:600;">
       </td>
-      <td style="padding:4px 6px;">
-        <input type="number" step="any" class="fin-input dn-item-delivered" value="1" style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="number" step="any" class="fin-form-input dn-item-delivered" value="1" style="width:100%; text-align:right; font-size:0.83rem; font-weight:700; color:#10b981;">
       </td>
-      <td style="padding:4px 6px;">
-        <input type="text" class="fin-input dn-item-remarks" value="Sound Condition" style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="text" class="fin-form-input dn-item-remarks" value="Prime Quality" placeholder="Sound Condition" style="width:100%; font-size:0.83rem;">
       </td>
-      <td style="padding:4px 6px; text-align:center;">
-        <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeDeliveryItemRow(this)" title="Remove Item">✕</button>
+      <td style="padding:0.5rem 0.65rem; text-align:center;">
+        <button type="button" class="fin-row-del-btn" onclick="window.finApp.removeDeliveryItemRow(this)" title="Remove Item">&times;</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1469,94 +1565,134 @@ export function registerDocumentModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-ult-edit">
-        <div class="fin-modal-box" style="max-width:880px; max-height:92vh; overflow-y:auto;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title">
-              <span>🛡️</span>
-              <span>${isEdit ? 'Edit Subcontractor Undertaking Letter' : 'Create Subcontractor Undertaking Letter (خطاب تعهد)'}</span>
-            </h3>
-            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-ult-edit')">✕</button>
+        <div class="fin-modal-dialog" style="max-width:960px; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🛡️</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  ${isEdit ? 'Edit Subcontractor Undertaking Letter' : 'Create Subcontractor Undertaking Letter'}
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">UAE Federal Decree Law 33 of 2021 Legal Compliance Undertaking • خطاب تعهد</p>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-ult-edit')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; color:#cbd5e1; font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s ease;">&times;</button>
           </div>
-          <form id="form-ult-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+          <form id="form-ult-edit" class="fin-modal-body" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" id="ult-id" value="${ult.id}">
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Reference Number *</label>
-                <input type="text" id="ult-ref-no" class="fin-input" value="${ult.ref_no}" required>
+            <!-- Card 1: Document Reference & Date -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📋</span>
+                  <span>Document Reference &amp; Date</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Letter Date *</label>
-                <input type="date" id="ult-date" class="fin-input" value="${ult.date}" required>
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Attention (Contact / Title)</label>
-                <input type="text" id="ult-attention" class="fin-input" value="${ult.attention || 'Project Manager'}" placeholder="Project Manager">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Contractor / Client Company *</label>
-                <input type="text" id="ult-client-name" class="fin-input" value="${ult.client_name || ult.attention_company}" required placeholder="M/S TOP ROCK INTERIORS LLC">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Reference Number <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ult-ref-no" class="fin-form-input" value="${ult.ref_no}" required style="font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Letter Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="ult-date" class="fin-form-input" value="${ult.date}" required>
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Project Name &amp; Fit-Out Scope *</label>
-                <input type="text" id="ult-project-name" class="fin-input" value="${ult.project_name}" required placeholder="The New Dubai Police Academy @ Alrowaiyah">
+            <!-- Card 2: Contractor & Project Details -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🏢</span>
+                  <span>Recipient Contractor &amp; Project Details</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Activity Type (in parentheses)</label>
-                <input type="text" id="ult-activity-type" class="fin-input" value="${ult.activity_type || 'Interiors Work'}" placeholder="Interiors Work">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Attention (Contact / Title)</label>
+                  <input type="text" id="ult-attention" class="fin-form-input" value="${ult.attention || 'Project Manager'}" placeholder="Project Manager">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Contractor / Client Company <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ult-client-name" class="fin-form-input" value="${ult.client_name || ult.attention_company}" required placeholder="M/S TOP ROCK INTERIORS LLC">
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1.15rem; margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Project Name &amp; Fit-Out Scope <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ult-project-name" class="fin-form-input" value="${ult.project_name}" required placeholder="The New Dubai Police Academy @ Alrowaiyah">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Activity Type (in parentheses)</label>
+                  <input type="text" id="ult-activity-type" class="fin-form-input" value="${ult.activity_type || 'Interiors Work'}" placeholder="Interiors Work">
+                </div>
+              </div>
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-form-label">Subject Line <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ult-subject" class="fin-form-input" value="${ult.subject}" required>
               </div>
             </div>
 
-            <div class="fin-form-group">
-              <label class="fin-label">Subject Line *</label>
-              <input type="text" id="ult-subject" class="fin-input" value="${ult.subject}" required>
-            </div>
-
-            <div class="fin-form-group">
-              <label class="fin-label">Undertaking Legal Declarations (UAE Federal Decree 33 of 2021) *</label>
-              <textarea id="ult-body-text" class="fin-input" rows="7" style="resize:vertical; font-family:inherit; line-height:1.45;" required>${ult.body_text}</textarea>
-            </div>
-
-            <!-- Employee List Dynamic Table -->
-            <div style="margin-top:0.5rem;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
-                <label class="fin-label" style="font-size:0.9rem; font-weight:800; color:#38bdf8;">👷 Deputed Workforce / Employee List</label>
-                <button type="button" class="fin-btn-quick" style="padding:4px 10px; font-size:0.75rem;" onclick="window.finApp.addUndertakingEmployeeRow()">+ Add Deputed Worker</button>
+            <!-- Card 3: Legal Declarations -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>⚖️</span>
+                  <span>Undertaking Legal Declarations (UAE Federal Decree Law 33 of 2021)</span>
+                </div>
               </div>
-              <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; font-size:0.8rem;" id="table-ult-employees">
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-form-label">Mandatory Legal Clauses &amp; Wage Protection Declarations <span style="color:#ef4444;">*</span></label>
+                <textarea id="ult-body-text" class="fin-form-textarea" rows="7" style="resize:vertical; font-family:inherit; line-height:1.55;" required>${ult.body_text}</textarea>
+              </div>
+            </div>
+
+            <!-- Card 4: Deputed Workforce Table -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div>
+                  <div class="fin-form-section-title">
+                    <span>👷</span>
+                    <span>Deputed Workforce / Employee List</span>
+                  </div>
+                  <div class="fin-form-section-desc">Certified personnel roster under corporate sponsorship with verified Emirates IDs</div>
+                </div>
+                <button type="button" class="fin-btn-quick" style="padding:6px 14px; font-size:0.78rem; border-color:#38bdf8; color:#38bdf8; display:flex; align-items:center; gap:0.4rem; font-weight:700;" onclick="window.finApp.addUndertakingEmployeeRow()">
+                  <span>+</span>
+                  <span>Add Deputed Worker</span>
+                </button>
+              </div>
+
+              <div style="overflow-x:auto; border:1px solid rgba(255,255,255,0.08); border-radius:10px; background:rgba(11,17,30,0.65);">
+                <table class="fin-line-item-table" style="width:100%; border-collapse:collapse; margin:0;" id="table-ult-employees">
                   <thead>
-                    <tr style="background:rgba(255,255,255,0.06); text-align:left;">
-                      <th style="padding:6px 8px; width:30%;">Worker Full Name</th>
-                      <th style="padding:6px 8px; width:26%;">Emirates ID</th>
-                      <th style="padding:6px 8px; width:18%;">Nationality</th>
-                      <th style="padding:6px 8px; width:22%;">Profession / Trade</th>
-                      <th style="padding:6px 8px; width:4%;"></th>
+                    <tr>
+                      <th style="padding:0.75rem 0.85rem; width:32%;">Worker Full Name</th>
+                      <th style="padding:0.75rem 0.85rem; width:26%;">Emirates ID</th>
+                      <th style="padding:0.75rem 0.85rem; width:18%;">Nationality</th>
+                      <th style="padding:0.75rem 0.85rem; width:20%;">Profession / Trade</th>
+                      <th style="padding:0.75rem 0.85rem; width:4%; text-align:center;"></th>
                     </tr>
                   </thead>
                   <tbody id="ult-employees-body">
                     ${employees.map((emp, idx) => `
-                      <tr class="ult-emp-row" style="border-bottom:1px solid rgba(255,255,255,0.06);">
-                        <td style="padding:4px 6px;">
-                          <input type="text" class="fin-input ult-emp-name" value="${emp.name || ''}" placeholder="Full Name" required style="width:100%;">
+                      <tr class="ult-emp-row">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="text" class="fin-form-input ult-emp-name" value="${emp.name || ''}" placeholder="Full Name" required style="width:100%; font-size:0.83rem;">
                         </td>
-                        <td style="padding:4px 6px;">
-                          <input type="text" class="fin-input ult-emp-eid" value="${emp.emirates_id || ''}" placeholder="784-XXXX-XXXXXXX-X" required style="width:100%;">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="text" class="fin-form-input ult-emp-eid" value="${emp.emirates_id || ''}" placeholder="784-XXXX-XXXXXXX-X" required style="width:100%; font-size:0.83rem; font-weight:600;">
                         </td>
-                        <td style="padding:4px 6px;">
-                          <input type="text" class="fin-input ult-emp-nat" value="${emp.nationality || 'Indian'}" placeholder="Nationality" style="width:100%;">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="text" class="fin-form-input ult-emp-nat" value="${emp.nationality || 'Indian'}" placeholder="Nationality" style="width:100%; font-size:0.83rem;">
                         </td>
-                        <td style="padding:4px 6px;">
-                          <input type="text" class="fin-input ult-emp-prof" value="${emp.profession || 'RG/JUMA ALROKN'}" placeholder="Profession" style="width:100%;">
+                        <td style="padding:0.5rem 0.65rem;">
+                          <input type="text" class="fin-form-input ult-emp-prof" value="${emp.profession || 'RG/JUMA ALROKN'}" placeholder="Profession" style="width:100%; font-size:0.83rem;">
                         </td>
-                        <td style="padding:4px 6px; text-align:center;">
-                          <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeUndertakingEmployeeRow(this)" title="Remove Worker">✕</button>
+                        <td style="padding:0.5rem 0.65rem; text-align:center;">
+                          <button type="button" class="fin-row-del-btn" onclick="window.finApp.removeUndertakingEmployeeRow(this)" title="Remove Worker">&times;</button>
                         </td>
                       </tr>
                     `).join('')}
@@ -1565,36 +1701,45 @@ export function registerDocumentModules(FinanceApp) {
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Responsible Person (Signatory) *</label>
-                <input type="text" id="ult-resp-person" class="fin-input" value="${ult.responsible_person || 'Eng. Bakhteyar Alam'}" required>
+            <!-- Card 5: Rayan Responsible Signatory -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>✍️</span>
+                  <span>Rayan Responsible Management Signatory</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Designation</label>
-                <input type="text" id="ult-designation" class="fin-input" value="${ult.designation || 'Construction Manager'}">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Responsible Person (Signatory) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ult-resp-person" class="fin-form-input" value="${ult.responsible_person || 'Eng. Bakhteyar Alam'}" required>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Designation</label>
+                  <input type="text" id="ult-designation" class="fin-form-input" value="${ult.designation || 'Construction Manager'}">
+                </div>
               </div>
             </div>
 
-            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+            <!-- Card 6: Official Authorization Seals -->
+            <div class="fin-auth-badge-card">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="ult-inc-stamp" ${ult.include_stamp !== false ? 'checked' : ''}>
                 <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
               </label>
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="ult-inc-sig" ${ult.include_signature !== false ? 'checked' : ''}>
                 <span>Include Construction Manager Signature</span>
               </label>
             </div>
 
-            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+            <div class="fin-modal-footer" style="padding:1.25rem 0 0 0; display:flex; justify-content:flex-end; gap:0.85rem; border-top:1px solid rgba(255,255,255,0.1); background:transparent;">
               <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-ult-edit')">Cancel</button>
-              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Undertaking Letter</button>
+              <button type="submit" class="fin-btn-quick primary">💾 ${isEdit ? 'Save & Update Undertaking Letter' : 'Save & Issue Undertaking Letter'}</button>
             </div>
           </form>
         </div>
-      </div>
-    `;
+      </div>`;
 
     this.showCustomModal(modalHtml);
 
@@ -1661,22 +1806,21 @@ export function registerDocumentModules(FinanceApp) {
     if (!tbody) return;
     const tr = document.createElement('tr');
     tr.className = 'ult-emp-row';
-    tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
     tr.innerHTML = `
-      <td style="padding:4px 6px;">
-        <input type="text" class="fin-input ult-emp-name" value="" placeholder="Full Name" required style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="text" class="fin-form-input ult-emp-name" value="" placeholder="Full Name" required style="width:100%; font-size:0.83rem;">
       </td>
-      <td style="padding:4px 6px;">
-        <input type="text" class="fin-input ult-emp-eid" value="784-" placeholder="784-XXXX-XXXXXXX-X" required style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="text" class="fin-form-input ult-emp-eid" value="784-" placeholder="784-XXXX-XXXXXXX-X" required style="width:100%; font-size:0.83rem; font-weight:600;">
       </td>
-      <td style="padding:4px 6px;">
-        <input type="text" class="fin-input ult-emp-nat" value="Indian" placeholder="Nationality" style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="text" class="fin-form-input ult-emp-nat" value="Indian" placeholder="Nationality" style="width:100%; font-size:0.83rem;">
       </td>
-      <td style="padding:4px 6px;">
-        <input type="text" class="fin-input ult-emp-prof" value="RG/JUMA ALROKN" placeholder="Profession" style="width:100%;">
+      <td style="padding:0.5rem 0.65rem;">
+        <input type="text" class="fin-form-input ult-emp-prof" value="RG/JUMA ALROKN" placeholder="Trade / Designation" style="width:100%; font-size:0.83rem;">
       </td>
-      <td style="padding:4px 6px; text-align:center;">
-        <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeUndertakingEmployeeRow(this)" title="Remove Worker">✕</button>
+      <td style="padding:0.5rem 0.65rem; text-align:center;">
+        <button type="button" class="fin-row-del-btn" onclick="window.finApp.removeUndertakingEmployeeRow(this)" title="Remove Worker">&times;</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1720,90 +1864,129 @@ export function registerDocumentModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-ltr-edit">
-        <div class="fin-modal-box" style="max-width:800px; max-height:92vh; overflow-y:auto;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title">
-              <span>✉️</span>
-              <span>${isEdit ? 'Edit Official Letter' : 'Compose Corporate Letter (Latter Editable)'}</span>
-            </h3>
-            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-ltr-edit')">✕</button>
+        <div class="fin-modal-dialog" style="max-width:900px; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">✉️</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  ${isEdit ? 'Edit Official Letter' : 'Compose Corporate Letter (Latter Editable)'}
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">Official Company Letterhead Document &amp; Formal Notice • خطاب رسمي</p>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-ltr-edit')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; color:#cbd5e1; font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s ease;">&times;</button>
           </div>
-          <form id="form-ltr-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+          <form id="form-ltr-edit" class="fin-modal-body" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" id="ltr-id" value="${ltr.id}">
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Reference Number *</label>
-                <input type="text" id="ltr-ref-no" class="fin-input" value="${ltr.ref_no}" required>
+            <!-- Card 1: Dispatch Reference & Date -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📋</span>
+                  <span>Dispatch Reference &amp; Date</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Letter Date *</label>
-                <input type="date" id="ltr-date" class="fin-input" value="${ltr.date}" required>
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Attention / Contact Name</label>
-                <input type="text" id="ltr-attention" class="fin-input" value="${ltr.attention || ''}" placeholder="The Project Director / General Manager">
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Recipient Company *</label>
-                <input type="text" id="ltr-recipient-company" class="fin-input" value="${ltr.recipient_company}" required placeholder="Company / Authority Name">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Reference Number <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ltr-ref-no" class="fin-form-input" value="${ltr.ref_no}" required style="font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Letter Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="ltr-date" class="fin-form-input" value="${ltr.date}" required>
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Recipient Address / City</label>
-                <input type="text" id="ltr-address" class="fin-input" value="${ltr.address || ''}" placeholder="Abu Dhabi, United Arab Emirates">
+            <!-- Card 2: Recipient Details & Project Reference -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🏢</span>
+                  <span>Recipient &amp; Entity Information</span>
+                </div>
               </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Project / Contract Reference</label>
-                <input type="text" id="ltr-project-name" class="fin-input" value="${ltr.project_name || ''}" placeholder="Project Name / Tender #">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Attention / Contact Name</label>
+                  <input type="text" id="ltr-attention" class="fin-form-input" value="${ltr.attention || ''}" placeholder="The Project Director / General Manager">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Recipient Company <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ltr-recipient-company" class="fin-form-input" value="${ltr.recipient_company}" required placeholder="Company / Authority Name">
+                </div>
               </div>
-            </div>
-
-            <div class="fin-form-group">
-              <label class="fin-label">Subject Line *</label>
-              <input type="text" id="ltr-subject" class="fin-input" value="${ltr.subject}" required placeholder="Subject: - ...">
-            </div>
-
-            <div class="fin-form-group">
-              <label class="fin-label">Letter Body Text (Fully Editable Paragraphs) *</label>
-              <textarea id="ltr-body-text" class="fin-input" rows="8" style="resize:vertical; font-family:inherit; line-height:1.5;" required>${ltr.body_text}</textarea>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-              <div class="fin-form-group">
-                <label class="fin-label">Signatory Name *</label>
-                <input type="text" id="ltr-signatory-name" class="fin-input" value="${ltr.signatory_name || 'Eng. Bakhteyar Alam'}" required>
-              </div>
-              <div class="fin-form-group">
-                <label class="fin-label">Designation</label>
-                <input type="text" id="ltr-designation" class="fin-input" value="${ltr.designation || 'Construction Manager'}">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Recipient Address / City</label>
+                  <input type="text" id="ltr-address" class="fin-form-input" value="${ltr.address || ''}" placeholder="Abu Dhabi, United Arab Emirates">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Project / Contract Reference</label>
+                  <input type="text" id="ltr-project-name" class="fin-form-input" value="${ltr.project_name || ''}" placeholder="Project Name / Tender #">
+                </div>
               </div>
             </div>
 
-            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+            <!-- Card 3: Letter Subject & Body -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>✍️</span>
+                  <span>Letter Subject &amp; Paragraphs</span>
+                </div>
+              </div>
+              <div class="fin-form-group" style="margin-bottom:1.15rem;">
+                <label class="fin-form-label">Subject Line <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ltr-subject" class="fin-form-input" value="${ltr.subject}" required placeholder="Subject: - ...">
+              </div>
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-form-label">Letter Body Text (Fully Editable Paragraphs) <span style="color:#ef4444;">*</span></label>
+                <textarea id="ltr-body-text" class="fin-form-textarea" rows="9" style="resize:vertical; font-family:inherit; line-height:1.6;" required>${ltr.body_text}</textarea>
+              </div>
+            </div>
+
+            <!-- Card 4: Signatory Designation -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🖋️</span>
+                  <span>Corporate Signatory Designation</span>
+                </div>
+              </div>
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Signatory Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ltr-signatory-name" class="fin-form-input" value="${ltr.signatory_name || 'Eng. Bakhteyar Alam'}" required>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-form-label">Designation</label>
+                  <input type="text" id="ltr-designation" class="fin-form-input" value="${ltr.designation || 'Construction Manager'}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 5: Official Authorization Seals -->
+            <div class="fin-auth-badge-card">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="ltr-inc-stamp" ${ltr.include_stamp !== false ? 'checked' : ''}>
                 <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
               </label>
-              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+              <label class="fin-auth-checkbox-label">
                 <input type="checkbox" id="ltr-inc-sig" ${ltr.include_signature !== false ? 'checked' : ''}>
                 <span>Include Authorized Signature</span>
               </label>
             </div>
 
-            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+            <div class="fin-modal-footer" style="padding:1.25rem 0 0 0; display:flex; justify-content:flex-end; gap:0.85rem; border-top:1px solid rgba(255,255,255,0.1); background:transparent;">
               <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-ltr-edit')">Cancel</button>
-              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Letter</button>
+              <button type="submit" class="fin-btn-quick primary">💾 ${isEdit ? 'Save & Update Letter' : 'Save & Issue Letter'}</button>
             </div>
           </form>
         </div>
-      </div>
-    `;
+      </div>`;
 
     this.showCustomModal(modalHtml);
 
