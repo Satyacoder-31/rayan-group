@@ -6122,5 +6122,276 @@
       "created_at": "2025-11-14T10:00:00Z"
     }
   ],
-  "loan_transactions": []
+  "loan_transactions": [],
+  "work_completion_certificates": [
+    {
+      "id": "wcc-rec-job-com-11020",
+      "cert_no": "REC-JOB COM-11020",
+      "reference_no": "REC-JOB COM-11020",
+      "date": "2026-06-26",
+      "time": "6:27 PM",
+      "subcontract_agreement": "IB-037-136",
+      "po_no": "IB-037-136",
+      "project_id": "prj-mvzme7ho",
+      "project_name": "Al Foah Mall Alain",
+      "client_id": "cust-ironbeam",
+      "client_name": "M/s IRON BEAM BUILDING CONTRACTING L.L.C",
+      "main_client": "M/s Emirates Driving Company",
+      "contact_person": "Mr. Mohamed Abuelgasim",
+      "to_name": "Mr. Mohamed Abuelgasim",
+      "to_company": "M/s IRON BEAM BUILDING CONTRACTING L.L.C",
+      "email": "mohamed.a@ironbeam.ae",
+      "phone": "025654497",
+      "scope_work_ref": "IB-037-136",
+      "scope_description": "Total Screed Work 160 Sqm",
+      "body_text": "With respect to the subjected agreement We, Rayan Engineering and Contracting LLC-SPC\nConfirm and Certify that all the works mentioned in the attached scope of work (IB-037-136)\nHave been Satisfactorily Executed and Completed.\n(Total Screed Work 160 Sqm)\n\nWe wish to take this opportunity to request a work completion certificate.\nIt would also be great if you detailed my accomplishment in this project to make it more powerful and we will be forever grateful for doing this\n\nI accept the above works on behalf of M/s IRON BEAM BUILDING CONTRACTING L.L.C, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.",
+      "acceptance_statement": "I accept the above works on behalf of M/s IRON BEAM BUILDING CONTRACTING L.L.C, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.",
+      "status": "Approved",
+      "created_at": "2026-06-26T18:27:00Z",
+      "created_by": "Arshad Alam Shaikh",
+      "authorized_signatory_client": "Mr. Mohamed Abuelgasim",
+      "authorized_signatory_rayan": "Eng. Bakhteyar Alam",
+      "include_stamp": true,
+      "include_signature": true
+    },
+    {
+      "id": "wcc-rec-job-com-11021",
+      "cert_no": "REC-JOB COM-11021",
+      "reference_no": "REC-JOB COM-11021",
+      "date": "2026-07-15",
+      "time": "4:15 PM",
+      "subcontract_agreement": "PODSUB-2026/0810",
+      "po_no": "PODSUB-2026/0810",
+      "project_id": "prj-toprock-police-01",
+      "project_name": "The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work",
+      "client_id": "cust-toprock",
+      "client_name": "M/S TOP ROCK INTERIORS LLC",
+      "main_client": "Dubai Police General HQ / Engineering Department",
+      "contact_person": "Project Manager",
+      "to_name": "Project Manager",
+      "to_company": "M/S TOP ROCK INTERIORS LLC",
+      "email": "procurementofficer@toprockinteriors.com",
+      "phone": "+971 502131834",
+      "scope_work_ref": "PODSUB-2026/0810",
+      "scope_description": "Wall Lining with Stud 50mm & Furring Channel Installation (567 Sqm)",
+      "body_text": "With respect to the subjected agreement We, Rayan Engineering and Contracting LLC-SPC\nConfirm and Certify that all the works mentioned in the attached scope of work (PODSUB-2026/0810)\nHave been Satisfactorily Executed and Completed.\n(Wall Lining with Stud 50mm & Furring Channel Installation 567 Sqm)\n\nWe wish to take this opportunity to request a work completion certificate.\nIt would also be great if you detailed my accomplishment in this project to make it more powerful and we will be forever grateful for doing this\n\nI accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.",
+      "acceptance_statement": "I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.",
+      "status": "Approved",
+      "created_at": "2026-07-15T16:15:00Z",
+      "created_by": "Arshad Alam Shaikh",
+      "authorized_signatory_client": "Mr. Shahil",
+      "authorized_signatory_rayan": "Eng. Bakhteyar Alam",
+      "include_stamp": true,
+      "include_signature": true
+    }
+  ],
+  "delivery_notes": [
+    {
+      "id": "dn-rec-1001",
+      "dn_no": "DN-REC-1001",
+      "reference_no": "DN-REC-1001",
+      "date": "2026-08-15",
+      "time": "10:30 AM",
+      "po_reference": "PODSUB-2026/0810",
+      "client_id": "cust-toprock",
+      "client_name": "M/S TOP ROCK INTERIORS LLC",
+      "project_name": "The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work",
+      "site_location": "Alrowaiyah, Dubai - Sector 4 Gate 2",
+      "vehicle_no": "DXB-54219",
+      "driver_name": "Abdul Rashid",
+      "driver_contact": "+971 55 819 4022",
+      "dispatch_from": "Rayan Central Fabrication & Storage Yard - Mussafah M-36",
+      "receiver_name": "Site Supervisor Tariq",
+      "receiver_eid": "784-1988-4459201-1",
+      "status": "Delivered",
+      "notes": "All materials inspected at dispatch and unloaded in verified sound structural condition.",
+      "items": [
+        {
+          "srl": 1,
+          "description": "Gypsum Board 12.5mm Moisture Resistant Standard",
+          "unit": "Sheets",
+          "qty_ordered": 250,
+          "qty_delivered": 250,
+          "remarks": "Prime Quality"
+        },
+        {
+          "srl": 2,
+          "description": "Galvanized Steel Studs 70mm x 3.0m Heavy Duty",
+          "unit": "Pcs",
+          "qty_ordered": 180,
+          "qty_delivered": 180,
+          "remarks": "Verified Gauge"
+        },
+        {
+          "srl": 3,
+          "description": "Acoustic Insulation Mineral Wool 50mm 48kg/m3",
+          "unit": "Rolls",
+          "qty_ordered": 45,
+          "qty_delivered": 45,
+          "remarks": "Standard Fire Rated"
+        }
+      ],
+      "dispatched_by": "Logistics Supervisor Rashid Khan",
+      "include_stamp": true,
+      "include_signature": true,
+      "created_at": "2026-08-15T09:00:00Z"
+    },
+    {
+      "id": "dn-rec-1002",
+      "dn_no": "DN-REC-1002",
+      "reference_no": "DN-REC-1002",
+      "date": "2026-06-20",
+      "time": "08:45 AM",
+      "po_reference": "IB-037-136",
+      "client_id": "cust-ironbeam",
+      "client_name": "M/s IRON BEAM BUILDING CONTRACTING L.L.C",
+      "project_name": "Al Foah Mall Alain",
+      "site_location": "Al Foah Mall, Ground Floor Cinema Concourse, Al Ain",
+      "vehicle_no": "AUH-88124",
+      "driver_name": "Mohammed Farooq",
+      "driver_contact": "+971 52 771 8933",
+      "dispatch_from": "Mussafah M-36 Yard",
+      "receiver_name": "Mr. Mohamed Abuelgasim",
+      "receiver_eid": "784-1982-1299834-5",
+      "status": "Delivered",
+      "notes": "Floor screed materials delivered on site with batch testing certificates.",
+      "items": [
+        {
+          "srl": 1,
+          "description": "Portland Cement Grade 42.5N High Strength",
+          "unit": "Bags",
+          "qty_ordered": 120,
+          "qty_delivered": 120,
+          "remarks": "Factory Sealed"
+        },
+        {
+          "srl": 2,
+          "description": "Washed Plaster Sand 0-4mm Clean Coarse Grade",
+          "unit": "Tons",
+          "qty_ordered": 18,
+          "qty_delivered": 18,
+          "remarks": "Moisture Checked"
+        },
+        {
+          "srl": 3,
+          "description": "Polypropylene Crack Control Microfibres (600g packs)",
+          "unit": "Packs",
+          "qty_ordered": 30,
+          "qty_delivered": 30,
+          "remarks": "Approved Batch"
+        }
+      ],
+      "dispatched_by": "Logistics Supervisor Rashid Khan",
+      "include_stamp": true,
+      "include_signature": true,
+      "created_at": "2026-06-20T08:00:00Z"
+    }
+  ],
+  "undertaking_letters": [
+    {
+      "id": "ult-rec-rg-ult-11006",
+      "ref_no": "REC-RG-ULT-11006",
+      "reference_no": "REC-RG-ULT-11006",
+      "date": "2026-06-04",
+      "attention": "Project Manager",
+      "attention_company": "M/S TOP ROCK INTERIORS LLC",
+      "client_name": "M/S TOP ROCK INTERIORS LLC",
+      "project_name": "The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work",
+      "activity_type": "Interiors Work",
+      "subject": "Subcontractor Undertaking letter M/S RAYAN ENGINEERING AND CONTRACTING L.L.C – S.P.C,",
+      "body_text": "With reference to the above-mentioned project/ subject we hereby confirm that we have subcontractor agreement with M/S TOP ROCK INTERIORS LLC,\n\nUpon terms and conditions in line with our contract being deputed for (Interiors Work) activities in your project M/S RAYAN ENGINEERING AND CONTRACTING L.L.C – S.P.C,,, will be responsible for any precautionary measures as far as safety is concerned and also agree that we will follow M/S TOP ROCK INTERIORS LLC s safety policy, M/S TOP ROCK INTERIORS LLC, HSE Plan and site safety rules based on DM/Trakhees regulations and Workmen Compensation Policy against all sums payable under the UAE Federal Decree - Law No. 33 of 2021, Article 37, also we agree that in case of any accidents or incidents occurred to any of the above companys workers or our employees we will take full responsibility of the persons treatments and any consequences like penalty or any legal complications related to the accident/incident also we agree that we can terminate above companies at any time if the violate HSE regulations set by the authorities.",
+      "responsible_person": "Eng. Bakhteyar Alam",
+      "designation": "Construction Manager",
+      "include_stamp": true,
+      "include_signature": true,
+      "status": "Active",
+      "created_at": "2026-06-04T10:00:00Z",
+      "employees": [
+        {
+          "srl": 1,
+          "name": "BHAGWAN DEEN MOLEY",
+          "emirates_id": "784-1983-8618357-2",
+          "nationality": "Indian",
+          "profession": "RG/JUMA ALROKN"
+        },
+        {
+          "srl": 2,
+          "name": "CHAETU PRASAD YADAV MOLE YADAV",
+          "emirates_id": "784-1980-0879530-8",
+          "nationality": "Indian",
+          "profession": "RG/JUMA ALROKN"
+        },
+        {
+          "srl": 3,
+          "name": "SHAHBAN ALI AKBAR ALI",
+          "emirates_id": "784-2003-1266689-2",
+          "nationality": "Indian",
+          "profession": "RG/JUMA ALROKN"
+        },
+        {
+          "srl": 4,
+          "name": "ELIUS MOROL MD ALAM MOROL",
+          "emirates_id": "784-1999-8851573-2",
+          "nationality": "Bangladesh",
+          "profession": "RG/JUMA ALROKN"
+        },
+        {
+          "srl": 5,
+          "name": "ASHOK KUMAR BABU LAL",
+          "emirates_id": "784-1982-6097953-3",
+          "nationality": "Indian",
+          "profession": "RG/JUMA ALROKN"
+        },
+        {
+          "srl": 6,
+          "name": "OM PRAKASH KANHAIYA LAL",
+          "emirates_id": "784-1998-2546929-1",
+          "nationality": "Indian",
+          "profession": "RG/JUMA ALROKN"
+        },
+        {
+          "srl": 7,
+          "name": "WAJID ALI SOLAHU",
+          "emirates_id": "784-1991-5410265-3",
+          "nationality": "Indian",
+          "profession": "RG/JUMA ALROKN"
+        },
+        {
+          "srl": 8,
+          "name": "BIRENDRA YADAV",
+          "emirates_id": "784-2001-5776745-8",
+          "nationality": "Nepal",
+          "profession": "RG/TRUST WAY"
+        },
+        {
+          "srl": 9,
+          "name": "FOOL CHANDRA SALIKRAM",
+          "emirates_id": "784-1998-5293711-1",
+          "nationality": "Indian",
+          "profession": "RG/TRUST WAY"
+        }
+      ]
+    }
+  ],
+  "custom_letters": [
+    {
+      "id": "let-rec-2026-01",
+      "ref_no": "REC-LTR-2026-101",
+      "reference_no": "REC-LTR-2026-101",
+      "date": "2026-05-18",
+      "attention": "The Project Director",
+      "recipient_name": "Eng. Tariq Mansoor",
+      "recipient_company": "M/S BUILDARA GENERAL CONTRACTING - L.L.C",
+      "address": "Sector E-25, Abu Dhabi, United Arab Emirates",
+      "project_name": "Commercial & Residential Tower Fit-Out - Sector E-25",
+      "subject": "Mobilization Notice & Safety Compliance Certification for Tower Fit-Out Package",
+      "body_text": "Dear Sir,\n\nWe are pleased to inform you that M/S RAYAN ENGINEERING AND CONTRACTING L.L.C – S.P.C has completed all pre-mobilization formalities, statutory HSE approvals, and workforce inductions for the Commercial & Residential Tower Fit-Out project at Sector E-25, Abu Dhabi.\n\nOur specialized site MEP & civil installation teams along with necessary equipment, certified scaffolding, and approved safety gears have been deployed on site effective from today. All works will strictly adhere to the approved project specifications, DM/Civil Defense regulations, and quality standards.\n\nWe assure you of our highest standard of workmanship and timely project milestone delivery. Kindly acknowledge receipt of this letter.",
+      "signatory_name": "Eng. Bakhteyar Alam",
+      "designation": "Construction Manager",
+      "include_stamp": true,
+      "include_signature": true,
+      "status": "Issued",
+      "created_at": "2026-05-18T11:00:00Z"
+    }
+  ]
 }

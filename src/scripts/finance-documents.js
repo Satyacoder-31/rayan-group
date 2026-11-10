@@ -1,0 +1,2533 @@
+/**
+ * Rayan Group — Operations & Contracts Document Modules
+ * 1. WORK COMPLETION CERTIFICATE (شهادة اتمام العمل)
+ * 2. Material Delivery Note (إذن تسليم مواد)
+ * 3. Subcontractor Undertaking Letter (خطاب تعهد مقاول من الباطن)
+ * 4. Corporate Official Letter (Editable Letterhead / Latter Editable)
+ */
+
+export function registerDocumentModules(FinanceApp) {
+  const proto = FinanceApp.prototype;
+
+  // ==========================================================================
+  // 1. WORK COMPLETION CERTIFICATES TAB
+  // ==========================================================================
+  proto.renderWorkCompletionTab = function(root) {
+    const certs = this.db?.work_completion_certificates || [];
+    const query = (this.wccSearchQuery || '').toLowerCase().trim();
+    const filterStatus = this.wccFilterStatus || 'all';
+
+    const filtered = certs.filter(c => {
+      const matchQuery = !query ||
+        (c.cert_no || '').toLowerCase().includes(query) ||
+        (c.reference_no || '').toLowerCase().includes(query) ||
+        (c.client_name || '').toLowerCase().includes(query) ||
+        (c.project_name || '').toLowerCase().includes(query) ||
+        (c.main_client || '').toLowerCase().includes(query) ||
+        (c.po_no || '').toLowerCase().includes(query);
+      const matchStatus = filterStatus === 'all' || (c.status || '').toLowerCase() === filterStatus.toLowerCase();
+      return matchQuery && matchStatus;
+    });
+
+    const approvedCount = certs.filter(c => (c.status || '').toLowerCase() === 'approved').length;
+    const pendingCount = certs.filter(c => (c.status || '').toLowerCase() === 'pending').length;
+
+    const html = `
+      <div class="fin-tab-pane active" id="pane-work-completion">
+        <div class="fin-panel-card" style="margin-bottom:1.5rem;">
+          <div class="fin-panel-header" style="flex-wrap:wrap; gap:1rem; align-items:flex-start;">
+            <div>
+              <h2 class="fin-panel-title" style="font-size:1.35rem; display:flex; align-items:center; gap:0.6rem;">
+                <span>📜</span>
+                <span>Work Completion Certificates</span>
+                <span class="fin-badge fin-badge-issued" style="font-size:0.75rem;">${certs.length} Total</span>
+              </h2>
+              <p style="color:#94a3b8; font-size:0.82rem; margin-top:0.25rem;">
+                Official client handover sign-offs, subcontract execution certifications, and project completion certificates with dual-authorization stamps.
+              </p>
+            </div>
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openWorkCompletionModal()">
+                + Create Completion Certificate
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportWorkCompletionCSV()">
+                📥 Export CSV
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1.25rem; margin-bottom:1.25rem;">
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Total Handover Certificates</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#f8fafc; margin-top:0.25rem;">${certs.length}</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#34d399; text-transform:uppercase; font-weight:700;">Approved &amp; Certified</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#10b981; margin-top:0.25rem;">${approvedCount}</div>
+            </div>
+            <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#fbbf24; text-transform:uppercase; font-weight:700;">Under Review / Pending</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#f59e0b; margin-top:0.25rem;">${pendingCount}</div>
+            </div>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
+            <div style="flex:1; min-width:240px; position:relative;">
+              <input type="text" id="wcc-search-input" class="fin-search-input" placeholder="Search by Cert #, Ref #, Client, Project, PO..." value="${this.wccSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+            </div>
+            <select id="wcc-filter-status" class="fin-select" style="min-width:160px;">
+              <option value="all" ${filterStatus === 'all' ? 'selected' : ''}>All Statuses (${certs.length})</option>
+              <option value="approved" ${filterStatus === 'approved' ? 'selected' : ''}>Approved (${approvedCount})</option>
+              <option value="pending" ${filterStatus === 'pending' ? 'selected' : ''}>Pending (${pendingCount})</option>
+            </select>
+          </div>
+
+          <!-- Register Table with Fixed Bottom Scrollbar -->
+          <div class="fin-table-container">
+            <div class="fin-table-scroll-wrap">
+              <table class="fin-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px; text-align:center;">#</th>
+                    <th>CERT / REF #</th>
+                    <th>DATE &amp; TIME</th>
+                    <th>CLIENT / SUBCONTRACTOR</th>
+                    <th>MAIN CLIENT / CONTRACTOR</th>
+                    <th>PROJECT &amp; LOCATION</th>
+                    <th>SCOPE / MATERIAL SUMMARY</th>
+                    <th style="text-align:center;">STATUS</th>
+                    <th style="text-align:right; width:190px;">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.length === 0 ? `
+                    <tr>
+                      <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">📜</div>
+                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Work Completion Certificates found</div>
+                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Completion Certificate" to issue a certified completion handover.</div>
+                      </td>
+                    </tr>
+                  ` : filtered.map((c, idx) => {
+                    const isApp = (c.status || '').toLowerCase() === 'approved';
+                    return `
+                      <tr>
+                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
+                        <td style="font-weight:800; color:#38bdf8;">
+                          <div style="cursor:pointer;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="View Certificate Document">
+                            ${c.cert_no || c.reference_no}
+                          </div>
+                          ${c.subcontract_agreement ? `<div style="font-size:0.7rem; color:#94a3b8; font-weight:500;">Agr: ${c.subcontract_agreement}</div>` : ''}
+                        </td>
+                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
+                          ${this.formatDate(c.date || c.created_at)}
+                          ${c.time ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.time}</div>` : ''}
+                        </td>
+                        <td style="font-weight:700; color:#f8fafc;">
+                          <div>${c.client_name || 'Client'}</div>
+                          ${c.contact_person ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${c.contact_person}</div>` : ''}
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.82rem;">
+                          ${c.main_client || '—'}
+                        </td>
+                        <td style="color:#f8fafc; font-weight:600;">
+                          ${c.project_name || 'Al Foah Mall Alain'}
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.8rem; max-width:260px;">
+                          ${c.scope_description || 'Scope of works executed according to PO'}
+                        </td>
+                        <td style="text-align:center;">
+                          <span class="fin-badge ${isApp ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
+                            ${c.status || 'Approved'}
+                          </span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="Print &amp; View Official Document">Print / View</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openWorkCompletionModal('${c.id}')" title="Edit Certificate Details">Edit</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteWorkCompletion('${c.id}')" title="Delete Certificate">Delete</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    root.innerHTML = html;
+
+    // Search & Filter event bindings
+    const sInput = document.getElementById('wcc-search-input');
+    if (sInput) {
+      sInput.oninput = (e) => {
+        this.wccSearchQuery = e.target.value;
+        this.renderWorkCompletionTab(root);
+        const refocused = document.getElementById('wcc-search-input');
+        if (refocused) {
+          refocused.focus();
+          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+        }
+      };
+    }
+
+    const fSelect = document.getElementById('wcc-filter-status');
+    if (fSelect) {
+      fSelect.onchange = (e) => {
+        this.wccFilterStatus = e.target.value;
+        this.renderWorkCompletionTab(root);
+      };
+    }
+  };
+
+  // ==========================================================================
+  // 2. MATERIAL DELIVERY NOTES TAB
+  // ==========================================================================
+  proto.renderDeliveryNotesTab = function(root) {
+    const notes = this.db?.delivery_notes || [];
+    const query = (this.dnSearchQuery || '').toLowerCase().trim();
+    const filterStatus = this.dnFilterStatus || 'all';
+
+    const filtered = notes.filter(n => {
+      const matchQuery = !query ||
+        (n.dn_no || '').toLowerCase().includes(query) ||
+        (n.client_name || '').toLowerCase().includes(query) ||
+        (n.project_name || '').toLowerCase().includes(query) ||
+        (n.site_location || '').toLowerCase().includes(query) ||
+        (n.vehicle_no || '').toLowerCase().includes(query) ||
+        (n.driver_name || '').toLowerCase().includes(query);
+      const matchStatus = filterStatus === 'all' || (n.status || '').toLowerCase() === filterStatus.toLowerCase();
+      return matchQuery && matchStatus;
+    });
+
+    const deliveredCount = notes.filter(n => (n.status || '').toLowerCase() === 'delivered').length;
+    const transitCount = notes.filter(n => (n.status || '').toLowerCase() === 'in transit').length;
+
+    const html = `
+      <div class="fin-tab-pane active" id="pane-delivery-notes">
+        <div class="fin-panel-card" style="margin-bottom:1.5rem;">
+          <div class="fin-panel-header" style="flex-wrap:wrap; gap:1rem; align-items:flex-start;">
+            <div>
+              <h2 class="fin-panel-title" style="font-size:1.35rem; display:flex; align-items:center; gap:0.6rem;">
+                <span>🚚</span>
+                <span>Material Delivery Notes</span>
+                <span class="fin-badge fin-badge-issued" style="font-size:0.75rem;">${notes.length} Total</span>
+              </h2>
+              <p style="color:#94a3b8; font-size:0.82rem; margin-top:0.25rem;">
+                Dispatch receipts, site material delivery tracking, and storekeeper receipt acknowledgements with dual-signatory verification.
+              </p>
+            </div>
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openDeliveryNoteModal()">
+                + Create Delivery Note
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportDeliveryNotesCSV()">
+                📥 Export CSV
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1.25rem; margin-bottom:1.25rem;">
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Total Dispatches</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#f8fafc; margin-top:0.25rem;">${notes.length}</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#34d399; text-transform:uppercase; font-weight:700;">Delivered &amp; Stamped</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#10b981; margin-top:0.25rem;">${deliveredCount}</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#38bdf8; text-transform:uppercase; font-weight:700;">In Transit / Dispatched</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#38bdf8; margin-top:0.25rem;">${transitCount}</div>
+            </div>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
+            <div style="flex:1; min-width:240px; position:relative;">
+              <input type="text" id="dn-search-input" class="fin-search-input" placeholder="Search by DN #, Client, Project, Vehicle, Driver..." value="${this.dnSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+            </div>
+            <select id="dn-filter-status" class="fin-select" style="min-width:160px;">
+              <option value="all" ${filterStatus === 'all' ? 'selected' : ''}>All Statuses (${notes.length})</option>
+              <option value="delivered" ${filterStatus === 'delivered' ? 'selected' : ''}>Delivered (${deliveredCount})</option>
+              <option value="in transit" ${filterStatus === 'in transit' ? 'selected' : ''}>In Transit (${transitCount})</option>
+            </select>
+          </div>
+
+          <!-- Register Table with Fixed Bottom Scrollbar -->
+          <div class="fin-table-container">
+            <div class="fin-table-scroll-wrap">
+              <table class="fin-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px; text-align:center;">#</th>
+                    <th>DN NUMBER</th>
+                    <th>DATE &amp; TIME</th>
+                    <th>CONSIGNEE / CLIENT</th>
+                    <th>DESTINATION PROJECT SITE</th>
+                    <th>VEHICLE &amp; DRIVER</th>
+                    <th style="text-align:center;">ITEMS (QTY)</th>
+                    <th style="text-align:center;">STATUS</th>
+                    <th style="text-align:right; width:190px;">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.length === 0 ? `
+                    <tr>
+                      <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">🚚</div>
+                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Delivery Notes recorded</div>
+                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Delivery Note" to issue a material dispatch slip.</div>
+                      </td>
+                    </tr>
+                  ` : filtered.map((n, idx) => {
+                    const isDel = (n.status || '').toLowerCase() === 'delivered';
+                    const itemsCount = (n.items || []).length;
+                    return `
+                      <tr>
+                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
+                        <td style="font-weight:800; color:#38bdf8;">
+                          <div style="cursor:pointer;" onclick="window.finApp.openDeliveryNotePrintModal('${n.id}')" title="View Delivery Note">
+                            ${n.dn_no}
+                          </div>
+                          ${n.po_reference ? `<div style="font-size:0.7rem; color:#94a3b8; font-weight:500;">PO: ${n.po_reference}</div>` : ''}
+                        </td>
+                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
+                          ${this.formatDate(n.date || n.created_at)}
+                          ${n.time ? `<div style="font-size:0.7rem; color:#94a3b8;">${n.time}</div>` : ''}
+                        </td>
+                        <td style="font-weight:700; color:#f8fafc;">
+                          <div>${n.client_name || 'Client'}</div>
+                          ${n.receiver_name ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Recv: ${n.receiver_name}</div>` : ''}
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.82rem;">
+                          <div style="font-weight:600; color:#f8fafc;">${n.project_name || 'Project Site'}</div>
+                          <div style="font-size:0.72rem; color:#94a3b8;">${n.site_location || 'Site Gate'}</div>
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.8rem;">
+                          <div style="font-weight:600; color:#f8fafc;">${n.vehicle_no || 'AUH-49210'}</div>
+                          <div style="font-size:0.72rem; color:#94a3b8;">${n.driver_name || 'Driver'} ${n.driver_contact ? `(${n.driver_contact})` : ''}</div>
+                        </td>
+                        <td style="text-align:center; font-weight:700; color:#38bdf8;">
+                          ${itemsCount} Line Item${itemsCount === 1 ? '' : 's'}
+                        </td>
+                        <td style="text-align:center;">
+                          <span class="fin-badge ${isDel ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
+                            ${n.status || 'Delivered'}
+                          </span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openDeliveryNotePrintModal('${n.id}')" title="Print &amp; View Delivery Note">Print / View</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openDeliveryNoteModal('${n.id}')" title="Edit Delivery Note">Edit</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDeliveryNote('${n.id}')" title="Delete Delivery Note">Delete</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    root.innerHTML = html;
+
+    const sInput = document.getElementById('dn-search-input');
+    if (sInput) {
+      sInput.oninput = (e) => {
+        this.dnSearchQuery = e.target.value;
+        this.renderDeliveryNotesTab(root);
+        const refocused = document.getElementById('dn-search-input');
+        if (refocused) {
+          refocused.focus();
+          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+        }
+      };
+    }
+
+    const fSelect = document.getElementById('dn-filter-status');
+    if (fSelect) {
+      fSelect.onchange = (e) => {
+        this.dnFilterStatus = e.target.value;
+        this.renderDeliveryNotesTab(root);
+      };
+    }
+  };
+
+  // ==========================================================================
+  // 3. SUBCONTRACTOR UNDERTAKING LETTERS TAB
+  // ==========================================================================
+  proto.renderUndertakingLettersTab = function(root) {
+    const letters = this.db?.undertaking_letters || [];
+    const query = (this.ultSearchQuery || '').toLowerCase().trim();
+
+    const filtered = letters.filter(l => {
+      const matchQuery = !query ||
+        (l.ref_no || '').toLowerCase().includes(query) ||
+        (l.client_name || '').toLowerCase().includes(query) ||
+        (l.project_name || '').toLowerCase().includes(query) ||
+        (l.subject || '').toLowerCase().includes(query) ||
+        (l.activity_type || '').toLowerCase().includes(query) ||
+        (l.employees || []).some(emp => (emp.name || '').toLowerCase().includes(query) || (emp.emirates_id || '').toLowerCase().includes(query));
+      return matchQuery;
+    });
+
+    const totalWorkers = letters.reduce((sum, l) => sum + ((l.employees || []).length), 0);
+
+    const html = `
+      <div class="fin-tab-pane active" id="pane-undertaking-letters">
+        <div class="fin-panel-card" style="margin-bottom:1.5rem;">
+          <div class="fin-panel-header" style="flex-wrap:wrap; gap:1rem; align-items:flex-start;">
+            <div>
+              <h2 class="fin-panel-title" style="font-size:1.35rem; display:flex; align-items:center; gap:0.6rem;">
+                <span>🛡️</span>
+                <span>Subcontractor Undertaking Letters</span>
+                <span class="fin-badge fin-badge-issued" style="font-size:0.75rem;">${letters.length} Total</span>
+              </h2>
+              <p style="color:#94a3b8; font-size:0.82rem; margin-top:0.25rem;">
+                Official DM/Trakhees statutory HSE undertakings, workforce deputations, and safety indemnity letters under UAE Federal Decree-Law No. 33 of 2021.
+              </p>
+            </div>
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openUndertakingLetterModal()">
+                + Create Undertaking Letter
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportUndertakingLettersCSV()">
+                📥 Export CSV
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1.25rem; margin-bottom:1.25rem;">
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Active Undertakings</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#f8fafc; margin-top:0.25rem;">${letters.length}</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#38bdf8; text-transform:uppercase; font-weight:700;">Total Deputed Personnel</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#38bdf8; margin-top:0.25rem;">${totalWorkers} Workers</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#34d399; text-transform:uppercase; font-weight:700;">HSE &amp; Labor Law Compliance</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#10b981; margin-top:0.25rem;">100% Certified</div>
+            </div>
+          </div>
+
+          <!-- Search Input -->
+          <div style="margin-bottom:1rem;">
+            <input type="text" id="ult-search-input" class="fin-search-input" placeholder="Search by Ref #, Client, Project, Worker Name, Emirates ID..." value="${this.ultSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+          </div>
+
+          <!-- Register Table with Fixed Bottom Scrollbar -->
+          <div class="fin-table-container">
+            <div class="fin-table-scroll-wrap">
+              <table class="fin-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px; text-align:center;">#</th>
+                    <th>REF NUMBER</th>
+                    <th>DATE</th>
+                    <th>CONTRACTOR / CLIENT</th>
+                    <th>PROJECT / SITE</th>
+                    <th>WORK ACTIVITY</th>
+                    <th style="text-align:center;">WORKERS DEPUTED</th>
+                    <th>RESPONSIBLE PERSON</th>
+                    <th style="text-align:right; width:190px;">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.length === 0 ? `
+                    <tr>
+                      <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">🛡️</div>
+                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Undertaking Letters found</div>
+                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Undertaking Letter" to draft a legal safety undertaking letter.</div>
+                      </td>
+                    </tr>
+                  ` : filtered.map((l, idx) => {
+                    const empCount = (l.employees || []).length;
+                    return `
+                      <tr>
+                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
+                        <td style="font-weight:800; color:#38bdf8;">
+                          <div style="cursor:pointer;" onclick="window.finApp.openUndertakingLetterPrintModal('${l.id}')" title="View 2-Page Undertaking Document">
+                            ${l.ref_no}
+                          </div>
+                        </td>
+                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
+                          ${this.formatDate(l.date || l.created_at)}
+                        </td>
+                        <td style="font-weight:700; color:#f8fafc;">
+                          <div>${l.client_name || l.attention_company || 'Client'}</div>
+                          ${l.attention ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${l.attention}</div>` : ''}
+                        </td>
+                        <td style="color:#f8fafc; font-weight:600; font-size:0.82rem;">
+                          ${l.project_name || 'Project Site'}
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.82rem;">
+                          <span style="background:rgba(56,189,248,0.12); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:600;">
+                            ${l.activity_type || 'Interiors Work'}
+                          </span>
+                        </td>
+                        <td style="text-align:center; font-weight:800; color:#10b981;">
+                          ${empCount} Personnel
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.82rem;">
+                          <div style="font-weight:700; color:#f8fafc;">${l.responsible_person || 'Eng. Bakhteyar Alam'}</div>
+                          <div style="font-size:0.7rem; color:#94a3b8;">${l.designation || 'Construction Manager'}</div>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openUndertakingLetterPrintModal('${l.id}')" title="Print &amp; View Official 2-Page Undertaking Letter">Print / View</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openUndertakingLetterModal('${l.id}')" title="Edit Letter &amp; Employee List">Edit</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteUndertakingLetter('${l.id}')" title="Delete Undertaking Letter">Delete</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    root.innerHTML = html;
+
+    const sInput = document.getElementById('ult-search-input');
+    if (sInput) {
+      sInput.oninput = (e) => {
+        this.ultSearchQuery = e.target.value;
+        this.renderUndertakingLettersTab(root);
+        const refocused = document.getElementById('ult-search-input');
+        if (refocused) {
+          refocused.focus();
+          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+        }
+      };
+    }
+  };
+
+  // ==========================================================================
+  // 4. CORPORATE LETTERS TAB (LATTER EDITABLE)
+  // ==========================================================================
+  proto.renderLettersTab = function(root) {
+    const letters = this.db?.custom_letters || [];
+    const query = (this.ltrSearchQuery || '').toLowerCase().trim();
+
+    const filtered = letters.filter(l => {
+      const matchQuery = !query ||
+        (l.ref_no || '').toLowerCase().includes(query) ||
+        (l.recipient_company || '').toLowerCase().includes(query) ||
+        (l.recipient_name || '').toLowerCase().includes(query) ||
+        (l.subject || '').toLowerCase().includes(query) ||
+        (l.project_name || '').toLowerCase().includes(query);
+      return matchQuery;
+    });
+
+    const html = `
+      <div class="fin-tab-pane active" id="pane-letters">
+        <div class="fin-panel-card" style="margin-bottom:1.5rem;">
+          <div class="fin-panel-header" style="flex-wrap:wrap; gap:1rem; align-items:flex-start;">
+            <div>
+              <h2 class="fin-panel-title" style="font-size:1.35rem; display:flex; align-items:center; gap:0.6rem;">
+                <span>✉️</span>
+                <span>Corporate Letters &amp; Correspondence</span>
+                <span class="fin-badge fin-badge-issued" style="font-size:0.75rem;">${letters.length} Total</span>
+              </h2>
+              <p style="color:#94a3b8; font-size:0.82rem; margin-top:0.25rem;">
+                Fully editable official corporate correspondence, commercial notices, mobilization letters, and authority submissions on Rayan letterhead.
+              </p>
+            </div>
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCustomLetterModal()">
+                + Draft New Letter
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportLettersCSV()">
+                📥 Export CSV
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Search Input -->
+          <div style="margin-top:1.25rem; margin-bottom:1rem;">
+            <input type="text" id="ltr-search-input" class="fin-search-input" placeholder="Search letters by Ref #, Recipient, Subject, Project..." value="${this.ltrSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+          </div>
+
+          <!-- Register Table with Fixed Bottom Scrollbar -->
+          <div class="fin-table-container">
+            <div class="fin-table-scroll-wrap">
+              <table class="fin-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px; text-align:center;">#</th>
+                    <th>REF NUMBER</th>
+                    <th>DATE</th>
+                    <th>RECIPIENT / TO</th>
+                    <th>PROJECT REFERENCE</th>
+                    <th>SUBJECT LINE</th>
+                    <th>SIGNATORY</th>
+                    <th style="text-align:right; width:190px;">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.length === 0 ? `
+                    <tr>
+                      <td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">✉️</div>
+                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Official Letters drafted</div>
+                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Draft New Letter" to compose an official letterhead document.</div>
+                      </td>
+                    </tr>
+                  ` : filtered.map((l, idx) => {
+                    return `
+                      <tr>
+                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
+                        <td style="font-weight:800; color:#38bdf8;">
+                          <div style="cursor:pointer;" onclick="window.finApp.openCustomLetterPrintModal('${l.id}')" title="View Letter Document">
+                            ${l.ref_no}
+                          </div>
+                        </td>
+                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
+                          ${this.formatDate(l.date || l.created_at)}
+                        </td>
+                        <td style="font-weight:700; color:#f8fafc;">
+                          <div>${l.recipient_company || l.recipient_name || 'Recipient'}</div>
+                          ${l.attention ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${l.attention}</div>` : ''}
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.82rem;">
+                          ${l.project_name || 'General Corporate'}
+                        </td>
+                        <td style="color:#f8fafc; font-weight:600; font-size:0.82rem; max-width:280px;">
+                          ${l.subject || 'Official Communication'}
+                        </td>
+                        <td style="color:#cbd5e1; font-size:0.82rem;">
+                          <div style="font-weight:700; color:#f8fafc;">${l.signatory_name || 'Authorized Signatory'}</div>
+                          <div style="font-size:0.7rem; color:#94a3b8;">${l.designation || 'Construction Manager'}</div>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openCustomLetterPrintModal('${l.id}')" title="Print &amp; View Letter">Print / View</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openCustomLetterModal('${l.id}')" title="Edit Letter Content">Edit</button>
+                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCustomLetter('${l.id}')" title="Delete Letter">Delete</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    root.innerHTML = html;
+
+    const sInput = document.getElementById('ltr-search-input');
+    if (sInput) {
+      sInput.oninput = (e) => {
+        this.ltrSearchQuery = e.target.value;
+        this.renderLettersTab(root);
+        const refocused = document.getElementById('ltr-search-input');
+        if (refocused) {
+          refocused.focus();
+          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+        }
+      };
+    }
+  };
+
+  // ==========================================================================
+  // 5. WORK COMPLETION CERTIFICATE EDIT MODAL
+  // ==========================================================================
+  proto.openWorkCompletionModal = function(certId = null) {
+    const isEdit = Boolean(certId);
+    let cert = null;
+    if (isEdit) {
+      cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    }
+    if (!cert) {
+      const nextNum = (this.db?.work_completion_certificates || []).length + 11020;
+      cert = {
+        id: `wcc-${Date.now()}`,
+        cert_no: `REC-JOB COM-${nextNum}`,
+        reference_no: `REC-JOB COM-${nextNum}`,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        subcontract_agreement: 'IB-037-136',
+        client_name: 'M/s IRON BEAM BUILDING CONTRACTING L.L.C',
+        main_client: 'M/s Emirates Driving Company',
+        contact_person: 'Mr. Mohamed Abuelgasim',
+        email: 'mohamed.a@ironbeam.ae',
+        project_name: 'Al Foah Mall Alain',
+        scope_work_ref: 'IB-037-136',
+        scope_description: 'Total Screed Work 160 Sqm',
+        body_text: `With respect to the subjected agreement We, Rayan Engineering and Contracting LLC-SPC Confirm and Certify that all the works mentioned in the attached scope of work (IB-037-136) Have been Satisfactorily Executed and Completed.\n(Total Screed Work 160 Sqm)\n\nWe wish to take this opportunity to request a work completion certificate.\nIt would also be great if you detailed my accomplishment in this project to make it more powerful and we will be forever grateful for doing this\n\nI accept the above works on behalf of M/s IRON BEAM BUILDING CONTRACTING L.L.C, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.`,
+        acceptance_statement: `I accept the above works on behalf of M/s IRON BEAM BUILDING CONTRACTING L.L.C, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.`,
+        authorized_signatory_client: 'Mr. Mohamed Abuelgasim',
+        authorized_signatory_rayan: 'Eng. Bakhteyar Alam',
+        include_stamp: true,
+        include_signature: true,
+        status: 'Approved'
+      };
+    }
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-wcc-edit">
+        <div class="fin-modal-box" style="max-width:820px; max-height:92vh; overflow-y:auto;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">
+              <span>📜</span>
+              <span>${isEdit ? 'Edit Work Completion Certificate' : 'Create Work Completion Certificate (شهادة اتمام العمل)'}</span>
+            </h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-wcc-edit')">✕</button>
+          </div>
+          <form id="form-wcc-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+            <input type="hidden" id="wcc-id" value="${cert.id}">
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Certificate / Job Ref # *</label>
+                <input type="text" id="wcc-cert-no" class="fin-input" value="${cert.cert_no || cert.reference_no}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Completion Date *</label>
+                <input type="date" id="wcc-date" class="fin-input" value="${cert.date || new Date().toISOString().split('T')[0]}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Execution Time</label>
+                <input type="text" id="wcc-time" class="fin-input" value="${cert.time || '6:27 PM'}">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Client / Subcontractor Name *</label>
+                <input type="text" id="wcc-client-name" class="fin-input" value="${cert.client_name}" required placeholder="M/s IRON BEAM BUILDING CONTRACTING L.L.C">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Main Contractor / Client</label>
+                <input type="text" id="wcc-main-client" class="fin-input" value="${cert.main_client || ''}" placeholder="M/s Emirates Driving Company">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Contact Person</label>
+                <input type="text" id="wcc-contact-person" class="fin-input" value="${cert.contact_person || ''}" placeholder="Mr. Mohamed Abuelgasim">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Contact Email</label>
+                <input type="email" id="wcc-email" class="fin-input" value="${cert.email || ''}" placeholder="mohamed.a@ironbeam.ae">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Sub-contract Agr / PO Ref</label>
+                <input type="text" id="wcc-subcontract-agreement" class="fin-input" value="${cert.subcontract_agreement || ''}" placeholder="IB-037-136">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Project Name &amp; Site *</label>
+                <input type="text" id="wcc-project-name" class="fin-input" value="${cert.project_name}" required placeholder="Al Foah Mall Alain">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Scope Description (Short)</label>
+                <input type="text" id="wcc-scope-desc" class="fin-input" value="${cert.scope_description || ''}" placeholder="Total Screed Work 160 Sqm">
+              </div>
+            </div>
+
+            <div class="fin-form-group">
+              <label class="fin-label">Certificate Body &amp; Handover Declarations *</label>
+              <textarea id="wcc-body-text" class="fin-input" rows="6" style="resize:vertical; font-family:inherit; line-height:1.45;" required>${cert.body_text}</textarea>
+            </div>
+
+            <div class="fin-form-group">
+              <label class="fin-label">Client Acceptance Statement</label>
+              <textarea id="wcc-acceptance" class="fin-input" rows="2" style="resize:vertical; font-family:inherit;">${cert.acceptance_statement || ''}</textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; align-items:center;">
+              <div class="fin-form-group">
+                <label class="fin-label">Client Signatory</label>
+                <input type="text" id="wcc-client-sig" class="fin-input" value="${cert.authorized_signatory_client || cert.contact_person || ''}" placeholder="Mr. Mohamed Abuelgasim">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Rayan Authorized Signatory</label>
+                <input type="text" id="wcc-rayan-sig" class="fin-input" value="${cert.authorized_signatory_rayan || 'Eng. Bakhteyar Alam'}" placeholder="Eng. Bakhteyar Alam">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Approval Status</label>
+                <select id="wcc-status" class="fin-select" style="width:100%;">
+                  <option value="Approved" ${cert.status === 'Approved' ? 'selected' : ''}>Approved &amp; Certified</option>
+                  <option value="Pending" ${cert.status === 'Pending' ? 'selected' : ''}>Pending Review</option>
+                  <option value="Draft" ${cert.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="wcc-inc-stamp" ${cert.include_stamp !== false ? 'checked' : ''}>
+                <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="wcc-inc-sig" ${cert.include_signature !== false ? 'checked' : ''}>
+                <span>Include Authorized Signature</span>
+              </label>
+            </div>
+
+            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-wcc-edit')">Cancel</button>
+              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Certificate</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    this.showCustomModal(modalHtml);
+
+    const form = document.getElementById('form-wcc-edit');
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const updated = {
+          id: document.getElementById('wcc-id').value,
+          cert_no: document.getElementById('wcc-cert-no').value.trim(),
+          reference_no: document.getElementById('wcc-cert-no').value.trim(),
+          date: document.getElementById('wcc-date').value,
+          time: document.getElementById('wcc-time').value.trim(),
+          client_name: document.getElementById('wcc-client-name').value.trim(),
+          main_client: document.getElementById('wcc-main-client').value.trim(),
+          contact_person: document.getElementById('wcc-contact-person').value.trim(),
+          email: document.getElementById('wcc-email').value.trim(),
+          subcontract_agreement: document.getElementById('wcc-subcontract-agreement').value.trim(),
+          po_no: document.getElementById('wcc-subcontract-agreement').value.trim(),
+          project_name: document.getElementById('wcc-project-name').value.trim(),
+          scope_description: document.getElementById('wcc-scope-desc').value.trim(),
+          body_text: document.getElementById('wcc-body-text').value.trim(),
+          acceptance_statement: document.getElementById('wcc-acceptance').value.trim(),
+          authorized_signatory_client: document.getElementById('wcc-client-sig').value.trim(),
+          authorized_signatory_rayan: document.getElementById('wcc-rayan-sig').value.trim(),
+          status: document.getElementById('wcc-status').value,
+          include_stamp: document.getElementById('wcc-inc-stamp').checked,
+          include_signature: document.getElementById('wcc-inc-sig').checked,
+          updated_at: new Date().toISOString()
+        };
+
+        if (!this.db.work_completion_certificates) {
+          this.db.work_completion_certificates = [];
+        }
+
+        const idx = this.db.work_completion_certificates.findIndex(c => c.id === updated.id);
+        if (idx >= 0) {
+          this.db.work_completion_certificates[idx] = { ...this.db.work_completion_certificates[idx], ...updated };
+        } else {
+          this.db.work_completion_certificates.unshift(updated);
+        }
+
+        try {
+          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        } catch (err) {}
+
+        this.closeModal('modal-wcc-edit');
+        this.renderActiveTab();
+        this.showNotification(`Work Completion Certificate ${updated.cert_no} saved successfully.`, 'success');
+
+        await this.syncApi('save_work_completion', { certificate: updated });
+      };
+    }
+  };
+
+  // ==========================================================================
+  // 6. DELIVERY NOTE EDIT MODAL
+  // ==========================================================================
+  proto.openDeliveryNoteModal = function(dnId = null) {
+    const isEdit = Boolean(dnId);
+    let dn = null;
+    if (isEdit) {
+      dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
+    }
+    if (!dn) {
+      const nextNum = (this.db?.delivery_notes || []).length + 1001;
+      dn = {
+        id: `dn-${Date.now()}`,
+        dn_no: `DN-REC-${nextNum}`,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        po_reference: 'PODSUB-2026/0810',
+        client_name: 'M/S TOP ROCK INTERIORS LLC',
+        project_name: 'The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work',
+        site_location: 'Alrowaiyah, Dubai - Sector 4 Gate 2',
+        vehicle_no: 'DXB-54219',
+        driver_name: 'Abdul Rashid',
+        driver_contact: '+971 55 819 4022',
+        dispatch_from: 'Rayan Central Fabrication & Storage Yard - Mussafah M-36',
+        receiver_name: 'Site Supervisor Tariq',
+        receiver_eid: '784-1988-4459201-1',
+        status: 'Delivered',
+        notes: 'All materials inspected at dispatch and unloaded in verified sound structural condition.',
+        items: [
+          { srl: 1, description: 'Gypsum Board 12.5mm Moisture Resistant Standard', unit: 'Sheets', qty_ordered: 250, qty_delivered: 250, remarks: 'Prime Quality' },
+          { srl: 2, description: 'Galvanized Steel Studs 70mm x 3.0m Heavy Duty', unit: 'Pcs', qty_ordered: 180, qty_delivered: 180, remarks: 'Verified Gauge' },
+          { srl: 3, description: 'Acoustic Insulation Mineral Wool 50mm 48kg/m3', unit: 'Rolls', qty_ordered: 45, qty_delivered: 45, remarks: 'Standard Fire Rated' }
+        ],
+        dispatched_by: 'Logistics Supervisor Rashid Khan',
+        include_stamp: true,
+        include_signature: true
+      };
+    }
+
+    const items = dn.items && dn.items.length ? dn.items : [
+      { srl: 1, description: 'Materials / Subcontracting Procurement Items', unit: 'LSUM', qty_ordered: 1, qty_delivered: 1, remarks: 'Good Condition' }
+    ];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-dn-edit">
+        <div class="fin-modal-box" style="max-width:880px; max-height:92vh; overflow-y:auto;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">
+              <span>🚚</span>
+              <span>${isEdit ? 'Edit Delivery Note' : 'Create Material Delivery Note (إذن تسليم مواد)'}</span>
+            </h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-dn-edit')">✕</button>
+          </div>
+          <form id="form-dn-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+            <input type="hidden" id="dn-id" value="${dn.id}">
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Delivery Note # *</label>
+                <input type="text" id="dn-number" class="fin-input" value="${dn.dn_no}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Dispatch Date *</label>
+                <input type="date" id="dn-date" class="fin-input" value="${dn.date}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">PO / LPO Reference</label>
+                <input type="text" id="dn-po-ref" class="fin-input" value="${dn.po_reference || ''}" placeholder="PODSUB-2026/0810">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Consignee / Client Name *</label>
+                <input type="text" id="dn-client-name" class="fin-input" value="${dn.client_name}" required placeholder="M/S TOP ROCK INTERIORS LLC">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Project Name *</label>
+                <input type="text" id="dn-project-name" class="fin-input" value="${dn.project_name}" required placeholder="The New Dubai Police Academy">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Dispatch Yard / Storage Origin</label>
+                <input type="text" id="dn-dispatch-from" class="fin-input" value="${dn.dispatch_from || ''}" placeholder="Mussafah M-36 Yard">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Site Delivery Gate / Location *</label>
+                <input type="text" id="dn-site-location" class="fin-input" value="${dn.site_location || ''}" required placeholder="Alrowaiyah, Dubai Gate 2">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Vehicle / Truck Plate #</label>
+                <input type="text" id="dn-vehicle-no" class="fin-input" value="${dn.vehicle_no || ''}" placeholder="AUH-49210">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Driver Name</label>
+                <input type="text" id="dn-driver-name" class="fin-input" value="${dn.driver_name || ''}" placeholder="Abdul Rashid">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Driver Mobile</label>
+                <input type="text" id="dn-driver-contact" class="fin-input" value="${dn.driver_contact || ''}" placeholder="+971 55 819 4022">
+              </div>
+            </div>
+
+            <!-- Material Items Dynamic Table -->
+            <div style="margin-top:0.5rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                <label class="fin-label" style="font-size:0.9rem; font-weight:800; color:#38bdf8;">📦 Delivered Material Items</label>
+                <button type="button" class="fin-btn-quick" style="padding:4px 10px; font-size:0.75rem;" onclick="window.finApp.addDeliveryItemRow()">+ Add Material Item</button>
+              </div>
+              <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.8rem;" id="table-dn-items">
+                  <thead>
+                    <tr style="background:rgba(255,255,255,0.06); text-align:left;">
+                      <th style="padding:6px 8px; width:45%;">Material Description / Specification</th>
+                      <th style="padding:6px 8px; width:12%;">Unit</th>
+                      <th style="padding:6px 8px; width:12%;">Qty Ordered</th>
+                      <th style="padding:6px 8px; width:12%;">Qty Delivered</th>
+                      <th style="padding:6px 8px; width:15%;">Condition / Remarks</th>
+                      <th style="padding:6px 8px; width:4%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="dn-items-body">
+                    ${items.map((item, idx) => `
+                      <tr class="dn-item-row" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <td style="padding:4px 6px;">
+                          <input type="text" class="fin-input dn-item-desc" value="${item.description || ''}" placeholder="Material description" required style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px;">
+                          <input type="text" class="fin-input dn-item-unit" value="${item.unit || 'Nos'}" placeholder="Unit (Sqm, Sheets, Pcs)" style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px;">
+                          <input type="number" step="any" class="fin-input dn-item-ordered" value="${item.qty_ordered || 1}" style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px;">
+                          <input type="number" step="any" class="fin-input dn-item-delivered" value="${item.qty_delivered || 1}" style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px;">
+                          <input type="text" class="fin-input dn-item-remarks" value="${item.remarks || 'Sound Condition'}" style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px; text-align:center;">
+                          <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeDeliveryItemRow(this)" title="Remove Item">✕</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Receiver Name &amp; Designation</label>
+                <input type="text" id="dn-receiver-name" class="fin-input" value="${dn.receiver_name || ''}" placeholder="Site Supervisor Tariq">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Receiver Emirates ID</label>
+                <input type="text" id="dn-receiver-eid" class="fin-input" value="${dn.receiver_eid || ''}" placeholder="784-1988-4459201-1">
+              </div>
+            </div>
+
+            <div class="fin-form-group">
+              <label class="fin-label">Dispatched By &amp; Verification Remarks</label>
+              <input type="text" id="dn-dispatched-by" class="fin-input" value="${dn.dispatched_by || 'Logistics Supervisor Rashid Khan'}">
+            </div>
+
+            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="dn-inc-stamp" ${dn.include_stamp !== false ? 'checked' : ''}>
+                <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="dn-inc-sig" ${dn.include_signature !== false ? 'checked' : ''}>
+                <span>Include Authorized Signature</span>
+              </label>
+            </div>
+
+            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-dn-edit')">Cancel</button>
+              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Delivery Note</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    this.showCustomModal(modalHtml);
+
+    const form = document.getElementById('form-dn-edit');
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const rows = Array.from(document.querySelectorAll('#dn-items-body .dn-item-row'));
+        const items = rows.map((r, i) => ({
+          srl: i + 1,
+          description: r.querySelector('.dn-item-desc')?.value.trim() || '',
+          unit: r.querySelector('.dn-item-unit')?.value.trim() || 'Nos',
+          qty_ordered: parseFloat(r.querySelector('.dn-item-ordered')?.value) || 1,
+          qty_delivered: parseFloat(r.querySelector('.dn-item-delivered')?.value) || 1,
+          remarks: r.querySelector('.dn-item-remarks')?.value.trim() || 'Sound Condition'
+        })).filter(it => it.description);
+
+        const updated = {
+          id: document.getElementById('dn-id').value,
+          dn_no: document.getElementById('dn-number').value.trim(),
+          reference_no: document.getElementById('dn-number').value.trim(),
+          date: document.getElementById('dn-date').value,
+          po_reference: document.getElementById('dn-po-ref').value.trim(),
+          client_name: document.getElementById('dn-client-name').value.trim(),
+          project_name: document.getElementById('dn-project-name').value.trim(),
+          dispatch_from: document.getElementById('dn-dispatch-from').value.trim(),
+          site_location: document.getElementById('dn-site-location').value.trim(),
+          vehicle_no: document.getElementById('dn-vehicle-no').value.trim(),
+          driver_name: document.getElementById('dn-driver-name').value.trim(),
+          driver_contact: document.getElementById('dn-driver-contact').value.trim(),
+          items: items,
+          receiver_name: document.getElementById('dn-receiver-name').value.trim(),
+          receiver_eid: document.getElementById('dn-receiver-eid').value.trim(),
+          dispatched_by: document.getElementById('dn-dispatched-by').value.trim(),
+          include_stamp: document.getElementById('dn-inc-stamp').checked,
+          include_signature: document.getElementById('dn-inc-sig').checked,
+          status: 'Delivered',
+          updated_at: new Date().toISOString()
+        };
+
+        if (!this.db.delivery_notes) {
+          this.db.delivery_notes = [];
+        }
+
+        const idx = this.db.delivery_notes.findIndex(n => n.id === updated.id);
+        if (idx >= 0) {
+          this.db.delivery_notes[idx] = { ...this.db.delivery_notes[idx], ...updated };
+        } else {
+          this.db.delivery_notes.unshift(updated);
+        }
+
+        try {
+          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        } catch (err) {}
+
+        this.closeModal('modal-dn-edit');
+        this.renderActiveTab();
+        this.showNotification(`Delivery Note ${updated.dn_no} saved successfully.`, 'success');
+
+        await this.syncApi('save_delivery_note', { delivery_note: updated });
+      };
+    }
+  };
+
+  proto.addDeliveryItemRow = function() {
+    const tbody = document.getElementById('dn-items-body');
+    if (!tbody) return;
+    const tr = document.createElement('tr');
+    tr.className = 'dn-item-row';
+    tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+    tr.innerHTML = `
+      <td style="padding:4px 6px;">
+        <input type="text" class="fin-input dn-item-desc" value="" placeholder="Material description" required style="width:100%;">
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="text" class="fin-input dn-item-unit" value="Nos" placeholder="Unit" style="width:100%;">
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="number" step="any" class="fin-input dn-item-ordered" value="1" style="width:100%;">
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="number" step="any" class="fin-input dn-item-delivered" value="1" style="width:100%;">
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="text" class="fin-input dn-item-remarks" value="Sound Condition" style="width:100%;">
+      </td>
+      <td style="padding:4px 6px; text-align:center;">
+        <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeDeliveryItemRow(this)" title="Remove Item">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  };
+
+  proto.removeDeliveryItemRow = function(btn) {
+    const row = btn.closest('.dn-item-row');
+    if (row) row.remove();
+  };
+
+  // ==========================================================================
+  // 7. SUBCONTRACTOR UNDERTAKING LETTER EDIT MODAL
+  // ==========================================================================
+  proto.openUndertakingLetterModal = function(letterId = null) {
+    const isEdit = Boolean(letterId);
+    let ult = null;
+    if (isEdit) {
+      ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    }
+    if (!ult) {
+      const nextNum = (this.db?.undertaking_letters || []).length + 11006;
+      ult = {
+        id: `ult-${Date.now()}`,
+        ref_no: `REC-RG-ULT-${nextNum}`,
+        date: new Date().toISOString().split('T')[0],
+        attention: 'Project Manager',
+        attention_company: 'M/S TOP ROCK INTERIORS LLC',
+        client_name: 'M/S TOP ROCK INTERIORS LLC',
+        project_name: 'The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work',
+        activity_type: 'Interiors Work',
+        subject: 'Subcontractor Undertaking letter M/S RAYAN ENGINEERING AND CONTRACTING L.L.C – S.P.C,',
+        body_text: `With reference to the above-mentioned project/ subject we hereby confirm that we have subcontractor agreement with M/S TOP ROCK INTERIORS LLC,\n\nUpon terms and conditions in line with our contract being deputed for (Interiors Work) activities in your project M/S RAYAN ENGINEERING AND CONTRACTING L.L.C – S.P.C,,, will be responsible for any precautionary measures as far as safety is concerned and also agree that we will follow M/S TOP ROCK INTERIORS LLC \`s safety policy, M/S TOP ROCK INTERIORS LLC, HSE Plan and site safety rules based on DM/Trakhees regulations and Workmen Compensation Policy against all sums payable under the UAE Federal Decree - Law No. 33 of 2021, Article 37, also we agree that in case of any accidents or incidents occurred to any of the above company\`s workers or our employees we will take full responsibility of the person\`s treatments and any consequences like penalty or any legal complications related to the accident/incident also we agree that we can terminate above companies at any time if the violate HSE regulations set by the authorities.`,
+        responsible_person: 'Eng. Bakhteyar Alam',
+        designation: 'Construction Manager',
+        include_stamp: true,
+        include_signature: true,
+        status: 'Active',
+        employees: [
+          { srl: 1, name: 'BHAGWAN DEEN MOLEY', emirates_id: '784-1983-8618357-2', nationality: 'Indian', profession: 'RG/JUMA ALROKN' },
+          { srl: 2, name: 'CHAETU PRASAD YADAV MOLE YADAV', emirates_id: '784-1980-0879530-8', nationality: 'Indian', profession: 'RG/JUMA ALROKN' },
+          { srl: 3, name: 'SHAHBAN ALI AKBAR ALI', emirates_id: '784-2003-1266689-2', nationality: 'Indian', profession: 'RG/JUMA ALROKN' },
+          { srl: 4, name: 'ELIUS MOROL MD ALAM MOROL', emirates_id: '784-1999-8851573-2', nationality: 'Bangladesh', profession: 'RG/JUMA ALROKN' },
+          { srl: 5, name: 'ASHOK KUMAR BABU LAL', emirates_id: '784-1982-6097953-3', nationality: 'Indian', profession: 'RG/JUMA ALROKN' },
+          { srl: 6, name: 'OM PRAKASH KANHAIYA LAL', emirates_id: '784-1998-2546929-1', nationality: 'Indian', profession: 'RG/JUMA ALROKN' },
+          { srl: 7, name: 'WAJID ALI SOLAHU', emirates_id: '784-1991-5410265-3', nationality: 'Indian', profession: 'RG/JUMA ALROKN' },
+          { srl: 8, name: 'BIRENDRA YADAV', emirates_id: '784-2001-5776745-8', nationality: 'Nepal', profession: 'RG/TRUST WAY' },
+          { srl: 9, name: 'FOOL CHANDRA SALIKRAM', emirates_id: '784-1998-5293711-1', nationality: 'Indian', profession: 'RG/TRUST WAY' }
+        ]
+      };
+    }
+
+    const employees = ult.employees && ult.employees.length ? ult.employees : [
+      { srl: 1, name: 'BHAGWAN DEEN MOLEY', emirates_id: '784-1983-8618357-2', nationality: 'Indian', profession: 'RG/JUMA ALROKN' }
+    ];
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-ult-edit">
+        <div class="fin-modal-box" style="max-width:880px; max-height:92vh; overflow-y:auto;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">
+              <span>🛡️</span>
+              <span>${isEdit ? 'Edit Subcontractor Undertaking Letter' : 'Create Subcontractor Undertaking Letter (خطاب تعهد)'}</span>
+            </h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-ult-edit')">✕</button>
+          </div>
+          <form id="form-ult-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+            <input type="hidden" id="ult-id" value="${ult.id}">
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Reference Number *</label>
+                <input type="text" id="ult-ref-no" class="fin-input" value="${ult.ref_no}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Letter Date *</label>
+                <input type="date" id="ult-date" class="fin-input" value="${ult.date}" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Attention (Contact / Title)</label>
+                <input type="text" id="ult-attention" class="fin-input" value="${ult.attention || 'Project Manager'}" placeholder="Project Manager">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Contractor / Client Company *</label>
+                <input type="text" id="ult-client-name" class="fin-input" value="${ult.client_name || ult.attention_company}" required placeholder="M/S TOP ROCK INTERIORS LLC">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Project Name &amp; Fit-Out Scope *</label>
+                <input type="text" id="ult-project-name" class="fin-input" value="${ult.project_name}" required placeholder="The New Dubai Police Academy @ Alrowaiyah">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Activity Type (in parentheses)</label>
+                <input type="text" id="ult-activity-type" class="fin-input" value="${ult.activity_type || 'Interiors Work'}" placeholder="Interiors Work">
+              </div>
+            </div>
+
+            <div class="fin-form-group">
+              <label class="fin-label">Subject Line *</label>
+              <input type="text" id="ult-subject" class="fin-input" value="${ult.subject}" required>
+            </div>
+
+            <div class="fin-form-group">
+              <label class="fin-label">Undertaking Legal Declarations (UAE Federal Decree 33 of 2021) *</label>
+              <textarea id="ult-body-text" class="fin-input" rows="7" style="resize:vertical; font-family:inherit; line-height:1.45;" required>${ult.body_text}</textarea>
+            </div>
+
+            <!-- Employee List Dynamic Table -->
+            <div style="margin-top:0.5rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                <label class="fin-label" style="font-size:0.9rem; font-weight:800; color:#38bdf8;">👷 Deputed Workforce / Employee List</label>
+                <button type="button" class="fin-btn-quick" style="padding:4px 10px; font-size:0.75rem;" onclick="window.finApp.addUndertakingEmployeeRow()">+ Add Deputed Worker</button>
+              </div>
+              <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.8rem;" id="table-ult-employees">
+                  <thead>
+                    <tr style="background:rgba(255,255,255,0.06); text-align:left;">
+                      <th style="padding:6px 8px; width:30%;">Worker Full Name</th>
+                      <th style="padding:6px 8px; width:26%;">Emirates ID</th>
+                      <th style="padding:6px 8px; width:18%;">Nationality</th>
+                      <th style="padding:6px 8px; width:22%;">Profession / Trade</th>
+                      <th style="padding:6px 8px; width:4%;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="ult-employees-body">
+                    ${employees.map((emp, idx) => `
+                      <tr class="ult-emp-row" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <td style="padding:4px 6px;">
+                          <input type="text" class="fin-input ult-emp-name" value="${emp.name || ''}" placeholder="Full Name" required style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px;">
+                          <input type="text" class="fin-input ult-emp-eid" value="${emp.emirates_id || ''}" placeholder="784-XXXX-XXXXXXX-X" required style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px;">
+                          <input type="text" class="fin-input ult-emp-nat" value="${emp.nationality || 'Indian'}" placeholder="Nationality" style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px;">
+                          <input type="text" class="fin-input ult-emp-prof" value="${emp.profession || 'RG/JUMA ALROKN'}" placeholder="Profession" style="width:100%;">
+                        </td>
+                        <td style="padding:4px 6px; text-align:center;">
+                          <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeUndertakingEmployeeRow(this)" title="Remove Worker">✕</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Responsible Person (Signatory) *</label>
+                <input type="text" id="ult-resp-person" class="fin-input" value="${ult.responsible_person || 'Eng. Bakhteyar Alam'}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Designation</label>
+                <input type="text" id="ult-designation" class="fin-input" value="${ult.designation || 'Construction Manager'}">
+              </div>
+            </div>
+
+            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="ult-inc-stamp" ${ult.include_stamp !== false ? 'checked' : ''}>
+                <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="ult-inc-sig" ${ult.include_signature !== false ? 'checked' : ''}>
+                <span>Include Construction Manager Signature</span>
+              </label>
+            </div>
+
+            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-ult-edit')">Cancel</button>
+              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Undertaking Letter</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    this.showCustomModal(modalHtml);
+
+    const form = document.getElementById('form-ult-edit');
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const rows = Array.from(document.querySelectorAll('#ult-employees-body .ult-emp-row'));
+        const employees = rows.map((r, i) => ({
+          srl: i + 1,
+          name: r.querySelector('.ult-emp-name')?.value.trim() || '',
+          emirates_id: r.querySelector('.ult-emp-eid')?.value.trim() || '',
+          nationality: r.querySelector('.ult-emp-nat')?.value.trim() || 'Indian',
+          profession: r.querySelector('.ult-emp-prof')?.value.trim() || 'Technician'
+        })).filter(emp => emp.name);
+
+        const updated = {
+          id: document.getElementById('ult-id').value,
+          ref_no: document.getElementById('ult-ref-no').value.trim(),
+          reference_no: document.getElementById('ult-ref-no').value.trim(),
+          date: document.getElementById('ult-date').value,
+          attention: document.getElementById('ult-attention').value.trim(),
+          attention_company: document.getElementById('ult-client-name').value.trim(),
+          client_name: document.getElementById('ult-client-name').value.trim(),
+          project_name: document.getElementById('ult-project-name').value.trim(),
+          activity_type: document.getElementById('ult-activity-type').value.trim(),
+          subject: document.getElementById('ult-subject').value.trim(),
+          body_text: document.getElementById('ult-body-text').value.trim(),
+          responsible_person: document.getElementById('ult-resp-person').value.trim(),
+          designation: document.getElementById('ult-designation').value.trim(),
+          include_stamp: document.getElementById('ult-inc-stamp').checked,
+          include_signature: document.getElementById('ult-inc-sig').checked,
+          status: 'Active',
+          employees: employees,
+          updated_at: new Date().toISOString()
+        };
+
+        if (!this.db.undertaking_letters) {
+          this.db.undertaking_letters = [];
+        }
+
+        const idx = this.db.undertaking_letters.findIndex(l => l.id === updated.id);
+        if (idx >= 0) {
+          this.db.undertaking_letters[idx] = { ...this.db.undertaking_letters[idx], ...updated };
+        } else {
+          this.db.undertaking_letters.unshift(updated);
+        }
+
+        try {
+          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        } catch (err) {}
+
+        this.closeModal('modal-ult-edit');
+        this.renderActiveTab();
+        this.showNotification(`Undertaking Letter ${updated.ref_no} saved successfully.`, 'success');
+
+        await this.syncApi('save_undertaking_letter', { undertaking_letter: updated });
+      };
+    }
+  };
+
+  proto.addUndertakingEmployeeRow = function() {
+    const tbody = document.getElementById('ult-employees-body');
+    if (!tbody) return;
+    const tr = document.createElement('tr');
+    tr.className = 'ult-emp-row';
+    tr.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+    tr.innerHTML = `
+      <td style="padding:4px 6px;">
+        <input type="text" class="fin-input ult-emp-name" value="" placeholder="Full Name" required style="width:100%;">
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="text" class="fin-input ult-emp-eid" value="784-" placeholder="784-XXXX-XXXXXXX-X" required style="width:100%;">
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="text" class="fin-input ult-emp-nat" value="Indian" placeholder="Nationality" style="width:100%;">
+      </td>
+      <td style="padding:4px 6px;">
+        <input type="text" class="fin-input ult-emp-prof" value="RG/JUMA ALROKN" placeholder="Profession" style="width:100%;">
+      </td>
+      <td style="padding:4px 6px; text-align:center;">
+        <button type="button" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" onclick="window.finApp.removeUndertakingEmployeeRow(this)" title="Remove Worker">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  };
+
+  proto.removeUndertakingEmployeeRow = function(btn) {
+    const row = btn.closest('.ult-emp-row');
+    if (row) row.remove();
+  };
+
+  // ==========================================================================
+  // 8. CORPORATE LETTER EDIT MODAL (LATTER EDITABLE)
+  // ==========================================================================
+  proto.openCustomLetterModal = function(letterId = null) {
+    const isEdit = Boolean(letterId);
+    let ltr = null;
+    if (isEdit) {
+      ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    }
+    if (!ltr) {
+      const nextNum = (this.db?.custom_letters || []).length + 101;
+      ltr = {
+        id: `let-${Date.now()}`,
+        ref_no: `REC-LTR-2026-${nextNum}`,
+        reference_no: `REC-LTR-2026-${nextNum}`,
+        date: new Date().toISOString().split('T')[0],
+        attention: 'The Project Director',
+        recipient_name: 'Eng. Tariq Mansoor',
+        recipient_company: 'M/S BUILDARA GENERAL CONTRACTING - L.L.C',
+        address: 'Sector E-25, Abu Dhabi, United Arab Emirates',
+        project_name: 'Commercial & Residential Tower Fit-Out - Sector E-25',
+        subject: 'Mobilization Notice & Safety Compliance Certification for Tower Fit-Out Package',
+        body_text: `Dear Sir,\n\nWe are pleased to inform you that M/S RAYAN ENGINEERING AND CONTRACTING L.L.C – S.P.C has completed all pre-mobilization formalities, statutory HSE approvals, and workforce inductions for the Commercial & Residential Tower Fit-Out project at Sector E-25, Abu Dhabi.\n\nOur specialized site MEP & civil installation teams along with necessary equipment, certified scaffolding, and approved safety gears have been deployed on site effective from today. All works will strictly adhere to the approved project specifications, DM/Civil Defense regulations, and quality standards.\n\nWe assure you of our highest standard of workmanship and timely project milestone delivery. Kindly acknowledge receipt of this letter.`,
+        signatory_name: 'Eng. Bakhteyar Alam',
+        designation: 'Construction Manager',
+        include_stamp: true,
+        include_signature: true,
+        status: 'Issued'
+      };
+    }
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-ltr-edit">
+        <div class="fin-modal-box" style="max-width:800px; max-height:92vh; overflow-y:auto;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">
+              <span>✉️</span>
+              <span>${isEdit ? 'Edit Official Letter' : 'Compose Corporate Letter (Latter Editable)'}</span>
+            </h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-ltr-edit')">✕</button>
+          </div>
+          <form id="form-ltr-edit" class="fin-modal-body" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.2rem;">
+            <input type="hidden" id="ltr-id" value="${ltr.id}">
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Reference Number *</label>
+                <input type="text" id="ltr-ref-no" class="fin-input" value="${ltr.ref_no}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Letter Date *</label>
+                <input type="date" id="ltr-date" class="fin-input" value="${ltr.date}" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Attention / Contact Name</label>
+                <input type="text" id="ltr-attention" class="fin-input" value="${ltr.attention || ''}" placeholder="The Project Director / General Manager">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Recipient Company *</label>
+                <input type="text" id="ltr-recipient-company" class="fin-input" value="${ltr.recipient_company}" required placeholder="Company / Authority Name">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Recipient Address / City</label>
+                <input type="text" id="ltr-address" class="fin-input" value="${ltr.address || ''}" placeholder="Abu Dhabi, United Arab Emirates">
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Project / Contract Reference</label>
+                <input type="text" id="ltr-project-name" class="fin-input" value="${ltr.project_name || ''}" placeholder="Project Name / Tender #">
+              </div>
+            </div>
+
+            <div class="fin-form-group">
+              <label class="fin-label">Subject Line *</label>
+              <input type="text" id="ltr-subject" class="fin-input" value="${ltr.subject}" required placeholder="Subject: - ...">
+            </div>
+
+            <div class="fin-form-group">
+              <label class="fin-label">Letter Body Text (Fully Editable Paragraphs) *</label>
+              <textarea id="ltr-body-text" class="fin-input" rows="8" style="resize:vertical; font-family:inherit; line-height:1.5;" required>${ltr.body_text}</textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-group">
+                <label class="fin-label">Signatory Name *</label>
+                <input type="text" id="ltr-signatory-name" class="fin-input" value="${ltr.signatory_name || 'Eng. Bakhteyar Alam'}" required>
+              </div>
+              <div class="fin-form-group">
+                <label class="fin-label">Designation</label>
+                <input type="text" id="ltr-designation" class="fin-input" value="${ltr.designation || 'Construction Manager'}">
+              </div>
+            </div>
+
+            <div style="display:flex; gap:1.5rem; align-items:center; background:rgba(255,255,255,0.03); padding:0.75rem 1rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="ltr-inc-stamp" ${ltr.include_stamp !== false ? 'checked' : ''}>
+                <span>Include Official Company Stamp (Blue Rayan Round Stamp)</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#f8fafc; cursor:pointer;">
+                <input type="checkbox" id="ltr-inc-sig" ${ltr.include_signature !== false ? 'checked' : ''}>
+                <span>Include Authorized Signature</span>
+              </label>
+            </div>
+
+            <div class="fin-modal-footer" style="padding:1rem 0 0 0; display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.1);">
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-ltr-edit')">Cancel</button>
+              <button type="submit" class="fin-btn-quick primary">💾 Save &amp; Update Letter</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    this.showCustomModal(modalHtml);
+
+    const form = document.getElementById('form-ltr-edit');
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const updated = {
+          id: document.getElementById('ltr-id').value,
+          ref_no: document.getElementById('ltr-ref-no').value.trim(),
+          reference_no: document.getElementById('ltr-ref-no').value.trim(),
+          date: document.getElementById('ltr-date').value,
+          attention: document.getElementById('ltr-attention').value.trim(),
+          recipient_company: document.getElementById('ltr-recipient-company').value.trim(),
+          address: document.getElementById('ltr-address').value.trim(),
+          project_name: document.getElementById('ltr-project-name').value.trim(),
+          subject: document.getElementById('ltr-subject').value.trim(),
+          body_text: document.getElementById('ltr-body-text').value.trim(),
+          signatory_name: document.getElementById('ltr-signatory-name').value.trim(),
+          designation: document.getElementById('ltr-designation').value.trim(),
+          include_stamp: document.getElementById('ltr-inc-stamp').checked,
+          include_signature: document.getElementById('ltr-inc-sig').checked,
+          status: 'Issued',
+          updated_at: new Date().toISOString()
+        };
+
+        if (!this.db.custom_letters) {
+          this.db.custom_letters = [];
+        }
+
+        const idx = this.db.custom_letters.findIndex(l => l.id === updated.id);
+        if (idx >= 0) {
+          this.db.custom_letters[idx] = { ...this.db.custom_letters[idx], ...updated };
+        } else {
+          this.db.custom_letters.unshift(updated);
+        }
+
+        try {
+          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        } catch (err) {}
+
+        this.closeModal('modal-ltr-edit');
+        this.renderActiveTab();
+        this.showNotification(`Letter ${updated.ref_no} saved successfully.`, 'success');
+
+        await this.syncApi('save_custom_letter', { custom_letter: updated });
+      };
+    }
+  };
+
+  // ==========================================================================
+  // 9. PRINT & VIEW MODALS (MATCHING EXACT UPLOADED DESIGNS)
+  // ==========================================================================
+
+  // --- Work Completion Certificate Print Modal ---
+  proto.openWorkCompletionPrintModal = function(certId, isVerifiedScan = false) {
+    let cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    if (!cert) {
+      cert = (this.db?.work_completion_certificates || [])[0] || {};
+    }
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📜</span>
+              <span>Work Completion Certificate — ${cert.cert_no || 'REC-JOB COM-11020'}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openWorkCompletionPrintModal('${cert.id}')">Completion Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDeliveryNotePrintModal()">Delivery Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadWorkCompletionDocument('${cert.id}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openWorkCompletionModal('${cert.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+              ✏️ Edit Certificate
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+
+            <!-- Center Watermark -->
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
+
+            <!-- Main Document Layer -->
+            <div style="position:relative; z-index:1;">
+
+              <!-- Top Cyan Bar -->
+              <div style="background:#00a3c4; height:18px; margin:-8mm -12mm 15px -12mm; padding:2px 12px; display:flex; align-items:center;">
+                <span style="color:#ffffff; font-size:0.68rem; font-weight:800; letter-spacing:0.04em;">RAYAN ENGINEERING</span>
+              </div>
+
+              <!-- Header with Logo and Bilingual Title -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <div>
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
+                </div>
+                <div style="text-align:center; flex:1;">
+                  <div style="font-family:'Amiri', serif; font-size:1.45rem; font-weight:700; color:#111827; line-height:1.2;">
+                    شهادة اتمام العمل
+                  </div>
+                  <div style="font-family:'Outfit', sans-serif; font-size:1.2rem; font-weight:800; color:#111827; letter-spacing:0.04em; text-transform:uppercase;">
+                    WORK COMPLETION CERTIFICATE
+                  </div>
+                </div>
+                <div style="width:48px;"></div>
+              </div>
+
+              <!-- Metadata & Reference Table -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; border-top:1px solid #111827; border-bottom:1px solid #111827; padding:6px 0;">
+                <div style="width:45%;">
+                  <div style="font-weight:700; color:#111827; font-size:0.84rem;">To.</div>
+                  <div style="font-weight:800; color:#111827; font-size:0.88rem;">${cert.contact_person || cert.to_name || 'Mr. Mohamed Abuelgasim'}</div>
+                  <div style="font-weight:700; color:#374151; font-size:0.82rem;">${cert.client_name || cert.to_company || 'M/s IRON BEAM BUILDING CONTRACTING L.L.C'}</div>
+                </div>
+
+                <div style="width:55%;">
+                  <table style="width:100%; font-size:0.78rem; border-collapse:collapse; text-align:right;">
+                    <tr>
+                      <td style="font-weight:700; text-align:left; color:#111827; width:22%;">Date :</td>
+                      <td style="font-weight:800; color:#111827; text-align:left; width:30%;">${this.formatDate(cert.date)}</td>
+                      <td style="font-weight:700; color:#111827; text-align:left; width:25%;">${cert.time || '6:27 PM'}</td>
+                      <td style="font-family:'Amiri', serif; font-weight:700; color:#111827; width:23%; font-size:0.82rem;">التاريخ:</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:700; text-align:left; color:#111827;">Reference number :</td>
+                      <td colspan="2" style="font-weight:800; color:#dc2626; text-align:left;">${cert.cert_no || cert.reference_no}</td>
+                      <td style="font-family:'Amiri', serif; font-weight:700; color:#111827; font-size:0.82rem;">الرقم المرجعي</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:700; text-align:left; color:#111827; line-height:1.2;">Sub-contract<br>Agreement</td>
+                      <td colspan="2" style="font-weight:800; color:#111827; text-align:left;">${cert.subcontract_agreement || cert.po_no || 'IB-037-136'}</td>
+                      <td style="font-family:'Amiri', serif; font-weight:700; color:#111827; font-size:0.82rem;">طلب شراء محلي</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Project Information Bilingual Box -->
+              <div style="border:1.5px solid #111827; padding:8px 12px; margin-bottom:1.2rem; background:#fbfcfe;">
+                <div style="font-size:0.84rem; font-weight:800; color:#111827; text-decoration:underline; margin-bottom:6px;">
+                  Project Information
+                </div>
+                <table style="width:100%; font-size:0.80rem; border-collapse:collapse;">
+                  <tr>
+                    <td style="width:18%; font-weight:700; color:#111827; padding:2px 0;">Project #</td>
+                    <td style="font-weight:700; color:#111827; padding:2px 0;">${cert.project_name || 'Al Foah Mall Alain'}</td>
+                    <td style="width:20%; text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">مشروع#</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:700; color:#111827; padding:2px 0;">Clint Name:</td>
+                    <td style="font-weight:800; color:#111827; padding:2px 0;">${cert.client_name || 'M/s IRON BEAM BUILDING CONTRACTING L.L.C'}</td>
+                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">اسم كلينت</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:700; color:#111827; padding:2px 0;">Main Clint:</td>
+                    <td style="font-weight:700; color:#111827; padding:2px 0;">${cert.main_client || 'M/s Emirates Driving Company'}</td>
+                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">كلينت الرئيسي</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:700; color:#111827; padding:2px 0;">Contact Person:</td>
+                    <td style="font-weight:700; color:#111827; padding:2px 0;">${cert.contact_person || 'Mr. Mohamed Abuelgasim'}</td>
+                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">اتصال شخص</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:700; color:#111827; padding:2px 0;">Email :</td>
+                    <td style="font-weight:700; color:#0284c7; padding:2px 0;">${cert.email || 'mohamed.a@ironbeam.ae'}</td>
+                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">بريد إلكتروني</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Dear Sir & Certification Declarations -->
+              <div style="font-size:0.84rem; line-height:1.55; color:#111827; margin-bottom:1.2rem;">
+                <div style="font-weight:700; margin-bottom:8px;">Dear Sir,</div>
+                <div style="white-space:pre-line; margin-bottom:10px;">
+                  ${cert.body_text}
+                </div>
+              </div>
+
+              <!-- Verification Notice -->
+              <div style="border-top:1px solid #111827; border-bottom:1px solid #111827; padding:4px 0; margin-bottom:1rem; font-size:0.76rem; font-weight:700; color:#111827;">
+                Please keep a copy of this Work Completion Certificate for your records
+              </div>
+
+              <!-- Best Wishes & Contacts -->
+              <div style="font-size:0.78rem; line-height:1.45; color:#374151; margin-bottom:1.5rem;">
+                <div style="color:#111827;">Best wishes</div>
+                <div style="font-weight:800; color:#111827;">RAYAN Group Team</div>
+                <div>Hotline : 025654497</div>
+                <div><a href="mailto:cc.info@rayan-group.com" style="color:#0284c7; text-decoration:none;">cc.info@rayan-group.com</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              </div>
+
+              <!-- Two Signature Boxes Side-by-Side (Matching Uploaded PDF) -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; border:1.5px solid #111827; min-height:130px; margin-bottom:1.5rem;">
+                <!-- Left: Client Signatory -->
+                <div style="border-right:1.5px solid #111827; padding:10px 12px; display:flex; flex-direction:column; justify-content:space-between;">
+                  <div>
+                    <div style="font-size:0.80rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                      ${cert.client_name || 'M/s IRON BEAM BUILDING CONTRACTING L.L.C'}
+                    </div>
+                    <div style="font-size:0.78rem; font-weight:700; color:#374151;">
+                      Authorized Signatory:
+                    </div>
+                  </div>
+                  <div style="min-height:50px; display:flex; align-items:flex-end; color:#9ca3af; font-size:0.72rem; font-style:italic;">
+                    Signature &amp; Stamp
+                  </div>
+                </div>
+
+                <!-- Right: Rayan Engineering Signatory with Stamp + Signature -->
+                <div style="padding:10px 12px; display:flex; flex-direction:column; justify-content:space-between; position:relative;">
+                  <div>
+                    <div style="font-size:0.80rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                      RAYAN ENGINEERING AND CONTRACTING LLC-SPC
+                    </div>
+                    <div style="font-size:0.78rem; font-weight:700; color:#374151;">
+                      Authorized Signatory:
+                    </div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:15px; position:relative; min-height:60px; margin-top:5px;">
+                    ${cert.include_signature !== false ? `
+                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block; filter:contrast(1.2);">
+                    ` : ''}
+                    ${cert.include_stamp !== false ? `
+                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:75px; width:auto; display:block; filter:contrast(1.15);">
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Solid Cyan Footer Strip -->
+              <div style="background:#00a3c4; color:#ffffff; padding:6px 10px; font-size:0.72rem; font-weight:700; text-align:center; margin:-6mm -12mm -6mm -12mm; letter-spacing:0.02em;">
+                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  };
+
+  proto.downloadWorkCompletionDocument = function(certId) {
+    let cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    if (!cert) return;
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Work Completion Certificate - ${cert.cert_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 6mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${cert.cert_no}_Work_Completion.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${cert.cert_no} Work Completion Certificate.`, 'success');
+    }
+  };
+
+  // --- Subcontractor Undertaking Letter Print Modal (2-Page Layout) ---
+  proto.openUndertakingLetterPrintModal = function(letterId, isVerifiedScan = false) {
+    let ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    if (!ult) {
+      ult = (this.db?.undertaking_letters || [])[0] || {};
+    }
+
+    const employees = ult.employees && ult.employees.length ? ult.employees : [
+      { srl: 1, name: 'BHAGWAN DEEN MOLEY', emirates_id: '784-1983-8618357-2', nationality: 'Indian', profession: 'RG/JUMA ALROKN' }
+    ];
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🛡️</span>
+              <span>Subcontractor Undertaking Letter (2 Pages) — ${ult.ref_no || 'REC-RG-ULT-11006'}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openWorkCompletionPrintModal()">Completion Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDeliveryNotePrintModal()">Delivery Note</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openUndertakingLetterPrintModal('${ult.id}')">Undertaking Letter</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadUndertakingLetterDocument('${ult.id}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openUndertakingLetterModal('${ult.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+              ✏️ Edit Letter
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <!-- PAGE 1: Undertaking Statement -->
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; min-height:1020px; display:flex; flex-direction:column; justify-content:space-between;">
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
+
+            <div style="position:relative; z-index:1;">
+              <!-- Header Logo -->
+              <div style="text-align:center; margin-bottom:1.5rem;">
+                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:56px; width:auto; display:inline-block;">
+              </div>
+
+              <!-- Date & Ref Row -->
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; font-weight:700; color:#111827; margin-bottom:1.8rem;">
+                <div>Date: ${this.formatDate(ult.date)}.</div>
+                <div>Ref.: ${ult.ref_no}</div>
+              </div>
+
+              <!-- Document Title -->
+              <div style="text-align:center; margin-bottom:1.8rem;">
+                <h1 style="font-size:1.15rem; font-weight:800; color:#111827; text-decoration:underline; letter-spacing:0.01em; margin:0;">
+                  Subcontractor undertaking letter.
+                </h1>
+              </div>
+
+              <!-- Attention & Project Details -->
+              <div style="font-size:0.86rem; color:#111827; line-height:1.6; margin-bottom:1.2rem;">
+                <div style="font-weight:700;">Attention: - ${ult.attention || 'Project Manager'},</div>
+                <div style="font-weight:800; text-transform:uppercase; margin-bottom:0.6rem;">${ult.client_name || ult.attention_company || 'M/S TOP ROCK INTERIORS LLC'}</div>
+                <div style="font-weight:800; margin-bottom:0.4rem;">Project: ${ult.project_name || 'The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work'}</div>
+                <div style="font-weight:800;">Subject: - ${ult.subject || 'Subcontractor Undertaking letter M/S RAYAN ENGINEERING AND CONTRACTING L.L.C – S.P.C,'}</div>
+              </div>
+
+              <!-- Body Paragraphs -->
+              <div style="font-size:0.86rem; line-height:1.75; color:#111827; text-align:justify;">
+                <div style="font-weight:700; margin-bottom:8px;">Dear Sir,</div>
+                <div style="white-space:pre-line;">
+                  ${ult.body_text}
+                </div>
+              </div>
+            </div>
+
+            <!-- Page 1 Bottom Footer -->
+            <div style="position:relative; z-index:1; border-top:1px solid #e2e8f0; padding-top:0.75rem; margin-top:2rem; font-size:0.75rem; color:#64748b; line-height:1.4;">
+              <div style="color:#0284c7; font-weight:700; margin-bottom:1px;">Abu Dhabi, UAE</div>
+              <div>Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com</div>
+            </div>
+          </div>
+
+          <!-- PAGE 2: Employee List Table & Dual Stamps -->
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; min-height:1020px; display:flex; flex-direction:column; justify-content:space-between; page-break-before:always; break-before:page;">
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
+
+            <div style="position:relative; z-index:1;">
+              <!-- Header Logo -->
+              <div style="text-align:center; margin-bottom:1.5rem;">
+                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:56px; width:auto; display:inline-block;">
+              </div>
+
+              <!-- Title -->
+              <div style="text-align:center; margin-bottom:1.5rem;">
+                <h2 style="font-size:1.3rem; font-weight:800; color:#1e3a8a; letter-spacing:0.04em; text-transform:uppercase; margin:0;">
+                  EMPLOYEE LIST
+                </h2>
+              </div>
+
+              <!-- Employee Table -->
+              <table style="width:100%; border-collapse:collapse; font-size:0.80rem; border:1px solid #1e3a8a; margin-bottom:2rem;">
+                <thead>
+                  <tr style="background:#bfdbfe; color:#1e3a8a; font-weight:800;">
+                    <th style="border:1px solid #1e3a8a; padding:8px 6px; width:7%; text-align:center;">SRL.</th>
+                    <th style="border:1px solid #1e3a8a; padding:8px 10px; width:38%; text-align:left;">NAME</th>
+                    <th style="border:1px solid #1e3a8a; padding:8px 10px; width:25%; text-align:center;">EMIRATES ID</th>
+                    <th style="border:1px solid #1e3a8a; padding:8px 8px; width:15%; text-align:center;">NATIONALITY</th>
+                    <th style="border:1px solid #1e3a8a; padding:8px 8px; width:15%; text-align:center;">PROFESSION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${employees.map((emp, idx) => `
+                    <tr style="border-bottom:1px solid #cbd5e1; background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                      <td style="border:1px solid #1e3a8a; padding:6px 6px; text-align:center; font-weight:700;">${idx + 1}</td>
+                      <td style="border:1px solid #1e3a8a; padding:6px 10px; font-weight:700; color:#111827; text-transform:uppercase;">${emp.name}</td>
+                      <td style="border:1px solid #1e3a8a; padding:6px 10px; text-align:center; font-family:monospace; font-weight:600; color:#1e293b;">${emp.emirates_id}</td>
+                      <td style="border:1px solid #1e3a8a; padding:6px 8px; text-align:center; color:#334155;">${emp.nationality}</td>
+                      <td style="border:1px solid #1e3a8a; padding:6px 8px; text-align:center; font-weight:600; color:#111827; font-size:0.75rem;">${emp.profession}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+
+              <!-- Sign-off Block -->
+              <div style="font-size:0.86rem; color:#111827; line-height:1.6; margin-top:1.5rem;">
+                <div style="font-weight:700; margin-bottom:8px;">Truly</div>
+                <div style="font-weight:700;">Responsible Person: <strong>${ult.responsible_person || 'Eng. Bakhteyar Alam'}</strong></div>
+                <div style="font-weight:700; margin-bottom:12px;">Designation: <strong>${ult.designation || 'Construction Manager'}</strong></div>
+
+                <div style="display:flex; align-items:flex-start; gap:2.5rem; margin-top:1rem;">
+                  <div>
+                    <div style="font-size:0.78rem; font-weight:700; color:#475569; margin-bottom:4px;">Signature</div>
+                    ${ult.include_signature !== false ? `
+                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:65px; width:auto; display:block; filter:contrast(1.2);">
+                    ` : ''}
+                  </div>
+                  <div>
+                    <div style="font-size:0.78rem; font-weight:700; color:#475569; margin-bottom:4px;">Company Stamp</div>
+                    ${ult.include_stamp !== false ? `
+                      <img src="/assets/docs/rayan-stamp-round.png" alt="Company Stamp" style="height:90px; width:auto; display:block; filter:contrast(1.2);">
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Page 2 Bottom Footer -->
+            <div style="position:relative; z-index:1; border-top:1px solid #e2e8f0; padding-top:0.75rem; margin-top:2rem; font-size:0.75rem; color:#64748b; line-height:1.4;">
+              <div style="color:#0284c7; font-weight:700; margin-bottom:1px;">Abu Dhabi, UAE</div>
+              <div>Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  };
+
+  proto.downloadUndertakingLetterDocument = function(letterId) {
+    let ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    if (!ult) return;
+    const pages = document.querySelectorAll('#fin-doc-print-modal .fin-document-paper');
+    if (pages.length) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Subcontractor Undertaking Letter - ${ult.ref_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 2rem; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 8mm 10mm; }
+      body { background: #fff; padding: 0; gap: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 8mm 10mm !important; page-break-after: always; break-after: page; }
+    }
+  </style>
+</head>
+<body>
+  ${Array.from(pages).map(p => p.outerHTML).join('\n')}
+</body>
+</html>`;
+      this.downloadFile(`${ult.ref_no}_Undertaking_Letter.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${ult.ref_no} Undertaking Letter.`, 'success');
+    }
+  };
+
+  // --- Material Delivery Note Print Modal ---
+  proto.openDeliveryNotePrintModal = function(dnId, isVerifiedScan = false) {
+    let dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
+    if (!dn) {
+      dn = (this.db?.delivery_notes || [])[0] || {};
+    }
+
+    const items = dn.items && dn.items.length ? dn.items : [
+      { srl: 1, description: 'Material Items as per approved delivery order', unit: 'LSUM', qty_ordered: 1, qty_delivered: 1, remarks: 'Verified Sound' }
+    ];
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🚚</span>
+              <span>Delivery Note — ${dn.dn_no || 'DN-REC-1001'}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openWorkCompletionPrintModal()">Completion Cert</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openDeliveryNotePrintModal('${dn.id}')">Delivery Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadDeliveryNoteDocument('${dn.id}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openDeliveryNoteModal('${dn.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+              ✏️ Edit Delivery Note
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 8mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
+
+            <div style="position:relative; z-index:1;">
+              <!-- Header -->
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; border-bottom:2px solid #111827; padding-bottom:0.75rem;">
+                <div style="max-width:55%;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:44px; width:auto; display:block; margin-bottom:4px;">
+                  <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase;">RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
+                  <div style="font-size:0.75rem; color:#475569;">TRN: 100234567800003 | Abu Dhabi, United Arab Emirates</div>
+                  <div style="font-size:0.75rem; color:#475569;">Hotline: +971 2 565 4497 | info@rayan-group.com</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-family:'Outfit', sans-serif; font-size:1.75rem; font-weight:800; color:#111827; line-height:1;">DELIVERY NOTE</div>
+                  <div style="font-family:'Amiri', serif; font-size:1.1rem; font-weight:700; color:#374151; margin-top:2px;">إذن تسليم مواد</div>
+                  <div style="font-size:0.92rem; font-weight:800; color:#0284c7; margin-top:4px;"># ${dn.dn_no}</div>
+                  <div style="font-size:0.78rem; color:#475569; margin-top:2px;">Date: <strong>${this.formatDate(dn.date)} ${dn.time || ''}</strong></div>
+                </div>
+              </div>
+
+              <!-- Details Grid (Consignee & Project Delivery Site) -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:1.2rem;">
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; background:#f8fafc;">
+                  <div style="font-size:0.70rem; font-weight:800; color:#0284c7; text-transform:uppercase; margin-bottom:4px;">DELIVERED TO (المستلم)</div>
+                  <div style="font-size:0.88rem; font-weight:800; color:#111827;">${dn.client_name || 'Client Name'}</div>
+                  <div style="font-size:0.78rem; color:#475569; margin-top:3px;">PO Ref: <strong>${dn.po_reference || 'Direct LPO'}</strong></div>
+                  <div style="font-size:0.78rem; color:#475569;">Attn: <strong>${dn.receiver_name || 'Site Storekeeper'}</strong></div>
+                </div>
+
+                <div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; background:#f8fafc;">
+                  <div style="font-size:0.70rem; font-weight:800; color:#0284c7; text-transform:uppercase; margin-bottom:4px;">PROJECT &amp; DISPATCH SITE (موقع المشروع)</div>
+                  <div style="font-size:0.88rem; font-weight:800; color:#111827;">${dn.project_name || 'Project Site'}</div>
+                  <div style="font-size:0.78rem; color:#475569; margin-top:3px;">Site Gate: <strong>${dn.site_location || 'Main Delivery Gate'}</strong></div>
+                  <div style="font-size:0.78rem; color:#475569;">Dispatch Origin: <strong>${dn.dispatch_from || 'Central Yard Mussafah'}</strong></div>
+                  <div style="font-size:0.78rem; color:#475569;">Vehicle: <strong>${dn.vehicle_no || 'AUH-49210'}</strong> • Driver: <strong>${dn.driver_name || 'Rashid'}</strong></div>
+                </div>
+              </div>
+
+              <!-- Line Items Table -->
+              <table style="width:100%; border-collapse:collapse; font-size:0.78rem; border:1px solid #111827; margin-bottom:1.2rem;">
+                <thead>
+                  <tr style="background:#111827; color:#ffffff;">
+                    <th style="border:1px solid #111827; padding:6px 4px; width:5%; text-align:center;">#</th>
+                    <th style="border:1px solid #111827; padding:6px 8px; width:48%; text-align:left;">Material Particulars / Specifications</th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:10%; text-align:center;">Unit</th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:12%; text-align:center;">Ordered Qty</th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:12%; text-align:center;">Delivered Qty</th>
+                    <th style="border:1px solid #111827; padding:6px 6px; width:13%; text-align:center;">Condition</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${items.map((it, idx) => `
+                    <tr style="border-bottom:1px solid #cbd5e1; background:#ffffff;">
+                      <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700;">${idx + 1}</td>
+                      <td style="border:1px solid #111827; padding:6px 8px; font-weight:700; color:#111827;">${it.description}</td>
+                      <td style="border:1px solid #111827; padding:6px 6px; text-align:center; font-weight:600;">${it.unit || 'Nos'}</td>
+                      <td style="border:1px solid #111827; padding:6px 6px; text-align:center; font-variant-numeric:tabular-nums; font-weight:600;">${it.qty_ordered || 1}</td>
+                      <td style="border:1px solid #111827; padding:6px 6px; text-align:center; font-weight:800; color:#059669; font-variant-numeric:tabular-nums;">${it.qty_delivered || 1}</td>
+                      <td style="border:1px solid #111827; padding:6px 6px; text-align:center; font-size:0.75rem; color:#475569;">${it.remarks || 'Sound Condition'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+
+              <!-- Notes & Inspection Statement -->
+              <div style="font-size:0.76rem; color:#475569; line-height:1.45; border-left:3px solid #0284c7; padding-left:8px; margin-bottom:1.5rem;">
+                <strong>Inspection &amp; Verification Note:</strong> All items listed above have been verified, counted, and inspected prior to dispatch. The receiver confirms that the goods were delivered in satisfactory and undamaged condition.
+              </div>
+
+              <!-- Dual Signature Section -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; border:1px solid #111827; min-height:120px; margin-bottom:1rem;">
+                <!-- Dispatched By -->
+                <div style="border-right:1px solid #111827; padding:8px 12px; display:flex; flex-direction:column; justify-content:space-between;">
+                  <div>
+                    <div style="font-size:0.76rem; font-weight:800; color:#111827;">DISPATCHED BY (مرسل من):</div>
+                    <div style="font-size:0.78rem; color:#475569; margin-top:2px;">RAYAN ENGINEERING &amp; CONTRACTING</div>
+                    <div style="font-size:0.75rem; color:#64748b;">${dn.dispatched_by || 'Storekeeper / Logistics Officer'}</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:12px; min-height:55px;">
+                    ${dn.include_signature !== false ? `
+                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:48px; width:auto; display:block;">
+                    ` : ''}
+                    ${dn.include_stamp !== false ? `
+                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:65px; width:auto; display:block;">
+                    ` : ''}
+                  </div>
+                </div>
+
+                <!-- Received By -->
+                <div style="padding:8px 12px; display:flex; flex-direction:column; justify-content:space-between;">
+                  <div>
+                    <div style="font-size:0.76rem; font-weight:800; color:#111827;">RECEIVED BY (المستلم في الموقع):</div>
+                    <div style="font-size:0.78rem; font-weight:700; color:#111827; margin-top:2px;">Name: ${dn.receiver_name || 'Site Supervisor'}</div>
+                    <div style="font-size:0.75rem; color:#64748b;">Emirates ID: ${dn.receiver_eid || '784-XXXX-XXXXXXX-X'}</div>
+                  </div>
+                  <div style="border-top:1px dashed #cbd5e1; padding-top:4px; display:flex; justify-content:space-between; font-size:0.72rem; color:#64748b;">
+                    <span>Receiver Signature</span>
+                    <span>Date &amp; Site Stamp</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div style="text-align:center; font-size:0.72rem; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:0.4rem;">
+                Official Material Transfer &amp; Delivery Document • Rayan Engineering and Contracting LLC SPC • Abu Dhabi, UAE
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  };
+
+  proto.downloadDeliveryNoteDocument = function(dnId) {
+    let dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
+    if (!dn) return;
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Delivery Note - ${dn.dn_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 6mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 8mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${dn.dn_no}_Delivery_Note.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${dn.dn_no} Delivery Note.`, 'success');
+    }
+  };
+
+  // --- Corporate Official Letter Print Modal (Latter Editable) ---
+  proto.openCustomLetterPrintModal = function(letterId, isVerifiedScan = false) {
+    let ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    if (!ltr) {
+      ltr = (this.db?.custom_letters || [])[0] || {};
+    }
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>✉️</span>
+              <span>Official Letter — ${ltr.ref_no || 'REC-LTR-2026-101'}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openWorkCompletionPrintModal()">Completion Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDeliveryNotePrintModal()">Delivery Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCustomLetterPrintModal('${ltr.id}')">Official Letter</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadCustomLetterDocument('${ltr.id}')">
+              📥 Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openCustomLetterModal('${ltr.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+              ✏️ Edit Letter
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; min-height:1020px; display:flex; flex-direction:column; justify-content:space-between;">
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
+
+            <div style="position:relative; z-index:1;">
+              <!-- Letterhead Header -->
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #111827; padding-bottom:1rem; margin-bottom:1.5rem;">
+                <div>
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:50px; width:auto; display:block; margin-bottom:4px;">
+                  <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase;">RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
+                  <div style="font-size:0.75rem; color:#475569;">TRN: 100234567800003 | Mussafah M-36, Abu Dhabi, UAE</div>
+                </div>
+                <div style="text-align:right; font-size:0.82rem; color:#374151;">
+                  <div style="font-weight:700; color:#111827;">Ref: <span style="color:#0284c7;">${ltr.ref_no}</span></div>
+                  <div>Date: <strong>${this.formatDate(ltr.date)}</strong></div>
+                </div>
+              </div>
+
+              <!-- Recipient & Subject -->
+              <div style="margin-bottom:1.5rem; font-size:0.88rem; line-height:1.5; color:#111827;">
+                ${ltr.attention ? `<div style="font-weight:700;">To: ${ltr.attention}</div>` : ''}
+                ${ltr.recipient_name ? `<div style="font-weight:700;">${ltr.recipient_name}</div>` : ''}
+                <div style="font-weight:800; text-transform:uppercase; font-size:0.92rem;">${ltr.recipient_company}</div>
+                ${ltr.address ? `<div style="color:#475569; font-size:0.82rem;">${ltr.address}</div>` : ''}
+                ${ltr.project_name ? `<div style="margin-top:8px; font-weight:700; color:#0284c7;">Project: ${ltr.project_name}</div>` : ''}
+                <div style="margin-top:12px; font-size:0.92rem; font-weight:800; color:#111827; text-decoration:underline;">
+                  ${ltr.subject}
+                </div>
+              </div>
+
+              <!-- Body Paragraphs -->
+              <div style="font-size:0.88rem; line-height:1.8; color:#111827; white-space:pre-line; text-align:justify; margin-bottom:2rem;">
+                ${ltr.body_text}
+              </div>
+
+              <!-- Sign-off Block with Stamp & Signature -->
+              <div style="font-size:0.88rem; color:#111827; line-height:1.5; margin-top:1.5rem;">
+                <div>Sincerely / With best regards,</div>
+                <div style="font-weight:800; margin-top:4px;">RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
+                <div style="font-weight:800; color:#1e3a8a; margin-top:2px;">${ltr.signatory_name || 'Eng. Bakhteyar Alam'}</div>
+                <div style="color:#475569; font-size:0.82rem;">${ltr.designation || 'Construction Manager'}</div>
+
+                <div style="display:flex; align-items:center; gap:20px; margin-top:10px;">
+                  ${ltr.include_signature !== false ? `
+                    <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block;">
+                  ` : ''}
+                  ${ltr.include_stamp !== false ? `
+                    <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:80px; width:auto; display:block;">
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Letterhead Footer -->
+            <div style="position:relative; z-index:1; border-top:1px solid #cbd5e1; padding-top:0.75rem; margin-top:2rem; font-size:0.75rem; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
+              <div>Hotline: +971 2 565 4497 | info@rayan-group.com</div>
+              <div>www.rayan-group.com</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  };
+
+  proto.downloadCustomLetterDocument = function(letterId) {
+    let ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    if (!ltr) return;
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Letter - ${ltr.ref_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box; }
+    @media print {
+      @page { size: A4 portrait; margin: 8mm 10mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 8mm 10mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${ltr.ref_no}_Official_Letter.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${ltr.ref_no} Letter.`, 'success');
+    }
+  };
+
+  // ==========================================================================
+  // 10. DELETION HANDLERS
+  // ==========================================================================
+  proto.deleteWorkCompletion = async function(certId) {
+    const cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    const label = cert ? cert.cert_no : certId;
+    if (!confirm(`Are you sure you want to delete Work Completion Certificate ${label}?`)) return;
+
+    if (this.db.work_completion_certificates) {
+      this.db.work_completion_certificates = this.db.work_completion_certificates.filter(c => c.id !== certId && c.cert_no !== certId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+
+    this.renderActiveTab();
+    this.showNotification(`Work Completion Certificate ${label} deleted.`, 'info');
+    await this.syncApi('delete_work_completion', { id: certId, cert_id: certId });
+  };
+
+  proto.deleteDeliveryNote = async function(dnId) {
+    const dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
+    const label = dn ? dn.dn_no : dnId;
+    if (!confirm(`Are you sure you want to delete Delivery Note ${label}?`)) return;
+
+    if (this.db.delivery_notes) {
+      this.db.delivery_notes = this.db.delivery_notes.filter(n => n.id !== dnId && n.dn_no !== dnId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+
+    this.renderActiveTab();
+    this.showNotification(`Delivery Note ${label} deleted.`, 'info');
+    await this.syncApi('delete_delivery_note', { id: dnId, dn_id: dnId });
+  };
+
+  proto.deleteUndertakingLetter = async function(letterId) {
+    const ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    const label = ult ? ult.ref_no : letterId;
+    if (!confirm(`Are you sure you want to delete Undertaking Letter ${label}?`)) return;
+
+    if (this.db.undertaking_letters) {
+      this.db.undertaking_letters = this.db.undertaking_letters.filter(l => l.id !== letterId && l.ref_no !== letterId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+
+    this.renderActiveTab();
+    this.showNotification(`Undertaking Letter ${label} deleted.`, 'info');
+    await this.syncApi('delete_undertaking_letter', { id: letterId, ref_no: label });
+  };
+
+  proto.deleteCustomLetter = async function(letterId) {
+    const ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
+    const label = ltr ? ltr.ref_no : letterId;
+    if (!confirm(`Are you sure you want to delete Official Letter ${label}?`)) return;
+
+    if (this.db.custom_letters) {
+      this.db.custom_letters = this.db.custom_letters.filter(l => l.id !== letterId && l.ref_no !== letterId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+
+    this.renderActiveTab();
+    this.showNotification(`Letter ${label} deleted.`, 'info');
+    await this.syncApi('delete_custom_letter', { id: letterId, ref_no: label });
+  };
+
+  // ==========================================================================
+  // 11. CSV EXPORT UTILITIES (WITH EXCEL TEXT QUOTING APOSTROPHE)
+  // ==========================================================================
+  proto.exportWorkCompletionCSV = function() {
+    const certs = this.db?.work_completion_certificates || [];
+    if (!certs.length) {
+      this.showNotification('No completion certificates available to export.', 'warning');
+      return;
+    }
+    const headers = ['Certificate Number', 'Reference Number', 'Date', 'Client / Subcontractor', 'Main Contractor', 'Project', 'PO / Agreement Ref', 'Scope Description', 'Status'];
+    const rows = certs.map(c => [
+      `'${c.cert_no || ''}`,
+      `'${c.reference_no || ''}`,
+      c.date || '',
+      `"${(c.client_name || '').replace(/"/g, '""')}"`,
+      `"${(c.main_client || '').replace(/"/g, '""')}"`,
+      `"${(c.project_name || '').replace(/"/g, '""')}"`,
+      `'${c.subcontract_agreement || c.po_no || ''}`,
+      `"${(c.scope_description || '').replace(/"/g, '""')}"`,
+      c.status || 'Approved'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    this.downloadFile(`Work_Completion_Certificates_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
+    this.showNotification('Work Completion Certificates exported to CSV.', 'success');
+  };
+
+  proto.exportDeliveryNotesCSV = function() {
+    const notes = this.db?.delivery_notes || [];
+    if (!notes.length) {
+      this.showNotification('No delivery notes available to export.', 'warning');
+      return;
+    }
+    const headers = ['DN Number', 'Date', 'Consignee / Client', 'Project Name', 'Site Location', 'Vehicle Number', 'Driver Name', 'Items Count', 'Status'];
+    const rows = notes.map(n => [
+      `'${n.dn_no || ''}`,
+      n.date || '',
+      `"${(n.client_name || '').replace(/"/g, '""')}"`,
+      `"${(n.project_name || '').replace(/"/g, '""')}"`,
+      `"${(n.site_location || '').replace(/"/g, '""')}"`,
+      `'${n.vehicle_no || ''}`,
+      `"${(n.driver_name || '').replace(/"/g, '""')}"`,
+      (n.items || []).length,
+      n.status || 'Delivered'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    this.downloadFile(`Delivery_Notes_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
+    this.showNotification('Delivery Notes exported to CSV.', 'success');
+  };
+
+  proto.exportUndertakingLettersCSV = function() {
+    const letters = this.db?.undertaking_letters || [];
+    if (!letters.length) {
+      this.showNotification('No undertaking letters available to export.', 'warning');
+      return;
+    }
+    const headers = ['Reference Number', 'Date', 'Attention', 'Client / Contractor', 'Project', 'Activity Type', 'Workers Count', 'Responsible Person', 'Status'];
+    const rows = letters.map(l => [
+      `'${l.ref_no || ''}`,
+      l.date || '',
+      `"${(l.attention || '').replace(/"/g, '""')}"`,
+      `"${(l.client_name || '').replace(/"/g, '""')}"`,
+      `"${(l.project_name || '').replace(/"/g, '""')}"`,
+      `"${(l.activity_type || '').replace(/"/g, '""')}"`,
+      (l.employees || []).length,
+      `"${(l.responsible_person || '').replace(/"/g, '""')}"`,
+      l.status || 'Active'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    this.downloadFile(`Undertaking_Letters_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
+    this.showNotification('Undertaking Letters exported to CSV.', 'success');
+  };
+
+  proto.exportLettersCSV = function() {
+    const letters = this.db?.custom_letters || [];
+    if (!letters.length) {
+      this.showNotification('No corporate letters available to export.', 'warning');
+      return;
+    }
+    const headers = ['Reference Number', 'Date', 'Attention', 'Recipient Company', 'Project Reference', 'Subject', 'Signatory Name', 'Status'];
+    const rows = letters.map(l => [
+      `'${l.ref_no || ''}`,
+      l.date || '',
+      `"${(l.attention || '').replace(/"/g, '""')}"`,
+      `"${(l.recipient_company || '').replace(/"/g, '""')}"`,
+      `"${(l.project_name || '').replace(/"/g, '""')}"`,
+      `"${(l.subject || '').replace(/"/g, '""')}"`,
+      `"${(l.signatory_name || '').replace(/"/g, '""')}"`,
+      l.status || 'Issued'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    this.downloadFile(`Corporate_Letters_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
+    this.showNotification('Corporate Letters exported to CSV.', 'success');
+  };
+}

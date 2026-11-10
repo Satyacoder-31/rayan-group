@@ -452,6 +452,63 @@ if ($pdo) {
                 setting_val LONGTEXT NOT NULL,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_work_completion_certificates (
+                id VARCHAR(64) PRIMARY KEY,
+                cert_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                reference_no VARCHAR(128),
+                client_name VARCHAR(255),
+                project_name VARCHAR(255),
+                completion_date DATE,
+                status VARCHAR(32) DEFAULT 'Approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_wcc_no (cert_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_delivery_notes (
+                id VARCHAR(64) PRIMARY KEY,
+                dn_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                dn_date DATE,
+                customer_name VARCHAR(255),
+                project_name VARCHAR(255),
+                status VARCHAR(32) DEFAULT 'Delivered',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_dn_num (dn_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_undertaking_letters (
+                id VARCHAR(64) PRIMARY KEY,
+                ref_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                date DATE,
+                client_name VARCHAR(255),
+                project_name VARCHAR(255),
+                status VARCHAR(32) DEFAULT 'Approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_ult_ref (ref_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_custom_letters (
+                id VARCHAR(64) PRIMARY KEY,
+                ref_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                date DATE,
+                recipient_name VARCHAR(255),
+                subject VARCHAR(255),
+                status VARCHAR(32) DEFAULT 'Issued',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_let_ref (ref_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
     } catch (Exception $e) {
         error_log("Finance tables initialization error: " . $e->getMessage());
@@ -3435,6 +3492,20 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             $data['credit_notes'] = $masterSeed['credit_notes'] ?? [];
                         }
                     }
+                    if ($masterSeed) {
+                        if (empty($data['work_completion_certificates']) && !empty($masterSeed['work_completion_certificates'])) {
+                            $data['work_completion_certificates'] = $masterSeed['work_completion_certificates'];
+                        }
+                        if (empty($data['delivery_notes']) && !empty($masterSeed['delivery_notes'])) {
+                            $data['delivery_notes'] = $masterSeed['delivery_notes'];
+                        }
+                        if (empty($data['undertaking_letters']) && !empty($masterSeed['undertaking_letters'])) {
+                            $data['undertaking_letters'] = $masterSeed['undertaking_letters'];
+                        }
+                        if (empty($data['custom_letters']) && !empty($masterSeed['custom_letters'])) {
+                            $data['custom_letters'] = $masterSeed['custom_letters'];
+                        }
+                    }
                     $companyOrder = ['rayan-group', 'rayan-corp-uae', 'rayan-energy-uae', 'rayan-properties-uae', 'ashaz-eng-in'];
                     usort($data['companies'], function($a, $b) use ($companyOrder) {
                         $posA = array_search($a['id'] ?? '', $companyOrder);
@@ -5427,6 +5498,16 @@ function saveFinanceDb($pdo, $dataFile, &$data, $candidates = []) {
                 if (empty($data[$k]) && !empty($val)) {
                     $data[$k] = $val;
                 }
+            }
+        }
+    }
+
+    $extraDocCols = ['work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters'];
+    foreach ($extraDocCols as $col) {
+        if (empty($data[$col])) {
+            $seed = getMasterSeed($candidates);
+            if (!empty($seed[$col])) {
+                $data[$col] = $seed[$col];
             }
         }
     }
@@ -9439,6 +9520,239 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $addAuditLog('delete', 'loan_transaction', $targetId, 'Deleted loan transaction ' . $targetId);
             }
             break;
+        case 'save_work_completion':
+            $cert = $body['certificate'] ?? [];
+            if (!empty($cert)) {
+                if (empty($cert['id'])) {
+                    $cert['id'] = 'wcc-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['work_completion_certificates']) || !is_array($db['work_completion_certificates'])) {
+                    $db['work_completion_certificates'] = [];
+                }
+                $found = false;
+                foreach ($db['work_completion_certificates'] as &$existing) {
+                    if (($existing['id'] ?? '') === $cert['id'] || (!empty($cert['cert_no']) && strcasecmp($existing['cert_no'] ?? '', $cert['cert_no']) === 0)) {
+                        $existing = array_merge($existing, $cert);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['work_completion_certificates'], $cert);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_work_completion_certificates (id, cert_no, company_id, reference_no, client_name, project_name, completion_date, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $cert['id'],
+                            $cert['cert_no'] ?? '',
+                            $cert['company_id'] ?? 'rayan-corp-uae',
+                            $cert['reference_no'] ?? '',
+                            $cert['client_name'] ?? '',
+                            $cert['project_name'] ?? '',
+                            $cert['completion_date'] ?? date('Y-m-d'),
+                            $cert['status'] ?? 'Approved',
+                            json_encode($cert)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_work_completion DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'work_completion', $cert['cert_no'] ?? $cert['id'], 'Saved work completion certificate ' . ($cert['cert_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_work_completion':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['work_completion_certificates'])) {
+                $db['work_completion_certificates'] = array_values(array_filter($db['work_completion_certificates'], function($c) use ($targetId) {
+                    return ($c['id'] ?? '') !== $targetId && ($c['cert_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_work_completion_certificates WHERE id = ? OR cert_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'work_completion', $targetId, 'Deleted work completion certificate ' . $targetId);
+            }
+            break;
+
+        case 'save_delivery_note':
+            $dn = $body['delivery_note'] ?? [];
+            if (!empty($dn)) {
+                if (empty($dn['id'])) {
+                    $dn['id'] = 'dn-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['delivery_notes']) || !is_array($db['delivery_notes'])) {
+                    $db['delivery_notes'] = [];
+                }
+                $found = false;
+                foreach ($db['delivery_notes'] as &$existing) {
+                    if (($existing['id'] ?? '') === $dn['id'] || (!empty($dn['dn_no']) && strcasecmp($existing['dn_no'] ?? '', $dn['dn_no']) === 0)) {
+                        $existing = array_merge($existing, $dn);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['delivery_notes'], $dn);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_delivery_notes (id, dn_no, company_id, dn_date, customer_name, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $dn['id'],
+                            $dn['dn_no'] ?? '',
+                            $dn['company_id'] ?? 'rayan-corp-uae',
+                            $dn['date'] ?? date('Y-m-d'),
+                            $dn['customer_name'] ?? '',
+                            $dn['project_name'] ?? '',
+                            $dn['status'] ?? 'Delivered',
+                            json_encode($dn)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_delivery_note DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'delivery_note', $dn['dn_no'] ?? $dn['id'], 'Saved delivery note ' . ($dn['dn_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_delivery_note':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['delivery_notes'])) {
+                $db['delivery_notes'] = array_values(array_filter($db['delivery_notes'], function($d) use ($targetId) {
+                    return ($d['id'] ?? '') !== $targetId && ($d['dn_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_delivery_notes WHERE id = ? OR dn_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'delivery_note', $targetId, 'Deleted delivery note ' . $targetId);
+            }
+            break;
+
+        case 'save_undertaking_letter':
+            $ult = $body['undertaking_letter'] ?? [];
+            if (!empty($ult)) {
+                if (empty($ult['id'])) {
+                    $ult['id'] = 'ult-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['undertaking_letters']) || !is_array($db['undertaking_letters'])) {
+                    $db['undertaking_letters'] = [];
+                }
+                $found = false;
+                foreach ($db['undertaking_letters'] as &$existing) {
+                    if (($existing['id'] ?? '') === $ult['id'] || (!empty($ult['ref_no']) && strcasecmp($existing['ref_no'] ?? '', $ult['ref_no']) === 0)) {
+                        $existing = array_merge($existing, $ult);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['undertaking_letters'], $ult);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_undertaking_letters (id, ref_no, company_id, date, client_name, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $ult['id'],
+                            $ult['ref_no'] ?? '',
+                            $ult['company_id'] ?? 'rayan-corp-uae',
+                            $ult['date'] ?? date('Y-m-d'),
+                            $ult['client_name'] ?? '',
+                            $ult['project_name'] ?? '',
+                            $ult['status'] ?? 'Approved',
+                            json_encode($ult)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_undertaking_letter DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'undertaking_letter', $ult['ref_no'] ?? $ult['id'], 'Saved undertaking letter ' . ($ult['ref_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_undertaking_letter':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['undertaking_letters'])) {
+                $db['undertaking_letters'] = array_values(array_filter($db['undertaking_letters'], function($u) use ($targetId) {
+                    return ($u['id'] ?? '') !== $targetId && ($u['ref_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_undertaking_letters WHERE id = ? OR ref_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'undertaking_letter', $targetId, 'Deleted undertaking letter ' . $targetId);
+            }
+            break;
+
+        case 'save_custom_letter':
+            $letter = $body['letter'] ?? [];
+            if (!empty($letter)) {
+                if (empty($letter['id'])) {
+                    $letter['id'] = 'let-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['custom_letters']) || !is_array($db['custom_letters'])) {
+                    $db['custom_letters'] = [];
+                }
+                $found = false;
+                foreach ($db['custom_letters'] as &$existing) {
+                    if (($existing['id'] ?? '') === $letter['id'] || (!empty($letter['ref_no']) && strcasecmp($existing['ref_no'] ?? '', $letter['ref_no']) === 0)) {
+                        $existing = array_merge($existing, $letter);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['custom_letters'], $letter);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_custom_letters (id, ref_no, company_id, date, recipient_name, subject, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $letter['id'],
+                            $letter['ref_no'] ?? '',
+                            $letter['company_id'] ?? 'rayan-corp-uae',
+                            $letter['date'] ?? date('Y-m-d'),
+                            $letter['recipient_name'] ?? '',
+                            $letter['subject'] ?? '',
+                            $letter['status'] ?? 'Issued',
+                            json_encode($letter)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_custom_letter DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'custom_letter', $letter['ref_no'] ?? $letter['id'], 'Saved official letter ' . ($letter['ref_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_custom_letter':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['custom_letters'])) {
+                $db['custom_letters'] = array_values(array_filter($db['custom_letters'], function($l) use ($targetId) {
+                    return ($l['id'] ?? '') !== $targetId && ($l['ref_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_custom_letters WHERE id = ? OR ref_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'custom_letter', $targetId, 'Deleted official letter ' . $targetId);
+            }
+            break;
+
         case 'sync_full':
             if (!empty($body['full_db']) && is_array($body['full_db'])) {
                 $db = $body['full_db'];

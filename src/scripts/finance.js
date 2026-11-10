@@ -1,4 +1,5 @@
 import defaultSeedData from '../../data/finance-data.json';
+import { registerDocumentModules } from './finance-documents.js';
 
 /**
  * RAYAN GROUP — ENTERPRISE ACCOUNTS, BILLING & FINANCIAL MANAGEMENT SYSTEM
@@ -128,6 +129,38 @@ class FinanceApp {
       return;
     }
 
+    // Check Work Completion Certificate
+    if (docType === 'wcc' || docType === 'work_completion' || upper.startsWith('WCC-') || upper.startsWith('REC-JOB')) {
+      const cert = (this.db?.work_completion_certificates || []).find(c => c.id === cleanId || c.cert_no === cleanId) ||
+        (this.db?.work_completion_certificates || [])[0] || { cert_no: cleanId };
+      this.openWorkCompletionPrintModal(cert.id || cleanId, true);
+      return;
+    }
+
+    // Check Delivery Note
+    if (docType === 'delivery_note' || docType === 'dn_slip' || upper.startsWith('DN-REC-') || upper.startsWith('DN-ASH-')) {
+      const dn = (this.db?.delivery_notes || []).find(d => d.id === cleanId || d.dn_no === cleanId) ||
+        (this.db?.delivery_notes || [])[0] || { dn_no: cleanId };
+      this.openDeliveryNotePrintModal(dn.id || cleanId, true);
+      return;
+    }
+
+    // Check Undertaking Letter
+    if (docType === 'undertaking' || docType === 'undertaking_letter' || upper.startsWith('ULT-') || upper.includes('ULT-11006') || upper.includes('UNDER_TAKING')) {
+      const ult = (this.db?.undertaking_letters || []).find(u => u.id === cleanId || u.ref_no === cleanId) ||
+        (this.db?.undertaking_letters || [])[0] || { ref_no: cleanId };
+      this.openUndertakingLetterPrintModal(ult.id || cleanId, true);
+      return;
+    }
+
+    // Check Official Letter
+    if (docType === 'letter' || upper.startsWith('LET-') || upper.startsWith('LTR-')) {
+      const letDoc = (this.db?.custom_letters || []).find(l => l.id === cleanId || l.ref_no === cleanId) ||
+        (this.db?.custom_letters || [])[0] || { ref_no: cleanId };
+      this.openCustomLetterPrintModal(letDoc.id || cleanId, true);
+      return;
+    }
+
     // Default Tax Invoice
     const inv = (this.db?.invoices || []).find(i => i.id === cleanId || i.invoice_no === cleanId) ||
       (this.db?.invoices || [])[0] || { invoice_no: cleanId };
@@ -200,7 +233,8 @@ class FinanceApp {
       'credit_notes', 'debit_notes', 'expenses', 'purchase_orders',
       'audit_logs', 'notifications', 'documents',
       'bank_accounts', 'cash_in_hand', 'cheques', 'loan_accounts',
-      'bank_transfers', 'cash_vouchers', 'loan_transactions'
+      'bank_transfers', 'cash_vouchers', 'loan_transactions',
+      'work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters'
     ];
 
     const getUniqueKey = (item) => {
@@ -215,6 +249,9 @@ class FinanceApp {
       if (item.credit_note_no) return `cn-${item.credit_note_no.trim().toLowerCase()}`;
       if (item.debit_note_no) return `dn-${item.debit_note_no.trim().toLowerCase()}`;
       if (item.cheque_no) return `chq-${item.cheque_no.trim().toLowerCase()}`;
+      if (item.cert_no) return `wcc-${item.cert_no.trim().toLowerCase()}`;
+      if (item.dn_no) return `dn-${item.dn_no.trim().toLowerCase()}`;
+      if (item.ref_no) return `ref-${item.ref_no.trim().toLowerCase()}`;
       return item.id || item.reference_no || item.account_number || item.iban || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
     };
 
@@ -2128,6 +2165,75 @@ class FinanceApp {
       return { success: true, localOnly: true, data: this.db };
     }
 
+    // Operations & Documents Fallbacks
+    if (action === 'save_work_completion' && payload.certificate) {
+      if (!this.db.work_completion_certificates) this.db.work_completion_certificates = [];
+      const item = payload.certificate;
+      const idx = this.db.work_completion_certificates.findIndex(x => x.id === item.id || (x.cert_no && item.cert_no && x.cert_no.toLowerCase() === item.cert_no.toLowerCase()));
+      if (idx >= 0) this.db.work_completion_certificates[idx] = { ...this.db.work_completion_certificates[idx], ...item };
+      else this.db.work_completion_certificates.unshift(item);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, certificate: item };
+    }
+    if (action === 'delete_work_completion' && payload.id) {
+      if (this.db.work_completion_certificates) {
+        this.db.work_completion_certificates = this.db.work_completion_certificates.filter(x => x.id !== payload.id && x.cert_no !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'save_delivery_note' && payload.delivery_note) {
+      if (!this.db.delivery_notes) this.db.delivery_notes = [];
+      const item = payload.delivery_note;
+      const idx = this.db.delivery_notes.findIndex(x => x.id === item.id || (x.dn_no && item.dn_no && x.dn_no.toLowerCase() === item.dn_no.toLowerCase()));
+      if (idx >= 0) this.db.delivery_notes[idx] = { ...this.db.delivery_notes[idx], ...item };
+      else this.db.delivery_notes.unshift(item);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, delivery_note: item };
+    }
+    if (action === 'delete_delivery_note' && payload.id) {
+      if (this.db.delivery_notes) {
+        this.db.delivery_notes = this.db.delivery_notes.filter(x => x.id !== payload.id && x.dn_no !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'save_undertaking_letter' && payload.undertaking_letter) {
+      if (!this.db.undertaking_letters) this.db.undertaking_letters = [];
+      const item = payload.undertaking_letter;
+      const idx = this.db.undertaking_letters.findIndex(x => x.id === item.id || (x.ref_no && item.ref_no && x.ref_no.toLowerCase() === item.ref_no.toLowerCase()));
+      if (idx >= 0) this.db.undertaking_letters[idx] = { ...this.db.undertaking_letters[idx], ...item };
+      else this.db.undertaking_letters.unshift(item);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, undertaking_letter: item };
+    }
+    if (action === 'delete_undertaking_letter' && payload.id) {
+      if (this.db.undertaking_letters) {
+        this.db.undertaking_letters = this.db.undertaking_letters.filter(x => x.id !== payload.id && x.ref_no !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
+    if (action === 'save_custom_letter' && payload.letter) {
+      if (!this.db.custom_letters) this.db.custom_letters = [];
+      const item = payload.letter;
+      const idx = this.db.custom_letters.findIndex(x => x.id === item.id || (x.ref_no && item.ref_no && x.ref_no.toLowerCase() === item.ref_no.toLowerCase()));
+      if (idx >= 0) this.db.custom_letters[idx] = { ...this.db.custom_letters[idx], ...item };
+      else this.db.custom_letters.unshift(item);
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db, letter: item };
+    }
+    if (action === 'delete_custom_letter' && payload.id) {
+      if (this.db.custom_letters) {
+        this.db.custom_letters = this.db.custom_letters.filter(x => x.id !== payload.id && x.ref_no !== payload.id);
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      return { success: true, localOnly: true, data: this.db };
+    }
+
     localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
   }
@@ -3652,6 +3758,37 @@ class FinanceApp {
                     </div>
                   </button>
                 ` : ''}
+
+                <div class="fin-qc-divider"></div>
+                <div class="fin-qc-section-title">PROJECTS &amp; OPERATIONS</div>
+                <button type="button" class="fin-qc-item" id="qa-btn-wcc">
+                  <span class="fin-qc-badge-icon" style="background:rgba(16,185,129,0.15); color:#10b981;">📜</span>
+                  <div class="fin-qc-text">
+                    <span class="fin-qc-name">Work Completion Cert.</span>
+                    <span class="fin-qc-desc">Official handover certification</span>
+                  </div>
+                </button>
+                <button type="button" class="fin-qc-item" id="qa-btn-dn">
+                  <span class="fin-qc-badge-icon" style="background:rgba(14,165,233,0.15); color:#0ea5e9;">🚚</span>
+                  <div class="fin-qc-text">
+                    <span class="fin-qc-name">Delivery Note</span>
+                    <span class="fin-qc-desc">Site material delivery slip</span>
+                  </div>
+                </button>
+                <button type="button" class="fin-qc-item" id="qa-btn-ult">
+                  <span class="fin-qc-badge-icon" style="background:rgba(245,158,11,0.15); color:#f59e0b;">🛡️</span>
+                  <div class="fin-qc-text">
+                    <span class="fin-qc-name">Undertaking Letter</span>
+                    <span class="fin-qc-desc">Subcontractor 2-page legal undertaking</span>
+                  </div>
+                </button>
+                <button type="button" class="fin-qc-item" id="qa-btn-letter">
+                  <span class="fin-qc-badge-icon" style="background:rgba(168,85,247,0.15); color:#a855f7;">✉️</span>
+                  <div class="fin-qc-text">
+                    <span class="fin-qc-name">Official Letter (Editable)</span>
+                    <span class="fin-qc-desc">Corporate letterhead document</span>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -3785,7 +3922,7 @@ class FinanceApp {
               </div>
 
               <!-- Accordion: Operations & Projects -->
-              <div class="fin-accordion-group ${['projects', 'items', 'documents'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-ops">
+              <div class="fin-accordion-group ${['projects', 'items', 'documents', 'work_completion', 'delivery_notes', 'undertaking_letters', 'letters'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-ops">
                 <div class="fin-accordion-header" data-toggle="fin-grp-ops">
                   <div class="fin-grp-title-wrap">
                     <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3800,6 +3937,22 @@ class FinanceApp {
                   </svg>
                 </div>
                 <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'work_completion' ? 'active' : ''}" data-tab="work_completion">
+                    <span class="fin-subitem-text">Work Completion</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Work Completion Certificate" data-action="new-wcc">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'delivery_notes' ? 'active' : ''}" data-tab="delivery_notes">
+                    <span class="fin-subitem-text">Delivery Notes</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Delivery Note" data-action="new-dn">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'undertaking_letters' ? 'active' : ''}" data-tab="undertaking_letters">
+                    <span class="fin-subitem-text">Undertaking Letters</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Undertaking Letter" data-action="new-ult">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'letters' ? 'active' : ''}" data-tab="letters">
+                    <span class="fin-subitem-text">Official Letters (Editable)</span>
+                    <button type="button" class="fin-subitem-plus" title="Create Official Letter" data-action="new-letter">+</button>
+                  </div>
                   <div class="fin-nav-subitem ${this.activeTab === 'projects' ? 'active' : ''}" data-tab="projects">
                     <span class="fin-subitem-text">Project Accounts</span>
                     <button type="button" class="fin-subitem-plus" title="Add Project Account" data-action="new-project">+</button>
@@ -3876,6 +4029,18 @@ class FinanceApp {
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openDebitNotePrintModal()">
                     <span class="fin-subitem-text">Debit Note (Sample)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openWorkCompletionPrintModal()">
+                    <span class="fin-subitem-text">Work Completion Cert.</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openDeliveryNotePrintModal()">
+                    <span class="fin-subitem-text">Delivery Note (Sample)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openUndertakingLetterPrintModal()">
+                    <span class="fin-subitem-text">Undertaking Letter (2p)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openCustomLetterPrintModal()">
+                    <span class="fin-subitem-text">Corporate Letterhead</span>
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openConsolidatedCustomerSOA()">
                     <span class="fin-subitem-text" style="color:#38bdf8; font-weight:600;">📑 Master Statement (All Clients)</span>
@@ -4174,6 +4339,18 @@ class FinanceApp {
           case 'new-user':
             this.openInviteUserModal();
             break;
+          case 'new-wcc':
+            this.openWorkCompletionModal();
+            break;
+          case 'new-dn':
+            this.openDeliveryNoteModal();
+            break;
+          case 'new-ult':
+            this.openUndertakingLetterModal();
+            break;
+          case 'new-letter':
+            this.openCustomLetterModal();
+            break;
         }
       };
     });
@@ -4242,6 +4419,18 @@ class FinanceApp {
     const qaPo = document.getElementById('qa-btn-po');
     if (qaPo) qaPo.onclick = () => this.openCreatePOModal();
 
+    const qaWcc = document.getElementById('qa-btn-wcc');
+    if (qaWcc) qaWcc.onclick = () => this.openWorkCompletionModal();
+
+    const qaDn = document.getElementById('qa-btn-dn');
+    if (qaDn) qaDn.onclick = () => this.openDeliveryNoteModal();
+
+    const qaUlt = document.getElementById('qa-btn-ult');
+    if (qaUlt) qaUlt.onclick = () => this.openUndertakingLetterModal();
+
+    const qaLetter = document.getElementById('qa-btn-letter');
+    if (qaLetter) qaLetter.onclick = () => this.openCustomLetterModal();
+
     // Native Print Handlers
     window.addEventListener('beforeprint', () => {
       const hasModal = document.getElementById('fin-doc-print-modal') || document.querySelector('.fin-modal-backdrop.open');
@@ -4294,6 +4483,10 @@ class FinanceApp {
         reports: 'Financial Reports & Analytics',
         calendar: 'Statutory Calendar & Compliance',
         documents: 'Document Vault',
+        work_completion: 'Work Completion Certificates',
+        delivery_notes: 'Material Delivery Notes',
+        undertaking_letters: 'Subcontractor Undertaking Letters',
+        letters: 'Official Corporate Letters (Editable)',
         users: 'Users & Audit Logs',
         settings: 'Entity Settings'
       };
@@ -4360,6 +4553,18 @@ class FinanceApp {
         break;
       case 'documents':
         this.renderDocumentsTab(root);
+        break;
+      case 'work_completion':
+        this.renderWorkCompletionTab(root);
+        break;
+      case 'delivery_notes':
+        this.renderDeliveryNotesTab(root);
+        break;
+      case 'undertaking_letters':
+        this.renderUndertakingLettersTab(root);
+        break;
+      case 'letters':
+        this.renderLettersTab(root);
         break;
       case 'bank_accounts':
         this.renderBankAccountsTab(root);
@@ -28505,6 +28710,9 @@ class FinanceApp {
     });
   }
 }
+
+// Register Operations & Document Modules
+registerDocumentModules(FinanceApp);
 
 // Global initialization
 function startFinanceApp() {
