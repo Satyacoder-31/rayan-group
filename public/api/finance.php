@@ -496,6 +496,66 @@ if ($pdo) {
                 INDEX idx_ult_ref (ref_no)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+            CREATE TABLE IF NOT EXISTS finance_employees (
+                id VARCHAR(64) PRIMARY KEY,
+                employee_no VARCHAR(64) NOT NULL,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                name VARCHAR(255) NOT NULL,
+                designation VARCHAR(255),
+                department VARCHAR(255),
+                joining_date DATE,
+                phone VARCHAR(64),
+                email VARCHAR(255),
+                bank_name VARCHAR(255),
+                iban VARCHAR(128),
+                account_no VARCHAR(128),
+                swift VARCHAR(64),
+                basic_salary DECIMAL(15,2) DEFAULT 0,
+                accommodation_allowance DECIMAL(15,2) DEFAULT 0,
+                consolidated_allowance DECIMAL(15,2) DEFAULT 0,
+                other_allowance DECIMAL(15,2) DEFAULT 0,
+                project_id VARCHAR(64),
+                project_name VARCHAR(255),
+                status VARCHAR(32) DEFAULT 'Active',
+                data_json LONGTEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_emp_no (employee_no),
+                INDEX idx_emp_company (company_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_payroll (
+                id VARCHAR(64) PRIMARY KEY,
+                slip_no VARCHAR(64) NOT NULL,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                employee_id VARCHAR(64) NOT NULL,
+                employee_no VARCHAR(64),
+                employee_name VARCHAR(255),
+                month_year VARCHAR(32) NOT NULL,
+                payment_date DATE,
+                basic_salary DECIMAL(15,2) DEFAULT 0,
+                accommodation_allowance DECIMAL(15,2) DEFAULT 0,
+                consolidated_allowance DECIMAL(15,2) DEFAULT 0,
+                overtime_amount DECIMAL(15,2) DEFAULT 0,
+                total_earnings DECIMAL(15,2) DEFAULT 0,
+                total_deductions DECIMAL(15,2) DEFAULT 0,
+                net_pay DECIMAL(15,2) DEFAULT 0,
+                payment_method VARCHAR(128),
+                payment_source_type VARCHAR(32),
+                payment_source_id VARCHAR(64),
+                payment_source_name VARCHAR(255),
+                project_id VARCHAR(64),
+                project_name VARCHAR(255),
+                status VARCHAR(32) DEFAULT 'Paid',
+                data_json LONGTEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_pay_emp (employee_id),
+                INDEX idx_pay_slip (slip_no),
+                INDEX idx_pay_month (month_year),
+                INDEX idx_pay_status (status)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
             CREATE TABLE IF NOT EXISTS finance_custom_letters (
                 id VARCHAR(64) PRIMARY KEY,
                 ref_no VARCHAR(64) NOT NULL UNIQUE,
@@ -3538,6 +3598,167 @@ function reconcileV81HMVillaFinancials(&$data, $pdo) {
     }
 }
 
+function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
+    $defaultEmployees = [
+        [
+            'id' => 'emp-en12001',
+            'employee_no' => 'EN12001',
+            'company_id' => 'rayan-corp-uae',
+            'name' => 'Bakhteyar Alam',
+            'position' => 'Operation Manager',
+            'department' => 'Rayan Engineering',
+            'date_of_joining' => '2025-08-07',
+            'date_of_appointment' => '2025-08-07',
+            'currency' => 'AED',
+            'phone' => '+971 50 123 4567',
+            'email' => 'bakhteyar@rayan-group.com',
+            'emirates_id' => '784-1988-1234567-1',
+            'passport_no' => 'N1234567',
+            'visa_status' => 'Employment Visa (Rayan Engineering)',
+            'basic_salary' => 9500.00,
+            'accommodation_allowance' => 12500.00,
+            'consolidated_allowance' => 8000.00,
+            'other_allowance' => 0.00,
+            'bank_name' => 'Emirates NBD Bank PJSC',
+            'swift' => 'EBILAEADXXX',
+            'iban' => 'AE860260001015934645101',
+            'account_no' => 'AE860260001015934645101',
+            'default_pay_method' => 'AED RAYAN GROUP Host To Host',
+            'project_id' => 'prj-toprock-police-01',
+            'project_name' => 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+            'status' => 'Active',
+            'created_at' => '2025-08-07T09:00:00Z'
+        ]
+    ];
+
+    $defaultPayroll = [
+        [
+            'id' => 'ps-june2026-en12001',
+            'slip_no' => 'PSJune 2026/EN12001',
+            'company_id' => 'rayan-corp-uae',
+            'employee_id' => 'emp-en12001',
+            'employee_no' => 'EN12001',
+            'employee_name' => 'Bakhteyar Alam',
+            'position' => 'Operation Manager',
+            'department' => 'Rayan Engineering',
+            'date_of_appointment' => '2025-08-07',
+            'currency' => 'AED',
+            'month_year' => 'Jun-26',
+            'period_label' => 'June 2026',
+            'printed_date' => '10-Jul-26',
+            'payment_date' => '2026-07-10',
+            'basic_salary' => 9500.00,
+            'accommodation_allowance' => 12500.00,
+            'consolidated_allowance' => 8000.00,
+            'normal_overtime' => 1000.00,
+            'overtime_hrs' => '10.0',
+            'other_earnings' => 0.00,
+            'total_earnings' => 31000.00,
+            'advance_deduction' => 0.00,
+            'absence_deduction' => 0.00,
+            'loan_deduction' => 0.00,
+            'other_deductions' => 0.00,
+            'total_deductions' => 0.00,
+            'net_pay' => 31000.00,
+            'breakdown_items' => [
+                ['date' => '10/07/2026', 'element_name' => 'Basic Salary', 'element_type' => 'Standard Earnings', 'remark' => 'Standard Basic Monthly', 'hrs' => '', 'amount' => 9500.00],
+                ['date' => '10/07/2026', 'element_name' => 'Accommodation Allowance', 'element_type' => 'Standard Earnings', 'remark' => 'Executive Housing Allowance', 'hrs' => '', 'amount' => 12500.00],
+                ['date' => '10/07/2026', 'element_name' => 'Consolidated Allowance', 'element_type' => 'Standard Earnings', 'remark' => 'Transport & Corporate Allowance', 'hrs' => '', 'amount' => 8000.00],
+                ['date' => '10/07/2026', 'element_name' => 'Normal Overtime', 'element_type' => 'Standard Earnings', 'remark' => 'Project Operations Supervision', 'hrs' => '10', 'amount' => 1000.00]
+            ],
+            'bank_name' => 'Emirates NBD Bank PJSC',
+            'swift' => 'EBILAEADXXX',
+            'iban' => 'AE860260001015934645101',
+            'account_no' => 'AE860260001015934645101',
+            'pay_method' => 'AED RAYAN GROUP Host To Host',
+            'transferred_amount' => 31000.00,
+            'status' => 'Paid',
+            'payout_source_type' => 'bank',
+            'payout_source_id' => 'bank-adcb-uae',
+            'payout_source_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+            'payout_reference' => 'TXN-PAYROLL-20260710-01',
+            'project_id' => 'prj-toprock-police-01',
+            'project_name' => 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+            'notes' => 'Operation Manager monthly compensation for June 2026',
+            'created_at' => '2026-07-10T11:30:00Z'
+        ]
+    ];
+
+    if (empty($data['employees']) || !is_array($data['employees'])) {
+        $data['employees'] = $defaultEmployees;
+    }
+    if (empty($data['payroll']) || !is_array($data['payroll'])) {
+        $data['payroll'] = $defaultPayroll;
+    }
+
+    if ($pdo) {
+        try {
+            $chkMig82 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'payroll_system_v82'")->fetchColumn();
+            if ($chkMig82 !== 'completed') {
+                $stmtEmp = $pdo->prepare("REPLACE INTO finance_employees (id, employee_no, company_id, name, designation, department, joining_date, phone, email, bank_name, iban, account_no, swift, basic_salary, accommodation_allowance, consolidated_allowance, other_allowance, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                foreach ($data['employees'] as $e) {
+                    $stmtEmp->execute([
+                        $e['id'],
+                        $e['employee_no'] ?? '',
+                        $e['company_id'] ?? 'rayan-corp-uae',
+                        $e['name'] ?? '',
+                        $e['position'] ?? ($e['designation'] ?? ''),
+                        $e['department'] ?? '',
+                        $e['date_of_joining'] ?? ($e['date_of_appointment'] ?? date('Y-m-d')),
+                        $e['phone'] ?? '',
+                        $e['email'] ?? '',
+                        $e['bank_name'] ?? '',
+                        $e['iban'] ?? '',
+                        $e['account_no'] ?? '',
+                        $e['swift'] ?? '',
+                        floatval($e['basic_salary'] ?? 0),
+                        floatval($e['accommodation_allowance'] ?? 0),
+                        floatval($e['consolidated_allowance'] ?? 0),
+                        floatval($e['other_allowance'] ?? 0),
+                        $e['project_id'] ?? '',
+                        $e['project_name'] ?? '',
+                        $e['status'] ?? 'Active',
+                        json_encode($e)
+                    ]);
+                }
+
+                $stmtPay = $pdo->prepare("REPLACE INTO finance_payroll (id, slip_no, company_id, employee_id, employee_no, employee_name, month_year, payment_date, basic_salary, accommodation_allowance, consolidated_allowance, overtime_amount, total_earnings, total_deductions, net_pay, payment_method, payment_source_type, payment_source_id, payment_source_name, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                foreach ($data['payroll'] as $p) {
+                    $stmtPay->execute([
+                        $p['id'],
+                        $p['slip_no'] ?? '',
+                        $p['company_id'] ?? 'rayan-corp-uae',
+                        $p['employee_id'] ?? '',
+                        $p['employee_no'] ?? '',
+                        $p['employee_name'] ?? '',
+                        $p['month_year'] ?? '',
+                        $p['payment_date'] ?? date('Y-m-d'),
+                        floatval($p['basic_salary'] ?? 0),
+                        floatval($p['accommodation_allowance'] ?? 0),
+                        floatval($p['consolidated_allowance'] ?? 0),
+                        floatval($p['normal_overtime'] ?? 0),
+                        floatval($p['total_earnings'] ?? 0),
+                        floatval($p['total_deductions'] ?? 0),
+                        floatval($p['net_pay'] ?? 0),
+                        $p['pay_method'] ?? '',
+                        $p['payout_source_type'] ?? '',
+                        $p['payout_source_id'] ?? '',
+                        $p['payout_source_name'] ?? '',
+                        $p['project_id'] ?? '',
+                        $p['project_name'] ?? '',
+                        $p['status'] ?? 'Paid',
+                        json_encode($p)
+                    ]);
+                }
+
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('payroll_system_v82', 'completed', NOW())");
+            }
+        } catch (Exception $e) {
+            error_log('Migration v82 error: ' . $e->getMessage());
+        }
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -5292,6 +5513,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV79ChequeDeposits($data, $pdo);
                     reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
                     reconcileV81HMVillaFinancials($data, $pdo);
+                    reconcileV82EmployeesAndPayroll($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -5313,6 +5535,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV79ChequeDeposits($data, $pdo);
                 reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
                 reconcileV81HMVillaFinancials($data, $pdo);
+                reconcileV82EmployeesAndPayroll($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
@@ -5588,7 +5811,7 @@ function saveFinanceDb($pdo, $dataFile, &$data, $candidates = []) {
         }
     }
 
-    $extraDocCols = ['work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters'];
+    $extraDocCols = ['work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters', 'employees', 'payroll'];
     foreach ($extraDocCols as $col) {
         if (empty($data[$col])) {
             $seed = getMasterSeed($candidates);
@@ -9837,6 +10060,211 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $addAuditLog('delete', 'custom_letter', $targetId, 'Deleted official letter ' . $targetId);
             }
+            break;
+
+        case 'save_employee':
+            $emp = $body['employee'] ?? [];
+            if (!empty($emp)) {
+                if (empty($emp['id'])) {
+                    $emp['id'] = 'emp-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['employees']) || !is_array($db['employees'])) {
+                    $db['employees'] = [];
+                }
+                $found = false;
+                foreach ($db['employees'] as &$existing) {
+                    if (($existing['id'] ?? '') === $emp['id'] || (!empty($emp['employee_no']) && strcasecmp($existing['employee_no'] ?? '', $emp['employee_no']) === 0)) {
+                        $existing = array_merge($existing, $emp);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['employees'], $emp);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_employees (id, employee_no, company_id, name, designation, department, joining_date, phone, email, bank_name, iban, account_no, swift, basic_salary, accommodation_allowance, consolidated_allowance, other_allowance, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $emp['id'],
+                            $emp['employee_no'] ?? '',
+                            $emp['company_id'] ?? 'rayan-corp-uae',
+                            $emp['name'] ?? '',
+                            $emp['position'] ?? ($emp['designation'] ?? ''),
+                            $emp['department'] ?? '',
+                            $emp['date_of_joining'] ?? ($emp['date_of_appointment'] ?? date('Y-m-d')),
+                            $emp['phone'] ?? '',
+                            $emp['email'] ?? '',
+                            $emp['bank_name'] ?? '',
+                            $emp['iban'] ?? '',
+                            $emp['account_no'] ?? '',
+                            $emp['swift'] ?? '',
+                            floatval($emp['basic_salary'] ?? 0),
+                            floatval($emp['accommodation_allowance'] ?? 0),
+                            floatval($emp['consolidated_allowance'] ?? 0),
+                            floatval($emp['other_allowance'] ?? 0),
+                            $emp['project_id'] ?? '',
+                            $emp['project_name'] ?? '',
+                            $emp['status'] ?? 'Active',
+                            json_encode($emp)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_employee DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'employee', $emp['employee_no'] ?? $emp['id'], 'Saved employee ' . ($emp['name'] ?? ''));
+            }
+            break;
+
+        case 'delete_employee':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['employees'])) {
+                $db['employees'] = array_values(array_filter($db['employees'], function($e) use ($targetId) {
+                    return ($e['id'] ?? '') !== $targetId && ($e['employee_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_employees WHERE id = ? OR employee_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'employee', $targetId, 'Deleted employee ' . $targetId);
+            }
+            break;
+
+        case 'save_payroll':
+            $pay = $body['payroll'] ?? [];
+            if (!empty($pay)) {
+                if (empty($pay['id'])) {
+                    $pay['id'] = 'ps-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['payroll']) || !is_array($db['payroll'])) {
+                    $db['payroll'] = [];
+                }
+                $found = false;
+                foreach ($db['payroll'] as &$existing) {
+                    if (($existing['id'] ?? '') === $pay['id'] || (!empty($pay['slip_no']) && strcasecmp($existing['slip_no'] ?? '', $pay['slip_no']) === 0)) {
+                        $existing = array_merge($existing, $pay);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['payroll'], $pay);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_payroll (id, slip_no, company_id, employee_id, employee_no, employee_name, month_year, payment_date, basic_salary, accommodation_allowance, consolidated_allowance, overtime_amount, total_earnings, total_deductions, net_pay, payment_method, payment_source_type, payment_source_id, payment_source_name, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $pay['id'],
+                            $pay['slip_no'] ?? '',
+                            $pay['company_id'] ?? 'rayan-corp-uae',
+                            $pay['employee_id'] ?? '',
+                            $pay['employee_no'] ?? '',
+                            $pay['employee_name'] ?? '',
+                            $pay['month_year'] ?? '',
+                            $pay['payment_date'] ?? date('Y-m-d'),
+                            floatval($pay['basic_salary'] ?? 0),
+                            floatval($pay['accommodation_allowance'] ?? 0),
+                            floatval($pay['consolidated_allowance'] ?? 0),
+                            floatval($pay['normal_overtime'] ?? 0),
+                            floatval($pay['total_earnings'] ?? 0),
+                            floatval($pay['total_deductions'] ?? 0),
+                            floatval($pay['net_pay'] ?? 0),
+                            $pay['pay_method'] ?? '',
+                            $pay['payout_source_type'] ?? '',
+                            $pay['payout_source_id'] ?? '',
+                            $pay['payout_source_name'] ?? '',
+                            $pay['project_id'] ?? '',
+                            $pay['project_name'] ?? '',
+                            $pay['status'] ?? 'Paid',
+                            json_encode($pay)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_payroll DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'payroll', $pay['slip_no'] ?? $pay['id'], 'Saved pay slip ' . ($pay['slip_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_payroll':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['payroll'])) {
+                $db['payroll'] = array_values(array_filter($db['payroll'], function($p) use ($targetId) {
+                    return ($p['id'] ?? '') !== $targetId && ($p['slip_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_payroll WHERE id = ? OR slip_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'payroll', $targetId, 'Deleted pay slip ' . $targetId);
+            }
+            break;
+
+        case 'disburse_payroll':
+            $slipId = $body['slip_id'] ?? '';
+            $slipData = $body['payroll'] ?? [];
+            $sourceType = $body['source_type'] ?? 'bank';
+            $sourceId = $body['source_id'] ?? '';
+            $amount = floatval($body['amount'] ?? ($slipData['net_pay'] ?? 0));
+            $payoutDate = $body['payment_date'] ?? date('Y-m-d');
+            $payoutRef = $body['payout_reference'] ?? ('TXN-PAYROLL-' . round(microtime(true) * 1000));
+
+            // 1. Mark payslip as Paid in db
+            if (!empty($db['payroll'])) {
+                foreach ($db['payroll'] as &$p) {
+                    if (($p['id'] ?? '') === $slipId || ($p['slip_no'] ?? '') === ($slipData['slip_no'] ?? '')) {
+                        $p['status'] = 'Paid';
+                        $p['payment_date'] = $payoutDate;
+                        $p['payout_source_type'] = $sourceType;
+                        $p['payout_source_id'] = $sourceId;
+                        $p['payout_reference'] = $payoutRef;
+                        break;
+                    }
+                }
+                unset($p);
+            }
+
+            // 2. Deduct from Bank Account or Cash in Hand
+            if ($sourceType === 'cash') {
+                if (!empty($db['cash_in_hand'])) {
+                    foreach ($db['cash_in_hand'] as &$c) {
+                        if (($c['id'] ?? '') === $sourceId || stripos($c['register_name'] ?? '', 'e-wallet') !== false) {
+                            $c['balance'] = round(floatval($c['balance'] ?? 0) - $amount, 2);
+                            $regName = $c['register_name'] ?? 'RAYAN E-Wallets';
+                            break;
+                        }
+                    }
+                    unset($c);
+                }
+                if ($pdo) {
+                    try {
+                        $pdo->exec("UPDATE finance_cash_in_hand SET balance = balance - {$amount}, updated_at = NOW() WHERE id = '{$sourceId}' OR register_name LIKE '%e-wallet%'");
+                    } catch (Exception $e) {}
+                }
+            } else {
+                if (!empty($db['bank_accounts'])) {
+                    foreach ($db['bank_accounts'] as &$b) {
+                        if (($b['id'] ?? '') === $sourceId || ($b['id'] ?? '') === 'bank-adcb-uae') {
+                            $b['balance'] = round(floatval($b['balance'] ?? 0) - $amount, 2);
+                            $bankName = $b['bank_name'] ?? 'ADCB';
+                            break;
+                        }
+                    }
+                    unset($b);
+                }
+                if ($pdo) {
+                    try {
+                        $pdo->exec("UPDATE finance_bank_accounts SET balance = balance - {$amount}, updated_at = NOW() WHERE id = '{$sourceId}'");
+                    } catch (Exception $e) {}
+                }
+            }
+            $addAuditLog('disburse', 'payroll', $slipId, "Disbursed {$amount} AED from {$sourceType} {$sourceId} for slip {$slipId}");
             break;
 
         case 'sync_full':

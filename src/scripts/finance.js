@@ -1,5 +1,6 @@
 import defaultSeedData from '../../data/finance-data.json';
 import { registerDocumentModules } from './finance-documents.js';
+import { registerPayrollModules } from './finance-payroll.js';
 
 /**
  * RAYAN GROUP — ENTERPRISE ACCOUNTS, BILLING & FINANCIAL MANAGEMENT SYSTEM
@@ -10,6 +11,8 @@ import { registerDocumentModules } from './finance-documents.js';
 class FinanceApp {
   constructor() {
     this.db = JSON.parse(JSON.stringify(defaultSeedData));
+    if (!Array.isArray(this.db.employees)) this.db.employees = [];
+    if (!Array.isArray(this.db.payroll)) this.db.payroll = [];
     this.currentUser = null;
     this.activeCompanyId = 'rayan-corp-uae';
     this.activePeriod = 'all';
@@ -234,7 +237,8 @@ class FinanceApp {
       'audit_logs', 'notifications', 'documents',
       'bank_accounts', 'cash_in_hand', 'cheques', 'loan_accounts',
       'bank_transfers', 'cash_vouchers', 'loan_transactions',
-      'work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters'
+      'work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters',
+      'employees', 'payroll'
     ];
 
     const getUniqueKey = (item) => {
@@ -252,6 +256,8 @@ class FinanceApp {
       if (item.cert_no) return `wcc-${item.cert_no.trim().toLowerCase()}`;
       if (item.dn_no) return `dn-${item.dn_no.trim().toLowerCase()}`;
       if (item.ref_no) return `ref-${item.ref_no.trim().toLowerCase()}`;
+      if (item.slip_no) return `ps-${item.slip_no.trim().toLowerCase()}`;
+      if (item.employee_no) return `emp-${item.employee_no.trim().toLowerCase()}`;
       return item.id || item.reference_no || item.account_number || item.iban || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
     };
 
@@ -1431,7 +1437,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v81';
+    const CURRENT_DB_VERSION = 'v2026_clean_v82';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3946,6 +3952,34 @@ class FinanceApp {
                 </div>
               </div>
 
+              <!-- Accordion: HR & Payroll -->
+              <div class="fin-accordion-group ${['employees', 'payroll'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-hr">
+                <div class="fin-accordion-header" data-toggle="fin-grp-hr">
+                  <div class="fin-grp-title-wrap">
+                    <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span class="fin-grp-title">HR &amp; Payroll</span>
+                  </div>
+                  <svg class="fin-accordion-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </div>
+                <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'employees' ? 'active' : ''}" data-tab="employees">
+                    <span class="fin-subitem-text">Employees / Workers</span>
+                    <button type="button" class="fin-subitem-plus" title="Add New Employee" onclick="event.stopPropagation(); window.finApp.openEmployeeModal()">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'payroll' ? 'active' : ''}" data-tab="payroll">
+                    <span class="fin-subitem-text">Payroll &amp; Pay Slips</span>
+                    <button type="button" class="fin-subitem-plus" title="Create Monthly Pay Slip" onclick="event.stopPropagation(); window.finApp.openPayslipModal()">+</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Accordion: Operations & Projects -->
               <div class="fin-accordion-group ${['projects', 'items', 'documents', 'work_completion', 'delivery_notes', 'undertaking_letters', 'letters'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-ops">
                 <div class="fin-accordion-header" data-toggle="fin-grp-ops">
@@ -4590,6 +4624,12 @@ class FinanceApp {
         break;
       case 'letters':
         this.renderLettersTab(root);
+        break;
+      case 'employees':
+        this.renderEmployeesTab(root);
+        break;
+      case 'payroll':
+        this.renderPayrollTab(root);
         break;
       case 'bank_accounts':
         this.renderBankAccountsTab(root);
@@ -9178,7 +9218,16 @@ class FinanceApp {
     const autoBillsCost = Math.round(prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0) * 100) / 100;
     const autoBillsPaid = Math.round(prjBills.reduce((s, b) => s + Math.min(Number(b.amount_paid) || 0, Number(b.grand_total) || 0), 0) * 100) / 100;
     const autoExpensesCost = Math.round(prjExpenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0) * 100) / 100;
-    const autoCost = Math.round((autoBillsCost + autoExpensesCost) * 100) / 100;
+
+    const prjPayroll = (this.db?.payroll || []).filter(p => {
+      if (p.status === 'void') return false;
+      if (p.project_id && (p.project_id === prjId || p.project_id.toLowerCase() === prjCode)) return true;
+      const pPName = (p.project_name || '').toLowerCase().trim();
+      if (pPName && (pPName === prjName || pPName === prjCode)) return true;
+      return false;
+    });
+    const autoSalariesCost = Math.round(prjPayroll.reduce((s, p) => s + (Number(p.net_pay || p.total_earnings) || 0), 0) * 100) / 100;
+    const autoCost = Math.round((autoBillsCost + autoExpensesCost + autoSalariesCost) * 100) / 100;
 
     const isManual = prj.manual_financials === true;
     const invoiced = isManual ? Number(prj.manual_invoiced ?? prj.contract_value ?? 0) : autoInvoiced;
@@ -9200,7 +9249,8 @@ class FinanceApp {
 
     const billsCost = isManual && prj.manual_bills !== undefined ? Number(prj.manual_bills) : autoBillsCost;
     const siteExpenses = isManual && prj.manual_expenses !== undefined ? Number(prj.manual_expenses) : autoExpensesCost;
-    const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses)) : Math.round((billsCost + siteExpenses) * 100) / 100;
+    const salariesCost = isManual && prj.manual_salaries !== undefined ? Number(prj.manual_salaries) : autoSalariesCost;
+    const totalCost = isManual ? Number(prj.manual_cost ?? (billsCost + siteExpenses + salariesCost)) : Math.round((billsCost + siteExpenses + salariesCost) * 100) / 100;
 
     let effNetInvoiced = netInvoiced;
     if (contractVal > 0 && Math.abs(netInvoiced - contractVal) <= 0.02) {
@@ -9208,7 +9258,7 @@ class FinanceApp {
     }
     const netProfit = isManual ? (prj.manual_profit !== undefined ? Number(prj.manual_profit) : Math.round((effNetInvoiced - totalCost) * 100) / 100) : Math.round((effNetInvoiced - totalCost) * 100) / 100;
     const profitMargin = effNetInvoiced > 0 ? ((netProfit / effNetInvoiced) * 100).toFixed(1) : (prj.manual_margin ? Number(prj.manual_margin).toFixed(1) : '0.0');
-    const cashPosition = Math.round((collected - (autoBillsPaid + siteExpenses)) * 100) / 100;
+    const cashPosition = Math.round((collected - (autoBillsPaid + siteExpenses + autoSalariesCost)) * 100) / 100;
 
     return {
       prj,
@@ -9222,6 +9272,8 @@ class FinanceApp {
       pendingDue,
       billsCost,
       siteExpenses,
+      salariesCost,
+      payroll: prjPayroll,
       totalCost,
       netProfit,
       profitMargin,
@@ -9459,7 +9511,7 @@ class FinanceApp {
                         <span style="color:#fb923c; display:block; font-size:0.7rem; font-weight:700;">Total Costs &amp; Expenses:</span>
                         <strong style="color:#fb923c; font-size:0.92rem; font-weight:800;">${this.formatCurrency(ledger.totalCost)}</strong>
                         <div style="font-size:0.65rem; color:#94a3b8; margin-top:2px;">
-                          Bills: ${this.formatCurrency(ledger.billsCost)} • Exp: ${this.formatCurrency(ledger.siteExpenses)}
+                          Bills: ${this.formatCurrency(ledger.billsCost)} • Exp: ${this.formatCurrency(ledger.siteExpenses)}${ledger.salariesCost > 0 ? ` • Salaries: ${this.formatCurrency(ledger.salariesCost)}` : ''}
                         </div>
                       </div>
                       <div style="grid-column: span 2; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.08); padding-top:6px; margin-top:2px;">
@@ -28819,6 +28871,7 @@ class FinanceApp {
 
 // Register Operations & Document Modules
 registerDocumentModules(FinanceApp);
+registerPayrollModules(FinanceApp);
 
 // Global initialization
 function startFinanceApp() {

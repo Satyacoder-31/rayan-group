@@ -2068,6 +2068,7 @@ export function registerDocumentModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDeliveryNotePrintModal()">Delivery Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -2317,6 +2318,7 @@ export function registerDocumentModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDeliveryNotePrintModal()">Delivery Note</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openUndertakingLetterPrintModal('${ult.id}')">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -2523,6 +2525,7 @@ export function registerDocumentModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openDeliveryNotePrintModal('${dn.id}')">Delivery Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">

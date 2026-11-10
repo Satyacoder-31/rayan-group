@@ -6582,5 +6582,116 @@
       "status": "Issued",
       "created_at": "2026-05-18T11:00:00Z"
     }
+  ],
+  "employees": [
+    {
+      "id": "emp-en12001",
+      "employee_no": "EN12001",
+      "company_id": "rayan-corp-uae",
+      "name": "Bakhteyar Alam",
+      "position": "Operation Manager",
+      "department": "Rayan Engineering",
+      "date_of_joining": "2025-08-07",
+      "date_of_appointment": "2025-08-07",
+      "currency": "AED",
+      "phone": "+971 50 123 4567",
+      "email": "bakhteyar@rayan-group.com",
+      "emirates_id": "784-1988-1234567-1",
+      "passport_no": "N1234567",
+      "visa_status": "Employment Visa (Rayan Engineering)",
+      "basic_salary": 9500,
+      "accommodation_allowance": 12500,
+      "consolidated_allowance": 8000,
+      "other_allowance": 0,
+      "bank_name": "Emirates NBD Bank PJSC",
+      "swift": "EBILAEADXXX",
+      "iban": "AE860260001015934645101",
+      "account_no": "AE860260001015934645101",
+      "default_pay_method": "AED RAYAN GROUP Host To Host",
+      "project_id": "prj-toprock-police-01",
+      "project_name": "The New Dubai Police Academy @ Al Rowaiyah, Dubai",
+      "status": "Active",
+      "created_at": "2025-08-07T09:00:00Z"
+    }
+  ],
+  "payroll": [
+    {
+      "id": "ps-june2026-en12001",
+      "slip_no": "PSJune 2026/EN12001",
+      "company_id": "rayan-corp-uae",
+      "employee_id": "emp-en12001",
+      "employee_no": "EN12001",
+      "employee_name": "Bakhteyar Alam",
+      "position": "Operation Manager",
+      "department": "Rayan Engineering",
+      "date_of_appointment": "2025-08-07",
+      "currency": "AED",
+      "month_year": "Jun-26",
+      "period_label": "June 2026",
+      "printed_date": "10-Jul-26",
+      "payment_date": "2026-07-10",
+      "basic_salary": 9500,
+      "accommodation_allowance": 12500,
+      "consolidated_allowance": 8000,
+      "normal_overtime": 1000,
+      "overtime_hrs": "10.0",
+      "other_earnings": 0,
+      "total_earnings": 31000,
+      "advance_deduction": 0,
+      "absence_deduction": 0,
+      "loan_deduction": 0,
+      "other_deductions": 0,
+      "total_deductions": 0,
+      "net_pay": 31000,
+      "breakdown_items": [
+        {
+          "date": "10/07/2026",
+          "element_name": "Basic Salary",
+          "element_type": "Standard Earnings",
+          "remark": "Standard Basic Monthly",
+          "hrs": "",
+          "amount": 9500
+        },
+        {
+          "date": "10/07/2026",
+          "element_name": "Accommodation Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Executive Housing Allowance",
+          "hrs": "",
+          "amount": 12500
+        },
+        {
+          "date": "10/07/2026",
+          "element_name": "Consolidated Allowance",
+          "element_type": "Standard Earnings",
+          "remark": "Transport & Corporate Allowance",
+          "hrs": "",
+          "amount": 8000
+        },
+        {
+          "date": "10/07/2026",
+          "element_name": "Normal Overtime",
+          "element_type": "Standard Earnings",
+          "remark": "Project Operations Supervision",
+          "hrs": "10",
+          "amount": 1000
+        }
+      ],
+      "bank_name": "Emirates NBD Bank PJSC",
+      "swift": "EBILAEADXXX",
+      "iban": "AE860260001015934645101",
+      "account_no": "AE860260001015934645101",
+      "pay_method": "AED RAYAN GROUP Host To Host",
+      "transferred_amount": 31000,
+      "status": "Paid",
+      "payout_source_type": "bank",
+      "payout_source_id": "bank-adcb-uae",
+      "payout_source_name": "Abu Dhabi Commercial Bank (ADCB)",
+      "payout_reference": "TXN-PAYROLL-20260710-01",
+      "project_id": "prj-toprock-police-01",
+      "project_name": "The New Dubai Police Academy @ Al Rowaiyah, Dubai",
+      "notes": "Operation Manager monthly compensation for June 2026",
+      "created_at": "2026-07-10T11:30:00Z"
+    }
   ]
 }
