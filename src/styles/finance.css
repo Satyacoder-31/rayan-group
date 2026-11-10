@@ -1730,21 +1730,22 @@
 }
 
 .fin-table-responsive::-webkit-scrollbar {
-  height: 6px;
+  height: 10px;
 }
 
 .fin-table-responsive::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 5px;
 }
 
 .fin-table-responsive::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 4px;
+  background: #0284c7;
+  border-radius: 5px;
+  border: 1px solid rgba(56, 189, 248, 0.5);
 }
 
 .fin-table-responsive::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.4);
+  background: #38bdf8;
 }
 
 .fin-data-table {
@@ -1909,19 +1910,56 @@
   color: #38bdf8;
 }
 
-/* Sticky Action Column so Edit/Delete are always visible and never cut off */
+/* Action Column at natural end of row, accessed only when scrolled right */
 .fin-col-actions-sticky {
-  position: sticky !important;
-  right: 0 !important;
-  background: #0b1329 !important;
-  z-index: 5 !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: -8px 0 16px rgba(0, 0, 0, 0.55);
+  position: static !important;
   white-space: nowrap !important;
+  text-align: right;
+  border-left: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .fin-data-table tr:hover .fin-col-actions-sticky {
-  background: #111e3f !important;
+  background: transparent !important;
+}
+
+/* Floating Persistent Horizontal Scrollbar at bottom of screen */
+.fin-floating-h-scrollbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  z-index: 998;
+  display: none;
+  background: rgba(11, 19, 41, 0.95);
+  border-top: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  scrollbar-width: thin;
+  scrollbar-color: #0284c7 rgba(0, 0, 0, 0.5);
+}
+
+.fin-floating-h-scrollbar::-webkit-scrollbar {
+  height: 10px;
+}
+
+.fin-floating-h-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+}
+
+.fin-floating-h-scrollbar::-webkit-scrollbar-thumb {
+  background: #0284c7;
+  border-radius: 5px;
+  border: 1px solid rgba(56, 189, 248, 0.6);
+}
+
+.fin-floating-h-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
 }
 
 /* ==========================================================================

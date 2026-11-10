@@ -3991,6 +3991,9 @@ class FinanceApp {
       }, { passive: true });
     }
 
+    // Initialize floating persistent horizontal scrollbar across all wide tables
+    this.initFloatingScrollbar();
+
     // 0. Sidebar Toggle & Mobile Backdrop
     const sidebarToggle = document.getElementById('fin-sidebar-toggle-btn');
     const sidebar = document.getElementById('fin-app-sidebar');
@@ -4378,6 +4381,114 @@ class FinanceApp {
         break;
       default:
         this.renderDashboardTab(root);
+    }
+    setTimeout(() => this.updateFloatingScrollbar(), 60);
+  }
+
+  // --------------------------------------------------------------------------
+  // FLOATING PERSISTENT HORIZONTAL SCROLLBAR (STAYS AT BOTTOM OF SCREEN)
+  // --------------------------------------------------------------------------
+  initFloatingScrollbar() {
+    let bar = document.getElementById('fin-floating-scrollbar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'fin-floating-scrollbar';
+      bar.className = 'fin-floating-h-scrollbar';
+      bar.innerHTML = '<div id="fin-floating-scrollbar-inner" style="height:1px;"></div>';
+      document.body.appendChild(bar);
+
+      // Bidirectional sync: when user drags or scrolls the floating scrollbar
+      bar.addEventListener('scroll', () => {
+        if (!this._activeScrollTable) return;
+        if (Math.abs(this._activeScrollTable.scrollLeft - bar.scrollLeft) > 1) {
+          this._activeScrollTable.scrollLeft = bar.scrollLeft;
+        }
+      });
+    }
+
+    const onScrollOrResize = () => {
+      this.updateFloatingScrollbar();
+    };
+
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    document.addEventListener('scroll', onScrollOrResize, { passive: true });
+    const contentRoot = document.getElementById('fin-tab-content-root');
+    if (contentRoot) {
+      contentRoot.addEventListener('scroll', onScrollOrResize, { passive: true });
+    }
+
+    // Mutation observer so dynamic content changes update the floating scrollbar
+    if (!this._tableMutationObs && contentRoot) {
+      this._tableMutationObs = new MutationObserver(() => {
+        this.updateFloatingScrollbar();
+      });
+      this._tableMutationObs.observe(contentRoot, { childList: true, subtree: true });
+    }
+  }
+
+  updateFloatingScrollbar() {
+    const bar = document.getElementById('fin-floating-scrollbar');
+    const inner = document.getElementById('fin-floating-scrollbar-inner');
+    if (!bar || !inner) return;
+
+    // Find all table-responsive containers in view
+    const tables = Array.from(document.querySelectorAll('.fin-table-responsive'));
+    if (!tables.length) {
+      bar.style.display = 'none';
+      this._activeScrollTable = null;
+      return;
+    }
+
+    let targetTable = null;
+    let maxVisibleHeight = 0;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    for (const tbl of tables) {
+      // Must have horizontal overflow (content wider than container)
+      if (tbl.scrollWidth <= tbl.clientWidth + 2) continue;
+
+      const rect = tbl.getBoundingClientRect();
+      const visibleTop = Math.max(0, rect.top);
+      const visibleBottom = Math.min(vh, rect.bottom);
+      const visibleHeight = visibleBottom - visibleTop;
+
+      // Table is visible in viewport AND its natural bottom is below the viewport fold
+      if (visibleHeight > 40 && rect.bottom > vh - 10 && rect.top < vh - 30) {
+        if (visibleHeight > maxVisibleHeight) {
+          maxVisibleHeight = visibleHeight;
+          targetTable = tbl;
+        }
+      }
+    }
+
+    if (!targetTable) {
+      bar.style.display = 'none';
+      this._activeScrollTable = null;
+      return;
+    }
+
+    this._activeScrollTable = targetTable;
+    const rect = targetTable.getBoundingClientRect();
+
+    bar.style.display = 'block';
+    bar.style.left = `${Math.max(0, rect.left)}px`;
+    bar.style.width = `${Math.min(rect.width, window.innerWidth - Math.max(0, rect.left))}px`;
+    inner.style.width = `${targetTable.scrollWidth}px`;
+    if (Math.abs(bar.scrollLeft - targetTable.scrollLeft) > 1) {
+      bar.scrollLeft = targetTable.scrollLeft;
+    }
+
+    // Attach scroll listener to table so scrolling the table also updates the bar
+    if (!targetTable._hScrollBound) {
+      targetTable._hScrollBound = true;
+      targetTable.addEventListener('scroll', () => {
+        if (this._activeScrollTable === targetTable) {
+          if (Math.abs(bar.scrollLeft - targetTable.scrollLeft) > 1) {
+            bar.scrollLeft = targetTable.scrollLeft;
+          }
+        }
+      }, { passive: true });
     }
   }
 
@@ -7228,7 +7339,30 @@ class FinanceApp {
         <div class="fin-panel-header" style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem;">
           <div>
             <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📜 Recent Bank Wires &amp; Remittance Clearances</h3>
-            <span style="font-size:0.72rem; color:#94a3b8;">Audited transaction records matched with corporate bank statements (${transfers.length} wires)</span>
+            <span style="font-size:0.72rem; color:#94a3b8;">Audited transaction records matched with corporate bank statements (<span id="bank-wire-count">${transfers.length}</span> wires)</span>
+          </div>
+        </div>
+
+        <!-- Search & Excel Export Toolbar for Bank Wires -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:0.6rem; margin-top:1rem; margin-bottom:1rem;">
+          <div style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; flex:1; max-width:680px;">
+            <div style="position:relative; flex:1; min-width:260px;">
+              <input type="text" id="bank-wire-search" class="fin-filter-input" placeholder="🔍 Search wire / UTR #, counterparty, bank, purpose..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="bank-wire-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            </div>
+            <select id="bank-wire-type-filter" class="fin-select-pill">
+              <option value="all">All Wires (${transfers.length})</option>
+              <option value="inward">Inward Client Wires</option>
+              <option value="outward">Outward Remittances</option>
+              <option value="bank_to_cash">Bank to E-Wallet / Cash</option>
+              <option value="inter_account">Inter-Bank Transfers</option>
+            </select>
+          </div>
+          <div>
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.1); font-weight:700;" onclick="window.finApp.exportBankTransfersCSV()">
+              📥 Export CSV / Excel
+            </button>
           </div>
         </div>
 
@@ -7246,14 +7380,64 @@ class FinanceApp {
                 <th style="text-align:center;">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${transfers.length === 0 ? `
-                <tr>
-                  <td colspan="8" style="text-align:center; padding:2rem; color:#94a3b8;">
-                    No wire transfers recorded yet for this entity. Click <strong>"Record Transfer / Wire"</strong> above to log an inflow or outflow.
-                  </td>
-                </tr>
-              ` : transfers.map(t => {
+            <tbody id="bank-wires-tbody">
+              ${this.renderBankWireRows(transfers)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const wireSearch = document.getElementById('bank-wire-search');
+    const wireClear = document.getElementById('bank-wire-search-clear');
+    const wireType = document.getElementById('bank-wire-type-filter');
+    const wireCount = document.getElementById('bank-wire-count');
+    const wireTbody = document.getElementById('bank-wires-tbody');
+
+    const updateWireFilter = () => {
+      const q = (wireSearch ? wireSearch.value : '').toLowerCase().trim();
+      const type = wireType ? wireType.value : 'all';
+      if (wireClear) wireClear.style.display = q ? 'block' : 'none';
+
+      const filtered = transfers.filter(t => {
+        const matchQ = !q ||
+          (t.reference_no || '').toLowerCase().includes(q) ||
+          (t.counterparty || '').toLowerCase().includes(q) ||
+          (t.source_bank || '').toLowerCase().includes(q) ||
+          (t.destination_bank || '').toLowerCase().includes(q) ||
+          (t.purpose || '').toLowerCase().includes(q) ||
+          (t.notes || '').toLowerCase().includes(q);
+        const matchType = (type === 'all') || (t.type === type);
+        return matchQ && matchType;
+      });
+
+      if (wireTbody) wireTbody.innerHTML = this.renderBankWireRows(filtered);
+      if (wireCount) wireCount.textContent = filtered.length;
+      this.updateFloatingScrollbar();
+    };
+
+    if (wireSearch) wireSearch.oninput = updateWireFilter;
+    if (wireType) wireType.onchange = updateWireFilter;
+    if (wireClear) {
+      wireClear.onclick = () => {
+        wireSearch.value = '';
+        updateWireFilter();
+        wireSearch.focus();
+      };
+    }
+  }
+
+  renderBankWireRows(transfers) {
+    if (!transfers.length) {
+      return `
+        <tr>
+          <td colspan="8" style="text-align:center; padding:2rem; color:#94a3b8;">
+            No wire transfers matching your search criteria.
+          </td>
+        </tr>
+      `;
+    }
+    return transfers.map(t => {
       const isInward = t.type === 'inward';
       const isInter = t.type === 'inter_account';
       const isBankWdl = t.type === 'bank_to_cash';
@@ -7261,31 +7445,26 @@ class FinanceApp {
       const sign = isInward ? '+' : (isInter ? '⇄' : '-');
       const typeLabel = t.type_label || (isBankWdl ? 'Bank Withdrawal to E-Wallet' : (isInward ? 'Inward Wire' : 'Outward Remittance'));
       return `
-                  <tr>
-                    <td><strong>${t.reference_no}</strong></td>
-                    <td>${this.formatDate(t.date)}</td>
-                    <td>
-                      <div style="font-weight:600; color:#ffffff;">${this.formatCompanyName(t.counterparty) || 'Corporate Treasury'}</div>
-                      ${t.purpose ? `<div style="font-size:0.7rem; color:#94a3b8;">${t.purpose}</div>` : ''}
-                    </td>
-                    <td>${t.source_bank || 'Corporate Account'}</td>
-                    <td><span style="color:${color}; font-weight:600;">${typeLabel}</span></td>
-                    <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(t.amount)}</strong></td>
-                    <td><span class="fin-badge ${t.status === 'Cleared' || t.status === 'Completed' ? 'fin-badge-paid' : 'fin-badge-pending'}">${t.status || 'Cleared'}</span></td>
-                    <td style="text-align:center;">
-                      <div style="display:inline-flex; gap:4px;">
-                        <button type="button" class="fin-btn-card-action" title="Print Remittance Advice" onclick="window.finApp.printBankWireAdvice('${t.id}')">🖨️</button>
-                        <button type="button" class="fin-btn-card-action danger" title="Delete Wire" onclick="window.finApp.deleteBankTransfer('${t.id}')">🗑️</button>
-                      </div>
-                    </td>
-                  </tr>
-                `;
-    }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
+        <tr>
+          <td><strong>${t.reference_no}</strong></td>
+          <td>${this.formatDate(t.date)}</td>
+          <td>
+            <div style="font-weight:600; color:#ffffff;">${this.formatCompanyName(t.counterparty) || 'Corporate Treasury'}</div>
+            ${t.purpose ? `<div style="font-size:0.7rem; color:#94a3b8;">${t.purpose}</div>` : ''}
+          </td>
+          <td>${t.source_bank || 'Corporate Account'}</td>
+          <td><span style="color:${color}; font-weight:600;">${typeLabel}</span></td>
+          <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(t.amount)}</strong></td>
+          <td><span class="fin-badge ${t.status === 'Cleared' || t.status === 'Completed' ? 'fin-badge-paid' : 'fin-badge-pending'}">${t.status || 'Cleared'}</span></td>
+          <td style="text-align:center;">
+            <div style="display:inline-flex; gap:4px;">
+              <button type="button" class="fin-btn-card-action" title="Print Remittance Advice" onclick="window.finApp.printBankWireAdvice('${t.id}')">🖨️</button>
+              <button type="button" class="fin-btn-card-action danger" title="Delete Wire" onclick="window.finApp.deleteBankTransfer('${t.id}')">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   renderCashInHandTab(root) {
@@ -7382,7 +7561,30 @@ class FinanceApp {
         <div class="fin-panel-header" style="margin-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem;">
           <div>
             <h3 style="font-size:0.95rem; color:#ffffff; margin:0;">📝 Recent Petty Cash Disbursals &amp; Replenishments</h3>
-            <span style="font-size:0.72rem; color:#94a3b8;">Dual-signatory verification receipts &amp; petty cash vouchers (${vouchers.length} vouchers)</span>
+            <span style="font-size:0.72rem; color:#94a3b8;">Dual-signatory verification receipts &amp; petty cash vouchers (<span id="cash-voucher-count">${vouchers.length}</span> vouchers)</span>
+          </div>
+        </div>
+
+        <!-- Search & Excel Export Toolbar for Petty Cash Vouchers -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:0.6rem; margin-top:1rem; margin-bottom:1rem;">
+          <div style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; flex:1; max-width:680px;">
+            <div style="position:relative; flex:1; min-width:260px;">
+              <input type="text" id="cash-voucher-search" class="fin-filter-input" placeholder="🔍 Search voucher #, payee, purpose, project, custodian..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="cash-voucher-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            </div>
+            <select id="cash-voucher-filter-type" class="fin-select-pill">
+              <option value="all">All Vouchers (${vouchers.length})</option>
+              <option value="outflow">Disbursals / Outflow</option>
+              <option value="inflow">Replenishments / Inflow</option>
+              <option value="bank_withdrawal">Bank Withdrawals</option>
+              <option value="transfer">Project Transfers</option>
+            </select>
+          </div>
+          <div>
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.1); font-weight:700;" onclick="window.finApp.exportCashVouchersCSV()">
+              📥 Export CSV / Excel
+            </button>
           </div>
         </div>
 
@@ -7402,53 +7604,108 @@ class FinanceApp {
                 <th style="text-align:center; min-width:120px;">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${vouchers.length === 0 ? `
-                <tr>
-                  <td colspan="10" style="text-align:center; padding:2rem; color:#94a3b8;">
-                    No petty cash vouchers logged yet. Click <strong>"Record Cash Voucher"</strong> above to issue a voucher.
-                  </td>
-                </tr>
-              ` : vouchers.map((v, idx) => {
+            <tbody id="cash-vouchers-tbody">
+              ${this.renderCashVoucherRows(vouchers)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const cashSearch = document.getElementById('cash-voucher-search');
+    const cashClear = document.getElementById('cash-voucher-search-clear');
+    const cashFilterType = document.getElementById('cash-voucher-filter-type');
+    const cashCount = document.getElementById('cash-voucher-count');
+    const cashTbody = document.getElementById('cash-vouchers-tbody');
+
+    const updateCashFilter = () => {
+      const q = (cashSearch ? cashSearch.value : '').toLowerCase().trim();
+      const fType = cashFilterType ? cashFilterType.value : 'all';
+      if (cashClear) cashClear.style.display = q ? 'block' : 'none';
+
+      const filtered = vouchers.filter(v => {
+        const matchQ = !q ||
+          (v.voucher_no || '').toLowerCase().includes(q) ||
+          (v.payee || '').toLowerCase().includes(q) ||
+          (v.purpose || '').toLowerCase().includes(q) ||
+          (v.project_name || '').toLowerCase().includes(q) ||
+          (v.custodian || '').toLowerCase().includes(q) ||
+          (v.register_name || '').toLowerCase().includes(q) ||
+          (v.category || '').toLowerCase().includes(q);
+
+        let matchType = true;
+        if (fType === 'outflow') matchType = v.type === 'outflow';
+        else if (fType === 'inflow') matchType = v.type === 'inflow';
+        else if (fType === 'bank_withdrawal') {
+          matchType = (v.category && v.category.includes('Replenishment')) || (v.purpose || '').toLowerCase().includes('bank');
+        } else if (fType === 'transfer') {
+          matchType = v.category === 'Inter-Vault Petty Cash Transfer';
+        }
+
+        return matchQ && matchType;
+      });
+
+      if (cashTbody) cashTbody.innerHTML = this.renderCashVoucherRows(filtered);
+      if (cashCount) cashCount.textContent = filtered.length;
+      this.updateFloatingScrollbar();
+    };
+
+    if (cashSearch) cashSearch.oninput = updateCashFilter;
+    if (cashFilterType) cashFilterType.onchange = updateCashFilter;
+    if (cashClear) {
+      cashClear.onclick = () => {
+        cashSearch.value = '';
+        updateCashFilter();
+        cashSearch.focus();
+      };
+    }
+  }
+
+  renderCashVoucherRows(vouchers) {
+    if (!vouchers.length) {
+      return `
+        <tr>
+          <td colspan="10" style="text-align:center; padding:2rem; color:#94a3b8;">
+            No petty cash vouchers matching your search criteria.
+          </td>
+        </tr>
+      `;
+    }
+    return vouchers.map((v, idx) => {
       const isInflow = v.type === 'inflow';
       const color = isInflow ? '#10b981' : '#fb923c';
       const sign = isInflow ? '+' : '-';
       const isTransfer = v.category === 'Inter-Vault Petty Cash Transfer';
       const isBankWdl = v.category === 'Bank Cash Withdrawal / E-Wallet Replenishment' || (v.category && v.category.includes('Replenishment') && (v.purpose || '').toLowerCase().includes('bank'));
       return `
-                  <tr>
-                    <td style="text-align:center; color:#94a3b8; font-weight:700;">${idx + 1}</td>
-                    <td><strong>${v.voucher_no}</strong></td>
-                    <td>${this.formatDate(v.date)}</td>
-                    <td>${v.register_name || 'Petty Cash Vault'}</td>
-                    <td>${v.custodian || 'Custodian'}</td>
-                    <td>
-                      <div style="font-weight:600; color:#ffffff;">${v.purpose}</div>
-                      <div style="font-size:0.7rem; color:#94a3b8; display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
-                        ${v.category ? `<span>${v.category}</span>` : ''}
-                        ${isBankWdl ? '<span style="font-size:0.68rem; color:#00e5d2; background:rgba(0,229,210,0.15); padding:1px 6px; border-radius:3px; font-weight:700;">🏦 Bank Withdrawal</span>' : ''}
-                        ${isTransfer ? '<span style="font-size:0.68rem; color:#38bdf8; background:rgba(56,189,248,0.15); padding:1px 6px; border-radius:3px;">Site Project Transfer</span>' : ''}
-                        ${v.project_name ? `<span style="font-size:0.68rem; color:#a78bfa; background:rgba(167,139,250,0.15); padding:1px 6px; border-radius:3px;">${v.project_name}</span>` : ''}
-                      </div>
-                    </td>
-                    <td>${v.payee || 'Site Runner'}</td>
-                    <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(v.amount)}</strong></td>
-                    <td><span class="fin-badge fin-badge-paid">${v.status || 'Approved'}</span></td>
-                    <td style="text-align:center;">
-                                            <div style="display:inline-flex; gap:5px; align-items:center;">
-                        <button type="button" class="fin-btn-card-action" title="Edit Cash Voucher" onclick="window.finApp.openEditCashVoucherModal('${v.id}')" style="border-color:#38bdf8; color:#38bdf8; font-weight:700;">Edit</button>
-                        <button type="button" class="fin-btn-card-action" title="Print Cash Voucher" onclick="window.finApp.printCashVoucher('${v.id}')">Print</button>
-                        <button type="button" class="fin-btn-card-action danger" title="Delete Voucher" onclick="window.finApp.deleteCashVoucher('${v.id}')">Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                `;
-    }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
+        <tr>
+          <td style="text-align:center; color:#94a3b8; font-weight:700;">${idx + 1}</td>
+          <td><strong>${v.voucher_no}</strong></td>
+          <td>${this.formatDate(v.date)}</td>
+          <td>${v.register_name || 'Petty Cash Vault'}</td>
+          <td>${v.custodian || 'Custodian'}</td>
+          <td>
+            <div style="font-weight:600; color:#ffffff;">${v.purpose}</div>
+            <div style="font-size:0.7rem; color:#94a3b8; display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
+              ${v.category ? `<span>${v.category}</span>` : ''}
+              ${isBankWdl ? '<span style="font-size:0.68rem; color:#00e5d2; background:rgba(0,229,210,0.15); padding:1px 6px; border-radius:3px; font-weight:700;">🏦 Bank Withdrawal</span>' : ''}
+              ${isTransfer ? '<span style="font-size:0.68rem; color:#38bdf8; background:rgba(56,189,248,0.15); padding:1px 6px; border-radius:3px;">Site Project Transfer</span>' : ''}
+              ${v.project_name ? `<span style="font-size:0.68rem; color:#a78bfa; background:rgba(167,139,250,0.15); padding:1px 6px; border-radius:3px;">${v.project_name}</span>` : ''}
+            </div>
+          </td>
+          <td>${v.payee || 'Site Runner'}</td>
+          <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(v.amount)}</strong></td>
+          <td><span class="fin-badge fin-badge-paid">${v.status || 'Approved'}</span></td>
+          <td style="text-align:center;">
+            <div style="display:inline-flex; gap:5px; align-items:center;">
+              <button type="button" class="fin-btn-card-action" title="Edit Cash Voucher" onclick="window.finApp.openEditCashVoucherModal('${v.id}')" style="border-color:#38bdf8; color:#38bdf8; font-weight:700;">Edit</button>
+              <button type="button" class="fin-btn-card-action" title="Print Cash Voucher" onclick="window.finApp.printCashVoucher('${v.id}')">Print</button>
+              <button type="button" class="fin-btn-card-action danger" title="Delete Voucher" onclick="window.finApp.deleteCashVoucher('${v.id}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   getChequeBadge(status) {
