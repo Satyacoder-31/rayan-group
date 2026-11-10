@@ -10,24 +10,93 @@ export function registerDocumentModules(FinanceApp) {
   const proto = FinanceApp.prototype;
 
   // ==========================================================================
-  // 1. WORK COMPLETION CERTIFICATES TAB
+  // CUSTOM MODAL CONTROLS (SHOW & CLOSE MODAL DIALOGS)
   // ==========================================================================
-  proto.renderWorkCompletionTab = function(root) {
-    const certs = this.db?.work_completion_certificates || [];
-    const query = (this.wccSearchQuery || '').toLowerCase().trim();
-    const filterStatus = this.wccFilterStatus || 'all';
+  proto.showCustomModal = function (html) {
+    let container = document.getElementById('fin-modal-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'fin-modal-container';
+      document.body.appendChild(container);
+    }
+    container.innerHTML = html;
+    document.body.classList.add('fin-doc-open');
+  };
 
-    const filtered = certs.filter(c => {
-      const matchQuery = !query ||
-        (c.cert_no || '').toLowerCase().includes(query) ||
-        (c.reference_no || '').toLowerCase().includes(query) ||
-        (c.client_name || '').toLowerCase().includes(query) ||
-        (c.project_name || '').toLowerCase().includes(query) ||
-        (c.main_client || '').toLowerCase().includes(query) ||
-        (c.po_no || '').toLowerCase().includes(query);
-      const matchStatus = filterStatus === 'all' || (c.status || '').toLowerCase() === filterStatus.toLowerCase();
-      return matchQuery && matchStatus;
-    });
+  proto.closeCustomModal = function (id) {
+    if (id) {
+      this.closeModal(id);
+    } else {
+      const container = document.getElementById('fin-modal-container');
+      if (container) container.innerHTML = '';
+      document.body.classList.remove('fin-doc-open');
+    }
+  };
+
+  // ==========================================================================
+  // 1. WORK COMPLETION CERTIFICATES (شهادة اتمام العمل)
+  // ==========================================================================
+  proto.renderWorkCompletionRows = function (certs, query = '') {
+    if (!certs || !certs.length) {
+      return `
+        <tr>
+          <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+            <div style="font-size:1.8rem; margin-bottom:0.5rem;">📜</div>
+            <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Work Completion Certificates found ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
+            <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Completion Certificate" to issue a certified completion handover.</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    return certs.map((c, idx) => {
+      const isApp = (c.status || '').toLowerCase() === 'approved';
+      return `
+        <tr>
+          <td style="text-align:center; font-weight:700; color:#94a3b8; white-space:nowrap; width:45px;">${idx + 1}</td>
+          <td style="white-space:nowrap !important; min-width:185px; font-weight:800; color:#38bdf8;" class="fin-inv-number-cell">
+            <div style="cursor:pointer;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="View Official Certificate">
+              ${c.cert_no || c.reference_no}
+            </div>
+            ${c.subcontract_agreement ? `<div style="font-size:0.7rem; color:#94a3b8; font-weight:500;">Agr: ${c.subcontract_agreement}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap !important; color:#cbd5e1; font-size:0.82rem; min-width:125px;">
+            ${this.formatDate(c.date || c.created_at)}
+            ${c.time ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.time}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap; min-width:220px; font-weight:700; color:#f8fafc;">
+            <div class="fin-customer-cell">${c.client_name || 'Client'}</div>
+            ${c.contact_person ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${c.contact_person}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem; min-width:190px;">
+            ${c.main_client || '—'}
+          </td>
+          <td style="white-space:nowrap; color:#f8fafc; font-weight:600; min-width:190px;">
+            ${c.project_name || 'Al Foah Mall Alain'}
+          </td>
+          <td style="color:#cbd5e1; font-size:0.8rem; min-width:220px;">
+            ${c.scope_description || 'Scope of works executed according to PO'}
+          </td>
+          <td style="text-align:center; white-space:nowrap; min-width:110px;">
+            <span class="fin-badge ${isApp ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
+              ${c.status || 'Approved'}
+            </span>
+          </td>
+          <td style="text-align:right; white-space:nowrap !important; min-width:190px;">
+            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="Print &amp; View Official Document">Print / View</button>
+            <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openWorkCompletionModal('${c.id}')" title="Edit Certificate Details">Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteWorkCompletion('${c.id}')" title="Delete Certificate">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  proto.renderWorkCompletionTab = function (root) {
+    const certs = this.db?.work_completion_certificates || [];
+    this.wccSearchQuery = this.wccSearchQuery || '';
+    this.wccFilterStatus = this.wccFilterStatus || 'all';
+    this.wccSort = this.wccSort || 'serial-desc';
 
     const approvedCount = certs.filter(c => (c.status || '').toLowerCase() === 'approved').length;
     const pendingCount = certs.filter(c => (c.status || '').toLowerCase() === 'pending').length;
@@ -46,15 +115,18 @@ export function registerDocumentModules(FinanceApp) {
                 Official client handover sign-offs, subcontract execution certifications, and project completion certificates with dual-authorization stamps.
               </p>
             </div>
-            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <div class="fin-panel-actions" style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#10b981;" onclick="window.finApp.openWorkCompletionPrintModal()">
+                📜 Sample Certificate
+              </button>
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openWorkCompletionModal()">
                 + Create Completion Certificate
               </button>
               <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportWorkCompletionCSV()">
                 📥 Export CSV
-              </button>
-              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
-                🔄 Sync &amp; Refresh
               </button>
             </div>
           </div>
@@ -76,87 +148,49 @@ export function registerDocumentModules(FinanceApp) {
           </div>
 
           <!-- Search & Filter Controls -->
-          <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
-            <div style="flex:1; min-width:240px; position:relative;">
-              <input type="text" id="wcc-search-input" class="fin-search-input" placeholder="Search by Cert #, Ref #, Client, Project, PO..." value="${this.wccSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+            <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+              <input type="text" id="wcc-filter-search" class="fin-filter-input" placeholder="🔍 Search cert #, ref #, client, contractor, project..." value="${this.wccSearchQuery || ''}" style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="wcc-search-clear" style="display:${this.wccSearchQuery ? 'block' : 'none'}; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
             </div>
-            <select id="wcc-filter-status" class="fin-select" style="min-width:160px;">
-              <option value="all" ${filterStatus === 'all' ? 'selected' : ''}>All Statuses (${certs.length})</option>
-              <option value="approved" ${filterStatus === 'approved' ? 'selected' : ''}>Approved (${approvedCount})</option>
-              <option value="pending" ${filterStatus === 'pending' ? 'selected' : ''}>Pending (${pendingCount})</option>
+            <select id="wcc-filter-status" class="fin-select-pill">
+              <option value="all" ${this.wccFilterStatus === 'all' ? 'selected' : ''}>All Statuses (${certs.length})</option>
+              <option value="approved" ${this.wccFilterStatus === 'approved' ? 'selected' : ''}>Approved &amp; Certified (${approvedCount})</option>
+              <option value="pending" ${this.wccFilterStatus === 'pending' ? 'selected' : ''}>Under Review (${pendingCount})</option>
             </select>
+            <select id="wcc-filter-sort" class="fin-select-pill" title="Order Certificates">
+              <option value="serial-desc" ${this.wccSort === 'serial-desc' ? 'selected' : ''}>🔢 Cert # (High to Low)</option>
+              <option value="serial-asc" ${this.wccSort === 'serial-asc' ? 'selected' : ''}>🔢 Cert # (Low to High)</option>
+              <option value="date-desc" ${this.wccSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.wccSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="client-asc" ${this.wccSort === 'client-asc' ? 'selected' : ''}>🔤 Client Name (A to Z)</option>
+              <option value="client-desc" ${this.wccSort === 'client-desc' ? 'selected' : ''}>🔤 Client Name (Z to A)</option>
+            </select>
+            <div id="wcc-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="wcc-showing-count">${certs.length}</span> of ${certs.length} certificates
+            </div>
           </div>
 
-          <!-- Register Table with Fixed Bottom Scrollbar -->
-          <div class="fin-table-container">
-            <div class="fin-table-scroll-wrap">
-              <table class="fin-table">
-                <thead>
-                  <tr>
-                    <th style="width:40px; text-align:center;">#</th>
-                    <th>CERT / REF #</th>
-                    <th>DATE &amp; TIME</th>
-                    <th>CLIENT / SUBCONTRACTOR</th>
-                    <th>MAIN CLIENT / CONTRACTOR</th>
-                    <th>PROJECT &amp; LOCATION</th>
-                    <th>SCOPE / MATERIAL SUMMARY</th>
-                    <th style="text-align:center;">STATUS</th>
-                    <th style="text-align:right; width:190px;">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${filtered.length === 0 ? `
-                    <tr>
-                      <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">📜</div>
-                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Work Completion Certificates found</div>
-                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Completion Certificate" to issue a certified completion handover.</div>
-                      </td>
-                    </tr>
-                  ` : filtered.map((c, idx) => {
-                    const isApp = (c.status || '').toLowerCase() === 'approved';
-                    return `
-                      <tr>
-                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
-                        <td style="font-weight:800; color:#38bdf8;">
-                          <div style="cursor:pointer;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="View Certificate Document">
-                            ${c.cert_no || c.reference_no}
-                          </div>
-                          ${c.subcontract_agreement ? `<div style="font-size:0.7rem; color:#94a3b8; font-weight:500;">Agr: ${c.subcontract_agreement}</div>` : ''}
-                        </td>
-                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
-                          ${this.formatDate(c.date || c.created_at)}
-                          ${c.time ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.time}</div>` : ''}
-                        </td>
-                        <td style="font-weight:700; color:#f8fafc;">
-                          <div>${c.client_name || 'Client'}</div>
-                          ${c.contact_person ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${c.contact_person}</div>` : ''}
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.82rem;">
-                          ${c.main_client || '—'}
-                        </td>
-                        <td style="color:#f8fafc; font-weight:600;">
-                          ${c.project_name || 'Al Foah Mall Alain'}
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.8rem; max-width:260px;">
-                          ${c.scope_description || 'Scope of works executed according to PO'}
-                        </td>
-                        <td style="text-align:center;">
-                          <span class="fin-badge ${isApp ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
-                            ${c.status || 'Approved'}
-                          </span>
-                        </td>
-                        <td style="text-align:right; white-space:nowrap;">
-                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="Print &amp; View Official Document">Print / View</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openWorkCompletionModal('${c.id}')" title="Edit Certificate Details">Edit</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteWorkCompletion('${c.id}')" title="Delete Certificate">Delete</button>
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
+          <!-- Register Table with Responsive Horizontal Scroll -->
+          <div class="fin-table-responsive">
+            <table class="fin-data-table" id="wcc-data-table">
+              <thead>
+                <tr>
+                  <th style="width:45px; text-align:center; white-space:nowrap;">#</th>
+                  <th style="white-space:nowrap; min-width:185px;">CERT / REF #</th>
+                  <th style="white-space:nowrap; min-width:125px;">DATE &amp; TIME</th>
+                  <th style="white-space:nowrap; min-width:220px;">CLIENT / SUBCONTRACTOR</th>
+                  <th style="white-space:nowrap; min-width:190px;">MAIN CLIENT / CONTRACTOR</th>
+                  <th style="white-space:nowrap; min-width:190px;">PROJECT &amp; LOCATION</th>
+                  <th style="white-space:nowrap; min-width:220px;">SCOPE / MATERIAL SUMMARY</th>
+                  <th style="text-align:center; white-space:nowrap; min-width:110px;">STATUS</th>
+                  <th style="text-align:right; white-space:nowrap; min-width:190px;">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="wcc-table-tbody">
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -164,48 +198,136 @@ export function registerDocumentModules(FinanceApp) {
 
     root.innerHTML = html;
 
-    // Search & Filter event bindings
-    const sInput = document.getElementById('wcc-search-input');
+    const tbody = document.getElementById('wcc-table-tbody');
+    const sInput = document.getElementById('wcc-filter-search');
+    const sClear = document.getElementById('wcc-search-clear');
+    const fStatus = document.getElementById('wcc-filter-status');
+    const fSort = document.getElementById('wcc-filter-sort');
+    const countBadge = document.getElementById('wcc-showing-count');
+
+    const updateFilter = () => {
+      const q = (sInput?.value || '').toLowerCase().trim();
+      const status = fStatus?.value || 'all';
+      const sort = fSort?.value || 'serial-desc';
+      this.wccSearchQuery = q;
+      this.wccFilterStatus = status;
+      this.wccSort = sort;
+
+      if (sClear) sClear.style.display = q ? 'block' : 'none';
+
+      let list = certs.filter(c => {
+        const matchQuery = !q ||
+          (c.cert_no || '').toLowerCase().includes(q) ||
+          (c.reference_no || '').toLowerCase().includes(q) ||
+          (c.client_name || '').toLowerCase().includes(q) ||
+          (c.project_name || '').toLowerCase().includes(q) ||
+          (c.main_client || '').toLowerCase().includes(q) ||
+          (c.po_no || '').toLowerCase().includes(q) ||
+          (c.subcontract_agreement || '').toLowerCase().includes(q) ||
+          (c.contact_person || '').toLowerCase().includes(q);
+        const matchStatus = status === 'all' || (c.status || '').toLowerCase() === status.toLowerCase();
+        return matchQuery && matchStatus;
+      });
+
+      list.sort((a, b) => {
+        if (sort === 'serial-desc') return (b.cert_no || b.reference_no || '').localeCompare(a.cert_no || a.reference_no || '', undefined, { numeric: true });
+        if (sort === 'serial-asc') return (a.cert_no || a.reference_no || '').localeCompare(b.cert_no || b.reference_no || '', undefined, { numeric: true });
+        if (sort === 'date-desc') return new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0);
+        if (sort === 'date-asc') return new Date(a.date || a.created_at || 0) - new Date(b.date || b.created_at || 0);
+        if (sort === 'client-asc') return (a.client_name || '').localeCompare(b.client_name || '');
+        if (sort === 'client-desc') return (b.client_name || '').localeCompare(a.client_name || '');
+        return 0;
+      });
+
+      if (tbody) tbody.innerHTML = this.renderWorkCompletionRows(list, q);
+      if (countBadge) countBadge.textContent = list.length;
+    };
+
     if (sInput) {
-      sInput.oninput = (e) => {
-        this.wccSearchQuery = e.target.value;
-        this.renderWorkCompletionTab(root);
-        const refocused = document.getElementById('wcc-search-input');
-        if (refocused) {
-          refocused.focus();
-          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+      sInput.oninput = () => updateFilter();
+    }
+    if (sClear) {
+      sClear.onclick = () => {
+        if (sInput) {
+          sInput.value = '';
+          updateFilter();
+          sInput.focus();
         }
       };
     }
+    if (fStatus) fStatus.onchange = () => updateFilter();
+    if (fSort) fSort.onchange = () => updateFilter();
 
-    const fSelect = document.getElementById('wcc-filter-status');
-    if (fSelect) {
-      fSelect.onchange = (e) => {
-        this.wccFilterStatus = e.target.value;
-        this.renderWorkCompletionTab(root);
-      };
-    }
+    updateFilter();
   };
 
   // ==========================================================================
-  // 2. MATERIAL DELIVERY NOTES TAB
+  // 2. MATERIAL DELIVERY NOTES (إذن تسليم مواد)
   // ==========================================================================
-  proto.renderDeliveryNotesTab = function(root) {
-    const notes = this.db?.delivery_notes || [];
-    const query = (this.dnSearchQuery || '').toLowerCase().trim();
-    const filterStatus = this.dnFilterStatus || 'all';
+  proto.renderDeliveryNoteRows = function (notes, query = '') {
+    if (!notes || !notes.length) {
+      return `
+        <tr>
+          <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+            <div style="font-size:1.8rem; margin-bottom:0.5rem;">🚚</div>
+            <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Delivery Notes recorded ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
+            <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Delivery Note" to issue a material dispatch slip.</div>
+          </td>
+        </tr>
+      `;
+    }
 
-    const filtered = notes.filter(n => {
-      const matchQuery = !query ||
-        (n.dn_no || '').toLowerCase().includes(query) ||
-        (n.client_name || '').toLowerCase().includes(query) ||
-        (n.project_name || '').toLowerCase().includes(query) ||
-        (n.site_location || '').toLowerCase().includes(query) ||
-        (n.vehicle_no || '').toLowerCase().includes(query) ||
-        (n.driver_name || '').toLowerCase().includes(query);
-      const matchStatus = filterStatus === 'all' || (n.status || '').toLowerCase() === filterStatus.toLowerCase();
-      return matchQuery && matchStatus;
-    });
+    return notes.map((n, idx) => {
+      const isDel = (n.status || '').toLowerCase() === 'delivered';
+      const itemsCount = (n.items || []).length;
+      return `
+        <tr>
+          <td style="text-align:center; font-weight:700; color:#94a3b8; white-space:nowrap; width:45px;">${idx + 1}</td>
+          <td style="white-space:nowrap !important; min-width:160px; font-weight:800; color:#38bdf8;" class="fin-inv-number-cell">
+            <div style="cursor:pointer;" onclick="window.finApp.openDeliveryNotePrintModal('${n.id}')" title="View Delivery Note">
+              ${n.dn_no}
+            </div>
+            ${n.po_reference ? `<div style="font-size:0.7rem; color:#94a3b8; font-weight:500;">PO: ${n.po_reference}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap !important; color:#cbd5e1; font-size:0.82rem; min-width:125px;">
+            ${this.formatDate(n.date || n.created_at)}
+            ${n.time ? `<div style="font-size:0.7rem; color:#94a3b8;">${n.time}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap; min-width:220px; font-weight:700; color:#f8fafc;">
+            <div class="fin-customer-cell">${n.client_name || 'Client'}</div>
+            ${n.receiver_name ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Recv: ${n.receiver_name}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap; min-width:200px; color:#cbd5e1; font-size:0.82rem;">
+            <div style="font-weight:600; color:#f8fafc;">${n.project_name || 'Project Site'}</div>
+            <div style="font-size:0.72rem; color:#94a3b8;">${n.site_location || 'Site Gate'}</div>
+          </td>
+          <td style="white-space:nowrap; text-align:center; font-weight:700; color:#38bdf8; min-width:120px;">
+            ${itemsCount} Line Item${itemsCount === 1 ? '' : 's'}
+          </td>
+          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.8rem; min-width:180px;">
+            <div style="font-weight:600; color:#f8fafc;">${n.vehicle_no || 'AUH-49210'}</div>
+            <div style="font-size:0.72rem; color:#94a3b8;">${n.driver_name || 'Driver'} ${n.driver_contact ? `(${n.driver_contact})` : ''}</div>
+          </td>
+          <td style="text-align:center; white-space:nowrap; min-width:110px;">
+            <span class="fin-badge ${isDel ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
+              ${n.status || 'Delivered'}
+            </span>
+          </td>
+          <td style="text-align:right; white-space:nowrap !important; min-width:190px;">
+            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openDeliveryNotePrintModal('${n.id}')" title="Print &amp; View Delivery Note">Print / View</button>
+            <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openDeliveryNoteModal('${n.id}')" title="Edit Delivery Note">Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDeliveryNote('${n.id}')" title="Delete Delivery Note">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  proto.renderDeliveryNotesTab = function (root) {
+    const notes = this.db?.delivery_notes || [];
+    this.dnSearchQuery = this.dnSearchQuery || '';
+    this.dnFilterStatus = this.dnFilterStatus || 'all';
+    this.dnSort = this.dnSort || 'serial-desc';
 
     const deliveredCount = notes.filter(n => (n.status || '').toLowerCase() === 'delivered').length;
     const transitCount = notes.filter(n => (n.status || '').toLowerCase() === 'in transit').length;
@@ -224,15 +346,18 @@ export function registerDocumentModules(FinanceApp) {
                 Dispatch receipts, site material delivery tracking, and storekeeper receipt acknowledgements with dual-signatory verification.
               </p>
             </div>
-            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <div class="fin-panel-actions" style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#10b981;" onclick="window.finApp.openDeliveryNotePrintModal()">
+                🚚 Sample Delivery Note
+              </button>
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openDeliveryNoteModal()">
                 + Create Delivery Note
               </button>
               <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportDeliveryNotesCSV()">
                 📥 Export CSV
-              </button>
-              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
-                🔄 Sync &amp; Refresh
               </button>
             </div>
           </div>
@@ -254,90 +379,49 @@ export function registerDocumentModules(FinanceApp) {
           </div>
 
           <!-- Search & Filter Controls -->
-          <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center;">
-            <div style="flex:1; min-width:240px; position:relative;">
-              <input type="text" id="dn-search-input" class="fin-search-input" placeholder="Search by DN #, Client, Project, Vehicle, Driver..." value="${this.dnSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+            <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+              <input type="text" id="dn-filter-search" class="fin-filter-input" placeholder="🔍 Search DN #, client, project, vehicle, driver..." value="${this.dnSearchQuery || ''}" style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="dn-search-clear" style="display:${this.dnSearchQuery ? 'block' : 'none'}; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
             </div>
-            <select id="dn-filter-status" class="fin-select" style="min-width:160px;">
-              <option value="all" ${filterStatus === 'all' ? 'selected' : ''}>All Statuses (${notes.length})</option>
-              <option value="delivered" ${filterStatus === 'delivered' ? 'selected' : ''}>Delivered (${deliveredCount})</option>
-              <option value="in transit" ${filterStatus === 'in transit' ? 'selected' : ''}>In Transit (${transitCount})</option>
+            <select id="dn-filter-status" class="fin-select-pill">
+              <option value="all" ${this.dnFilterStatus === 'all' ? 'selected' : ''}>All Statuses (${notes.length})</option>
+              <option value="delivered" ${this.dnFilterStatus === 'delivered' ? 'selected' : ''}>Delivered (${deliveredCount})</option>
+              <option value="in transit" ${this.dnFilterStatus === 'in transit' ? 'selected' : ''}>In Transit (${transitCount})</option>
             </select>
+            <select id="dn-filter-sort" class="fin-select-pill" title="Order Delivery Notes">
+              <option value="serial-desc" ${this.dnSort === 'serial-desc' ? 'selected' : ''}>🔢 DN # (High to Low)</option>
+              <option value="serial-asc" ${this.dnSort === 'serial-asc' ? 'selected' : ''}>🔢 DN # (Low to High)</option>
+              <option value="date-desc" ${this.dnSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.dnSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="client-asc" ${this.dnSort === 'client-asc' ? 'selected' : ''}>🔤 Consignee (A to Z)</option>
+              <option value="client-desc" ${this.dnSort === 'client-desc' ? 'selected' : ''}>🔤 Consignee (Z to A)</option>
+            </select>
+            <div id="dn-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="dn-showing-count">${notes.length}</span> of ${notes.length} delivery notes
+            </div>
           </div>
 
-          <!-- Register Table with Fixed Bottom Scrollbar -->
-          <div class="fin-table-container">
-            <div class="fin-table-scroll-wrap">
-              <table class="fin-table">
-                <thead>
-                  <tr>
-                    <th style="width:40px; text-align:center;">#</th>
-                    <th>DN NUMBER</th>
-                    <th>DATE &amp; TIME</th>
-                    <th>CONSIGNEE / CLIENT</th>
-                    <th>DESTINATION PROJECT SITE</th>
-                    <th>VEHICLE &amp; DRIVER</th>
-                    <th style="text-align:center;">ITEMS (QTY)</th>
-                    <th style="text-align:center;">STATUS</th>
-                    <th style="text-align:right; width:190px;">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${filtered.length === 0 ? `
-                    <tr>
-                      <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">🚚</div>
-                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Delivery Notes recorded</div>
-                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Delivery Note" to issue a material dispatch slip.</div>
-                      </td>
-                    </tr>
-                  ` : filtered.map((n, idx) => {
-                    const isDel = (n.status || '').toLowerCase() === 'delivered';
-                    const itemsCount = (n.items || []).length;
-                    return `
-                      <tr>
-                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
-                        <td style="font-weight:800; color:#38bdf8;">
-                          <div style="cursor:pointer;" onclick="window.finApp.openDeliveryNotePrintModal('${n.id}')" title="View Delivery Note">
-                            ${n.dn_no}
-                          </div>
-                          ${n.po_reference ? `<div style="font-size:0.7rem; color:#94a3b8; font-weight:500;">PO: ${n.po_reference}</div>` : ''}
-                        </td>
-                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
-                          ${this.formatDate(n.date || n.created_at)}
-                          ${n.time ? `<div style="font-size:0.7rem; color:#94a3b8;">${n.time}</div>` : ''}
-                        </td>
-                        <td style="font-weight:700; color:#f8fafc;">
-                          <div>${n.client_name || 'Client'}</div>
-                          ${n.receiver_name ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Recv: ${n.receiver_name}</div>` : ''}
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.82rem;">
-                          <div style="font-weight:600; color:#f8fafc;">${n.project_name || 'Project Site'}</div>
-                          <div style="font-size:0.72rem; color:#94a3b8;">${n.site_location || 'Site Gate'}</div>
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.8rem;">
-                          <div style="font-weight:600; color:#f8fafc;">${n.vehicle_no || 'AUH-49210'}</div>
-                          <div style="font-size:0.72rem; color:#94a3b8;">${n.driver_name || 'Driver'} ${n.driver_contact ? `(${n.driver_contact})` : ''}</div>
-                        </td>
-                        <td style="text-align:center; font-weight:700; color:#38bdf8;">
-                          ${itemsCount} Line Item${itemsCount === 1 ? '' : 's'}
-                        </td>
-                        <td style="text-align:center;">
-                          <span class="fin-badge ${isDel ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
-                            ${n.status || 'Delivered'}
-                          </span>
-                        </td>
-                        <td style="text-align:right; white-space:nowrap;">
-                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openDeliveryNotePrintModal('${n.id}')" title="Print &amp; View Delivery Note">Print / View</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openDeliveryNoteModal('${n.id}')" title="Edit Delivery Note">Edit</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteDeliveryNote('${n.id}')" title="Delete Delivery Note">Delete</button>
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
+          <!-- Register Table with Responsive Horizontal Scroll -->
+          <div class="fin-table-responsive">
+            <table class="fin-data-table" id="dn-data-table">
+              <thead>
+                <tr>
+                  <th style="width:45px; text-align:center; white-space:nowrap;">#</th>
+                  <th style="white-space:nowrap; min-width:160px;">DN NUMBER</th>
+                  <th style="white-space:nowrap; min-width:125px;">DISPATCH DATE</th>
+                  <th style="white-space:nowrap; min-width:220px;">CONSIGNEE / CLIENT</th>
+                  <th style="white-space:nowrap; min-width:200px;">DESTINATION PROJECT SITE</th>
+                  <th style="text-align:center; white-space:nowrap; min-width:120px;">ITEMS (QTY)</th>
+                  <th style="white-space:nowrap; min-width:180px;">VEHICLE &amp; DRIVER</th>
+                  <th style="text-align:center; white-space:nowrap; min-width:110px;">STATUS</th>
+                  <th style="text-align:right; white-space:nowrap; min-width:190px;">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="dn-table-tbody">
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -345,45 +429,133 @@ export function registerDocumentModules(FinanceApp) {
 
     root.innerHTML = html;
 
-    const sInput = document.getElementById('dn-search-input');
+    const tbody = document.getElementById('dn-table-tbody');
+    const sInput = document.getElementById('dn-filter-search');
+    const sClear = document.getElementById('dn-search-clear');
+    const fStatus = document.getElementById('dn-filter-status');
+    const fSort = document.getElementById('dn-filter-sort');
+    const countBadge = document.getElementById('dn-showing-count');
+
+    const updateFilter = () => {
+      const q = (sInput?.value || '').toLowerCase().trim();
+      const status = fStatus?.value || 'all';
+      const sort = fSort?.value || 'serial-desc';
+      this.dnSearchQuery = q;
+      this.dnFilterStatus = status;
+      this.dnSort = sort;
+
+      if (sClear) sClear.style.display = q ? 'block' : 'none';
+
+      let list = notes.filter(n => {
+        const matchQuery = !q ||
+          (n.dn_no || '').toLowerCase().includes(q) ||
+          (n.client_name || '').toLowerCase().includes(q) ||
+          (n.project_name || '').toLowerCase().includes(q) ||
+          (n.site_location || '').toLowerCase().includes(q) ||
+          (n.vehicle_no || '').toLowerCase().includes(q) ||
+          (n.driver_name || '').toLowerCase().includes(q) ||
+          (n.po_reference || '').toLowerCase().includes(q) ||
+          (n.receiver_name || '').toLowerCase().includes(q) ||
+          (n.items || []).some(it => (it.description || '').toLowerCase().includes(q));
+        const matchStatus = status === 'all' || (n.status || '').toLowerCase() === status.toLowerCase();
+        return matchQuery && matchStatus;
+      });
+
+      list.sort((a, b) => {
+        if (sort === 'serial-desc') return (b.dn_no || '').localeCompare(a.dn_no || '', undefined, { numeric: true });
+        if (sort === 'serial-asc') return (a.dn_no || '').localeCompare(b.dn_no || '', undefined, { numeric: true });
+        if (sort === 'date-desc') return new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0);
+        if (sort === 'date-asc') return new Date(a.date || a.created_at || 0) - new Date(b.date || b.created_at || 0);
+        if (sort === 'client-asc') return (a.client_name || '').localeCompare(b.client_name || '');
+        if (sort === 'client-desc') return (b.client_name || '').localeCompare(a.client_name || '');
+        return 0;
+      });
+
+      if (tbody) tbody.innerHTML = this.renderDeliveryNoteRows(list, q);
+      if (countBadge) countBadge.textContent = list.length;
+    };
+
     if (sInput) {
-      sInput.oninput = (e) => {
-        this.dnSearchQuery = e.target.value;
-        this.renderDeliveryNotesTab(root);
-        const refocused = document.getElementById('dn-search-input');
-        if (refocused) {
-          refocused.focus();
-          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+      sInput.oninput = () => updateFilter();
+    }
+    if (sClear) {
+      sClear.onclick = () => {
+        if (sInput) {
+          sInput.value = '';
+          updateFilter();
+          sInput.focus();
         }
       };
     }
+    if (fStatus) fStatus.onchange = () => updateFilter();
+    if (fSort) fSort.onchange = () => updateFilter();
 
-    const fSelect = document.getElementById('dn-filter-status');
-    if (fSelect) {
-      fSelect.onchange = (e) => {
-        this.dnFilterStatus = e.target.value;
-        this.renderDeliveryNotesTab(root);
-      };
-    }
+    updateFilter();
   };
 
   // ==========================================================================
-  // 3. SUBCONTRACTOR UNDERTAKING LETTERS TAB
+  // 3. SUBCONTRACTOR UNDERTAKING LETTERS (خطاب تعهد مقاول من الباطن)
   // ==========================================================================
-  proto.renderUndertakingLettersTab = function(root) {
-    const letters = this.db?.undertaking_letters || [];
-    const query = (this.ultSearchQuery || '').toLowerCase().trim();
+  proto.renderUndertakingLetterRows = function (letters, query = '') {
+    if (!letters || !letters.length) {
+      return `
+        <tr>
+          <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+            <div style="font-size:1.8rem; margin-bottom:0.5rem;">🛡️</div>
+            <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Undertaking Letters found ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
+            <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Undertaking Letter" to draft a legal safety undertaking letter.</div>
+          </td>
+        </tr>
+      `;
+    }
 
-    const filtered = letters.filter(l => {
-      const matchQuery = !query ||
-        (l.ref_no || '').toLowerCase().includes(query) ||
-        (l.client_name || '').toLowerCase().includes(query) ||
-        (l.project_name || '').toLowerCase().includes(query) ||
-        (l.subject || '').toLowerCase().includes(query) ||
-        (l.activity_type || '').toLowerCase().includes(query) ||
-        (l.employees || []).some(emp => (emp.name || '').toLowerCase().includes(query) || (emp.emirates_id || '').toLowerCase().includes(query));
-      return matchQuery;
-    });
+    return letters.map((l, idx) => {
+      const empCount = (l.employees || []).length;
+      return `
+        <tr>
+          <td style="text-align:center; font-weight:700; color:#94a3b8; white-space:nowrap; width:45px;">${idx + 1}</td>
+          <td style="white-space:nowrap !important; min-width:180px; font-weight:800; color:#38bdf8;" class="fin-inv-number-cell">
+            <div style="cursor:pointer;" onclick="window.finApp.openUndertakingLetterPrintModal('${l.id}')" title="View 2-Page Undertaking Document">
+              ${l.ref_no}
+            </div>
+          </td>
+          <td style="white-space:nowrap !important; color:#cbd5e1; font-size:0.82rem; min-width:110px;">
+            ${this.formatDate(l.date || l.created_at)}
+          </td>
+          <td style="white-space:nowrap; min-width:220px; font-weight:700; color:#f8fafc;">
+            <div class="fin-customer-cell">${l.client_name || l.attention_company || 'Client'}</div>
+            ${l.attention ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${l.attention}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap; color:#f8fafc; font-weight:600; font-size:0.82rem; min-width:200px;">
+            ${l.project_name || 'Project Site'}
+          </td>
+          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem; min-width:180px;">
+            <span style="background:rgba(56,189,248,0.12); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:600;">
+              ${l.activity_type || 'Interiors Work'}
+            </span>
+          </td>
+          <td style="text-align:center; white-space:nowrap; font-weight:800; color:#10b981; min-width:120px;">
+            ${empCount} Personnel
+          </td>
+          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem; min-width:180px;">
+            <div style="font-weight:700; color:#f8fafc;">${l.responsible_person || 'Eng. Bakhteyar Alam'}</div>
+            <div style="font-size:0.7rem; color:#94a3b8;">${l.designation || 'Construction Manager'}</div>
+          </td>
+          <td style="text-align:right; white-space:nowrap !important; min-width:190px;">
+            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openUndertakingLetterPrintModal('${l.id}')" title="Print &amp; View Official 2-Page Undertaking Letter">Print / View</button>
+            <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openUndertakingLetterModal('${l.id}')" title="Edit Letter &amp; Employee List">Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteUndertakingLetter('${l.id}')" title="Delete Undertaking Letter">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  proto.renderUndertakingLettersTab = function (root) {
+    const letters = this.db?.undertaking_letters || [];
+    this.ultSearchQuery = this.ultSearchQuery || '';
+    this.ultFilterStatus = this.ultFilterStatus || 'all';
+    this.ultSort = this.ultSort || 'serial-desc';
 
     const totalWorkers = letters.reduce((sum, l) => sum + ((l.employees || []).length), 0);
 
@@ -401,15 +573,18 @@ export function registerDocumentModules(FinanceApp) {
                 Official DM/Trakhees statutory HSE undertakings, workforce deputations, and safety indemnity letters under UAE Federal Decree-Law No. 33 of 2021.
               </p>
             </div>
-            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <div class="fin-panel-actions" style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#10b981;" onclick="window.finApp.openUndertakingLetterPrintModal()">
+                🛡️ Sample Undertaking
+              </button>
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openUndertakingLetterModal()">
                 + Create Undertaking Letter
               </button>
               <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportUndertakingLettersCSV()">
                 📥 Export CSV
-              </button>
-              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
-                🔄 Sync &amp; Refresh
               </button>
             </div>
           </div>
@@ -430,80 +605,49 @@ export function registerDocumentModules(FinanceApp) {
             </div>
           </div>
 
-          <!-- Search Input -->
-          <div style="margin-bottom:1rem;">
-            <input type="text" id="ult-search-input" class="fin-search-input" placeholder="Search by Ref #, Client, Project, Worker Name, Emirates ID..." value="${this.ultSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+          <!-- Search & Filter Controls -->
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+            <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+              <input type="text" id="ult-filter-search" class="fin-filter-input" placeholder="🔍 Search ref #, client, project, worker name, Emirates ID..." value="${this.ultSearchQuery || ''}" style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="ult-search-clear" style="display:${this.ultSearchQuery ? 'block' : 'none'}; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            </div>
+            <select id="ult-filter-status" class="fin-select-pill">
+              <option value="all" ${this.ultFilterStatus === 'all' ? 'selected' : ''}>All Undertakings (${letters.length})</option>
+              <option value="active" ${this.ultFilterStatus === 'active' ? 'selected' : ''}>Active / Compliant</option>
+            </select>
+            <select id="ult-filter-sort" class="fin-select-pill" title="Order Undertakings">
+              <option value="serial-desc" ${this.ultSort === 'serial-desc' ? 'selected' : ''}>🔢 Ref # (High to Low)</option>
+              <option value="serial-asc" ${this.ultSort === 'serial-asc' ? 'selected' : ''}>🔢 Ref # (Low to High)</option>
+              <option value="date-desc" ${this.ultSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.ultSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="client-asc" ${this.ultSort === 'client-asc' ? 'selected' : ''}>🔤 Contractor (A to Z)</option>
+              <option value="client-desc" ${this.ultSort === 'client-desc' ? 'selected' : ''}>🔤 Contractor (Z to A)</option>
+            </select>
+            <div id="ult-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="ult-showing-count">${letters.length}</span> of ${letters.length} letters
+            </div>
           </div>
 
-          <!-- Register Table with Fixed Bottom Scrollbar -->
-          <div class="fin-table-container">
-            <div class="fin-table-scroll-wrap">
-              <table class="fin-table">
-                <thead>
-                  <tr>
-                    <th style="width:40px; text-align:center;">#</th>
-                    <th>REF NUMBER</th>
-                    <th>DATE</th>
-                    <th>CONTRACTOR / CLIENT</th>
-                    <th>PROJECT / SITE</th>
-                    <th>WORK ACTIVITY</th>
-                    <th style="text-align:center;">WORKERS DEPUTED</th>
-                    <th>RESPONSIBLE PERSON</th>
-                    <th style="text-align:right; width:190px;">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${filtered.length === 0 ? `
-                    <tr>
-                      <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">🛡️</div>
-                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Undertaking Letters found</div>
-                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Create Undertaking Letter" to draft a legal safety undertaking letter.</div>
-                      </td>
-                    </tr>
-                  ` : filtered.map((l, idx) => {
-                    const empCount = (l.employees || []).length;
-                    return `
-                      <tr>
-                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
-                        <td style="font-weight:800; color:#38bdf8;">
-                          <div style="cursor:pointer;" onclick="window.finApp.openUndertakingLetterPrintModal('${l.id}')" title="View 2-Page Undertaking Document">
-                            ${l.ref_no}
-                          </div>
-                        </td>
-                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
-                          ${this.formatDate(l.date || l.created_at)}
-                        </td>
-                        <td style="font-weight:700; color:#f8fafc;">
-                          <div>${l.client_name || l.attention_company || 'Client'}</div>
-                          ${l.attention ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${l.attention}</div>` : ''}
-                        </td>
-                        <td style="color:#f8fafc; font-weight:600; font-size:0.82rem;">
-                          ${l.project_name || 'Project Site'}
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.82rem;">
-                          <span style="background:rgba(56,189,248,0.12); color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:600;">
-                            ${l.activity_type || 'Interiors Work'}
-                          </span>
-                        </td>
-                        <td style="text-align:center; font-weight:800; color:#10b981;">
-                          ${empCount} Personnel
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.82rem;">
-                          <div style="font-weight:700; color:#f8fafc;">${l.responsible_person || 'Eng. Bakhteyar Alam'}</div>
-                          <div style="font-size:0.7rem; color:#94a3b8;">${l.designation || 'Construction Manager'}</div>
-                        </td>
-                        <td style="text-align:right; white-space:nowrap;">
-                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openUndertakingLetterPrintModal('${l.id}')" title="Print &amp; View Official 2-Page Undertaking Letter">Print / View</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openUndertakingLetterModal('${l.id}')" title="Edit Letter &amp; Employee List">Edit</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteUndertakingLetter('${l.id}')" title="Delete Undertaking Letter">Delete</button>
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
+          <!-- Register Table with Responsive Horizontal Scroll -->
+          <div class="fin-table-responsive">
+            <table class="fin-data-table" id="ult-data-table">
+              <thead>
+                <tr>
+                  <th style="width:45px; text-align:center; white-space:nowrap;">#</th>
+                  <th style="white-space:nowrap; min-width:180px;">REF NUMBER</th>
+                  <th style="white-space:nowrap; min-width:110px;">DATE</th>
+                  <th style="white-space:nowrap; min-width:220px;">CONTRACTOR / CLIENT</th>
+                  <th style="white-space:nowrap; min-width:200px;">PROJECT / SITE</th>
+                  <th style="white-space:nowrap; min-width:180px;">WORK ACTIVITY</th>
+                  <th style="text-align:center; white-space:nowrap; min-width:120px;">WORKERS DEPUTED</th>
+                  <th style="white-space:nowrap; min-width:180px;">RESPONSIBLE PERSON</th>
+                  <th style="text-align:right; white-space:nowrap; min-width:190px;">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="ult-table-tbody">
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -511,36 +655,133 @@ export function registerDocumentModules(FinanceApp) {
 
     root.innerHTML = html;
 
-    const sInput = document.getElementById('ult-search-input');
+    const tbody = document.getElementById('ult-table-tbody');
+    const sInput = document.getElementById('ult-filter-search');
+    const sClear = document.getElementById('ult-search-clear');
+    const fStatus = document.getElementById('ult-filter-status');
+    const fSort = document.getElementById('ult-filter-sort');
+    const countBadge = document.getElementById('ult-showing-count');
+
+    const updateFilter = () => {
+      const q = (sInput?.value || '').toLowerCase().trim();
+      const status = fStatus?.value || 'all';
+      const sort = fSort?.value || 'serial-desc';
+      this.ultSearchQuery = q;
+      this.ultFilterStatus = status;
+      this.ultSort = sort;
+
+      if (sClear) sClear.style.display = q ? 'block' : 'none';
+
+      let list = letters.filter(l => {
+        const matchQuery = !q ||
+          (l.ref_no || '').toLowerCase().includes(q) ||
+          (l.client_name || '').toLowerCase().includes(q) ||
+          (l.attention_company || '').toLowerCase().includes(q) ||
+          (l.attention || '').toLowerCase().includes(q) ||
+          (l.project_name || '').toLowerCase().includes(q) ||
+          (l.subject || '').toLowerCase().includes(q) ||
+          (l.activity_type || '').toLowerCase().includes(q) ||
+          (l.responsible_person || '').toLowerCase().includes(q) ||
+          (l.employees || []).some(emp => (emp.name || '').toLowerCase().includes(q) || (emp.emirates_id || '').toLowerCase().includes(q));
+        const matchStatus = status === 'all' || (l.status || '').toLowerCase() === status.toLowerCase();
+        return matchQuery && matchStatus;
+      });
+
+      list.sort((a, b) => {
+        if (sort === 'serial-desc') return (b.ref_no || '').localeCompare(a.ref_no || '', undefined, { numeric: true });
+        if (sort === 'serial-asc') return (a.ref_no || '').localeCompare(b.ref_no || '', undefined, { numeric: true });
+        if (sort === 'date-desc') return new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0);
+        if (sort === 'date-asc') return new Date(a.date || a.created_at || 0) - new Date(b.date || b.created_at || 0);
+        if (sort === 'client-asc') return (a.client_name || a.attention_company || '').localeCompare(b.client_name || b.attention_company || '');
+        if (sort === 'client-desc') return (b.client_name || b.attention_company || '').localeCompare(a.client_name || a.attention_company || '');
+        return 0;
+      });
+
+      if (tbody) tbody.innerHTML = this.renderUndertakingLetterRows(list, q);
+      if (countBadge) countBadge.textContent = list.length;
+    };
+
     if (sInput) {
-      sInput.oninput = (e) => {
-        this.ultSearchQuery = e.target.value;
-        this.renderUndertakingLettersTab(root);
-        const refocused = document.getElementById('ult-search-input');
-        if (refocused) {
-          refocused.focus();
-          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+      sInput.oninput = () => updateFilter();
+    }
+    if (sClear) {
+      sClear.onclick = () => {
+        if (sInput) {
+          sInput.value = '';
+          updateFilter();
+          sInput.focus();
         }
       };
     }
+    if (fStatus) fStatus.onchange = () => updateFilter();
+    if (fSort) fSort.onchange = () => updateFilter();
+
+    updateFilter();
   };
 
   // ==========================================================================
-  // 4. CORPORATE LETTERS TAB (LATTER EDITABLE)
+  // 4. CORPORATE LETTERS TAB (LATTER EDITABLE / OFFICIAL CORRESPONDENCE)
   // ==========================================================================
-  proto.renderLettersTab = function(root) {
-    const letters = this.db?.custom_letters || [];
-    const query = (this.ltrSearchQuery || '').toLowerCase().trim();
+  proto.renderCustomLetterRows = function (letters, query = '') {
+    if (!letters || !letters.length) {
+      return `
+        <tr>
+          <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+            <div style="font-size:1.8rem; margin-bottom:0.5rem;">✉️</div>
+            <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Official Letters drafted ${query ? `matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"` : ''}</div>
+            <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Draft New Letter" to compose an official letterhead document.</div>
+          </td>
+        </tr>
+      `;
+    }
 
-    const filtered = letters.filter(l => {
-      const matchQuery = !query ||
-        (l.ref_no || '').toLowerCase().includes(query) ||
-        (l.recipient_company || '').toLowerCase().includes(query) ||
-        (l.recipient_name || '').toLowerCase().includes(query) ||
-        (l.subject || '').toLowerCase().includes(query) ||
-        (l.project_name || '').toLowerCase().includes(query);
-      return matchQuery;
-    });
+    return letters.map((l, idx) => {
+      const isIssued = (l.status || '').toLowerCase() === 'issued';
+      return `
+        <tr>
+          <td style="text-align:center; font-weight:700; color:#94a3b8; white-space:nowrap; width:45px;">${idx + 1}</td>
+          <td style="white-space:nowrap !important; min-width:180px; font-weight:800; color:#38bdf8;" class="fin-inv-number-cell">
+            <div style="cursor:pointer;" onclick="window.finApp.openCustomLetterPrintModal('${l.id}')" title="View Letter Document">
+              ${l.ref_no}
+            </div>
+          </td>
+          <td style="white-space:nowrap !important; color:#cbd5e1; font-size:0.82rem; min-width:110px;">
+            ${this.formatDate(l.date || l.created_at)}
+          </td>
+          <td style="white-space:nowrap; min-width:220px; font-weight:700; color:#f8fafc;">
+            <div class="fin-customer-cell">${l.recipient_company || l.recipient_name || 'Recipient'}</div>
+            ${l.attention ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${l.attention}</div>` : ''}
+          </td>
+          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem; min-width:200px;">
+            ${l.project_name || 'General Corporate'}
+          </td>
+          <td style="color:#f8fafc; font-weight:600; font-size:0.82rem; min-width:240px;">
+            ${l.subject || 'Official Communication'}
+          </td>
+          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem; min-width:170px;">
+            <div style="font-weight:700; color:#f8fafc;">${l.signatory_name || 'Authorized Signatory'}</div>
+            <div style="font-size:0.7rem; color:#94a3b8;">${l.designation || 'Construction Manager'}</div>
+          </td>
+          <td style="text-align:center; white-space:nowrap; min-width:100px;">
+            <span class="fin-badge ${isIssued ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
+              ${l.status || 'Issued'}
+            </span>
+          </td>
+          <td style="text-align:right; white-space:nowrap !important; min-width:190px;">
+            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openCustomLetterPrintModal('${l.id}')" title="Print &amp; View Letter">Print / View</button>
+            <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openCustomLetterModal('${l.id}')" title="Edit Letter Content">Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCustomLetter('${l.id}')" title="Delete Letter">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  proto.renderLettersTab = function (root) {
+    const letters = this.db?.custom_letters || [];
+    this.ltrSearchQuery = this.ltrSearchQuery || '';
+    this.ltrFilterStatus = this.ltrFilterStatus || 'all';
+    this.ltrSort = this.ltrSort || 'serial-desc';
 
     const html = `
       <div class="fin-tab-pane active" id="pane-letters">
@@ -556,86 +797,77 @@ export function registerDocumentModules(FinanceApp) {
                 Fully editable official corporate correspondence, commercial notices, mobilization letters, and authority submissions on Rayan letterhead.
               </p>
             </div>
-            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <div class="fin-panel-actions" style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
+                🔄 Sync &amp; Refresh
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#10b981;" onclick="window.finApp.openCustomLetterPrintModal()">
+                ✉️ Sample Letter
+              </button>
               <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCustomLetterModal()">
                 + Draft New Letter
               </button>
               <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.exportLettersCSV()">
                 📥 Export CSV
               </button>
-              <button type="button" class="fin-btn-quick" style="border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.refreshDatabaseAndRender()">
-                🔄 Sync &amp; Refresh
-              </button>
             </div>
           </div>
 
-          <!-- Search Input -->
-          <div style="margin-top:1.25rem; margin-bottom:1rem;">
-            <input type="text" id="ltr-search-input" class="fin-search-input" placeholder="Search letters by Ref #, Recipient, Subject, Project..." value="${this.ltrSearchQuery || ''}" style="width:100%; box-sizing:border-box;">
+          <!-- Summary Stats -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1.25rem; margin-bottom:1.25rem;">
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Total Letters Drafted</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#f8fafc; margin-top:0.25rem;">${letters.length}</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#34d399; text-transform:uppercase; font-weight:700;">Official Letterhead Format</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#10b981; margin-top:0.25rem;">100% Ready</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:1rem;">
+              <div style="font-size:0.75rem; color:#38bdf8; text-transform:uppercase; font-weight:700;">Dual Auth &amp; Official Seal</div>
+              <div style="font-size:1.6rem; font-weight:800; color:#38bdf8; margin-top:0.25rem;">Included</div>
+            </div>
           </div>
 
-          <!-- Register Table with Fixed Bottom Scrollbar -->
-          <div class="fin-table-container">
-            <div class="fin-table-scroll-wrap">
-              <table class="fin-table">
-                <thead>
-                  <tr>
-                    <th style="width:40px; text-align:center;">#</th>
-                    <th>REF NUMBER</th>
-                    <th>DATE</th>
-                    <th>RECIPIENT / TO</th>
-                    <th>PROJECT REFERENCE</th>
-                    <th>SUBJECT LINE</th>
-                    <th>SIGNATORY</th>
-                    <th style="text-align:right; width:190px;">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${filtered.length === 0 ? `
-                    <tr>
-                      <td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
-                        <div style="font-size:1.8rem; margin-bottom:0.5rem;">✉️</div>
-                        <div style="font-weight:700; font-size:1rem; color:#f8fafc;">No Official Letters drafted</div>
-                        <div style="font-size:0.8rem; margin-top:0.25rem;">Click "+ Draft New Letter" to compose an official letterhead document.</div>
-                      </td>
-                    </tr>
-                  ` : filtered.map((l, idx) => {
-                    return `
-                      <tr>
-                        <td style="text-align:center; font-weight:700; color:#94a3b8;">${idx + 1}</td>
-                        <td style="font-weight:800; color:#38bdf8;">
-                          <div style="cursor:pointer;" onclick="window.finApp.openCustomLetterPrintModal('${l.id}')" title="View Letter Document">
-                            ${l.ref_no}
-                          </div>
-                        </td>
-                        <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem;">
-                          ${this.formatDate(l.date || l.created_at)}
-                        </td>
-                        <td style="font-weight:700; color:#f8fafc;">
-                          <div>${l.recipient_company || l.recipient_name || 'Recipient'}</div>
-                          ${l.attention ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${l.attention}</div>` : ''}
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.82rem;">
-                          ${l.project_name || 'General Corporate'}
-                        </td>
-                        <td style="color:#f8fafc; font-weight:600; font-size:0.82rem; max-width:280px;">
-                          ${l.subject || 'Official Communication'}
-                        </td>
-                        <td style="color:#cbd5e1; font-size:0.82rem;">
-                          <div style="font-weight:700; color:#f8fafc;">${l.signatory_name || 'Authorized Signatory'}</div>
-                          <div style="font-size:0.7rem; color:#94a3b8;">${l.designation || 'Construction Manager'}</div>
-                        </td>
-                        <td style="text-align:right; white-space:nowrap;">
-                          <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openCustomLetterPrintModal('${l.id}')" title="Print &amp; View Letter">Print / View</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openCustomLetterModal('${l.id}')" title="Edit Letter Content">Edit</button>
-                          <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCustomLetter('${l.id}')" title="Delete Letter">Delete</button>
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
+          <!-- Search & Filter Controls -->
+          <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+            <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+              <input type="text" id="ltr-filter-search" class="fin-filter-input" placeholder="🔍 Search letters by ref #, recipient, subject, project..." value="${this.ltrSearchQuery || ''}" style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+              <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+              <button type="button" id="ltr-search-clear" style="display:${this.ltrSearchQuery ? 'block' : 'none'}; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
             </div>
+            <select id="ltr-filter-sort" class="fin-select-pill" title="Order Letters">
+              <option value="serial-desc" ${this.ltrSort === 'serial-desc' ? 'selected' : ''}>🔢 Ref # (High to Low)</option>
+              <option value="serial-asc" ${this.ltrSort === 'serial-asc' ? 'selected' : ''}>🔢 Ref # (Low to High)</option>
+              <option value="date-desc" ${this.ltrSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.ltrSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="client-asc" ${this.ltrSort === 'client-asc' ? 'selected' : ''}>🔤 Recipient (A to Z)</option>
+              <option value="client-desc" ${this.ltrSort === 'client-desc' ? 'selected' : ''}>🔤 Recipient (Z to A)</option>
+            </select>
+            <div id="ltr-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+              Showing <span id="ltr-showing-count">${letters.length}</span> of ${letters.length} letters
+            </div>
+          </div>
+
+          <!-- Register Table with Responsive Horizontal Scroll -->
+          <div class="fin-table-responsive">
+            <table class="fin-data-table" id="ltr-data-table">
+              <thead>
+                <tr>
+                  <th style="width:45px; text-align:center; white-space:nowrap;">#</th>
+                  <th style="white-space:nowrap; min-width:180px;">REF NUMBER</th>
+                  <th style="white-space:nowrap; min-width:110px;">DATE</th>
+                  <th style="white-space:nowrap; min-width:220px;">RECIPIENT / TO</th>
+                  <th style="white-space:nowrap; min-width:200px;">PROJECT REFERENCE</th>
+                  <th style="white-space:nowrap; min-width:240px;">SUBJECT LINE</th>
+                  <th style="white-space:nowrap; min-width:170px;">SIGNATORY</th>
+                  <th style="text-align:center; white-space:nowrap; min-width:100px;">STATUS</th>
+                  <th style="text-align:right; white-space:nowrap; min-width:190px;">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="ltr-table-tbody">
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -643,24 +875,67 @@ export function registerDocumentModules(FinanceApp) {
 
     root.innerHTML = html;
 
-    const sInput = document.getElementById('ltr-search-input');
+    const tbody = document.getElementById('ltr-table-tbody');
+    const sInput = document.getElementById('ltr-filter-search');
+    const sClear = document.getElementById('ltr-search-clear');
+    const fSort = document.getElementById('ltr-filter-sort');
+    const countBadge = document.getElementById('ltr-showing-count');
+
+    const updateFilter = () => {
+      const q = (sInput?.value || '').toLowerCase().trim();
+      const sort = fSort?.value || 'serial-desc';
+      this.ltrSearchQuery = q;
+      this.ltrSort = sort;
+
+      if (sClear) sClear.style.display = q ? 'block' : 'none';
+
+      let list = letters.filter(l => {
+        const matchQuery = !q ||
+          (l.ref_no || '').toLowerCase().includes(q) ||
+          (l.recipient_company || '').toLowerCase().includes(q) ||
+          (l.recipient_name || '').toLowerCase().includes(q) ||
+          (l.attention || '').toLowerCase().includes(q) ||
+          (l.subject || '').toLowerCase().includes(q) ||
+          (l.project_name || '').toLowerCase().includes(q) ||
+          (l.signatory_name || '').toLowerCase().includes(q);
+        return matchQuery;
+      });
+
+      list.sort((a, b) => {
+        if (sort === 'serial-desc') return (b.ref_no || '').localeCompare(a.ref_no || '', undefined, { numeric: true });
+        if (sort === 'serial-asc') return (a.ref_no || '').localeCompare(b.ref_no || '', undefined, { numeric: true });
+        if (sort === 'date-desc') return new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0);
+        if (sort === 'date-asc') return new Date(a.date || a.created_at || 0) - new Date(b.date || b.created_at || 0);
+        if (sort === 'client-asc') return (a.recipient_company || a.recipient_name || '').localeCompare(b.recipient_company || b.recipient_name || '');
+        if (sort === 'client-desc') return (b.recipient_company || b.recipient_name || '').localeCompare(a.recipient_company || a.recipient_name || '');
+        return 0;
+      });
+
+      if (tbody) tbody.innerHTML = this.renderCustomLetterRows(list, q);
+      if (countBadge) countBadge.textContent = list.length;
+    };
+
     if (sInput) {
-      sInput.oninput = (e) => {
-        this.ltrSearchQuery = e.target.value;
-        this.renderLettersTab(root);
-        const refocused = document.getElementById('ltr-search-input');
-        if (refocused) {
-          refocused.focus();
-          refocused.setSelectionRange(refocused.value.length, refocused.value.length);
+      sInput.oninput = () => updateFilter();
+    }
+    if (sClear) {
+      sClear.onclick = () => {
+        if (sInput) {
+          sInput.value = '';
+          updateFilter();
+          sInput.focus();
         }
       };
     }
+    if (fSort) fSort.onchange = () => updateFilter();
+
+    updateFilter();
   };
 
   // ==========================================================================
   // 5. WORK COMPLETION CERTIFICATE EDIT MODAL
   // ==========================================================================
-  proto.openWorkCompletionModal = function(certId = null) {
+  proto.openWorkCompletionModal = function (certId = null) {
     const isEdit = Boolean(certId);
     let cert = null;
     if (isEdit) {
@@ -849,7 +1124,7 @@ export function registerDocumentModules(FinanceApp) {
 
         try {
           localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (err) {}
+        } catch (err) { }
 
         this.closeModal('modal-wcc-edit');
         this.renderActiveTab();
@@ -863,7 +1138,7 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
   // 6. DELIVERY NOTE EDIT MODAL
   // ==========================================================================
-  proto.openDeliveryNoteModal = function(dnId = null) {
+  proto.openDeliveryNoteModal = function (dnId = null) {
     const isEdit = Boolean(dnId);
     let dn = null;
     if (isEdit) {
@@ -1102,7 +1377,7 @@ export function registerDocumentModules(FinanceApp) {
 
         try {
           localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (err) {}
+        } catch (err) { }
 
         this.closeModal('modal-dn-edit');
         this.renderActiveTab();
@@ -1113,7 +1388,7 @@ export function registerDocumentModules(FinanceApp) {
     }
   };
 
-  proto.addDeliveryItemRow = function() {
+  proto.addDeliveryItemRow = function () {
     const tbody = document.getElementById('dn-items-body');
     if (!tbody) return;
     const tr = document.createElement('tr');
@@ -1142,7 +1417,7 @@ export function registerDocumentModules(FinanceApp) {
     tbody.appendChild(tr);
   };
 
-  proto.removeDeliveryItemRow = function(btn) {
+  proto.removeDeliveryItemRow = function (btn) {
     const row = btn.closest('.dn-item-row');
     if (row) row.remove();
   };
@@ -1150,7 +1425,7 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
   // 7. SUBCONTRACTOR UNDERTAKING LETTER EDIT MODAL
   // ==========================================================================
-  proto.openUndertakingLetterModal = function(letterId = null) {
+  proto.openUndertakingLetterModal = function (letterId = null) {
     const isEdit = Boolean(letterId);
     let ult = null;
     if (isEdit) {
@@ -1370,7 +1645,7 @@ export function registerDocumentModules(FinanceApp) {
 
         try {
           localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (err) {}
+        } catch (err) { }
 
         this.closeModal('modal-ult-edit');
         this.renderActiveTab();
@@ -1381,7 +1656,7 @@ export function registerDocumentModules(FinanceApp) {
     }
   };
 
-  proto.addUndertakingEmployeeRow = function() {
+  proto.addUndertakingEmployeeRow = function () {
     const tbody = document.getElementById('ult-employees-body');
     if (!tbody) return;
     const tr = document.createElement('tr');
@@ -1407,7 +1682,7 @@ export function registerDocumentModules(FinanceApp) {
     tbody.appendChild(tr);
   };
 
-  proto.removeUndertakingEmployeeRow = function(btn) {
+  proto.removeUndertakingEmployeeRow = function (btn) {
     const row = btn.closest('.ult-emp-row');
     if (row) row.remove();
   };
@@ -1415,7 +1690,7 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
   // 8. CORPORATE LETTER EDIT MODAL (LATTER EDITABLE)
   // ==========================================================================
-  proto.openCustomLetterModal = function(letterId = null) {
+  proto.openCustomLetterModal = function (letterId = null) {
     const isEdit = Boolean(letterId);
     let ltr = null;
     if (isEdit) {
@@ -1568,7 +1843,7 @@ export function registerDocumentModules(FinanceApp) {
 
         try {
           localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (err) {}
+        } catch (err) { }
 
         this.closeModal('modal-ltr-edit');
         this.renderActiveTab();
@@ -1584,7 +1859,7 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
 
   // --- Work Completion Certificate Print Modal ---
-  proto.openWorkCompletionPrintModal = function(certId, isVerifiedScan = false) {
+  proto.openWorkCompletionPrintModal = function (certId, isVerifiedScan = false) {
     let cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
     if (!cert) {
       cert = (this.db?.work_completion_certificates || [])[0] || {};
@@ -1797,7 +2072,7 @@ export function registerDocumentModules(FinanceApp) {
     document.body.classList.add('fin-doc-open');
   };
 
-  proto.downloadWorkCompletionDocument = function(certId) {
+  proto.downloadWorkCompletionDocument = function (certId) {
     let cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
     if (!cert) return;
     const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
@@ -1829,7 +2104,7 @@ export function registerDocumentModules(FinanceApp) {
   };
 
   // --- Subcontractor Undertaking Letter Print Modal (2-Page Layout) ---
-  proto.openUndertakingLetterPrintModal = function(letterId, isVerifiedScan = false) {
+  proto.openUndertakingLetterPrintModal = function (letterId, isVerifiedScan = false) {
     let ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     if (!ult) {
       ult = (this.db?.undertaking_letters || [])[0] || {};
@@ -2003,7 +2278,7 @@ export function registerDocumentModules(FinanceApp) {
     document.body.classList.add('fin-doc-open');
   };
 
-  proto.downloadUndertakingLetterDocument = function(letterId) {
+  proto.downloadUndertakingLetterDocument = function (letterId) {
     let ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     if (!ult) return;
     const pages = document.querySelectorAll('#fin-doc-print-modal .fin-document-paper');
@@ -2035,7 +2310,7 @@ export function registerDocumentModules(FinanceApp) {
   };
 
   // --- Material Delivery Note Print Modal ---
-  proto.openDeliveryNotePrintModal = function(dnId, isVerifiedScan = false) {
+  proto.openDeliveryNotePrintModal = function (dnId, isVerifiedScan = false) {
     let dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
     if (!dn) {
       dn = (this.db?.delivery_notes || [])[0] || {};
@@ -2200,7 +2475,7 @@ export function registerDocumentModules(FinanceApp) {
     document.body.classList.add('fin-doc-open');
   };
 
-  proto.downloadDeliveryNoteDocument = function(dnId) {
+  proto.downloadDeliveryNoteDocument = function (dnId) {
     let dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
     if (!dn) return;
     const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
@@ -2232,7 +2507,7 @@ export function registerDocumentModules(FinanceApp) {
   };
 
   // --- Corporate Official Letter Print Modal (Latter Editable) ---
-  proto.openCustomLetterPrintModal = function(letterId, isVerifiedScan = false) {
+  proto.openCustomLetterPrintModal = function (letterId, isVerifiedScan = false) {
     let ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     if (!ltr) {
       ltr = (this.db?.custom_letters || [])[0] || {};
@@ -2343,7 +2618,7 @@ export function registerDocumentModules(FinanceApp) {
     document.body.classList.add('fin-doc-open');
   };
 
-  proto.downloadCustomLetterDocument = function(letterId) {
+  proto.downloadCustomLetterDocument = function (letterId) {
     let ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     if (!ltr) return;
     const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
@@ -2377,7 +2652,7 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
   // 10. DELETION HANDLERS
   // ==========================================================================
-  proto.deleteWorkCompletion = async function(certId) {
+  proto.deleteWorkCompletion = async function (certId) {
     const cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
     const label = cert ? cert.cert_no : certId;
     if (!confirm(`Are you sure you want to delete Work Completion Certificate ${label}?`)) return;
@@ -2385,14 +2660,14 @@ export function registerDocumentModules(FinanceApp) {
     if (this.db.work_completion_certificates) {
       this.db.work_completion_certificates = this.db.work_completion_certificates.filter(c => c.id !== certId && c.cert_no !== certId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
 
     this.renderActiveTab();
     this.showNotification(`Work Completion Certificate ${label} deleted.`, 'info');
     await this.syncApi('delete_work_completion', { id: certId, cert_id: certId });
   };
 
-  proto.deleteDeliveryNote = async function(dnId) {
+  proto.deleteDeliveryNote = async function (dnId) {
     const dn = (this.db?.delivery_notes || []).find(n => n.id === dnId || n.dn_no === dnId);
     const label = dn ? dn.dn_no : dnId;
     if (!confirm(`Are you sure you want to delete Delivery Note ${label}?`)) return;
@@ -2400,14 +2675,14 @@ export function registerDocumentModules(FinanceApp) {
     if (this.db.delivery_notes) {
       this.db.delivery_notes = this.db.delivery_notes.filter(n => n.id !== dnId && n.dn_no !== dnId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
 
     this.renderActiveTab();
     this.showNotification(`Delivery Note ${label} deleted.`, 'info');
     await this.syncApi('delete_delivery_note', { id: dnId, dn_id: dnId });
   };
 
-  proto.deleteUndertakingLetter = async function(letterId) {
+  proto.deleteUndertakingLetter = async function (letterId) {
     const ult = (this.db?.undertaking_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     const label = ult ? ult.ref_no : letterId;
     if (!confirm(`Are you sure you want to delete Undertaking Letter ${label}?`)) return;
@@ -2415,14 +2690,14 @@ export function registerDocumentModules(FinanceApp) {
     if (this.db.undertaking_letters) {
       this.db.undertaking_letters = this.db.undertaking_letters.filter(l => l.id !== letterId && l.ref_no !== letterId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
 
     this.renderActiveTab();
     this.showNotification(`Undertaking Letter ${label} deleted.`, 'info');
     await this.syncApi('delete_undertaking_letter', { id: letterId, ref_no: label });
   };
 
-  proto.deleteCustomLetter = async function(letterId) {
+  proto.deleteCustomLetter = async function (letterId) {
     const ltr = (this.db?.custom_letters || []).find(l => l.id === letterId || l.ref_no === letterId);
     const label = ltr ? ltr.ref_no : letterId;
     if (!confirm(`Are you sure you want to delete Official Letter ${label}?`)) return;
@@ -2430,7 +2705,7 @@ export function registerDocumentModules(FinanceApp) {
     if (this.db.custom_letters) {
       this.db.custom_letters = this.db.custom_letters.filter(l => l.id !== letterId && l.ref_no !== letterId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
 
     this.renderActiveTab();
     this.showNotification(`Letter ${label} deleted.`, 'info');
@@ -2440,94 +2715,119 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
   // 11. CSV EXPORT UTILITIES (WITH EXCEL TEXT QUOTING APOSTROPHE)
   // ==========================================================================
-  proto.exportWorkCompletionCSV = function() {
+  const triggerCSVDownload = (finApp, filename, csvContent) => {
+    const finalContent = csvContent.startsWith('\uFEFF') ? csvContent : ('\uFEFF' + csvContent);
+    if (typeof finApp.downloadFile === 'function') {
+      finApp.downloadFile(filename, finalContent, 'text/csv;charset=utf-8;');
+    } else {
+      const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  proto.exportWorkCompletionCSV = function () {
     const certs = this.db?.work_completion_certificates || [];
     if (!certs.length) {
       this.showNotification('No completion certificates available to export.', 'warning');
       return;
     }
-    const headers = ['Certificate Number', 'Reference Number', 'Date', 'Client / Subcontractor', 'Main Contractor', 'Project', 'PO / Agreement Ref', 'Scope Description', 'Status'];
+    const headers = ['Certificate Number', 'Reference Number', 'Date', 'Time', 'Client / Subcontractor', 'Contact Person', 'Main Contractor', 'Project', 'PO / Agreement Ref', 'Scope Description', 'Status'];
     const rows = certs.map(c => [
       `'${c.cert_no || ''}`,
       `'${c.reference_no || ''}`,
-      c.date || '',
+      `'${c.date || ''}`,
+      `"${(c.time || '').replace(/"/g, '""')}"`,
       `"${(c.client_name || '').replace(/"/g, '""')}"`,
+      `"${(c.contact_person || '').replace(/"/g, '""')}"`,
       `"${(c.main_client || '').replace(/"/g, '""')}"`,
       `"${(c.project_name || '').replace(/"/g, '""')}"`,
       `'${c.subcontract_agreement || c.po_no || ''}`,
       `"${(c.scope_description || '').replace(/"/g, '""')}"`,
-      c.status || 'Approved'
+      `"${c.status || 'Approved'}"`
     ]);
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-    this.downloadFile(`Work_Completion_Certificates_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
-    this.showNotification('Work Completion Certificates exported to CSV.', 'success');
+    triggerCSVDownload(this, `Work_Completion_Certificates_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+    this.showNotification('Work Completion Certificates exported to CSV successfully.', 'success');
   };
 
-  proto.exportDeliveryNotesCSV = function() {
+  proto.exportDeliveryNotesCSV = function () {
     const notes = this.db?.delivery_notes || [];
     if (!notes.length) {
       this.showNotification('No delivery notes available to export.', 'warning');
       return;
     }
-    const headers = ['DN Number', 'Date', 'Consignee / Client', 'Project Name', 'Site Location', 'Vehicle Number', 'Driver Name', 'Items Count', 'Status'];
+    const headers = ['DN Number', 'Reference Number', 'Date', 'Time', 'Consignee / Client', 'Project Name', 'Site Location', 'Vehicle Number', 'Driver Name', 'Driver Contact', 'Items Count', 'Receiver Name', 'Status'];
     const rows = notes.map(n => [
       `'${n.dn_no || ''}`,
-      n.date || '',
+      `'${n.reference_no || n.dn_no || ''}`,
+      `'${n.date || ''}`,
+      `"${(n.time || '').replace(/"/g, '""')}"`,
       `"${(n.client_name || '').replace(/"/g, '""')}"`,
       `"${(n.project_name || '').replace(/"/g, '""')}"`,
       `"${(n.site_location || '').replace(/"/g, '""')}"`,
       `'${n.vehicle_no || ''}`,
       `"${(n.driver_name || '').replace(/"/g, '""')}"`,
-      (n.items || []).length,
-      n.status || 'Delivered'
+      `'${n.driver_contact || ''}`,
+      `'${(n.items || []).length}`,
+      `"${(n.receiver_name || '').replace(/"/g, '""')}"`,
+      `"${n.status || 'Delivered'}"`
     ]);
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-    this.downloadFile(`Delivery_Notes_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
-    this.showNotification('Delivery Notes exported to CSV.', 'success');
+    triggerCSVDownload(this, `Delivery_Notes_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+    this.showNotification('Delivery Notes exported to CSV successfully.', 'success');
   };
 
-  proto.exportUndertakingLettersCSV = function() {
+  proto.exportUndertakingLettersCSV = function () {
     const letters = this.db?.undertaking_letters || [];
     if (!letters.length) {
       this.showNotification('No undertaking letters available to export.', 'warning');
       return;
     }
-    const headers = ['Reference Number', 'Date', 'Attention', 'Client / Contractor', 'Project', 'Activity Type', 'Workers Count', 'Responsible Person', 'Status'];
+    const headers = ['Reference Number', 'Date', 'Attention', 'Client / Contractor', 'Project', 'Activity Type', 'Workers Count', 'Responsible Person', 'Designation', 'Status'];
     const rows = letters.map(l => [
       `'${l.ref_no || ''}`,
-      l.date || '',
+      `'${l.date || ''}`,
       `"${(l.attention || '').replace(/"/g, '""')}"`,
-      `"${(l.client_name || '').replace(/"/g, '""')}"`,
+      `"${(l.client_name || l.attention_company || '').replace(/"/g, '""')}"`,
       `"${(l.project_name || '').replace(/"/g, '""')}"`,
       `"${(l.activity_type || '').replace(/"/g, '""')}"`,
-      (l.employees || []).length,
+      `'${(l.employees || []).length}`,
       `"${(l.responsible_person || '').replace(/"/g, '""')}"`,
-      l.status || 'Active'
+      `"${(l.designation || '').replace(/"/g, '""')}"`,
+      `"${l.status || 'Active'}"`
     ]);
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-    this.downloadFile(`Undertaking_Letters_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
-    this.showNotification('Undertaking Letters exported to CSV.', 'success');
+    triggerCSVDownload(this, `Undertaking_Letters_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+    this.showNotification('Undertaking Letters exported to CSV successfully.', 'success');
   };
 
-  proto.exportLettersCSV = function() {
+  proto.exportLettersCSV = function () {
     const letters = this.db?.custom_letters || [];
     if (!letters.length) {
       this.showNotification('No corporate letters available to export.', 'warning');
       return;
     }
-    const headers = ['Reference Number', 'Date', 'Attention', 'Recipient Company', 'Project Reference', 'Subject', 'Signatory Name', 'Status'];
+    const headers = ['Reference Number', 'Date', 'Attention', 'Recipient Company', 'Project Reference', 'Subject', 'Signatory Name', 'Designation', 'Status'];
     const rows = letters.map(l => [
       `'${l.ref_no || ''}`,
-      l.date || '',
+      `'${l.date || ''}`,
       `"${(l.attention || '').replace(/"/g, '""')}"`,
       `"${(l.recipient_company || '').replace(/"/g, '""')}"`,
       `"${(l.project_name || '').replace(/"/g, '""')}"`,
       `"${(l.subject || '').replace(/"/g, '""')}"`,
       `"${(l.signatory_name || '').replace(/"/g, '""')}"`,
-      l.status || 'Issued'
+      `"${(l.designation || '').replace(/"/g, '""')}"`,
+      `"${l.status || 'Issued'}"`
     ]);
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-    this.downloadFile(`Corporate_Letters_${new Date().toISOString().split('T')[0]}.csv`, csvContent, 'text/csv');
-    this.showNotification('Corporate Letters exported to CSV.', 'success');
+    triggerCSVDownload(this, `Corporate_Letters_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+    this.showNotification('Corporate Letters exported to CSV successfully.', 'success');
   };
 }
