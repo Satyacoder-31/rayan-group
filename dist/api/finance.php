@@ -1,41 +1,3 @@
-function reconcileV80CustomerTrnAndRelationalSync(&$data, $pdo) {
-    if (!$pdo) return;
-    try {
-        $chkMig80 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'toprock_trn_sync_v80'")->fetchColumn();
-        if ($chkMig80 !== 'completed') {
-            // 1. Update customers table
-            $pdo->exec("UPDATE finance_customers SET trn = '104571196000003', data_json = JSON_SET(data_json, '$.trn', '104571196000003') WHERE id = 'cust-toprock' OR name LIKE '%TOP ROCK%'");
-            // 2. Update invoices table
-            $pdo->exec("UPDATE finance_invoices SET customer_trn = '104571196000003', data_json = JSON_SET(data_json, '$.customer_trn', '104571196000003', '$.trn', '104571196000003', '$.tax_number', '104571196000003') WHERE customer_id = 'cust-toprock' OR customer_name LIKE '%TOP ROCK%'");
-            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('toprock_trn_sync_v80', 'completed', NOW())");
-        }
-    } catch (Exception $e) {}
-
-    // Ensure memory state has updated TRN for Top Rock
-    if (!empty($data['customers']) && is_array($data['customers'])) {
-        foreach ($data['customers'] as &$c) {
-            if (($c['id'] ?? '') === 'cust-toprock' || stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
-                if (empty($c['trn']) || $c['trn'] === '100360644700003') {
-                    $c['trn'] = '104571196000003';
-                }
-            }
-        }
-        unset($c);
-    }
-    if (!empty($data['invoices']) && is_array($data['invoices'])) {
-        foreach ($data['invoices'] as &$inv) {
-            if (($inv['customer_id'] ?? '') === 'cust-toprock' || stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false) {
-                if (empty($inv['customer_trn']) || $inv['customer_trn'] === '100360644700003') {
-                    $inv['customer_trn'] = '104571196000003';
-                    $inv['trn'] = '104571196000003';
-                    $inv['tax_number'] = '104571196000003';
-                }
-            }
-        }
-        unset($inv);
-    }
-}
-
 <?php
 /**
  * Rayan Group — Enterprise Accounts & Billing Management API
@@ -3512,6 +3474,70 @@ function reconcileV79ChequeDeposits(&$data, $pdo) {
     }
 }
 
+function reconcileV80CustomerTrnAndRelationalSync(&$data, $pdo) {
+    if (!$pdo) return;
+    try {
+        $chkMig80 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'toprock_trn_sync_v80'")->fetchColumn();
+        if ($chkMig80 !== 'completed') {
+            // 1. Update customers table
+            $pdo->exec("UPDATE finance_customers SET trn = '104571196000003', data_json = JSON_SET(data_json, '$.trn', '104571196000003') WHERE id = 'cust-toprock' OR name LIKE '%TOP ROCK%'");
+            // 2. Update invoices table
+            $pdo->exec("UPDATE finance_invoices SET customer_trn = '104571196000003', data_json = JSON_SET(data_json, '$.customer_trn', '104571196000003', '$.trn', '104571196000003', '$.tax_number', '104571196000003') WHERE customer_id = 'cust-toprock' OR customer_name LIKE '%TOP ROCK%'");
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('toprock_trn_sync_v80', 'completed', NOW())");
+        }
+    } catch (Exception $e) {}
+
+    // Ensure memory state has updated TRN for Top Rock
+    if (!empty($data['customers']) && is_array($data['customers'])) {
+        foreach ($data['customers'] as &$c) {
+            if (($c['id'] ?? '') === 'cust-toprock' || stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
+                if (empty($c['trn']) || $c['trn'] === '100360644700003') {
+                    $c['trn'] = '104571196000003';
+                }
+            }
+        }
+        unset($c);
+    }
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        foreach ($data['invoices'] as &$inv) {
+            if (($inv['customer_id'] ?? '') === 'cust-toprock' || stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false) {
+                if (empty($inv['customer_trn']) || $inv['customer_trn'] === '100360644700003') {
+                    $inv['customer_trn'] = '104571196000003';
+                    $inv['trn'] = '104571196000003';
+                    $inv['tax_number'] = '104571196000003';
+                }
+            }
+        }
+        unset($inv);
+    }
+}
+
+function reconcileV81HMVillaFinancials(&$data, $pdo) {
+    if (!$pdo) return;
+    try {
+        $chkMig81 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'hm_villa_reconcile_v81'")->fetchColumn();
+        if ($chkMig81 !== 'completed') {
+            // Update finance_projects table for HM Villa: contract_value = 38990.00, approved_budget = 38990.00, code = 'PRJ-REC-7-HMV-2024'
+            $pdo->exec("UPDATE finance_projects SET contract_value = 38990.00, approved_budget = 38990.00, code = 'PRJ-REC-7-HMV-2024', data_json = JSON_SET(data_json, '$.contract_value', 38990.00, '$.approved_budget', 38990.00, '$.code', 'PRJ-REC-7-HMV-2024'), updated_at = NOW() WHERE id = 'prj-rec-3-hp-2024' OR name LIKE '%HM Villa%'");
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('hm_villa_reconcile_v81', 'completed', NOW())");
+        }
+    } catch (Exception $e) {
+        error_log('Migration v81 error: ' . $e->getMessage());
+    }
+
+    // Ensure memory state has updated contract value, budget and code for HM Villa
+    if (!empty($data['projects']) && is_array($data['projects'])) {
+        foreach ($data['projects'] as &$p) {
+            if (($p['id'] ?? '') === 'prj-rec-3-hp-2024' || stripos($p['name'] ?? '', 'HM Villa') !== false) {
+                $p['contract_value'] = 38990.00;
+                $p['approved_budget'] = 38990.00;
+                $p['code'] = 'PRJ-REC-7-HMV-2024';
+            }
+        }
+        unset($p);
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -5265,6 +5291,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV78VendorSerialAtoZ($data, $pdo);
                     reconcileV79ChequeDeposits($data, $pdo);
                     reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
+                    reconcileV81HMVillaFinancials($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -5284,6 +5311,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV77BankWithdrawalAndEWalletPayments($data, $pdo);
                 reconcileV78VendorSerialAtoZ($data, $pdo);
                 reconcileV79ChequeDeposits($data, $pdo);
+                reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
+                reconcileV81HMVillaFinancials($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {

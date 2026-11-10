@@ -1147,6 +1147,13 @@ class FinanceApp {
         p.contract_value = 388098.68;
         p.approved_budget = 388098.68;
       }
+      if (p.id === 'prj-rec-3-hp-2024' || (p.name || '').toLowerCase().includes('hm villa')) {
+        p.contract_value = 38990.00;
+        p.approved_budget = 38990.00;
+        if (p.code && p.code.toLowerCase().includes('hp')) {
+          p.code = 'PRJ-REC-7-HMV-2024';
+        }
+      }
     });
 
     // Purge duplicate/fake vouchers
@@ -1424,7 +1431,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v80';
+    const CURRENT_DB_VERSION = 'v2026_clean_v81';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -9058,6 +9065,24 @@ class FinanceApp {
         if (otherPrj) return false;
       }
 
+      // Client/Customer mismatch guard for AR documents (invoices, receipts, credit notes):
+      const prjClient = (prj.client_name || prj.customer_name || prj.client || '').toLowerCase().trim();
+      if (prjClient && !isBill) {
+        const docClient = (doc.customer_name || doc.client_name || doc.party_name || '').toLowerCase().trim();
+        if (docClient) {
+          const prjTokens = prjClient.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t.length >= 4 && !['llc', 'fze', 'est', 'corp', 'general', 'trading', 'contracting', 'services', 'technical', 'proprietorship', 'engineering', 'decor'].includes(t));
+          const docTokens = docClient.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t.length >= 4 && !['llc', 'fze', 'est', 'corp', 'general', 'trading', 'contracting', 'services', 'technical', 'proprietorship', 'engineering', 'decor'].includes(t));
+          if (prjTokens.length > 0 && docTokens.length > 0) {
+            const hasCommonToken = prjTokens.some(pt => docTokens.some(dt => pt === dt || pt.includes(dt) || dt.includes(pt)));
+            if (!hasCommonToken) {
+              if (doc.project_id !== prjId && (doc.project_id || '').toLowerCase() !== prjCode) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+
       const docAll = (docPName + ' ' + (doc.subject || '') + ' ' + (doc.notes || '') + ' ' + (doc.description || '') + ' ' + (doc.vendor_invoice_no || '') + ' ' + (doc.po_no || '') + ' ' + (doc.po_reference || '') + ' ' + (doc.item_description || '')).toLowerCase();
       if (prjCode.includes('max') || prjName.includes('max')) {
         if (docAll.includes('max') || (docAll.includes('wahda') && !docAll.includes('commercial tower'))) return true;
@@ -9076,7 +9101,10 @@ class FinanceApp {
       if (prjCode.includes('bateel') || prjName.includes('bateel')) {
         if (docAll.includes('bateel')) return true;
       }
-      if (prjCode.includes('hp') || prjName.includes('hayat') || prjName.includes('property')) {
+      if (prjCode.includes('hm') || prjCode.includes('hmv') || prjName.includes('hm villa') || prjName.includes('villa') || prjName.includes('spa corridor')) {
+        if (docAll.includes('hm villa') || docAll.includes('amgm/po-2024') || docAll.includes('spa corridor') || (docAll.includes('muluki') && (docAll.includes('villa') || docAll.includes('amgm')))) return true;
+      }
+      if ((prjCode.includes('hayat') || prjName.includes('hayat') || (prjCode.includes('hp') && prjName.includes('hayat')) || prjName.includes('property')) && !prjName.includes('villa') && !prjCode.includes('hmv')) {
         if (docAll.includes('hayat property') || docAll.includes('property # 12') || docAll.includes('property 12') || docAll.includes('podull/106322') || docAll.includes('podull/107329') || docAll.includes('sodul/108640')) return true;
       }
       if (prjCode.includes('ab') || prjCode.includes('bd') || prjName.includes('arab bank') || prjName.includes('sector e-25') || prjName.includes('commercial & residential')) {
@@ -9109,12 +9137,11 @@ class FinanceApp {
     const invNos = new Set(prjInvoices.map(i => (i.invoice_no || '').trim().toLowerCase()));
     const invIds = new Set(prjInvoices.map(i => (i.id || '').trim().toLowerCase()));
     const prjReceipts = receipts.filter(r => {
-      if (isDocLinked(r, false)) return true;
       const allocs = r.allocations || r.allocated_invoices;
-      if (allocs && Array.isArray(allocs)) {
+      if (allocs && Array.isArray(allocs) && allocs.length > 0) {
         return allocs.some(ai => (ai.invoice_no && invNos.has(ai.invoice_no.trim().toLowerCase())) || (ai.invoice_id && invIds.has(ai.invoice_id.trim().toLowerCase())));
       }
-      return false;
+      return isDocLinked(r, false);
     });
 
     // Credit notes linked to project or project invoices
@@ -9134,7 +9161,18 @@ class FinanceApp {
     const autoCredited = Math.max(autoCreditedFromInvs, autoCreditedFromNotes);
 
     const autoCollectedFromInvs = Math.round(prjInvoices.reduce((s, i) => s + (Number(i.amount_paid) || 0), 0) * 100) / 100;
-    const autoCollectedFromReceipts = Math.round(prjReceipts.reduce((s, r) => s + (Number(r.amount_received) || 0), 0) * 100) / 100;
+    const autoCollectedFromReceipts = Math.round(prjReceipts.reduce((s, r) => {
+      const allocs = r.allocations || r.allocated_invoices;
+      if (allocs && Array.isArray(allocs) && allocs.length > 0) {
+        const prjAllocAmt = allocs.reduce((as, ai) => {
+          const matchNo = ai.invoice_no && invNos.has(ai.invoice_no.trim().toLowerCase());
+          const matchId = ai.invoice_id && invIds.has(ai.invoice_id.trim().toLowerCase());
+          return matchNo || matchId ? as + (Number(ai.amount_allocated ?? ai.amount ?? 0)) : as;
+        }, 0);
+        return s + prjAllocAmt;
+      }
+      return s + (Number(r.amount_received) || 0);
+    }, 0) * 100) / 100;
     const autoCollected = Math.max(autoCollectedFromInvs, autoCollectedFromReceipts);
 
     const autoBillsCost = Math.round(prjBills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0) * 100) / 100;
