@@ -23918,7 +23918,18 @@ class FinanceApp {
     const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     let csv = 'Invoice Number,Date,Customer,TRN / GSTIN,Place of Supply,Taxable Value,Tax Total,Grand Total,Amount Paid,Balance Due,Status\n';
     invoices.forEach(i => {
-      csv += `${this.csvEscape(i.invoice_no)},${this.csvEscape(i.invoice_date)},${this.csvEscape(i.customer_name)},${this.csvEscape(i.customer_trn || i.customer_gstin || '')},${this.csvEscape(i.place_of_supply || '')},${Number(i.taxable_subtotal || 0).toFixed(2)},${Number(i.total_tax || 0).toFixed(2)},${Number(i.grand_total || 0).toFixed(2)},${Number(i.amount_paid || 0).toFixed(2)},${Number(i.balance_due || 0).toFixed(2)},${this.csvEscape(i.status || '')}\n`;
+      let rawTrn = (i.customer_trn || i.customer_gstin || '').trim();
+      if (!rawTrn && i.customer_id) {
+        const cust = (this.db?.customers || []).find(c => c.id === i.customer_id || (c.name && c.name.toLowerCase() === (i.customer_name || '').toLowerCase()));
+        if (cust) rawTrn = (cust.trn || cust.gstin || '').trim();
+      }
+      if (!rawTrn && i.customer_name) {
+        const cust = (this.db?.customers || []).find(c => c.name && c.name.toLowerCase() === i.customer_name.toLowerCase());
+        if (cust) rawTrn = (cust.trn || cust.gstin || '').trim();
+      }
+      const formattedTrn = rawTrn ? (rawTrn.startsWith("'") ? rawTrn : `'${rawTrn}`) : '';
+
+      csv += `${this.csvEscape(i.invoice_no)},${this.csvEscape(i.invoice_date)},${this.csvEscape(i.customer_name)},${this.csvEscape(formattedTrn)},${this.csvEscape(i.place_of_supply || '')},${Number(i.taxable_subtotal || 0).toFixed(2)},${Number(i.total_tax || 0).toFixed(2)},${Number(i.grand_total || 0).toFixed(2)},${Number(i.amount_paid || 0).toFixed(2)},${Number(i.balance_due || 0).toFixed(2)},${this.csvEscape(i.status || '')}\n`;
     });
     this.downloadFile(`Rayan_Group_Sales_Invoices_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
   }
@@ -24009,7 +24020,11 @@ class FinanceApp {
       const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
       const dues = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
       const invoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
-      csv += `${this.csvEscape(c.code || '')},${this.csvEscape(c.name || '')},${this.csvEscape(c.category || 'Client')},${this.csvEscape(c.trn || c.gstin || '')},${this.csvEscape(c.contact_person || c.contact || '')},${this.csvEscape(c.phone || '')},${this.csvEscape(c.email || '')},${this.csvEscape(c.city || c.address || '')},${Number(c.opening_balance || 0).toFixed(2)},${invoiced.toFixed(2)},${dues.toFixed(2)},${this.csvEscape(c.status || 'Active')}\n`;
+      const rawTrn = (c.trn || c.gstin || '').trim();
+      const formattedTrn = rawTrn ? (rawTrn.startsWith("'") ? rawTrn : `'${rawTrn}`) : '';
+      const rawPhone = (c.phone || '').trim();
+      const formattedPhone = rawPhone ? (rawPhone.startsWith("'") ? rawPhone : `'${rawPhone}`) : '';
+      csv += `${this.csvEscape(c.code || '')},${this.csvEscape(c.name || '')},${this.csvEscape(c.category || 'Client')},${this.csvEscape(formattedTrn)},${this.csvEscape(c.contact_person || c.contact || '')},${this.csvEscape(formattedPhone)},${this.csvEscape(c.email || '')},${this.csvEscape(c.city || c.address || '')},${Number(c.opening_balance || 0).toFixed(2)},${invoiced.toFixed(2)},${dues.toFixed(2)},${this.csvEscape(c.status || 'Active')}\n`;
     });
     this.downloadFile(`Rayan_Group_Customers_Directory_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
   }
@@ -24021,7 +24036,13 @@ class FinanceApp {
     rawVendors.forEach(v => {
       const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === (v.name || '').toLowerCase())) && b.status !== 'void');
       const payables = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
-      csv += `${this.csvEscape(v.code || '')},${this.csvEscape(v.name || '')},${this.csvEscape(v.category || 'Supplier')},${this.csvEscape(v.trn || v.pan || v.gstin || '')},${this.csvEscape(v.contact_person || v.contact || '')},${this.csvEscape(v.phone || '')},${this.csvEscape(v.email || '')},${this.csvEscape(v.bank_name || '')},${this.csvEscape(v.bank_account || v.iban || '')},${this.csvEscape(v.payment_terms || '')},${payables.toFixed(2)},${this.csvEscape(v.status || 'Active')}\n`;
+      const rawTrn = (v.trn || v.pan || v.gstin || '').trim();
+      const formattedTrn = rawTrn ? (rawTrn.startsWith("'") ? rawTrn : `'${rawTrn}`) : '';
+      const rawPhone = (v.phone || '').trim();
+      const formattedPhone = rawPhone ? (rawPhone.startsWith("'") ? rawPhone : `'${rawPhone}`) : '';
+      const rawBankAcct = (v.bank_account || v.iban || '').trim();
+      const formattedBankAcct = rawBankAcct ? (rawBankAcct.startsWith("'") ? rawBankAcct : `'${rawBankAcct}`) : '';
+      csv += `${this.csvEscape(v.code || '')},${this.csvEscape(v.name || '')},${this.csvEscape(v.category || 'Supplier')},${this.csvEscape(formattedTrn)},${this.csvEscape(v.contact_person || v.contact || '')},${this.csvEscape(formattedPhone)},${this.csvEscape(v.email || '')},${this.csvEscape(v.bank_name || '')},${this.csvEscape(formattedBankAcct)},${this.csvEscape(v.payment_terms || '')},${payables.toFixed(2)},${this.csvEscape(v.status || 'Active')}\n`;
     });
     this.downloadFile(`Rayan_Group_Vendors_Directory_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
   }
@@ -24050,7 +24071,9 @@ class FinanceApp {
     else if (filterType === 'outward') cheques = cheques.filter(c => c.type === 'outward');
     let csv = 'Cheque #,Type (Inward/Outward),Cheque Date,Drawee Bank,Party / Issuer / Vendor,Amount,Currency,Status,Deposit Bank,Notes\n';
     cheques.forEach(c => {
-      csv += `${this.csvEscape(c.cheque_no)},${this.csvEscape(c.type || 'inward')},${this.csvEscape(c.date || c.cheque_date)},${this.csvEscape(c.bank_name || c.drawee_bank || '')},${this.csvEscape(c.party_name || '')},${Number(c.amount || 0).toFixed(2)},${this.csvEscape(c.currency || 'AED')},${this.csvEscape(c.status || 'Cleared')},${this.csvEscape(c.deposit_bank || '')},${this.csvEscape(c.notes || '')}\n`;
+      const rawChq = (c.cheque_no || '').trim();
+      const formattedChq = rawChq ? (rawChq.startsWith("'") ? rawChq : `'${rawChq}`) : '';
+      csv += `${this.csvEscape(formattedChq)},${this.csvEscape(c.type || 'inward')},${this.csvEscape(c.date || c.cheque_date)},${this.csvEscape(c.bank_name || c.drawee_bank || '')},${this.csvEscape(c.party_name || '')},${Number(c.amount || 0).toFixed(2)},${this.csvEscape(c.currency || 'AED')},${this.csvEscape(c.status || 'Cleared')},${this.csvEscape(c.deposit_bank || '')},${this.csvEscape(c.notes || '')}\n`;
     });
     const suffix = filterType === 'inward' ? 'Inward_Cheques' : (filterType === 'outward' ? 'Outward_Cheques' : 'All_Cheques');
     this.downloadFile(`Rayan_Group_${suffix}_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
