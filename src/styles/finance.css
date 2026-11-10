@@ -3979,11 +3979,31 @@ body.fin-doc-open .fin-app-wrapper {
     break-before: avoid !important;
   }
 
+  /* Suppress all browser and container scrollbars in print */
+  *,
+  *::before,
+  *::after {
+    scrollbar-width: none !important;
+  }
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
   /* Completely eradicate preloader, custom cursor & floating non-print elements */
   #site-preloader,
   .site-preloader,
   #custom-cursor,
-  #cursor-dot {
+  #cursor-dot,
+  #fin-floating-scrollbar,
+  .fin-floating-h-scrollbar,
+  #fin-floating-scrollbar-inner,
+  .mobile-bottom-dock,
+  .floating-whatsapp-btn,
+  #toast-container,
+  .modal-overlay {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
@@ -3995,9 +4015,19 @@ body.fin-doc-open .fin-app-wrapper {
     pointer-events: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
   }
 
   /* 3. Hide non-printable app navigation, header chrome & floating elements */
+  #fin-floating-scrollbar,
+  .fin-floating-h-scrollbar,
+  #fin-floating-scrollbar-inner,
+  .mobile-bottom-dock,
+  .floating-whatsapp-btn,
+  #toast-container,
+  .modal-overlay,
   .fin-doc-toolbar,
   .fin-app-topbar,
   .fin-topbar,

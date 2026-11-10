@@ -4618,6 +4618,13 @@ class FinanceApp {
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize, { passive: true });
     document.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('beforeprint', () => {
+      const fb = document.getElementById('fin-floating-scrollbar');
+      if (fb) fb.style.display = 'none';
+    });
+    window.addEventListener('afterprint', () => {
+      this.updateFloatingScrollbar();
+    });
     const contentRoot = document.getElementById('fin-tab-content-root');
     if (contentRoot) {
       contentRoot.addEventListener('scroll', onScrollOrResize, { passive: true });
@@ -4636,6 +4643,19 @@ class FinanceApp {
     const bar = document.getElementById('fin-floating-scrollbar');
     const inner = document.getElementById('fin-floating-scrollbar-inner');
     if (!bar || !inner) return;
+
+    // Immediately hide floating scrollbar if printing, if document viewer is open, or if any modal is active
+    if (
+      document.body.classList.contains('fin-doc-open') ||
+      document.body.classList.contains('fin-printing-now') ||
+      document.getElementById('fin-doc-print-modal') ||
+      document.querySelector('.fin-doc-modal-backdrop') ||
+      document.querySelector('.fin-modal-backdrop.open')
+    ) {
+      bar.style.display = 'none';
+      this._activeScrollTable = null;
+      return;
+    }
 
     // Find all table-responsive containers in view
     const tables = Array.from(document.querySelectorAll('.fin-table-responsive'));
@@ -19732,6 +19752,7 @@ class FinanceApp {
     const el = document.getElementById('fin-doc-print-modal');
     if (el) el.remove();
     document.body.classList.remove('fin-doc-open');
+    this.updateFloatingScrollbar();
     if (window.location.search.includes('verify=') || window.location.search.includes('doc=')) {
       if (this.currentUser) {
         this.showAppView();
@@ -19745,6 +19766,12 @@ class FinanceApp {
   }
 
   printDocument() {
+    // Immediately hide floating scrollbar and other interactive overlays
+    const floatingBar = document.getElementById('fin-floating-scrollbar');
+    if (floatingBar) {
+      floatingBar.style.display = 'none';
+    }
+
     // Clean up any legacy print iframe if present
     const legacyFrame = document.getElementById('fin-clean-print-frame');
     if (legacyFrame) {
