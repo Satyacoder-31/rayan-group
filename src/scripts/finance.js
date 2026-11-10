@@ -5431,6 +5431,9 @@ class FinanceApp {
                 + Add Customer
               </button>
             ` : ''}
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportCustomersCSV()">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -5685,6 +5688,9 @@ class FinanceApp {
                 + Add Vendor
               </button>
             ` : ''}
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportVendorsCSV()">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -5908,6 +5914,9 @@ class FinanceApp {
                 + Add Item / Service
               </button>
             ` : ''}
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportItemsCSV()">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -5985,6 +5994,9 @@ class FinanceApp {
                   + Record Receipt
                 </button>
               ` : ''}
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.exportReceiptsCSV()">
+                📥 Export CSV
+              </button>
             </div>
           </div>
           <div class="fin-table-responsive">
@@ -6046,11 +6058,16 @@ class FinanceApp {
               <h2 class="fin-panel-title">💸 Vendor Payment Vouchers</h2>
               <p style="font-size:0.75rem; color:#94a3b8;">Outward disbursements against purchase bills</p>
             </div>
-            ${this.hasPermission('record_payment') ? `
-              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordPaymentModal()">
-                + Vendor Payment
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              ${this.hasPermission('record_payment') ? `
+                <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordPaymentModal()">
+                  + Vendor Payment
+                </button>
+              ` : ''}
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.exportPaymentsCSV()">
+                📥 Export CSV
               </button>
-            ` : ''}
+            </div>
           </div>
           <div class="fin-table-responsive">
             <table class="fin-data-table">
@@ -6253,6 +6270,9 @@ class FinanceApp {
                   + Record Payment-In
                 </button>
               ` : ''}
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.exportReceiptsCSV()">
+                📥 Export CSV
+              </button>
             </div>
           </div>
 
@@ -6509,11 +6529,16 @@ class FinanceApp {
               <h2 class="fin-panel-title">💸 Payment-Out (Vendor &amp; Contractor Disbursements)</h2>
               <p style="font-size:0.75rem; color:#94a3b8;">Outward disbursements, supplier bank transfers, and purchase bill settlements</p>
             </div>
-            ${this.hasPermission('record_payment') ? `
-              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordPaymentModal()">
-                + Record Payment-Out
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              ${this.hasPermission('record_payment') ? `
+                <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordPaymentModal()">
+                  + Record Payment-Out
+                </button>
+              ` : ''}
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.exportPaymentsCSV()">
+                📥 Export CSV
               </button>
-            ` : ''}
+            </div>
           </div>
 
           <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.25rem;">
@@ -6754,9 +6779,14 @@ class FinanceApp {
             <h2 class="fin-panel-title">🔄 Sales Credit Notes (Customer Returns &amp; Price Adjustments)</h2>
             <p style="font-size:0.75rem; color:#94a3b8;">Official credit notes issued to clients reducing receivable ledger balance</p>
           </div>
-          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateNotePrompt('credit_note')">
-            + Create Credit Note
-          </button>
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateNotePrompt('credit_note')">
+              + Create Credit Note
+            </button>
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportCreditNotesCSV()">
+              📥 Export CSV
+            </button>
+          </div>
         </div>
         <!-- Filter / Search Bar -->
         <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
@@ -6947,9 +6977,14 @@ class FinanceApp {
             <h2 class="fin-panel-title">🔄 Purchase Debit Notes (Vendor Debits &amp; Rate Adjustments)</h2>
             <p style="font-size:0.75rem; color:#94a3b8;">Reduces supplier payable balance against damaged materials, short deliveries, or corrections</p>
           </div>
-          <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateNotePrompt('debit_note')">
-            + Create Debit Note
-          </button>
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCreateNotePrompt('debit_note')">
+              + Create Debit Note
+            </button>
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportDebitNotesCSV()">
+              📥 Export CSV
+            </button>
+          </div>
         </div>
 
         <!-- Filter / Search Bar -->
@@ -7142,6 +7177,9 @@ class FinanceApp {
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openAddBankAccountModal()">
               + Add Bank Account
             </button>
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportBankTransfersCSV()">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -7288,6 +7326,9 @@ class FinanceApp {
             </button>
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openCashEntryModal()">
               + Record Cash Voucher
+            </button>
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportCashVouchersCSV()">
+              📥 Export CSV
             </button>
           </div>
         </div>
@@ -7482,9 +7523,14 @@ class FinanceApp {
               <h2 class="fin-panel-title">📥 Inward Cheques &amp; PDCs (Customer Receipts)</h2>
               <p style="font-size:0.75rem; color:#94a3b8;">Cheques and post-dated instruments received from clients under banking clearance (${inward.length})</p>
             </div>
-            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordChequeModal('inward')">
-              + Inward Cheque / PDC
-            </button>
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordChequeModal('inward')">
+                + Inward Cheque / PDC
+              </button>
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.exportChequesCSV('inward')">
+                📥 Export CSV
+              </button>
+            </div>
           </div>
 
           <!-- Inward Cheques Search & Filter Bar -->
@@ -7564,9 +7610,14 @@ class FinanceApp {
               <h2 class="fin-panel-title">📤 Outward Cheques (Vendor Disbursements)</h2>
               <p style="font-size:0.75rem; color:#94a3b8;">Corporate cheques issued against verified supplier bills (${outward.length})</p>
             </div>
-            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordChequeModal('outward')">
-              + Issue Cheque
-            </button>
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordChequeModal('outward')">
+                + Issue Cheque
+              </button>
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.exportChequesCSV('outward')">
+                📥 Export CSV
+              </button>
+            </div>
           </div>
 
           <!-- Outward Cheques Search Bar -->
@@ -7929,6 +7980,9 @@ class FinanceApp {
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openLoanEntryModal()">
               + Record Drawdown / Repayment
             </button>
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportLoansCSV()">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -8055,6 +8109,9 @@ class FinanceApp {
                 + Record Expense Claim
               </button>
             ` : ''}
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportExpensesCSV()">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -8264,6 +8321,9 @@ class FinanceApp {
                 + Create Purchase Order
               </button>
             ` : ''}
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportPurchaseOrdersCSV()">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -23578,30 +23638,15 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // EXPORT UTILITIES (CSV / XLSX / PRINT)
   // --------------------------------------------------------------------------
-  exportInvoicesCSV() {
-    const invoices = this.db?.invoices || [];
-    let csv = 'Invoice Number,Date,Customer,TRN / GSTIN,Place of Supply,Taxable Value,Tax Total,Grand Total,Amount Paid,Balance Due,Status\n';
-    invoices.forEach(i => {
-      csv += `"${i.invoice_no}","${i.invoice_date}","${i.customer_name}","${i.customer_trn || i.customer_gstin || ''}","${i.place_of_supply || ''}",${i.taxable_subtotal},${i.total_tax},${i.grand_total},${i.amount_paid || 0},${i.balance_due},"${i.status}"\n`;
-    });
-    this.downloadFile('Rayan_Group_Sales_Invoices_Register.csv', csv, 'text/csv');
+  csvEscape(val) {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""').replace(/\r?\n/g, ' ');
+    return `"${str}"`;
   }
 
-  exportBillsCSV() {
-    const bills = this.db?.purchase_bills || [];
-    let csv = 'Bill Number,Supplier Invoice No,Date,Vendor,Taxable Value,Tax Total,Grand Total,Amount Paid,Balance Due,Status\n';
-    bills.forEach(b => {
-      csv += `"${b.bill_no}","${b.vendor_invoice_no}","${b.bill_date}","${b.vendor_name}",${b.taxable_subtotal},${b.tax_total},${b.grand_total},${b.amount_paid || 0},${b.balance_due},"${b.status}"\n`;
-    });
-    this.downloadFile('Rayan_Group_Purchase_Bills_Register.csv', csv, 'text/csv');
-  }
-
-  exportReportsExcel() {
-    this.exportInvoicesCSV();
-  }
-
-  downloadFile(filename, content, type) {
-    const blob = new Blob([content], { type });
+  downloadFile(filename, content, type = 'text/csv;charset=utf-8;') {
+    const finalContent = (type && type.includes('csv') && !content.startsWith('\uFEFF')) ? ('\uFEFF' + content) : content;
+    const blob = new Blob([finalContent], { type });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -23610,6 +23655,171 @@ class FinanceApp {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  exportInvoicesCSV() {
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let csv = 'Invoice Number,Date,Customer,TRN / GSTIN,Place of Supply,Taxable Value,Tax Total,Grand Total,Amount Paid,Balance Due,Status\n';
+    invoices.forEach(i => {
+      csv += `${this.csvEscape(i.invoice_no)},${this.csvEscape(i.invoice_date)},${this.csvEscape(i.customer_name)},${this.csvEscape(i.customer_trn || i.customer_gstin || '')},${this.csvEscape(i.place_of_supply || '')},${Number(i.taxable_subtotal || 0).toFixed(2)},${Number(i.total_tax || 0).toFixed(2)},${Number(i.grand_total || 0).toFixed(2)},${Number(i.amount_paid || 0).toFixed(2)},${Number(i.balance_due || 0).toFixed(2)},${this.csvEscape(i.status || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Sales_Invoices_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportBillsCSV() {
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    let csv = 'Bill Number,Supplier Invoice No,Date,Vendor,Linked Project,Taxable Value,Tax Total,Grand Total,Amount Paid,Balance Due,Status\n';
+    bills.forEach(b => {
+      csv += `${this.csvEscape(b.bill_no)},${this.csvEscape(b.vendor_invoice_no || '')},${this.csvEscape(b.bill_date)},${this.csvEscape(b.vendor_name || '')},${this.csvEscape(b.project_name || '')},${Number(b.taxable_subtotal || 0).toFixed(2)},${Number(b.tax_total || 0).toFixed(2)},${Number(b.grand_total || 0).toFixed(2)},${Number(b.amount_paid || 0).toFixed(2)},${Number(b.balance_due || 0).toFixed(2)},${this.csvEscape(b.status || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Purchase_Bills_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportReceiptsCSV() {
+    const rawReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let csv = 'Receipt #,Date,Customer / Client,Payment Mode,Bank / Treasury Account,Reference / Cheque #,Allocated Invoices,Amount Received,Currency,Status,Notes\n';
+    rawReceipts.forEach(r => {
+      let custName = r.customer_name || '';
+      if (!custName || custName === 'Customer' || custName === 'Client') {
+        const firstAlloc = (r.allocations || [])[0];
+        if (firstAlloc) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
+          if (mi?.customer_name) custName = mi.customer_name;
+        } else if (r.ref_invoice_no) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
+          if (mi?.customer_name) custName = mi.customer_name;
+        }
+      }
+      const allocInvs = (r.allocations || []).map(a => `${a.invoice_no || ''}${a.amount ? ` (${a.amount})` : ''}`).filter(Boolean).join('; ') || r.ref_invoice_no || '';
+      csv += `${this.csvEscape(r.receipt_no)},${this.csvEscape(r.receipt_date)},${this.csvEscape(custName)},${this.csvEscape(r.payment_mode || r.mode || 'Online')},${this.csvEscape(r.bank_name || r.account_name || 'Corporate Bank')},${this.csvEscape(r.reference_no || r.cheque_no || r.transaction_ref || '')},${this.csvEscape(allocInvs)},${Number(r.amount_received || 0).toFixed(2)},${this.csvEscape(r.currency || 'AED')},${this.csvEscape(r.status || 'Cleared')},${this.csvEscape(r.notes || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Payment_In_Receipts_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportPaymentsCSV() {
+    const rawPayments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id));
+    let csv = 'Voucher #,Date,Vendor / Contractor,Remittance Channel,Bank / Cash Vault,Reference / Wire / Cheque #,Allocated Bills,Disbursed Amount,Currency,Status,Notes\n';
+    rawPayments.forEach(p => {
+      const allocBills = (p.allocations || []).map(a => `${a.bill_no || ''}${a.amount ? ` (${a.amount})` : ''}`).filter(Boolean).join('; ') || p.ref_bill_no || '';
+      csv += `${this.csvEscape(p.voucher_no)},${this.csvEscape(p.payment_date)},${this.csvEscape(p.vendor_name || '')},${this.csvEscape(p.remittance_channel || p.payment_method || 'Online')},${this.csvEscape(p.bank_name || p.account_name || 'Bank Account')},${this.csvEscape(p.reference_no || p.wire_no || p.cheque_no || '')},${this.csvEscape(allocBills)},${Number(p.amount_paid || 0).toFixed(2)},${this.csvEscape(p.currency || 'AED')},${this.csvEscape(p.status || 'Cleared')},${this.csvEscape(p.notes || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Payment_Out_Disbursements_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportExpensesCSV() {
+    const rawExpenses = (this.db?.expenses || []).filter(e => this.matchesActiveCompany(e.company_id));
+    let csv = 'Expense #,Date,Category,Description,Claimant / Payee,Payment Mode,Project,Taxable Amount,Tax Amount,Total Amount,Currency,Status,Notes\n';
+    rawExpenses.forEach(e => {
+      csv += `${this.csvEscape(e.expense_no)},${this.csvEscape(e.date)},${this.csvEscape(e.category || '')},${this.csvEscape(e.description || '')},${this.csvEscape(e.claimant || e.payee || e.submitted_by || '')},${this.csvEscape(e.payment_mode || 'Cash')},${this.csvEscape(e.project_name || e.project_id || '')},${Number(e.taxable_amount || 0).toFixed(2)},${Number(e.tax_amount || 0).toFixed(2)},${Number(e.total_amount || 0).toFixed(2)},${this.csvEscape(e.currency || 'AED')},${this.csvEscape(e.status || 'Approved')},${this.csvEscape(e.notes || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Expenses_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportPurchaseOrdersCSV() {
+    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id));
+    let csv = 'PO Number,Date,Vendor / Supplier,Project,Delivery Date,Payment Terms,Subtotal,Tax Total,Total Value,Currency,Status,Notes\n';
+    rawPos.forEach(p => {
+      csv += `${this.csvEscape(p.po_no)},${this.csvEscape(p.date || p.po_date)},${this.csvEscape(p.vendor_name || '')},${this.csvEscape(p.project_name || '')},${this.csvEscape(p.delivery_date || '')},${this.csvEscape(p.payment_terms || '')},${Number(p.subtotal || 0).toFixed(2)},${Number(p.tax_total || 0).toFixed(2)},${Number(p.total_value || p.grand_total || 0).toFixed(2)},${this.csvEscape(p.currency || 'AED')},${this.csvEscape(p.status || 'Approved')},${this.csvEscape(p.notes || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Purchase_Orders_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportCreditNotesCSV() {
+    const rawCreditNotes = (this.db?.credit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    let csv = 'Credit Note #,Date,Customer,Ref Invoice #,Reason,Taxable Amount,Tax Amount,Total Credit Amount,Currency,Status\n';
+    rawCreditNotes.forEach(cn => {
+      csv += `${this.csvEscape(cn.credit_note_no)},${this.csvEscape(cn.date || cn.created_at || '')},${this.csvEscape(cn.customer_name || '')},${this.csvEscape(cn.invoice_no || cn.ref_invoice_no || '')},${this.csvEscape(cn.reason || '')},${Number(cn.taxable_amount || 0).toFixed(2)},${Number(cn.tax_amount || 0).toFixed(2)},${Number(cn.total_credit_amount || 0).toFixed(2)},${this.csvEscape(cn.currency || 'AED')},${this.csvEscape(cn.status || 'Applied')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Credit_Notes_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportDebitNotesCSV() {
+    const rawDebitNotes = (this.db?.debit_notes || []).filter(n => this.matchesActiveCompany(n.company_id));
+    let csv = 'Debit Note #,Date,Vendor,Ref Bill #,Reason,Taxable Amount,Tax Amount,Total Debit Amount,Currency,Status\n';
+    rawDebitNotes.forEach(dn => {
+      csv += `${this.csvEscape(dn.debit_note_no)},${this.csvEscape(dn.date || dn.created_at || '')},${this.csvEscape(dn.vendor_name || '')},${this.csvEscape(dn.bill_no || dn.ref_bill_no || '')},${this.csvEscape(dn.reason || '')},${Number(dn.taxable_amount || 0).toFixed(2)},${Number(dn.tax_amount || 0).toFixed(2)},${Number(dn.total_debit_amount || 0).toFixed(2)},${this.csvEscape(dn.currency || 'AED')},${this.csvEscape(dn.status || 'Applied')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Debit_Notes_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportCustomersCSV() {
+    const rawCustomers = (this.db?.customers || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let csv = 'Customer Code,Customer Name,Category,TRN / GSTIN,Contact Person,Phone,Email,City / Address,Opening Balance,Total Invoiced,Outstanding Receivables,Status\n';
+    rawCustomers.forEach(c => {
+      const custInvoices = invoices.filter(i => (i.customer_id === c.id || (c.name && i.customer_name === c.name)) && i.status !== 'void');
+      const hasOpeningInvoice = custInvoices.some(i => (i.invoice_no || '').includes('OPEN') || (i.project_name || '').includes('Opening Balance'));
+      const unbilledOpening = hasOpeningInvoice ? 0 : (Number(c.opening_balance) || 0);
+      const dues = custInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0) + unbilledOpening;
+      const invoiced = custInvoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+      csv += `${this.csvEscape(c.code || '')},${this.csvEscape(c.name || '')},${this.csvEscape(c.category || 'Client')},${this.csvEscape(c.trn || c.gstin || '')},${this.csvEscape(c.contact_person || c.contact || '')},${this.csvEscape(c.phone || '')},${this.csvEscape(c.email || '')},${this.csvEscape(c.city || c.address || '')},${Number(c.opening_balance || 0).toFixed(2)},${invoiced.toFixed(2)},${dues.toFixed(2)},${this.csvEscape(c.status || 'Active')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Customers_Directory_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportVendorsCSV() {
+    const rawVendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
+    const bills = (this.db?.purchase_bills || []).filter(b => this.matchesActiveCompany(b.company_id));
+    let csv = 'Vendor Code,Vendor Name,Category,TRN / PAN / GSTIN,Contact Person,Phone,Email,Bank Name,IBAN / Account #,Payment Terms,Outstanding Payables,Status\n';
+    rawVendors.forEach(v => {
+      const vendBills = bills.filter(b => (b.vendor_id === v.id || (b.vendor_name && b.vendor_name.toLowerCase() === (v.name || '').toLowerCase())) && b.status !== 'void');
+      const payables = vendBills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
+      csv += `${this.csvEscape(v.code || '')},${this.csvEscape(v.name || '')},${this.csvEscape(v.category || 'Supplier')},${this.csvEscape(v.trn || v.pan || v.gstin || '')},${this.csvEscape(v.contact_person || v.contact || '')},${this.csvEscape(v.phone || '')},${this.csvEscape(v.email || '')},${this.csvEscape(v.bank_name || '')},${this.csvEscape(v.bank_account || v.iban || '')},${this.csvEscape(v.payment_terms || '')},${payables.toFixed(2)},${this.csvEscape(v.status || 'Active')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Vendors_Directory_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportBankTransfersCSV() {
+    const transfers = (this.db?.bank_transfers || []).filter(t => (t.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let csv = 'Reference # / UTR,Date,Bank Account,Counterparty / Payee,Transaction Type,Disbursed / Inward Amount,Balance After,Currency,Status,Description\n';
+    transfers.forEach(t => {
+      csv += `${this.csvEscape(t.reference_no || t.utr_no || t.id)},${this.csvEscape(t.date || t.settlement_date)},${this.csvEscape(t.bank_account_name || t.bank_name || '')},${this.csvEscape(t.counterparty || t.payee || '')},${this.csvEscape(t.type || t.transaction_type || '')},${Number(t.amount || 0).toFixed(2)},${Number(t.balance_after || 0).toFixed(2)},${this.csvEscape(t.currency || 'AED')},${this.csvEscape(t.status || 'Cleared')},${this.csvEscape(t.description || t.notes || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Bank_Wires_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportCashVouchersCSV() {
+    const vouchers = (this.db?.cash_vouchers || []).filter(v => (v.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let csv = 'Voucher #,Date,Register Vault,Custodian,Type (Inflow/Outflow),Payee / Received From,Category,Linked Project,Amount,Currency,Status,Purpose\n';
+    vouchers.forEach(v => {
+      csv += `${this.csvEscape(v.voucher_no)},${this.csvEscape(v.date)},${this.csvEscape(v.register_name || '')},${this.csvEscape(v.custodian || '')},${this.csvEscape(v.type || 'outflow')},${this.csvEscape(v.payee || '')},${this.csvEscape(v.category || '')},${this.csvEscape(v.project_name || '')},${Number(v.amount || 0).toFixed(2)},${this.csvEscape(v.currency || 'AED')},${this.csvEscape(v.status || 'Approved')},${this.csvEscape(v.purpose || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Cash_Vouchers_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportChequesCSV(filterType = 'all') {
+    let cheques = (this.db?.cheques || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    if (filterType === 'inward') cheques = cheques.filter(c => c.type === 'inward');
+    else if (filterType === 'outward') cheques = cheques.filter(c => c.type === 'outward');
+    let csv = 'Cheque #,Type (Inward/Outward),Cheque Date,Drawee Bank,Party / Issuer / Vendor,Amount,Currency,Status,Deposit Bank,Notes\n';
+    cheques.forEach(c => {
+      csv += `${this.csvEscape(c.cheque_no)},${this.csvEscape(c.type || 'inward')},${this.csvEscape(c.date || c.cheque_date)},${this.csvEscape(c.bank_name || c.drawee_bank || '')},${this.csvEscape(c.party_name || '')},${Number(c.amount || 0).toFixed(2)},${this.csvEscape(c.currency || 'AED')},${this.csvEscape(c.status || 'Cleared')},${this.csvEscape(c.deposit_bank || '')},${this.csvEscape(c.notes || '')}\n`;
+    });
+    const suffix = filterType === 'inward' ? 'Inward_Cheques' : (filterType === 'outward' ? 'Outward_Cheques' : 'All_Cheques');
+    this.downloadFile(`Rayan_Group_${suffix}_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportItemsCSV() {
+    const items = (this.db?.items || []).filter(it => !it.company_id || this.matchesActiveCompany(it.company_id));
+    let csv = 'Item Code,Item Name,Category,Unit,Unit Price,Standard Cost,Tax Rate (%),Currency,Status,Description\n';
+    items.forEach(it => {
+      csv += `${this.csvEscape(it.code || '')},${this.csvEscape(it.name || '')},${this.csvEscape(it.category || '')},${this.csvEscape(it.unit || '')},${Number(it.unit_price || 0).toFixed(2)},${Number(it.standard_cost || 0).toFixed(2)},${Number(it.tax_rate || 5).toFixed(1)},${this.csvEscape(it.currency || 'AED')},${this.csvEscape(it.status || 'Active')},${this.csvEscape(it.description || '')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Items_Price_Catalog_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportLoansCSV() {
+    const loans = (this.db?.loan_accounts || []).filter(l => this.matchesActiveCompany(l.company_id));
+    let csv = 'Facility Name,Lender Bank,Facility Type,Sanctioned Limit,Outstanding Balance,Available Limit,Interest Rate,Tenure / Maturity,Status\n';
+    loans.forEach(l => {
+      const avail = Math.max(0, (Number(l.sanctioned_limit) || 0) - (Number(l.outstanding_balance) || 0));
+      csv += `${this.csvEscape(l.facility_name || l.name || '')},${this.csvEscape(l.bank_name || l.lender || '')},${this.csvEscape(l.facility_type || '')},${Number(l.sanctioned_limit || 0).toFixed(2)},${Number(l.outstanding_balance || 0).toFixed(2)},${avail.toFixed(2)},${this.csvEscape(l.interest_rate || '')},${this.csvEscape(l.tenure || '')},${this.csvEscape(l.status || 'Active')}\n`;
+    });
+    this.downloadFile(`Rayan_Group_Loan_Accounts_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  exportReportsExcel() {
+    this.exportInvoicesCSV();
   }
 
   // --------------------------------------------------------------------------
