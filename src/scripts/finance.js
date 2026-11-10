@@ -853,6 +853,24 @@ class FinanceApp {
       }
     });
 
+    // 0b3. Ensure Top Rock Interiors customer and all linked invoices have canonical TRN 104571196000003
+    (this.db.customers || []).forEach(c => {
+      if (c && (c.id === 'cust-toprock' || (c.name || '').toLowerCase().includes('top rock'))) {
+        if (!c.trn || c.trn === '100360644700003') {
+          c.trn = '104571196000003';
+        }
+      }
+    });
+    (this.db.invoices || []).forEach(inv => {
+      if (inv && (inv.customer_id === 'cust-toprock' || (inv.customer_name || '').toLowerCase().includes('top rock'))) {
+        if (!inv.customer_trn || inv.customer_trn === '100360644700003') {
+          inv.customer_trn = '104571196000003';
+          inv.trn = '104571196000003';
+          inv.tax_number = '104571196000003';
+        }
+      }
+    });
+
     // 0b2. Normalize vendor payment voucher numbers to PV-REC-44xxx sequence (continuous across years, PV-ASH-44xxx for India)
     if (Array.isArray(this.db.vendor_payments) && this.db.vendor_payments.length > 0) {
       const sorted = [...this.db.vendor_payments].sort((a, b) => {
@@ -1406,7 +1424,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v68';
+    const CURRENT_DB_VERSION = 'v2026_clean_v80';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2932,7 +2950,7 @@ class FinanceApp {
     const name = localInfo?.name || cust?.name || latestInv?.customer_name || rawKey;
     const id = cust?.id || localInfo?.id || latestInv?.customer_id || '';
     const code = cust?.code || localInfo?.code || '';
-    const trn = isTopRock ? '100360644700003' : (localInfo?.trn || cust?.trn || latestInv?.customer_trn || (isBuildara ? '105405525400003' : ''));
+    const trn = localInfo?.trn || cust?.trn || latestInv?.customer_trn || (isTopRock ? '104571196000003' : (isBuildara ? '105405525400003' : ''));
     const gstin = localInfo?.gstin || cust?.gstin || latestInv?.customer_gstin || '';
 
     const isUae = (cust?.country && cust.country.toUpperCase() === 'UAE') ||
@@ -5358,7 +5376,10 @@ class FinanceApp {
       const sMode = sortSelect ? sortSelect.value : (this.invSort || 'serial-desc');
       this.invSort = sMode;
       const filtered = rawInvoices.filter(inv => {
-        const matchQ = (inv.invoice_no || '').toLowerCase().includes(q) || (inv.customer_name || '').toLowerCase().includes(q);
+        const trnText = (inv.customer_trn || inv.trn || inv.tax_number || '').toLowerCase();
+        const matchQ = (inv.invoice_no || '').toLowerCase().includes(q) || 
+                       (inv.customer_name || '').toLowerCase().includes(q) ||
+                       trnText.includes(q);
         const matchSt = st === 'all' || inv.status === st;
         return matchQ && matchSt;
       });
@@ -5436,7 +5457,18 @@ class FinanceApp {
         <td style="white-space:nowrap;">${this.formatDate(inv.invoice_date)}</td>
         <td style="white-space:nowrap; min-width:200px;">
           <span class="fin-customer-cell">${inv.customer_name || 'Valued Client'}</span>
-          ${inv.customer_trn ? `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${inv.customer_trn}</div>` : (inv.customer_gstin ? `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${inv.customer_gstin}</div>` : '')}
+          ${(() => {
+            const cust = (this.db?.customers || []).find(c => (inv.customer_id && c.id === inv.customer_id) || (c.name && inv.customer_name && c.name.toLowerCase() === inv.customer_name.toLowerCase()));
+            const isTopRock = (inv.customer_name || '').toLowerCase().includes('top rock') || inv.customer_id === 'cust-toprock';
+            const trn = inv.customer_trn || inv.trn || inv.tax_number || cust?.trn || (isTopRock ? '104571196000003' : '');
+            const gstin = inv.customer_gstin || cust?.gstin || '';
+            if (trn) {
+              return `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${trn}</div>`;
+            } else if (gstin) {
+              return `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${gstin}</div>`;
+            }
+            return '';
+          })()}
         </td>
         <td><span style="font-size:0.75rem;">${inv.place_of_supply || '—'}</span></td>
         <td style="white-space:nowrap;">${inv.currency_symbol || ''}${Number(inv.taxable_subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
@@ -12146,7 +12178,7 @@ class FinanceApp {
         }
 
         // If Top Rock client is selected and table has no active items, auto-fill Dubai Police Academy items
-        const isTopRockClient = (clientName || '').toLowerCase().includes('top rock') || clientTrn === '100360644700003';
+        const isTopRockClient = (clientName || '').toLowerCase().includes('top rock') || clientTrn === '104571196000003' || clientTrn === '100360644700003';
         if (isTopRockClient) {
           if (prjInput && (!prjInput.value || prjInput.value === 'General Corporate Billing')) {
             prjInput.value = 'THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI, UAE';
@@ -17598,7 +17630,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Tax Registration Number (TRN) <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="new-cust-trn" class="fin-form-input" placeholder="100360644700003">
+                  <input type="text" id="new-cust-trn" class="fin-form-input" placeholder="104571196000003">
                 </div>
               </div>
 
@@ -17938,7 +17970,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Tax ID / TRN (UAE VAT)</label>
-                  <input type="text" id="edit-cust-trn" class="fin-form-input" value="${cust.trn || ''}" placeholder="e.g. 100360644700003">
+                  <input type="text" id="edit-cust-trn" class="fin-form-input" value="${cust.trn || ''}" placeholder="e.g. 104571196000003">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">GSTIN (India)</label>
@@ -22461,7 +22493,7 @@ class FinanceApp {
     // Customer Lookup & Complete Hydration
     const custName = inv.customer_name || 'M/S TOP ROCK INTERIORS LLC.';
     const custClean = custName.toLowerCase().replace(/^(m\/s\.?|m\/s|messrs\.?)\s+/i, '').trim();
-    const isTopRock = (inv.invoice_no === 'REC-RG-INV-44035') || (inv.id === 'inv-rec-rg-inv-44035') || (inv.invoice_no === 'REC-INV-44035');
+    const isTopRock = custClean.includes('top rock') || (inv.customer_id === 'cust-toprock') || (inv.invoice_no === 'REC-RG-INV-44035') || (inv.id === 'inv-rec-rg-inv-44035') || (inv.invoice_no === 'REC-INV-44035');
 
     const customer = (this.db?.customers || []).find(c =>
       (inv.customer_id && c.id === inv.customer_id) ||
@@ -22474,7 +22506,7 @@ class FinanceApp {
     ) || {};
 
     const custAddress = inv.customer_address || inv.billing_address || customer.billing_address || customer.office_address || customer.address || (isTopRock ? 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' : '');
-    const custTrn = inv.customer_trn || inv.trn || customer.trn || (isTopRock ? '100360644700003' : '');
+    const custTrn = inv.customer_trn || inv.trn || customer.trn || (isTopRock ? '104571196000003' : '');
     let rawPo = (inv.order_no || inv.order_number || (inv.po_reference && inv.po_reference !== '.' && inv.po_reference !== '/' ? inv.po_reference.replace(/^\.\s*/, '') : '') || inv.lpo_no || inv.last_po_reference || customer.last_po_reference || (isTopRock ? 'PODSUB-2026/0810 & 0858' : '')).trim();
     if (rawPo === '.' || rawPo === '/' || rawPo.toLowerCase() === 'invoice no /' || rawPo.toLowerCase() === 'none') {
       rawPo = '';
@@ -24844,6 +24876,8 @@ class FinanceApp {
         inv.customer_gstin = newCustTax;
       } else {
         inv.customer_trn = newCustTax;
+        inv.trn = newCustTax;
+        inv.tax_number = newCustTax;
       }
 
       // Sync customer_id with normalized name
@@ -24855,7 +24889,14 @@ class FinanceApp {
       });
       if (custMatch) {
         inv.customer_id = custMatch.id;
-        if (custMatch.trn && !inv.customer_trn) inv.customer_trn = custMatch.trn;
+        if (!inv.customer_trn && custMatch.trn) {
+          inv.customer_trn = custMatch.trn;
+          inv.trn = custMatch.trn;
+          inv.tax_number = custMatch.trn;
+        }
+        if (newCustTax && (!custMatch.trn || custMatch.trn !== newCustTax)) {
+          custMatch.trn = newCustTax;
+        }
       }
       const newCustId = inv.customer_id;
 
