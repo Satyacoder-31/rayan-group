@@ -1166,6 +1166,12 @@ class FinanceApp {
     if (this.db.credit_notes) {
       this.db.credit_notes = this.db.credit_notes.filter(c => c.credit_note_no !== 'CN-REC-015' && c.id !== 'cn-1793555201785');
     }
+    const bill1007 = (this.db.purchase_bills || []).find(b => b.bill_no === 'BILL-REC-1007' || b.id === 'bill-1793987304049');
+    if (bill1007) {
+      bill1007.amount_paid = 90499.27;
+      bill1007.balance_due = 0.00;
+      bill1007.status = 'paid';
+    }
     const inv44015 = (this.db.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44015');
     if (inv44015) {
       inv44015.sub_total = 64556.32;
@@ -1601,7 +1607,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v85';
+    const CURRENT_DB_VERSION = 'v2026_clean_v86';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);

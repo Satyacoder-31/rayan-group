@@ -4002,17 +4002,18 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                     } catch (Exception $e) {}
 
-                    // Migration v85: Reconcile Chipotle Project PRJ-REC-102-CHIP-2025 financials down to the fil
+                    // Migration v86: Reconcile Chipotle Project PRJ-REC-102-CHIP-2025 financials down to the fil
                     try {
-                        $chkChip85 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'chipotle_fils_reconcile_v85'")->fetchColumn();
-                        if (!$chkChip85) {
+                        $chkChip86 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'chipotle_fils_reconcile_v86'")->fetchColumn();
+                        if (!$chkChip86) {
                             $pdo->exec("UPDATE finance_invoices SET grand_total = 20044.43, sub_total = 19089.93, taxable_subtotal = 19089.93, vat_total = 954.50, total_tax = 954.50, amount_paid = 20044.43, balance_due = 0.00, amount_credited = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44010'");
                             $pdo->exec("UPDATE finance_invoices SET grand_total = 20044.01, amount_paid = 20044.01, balance_due = 0.00, amount_credited = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44014'");
                             $pdo->exec("UPDATE finance_invoices SET grand_total = 67784.14, amount_paid = 50000.00, balance_due = 17784.14, status = 'partially_paid' WHERE invoice_no = 'REC-RG-INV-44015'");
                             $pdo->exec("UPDATE finance_customer_receipts SET amount_received = 20044.01, allocated_amount = 20044.01, allocations = '[{\"invoice_id\":\"inv-rec-rg-inv-44014\",\"invoice_no\":\"REC-RG-INV-44014\",\"amount_allocated\":20044.01}]' WHERE id = 'rec-mvy4fwvn' OR receipt_no = 'REC-RV-44031' OR reference_no = '017236'");
                             $pdo->exec("DELETE FROM finance_credit_notes WHERE id = 'cn-1793555201785' OR credit_note_no = 'CN-REC-015'");
                             $pdo->exec("UPDATE finance_projects SET contract_value = 107872.58, approved_budget = 107872.58 WHERE id = 'prj-mw3rnn9m' OR code = 'PRJ-REC-102-CHIP-2025'");
-                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('chipotle_fils_reconcile_v85', 'completed', NOW())");
+                            $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 90499.27, balance_due = 0.00, status = 'paid' WHERE bill_no = 'BILL-REC-1007' OR id = 'bill-1793987304049'");
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('chipotle_fils_reconcile_v86', 'completed', NOW())");
                         }
                     } catch (Exception $e) {}
 
