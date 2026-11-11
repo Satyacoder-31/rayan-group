@@ -3128,261 +3128,8 @@ function reconcileAllPaymentRecordsPhp(&$data, $pdo) {
 }
 
 function reconcileV77BankWithdrawalAndEWalletPayments(&$data, $pdo) {
-    if (!$data || !is_array($data)) return;
-    if ($pdo) {
-        try {
-            $done = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_v77_completed'")->fetchColumn();
-            if ($done === 'completed') return;
-        } catch (Exception $e) {}
-    }
-
-    // 1. Clean up deleted_vendor_payments blacklist in MySQL
-    // Remove all 'pv-*' or 'PV-*' strings, and unblacklist pay-1793974452744 / pay-1794163926800 / pay-1794164923060
-    if ($pdo) {
-        try {
-            $rawDel = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'deleted_vendor_payments'")->fetchColumn();
-            if ($rawDel) {
-                $delArr = json_decode($rawDel, true) ?: [];
-                $newDel = [];
-                foreach ($delArr as $item) {
-                    $itemStr = strtolower(trim($item));
-                    if (strpos($itemStr, 'pv-') === 0 || $itemStr === 'pv-rec-44001' || $itemStr === 'pay-1793974452744' || $itemStr === 'pay-1794163926800' || $itemStr === 'pay-1794164923060') {
-                        continue; // Remove from blacklist!
-                    }
-                    $newDel[] = $item;
-                }
-                $stmtDel = $pdo->prepare("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('deleted_vendor_payments', :val, NOW())");
-                $stmtDel->execute([':val' => json_encode(array_values(array_unique($newDel)))]);
-            }
-        } catch (Exception $e) {
-            error_log("Error cleaning deleted_vendor_payments: " . $e->getMessage());
-        }
-    }
-
-    // 2. Remove duplicate bank wire 'wire-wdl-1794163875360' and 'wire-pv-rec-44001'
-    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
-        $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($bt) {
-            $id = $bt['id'] ?? '';
-            return $id !== 'wire-wdl-1794163875360' && $id !== 'wire-pv-rec-44001';
-        }));
-    }
-    if ($pdo) {
-        try {
-            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-wdl-1794163875360', 'wire-pv-rec-44001')");
-        } catch (Exception $e) {}
-    }
-
-    // 3. Refund ADCB bank account by 47,231 AED (setting balance to 360,335.10 AED)
-    if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
-        foreach ($data['bank_accounts'] as &$ba) {
-            if (($ba['id'] ?? '') === 'bank-adcb-uae') {
-                $cur = floatval($ba['balance'] ?? 0);
-                if ($cur < 350000) {
-                    $ba['balance'] = 360335.10;
-                }
-                break;
-            }
-        }
-        unset($ba);
-    }
-    if ($pdo) {
-        try {
-            $curBal = floatval($pdo->query("SELECT balance FROM finance_bank_accounts WHERE id = 'bank-adcb-uae'")->fetchColumn() ?: 0);
-            if ($curBal < 350000) {
-                $pdo->exec("UPDATE finance_bank_accounts SET balance = 360335.10, data_json = JSON_SET(data_json, '$.balance', 360335.10), updated_at = NOW() WHERE id = 'bank-adcb-uae'");
-            }
-        } catch (Exception $e) {}
-    }
-
-    // 4. Remove duplicate cash voucher inflow cv-wire-wdl-1794163875360 (CV-WDL-9353) and duplicate outflow cv-pay-pay-1794164923060
-    if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
-        $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($cv) {
-            $id = $cv['id'] ?? '';
-            $vNo = $cv['voucher_no'] ?? '';
-            return $id !== 'cv-wire-wdl-1794163875360' && $vNo !== 'CV-WDL-9353' && $id !== 'cv-pay-pay-1794164923060';
-        }));
-    }
-    if ($pdo) {
-        try {
-            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id IN ('cv-wire-wdl-1794163875360', 'cv-pay-pay-1794164923060') OR voucher_no = 'CV-WDL-9353'");
-        } catch (Exception $e) {}
-    }
-
-    // Ensure genuine cash voucher outflow cv-pay-pay-1794163926800 (CV-PV-REC-44001) is active
-    $hasVpCv = false;
-    if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
-        foreach ($data['cash_vouchers'] as &$cv) {
-            if (($cv['id'] ?? '') === 'cv-pay-pay-1794163926800' || ($cv['voucher_no'] ?? '') === 'CV-PV-REC-44001') {
-                $hasVpCv = true;
-                $cv['id'] = 'cv-pay-pay-1794163926800';
-                $cv['payment_id'] = 'pay-1794163926800';
-                $cv['voucher_no'] = 'CV-PV-REC-44001';
-                $cv['company_id'] = 'rayan-corp-uae';
-                $cv['register_id'] = 'cash-mw5esv3w';
-                $cv['register_name'] = 'RAYAN E-Wallets';
-                $cv['custodian'] = 'Cashier / Petty Cash Custodian';
-                $cv['date'] = '2023-09-13';
-                $cv['type'] = 'outflow';
-                $cv['category'] = 'Supplier Disbursement';
-                $cv['purpose'] = 'Disbursement against General';
-                $cv['payee'] = 'M/S GENERAL EXPENSES FOR THE PROJECT';
-                $cv['amount'] = 47231.00;
-                $cv['currency'] = 'AED';
-                $cv['status'] = 'Cleared';
-                break;
-            }
-        }
-        unset($cv);
-    }
-    if (!$hasVpCv) {
-        if (!isset($data['cash_vouchers']) || !is_array($data['cash_vouchers'])) $data['cash_vouchers'] = [];
-        array_unshift($data['cash_vouchers'], [
-            'id' => 'cv-pay-pay-1794163926800',
-            'payment_id' => 'pay-1794163926800',
-            'voucher_no' => 'CV-PV-REC-44001',
-            'company_id' => 'rayan-corp-uae',
-            'register_id' => 'cash-mw5esv3w',
-            'register_name' => 'RAYAN E-Wallets',
-            'custodian' => 'Cashier / Petty Cash Custodian',
-            'date' => '2023-09-13',
-            'type' => 'outflow',
-            'category' => 'Supplier Disbursement',
-            'purpose' => 'Disbursement against General',
-            'payee' => 'M/S GENERAL EXPENSES FOR THE PROJECT',
-            'amount' => 47231.00,
-            'currency' => 'AED',
-            'status' => 'Cleared',
-            'created_at' => '2023-09-13T10:00:00Z'
-        ]);
-    }
-    if ($pdo) {
-        try {
-            $stmtCcv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, voucher_no, company_id, register_id, custodian, voucher_date, type, category, purpose, payee, amount, currency, status, data_json, updated_at) VALUES (:id, :vno, :cid, :rid, :cust, :vdate, :type, :cat, :purp, :payee, :amt, :curr, :status, :json, NOW())");
-            $ccvData = [
-                'id' => 'cv-pay-pay-1794163926800',
-                'payment_id' => 'pay-1794163926800',
-                'voucher_no' => 'CV-PV-REC-44001',
-                'company_id' => 'rayan-corp-uae',
-                'register_id' => 'cash-mw5esv3w',
-                'register_name' => 'RAYAN E-Wallets',
-                'custodian' => 'Cashier / Petty Cash Custodian',
-                'date' => '2023-09-13',
-                'type' => 'outflow',
-                'category' => 'Supplier Disbursement',
-                'purpose' => 'Disbursement against General',
-                'payee' => 'M/S GENERAL EXPENSES FOR THE PROJECT',
-                'amount' => 47231.00,
-                'currency' => 'AED',
-                'status' => 'Cleared'
-            ];
-            $stmtCcv->execute([
-                ':id' => 'cv-pay-pay-1794163926800',
-                ':vno' => 'CV-PV-REC-44001',
-                ':cid' => 'rayan-corp-uae',
-                ':rid' => 'cash-mw5esv3w',
-                ':cust' => 'Cashier / Petty Cash Custodian',
-                ':vdate' => '2023-09-13',
-                ':type' => 'outflow',
-                ':cat' => 'Supplier Disbursement',
-                ':purp' => 'Disbursement against General',
-                ':payee' => 'M/S GENERAL EXPENSES FOR THE PROJECT',
-                ':amt' => 47231.00,
-                ':curr' => 'AED',
-                ':status' => 'Cleared',
-                ':json' => json_encode($ccvData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-            ]);
-        } catch (Exception $e) {}
-    }
-
-    // 5. Authoritative payment-out PV-REC-44001 for BILL-REC-1001
-    $canonicalVp = [
-        'id' => 'pay-1794163926800',
-        'voucher_no' => 'PV-REC-44001',
-        'company_id' => 'rayan-corp-uae',
-        'currency' => 'AED',
-        'currency_symbol' => 'AED ',
-        'vendor_id' => 'vend-mw3q187t',
-        'vendor_name' => 'M/S GENERAL EXPENSES FOR THE PROJECT',
-        'payment_date' => '2023-09-13',
-        'payment_mode' => 'Cash / Rayan Wallet',
-        'source_vault_id' => 'cash-mw5esv3w',
-        'source_vault_name' => 'RAYAN E-Wallets',
-        'reference_no' => 'Cash / Bank Transfer',
-        'amount_paid' => 47231.00,
-        'allocations' => [
-            [
-                'bill_id' => 'bill-1793974433713',
-                'bill_no' => 'BILL-REC-1001',
-                'vendor_invoice_no' => 'General',
-                'amount_allocated' => 47231.00
-            ]
-        ],
-        'notes' => 'Disbursement against General',
-        'status' => 'Released & Reconciled',
-        'created_at' => '2023-09-13T10:00:00.000Z'
-    ];
-
-    if (!isset($data['vendor_payments']) || !is_array($data['vendor_payments'])) {
-        $data['vendor_payments'] = [];
-    }
-    $foundVp = false;
-    foreach ($data['vendor_payments'] as &$vp) {
-        if (($vp['id'] ?? '') === $canonicalVp['id'] || ($vp['voucher_no'] ?? '') === 'PV-REC-44001') {
-            $vp = array_merge($vp, $canonicalVp);
-            $foundVp = true;
-            break;
-        }
-    }
-    unset($vp);
-    if (!$foundVp) {
-        array_unshift($data['vendor_payments'], $canonicalVp);
-    }
-
-    if ($pdo) {
-        try {
-            $stmtVp = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :voucher_no, :company_id, :vendor_id, :vendor_name, :payment_date, :payment_mode, :reference_no, :amount_paid, :currency, :data_json, NOW())");
-            $stmtVp->execute([
-                ':id' => $canonicalVp['id'],
-                ':voucher_no' => $canonicalVp['voucher_no'],
-                ':company_id' => $canonicalVp['company_id'],
-                ':vendor_id' => $canonicalVp['vendor_id'],
-                ':vendor_name' => $canonicalVp['vendor_name'],
-                ':payment_date' => $canonicalVp['payment_date'],
-                ':payment_mode' => $canonicalVp['payment_mode'],
-                ':reference_no' => $canonicalVp['reference_no'],
-                ':amount_paid' => $canonicalVp['amount_paid'],
-                ':currency' => $canonicalVp['currency'],
-                ':data_json' => json_encode($canonicalVp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-            ]);
-        } catch (Exception $e) {}
-    }
-
-    // 6. Ensure BILL-REC-1001 is marked paid
-    if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
-        foreach ($data['purchase_bills'] as &$pb) {
-            if (($pb['id'] ?? '') === 'bill-1793974433713' || ($pb['bill_no'] ?? '') === 'BILL-REC-1001') {
-                $pb['amount_paid'] = 47231.00;
-                $pb['balance_due'] = 0.00;
-                $pb['status'] = 'paid';
-                break;
-            }
-        }
-        unset($pb);
-    }
-    if ($pdo) {
-        try {
-            $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 47231.00, balance_due = 0.00, status = 'paid', data_json = JSON_SET(data_json, '$.amount_paid', 47231.00, '$.balance_due', 0.00, '$.status', 'paid') WHERE id = 'bill-1793974433713' OR bill_no = 'BILL-REC-1001'");
-        } catch (Exception $e) {}
-    }
-
-    // Recalculate all balances and mark v77 migration complete
-    recalculateAllFinanceBalances($data);
-
-    if ($pdo) {
-        try {
-            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_v77_completed', 'completed', NOW())");
-        } catch (Exception $e) {}
-    }
+    // Deprecated and neutralized: All fake bank withdrawals and cash disbursements removed by v93
+    return;
 }
 
 function reconcileV78VendorSerialAtoZ(&$data, $pdo) {
@@ -3659,12 +3406,7 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
                 ':data_json' => json_encode($wire44028)
             ]);
 
-            // 7. Update ADCB Bank Balance to 516195.81
-            $pdo->exec("UPDATE finance_bank_accounts SET balance = 516195.81, data_json = JSON_SET(data_json, '$.balance', '516195.81') WHERE id = 'bank-adcb-uae'");
-
-            // 8. Update RAYAN E-Wallets Cash Balance to 14000.00
-            $pdo->exec("UPDATE finance_cash_in_hand SET balance = 14000.00, data_json = JSON_SET(data_json, '$.balance', 14000.00) WHERE id = 'cash-mw5esv3w'");
-
+            // 7. Replaced by Migration v93 clear cash in hand
             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('bank_cheque_harmony_v92', 'completed', NOW())");
         }
     } catch (Exception $e) {
@@ -3742,13 +3484,111 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
     }
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
-            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '516195.81';
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
         }
         unset($b);
     }
     if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
         foreach ($data['cash_in_hand'] as &$c) {
-            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 14000.00;
+            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 5000.00;
+        }
+        unset($c);
+    }
+}
+
+function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
+    if ($pdo) {
+        try {
+            $chkMig93 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'clear_cash_in_hand_v93'")->fetchColumn();
+            if ($chkMig93 !== 'completed') {
+                // 1. Delete all synthetic bank_to_cash withdrawal wires (wire-wdl-*) and fake outward wires
+                $pdo->exec("DELETE FROM finance_bank_transfers WHERE type = 'bank_to_cash' OR id LIKE 'wire-wdl-%' OR reference_no LIKE 'wire-wdl-%' OR id LIKE 'wire-pv-%' OR reference_no LIKE 'wire-pv-%' OR purpose LIKE '%replenish RAYAN E-Wallets%' OR purpose LIKE '%cash withdrawal%' OR counterparty LIKE '%GENERAL EXPENSES%'");
+
+                // 2. Delete all synthetic cash vouchers (CV-WDL-* and CV-PV-*)
+                // Retain only genuine customer cash receipt CV-RCP-44008 (5,000 AED scrap collection)
+                $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id != 'cv-rcp-hln-scrap-44008' AND voucher_no != 'CV-RCP-44008' AND (voucher_no LIKE 'CV-WDL-%' OR voucher_no LIKE 'CV-PV-%' OR id LIKE 'cv-wdl-%' OR id LIKE 'cv-pv-%' OR payee LIKE '%GENERAL EXPENSES%' OR purpose LIKE '%replenish RAYAN E-Wallets%' OR purpose LIKE '%cash withdrawal%')");
+
+                // 3. Delete fake General Expenses purchase bills (BILL-REC-1008 through BILL-REC-1016)
+                $pdo->exec("DELETE FROM finance_purchase_bills WHERE vendor_name LIKE '%GENERAL EXPENSES%' OR vendor_id = 'vend-mw3q187t' OR bill_no IN ('BILL-REC-1008', 'BILL-REC-1009', 'BILL-REC-1010', 'BILL-REC-1011', 'BILL-REC-1012', 'BILL-REC-1013', 'BILL-REC-1014', 'BILL-REC-1015', 'BILL-REC-1016')");
+
+                // 4. Delete all synthetic vendor payments (since no bills are cleared)
+                $pdo->exec("DELETE FROM finance_vendor_payments WHERE vendor_name LIKE '%GENERAL EXPENSES%' OR vendor_id = 'vend-mw3q187t' OR voucher_no LIKE 'PV-REC-%' OR voucher_no LIKE 'PV-RG-%'");
+
+                // 5. Reset all genuine purchase bills to unpaid
+                $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 0.00, balance_due = grand_total, status = 'unpaid', data_json = JSON_SET(data_json, '$.amount_paid', 0.00, '$.balance_due', grand_total, '$.status', 'unpaid')");
+
+                // 6. Restore ADCB Bank Account balance to full client receipts (1,351,640.87 AED)
+                $pdo->exec("UPDATE finance_bank_accounts SET balance = 1351640.87, data_json = JSON_SET(data_json, '$.balance', '1351640.87') WHERE id = 'bank-adcb-uae'");
+
+                // 7. Restore RAYAN E-Wallets Cash Balance to 5000.00 AED
+                $pdo->exec("UPDATE finance_cash_in_hand SET balance = 5000.00, data_json = JSON_SET(data_json, '$.balance', 5000.00) WHERE id = 'cash-mw5esv3w'");
+
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('clear_cash_in_hand_v93', 'completed', NOW())");
+            }
+        } catch (Exception $e) {
+            error_log("Migration v93 error: " . $e->getMessage());
+        }
+    }
+
+    // In-memory data sanitization:
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($t) {
+            $id = $t['id'] ?? '';
+            $ref = $t['reference_no'] ?? '';
+            $type = $t['type'] ?? '';
+            $purp = $t['purpose'] ?? '';
+            $party = $t['counterparty'] ?? '';
+            if ($type === 'bank_to_cash') return false;
+            if (strpos($id, 'wire-wdl-') === 0 || strpos($ref, 'wire-wdl-') === 0 || strpos($id, 'wire-pv-') === 0 || strpos($ref, 'wire-pv-') === 0) return false;
+            if (stripos($purp, 'replenish rayan e-wallets') !== false || stripos($purp, 'cash withdrawal') !== false) return false;
+            if (stripos($party, 'GENERAL EXPENSES') !== false) return false;
+            return true;
+        }));
+    }
+
+    if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+        $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($v) {
+            $no = $v['voucher_no'] ?? '';
+            $id = $v['id'] ?? '';
+            $payee = $v['payee'] ?? '';
+            $purp = $v['purpose'] ?? '';
+            if (strpos($no, 'CV-WDL-') === 0 || strpos($no, 'CV-PV-') === 0) return false;
+            if (strpos($id, 'cv-wdl-') === 0 || strpos($id, 'cv-pv-') === 0) return false;
+            if (stripos($payee, 'GENERAL EXPENSES') !== false || stripos($purp, 'general expenses') !== false) return false;
+            if (stripos($purp, 'replenish rayan e-wallets') !== false || stripos($purp, 'cash withdrawal') !== false) return false;
+            return true;
+        }));
+    }
+
+    if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
+        $data['purchase_bills'] = array_values(array_filter($data['purchase_bills'], function($b) {
+            $vName = $b['vendor_name'] ?? '';
+            $vId = $b['vendor_id'] ?? '';
+            $bNo = $b['bill_no'] ?? '';
+            if (stripos($vName, 'GENERAL EXPENSES') !== false || $vId === 'vend-mw3q187t') return false;
+            if (in_array($bNo, ['BILL-REC-1008', 'BILL-REC-1009', 'BILL-REC-1010', 'BILL-REC-1011', 'BILL-REC-1012', 'BILL-REC-1013', 'BILL-REC-1014', 'BILL-REC-1015', 'BILL-REC-1016'])) return false;
+            return true;
+        }));
+        foreach ($data['purchase_bills'] as &$b) {
+            $b['amount_paid'] = 0.00;
+            $b['balance_due'] = floatval($b['grand_total'] ?? 0);
+            $b['status'] = 'unpaid';
+        }
+        unset($b);
+    }
+
+    $data['vendor_payments'] = [];
+
+    if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+        foreach ($data['bank_accounts'] as &$b) {
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
+        }
+        unset($b);
+    }
+
+    if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
+        foreach ($data['cash_in_hand'] as &$c) {
+            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 5000.00;
         }
         unset($c);
     }
@@ -5781,6 +5621,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
                     reconcileV90CanonicalTrnAndBalances($data, $pdo);
                     reconcileV92BankCashChequeHarmony($data, $pdo);
+                    reconcileV93ClearCashInHandAndFakeLoops($data, $pdo);
                     reconcileV81HMVillaFinancials($data, $pdo);
                     reconcileV82EmployeesAndPayroll($data, $pdo);
                     recalculateAllFinanceBalances($data);
@@ -5803,6 +5644,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV78VendorSerialAtoZ($data, $pdo);
                 reconcileV79ChequeDeposits($data, $pdo);
                 reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
+                reconcileV92BankCashChequeHarmony($data, $pdo);
+                reconcileV93ClearCashInHandAndFakeLoops($data, $pdo);
                 reconcileV81HMVillaFinancials($data, $pdo);
                 reconcileV82EmployeesAndPayroll($data, $pdo);
                 recalculateAllFinanceBalances($data);
@@ -6739,7 +6582,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_state') {
         echo json_encode([
             'success' => true,
-            'version_tag' => 'v92_bank_cheque_harmony',
+            'version_tag' => 'v93_clear_cash_in_hand',
             'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
             'data' => $db
         ]);
