@@ -1021,7 +1021,6 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'new_no' => 'CN-REC-013'],
                     ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'new_no' => 'CN-REC-014'],
 
-                    ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'new_no' => 'CN-REC-015'],
                     ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'new_no' => 'CN-REC-016'],
                     ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'new_no' => 'CN-REC-017'],
                     ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'new_no' => 'CN-REC-019'],
@@ -4003,6 +4002,20 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                     } catch (Exception $e) {}
 
+                    // Migration v85: Reconcile Chipotle Project PRJ-REC-102-CHIP-2025 financials down to the fil
+                    try {
+                        $chkChip85 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'chipotle_fils_reconcile_v85'")->fetchColumn();
+                        if (!$chkChip85) {
+                            $pdo->exec("UPDATE finance_invoices SET grand_total = 20044.43, sub_total = 19089.93, taxable_subtotal = 19089.93, vat_total = 954.50, total_tax = 954.50, amount_paid = 20044.43, balance_due = 0.00, amount_credited = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44010'");
+                            $pdo->exec("UPDATE finance_invoices SET grand_total = 20044.01, amount_paid = 20044.01, balance_due = 0.00, amount_credited = 0.00, status = 'paid' WHERE invoice_no = 'REC-RG-INV-44014'");
+                            $pdo->exec("UPDATE finance_invoices SET grand_total = 67784.14, amount_paid = 50000.00, balance_due = 17784.14, status = 'partially_paid' WHERE invoice_no = 'REC-RG-INV-44015'");
+                            $pdo->exec("UPDATE finance_customer_receipts SET amount_received = 20044.01, allocated_amount = 20044.01, allocations = '[{\"invoice_id\":\"inv-rec-rg-inv-44014\",\"invoice_no\":\"REC-RG-INV-44014\",\"amount_allocated\":20044.01}]' WHERE id = 'rec-mvy4fwvn' OR receipt_no = 'REC-RV-44031' OR reference_no = '017236'");
+                            $pdo->exec("DELETE FROM finance_credit_notes WHERE id = 'cn-1793555201785' OR credit_note_no = 'CN-REC-015'");
+                            $pdo->exec("UPDATE finance_projects SET contract_value = 107872.58, approved_budget = 107872.58 WHERE id = 'prj-mw3rnn9m' OR code = 'PRJ-REC-102-CHIP-2025'");
+                            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('chipotle_fils_reconcile_v85', 'completed', NOW())");
+                        }
+                    } catch (Exception $e) {}
+
                     // Migration v47: Universal M/S normalization across MySQL tables
                     try {
                         $chkMs47 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'company_ms_normalization_v47'")->fetchColumn();
@@ -4065,7 +4078,6 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             ['id' => 'cn-1793510889507', 'inv' => 'REC-RG-INV-44001', 'date' => '2024-06-16', 'no' => 'CN-REC-013'],
                             ['id' => 'cn-1793509397983', 'inv' => 'REC-RG-INV-1026', 'date' => '2024-10-10', 'no' => 'CN-REC-014'],
 
-                            ['id' => 'cn-1793555201785', 'inv' => 'REC-RG-INV-44014', 'date' => '2025-06-15', 'no' => 'CN-REC-015'],
                             ['id' => 'cn-1793511081739', 'inv' => 'REC-RG-INV-44003', 'date' => '2025-08-18', 'no' => 'CN-REC-016'],
                             ['id' => 'cn-1793511132931', 'inv' => 'REC-RG-INV-44004', 'date' => '2025-08-19', 'no' => 'CN-REC-017'],
                             ['id' => 'cn-1793511975271', 'inv' => 'REC-RG-INV-44012', 'date' => '2025-11-26', 'no' => 'CN-REC-019'],

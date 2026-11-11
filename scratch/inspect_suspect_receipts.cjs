@@ -13,3 +13,4 @@ console.log(JSON.stringify(wMap, null, 2));
 console.log("\n=== INSPECTING ALL RECEIPTS WITH 44026 or 44027 or 44028 ===");
 const nearReceipts = (data.customer_receipts || []).filter(r => ['REC-RV-44025', 'REC-RV-44026', 'REC-RV-44027', 'REC-RV-44028', 'REC-RV-44029'].includes(r.receipt_no));
 nearReceipts.forEach(r => console.log(JSON.stringify(r, null, 2)));
+

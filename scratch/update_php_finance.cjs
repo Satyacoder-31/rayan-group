@@ -66,3 +66,4 @@ if (isCRLF) {
 }
 fs.writeFileSync('public/api/finance.php', php, 'utf8');
 console.log('Successfully updated public/api/finance.php!');
+

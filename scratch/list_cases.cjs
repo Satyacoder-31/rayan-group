@@ -6,3 +6,4 @@ for (let i = 6490; i < lines.length; i++) {
     console.log(i + 1, lines[i].trim());
   }
 }
+

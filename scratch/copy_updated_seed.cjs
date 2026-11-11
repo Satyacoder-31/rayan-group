@@ -10,3 +10,4 @@ console.log('Updated public/data/finance-data.json');
 
 fs.writeFileSync('dist/data/finance-data.json', updated, 'utf8');
 console.log('Updated dist/data/finance-data.json');
+

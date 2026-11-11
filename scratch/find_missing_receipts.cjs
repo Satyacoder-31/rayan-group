@@ -12,3 +12,4 @@ inwardTransfers.forEach(t => {
   const matchRcp = (data.customer_receipts || []).find(r => r.id === t.receipt_id || r.receipt_no === t.reference_no || (r.reference_no && r.reference_no === t.reference_no));
   console.log(`[Inward Transfer] Date: ${t.date} | Ref: ${t.reference_no} | Counterparty: ${t.counterparty} | Amount: ${t.amount} | Purpose: ${t.purpose} | Matched Receipt: ${matchRcp ? matchRcp.receipt_no : 'MISSING'}`);
 });
+

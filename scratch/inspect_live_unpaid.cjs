@@ -56,3 +56,4 @@ const rcpImg3 = (data.customer_receipts || []).filter(r => {
 rcpImg3.forEach(r => {
   console.log(`[Receipt] ID: ${r.id} | No: ${r.receipt_no} | Date: ${r.receipt_date} | Client: ${r.customer_name} | Amount: ${r.amount} | Allocations: ${JSON.stringify(r.allocated_invoices)}`);
 });
+

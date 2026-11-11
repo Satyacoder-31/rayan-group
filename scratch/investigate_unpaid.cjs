@@ -39,3 +39,4 @@ const rcpOther = (data.customer_receipts || []).filter(r => {
   return str.includes("185597") || str.includes("35597") || str.includes("5000") || (r.allocated_invoices && r.allocated_invoices.some(a => invOther.some(i => i.invoice_no === a.invoice_no)));
 });
 rcpOther.forEach(r => console.log(`[Receipt] ID: ${r.id} | No: ${r.receipt_no} | Client: ${r.customer_name} | Amount: ${r.amount} | Invoices: ${JSON.stringify(r.allocated_invoices)}`));
+

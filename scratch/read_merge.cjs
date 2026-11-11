@@ -4,3 +4,4 @@ const lines = content.split('\n');
 const idx = lines.findIndex(l => l.includes('mergeWithSeedData'));
 console.log('mergeWithSeedData at line', idx + 1);
 console.log(lines.slice(idx, idx + 60).join('\n'));
+

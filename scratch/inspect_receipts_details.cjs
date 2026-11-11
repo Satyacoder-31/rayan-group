@@ -20,3 +20,4 @@ mobin.forEach(r => console.log(JSON.stringify(r, null, 2)));
 console.log("\nAll invoices for MOBIN AL LISAILI VILLA DUBAI:");
 const mobinInv = data.invoices.filter(i => (i.customer_name || '').toLowerCase().includes("mobin") || (i.customer_name || '').toLowerCase().includes("lisaili") || (i.project_name || '').toLowerCase().includes("lisaili"));
 mobinInv.forEach(i => console.log(JSON.stringify(i, null, 2)));
+
