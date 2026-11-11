@@ -73,3 +73,4 @@ All projects in Rayan Group follow unified financial rules:
   1. Run `npm run fin project <project_code>` to see the exact breakdown.
   2. Check receipt allocations with `npm run fin inspect <project_code>`.
   3. Fix the specific invoice or receipt and run `npm run deploy`.
+

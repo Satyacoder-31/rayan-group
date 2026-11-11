@@ -222,6 +222,95 @@ class FinanceApp {
   }
 
   // --------------------------------------------------------------------------
+  // CENTRALIZED RESILIENT ENTITY FINDER & MODAL MOUNT HELPERS
+  // --------------------------------------------------------------------------
+  getModalContainer() {
+    let container = document.getElementById('fin-modal-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'fin-modal-container';
+      document.body.appendChild(container);
+    }
+    return container;
+  }
+
+  findEntity(collectionKey, identifier) {
+    if (!identifier || !this.db || !Array.isArray(this.db[collectionKey])) return null;
+    const idStr = String(identifier).trim();
+    if (!idStr || idStr === 'undefined' || idStr === 'null') return null;
+    const idLower = idStr.toLowerCase();
+    const cleanAlpha = idLower.replace(/[^a-z0-9]/g, '');
+
+    const items = this.db[collectionKey];
+
+    // 1. Exact match by id or standard number properties
+    let found = items.find(item => {
+      if (!item) return false;
+      if (item.id === idStr || String(item.id).toLowerCase() === idLower) return true;
+      if (item.invoice_no && (item.invoice_no === idStr || item.invoice_no.toLowerCase() === idLower)) return true;
+      if (item.bill_no && (item.bill_no === idStr || item.bill_no.toLowerCase() === idLower)) return true;
+      if (item.receipt_no && (item.receipt_no === idStr || item.receipt_no.toLowerCase() === idLower)) return true;
+      if (item.voucher_no && (item.voucher_no === idStr || item.voucher_no.toLowerCase() === idLower)) return true;
+      if (item.reference_no && (item.reference_no === idStr || item.reference_no.toLowerCase() === idLower)) return true;
+      if (item.expense_no && (item.expense_no === idStr || item.expense_no.toLowerCase() === idLower)) return true;
+      if (item.po_no && (item.po_no === idStr || item.po_no.toLowerCase() === idLower)) return true;
+      if (item.credit_note_no && (item.credit_note_no === idStr || item.credit_note_no.toLowerCase() === idLower)) return true;
+      if (item.debit_note_no && (item.debit_note_no === idStr || item.debit_note_no.toLowerCase() === idLower)) return true;
+      if (item.cheque_no && (item.cheque_no === idStr || item.cheque_no.toLowerCase() === idLower)) return true;
+      if (item.account_number && (item.account_number === idStr || item.account_number.toLowerCase() === idLower)) return true;
+      if (item.iban && (item.iban === idStr || item.iban.toLowerCase() === idLower)) return true;
+      if (item.code && (item.code === idStr || item.code.toLowerCase() === idLower)) return true;
+      if (item.name && item.name.toLowerCase() === idLower) return true;
+      return false;
+    });
+    if (found) return found;
+
+    // 2. Normalized alphanumeric match (ignores hyphens, slashes, spaces)
+    if (cleanAlpha.length >= 3) {
+      found = items.find(item => {
+        if (!item) return false;
+        const keys = [item.id, item.invoice_no, item.bill_no, item.receipt_no, item.voucher_no, item.reference_no, item.expense_no, item.code];
+        return keys.some(k => k && String(k).toLowerCase().replace(/[^a-z0-9]/g, '') === cleanAlpha);
+      });
+      if (found) return found;
+    }
+
+    // 3. Trailing sequence number match (e.g. "44052" matches "REC-RG-INV-44052")
+    const seqMatch = idStr.match(/\b(\d{4,6})\b/);
+    if (seqMatch) {
+      const seq = seqMatch[1];
+      found = items.find(item => {
+        if (!item) return false;
+        const keys = [item.id, item.invoice_no, item.bill_no, item.receipt_no, item.voucher_no, item.reference_no, item.expense_no];
+        return keys.some(k => k && String(k).includes(seq));
+      });
+      if (found) return found;
+    }
+
+    // 4. Fallback for vendor payments disbursed via petty cash / cash vouchers
+    if (collectionKey === 'vendor_payments') {
+      const cv = (this.db.cash_vouchers || []).find(c => c.id === idStr || c.voucher_no === idStr || c.payment_id === idStr);
+      if (cv) {
+        return {
+          id: cv.payment_id || cv.id,
+          voucher_no: cv.voucher_no,
+          vendor_id: cv.vendor_id || '',
+          vendor_name: cv.payee || '',
+          amount_paid: Number(cv.amount) || 0,
+          payment_date: cv.date,
+          payment_mode: 'Cash',
+          reference_no: cv.voucher_no,
+          notes: cv.purpose || '',
+          company_id: cv.company_id || this.activeCompanyId,
+          allocations: []
+        };
+      }
+    }
+
+    return null;
+  }
+
+  // --------------------------------------------------------------------------
   // DATA LAYER & API SYNC
   // --------------------------------------------------------------------------
   mergeWithSeedData(sourceData) {
@@ -859,20 +948,20 @@ class FinanceApp {
       }
     });
 
-    // 0b3. Ensure Top Rock Interiors customer and all linked invoices have canonical TRN 104571196000003
+    // 0b3. Ensure Top Rock Interiors customer and all linked invoices have canonical TRN 10457119600003
     (this.db.customers || []).forEach(c => {
       if (c && (c.id === 'cust-toprock' || (c.name || '').toLowerCase().includes('top rock'))) {
         if (!c.trn || c.trn === '100360644700003') {
-          c.trn = '104571196000003';
+          c.trn = '10457119600003';
         }
       }
     });
     (this.db.invoices || []).forEach(inv => {
       if (inv && (inv.customer_id === 'cust-toprock' || (inv.customer_name || '').toLowerCase().includes('top rock'))) {
         if (!inv.customer_trn || inv.customer_trn === '100360644700003') {
-          inv.customer_trn = '104571196000003';
-          inv.trn = '104571196000003';
-          inv.tax_number = '104571196000003';
+          inv.customer_trn = '10457119600003';
+          inv.trn = '10457119600003';
+          inv.tax_number = '10457119600003';
         }
       }
     });
@@ -1607,7 +1696,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v88';
+    const CURRENT_DB_VERSION = 'v2026_clean_v91';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3133,7 +3222,7 @@ class FinanceApp {
     const name = localInfo?.name || cust?.name || latestInv?.customer_name || rawKey;
     const id = cust?.id || localInfo?.id || latestInv?.customer_id || '';
     const code = cust?.code || localInfo?.code || '';
-    const trn = localInfo?.trn || cust?.trn || latestInv?.customer_trn || (isTopRock ? '104571196000003' : (isBuildara ? '105405525400003' : ''));
+    const trn = localInfo?.trn || cust?.trn || latestInv?.customer_trn || (isTopRock ? '10457119600003' : (isBuildara ? '105405525400003' : ''));
     const gstin = localInfo?.gstin || cust?.gstin || latestInv?.customer_gstin || '';
 
     const isUae = (cust?.country && cust.country.toUpperCase() === 'UAE') ||
@@ -5677,7 +5766,7 @@ class FinanceApp {
           ${(() => {
             const cust = (this.db?.customers || []).find(c => (inv.customer_id && c.id === inv.customer_id) || (c.name && inv.customer_name && c.name.toLowerCase() === inv.customer_name.toLowerCase()));
             const isTopRock = (inv.customer_name || '').toLowerCase().includes('top rock') || inv.customer_id === 'cust-toprock';
-            const trn = inv.customer_trn || inv.trn || inv.tax_number || cust?.trn || (isTopRock ? '104571196000003' : '');
+            const trn = inv.customer_trn || inv.trn || inv.tax_number || cust?.trn || (isTopRock ? '10457119600003' : '');
             const gstin = inv.customer_gstin || cust?.gstin || '';
             if (trn) {
               return `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${trn}</div>`;
@@ -7933,6 +8022,7 @@ class FinanceApp {
           <td style="text-align:center;">
             <div style="display:inline-flex; gap:4px;">
               <button type="button" class="fin-btn-card-action" title="Print Remittance Advice" onclick="window.finApp.printBankWireAdvice('${t.id}')">🖨️</button>
+              <button type="button" class="fin-btn-card-action" title="Edit Wire" onclick="window.finApp.openEditBankTransferModal('${t.id}')" style="border-color:#38bdf8; color:#38bdf8; font-weight:700;">✏️ Edit</button>
               <button type="button" class="fin-btn-card-action danger" title="Delete Wire" onclick="window.finApp.deleteBankTransfer('${t.id}')">🗑️</button>
             </div>
           </td>
@@ -12438,7 +12528,7 @@ class FinanceApp {
         }
 
         // If Top Rock client is selected and table has no active items, auto-fill Dubai Police Academy items
-        const isTopRockClient = (clientName || '').toLowerCase().includes('top rock') || clientTrn === '104571196000003' || clientTrn === '100360644700003';
+        const isTopRockClient = (clientName || '').toLowerCase().includes('top rock') || clientTrn === '10457119600003' || clientTrn === '100360644700003';
         if (isTopRockClient) {
           if (prjInput && (!prjInput.value || prjInput.value === 'General Corporate Billing')) {
             prjInput.value = 'THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI, UAE';
@@ -13633,7 +13723,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -14009,7 +14099,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const custSel = document.getElementById('rec-cust-sel');
     const invList = document.getElementById('rec-invoices-list');
@@ -14655,7 +14745,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const vendInput = document.getElementById('bill-vend-input');
     const vendDropdown = document.getElementById('bill-vend-dropdown');
@@ -15400,7 +15490,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const payModeSel = document.getElementById('pay-mode');
     const payVaultCont = document.getElementById('pay-vault-container');
@@ -15866,7 +15956,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -16370,7 +16460,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -16776,7 +16866,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -17300,7 +17390,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -17633,7 +17723,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -17794,7 +17884,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -17890,7 +17980,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Tax Registration Number (TRN) <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="new-cust-trn" class="fin-form-input" placeholder="104571196000003">
+                  <input type="text" id="new-cust-trn" class="fin-form-input" placeholder="10457119600003">
                 </div>
               </div>
 
@@ -17969,7 +18059,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     // Toggle custom AR account input
     const arSel = document.getElementById('new-cust-ar');
@@ -18230,7 +18320,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Tax ID / TRN (UAE VAT)</label>
-                  <input type="text" id="edit-cust-trn" class="fin-form-input" value="${cust.trn || ''}" placeholder="e.g. 104571196000003">
+                  <input type="text" id="edit-cust-trn" class="fin-form-input" value="${cust.trn || ''}" placeholder="e.g. 10457119600003">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">GSTIN (India)</label>
@@ -18340,7 +18430,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const arSel = document.getElementById('edit-cust-ar');
     const arCustom = document.getElementById('edit-cust-ar-custom');
@@ -18582,7 +18672,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const catSel = document.getElementById('new-vend-cat');
     const customGroup = document.getElementById('new-vend-custom-group');
@@ -18728,7 +18818,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('add-item-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -18875,7 +18965,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     // Project Mode Toggle for Expense Modal
     const expPrjToggleBtn = document.getElementById('exp-prj-toggle-btn');
@@ -19091,7 +19181,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const itemSel = document.getElementById('po-item-sel');
     const rateInp = document.getElementById('po-rate');
@@ -19238,7 +19328,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('cn-invoice-select')?.addEventListener('change', (e) => {
       this.openCreateCreditNoteModal(e.target.value);
@@ -19370,7 +19460,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('invite-user-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -19944,11 +20034,18 @@ class FinanceApp {
 
   // Delete project
   async deleteProject(projectId) {
-    const prj = (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
+    const prj = this.findEntity('projects', projectId) || (this.db?.projects || []).find(p => p.id === projectId || p.code === projectId);
     const label = prj ? `${prj.name} (${prj.code})` : projectId;
+    const pId = prj ? prj.id : projectId;
+    const pCode = prj ? prj.code : projectId;
     if (!confirm(`Are you sure you want to delete project "${label}"? This will remove the project account.`)) return;
     this.closeModal('modal-edit-project');
-    await this.syncApi('delete_project', { project_id: projectId, id: projectId });
+
+    if (this.db?.projects) {
+      this.db.projects = this.db.projects.filter(p => p.id !== pId && p.code !== pCode && p.id !== projectId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
     this.showNotification(`Project "${label}" deleted.`, 'info');
     if (this.activeTab === 'projects') {
       const root = document.getElementById('fin-tab-content-root');
@@ -19956,6 +20053,10 @@ class FinanceApp {
     } else {
       this.renderActiveTab();
     }
+
+    this.syncApi('delete_project', { project_id: pId, id: pId, code: pCode }).catch(err => {
+      console.warn('Backend sync warning for delete_project:', err);
+    });
   }
 
   // 15. NOTIFICATIONS MODAL
@@ -19987,7 +20088,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
   }
 
   // 16. USER PROFILE MODAL
@@ -20028,7 +20129,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
   }
 
   closeModal(id) {
@@ -20232,7 +20333,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('bank-account-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -20277,14 +20378,19 @@ class FinanceApp {
   }
 
   async deleteBankAccount(bankId) {
-    if (!confirm('Are you sure you want to delete this bank account from records?')) return;
+    const bank = (this.db?.bank_accounts || []).find(b => b.id === bankId);
+    const label = bank ? (bank.bank_name || bank.account_name || bankId) : bankId;
+    if (!confirm(`Are you sure you want to delete bank account "${label}" from records?`)) return;
     if (this.db?.bank_accounts) {
       this.db.bank_accounts = this.db.bank_accounts.filter(b => b.id !== bankId);
     }
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
-    await this.syncApi('delete_bank_account', { id: bankId });
     this.renderActiveTab();
-    this.showNotification('Bank account removed.', 'info');
+    this.showNotification(`Bank account "${label}" removed.`, 'info');
+
+    this.syncApi('delete_bank_account', { id: bankId, bank_id: bankId }).catch(err => {
+      console.warn('Backend sync warning for delete_bank_account:', err);
+    });
   }
 
   // 2. RECORD BANK WIRE / TRANSFER MODAL
@@ -20379,7 +20485,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const btTypeEl = document.getElementById('bt-type');
     const btVaultGroup = document.getElementById('bt-vault-group');
@@ -20684,7 +20790,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     // Elements & dynamic projection
     const srcEl = document.getElementById('btw-source');
@@ -20872,15 +20978,131 @@ class FinanceApp {
     };
   }
 
+  openEditBankTransferModal(transferId) {
+    const trn = this.findEntity('bank_transfers', transferId);
+    if (!trn) {
+      this.showNotification(`Bank wire transfer record "${transferId}" not found.`, 'warning');
+      return;
+    }
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = trn.currency || (isIndia ? 'INR' : 'AED');
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-edit-bank-transfer">
+        <div class="fin-modal-dialog" style="max-width:560px;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title">✏️ Edit Bank Wire / Remittance Record</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-bank-transfer')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="edit-bank-transfer-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Reference / UTR # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ebt-ref" class="fin-form-input" value="${trn.reference_no || ''}" required style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transfer Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="ebt-date" class="fin-form-input" value="${trn.date || trn.transfer_date || ''}" required>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Amount (${curr}) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="ebt-amount" class="fin-form-input" value="${trn.amount || 0}" step="any" min="0.01" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Corporate Bank</label>
+                  <select id="ebt-bank" class="fin-form-select">
+                    ${banks.map(b => `<option value="${b.bank_name}" ${(trn.source_bank === b.bank_name || trn.destination_bank === b.bank_name) ? 'selected' : ''}>${b.bank_name}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Counterparty / Beneficiary <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ebt-counterparty" class="fin-form-input" value="${trn.counterparty || ''}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Status</label>
+                  <select id="ebt-status" class="fin-form-select">
+                    <option value="Cleared" ${trn.status === 'Cleared' ? 'selected' : ''}>Cleared</option>
+                    <option value="Completed" ${trn.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                    <option value="Pending" ${trn.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Purpose / Description</label>
+                <textarea id="ebt-purpose" class="fin-form-textarea" rows="2">${trn.purpose || ''}</textarea>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="fin-btn-quick" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.4);" onclick="window.finApp.closeModal('modal-edit-bank-transfer'); window.finApp.deleteBankTransfer('${trn.id}')">🗑️ Delete Wire</button>
+                <div style="display:flex; gap:0.5rem;">
+                  <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-edit-bank-transfer')">Cancel</button>
+                  <button type="submit" class="fin-btn-quick primary">Save Wire Changes &rarr;</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+
+    document.getElementById('edit-bank-transfer-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const updatedTrn = {
+        ...trn,
+        reference_no: document.getElementById('ebt-ref').value.trim(),
+        date: document.getElementById('ebt-date').value,
+        transfer_date: document.getElementById('ebt-date').value,
+        amount: parseFloat(document.getElementById('ebt-amount').value) || 0,
+        source_bank: document.getElementById('ebt-bank').value,
+        counterparty: document.getElementById('ebt-counterparty').value.trim(),
+        status: document.getElementById('ebt-status').value,
+        purpose: document.getElementById('ebt-purpose').value.trim()
+      };
+
+      if (!this.db.bank_transfers) this.db.bank_transfers = [];
+      const idx = this.db.bank_transfers.findIndex(t => t.id === trn.id || t.reference_no === trn.reference_no);
+      if (idx >= 0) this.db.bank_transfers[idx] = updatedTrn;
+      else this.db.bank_transfers.unshift(updatedTrn);
+
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+      this.closeModal('modal-edit-bank-transfer');
+      this.renderActiveTab();
+      this.showNotification(`Bank wire "${updatedTrn.reference_no}" updated successfully.`, 'success');
+
+      this.syncApi('update_bank_transfer', { id: trn.id, transfer: updatedTrn }).catch(err => {
+        console.warn('Backend sync warning for update_bank_transfer:', err);
+      });
+    };
+  }
+
   async deleteBankTransfer(transferId) {
-    if (!confirm('Are you sure you want to delete this bank wire record?')) return;
+    const trn = this.findEntity('bank_transfers', transferId);
+    const label = trn ? (trn.reference_no || trn.id) : transferId;
+    const tId = trn ? trn.id : transferId;
+    const tRef = trn ? (trn.reference_no || '') : '';
+    if (!confirm(`Are you sure you want to delete bank wire record "${label}"?`)) return;
+
     if (this.db?.bank_transfers) {
-      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== transferId && t.reference_no !== transferId);
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== tId && t.id !== transferId && (tRef ? t.reference_no !== tRef : true));
     }
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
-    await this.syncApi('delete_bank_transfer', { id: transferId, transfer_id: transferId });
     this.renderActiveTab();
-    this.showNotification('Bank wire record deleted.', 'info');
+    this.showNotification(`Bank wire record "${label}" deleted successfully.`, 'info');
+
+    this.syncApi('delete_bank_transfer', { id: tId, reference_no: tRef, transfer_id: tId }).catch(err => {
+      console.warn('Backend sync warning for delete_bank_transfer:', err);
+    });
   }
 
   printBankWireAdvice(transferId) {
@@ -20933,7 +21155,7 @@ class FinanceApp {
         </div>
       </div>
     `;
-    document.getElementById('fin-modal-container').innerHTML = adviceHtml;
+    this.getModalContainer().innerHTML = adviceHtml;
   }
 
   // 3. ADD / EDIT CASH VAULT REGISTER MODAL
@@ -20991,7 +21213,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('cash-register-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -21024,10 +21246,19 @@ class FinanceApp {
       alert('RAYAN E-Wallets is the central primary cash repository and cannot be removed.');
       return;
     }
-    if (!confirm('Are you sure you want to remove this cash vault register?')) return;
-    await this.syncApi('delete_cash_register', { id: regId });
+    const label = reg ? (reg.register_name || regId) : regId;
+    if (!confirm(`Are you sure you want to remove cash vault register "${label}"?`)) return;
+
+    if (this.db?.cash_in_hand) {
+      this.db.cash_in_hand = this.db.cash_in_hand.filter(r => r.id !== regId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
-    this.showNotification('Cash register removed.', 'info');
+    this.showNotification(`Cash register "${label}" removed.`, 'info');
+
+    this.syncApi('delete_cash_register', { id: regId, register_id: regId }).catch(err => {
+      console.warn('Backend sync warning for delete_cash_register:', err);
+    });
   }
 
   // 4. RECORD PETTY CASH VOUCHER MODAL
@@ -21123,7 +21354,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('cash-entry-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -21156,10 +21387,23 @@ class FinanceApp {
   }
 
   async deleteCashVoucher(voucherId) {
-    if (!confirm('Are you sure you want to delete this petty cash voucher?')) return;
-    await this.syncApi('delete_cash_voucher', { id: voucherId });
+    const v = this.findEntity('cash_vouchers', voucherId);
+    const label = v ? (v.voucher_no || v.id) : voucherId;
+    const vId = v ? v.id : voucherId;
+    const vNo = v ? (v.voucher_no || '') : '';
+    if (!confirm(`Are you sure you want to delete petty cash voucher "${label}"?`)) return;
+
+    if (this.db?.cash_vouchers) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(x => x.id !== vId && x.id !== voucherId && (vNo ? x.voucher_no !== vNo : true));
+    }
+    this.normalizeAllBalances();
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
     this.renderActiveTab();
-    this.showNotification('Cash voucher deleted.', 'info');
+    this.showNotification(`Petty cash voucher "${label}" deleted successfully.`, 'info');
+
+    this.syncApi('delete_cash_voucher', { id: vId, voucher_no: vNo }).catch(err => {
+      console.warn('Backend sync warning for delete_cash_voucher:', err);
+    });
   }
 
   // 5. TRANSFER PETTY CASH MODAL (RAYAN E-Wallets -> Project Registers)
@@ -21271,7 +21515,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     // Dynamic UI interactions
     const sourceEl = document.getElementById('tpc-source');
@@ -21451,9 +21695,9 @@ class FinanceApp {
 
   // 6. EDIT CASH VOUCHER MODAL
   openEditCashVoucherModal(voucherId) {
-    const v = (this.db?.cash_vouchers || []).find(x => x.id === voucherId || x.voucher_no === voucherId);
+    const v = this.findEntity('cash_vouchers', voucherId);
     if (!v) {
-      alert('Voucher not found.');
+      this.showNotification(`Cash voucher "${voucherId}" could not be found.`, 'warning');
       return;
     }
     const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
@@ -21548,7 +21792,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('edit-cash-voucher-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -21658,7 +21902,7 @@ class FinanceApp {
         </div>
       </div>
     `;
-    document.getElementById('fin-modal-container').innerHTML = voucherHtml;
+    this.getModalContainer().innerHTML = voucherHtml;
   }
 
   // 5. RECORD CHEQUE MODAL
@@ -21745,7 +21989,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('cheque-entry-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -21902,7 +22146,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('deposit-cheque-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -22016,7 +22260,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('clear-cheque-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -22086,7 +22330,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('update-cheque-status-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -22199,7 +22443,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('loan-facility-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -22234,10 +22478,23 @@ class FinanceApp {
   }
 
   async deleteLoanAccount(loanId) {
-    if (!confirm('Are you sure you want to remove this corporate credit facility?')) return;
-    await this.syncApi('delete_loan_account', { id: loanId });
+    const loan = (this.db?.loan_accounts || []).find(l => l.id === loanId);
+    const label = loan ? (loan.facility_name || loan.name || loanId) : loanId;
+    if (!confirm(`Are you sure you want to remove corporate credit facility "${label}"?`)) return;
+
+    if (this.db?.loan_accounts) {
+      this.db.loan_accounts = this.db.loan_accounts.filter(l => l.id !== loanId);
+    }
+    if (this.db?.loan_transactions) {
+      this.db.loan_transactions = this.db.loan_transactions.filter(t => t.facility_id !== loanId && t.loan_id !== loanId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
-    this.showNotification('Credit facility removed.', 'info');
+    this.showNotification(`Credit facility "${label}" removed.`, 'info');
+
+    this.syncApi('delete_loan_account', { id: loanId, loan_id: loanId }).catch(err => {
+      console.warn('Backend sync warning for delete_loan_account:', err);
+    });
   }
 
   // 7. RECORD LOAN DRAWDOWN / REPAYMENT MODAL
@@ -22309,7 +22566,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('loan-entry-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -22348,9 +22605,16 @@ class FinanceApp {
 
   async deleteLoanTransaction(transId) {
     if (!confirm('Are you sure you want to delete this facility transaction?')) return;
-    await this.syncApi('delete_loan_transaction', { id: transId });
+    if (this.db?.loan_transactions) {
+      this.db.loan_transactions = this.db.loan_transactions.filter(t => t.id !== transId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
     this.showNotification('Transaction record deleted.', 'info');
+
+    this.syncApi('delete_loan_transaction', { id: transId, transaction_id: transId }).catch(err => {
+      console.warn('Backend sync warning for delete_loan_transaction:', err);
+    });
   }
 
   // 20. PROMPT TO ISSUE CREDIT/DEBIT NOTE
@@ -22422,7 +22686,7 @@ class FinanceApp {
           </div>
         </div>
       `;
-      document.getElementById('fin-modal-container').innerHTML = modalHtml;
+      this.getModalContainer().innerHTML = modalHtml;
 
       const billSel = document.getElementById('dn-bill-select');
       const vendInput = document.getElementById('dn-vendor-input');
@@ -22517,7 +22781,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     document.getElementById('upload-doc-form').onsubmit = (e) => {
       e.preventDefault();
@@ -22766,7 +23030,7 @@ class FinanceApp {
     ) || {};
 
     const custAddress = inv.customer_address || inv.billing_address || customer.billing_address || customer.office_address || customer.address || (isTopRock ? 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE' : '');
-    const custTrn = inv.customer_trn || inv.trn || customer.trn || (isTopRock ? '104571196000003' : '');
+    const custTrn = inv.customer_trn || inv.trn || customer.trn || (isTopRock ? '10457119600003' : '');
     let rawPo = (inv.order_no || inv.order_number || (inv.po_reference && inv.po_reference !== '.' && inv.po_reference !== '/' ? inv.po_reference.replace(/^\.\s*/, '') : '') || inv.lpo_no || inv.last_po_reference || customer.last_po_reference || (isTopRock ? 'PODSUB-2026/0810 & 0858' : '')).trim();
     if (rawPo === '.' || rawPo === '/' || rawPo.toLowerCase() === 'invoice no /' || rawPo.toLowerCase() === 'none') {
       rawPo = '';
@@ -23166,7 +23430,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -23560,7 +23824,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -24410,7 +24674,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -24650,9 +24914,9 @@ class FinanceApp {
 
   // 1. EDIT TAX INVOICE MODAL (MULTI-ITEM LINE EDITOR)
   openEditInvoiceModal(invoiceId) {
-    const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    const inv = this.findEntity('invoices', invoiceId);
     if (!inv) {
-      alert('Invoice not found.');
+      this.showNotification(`Tax Invoice "${invoiceId}" could not be found.`, 'warning');
       return;
     }
     const isIndia = (inv.company_id || this.activeCompanyId) === 'ashaz-eng-in';
@@ -24864,7 +25128,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const invNumInput = document.getElementById('edit-inv-number');
     if (invNumInput) {
@@ -25306,9 +25570,9 @@ class FinanceApp {
 
   // 2. EDIT PURCHASE BILL MODAL
   openEditBillModal(billId) {
-    const bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
+    const bill = this.findEntity('purchase_bills', billId);
     if (!bill) {
-      alert('Purchase bill not found.');
+      this.showNotification(`Purchase bill "${billId}" could not be found.`, 'warning');
       return;
     }
     const isIndia = (bill.company_id || this.activeCompanyId) === 'ashaz-eng-in';
@@ -25524,7 +25788,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     // Project Autocomplete for Edit Modal
     const editPrjInput = document.getElementById('edit-bill-project');
@@ -25972,9 +26236,9 @@ class FinanceApp {
 
   // 3. EDIT CUSTOMER RECEIPT / PAYMENT-IN MODAL
   openEditReceiptModal(receiptId) {
-    const rcp = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
+    const rcp = this.findEntity('customer_receipts', receiptId);
     if (!rcp) {
-      alert('Payment-In voucher not found.');
+      this.showNotification(`Payment-In voucher "${receiptId}" could not be found.`, 'warning');
       return;
     }
     const isIndia = (rcp.company_id || this.activeCompanyId) === 'ashaz-eng-in';
@@ -26087,7 +26351,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const rcpNoInput = document.getElementById('edit-rcp-no');
     if (rcpNoInput) {
@@ -26183,9 +26447,9 @@ class FinanceApp {
 
   // 4. EDIT EXPENSE MODAL
   openEditExpenseModal(expenseId) {
-    const exp = (this.db?.expenses || []).find(e => e.id === expenseId || e.expense_no === expenseId);
+    const exp = this.findEntity('expenses', expenseId);
     if (!exp) {
-      alert('Expense record not found.');
+      this.showNotification(`Expense record "${expenseId}" could not be found.`, 'warning');
       return;
     }
     const isIndia = (exp.company_id || this.activeCompanyId) === 'ashaz-eng-in';
@@ -26295,7 +26559,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const amtInp = document.getElementById('edit-exp-amount');
     const taxInp = document.getElementById('edit-exp-tax');
@@ -26614,7 +26878,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -26665,10 +26929,29 @@ class FinanceApp {
   }
 
   async deleteExpense(expenseId) {
-    if (!confirm('Are you sure you want to delete this expense record?')) return;
-    await this.syncApi('delete_expense', { expense_id: expenseId });
-    alert('Expense record deleted successfully.');
+    const exp = this.findEntity('expenses', expenseId);
+    const label = exp ? (exp.expense_no || exp.category || expenseId) : expenseId;
+    const eId = exp ? exp.id : expenseId;
+    const eNo = exp ? (exp.expense_no || '') : '';
+    if (!confirm(`Are you sure you want to delete expense record "${label}"?`)) return;
+
+    if (this.db?.expenses) {
+      this.db.expenses = this.db.expenses.filter(e => e.id !== eId && e.expense_no !== eNo && e.id !== expenseId);
+    }
+    if (this.db?.cash_vouchers) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => cv.expense_id !== eId && cv.expense_id !== expenseId);
+    }
+    if (this.db?.bank_transfers) {
+      this.db.bank_transfers = this.db.bank_transfers.filter(bt => bt.expense_id !== eId && bt.expense_id !== expenseId);
+    }
+    this.normalizeAllBalances();
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
+    this.showNotification(`Expense record "${label}" deleted successfully.`, 'info');
+
+    this.syncApi('delete_expense', { expense_id: eId, id: eId, expense_no: eNo }).catch(err => {
+      console.warn('Backend sync warning for delete_expense:', err);
+    });
   }
 
   // 11. OFFICIAL VENDOR PAYMENT VOUCHER PRINT MODAL (Website View & PDF Ready)
@@ -26976,7 +27259,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -27013,9 +27296,9 @@ class FinanceApp {
 
   // 5. EDIT VENDOR PAYMENT MODAL
   openEditPaymentModal(paymentId) {
-    const pay = (this.db?.vendor_payments || []).find(p => p.id === paymentId || p.voucher_no === paymentId);
+    const pay = this.findEntity('vendor_payments', paymentId);
     if (!pay) {
-      alert('Payment voucher not found.');
+      this.showNotification(`Payment voucher "${paymentId}" could not be found.`, 'warning');
       return;
     }
     const isIndia = (pay.company_id || this.activeCompanyId) === 'ashaz-eng-in';
@@ -27124,7 +27407,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const editPayModeSel = document.getElementById('edit-pay-mode');
     const editPayVaultCont = document.getElementById('edit-pay-vault-container');
@@ -27325,7 +27608,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const qtyInp = document.getElementById('edit-po-qty');
     const rateInp = document.getElementById('edit-po-rate');
@@ -27538,7 +27821,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.getElementById('edit-cn-form').onsubmit = async (e) => {
       e.preventDefault();
       cn.customer_name = document.getElementById('edit-cn-cust').value.trim();
@@ -27632,7 +27915,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.getElementById('edit-dn-form').onsubmit = async (e) => {
       e.preventDefault();
       dn.vendor_name = document.getElementById('edit-dn-vend').value.trim();
@@ -27726,7 +28009,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.getElementById('edit-doc-form').onsubmit = async (e) => {
       e.preventDefault();
       doc.name = document.getElementById('edit-doc-name').value.trim();
@@ -27766,24 +28049,25 @@ class FinanceApp {
 
   async deleteDocument(docId) {
     if (!confirm('Are you sure you wish to delete this document from the vault?')) return;
-    await this.syncApi('delete_document', { document_id: docId });
-    alert('Document removed from vault.');
+    if (this.db?.documents) {
+      this.db.documents = this.db.documents.filter(d => d.id !== docId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
+    this.showNotification('Document removed from vault.', 'info');
+
+    this.syncApi('delete_document', { document_id: docId, id: docId }).catch(err => {
+      console.warn('Backend sync warning for delete_document:', err);
+    });
   }
 
   // 9B. INVOICE DELETE ACTION HANDLER
   async deleteInvoice(invoiceId) {
-    const inv = (this.db?.invoices || []).find(i => i.id === invoiceId || i.invoice_no === invoiceId);
+    const inv = this.findEntity('invoices', invoiceId);
     const label = inv ? inv.invoice_no : invoiceId;
     const invId = inv ? inv.id : invoiceId;
     const invNo = inv ? inv.invoice_no : invoiceId;
     if (!confirm(`Are you sure you want to delete Tax Invoice ${label}?`)) return;
-
-    try {
-      await this.syncApi('delete_invoice', { invoice_id: invId, invoice_no: invNo, id: invId });
-    } catch (err) {
-      console.warn('API sync warning for delete_invoice:', err);
-    }
 
     const getSeqNum = (str) => {
       if (!str) return null;
@@ -27792,6 +28076,7 @@ class FinanceApp {
     };
     const delSeq = getSeqNum(invNo) || getSeqNum(invId) || getSeqNum(invoiceId);
 
+    // 1. Immediately remove from local memory & cache
     if (this.db.invoices) {
       this.db.invoices = this.db.invoices.filter(i => {
         if (i.id === invId || i.id === invoiceId) return false;
@@ -27805,11 +28090,11 @@ class FinanceApp {
       });
     }
 
-    // Also remove any allocations in customer receipts pointing to this invoice
+    // 2. Unlink allocations in customer receipts pointing to this invoice
     if (this.db.customer_receipts) {
       this.db.customer_receipts.forEach(rcp => {
         if (rcp.allocations && Array.isArray(rcp.allocations)) {
-          rcp.allocations = rcp.allocations.filter(a => a.invoice_id !== invoiceId && a.invoice_no !== invoiceId && a.invoice_no !== label);
+          rcp.allocations = rcp.allocations.filter(a => a.invoice_id !== invId && a.invoice_no !== invNo && a.invoice_no !== label);
         }
       });
     }
@@ -27819,8 +28104,14 @@ class FinanceApp {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     } catch (e) { }
 
-    this.showNotification(`Tax Invoice ${label} deleted successfully.`, 'info');
+    // 3. Immediately update UI
     this.renderActiveTab();
+    this.showNotification(`Tax Invoice ${label} deleted successfully.`, 'info');
+
+    // 4. Persist to server in background
+    this.syncApi('delete_invoice', { invoice_id: invId, invoice_no: invNo, id: invId }).catch(err => {
+      console.warn('Backend sync warning for delete_invoice:', err);
+    });
   }
 
   // 9C. CUSTOMER DELETE ACTION HANDLER
@@ -27860,41 +28151,57 @@ class FinanceApp {
 
   // 10. PROCUREMENT & DISBURSEMENT ACTION HANDLERS
   async deleteBill(billId) {
-    const bill = (this.db?.purchase_bills || []).find(b => b.id === billId || b.bill_no === billId);
+    const bill = this.findEntity('purchase_bills', billId);
     const label = bill ? bill.bill_no : billId;
+    const bId = bill ? bill.id : billId;
+    const bNo = bill ? bill.bill_no : billId;
     if (!confirm(`Are you sure you want to delete purchase bill ${label}?`)) return;
 
     // 1. Immediately remove from local database & recalculate balances
     if (this.db.purchase_bills) {
-      this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== billId && b.bill_no !== billId);
+      this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== bId && b.bill_no !== bNo && b.id !== billId && b.bill_no !== billId);
     }
+
+    // 2. Unlink allocations in vendor payments pointing to this bill
+    if (this.db.vendor_payments) {
+      this.db.vendor_payments.forEach(vp => {
+        if (vp.allocations && Array.isArray(vp.allocations)) {
+          vp.allocations = vp.allocations.filter(a => a.bill_id !== bId && a.bill_no !== bNo && a.bill_id !== billId && a.bill_no !== billId);
+        }
+      });
+    }
+
     this.normalizeAllBalances();
     try {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     } catch (e) { }
 
-    // 2. Re-render UI immediately
+    // 3. Re-render UI immediately
     this.renderActiveTab();
     this.showNotification(`Purchase bill ${label} deleted successfully.`, 'info');
 
-    // 3. Persist deletion to backend server
-    await this.syncApi('delete_bill', { bill_id: billId, id: billId });
+    // 4. Persist deletion to backend server
+    this.syncApi('delete_bill', { bill_id: bId, bill_no: bNo, id: bId }).catch(err => {
+      console.warn('Backend sync warning for delete_bill:', err);
+    });
   }
 
   async deletePayment(payId) {
-    const pay = (this.db?.vendor_payments || []).find(p => p.id === payId || p.voucher_no === payId);
+    const pay = this.findEntity('vendor_payments', payId);
     const label = pay ? pay.voucher_no : payId;
+    const pId = pay ? pay.id : payId;
+    const pNo = pay ? pay.voucher_no : payId;
     if (!confirm(`Are you sure you want to delete payment voucher ${label}?`)) return;
 
-    const idSet = new Set([payId, label, pay?.id, pay?.voucher_no].filter(Boolean));
+    const idSet = new Set([payId, label, pId, pNo].filter(Boolean));
     if (this.db.vendor_payments) {
       this.db.vendor_payments = this.db.vendor_payments.filter(p => !idSet.has(p.id) && !idSet.has(p.voucher_no));
     }
     if (this.db.bank_transfers) {
-      this.db.bank_transfers = this.db.bank_transfers.filter(t => !idSet.has(t.payment_id));
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => !idSet.has(t.payment_id) && !idSet.has(t.reference_no));
     }
     if (this.db.cash_vouchers) {
-      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id));
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id) && !idSet.has(cv.voucher_no));
     }
     this.normalizeAllBalances();
     try {
@@ -27904,15 +28211,9 @@ class FinanceApp {
     this.renderActiveTab();
     this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
 
-    const res = await this.syncApi('delete_payment', { payment_id: payId, id: payId });
-    if (res && res.data) {
-      this.db = this.mergeWithSeedData(res.data);
-      this.normalizeAllBalances();
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) { }
-      this.renderActiveTab();
-    }
+    this.syncApi('delete_payment', { payment_id: pId, voucher_no: pNo, id: pId }).catch(err => {
+      console.warn('Backend sync warning for delete_payment:', err);
+    });
   }
 
   toggleSelectAllPayments(checked) {
@@ -27989,15 +28290,9 @@ class FinanceApp {
     this.renderActiveTab();
     this.showNotification(`Successfully deleted ${count} payment voucher(s).`, 'success');
 
-    const res = await this.syncApi('bulk_delete_payments', { payment_ids: selectedIds });
-    if (res && res.data) {
-      this.db = this.mergeWithSeedData(res.data);
-      this.normalizeAllBalances();
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) { }
-      this.renderActiveTab();
-    }
+    this.syncApi('bulk_delete_payments', { payment_ids: selectedIds }).catch(err => {
+      console.warn('Backend sync warning for bulk_delete_payments:', err);
+    });
   }
 
   async deleteAllVisiblePayments() {
@@ -28039,25 +28334,27 @@ class FinanceApp {
     this.renderActiveTab();
     this.showNotification(`Successfully deleted all ${count} payment voucher(s).`, 'success');
 
-    const res = await this.syncApi('bulk_delete_payments', { payment_ids: visibleIds });
-    if (res && res.data) {
-      this.db = this.mergeWithSeedData(res.data);
-      this.normalizeAllBalances();
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) { }
-      this.renderActiveTab();
-    }
+    this.syncApi('bulk_delete_payments', { payment_ids: visibleIds }).catch(err => {
+      console.warn('Backend sync warning for bulk_delete_payments:', err);
+    });
   }
 
   async deleteReceipt(receiptId) {
-    const rcp = (this.db?.customer_receipts || []).find(r => r.id === receiptId || r.receipt_no === receiptId);
+    const rcp = this.findEntity('customer_receipts', receiptId);
     const label = rcp ? rcp.receipt_no : receiptId;
+    const rId = rcp ? rcp.id : receiptId;
+    const rNo = rcp ? rcp.receipt_no : receiptId;
     if (!confirm(`Are you sure you want to delete Payment-In voucher ${label}?`)) return;
 
     // 1. Immediately remove from local database & update invoice balances
     if (this.db.customer_receipts) {
-      this.db.customer_receipts = this.db.customer_receipts.filter(r => r.id !== receiptId && r.receipt_no !== receiptId && r.receipt_no !== label);
+      this.db.customer_receipts = this.db.customer_receipts.filter(r => r.id !== rId && r.receipt_no !== rNo && r.id !== receiptId && r.receipt_no !== receiptId);
+    }
+    if (this.db.bank_transfers) {
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => t.receipt_id !== rId && t.receipt_id !== rNo);
+    }
+    if (this.db.cash_vouchers) {
+      this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => cv.receipt_id !== rId && cv.receipt_id !== rNo);
     }
     this.normalizeAllBalances();
     try {
@@ -28069,7 +28366,9 @@ class FinanceApp {
     this.showNotification(`Payment-In voucher ${label} deleted successfully.`, 'info');
 
     // 3. Persist deletion to backend server
-    await this.syncApi('delete_receipt', { receipt_id: receiptId, id: receiptId, receipt_no: label });
+    this.syncApi('delete_receipt', { receipt_id: rId, id: rId, receipt_no: rNo }).catch(err => {
+      console.warn('Backend sync warning for delete_receipt:', err);
+    });
   }
 
   async refreshFromBackend() {
@@ -28086,53 +28385,92 @@ class FinanceApp {
   }
 
   async deletePO(poId) {
-    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    const po = this.findEntity('purchase_orders', poId) || (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
     const label = po ? po.po_no : poId;
+    const pId = po ? po.id : poId;
+    const pNo = po ? po.po_no : poId;
     if (!confirm(`Are you sure you want to delete purchase order ${label}?`)) return;
-    await this.syncApi('delete_po', { po_id: poId, id: poId });
-    if (this.db.purchase_orders) {
-      this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== poId && p.po_no !== poId);
+
+    if (this.db?.purchase_orders) {
+      this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== pId && p.po_no !== pNo && p.id !== poId);
     }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+    this.closeModal('modal-edit-po');
+    this.closeModal('modal-po');
     this.showNotification(`Purchase order ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
+
+    this.syncApi('delete_po', { po_id: pId, id: pId, po_no: pNo }).catch(err => {
+      console.warn('API sync warning for delete_po:', err);
+    });
   }
 
   async deleteCreditNote(cnId) {
-    const cn = (this.db?.credit_notes || []).find(c => c.id === cnId || c.credit_note_no === cnId);
+    const cn = this.findEntity('credit_notes', cnId) || (this.db?.credit_notes || []).find(c => c.id === cnId || c.credit_note_no === cnId);
     const label = cn ? cn.credit_note_no : cnId;
+    const cId = cn ? cn.id : cnId;
+    const cNo = cn ? cn.credit_note_no : cnId;
     if (!confirm(`Are you sure you want to delete credit note ${label}?`)) return;
-    await this.syncApi('delete_credit_note', { credit_note_id: cnId, id: cnId });
-    if (this.db.credit_notes) {
-      this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cnId && c.credit_note_no !== cnId);
+
+    if (this.db?.credit_notes) {
+      this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cId && c.credit_note_no !== cNo && c.id !== cnId);
     }
     this.normalizeAllBalances();
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+    this.closeModal('modal-edit-credit-note');
+    this.closeModal('modal-credit-note');
     this.showNotification(`Credit note ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
+
+    this.syncApi('delete_credit_note', { credit_note_id: cId, id: cId, credit_note_no: cNo }).catch(err => {
+      console.warn('API sync warning for delete_credit_note:', err);
+    });
   }
 
   async deleteDebitNote(dnId) {
-    const dn = (this.db?.debit_notes || []).find(d => d.id === dnId || d.debit_note_no === dnId);
+    const dn = this.findEntity('debit_notes', dnId) || (this.db?.debit_notes || []).find(d => d.id === dnId || d.debit_note_no === dnId);
     const label = dn ? dn.debit_note_no : dnId;
+    const dId = dn ? dn.id : dnId;
+    const dNo = dn ? dn.debit_note_no : dnId;
     if (!confirm(`Are you sure you want to delete debit note ${label}?`)) return;
-    await this.syncApi('delete_debit_note', { debit_note_id: dnId, id: dnId });
-    if (this.db.debit_notes) {
-      this.db.debit_notes = this.db.debit_notes.filter(d => d.id !== dnId && d.debit_note_no !== dnId);
+
+    if (this.db?.debit_notes) {
+      this.db.debit_notes = this.db.debit_notes.filter(d => d.id !== dId && d.debit_note_no !== dNo && d.id !== dnId);
     }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+    this.closeModal('modal-edit-debit-note');
+    this.closeModal('modal-debit-note');
     this.showNotification(`Debit note ${label} deleted successfully.`, 'info');
     this.renderActiveTab();
+
+    this.syncApi('delete_debit_note', { debit_note_id: dId, id: dId, debit_note_no: dNo }).catch(err => {
+      console.warn('API sync warning for delete_debit_note:', err);
+    });
   }
 
   async deleteVendor(vendId) {
-    const vend = (this.db?.vendors || []).find(v => v.id === vendId || v.code === vendId);
+    const vend = this.findEntity('vendors', vendId) || (this.db?.vendors || []).find(v => v.id === vendId || v.code === vendId);
     const label = vend ? vend.name : vendId;
+    const vId = vend ? vend.id : vendId;
+    const vCode = vend ? (vend.code || '') : '';
     if (!confirm(`Are you sure you want to delete supplier / vendor "${label}"?`)) return;
-    await this.syncApi('delete_vendor', { vendor_id: vendId, id: vendId });
-    if (this.db.vendors) {
-      this.db.vendors = this.db.vendors.filter(v => v.id !== vendId && v.code !== vendId);
+
+    if (this.db?.vendors) {
+      this.db.vendors = this.db.vendors.filter(v => v.id !== vId && v.code !== vCode && v.id !== vendId);
     }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+
+    this.closeModal('modal-edit-vendor');
+    this.closeModal('modal-vendor');
     this.showNotification(`Vendor "${label}" deleted successfully.`, 'info');
     this.renderActiveTab();
+
+    this.syncApi('delete_vendor', { vendor_id: vId, id: vId, code: vCode }).catch(err => {
+      console.warn('API sync warning for delete_vendor:', err);
+    });
   }
 
   openEditVendorModal(vendId) {
@@ -28293,7 +28631,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
 
     const editCatSel = document.getElementById('edit-vend-cat');
     const editCustomGroup = document.getElementById('edit-vend-custom-group');
@@ -28709,7 +29047,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 
@@ -28985,7 +29323,7 @@ class FinanceApp {
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
   }
 

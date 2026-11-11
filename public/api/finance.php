@@ -720,11 +720,11 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         'contact_person' => 'Mr. Shahil',
         'email' => 'procurementofficer@toprockinteriors.com',
         'phone' => '+971 502131834',
-        'customer_trn' => '104571196000003',
-        'trn' => '104571196000003',
+        'customer_trn' => '10457119600003',
+        'trn' => '10457119600003',
         'tax_regime' => 'trn',
         'tax_type' => 'TRN',
-        'tax_number' => '104571196000003',
+        'tax_number' => '10457119600003',
         'currency' => 'AED',
         'currency_symbol' => 'AED ',
         'place_of_supply' => 'Dubai, UAE',
@@ -774,7 +774,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             $pdo->exec("DELETE FROM finance_cash_vouchers WHERE payment_id IS NOT NULL AND payment_id != '' AND payment_id NOT IN (SELECT id FROM finance_vendor_payments)");
             $pdo->exec("DELETE FROM finance_items WHERE id LIKE 'item-00%'");
             $pdo->exec("UPDATE finance_customers SET 
-                trn = '104571196000003', 
+                trn = '10457119600003', 
                 customer_type = 'Business',
                 contact_person = 'Mr. Shahil', 
                 salutation = 'Mr.',
@@ -893,7 +893,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 first_name = 'Shahil',
                 email = 'procurementofficer@toprockinteriors.com',
                 phone = '+971 502131834',
-                trn = '104571196000003',
+                trn = '10457119600003',
                 billing_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
                 office_address = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
                 place_of_supply = 'Dubai, UAE',
@@ -934,13 +934,13 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     $pdo->exec("UPDATE finance_invoices SET 
                         customer_id = 'cust-toprock',
                         customer_name = 'M/S TOP ROCK INTERIORS LLC.',
-                        customer_trn = '104571196000003',
+                        customer_trn = '10457119600003',
                         data_json = JSON_SET(
                             data_json, 
                             '$.customer_id', 'cust-toprock', 
                             '$.customer_name', 'M/S TOP ROCK INTERIORS LLC.',
-                            '$.customer_trn', '104571196000003',
-                            '$.tax_number', '104571196000003',
+                            '$.customer_trn', '10457119600003',
+                            '$.tax_number', '10457119600003',
                             '$.contact_person', 'Mr. Shahil',
                             '$.email', 'procurementofficer@toprockinteriors.com',
                             '$.customer_address', 'TRI Office No.1, Al Qusais Ind Area 1, Dubai, UAE',
@@ -1695,8 +1695,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
             if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44050' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-44050') {
                 $inv['customer_id'] = 'cust-toprock';
                 $inv['customer_name'] = 'M/S TOP ROCK INTERIORS LLC.';
-                $inv['customer_trn'] = '104571196000003';
-                $inv['tax_number'] = '104571196000003';
+                $inv['customer_trn'] = '10457119600003';
+                $inv['tax_number'] = '10457119600003';
                 $inv['contact_person'] = 'Mr. Shahil';
                 $inv['email'] = 'procurementofficer@toprockinteriors.com';
                 $inv['customer_address'] = 'TRI Office No.1, Al Qusais Ind Area 1, Dubai, UAE';
@@ -1815,13 +1815,13 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
         foreach ($data['customers'] as &$c) {
             if (stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
-                if (($c['trn'] ?? '') !== '104571196000003' || ($c['phone'] ?? '') !== '+971 502131834' || ($c['contact_person'] ?? '') !== 'Mr. Shahil') {
+                if (($c['trn'] ?? '') !== '10457119600003' || ($c['phone'] ?? '') !== '+971 502131834' || ($c['contact_person'] ?? '') !== 'Mr. Shahil') {
                     $c['id'] = 'cust-toprock';
                     if (empty($c['code']) || $c['code'] === 'CUST-TOPROCK') $c['code'] = 'CUST-REC-1011';
                     $c['customer_type'] = 'Business';
                     $c['name'] = 'M/S TOP ROCK INTERIORS LLC.';
                     $c['display_name'] = 'M/S TOP ROCK INTERIORS LLC.';
-                    $c['trn'] = '104571196000003';
+                    $c['trn'] = '10457119600003';
                     $c['tax_treatment'] = 'VAT Registered';
                     $c['place_of_supply'] = 'Dubai, UAE';
                     $c['billing_address'] = 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE';
@@ -3559,15 +3559,48 @@ function reconcileV79ChequeDeposits(&$data, $pdo) {
     }
 }
 
+function reconcileV90CanonicalTrnAndBalances(&$data, $pdo) {
+    if (!$pdo) return;
+    try {
+        $chkMig90 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'toprock_trn_canonical_v90'")->fetchColumn();
+        if ($chkMig90 !== 'completed') {
+            // Permanently synchronize Top Rock TRN in MySQL relational tables
+            $pdo->exec("UPDATE finance_customers SET trn = '10457119600003', data_json = JSON_SET(data_json, '$.trn', '10457119600003') WHERE id = 'cust-toprock' OR name LIKE '%TOP ROCK%'");
+            $pdo->exec("UPDATE finance_invoices SET customer_trn = '10457119600003', data_json = JSON_SET(data_json, '$.customer_trn', '10457119600003', '$.trn', '10457119600003', '$.tax_number', '10457119600003') WHERE customer_id = 'cust-toprock' OR customer_name LIKE '%TOP ROCK%'");
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('toprock_trn_canonical_v90', 'completed', NOW())");
+        }
+    } catch (Exception $e) {}
+
+    // Synchronize memory state for Top Rock TRN
+    if (!empty($data['customers']) && is_array($data['customers'])) {
+        foreach ($data['customers'] as &$c) {
+            if (($c['id'] ?? '') === 'cust-toprock' || stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
+                $c['trn'] = '10457119600003';
+            }
+        }
+        unset($c);
+    }
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        foreach ($data['invoices'] as &$inv) {
+            if (($inv['customer_id'] ?? '') === 'cust-toprock' || stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false) {
+                $inv['customer_trn'] = '10457119600003';
+                $inv['trn'] = '10457119600003';
+                $inv['tax_number'] = '10457119600003';
+            }
+        }
+        unset($inv);
+    }
+}
+
 function reconcileV80CustomerTrnAndRelationalSync(&$data, $pdo) {
     if (!$pdo) return;
     try {
         $chkMig80 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'toprock_trn_sync_v80'")->fetchColumn();
         if ($chkMig80 !== 'completed') {
             // 1. Update customers table
-            $pdo->exec("UPDATE finance_customers SET trn = '104571196000003', data_json = JSON_SET(data_json, '$.trn', '104571196000003') WHERE id = 'cust-toprock' OR name LIKE '%TOP ROCK%'");
+            $pdo->exec("UPDATE finance_customers SET trn = '10457119600003', data_json = JSON_SET(data_json, '$.trn', '10457119600003') WHERE id = 'cust-toprock' OR name LIKE '%TOP ROCK%'");
             // 2. Update invoices table
-            $pdo->exec("UPDATE finance_invoices SET customer_trn = '104571196000003', data_json = JSON_SET(data_json, '$.customer_trn', '104571196000003', '$.trn', '104571196000003', '$.tax_number', '104571196000003') WHERE customer_id = 'cust-toprock' OR customer_name LIKE '%TOP ROCK%'");
+            $pdo->exec("UPDATE finance_invoices SET customer_trn = '10457119600003', data_json = JSON_SET(data_json, '$.customer_trn', '10457119600003', '$.trn', '10457119600003', '$.tax_number', '10457119600003') WHERE customer_id = 'cust-toprock' OR customer_name LIKE '%TOP ROCK%'");
             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('toprock_trn_sync_v80', 'completed', NOW())");
         }
     } catch (Exception $e) {}
@@ -3577,7 +3610,7 @@ function reconcileV80CustomerTrnAndRelationalSync(&$data, $pdo) {
         foreach ($data['customers'] as &$c) {
             if (($c['id'] ?? '') === 'cust-toprock' || stripos($c['name'] ?? '', 'TOP ROCK') !== false) {
                 if (empty($c['trn']) || $c['trn'] === '100360644700003') {
-                    $c['trn'] = '104571196000003';
+                    $c['trn'] = '10457119600003';
                 }
             }
         }
@@ -3587,9 +3620,9 @@ function reconcileV80CustomerTrnAndRelationalSync(&$data, $pdo) {
         foreach ($data['invoices'] as &$inv) {
             if (($inv['customer_id'] ?? '') === 'cust-toprock' || stripos($inv['customer_name'] ?? '', 'TOP ROCK') !== false) {
                 if (empty($inv['customer_trn']) || $inv['customer_trn'] === '100360644700003') {
-                    $inv['customer_trn'] = '104571196000003';
-                    $inv['trn'] = '104571196000003';
-                    $inv['tax_number'] = '104571196000003';
+                    $inv['customer_trn'] = '10457119600003';
+                    $inv['trn'] = '10457119600003';
+                    $inv['tax_number'] = '10457119600003';
                 }
             }
         }
@@ -5551,6 +5584,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV78VendorSerialAtoZ($data, $pdo);
                     reconcileV79ChequeDeposits($data, $pdo);
                     reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
+reconcileV90CanonicalTrnAndBalances($data, $pdo);
                     reconcileV81HMVillaFinancials($data, $pdo);
                     reconcileV82EmployeesAndPayroll($data, $pdo);
                     recalculateAllFinanceBalances($data);
@@ -6509,7 +6543,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_state') {
         echo json_encode([
             'success' => true,
-            'version_tag' => 'v78_reconcile_paid_invoices',
+            'version_tag' => 'v90_canonical_sync',
             'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
             'data' => $db
         ]);
@@ -6968,52 +7002,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case 'delete_bill':
-            $billId = $body['bill_id'] ?? $body['id'] ?? '';
-            if (!empty($billId) && isset($db['purchase_bills'])) {
-                $db['purchase_bills'] = array_values(array_filter($db['purchase_bills'], function($item) use ($billId) {
-                    return ($item['id'] ?? '') !== $billId && ($item['bill_no'] ?? '') !== $billId;
+            $billId = trim($body['bill_id'] ?? $body['id'] ?? '');
+            $billNo = trim($body['bill_no'] ?? '');
+            if ((!empty($billId) || !empty($billNo)) && isset($db['purchase_bills'])) {
+                $db['purchase_bills'] = array_values(array_filter($db['purchase_bills'], function($item) use ($billId, $billNo) {
+                    $id = $item['id'] ?? '';
+                    $no = $item['bill_no'] ?? '';
+                    if (!empty($billId) && ($id === $billId || strcasecmp($no, $billId) === 0)) return false;
+                    if (!empty($billNo) && ($id === $billNo || strcasecmp($no, $billNo) === 0)) return false;
+                    return true;
                 }));
+                // Unlink allocations pointing to this bill in vendor payments
+                if (isset($db['vendor_payments']) && is_array($db['vendor_payments'])) {
+                    foreach ($db['vendor_payments'] as &$vp) {
+                        if (!empty($vp['allocations']) && is_array($vp['allocations'])) {
+                            $vp['allocations'] = array_values(array_filter($vp['allocations'], function($a) use ($billId, $billNo) {
+                                $bId = $a['bill_id'] ?? '';
+                                $bNo = $a['bill_no'] ?? '';
+                                if (!empty($billId) && ($bId === $billId || strcasecmp($bNo, $billId) === 0)) return false;
+                                if (!empty($billNo) && ($bId === $billNo || strcasecmp($bNo, $billNo) === 0)) return false;
+                                return true;
+                            }));
+                        }
+                    }
+                    unset($vp);
+                }
                 if ($pdo) {
                     try {
-                        $stmt = $pdo->prepare("DELETE FROM finance_purchase_bills WHERE id = ? OR bill_no = ?");
-                        $stmt->execute([$billId, $billId]);
+                        $stmt = $pdo->prepare("DELETE FROM finance_purchase_bills WHERE id = ? OR bill_no = ? OR id = ? OR bill_no = ?");
+                        $stmt->execute([$billId, $billId, $billNo, $billNo]);
                     } catch (Exception $e) {}
                 }
                 recalculateAllFinanceBalances($db);
-                $addAuditLog('delete', 'bill', $billId, 'Deleted bill ' . $billId);
+                if ($pdo && !empty($db['vendor_payments']) && is_array($db['vendor_payments'])) {
+                    try {
+                        $stmtUpdVp = $pdo->prepare("UPDATE finance_vendor_payments SET data_json = :dj WHERE id = :id OR voucher_no = :vno");
+                        foreach ($db['vendor_payments'] as $vpItem) {
+                            $stmtUpdVp->execute([
+                                ':dj' => json_encode($vpItem, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                                ':id' => $vpItem['id'] ?? '',
+                                ':vno' => $vpItem['voucher_no'] ?? ''
+                            ]);
+                        }
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'bill', $billNo ?: $billId, 'Deleted bill ' . ($billNo ?: $billId));
             }
             break;
 
         case 'delete_receipt':
-            $rcpId = $body['receipt_id'] ?? $body['id'] ?? $body['receipt_no'] ?? '';
-            $rcpNo = $body['receipt_no'] ?? $rcpId;
+            $rcpId = trim($body['receipt_id'] ?? $body['id'] ?? $body['receipt_no'] ?? '');
+            $rcpNo = trim($body['receipt_no'] ?? $rcpId);
             if (!empty($rcpId) && isset($db['customer_receipts'])) {
                 $db['customer_receipts'] = array_values(array_filter($db['customer_receipts'], function($item) use ($rcpId, $rcpNo) {
                     $id = $item['id'] ?? '';
                     $no = $item['receipt_no'] ?? '';
-                    return $id !== $rcpId && $no !== $rcpId && $id !== $rcpNo && $no !== $rcpNo;
+                    return $id !== $rcpId && strcasecmp($no, $rcpId) !== 0 && $id !== $rcpNo && strcasecmp($no, $rcpNo) !== 0;
                 }));
+                // Delete linked bank transfers or cash vouchers
+                if (isset($db['bank_transfers']) && is_array($db['bank_transfers'])) {
+                    $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($item) use ($rcpId, $rcpNo) {
+                        $rId = $item['receipt_id'] ?? '';
+                        return $rId !== $rcpId && $rId !== $rcpNo;
+                    }));
+                }
+                if (isset($db['cash_vouchers']) && is_array($db['cash_vouchers'])) {
+                    $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($item) use ($rcpId, $rcpNo) {
+                        $rId = $item['receipt_id'] ?? '';
+                        return $rId !== $rcpId && $rId !== $rcpNo;
+                    }));
+                }
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM finance_receipts WHERE id = ? OR receipt_no = ? OR id = ? OR receipt_no = ?");
                         $stmt->execute([$rcpId, $rcpId, $rcpNo, $rcpNo]);
+                        $stmtBt = $pdo->prepare("DELETE FROM finance_bank_transfers WHERE receipt_id = ? OR receipt_id = ?");
+                        $stmtBt->execute([$rcpId, $rcpNo]);
+                        $stmtCv = $pdo->prepare("DELETE FROM finance_cash_vouchers WHERE receipt_id = ? OR receipt_id = ?");
+                        $stmtCv->execute([$rcpId, $rcpNo]);
                     } catch (Exception $e) {}
                 }
                 recalculateAllFinanceBalances($db);
-                $addAuditLog('delete', 'receipt', $rcpId, 'Deleted customer receipt ' . $rcpId);
+                // Synchronize recalculated invoice balances to MySQL relational table
+                if ($pdo && !empty($db['invoices']) && is_array($db['invoices'])) {
+                    try {
+                        $stmtUpdInv = $pdo->prepare("UPDATE finance_invoices SET amount_paid = :amt, balance_due = :bal, status = :st, data_json = :dj WHERE id = :id OR invoice_no = :ino");
+                        foreach ($db['invoices'] as $invItem) {
+                            $stmtUpdInv->execute([
+                                ':amt' => floatval($invItem['amount_paid'] ?? 0),
+                                ':bal' => floatval($invItem['balance_due'] ?? 0),
+                                ':st' => $invItem['status'] ?? 'unpaid',
+                                ':dj' => json_encode($invItem, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                                ':id' => $invItem['id'] ?? '',
+                                ':ino' => $invItem['invoice_no'] ?? ''
+                            ]);
+                        }
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'receipt', $rcpNo ?: $rcpId, 'Deleted customer receipt ' . ($rcpNo ?: $rcpId));
             }
             break;
 
         case 'delete_payment':
-            $payId = $body['payment_id'] ?? $body['id'] ?? $body['voucher_no'] ?? '';
-            $payNo = $body['voucher_no'] ?? $payId;
+            $payId = trim($body['payment_id'] ?? $body['id'] ?? $body['voucher_no'] ?? '');
+            $payNo = trim($body['voucher_no'] ?? $payId);
             if (!empty($payId)) {
-                // Permanently record in deleted_vendor_payments (ONLY record IDs starting with pay-, never reusable sequence numbers)
+                // Permanently record in deleted_vendor_payments
                 if ($pdo) {
                     try {
                         $rawDel = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'deleted_vendor_payments'")->fetchColumn();
                         $delArr = $rawDel ? (json_decode($rawDel, true) ?: []) : [];
-                        if (strpos($payId, 'pay-') === 0 && !in_array($payId, $delArr)) $delArr[] = $payId;
+                        if (!empty($payId) && !in_array($payId, $delArr)) $delArr[] = $payId;
+                        if (!empty($payNo) && !in_array($payNo, $delArr)) $delArr[] = $payNo;
                         $stmtDelSet = $pdo->prepare("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('deleted_vendor_payments', :val, NOW())");
                         $stmtDelSet->execute([':val' => json_encode(array_values(array_unique($delArr)))]);
                     } catch (Exception $e) {}
@@ -7023,7 +7123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db['vendor_payments'] = array_values(array_filter($db['vendor_payments'], function($item) use ($payId, $payNo) {
                         $id = $item['id'] ?? '';
                         $no = $item['voucher_no'] ?? '';
-                        return $id !== $payId && $no !== $payId && $id !== $payNo && $no !== $payNo;
+                        return $id !== $payId && strcasecmp($no, $payId) !== 0 && $id !== $payNo && strcasecmp($no, $payNo) !== 0;
                     }));
                 }
                 if (isset($db['bank_transfers']) && is_array($db['bank_transfers'])) {
@@ -7065,7 +7165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (Exception $e) {}
                 }
                 saveFinanceDb($pdo, $dataFile, $db, $candidates);
-                $addAuditLog('delete', 'payment', $payId, 'Deleted vendor payment ' . $payId);
+                $addAuditLog('delete', 'payment', $payNo ?: $payId, 'Deleted vendor payment ' . ($payNo ?: $payId));
             }
             break;
 
@@ -9212,6 +9312,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             exit;
 
+        case 'update_bank_transfer':
+            $trn = $body['transfer'] ?? $body['bank_transfer'] ?? [];
+            $targetId = $body['id'] ?? $trn['id'] ?? '';
+            if (!empty($targetId) && !empty($db['bank_transfers'])) {
+                $updatedTrn = null;
+                foreach ($db['bank_transfers'] as &$exT) {
+                    if (($exT['id'] ?? '') === $targetId || ($exT['reference_no'] ?? '') === $targetId) {
+                        $exT = array_merge($exT, $trn);
+                        $updatedTrn = $exT;
+                        break;
+                    }
+                }
+                unset($exT);
+                if ($updatedTrn && $pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, source_account_id, source_bank, destination_account_id, destination_bank, reference_no, transfer_date, amount, currency, type, purpose, status, counterparty, data_json, updated_at) VALUES (:id, :company_id, :source_account_id, :source_bank, :destination_account_id, :destination_bank, :reference_no, :transfer_date, :amount, :currency, :type, :purpose, :status, :counterparty, :data_json, NOW())");
+                        $stmt->execute([
+                            ':id' => $updatedTrn['id'] ?? $targetId,
+                            ':company_id' => $updatedTrn['company_id'] ?? 'rayan-corp-uae',
+                            ':source_account_id' => $updatedTrn['source_account_id'] ?? 'bank-adcb-uae',
+                            ':source_bank' => $updatedTrn['source_bank'] ?? 'ADCB',
+                            ':destination_account_id' => $updatedTrn['destination_account_id'] ?? '',
+                            ':destination_bank' => $updatedTrn['destination_bank'] ?? '',
+                            ':reference_no' => $updatedTrn['reference_no'] ?? '',
+                            ':transfer_date' => $updatedTrn['date'] ?? $updatedTrn['transfer_date'] ?? date('Y-m-d'),
+                            ':amount' => floatval($updatedTrn['amount'] ?? 0),
+                            ':currency' => $updatedTrn['currency'] ?? 'AED',
+                            ':type' => $updatedTrn['type'] ?? 'outward_wire',
+                            ':purpose' => $updatedTrn['purpose'] ?? '',
+                            ':status' => $updatedTrn['status'] ?? 'Cleared',
+                            ':counterparty' => $updatedTrn['counterparty'] ?? '',
+                            ':data_json' => json_encode($updatedTrn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('update', 'bank_transfer', $targetId, 'Updated bank transfer ' . $targetId);
+            }
+            break;
+
         case 'delete_bank_transfer':
             $targetId = $body['id'] ?? '';
             if (!empty($targetId) && !empty($db['bank_transfers'])) {
@@ -9276,13 +9415,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reg = $body['register'] ?? $body['cash_register'] ?? [];
             $targetId = $body['id'] ?? $reg['id'] ?? '';
             if (!empty($targetId) && !empty($db['cash_in_hand'])) {
+                $updatedReg = null;
                 foreach ($db['cash_in_hand'] as &$exR) {
-                    if (($exR['id'] ?? '') === $targetId) {
+                    if (($exR['id'] ?? '') === $targetId || strcasecmp($exR['id'] ?? '', $targetId) === 0) {
                         $exR = array_merge($exR, $reg);
+                        $updatedReg = $exR;
                         break;
                     }
                 }
                 unset($exR);
+                if ($updatedReg && $pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_cash_in_hand (id, company_id, register_name, location, custodian, balance, currency, last_replenished, data_json, updated_at) VALUES (:id, :company_id, :register_name, :location, :custodian, :balance, :currency, :last_replenished, :data_json, NOW())");
+                        $stmt->execute([
+                            ':id' => $updatedReg['id'] ?? $targetId,
+                            ':company_id' => $updatedReg['company_id'] ?? 'rayan-corp-uae',
+                            ':register_name' => $updatedReg['register_name'] ?? 'Petty Cash Register',
+                            ':location' => $updatedReg['location'] ?? 'Site',
+                            ':custodian' => $updatedReg['custodian'] ?? 'Custodian',
+                            ':balance' => floatval($updatedReg['balance'] ?? 0),
+                            ':currency' => $updatedReg['currency'] ?? 'AED',
+                            ':last_replenished' => $updatedReg['last_replenished'] ?? date('Y-m-d'),
+                            ':data_json' => json_encode($updatedReg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('update', 'cash_register', $targetId, 'Updated cash register ' . $targetId);
             }
             break;
@@ -9539,6 +9696,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     unset($cih);
                 }
 
+                // Persist updated cash voucher directly to MySQL
+                if ($pdo) {
+                    try {
+                        $matchedCv = null;
+                        foreach ($db['cash_vouchers'] as $checkCv) {
+                            if (($checkCv['id'] ?? '') === $vId || ($checkCv['voucher_no'] ?? '') === $vId) {
+                                $matchedCv = $checkCv;
+                                break;
+                            }
+                        }
+                        if ($matchedCv) {
+                            $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, register_id, register_name, voucher_no, voucher_date, type, amount, category, payee, custodian, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :register_id, :register_name, :voucher_no, :voucher_date, :type, :amount, :category, :payee, :custodian, :purpose, :status, :data_json, NOW())");
+                            $stmtCv->execute([
+                                ':id' => $matchedCv['id'] ?? $vId,
+                                ':company_id' => $matchedCv['company_id'] ?? 'rayan-corp-uae',
+                                ':register_id' => $matchedCv['register_id'] ?? 'cash-mw5esv3w',
+                                ':register_name' => $matchedCv['register_name'] ?? 'RAYAN E-Wallets',
+                                ':voucher_no' => $matchedCv['voucher_no'] ?? '',
+                                ':voucher_date' => $matchedCv['date'] ?? $matchedCv['voucher_date'] ?? date('Y-m-d'),
+                                ':type' => $matchedCv['type'] ?? 'outflow',
+                                ':amount' => floatval($matchedCv['amount'] ?? 0),
+                                ':category' => $matchedCv['category'] ?? 'Petty Cash',
+                                ':payee' => $matchedCv['payee'] ?? '',
+                                ':custodian' => $matchedCv['custodian'] ?? 'Custodian',
+                                ':purpose' => $matchedCv['purpose'] ?? '',
+                                ':status' => $matchedCv['status'] ?? 'Approved',
+                                ':data_json' => json_encode($matchedCv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                            ]);
+                        }
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('update', 'cash_voucher', $cv['voucher_no'] ?? $vId, 'Updated cash voucher ' . ($cv['voucher_no'] ?? $vId));
             }
             break;
