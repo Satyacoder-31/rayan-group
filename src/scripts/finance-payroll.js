@@ -28,6 +28,63 @@ export function registerPayrollModules(FinanceApp) {
       .replace(/'/g, '&#039;');
   };
 
+  // Standard Monthly Payroll Periods Reference
+  const PAYROLL_PERIODS = [
+    { key: '2026-07', short: 'Jul-26', full: 'July 2026', label: 'July 2026' },
+    { key: '2026-06', short: 'Jun-26', full: 'June 2026', label: 'June 2026' },
+    { key: '2026-05', short: 'May-26', full: 'May 2026', label: 'May 2026' },
+    { key: '2026-04', short: 'Apr-26', full: 'April 2026', label: 'April 2026' },
+    { key: '2026-03', short: 'Mar-26', full: 'March 2026', label: 'March 2026' },
+    { key: '2026-02', short: 'Feb-26', full: 'February 2026', label: 'February 2026' },
+    { key: '2026-01', short: 'Jan-26', full: 'January 2026', label: 'January 2026' },
+    { key: '2025-12', short: 'Dec-25', full: 'December 2025', label: 'December 2025' },
+    { key: '2025-11', short: 'Nov-25', full: 'November 2025', label: 'November 2025' },
+    { key: '2025-10', short: 'Oct-25', full: 'October 2025', label: 'October 2025' }
+  ];
+
+  const doesSlipMatchPeriod = (slip, period) => {
+    if (!slip || !period) return false;
+    const my = (slip.month_year || '').trim().toLowerCase();
+    const pl = (slip.period_label || '').trim().toLowerCase();
+    const pd = (slip.payment_date || '').trim().toLowerCase();
+    const ps = (period.short || '').toLowerCase();
+    const pf = (period.full || period.label || '').toLowerCase();
+    const pk = (period.key || '').toLowerCase();
+    return my === ps || my === pf || pl === ps || pl === pf || pl.includes(pf) || my.includes(ps) || pd.startsWith(pk);
+  };
+
+  const getPeriodsForFilter = (filterKey = '3m') => {
+    if (filterKey === '1m') {
+      return [PAYROLL_PERIODS[1]]; // June 2026 (1 Month)
+    } else if (filterKey === '3m') {
+      return PAYROLL_PERIODS.slice(1, 4); // June 2026, May 2026, April 2026 (3 Months)
+    } else if (filterKey === '6m') {
+      return PAYROLL_PERIODS.slice(1, 7); // June 2026 to January 2026 (6 Months)
+    } else {
+      return PAYROLL_PERIODS.slice(0, 8); // All recent months
+    }
+  };
+
+  const getPeriodsForEmployee = (emp, filterKey = '3m', allSlips = []) => {
+    const basePeriods = getPeriodsForFilter(filterKey);
+    if (filterKey === 'all') {
+      const extraPeriods = [];
+      allSlips.forEach(s => {
+        const matchesExisting = basePeriods.some(p => doesSlipMatchPeriod(s, p));
+        if (!matchesExisting) {
+          extraPeriods.push({
+            key: s.payment_date ? s.payment_date.slice(0, 7) : 'extra',
+            short: s.month_year || 'Period',
+            full: s.period_label || s.month_year || 'Recorded Period',
+            label: s.period_label || s.month_year || 'Recorded Period'
+          });
+        }
+      });
+      return [...basePeriods, ...extraPeriods];
+    }
+    return basePeriods;
+  };
+
   // Helper to ensure initial default employee & payslip if empty
   proto.ensurePayrollSeedData = function () {
     if (!this.db) return;
@@ -157,6 +214,9 @@ export function registerPayrollModules(FinanceApp) {
           <button type="button" class="fin-btn-secondary" onclick="window.finApp.switchTab('payroll')">
             💼 View Payroll Register
           </button>
+          <button type="button" class="fin-btn-primary" style="background:#10b981; border-color:#10b981;" onclick="window.finApp.openRecordEmployeePaymentModal()">
+            💳 Record Salary Payment
+          </button>
           <button type="button" class="fin-btn-primary" onclick="window.finApp.openEmployeeModal()">
             + Add New Employee
           </button>
@@ -234,7 +294,7 @@ export function registerPayrollModules(FinanceApp) {
                 <th style="text-align:right;">Monthly Standard Salary</th>
                 <th>Bank &amp; IBAN Coordinates</th>
                 <th style="width:90px; text-align:center;">Status</th>
-                <th style="width:170px; text-align:right;">Actions</th>
+                <th style="width:340px; text-align:right;">Actions</th>
               </tr>
             </thead>
             <tbody id="fin-emp-tbody">
@@ -318,11 +378,17 @@ export function registerPayrollModules(FinanceApp) {
             </span>
           </td>
           <td style="text-align:right;">
-            <div style="display:inline-flex; gap:0.35rem; align-items:center;">
-              <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:4px 8px; font-size:0.75rem;" onclick="window.finApp.openPayslipModal(null, '${emp.id}')" title="Create Monthly Pay Slip">
+            <div style="display:inline-flex; gap:0.35rem; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+              <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:4px 9px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')" title="Record Monthly Salary & Deduct Balance">
+                💳 Record Payment
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:4px 9px; font-size:0.75rem; font-weight:600;" onclick="window.finApp.openEmployeeSalaryHistoryModal('${emp.id}', '3m')" title="View 1-Month, 3-Month & 6-Month Salary History">
+                📊 History (1-3 Mo)
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 8px; font-size:0.75rem;" onclick="window.finApp.openPayslipModal(null, '${emp.id}')" title="Create Monthly Pay Slip">
                 📜 Pay Slip
               </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.1); color:#38bdf8; border:1px solid rgba(56,189,248,0.25); padding:4px 7px; font-size:0.75rem;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Profile">
+              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 7px; font-size:0.75rem;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Profile">
                 ✏️
               </button>
               <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:4px 7px; font-size:0.75rem;" onclick="window.finApp.deleteEmployee('${emp.id}')" title="Delete Employee">
@@ -370,6 +436,7 @@ export function registerPayrollModules(FinanceApp) {
   proto.renderPayrollTab = function (root) {
     this.ensurePayrollSeedData();
     const payroll = (this.db?.payroll || []).filter(p => this.matchesActiveCompany(p.company_id));
+    const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
 
     const totalSlips = payroll.length;
     const paidSlips = payroll.filter(p => (p.status || '').toLowerCase() === 'paid');
@@ -383,6 +450,7 @@ export function registerPayrollModules(FinanceApp) {
 
     const monthsSet = new Set(payroll.map(p => p.month_year || p.period_label).filter(Boolean));
     const projects = (this.db?.projects || []).filter(p => this.matchesActiveCompany(p.company_id));
+    const currentPeriodFilter = this.payrollPeriodFilter || 'all';
 
     root.innerHTML = `
       <div class="fin-tab-header">
@@ -396,6 +464,9 @@ export function registerPayrollModules(FinanceApp) {
           </button>
           <button type="button" class="fin-btn-secondary" onclick="window.finApp.switchTab('employees')">
             👥 Employees Directory
+          </button>
+          <button type="button" class="fin-btn-primary" style="background:#10b981; border-color:#10b981;" onclick="window.finApp.openRecordEmployeePaymentModal()">
+            💳 Record Salary Payment
           </button>
           <button type="button" class="fin-btn-primary" onclick="window.finApp.openPayslipModal()">
             + Create Monthly Pay Slip
@@ -432,25 +503,53 @@ export function registerPayrollModules(FinanceApp) {
 
       <!-- Filters Toolbar -->
       <div class="fin-filter-bar" style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; margin-bottom:1.25rem; background:rgba(15,23,42,0.4); padding:1rem; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
-        <div style="flex:1; min-width:240px; position:relative;">
-          <input type="text" id="fin-pay-search" class="fin-form-input" placeholder="Search by slip #, employee, position, month, bank..." style="width:100%; padding-left:2.2rem;" oninput="window.finApp.filterPayrollRows()">
+        <!-- Period Filter Pills -->
+        <div style="display:flex; align-items:center; gap:0.35rem; background:rgba(15,23,42,0.6); padding:4px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+          <button type="button" class="fin-pay-period-pill ${currentPeriodFilter === 'all' ? 'active' : ''}" data-period="all" onclick="window.finApp.setPayrollPeriodFilter('all')" style="${currentPeriodFilter === 'all' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : 'background:rgba(255,255,255,0.06); color:#cbd5e1;'} padding:4px 10px; border-radius:6px; font-size:0.75rem; border:none; cursor:pointer;">
+            All Periods
+          </button>
+          <button type="button" class="fin-pay-period-pill ${currentPeriodFilter === '1m' ? 'active' : ''}" data-period="1m" onclick="window.finApp.setPayrollPeriodFilter('1m')" style="${currentPeriodFilter === '1m' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : 'background:rgba(255,255,255,0.06); color:#cbd5e1;'} padding:4px 10px; border-radius:6px; font-size:0.75rem; border:none; cursor:pointer;">
+            1 Month
+          </button>
+          <button type="button" class="fin-pay-period-pill ${currentPeriodFilter === '3m' ? 'active' : ''}" data-period="3m" onclick="window.finApp.setPayrollPeriodFilter('3m')" style="${currentPeriodFilter === '3m' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : 'background:rgba(255,255,255,0.06); color:#cbd5e1;'} padding:4px 10px; border-radius:6px; font-size:0.75rem; border:none; cursor:pointer;">
+            3 Months
+          </button>
+          <button type="button" class="fin-pay-period-pill ${currentPeriodFilter === '6m' ? 'active' : ''}" data-period="6m" onclick="window.finApp.setPayrollPeriodFilter('6m')" style="${currentPeriodFilter === '6m' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : 'background:rgba(255,255,255,0.06); color:#cbd5e1;'} padding:4px 10px; border-radius:6px; font-size:0.75rem; border:none; cursor:pointer;">
+            6 Months
+          </button>
+        </div>
+
+        <div style="flex:1; min-width:200px; position:relative;">
+          <input type="text" id="fin-pay-search" class="fin-form-input" placeholder="Search slip #, employee, bank, ref..." style="width:100%; padding-left:2.2rem;" oninput="window.finApp.filterPayrollRows()">
           <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b;">🔍</span>
         </div>
-        <select id="fin-pay-month-filter" class="fin-form-select" style="min-width:140px;" onchange="window.finApp.filterPayrollRows()">
-          <option value="">All Periods</option>
-          ${[...monthsSet].map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}
+
+        <!-- Filter by Employee -->
+        <select id="fin-pay-emp-filter" class="fin-form-select" style="min-width:180px;" onchange="window.finApp.filterPayrollRows()">
+          <option value="">All Employees (${employees.length})</option>
+          ${employees.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.employee_no)} - ${escapeHtml(e.name)}</option>`).join('')}
         </select>
+
+        <!-- Filter by Source Type -->
+        <select id="fin-pay-source-filter" class="fin-form-select" style="min-width:160px;" onchange="window.finApp.filterPayrollRows()">
+          <option value="">All Payment Sources</option>
+          <option value="bank">🏦 Bank Accounts</option>
+          <option value="cash">💵 RAYAN E-Wallets</option>
+        </select>
+
         <select id="fin-pay-status-filter" class="fin-form-select" style="min-width:130px;" onchange="window.finApp.filterPayrollRows()">
           <option value="">All Statuses</option>
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
           <option value="draft">Draft</option>
         </select>
-        <select id="fin-pay-proj-filter" class="fin-form-select" style="min-width:200px;" onchange="window.finApp.filterPayrollRows()">
+
+        <select id="fin-pay-proj-filter" class="fin-form-select" style="min-width:180px;" onchange="window.finApp.filterPayrollRows()">
           <option value="">All Projects</option>
           <option value="corporate">Corporate / Overhead</option>
           ${projects.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.code || '')} - ${escapeHtml(p.name)}</option>`).join('')}
         </select>
+
         <button type="button" class="fin-btn-secondary" onclick="window.finApp.renderPayrollTab(document.getElementById('fin-view-container'))">
           🔄 Refresh
         </button>
@@ -582,24 +681,55 @@ export function registerPayrollModules(FinanceApp) {
     }).join('');
   };
 
+  proto.setPayrollPeriodFilter = function (periodKey) {
+    this.payrollPeriodFilter = periodKey;
+    document.querySelectorAll('.fin-pay-period-pill').forEach(btn => {
+      if (btn.getAttribute('data-period') === periodKey) {
+        btn.classList.add('active');
+        btn.style.background = '#38bdf8';
+        btn.style.color = '#0f172a';
+        btn.style.fontWeight = '700';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = 'rgba(255,255,255,0.06)';
+        btn.style.color = '#cbd5e1';
+        btn.style.fontWeight = '500';
+      }
+    });
+    this.filterPayrollRows();
+  };
+
   proto.filterPayrollRows = function () {
     const q = (document.getElementById('fin-pay-search')?.value || '').toLowerCase().trim();
-    const month = (document.getElementById('fin-pay-month-filter')?.value || '').toLowerCase().trim();
+    const empId = (document.getElementById('fin-pay-emp-filter')?.value || '').trim();
+    const sourceFilter = (document.getElementById('fin-pay-source-filter')?.value || '').toLowerCase().trim();
     const status = (document.getElementById('fin-pay-status-filter')?.value || '').toLowerCase().trim();
     const prj = (document.getElementById('fin-pay-proj-filter')?.value || '').toLowerCase().trim();
+    const periodPill = this.payrollPeriodFilter || 'all';
 
     const payroll = (this.db?.payroll || []).filter(p => {
       if (!this.matchesActiveCompany(p.company_id)) return false;
 
       if (q) {
-        const hay = `${p.slip_no || ''} ${p.employee_name || ''} ${p.employee_no || ''} ${p.month_year || ''} ${p.bank_name || ''} ${p.project_name || ''}`.toLowerCase();
+        const hay = `${p.slip_no || ''} ${p.employee_name || ''} ${p.employee_no || ''} ${p.month_year || ''} ${p.bank_name || ''} ${p.payout_source_name || ''} ${p.project_name || ''} ${p.payout_reference || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
-      if (month && !(p.month_year || p.period_label || '').toLowerCase().includes(month)) return false;
+      if (empId) {
+        if (p.employee_id !== empId && p.employee_no !== empId) return false;
+      }
+      if (sourceFilter) {
+        if (sourceFilter === 'bank' && (p.payout_source_type || 'bank') !== 'bank') return false;
+        if (sourceFilter === 'cash' && (p.payout_source_type || 'bank') !== 'cash') return false;
+      }
       if (status && (p.status || 'draft').toLowerCase() !== status) return false;
       if (prj) {
         if (prj === 'corporate' && p.project_id) return false;
         if (prj !== 'corporate' && (p.project_id || '').toLowerCase() !== prj) return false;
+      }
+      if (periodPill && periodPill !== 'all') {
+        const periods = getPeriodsForFilter(periodPill);
+        const matchesPeriod = periods.some(period => doesSlipMatchPeriod(p, period));
+        if (!matchesPeriod) return false;
       }
 
       return true;
@@ -889,9 +1019,300 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   // ==========================================================================
-  // 5. PAYSLIP MODAL (CREATE / EDIT)
+  // 5. EMPLOYEE MONTH-WISE SALARY & PAYMENT HISTORY MODAL (1-Month, 3-Month, etc.)
   // ==========================================================================
-  proto.openPayslipModal = function (slipId = null, preselectedEmpId = null) {
+  proto.openEmployeeSalaryHistoryModal = function (empId, periodFilter = '3m') {
+    this.ensurePayrollSeedData();
+    this.lastEmployeeHistoryFilter = periodFilter;
+    const emp = (this.db?.employees || []).find(e => e.id === empId);
+    if (!emp) {
+      this.showToast ? this.showToast('Employee not found', 'error') : alert('Employee not found');
+      return;
+    }
+
+    const empSlips = (this.db?.payroll || []).filter(p => {
+      if (!this.matchesActiveCompany(p.company_id)) return false;
+      return p.employee_id === emp.id || (emp.employee_no && p.employee_no === emp.employee_no);
+    });
+
+    const periods = getPeriodsForEmployee(emp, periodFilter, empSlips);
+
+    const basic = Number(emp.basic_salary) || 0;
+    const acc = Number(emp.accommodation_allowance) || 0;
+    const cons = Number(emp.consolidated_allowance) || 0;
+    const oth = Number(emp.other_allowance) || 0;
+    const totalStandard = basic + acc + cons + oth;
+
+    // Calculate metrics for the period
+    let periodPaidCount = 0;
+    let periodUnpaidCount = 0;
+    let periodTotalPaid = 0;
+    let periodTotalPending = 0;
+
+    periods.forEach(p => {
+      const slip = empSlips.find(s => doesSlipMatchPeriod(s, p));
+      if (slip) {
+        if ((slip.status || '').toLowerCase() === 'paid') {
+          periodPaidCount++;
+          periodTotalPaid += Number(slip.net_pay || slip.transferred_amount || 0);
+        } else {
+          periodUnpaidCount++;
+          periodTotalPending += Number(slip.net_pay || slip.total_earnings || 0);
+        }
+      } else {
+        periodUnpaidCount++;
+        periodTotalPending += totalStandard;
+      }
+    });
+
+    // Generate Month Cards
+    const cardsHtml = periods.map(p => {
+      const slip = empSlips.find(s => doesSlipMatchPeriod(s, p));
+      if (slip) {
+        const isPaid = (slip.status || '').toLowerCase() === 'paid';
+        const netAmount = Number(slip.net_pay || slip.transferred_amount || 0);
+        const slipEarn = Number(slip.total_earnings) || (Number(slip.basic_salary || 0) + Number(slip.accommodation_allowance || 0) + Number(slip.consolidated_allowance || 0) + Number(slip.normal_overtime || 0));
+        const slipDed = Number(slip.total_deductions) || 0;
+        const sourceLabel = slip.payout_source_type === 'cash'
+          ? `💵 RAYAN E-Wallets (${escapeHtml(slip.payout_source_name || 'RAYAN E-Wallets')})`
+          : `🏦 ${escapeHtml(slip.payout_source_name || slip.bank_name || 'Bank Account')}`;
+
+        return `
+          <div style="background:${isPaid ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.06)'}; border:1px solid ${isPaid ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)'}; border-radius:12px; padding:1.25rem; margin-bottom:1rem; transition:all 0.2s ease;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem; margin-bottom:0.75rem;">
+              <div>
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                  <span style="font-size:1.1rem; font-weight:800; color:#f8fafc;">🗓️ ${escapeHtml(p.full)}</span>
+                  <span style="font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:10px; background:${isPaid ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.18)'}; color:${isPaid ? '#10b981' : '#f59e0b'}; border:1px solid ${isPaid ? '#10b981' : '#f59e0b'}40;">
+                    ${isPaid ? '✓ PAID & DEDUCTED' : '⏳ PENDING PAYOUT'}
+                  </span>
+                </div>
+                <div style="font-size:0.78rem; color:#94a3b8; margin-top:3px;">
+                  Pay Slip #: <strong style="color:#38bdf8; font-family:monospace;">${escapeHtml(slip.slip_no)}</strong>
+                  • Date: <strong>${escapeHtml(slip.payment_date || slip.printed_date || '---')}</strong>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.75rem; color:#94a3b8; font-weight:600;">Net Salary ${isPaid ? 'Paid' : 'Payable'}:</div>
+                <div style="font-size:1.35rem; font-weight:800; color:${isPaid ? '#10b981' : '#f59e0b'};">
+                  ${formatMoney(netAmount, slip.currency || 'AED')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Breakdown Pills -->
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.85rem; font-size:0.75rem; background:rgba(15,23,42,0.4); padding:0.65rem 0.85rem; border-radius:8px; border:1px solid rgba(255,255,255,0.04);">
+              <span style="color:#cbd5e1;">Basic: <strong style="color:#f8fafc;">${formatMoney(slip.basic_salary)}</strong></span>
+              <span style="color:#64748b;">•</span>
+              <span style="color:#cbd5e1;">Accom: <strong style="color:#f8fafc;">${formatMoney(slip.accommodation_allowance)}</strong></span>
+              <span style="color:#64748b;">•</span>
+              <span style="color:#cbd5e1;">Consol: <strong style="color:#f8fafc;">${formatMoney(slip.consolidated_allowance)}</strong></span>
+              ${Number(slip.normal_overtime) > 0 ? `
+                <span style="color:#64748b;">•</span>
+                <span style="color:#38bdf8;">OT: <strong style="color:#38bdf8;">${formatMoney(slip.normal_overtime)}</strong> (${escapeHtml(slip.overtime_hrs || '0')} hrs)</span>
+              ` : ''}
+              ${slipDed > 0 ? `
+                <span style="color:#64748b;">•</span>
+                <span style="color:#ef4444;">Deductions: <strong style="color:#ef4444;">-${formatMoney(slipDed)}</strong></span>
+              ` : ''}
+            </div>
+
+            <!-- Payout Source & Ref info -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:0.75rem;">
+              <div style="font-size:0.75rem; color:#94a3b8;">
+                <span style="font-weight:600; color:#cbd5e1;">Deduction Source:</span> ${sourceLabel}
+                ${slip.payout_reference ? `<span style="color:#64748b;"> • Ref: <code style="color:#38bdf8; font-family:monospace;">${escapeHtml(slip.payout_reference)}</code></span>` : ''}
+              </div>
+              <div style="display:inline-flex; gap:0.4rem; align-items:center;">
+                <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); padding:4px 9px; font-size:0.75rem;" onclick="window.finApp.openPayslipPrintModal('${slip.id}')" title="Print Official Replica PDF">
+                  🖨️ Payslip PDF
+                </button>
+                ${!isPaid ? `
+                  <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.2); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:4px 9px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openDisburseSalaryModal('${slip.id}')" title="Disburse and deduct now">
+                    💳 Deduct &amp; Disburse
+                  </button>
+                ` : ''}
+                <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 8px; font-size:0.75rem;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}', '${p.full}', '${slip.id}')" title="Edit Compensation Breakdown">
+                  ✏️ Edit
+                </button>
+                <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); padding:4px 7px; font-size:0.75rem;" onclick="window.finApp.deletePayslip('${slip.id}')" title="Delete Slip">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        // UNRECORDED MONTH
+        return `
+          <div style="background:rgba(30,41,59,0.35); border:1px dashed rgba(255,255,255,0.15); border-radius:12px; padding:1.25rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                <span style="font-size:1.05rem; font-weight:700; color:#f8fafc;">🗓️ ${escapeHtml(p.full)}</span>
+                <span style="font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.3);">
+                  ⚠️ Unrecorded / Not Paid
+                </span>
+              </div>
+              <div style="font-size:0.78rem; color:#94a3b8; margin-top:4px;">
+                Registered Standard Monthly Salary: <strong style="color:#10b981;">${formatMoney(totalStandard)}</strong> (Basic: ${formatMoney(basic)} + Accom: ${formatMoney(acc)} + Cons: ${formatMoney(cons)})
+              </div>
+            </div>
+            <div>
+              <button type="button" class="fin-btn-primary" style="background:#10b981; border-color:#10b981; padding:7px 14px; font-size:0.82rem; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}', '${p.full}')">
+                <span>💳</span> Record Payment for ${escapeHtml(p.full)}
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="fin-emp-history-modal-backdrop">
+        <div class="fin-modal" style="max-width:880px; width:95%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+          <!-- Header -->
+          <div class="fin-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                <span style="font-size:1.4rem;">📊</span>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; color:#f8fafc;">
+                  Month-Wise Salary &amp; Payment History
+                </h3>
+              </div>
+              <p style="margin:4px 0 0 0; font-size:0.78rem; color:#94a3b8;">
+                Track monthly compensation records, settlements, and bank / RAYAN E-Wallets deductions
+              </p>
+            </div>
+            <button type="button" class="fin-btn-ghost" onclick="window.finApp.closeEmployeeSalaryHistoryModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+          </div>
+
+          <div style="padding:1.5rem;">
+            <!-- Employee Profile Summary Card -->
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:1.2rem; margin-bottom:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <strong style="color:#f8fafc; font-size:1.1rem;">${escapeHtml(emp.name)}</strong>
+                    <span style="font-family:monospace; font-size:0.8rem; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 7px; border-radius:6px; border:1px solid rgba(56,189,248,0.3);">
+                      ${escapeHtml(emp.employee_no)}
+                    </span>
+                    <span style="font-size:0.72rem; padding:2px 8px; border-radius:12px; background:rgba(16,185,129,0.12); color:#10b981; font-weight:700;">
+                      ${escapeHtml(emp.status || 'Active')}
+                    </span>
+                  </div>
+                  <div style="font-size:0.82rem; color:#cbd5e1; margin-top:4px;">
+                    <strong>${escapeHtml(emp.position || 'Staff')}</strong> • <span style="color:#38bdf8;">${escapeHtml(emp.department || 'Rayan')}</span>
+                  </div>
+                  <div style="font-size:0.74rem; color:#94a3b8; margin-top:4px;">
+                    Allocation: <strong style="color:#f1f5f9;">${escapeHtml(emp.project_name || 'Corporate Overhead')}</strong>
+                    ${emp.iban ? ` • Bank: <span style="font-family:monospace; color:#cbd5e1;">${escapeHtml(emp.bank_name || 'Bank')} (${escapeHtml(emp.iban)})</span>` : ''}
+                  </div>
+                </div>
+
+                <div style="text-align:right;">
+                  <div style="font-size:0.72rem; color:#94a3b8; font-weight:600; text-transform:uppercase;">Registered Standard Salary:</div>
+                  <div style="font-size:1.35rem; font-weight:800; color:#10b981; margin:2px 0;">
+                    ${formatMoney(totalStandard, emp.currency || 'AED')}
+                  </div>
+                  <div style="font-size:0.7rem; color:#64748b;">
+                    Basic: ${formatMoney(basic)} • Acc: ${formatMoney(acc)} • Cons: ${formatMoney(cons)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Period Filter Pills Toolbar -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; margin-bottom:1.25rem;">
+              <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(15,23,42,0.6); padding:4px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                <button type="button" class="fin-doc-pill-btn ${periodFilter === '1m' ? 'active' : ''}" style="${periodFilter === '1m' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : ''}" onclick="window.finApp.openEmployeeSalaryHistoryModal('${emp.id}', '1m')">
+                  🗓️ 1 Month
+                </button>
+                <button type="button" class="fin-doc-pill-btn ${periodFilter === '3m' ? 'active' : ''}" style="${periodFilter === '3m' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : ''}" onclick="window.finApp.openEmployeeSalaryHistoryModal('${emp.id}', '3m')">
+                  🗓️ 3 Months (Quarter)
+                </button>
+                <button type="button" class="fin-doc-pill-btn ${periodFilter === '6m' ? 'active' : ''}" style="${periodFilter === '6m' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : ''}" onclick="window.finApp.openEmployeeSalaryHistoryModal('${emp.id}', '6m')">
+                  🗓️ 6 Months (Half-Year)
+                </button>
+                <button type="button" class="fin-doc-pill-btn ${periodFilter === 'all' ? 'active' : ''}" style="${periodFilter === 'all' ? 'background:#38bdf8; color:#0f172a; font-weight:700;' : ''}" onclick="window.finApp.openEmployeeSalaryHistoryModal('${emp.id}', 'all')">
+                  🌐 All Recorded History
+                </button>
+              </div>
+
+              <button type="button" class="fin-btn-primary" style="background:#10b981; border-color:#10b981;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')">
+                + Record Monthly Payment
+              </button>
+            </div>
+
+            <!-- Metrics Summary Strip -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:0.75rem; margin-bottom:1.5rem;">
+              <div style="background:rgba(15,23,42,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:0.85rem;">
+                <div style="font-size:0.7rem; color:#94a3b8; font-weight:600;">Timeframe Range</div>
+                <div style="font-size:1.15rem; font-weight:800; color:#38bdf8; margin-top:2px;">
+                  ${periodFilter === '1m' ? 'Last 1 Month' : (periodFilter === '3m' ? 'Last 3 Months' : (periodFilter === '6m' ? 'Last 6 Months' : 'All Months'))}
+                </div>
+                <div style="font-size:0.68rem; color:#64748b;">${periods.length} monthly cycles</div>
+              </div>
+              <div style="background:rgba(15,23,42,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:0.85rem;">
+                <div style="font-size:0.7rem; color:#94a3b8; font-weight:600;">Settled (Paid)</div>
+                <div style="font-size:1.15rem; font-weight:800; color:#10b981; margin-top:2px;">
+                  ${periodPaidCount} / ${periods.length}
+                </div>
+                <div style="font-size:0.68rem; color:#64748b;">Deducted from Bank/Wallets</div>
+              </div>
+              <div style="background:rgba(15,23,42,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:0.85rem;">
+                <div style="font-size:0.7rem; color:#94a3b8; font-weight:600;">Total Net Disbursed</div>
+                <div style="font-size:1.15rem; font-weight:800; color:#10b981; margin-top:2px;">
+                  ${formatMoney(periodTotalPaid)}
+                </div>
+                <div style="font-size:0.68rem; color:#64748b;">Actual payout amount</div>
+              </div>
+              <div style="background:rgba(15,23,42,0.5); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:0.85rem;">
+                <div style="font-size:0.7rem; color:#94a3b8; font-weight:600;">Unrecorded / Pending</div>
+                <div style="font-size:1.15rem; font-weight:800; color:${periodUnpaidCount > 0 ? '#f59e0b' : '#64748b'}; margin-top:2px;">
+                  ${periodUnpaidCount} months
+                </div>
+                <div style="font-size:0.68rem; color:#64748b;">Awaiting recording/payout</div>
+              </div>
+            </div>
+
+            <!-- Month Cards Timeline -->
+            <div style="margin-bottom:1rem;">
+              <div style="font-size:0.82rem; font-weight:700; color:#cbd5e1; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.75rem;">
+                Month-by-Month Payment Breakdown
+              </div>
+              ${cardsHtml}
+            </div>
+
+            <!-- Footer Action -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:1.25rem; margin-top:1rem;">
+              <div style="font-size:0.75rem; color:#94a3b8;">
+                Click "+ Record Payment" on any unrecorded month to calculate salary and deduct from Bank or RAYAN E-Wallets.
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeEmployeeSalaryHistoryModal()">
+                  Close
+                </button>
+                <button type="button" class="fin-btn-primary" style="background:#10b981; border-color:#10b981;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')">
+                  💳 + Record Monthly Payment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.showCustomModal(modalHtml);
+  };
+
+  proto.closeEmployeeSalaryHistoryModal = function () {
+    this.closeCustomModal('fin-emp-history-modal-backdrop');
+  };
+
+  // ==========================================================================
+  // 6. RECORD EMPLOYEE SALARY PAYMENT MODAL (MONTH-WISE & DIRECT DEDUCTIONS)
+  // ==========================================================================
+  proto.openRecordEmployeePaymentModal = function (empId = null, defaultMonth = null, slipId = null) {
     this.ensurePayrollSeedData();
     let slip = null;
     if (slipId) {
@@ -903,71 +1324,214 @@ export function registerPayrollModules(FinanceApp) {
     const bankAccounts = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
     const cashRegisters = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
 
-    // Choose target employee
+    // Determine target employee
     let targetEmp = null;
     if (slip?.employee_id) {
       targetEmp = employees.find(e => e.id === slip.employee_id);
-    } else if (preselectedEmpId) {
-      targetEmp = employees.find(e => e.id === preselectedEmpId);
+    } else if (empId) {
+      targetEmp = employees.find(e => e.id === empId);
     } else if (employees.length > 0) {
       targetEmp = employees[0];
     }
 
     const isEdit = Boolean(slip);
-    const slipNo = slip?.slip_no || `PSJune 2026/${targetEmp?.employee_no || 'EN12001'}`;
+    const targetMonth = defaultMonth || slip?.period_label || slip?.month_year || 'June 2026';
+    const slipNo = slip?.slip_no || `PS${targetMonth.replace(/\s+/g, '')}/${targetEmp?.employee_no || 'EN12001'}`;
+
+    const basicSalary = slip?.basic_salary ?? (targetEmp?.basic_salary ?? 9500);
+    const accAllowance = slip?.accommodation_allowance ?? (targetEmp?.accommodation_allowance ?? 12500);
+    const consAllowance = slip?.consolidated_allowance ?? (targetEmp?.consolidated_allowance ?? 8000);
+    const otAmount = slip?.normal_overtime ?? 0;
+    const otHrs = slip?.overtime_hrs ?? '0.0';
+    const otherEarn = slip?.other_earnings ?? 0;
+
+    const advDed = slip?.advance_deduction ?? 0;
+    const absDed = slip?.absence_deduction ?? 0;
+    const loanDed = slip?.loan_deduction ?? 0;
+
+    const sourceType = slip?.payout_source_type || 'bank';
+    const defaultStatus = slip?.status || 'Paid';
+
+    // Bank accounts options
+    const bankOpts = (bankAccounts.length > 0 ? bankAccounts : [
+      { id: 'bank-adcb-uae', bank_name: 'Abu Dhabi Commercial Bank (ADCB)', balance: 3114846.10 }
+    ]).map(b => `<option value="${escapeHtml(b.id)}" ${slip?.payout_source_id === b.id ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>`).join('');
+
+    // Cash registers options
+    const cashOpts = (cashRegisters.length > 0 ? cashRegisters : [
+      { id: 'cash-mw5esv3w', register_name: 'RAYAN E-Wallets', balance: 1326786.10 }
+    ]).map(c => `<option value="${escapeHtml(c.id)}" ${(slip?.payout_source_id === c.id || (!slip?.payout_source_id && (c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('wallet')))) ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${formatMoney(c.balance)})</option>`).join('');
 
     const html = `
-      <div class="fin-modal-backdrop open" id="fin-payslip-modal-backdrop">
-        <div class="fin-modal" style="max-width:850px; width:95%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+      <div class="fin-modal-backdrop open" id="fin-record-payment-modal-backdrop">
+        <div class="fin-modal" style="max-width:880px; width:95%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+          <!-- Header -->
           <div class="fin-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.08);">
             <div>
-              <h3 class="fin-modal-title" style="margin:0; font-size:1.15rem; color:#f8fafc;">
-                ${isEdit ? '✏️ Edit Monthly Pay Slip' : '📜 Create Official Monthly Pay Slip'}
-              </h3>
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                <span style="font-size:1.3rem;">💳</span>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; color:#f8fafc;">
+                  ${isEdit ? '✏️ Edit Month-Wise Salary Payment' : '💳 Record Month-Wise Salary Payment'}
+                </h3>
+              </div>
               <p style="margin:4px 0 0 0; font-size:0.75rem; color:#94a3b8;">
-                Generate official payroll voucher, calculate net earnings &amp; configure account payout deductions
+                Enter monthly salary elements, calculate net pay &amp; immediately deduct balance from Bank Account or RAYAN E-Wallets
               </p>
             </div>
-            <button type="button" class="fin-btn-ghost" onclick="window.finApp.closePayslipModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+            <button type="button" class="fin-btn-ghost" onclick="window.finApp.closeRecordEmployeePaymentModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
           </div>
 
-          <form id="fin-payslip-form" onsubmit="window.finApp.savePayslipForm(event)" style="padding:1.5rem;">
+          <form id="fin-record-payment-form" onsubmit="window.finApp.saveRecordEmployeePaymentForm(event)" style="padding:1.5rem;">
             <input type="hidden" name="id" value="${slip?.id || ''}">
 
-            <!-- Section 1: Employee Selection & Pay Period -->
-            <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
-              <div>
-                <label class="fin-form-label">Select Employee *</label>
-                <select name="employee_id" id="fin-ps-emp-select" class="fin-form-select" required onchange="window.finApp.onPayslipEmployeeChange(this.value)">
-                  ${employees.map(e => `
-                    <option value="${escapeHtml(e.id)}" ${(targetEmp?.id === e.id) ? 'selected' : ''}>
-                      ${escapeHtml(e.employee_no)} — ${escapeHtml(e.name)} (${escapeHtml(e.position || 'Staff')})
-                    </option>
-                  `).join('')}
-                </select>
-              </div>
-              <div>
-                <label class="fin-form-label">Pay Slip Reference # *</label>
-                <input type="text" name="slip_no" id="fin-ps-slip-no" class="fin-form-input" required value="${escapeHtml(slipNo)}" placeholder="PSJune 2026/EN12001">
-              </div>
-              <div>
-                <label class="fin-form-label">Month &amp; Period *</label>
-                <input type="text" name="month_year" class="fin-form-input" required value="${escapeHtml(slip?.month_year || 'Jun-26')}" placeholder="e.g. Jun-26">
+            <!-- Section 1: Employee & Target Month -->
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.1rem; margin-bottom:1.25rem;">
+              <div style="display:grid; grid-template-columns:1.5fr 1.2fr 1fr; gap:1rem;">
+                <div>
+                  <label class="fin-form-label">Registered Employee *</label>
+                  <select name="employee_id" id="fin-rec-emp-select" class="fin-form-select" required onchange="window.finApp.onRecordEmpChange(this.value)">
+                    ${employees.map(e => `
+                      <option value="${escapeHtml(e.id)}" ${(targetEmp?.id === e.id) ? 'selected' : ''}>
+                        ${escapeHtml(e.employee_no)} — ${escapeHtml(e.name)} (${escapeHtml(e.position || 'Staff')})
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="fin-form-label">Select Month / Period *</label>
+                  <div style="display:flex; gap:0.5rem;">
+                    <select name="month_period_select" id="fin-rec-month-select" class="fin-form-select" onchange="window.finApp.onRecordMonthSelectChange(this.value)">
+                      ${PAYROLL_PERIODS.map(p => `
+                        <option value="${escapeHtml(p.full)}" ${(targetMonth === p.full || targetMonth === p.short || targetMonth === p.key) ? 'selected' : ''}>
+                          ${escapeHtml(p.full)} (${escapeHtml(p.short)})
+                        </option>
+                      `).join('')}
+                      <option value="custom">Custom Month...</option>
+                    </select>
+                    <input type="text" name="month_year" id="fin-rec-month-input" class="fin-form-input" style="display:none; width:120px;" placeholder="e.g. May 2026" value="${escapeHtml(targetMonth)}">
+                  </div>
+                  <!-- Quick Month Buttons -->
+                  <div style="display:flex; gap:0.35rem; margin-top:0.4rem;">
+                    <button type="button" class="fin-doc-pill-btn" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.setRecordMonth('June 2026')">June 2026</button>
+                    <button type="button" class="fin-doc-pill-btn" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.setRecordMonth('May 2026')">May 2026</button>
+                    <button type="button" class="fin-doc-pill-btn" style="padding:2px 7px; font-size:0.7rem;" onclick="window.finApp.setRecordMonth('April 2026')">April 2026</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="fin-form-label">Pay Slip # Ref</label>
+                  <input type="text" name="slip_no" id="fin-rec-slip-no" class="fin-form-input" required value="${escapeHtml(slipNo)}" placeholder="PSJune2026/EN12001">
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 2fr; gap:1rem; margin-bottom:1.25rem;">
+            <!-- Section 2: Salary Earnings Breakdown -->
+            <div style="font-size:0.78rem; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;">
+              1. Monthly Earnings &amp; Allowances (AED)
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
               <div>
-                <label class="fin-form-label">Printed Date</label>
-                <input type="text" name="printed_date" class="fin-form-input" value="${escapeHtml(slip?.printed_date || '10-Jul-26')}">
+                <label class="fin-form-label">Basic Salary *</label>
+                <input type="number" step="0.01" name="basic_salary" id="fin-rec-basic" class="fin-form-input" required value="${basicSalary}" oninput="window.finApp.calcRecordPaymentTotals()">
               </div>
               <div>
-                <label class="fin-form-label">Payment Due / Date</label>
-                <input type="date" name="payment_date" class="fin-form-input" value="${slip?.payment_date || new Date().toISOString().split('T')[0]}">
+                <label class="fin-form-label">Accommodation</label>
+                <input type="number" step="0.01" name="accommodation_allowance" id="fin-rec-acc" class="fin-form-input" value="${accAllowance}" oninput="window.finApp.calcRecordPaymentTotals()">
               </div>
               <div>
-                <label class="fin-form-label">Project Cost Center (Profit &amp; Loss Deduction) *</label>
-                <select name="project_id" class="fin-form-select" id="fin-ps-proj-select">
+                <label class="fin-form-label">Consolidated</label>
+                <input type="number" step="0.01" name="consolidated_allowance" id="fin-rec-cons" class="fin-form-input" value="${consAllowance}" oninput="window.finApp.calcRecordPaymentTotals()">
+              </div>
+              <div>
+                <label class="fin-form-label">Overtime (AED)</label>
+                <input type="number" step="0.01" name="normal_overtime" id="fin-rec-ot" class="fin-form-input" value="${otAmount}" oninput="window.finApp.calcRecordPaymentTotals()">
+              </div>
+              <div>
+                <label class="fin-form-label">OT Hours</label>
+                <input type="text" name="overtime_hrs" id="fin-rec-ot-hrs" class="fin-form-input" value="${escapeHtml(otHrs)}" placeholder="e.g. 10.0">
+              </div>
+            </div>
+
+            <!-- Section 3: Deductions Breakdown -->
+            <div style="font-size:0.78rem; font-weight:700; color:#ef4444; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
+              2. Deductions (AED)
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-form-label">Salary Advance Deductions</label>
+                <input type="number" step="0.01" name="advance_deduction" id="fin-rec-adv" class="fin-form-input" value="${advDed}" oninput="window.finApp.calcRecordPaymentTotals()">
+              </div>
+              <div>
+                <label class="fin-form-label">Absences / Unpaid Leaves</label>
+                <input type="number" step="0.01" name="absence_deduction" id="fin-rec-abs" class="fin-form-input" value="${absDed}" oninput="window.finApp.calcRecordPaymentTotals()">
+              </div>
+              <div>
+                <label class="fin-form-label">Loan / Other Deductions</label>
+                <input type="number" step="0.01" name="loan_deduction" id="fin-rec-loan" class="fin-form-input" value="${loanDed}" oninput="window.finApp.calcRecordPaymentTotals()">
+              </div>
+            </div>
+
+            <!-- Live Calculation Summary Card -->
+            <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:1rem 1.25rem; display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:1rem; align-items:center; margin-bottom:1.25rem;">
+              <div>
+                <span style="font-size:0.74rem; color:#94a3b8; display:block;">Gross Monthly Earnings:</span>
+                <strong id="fin-rec-tot-earn" style="font-size:1.15rem; color:#38bdf8;">AED 30,000.00</strong>
+              </div>
+              <div>
+                <span style="font-size:0.74rem; color:#94a3b8; display:block;">Total Deductions:</span>
+                <strong id="fin-rec-tot-ded" style="font-size:1.15rem; color:#ef4444;">AED 0.00</strong>
+              </div>
+              <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.6rem 1rem;">
+                <span style="font-size:0.75rem; color:#10b981; font-weight:700; display:block;">Net Salary Payable / Deducted:</span>
+                <strong id="fin-rec-net-pay" style="font-size:1.35rem; color:#10b981;">AED 30,000.00</strong>
+              </div>
+            </div>
+
+            <!-- Section 4: Deduction Source (Bank Account vs RAYAN E-Wallets) -->
+            <div style="font-size:0.78rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
+              3. Payout Source &amp; Direct Account Deduction
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1.3fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-form-label">Deduct Balance From *</label>
+                <select name="payout_source_type" id="fin-rec-source-type" class="fin-form-select" required onchange="window.finApp.onRecordSourceTypeChange(this.value)">
+                  <option value="bank" ${sourceType === 'bank' ? 'selected' : ''}>🏦 Bank Account (Wire Transfer)</option>
+                  <option value="cash" ${sourceType === 'cash' ? 'selected' : ''}>💵 RAYAN E-Wallets / Cash in Hand</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="fin-form-label">Specific Account / Register *</label>
+                <select name="payout_source_id" id="fin-rec-source-id" class="fin-form-select" required>
+                  ${sourceType === 'cash' ? cashOpts : bankOpts}
+                </select>
+              </div>
+
+              <div>
+                <label class="fin-form-label">Payment Status *</label>
+                <select name="status" id="fin-rec-status" class="fin-form-select">
+                  <option value="Paid" ${defaultStatus === 'Paid' ? 'selected' : ''}>✓ Paid (Deduct Immediately)</option>
+                  <option value="Pending" ${defaultStatus === 'Pending' ? 'selected' : ''}>⏳ Pending (Pay Later)</option>
+                  <option value="Draft" ${defaultStatus === 'Draft' ? 'selected' : ''}>📝 Draft</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:1rem; margin-bottom:1.25rem;">
+              <div>
+                <label class="fin-form-label">Payment / Disbursement Date</label>
+                <input type="date" name="payment_date" class="fin-form-input" required value="${slip?.payment_date || new Date().toISOString().split('T')[0]}">
+              </div>
+
+              <div>
+                <label class="fin-form-label">Transaction / Cheque Ref #</label>
+                <input type="text" name="payout_reference" class="fin-form-input" value="${escapeHtml(slip?.payout_reference || `TXN-PAYROLL-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${targetEmp?.employee_no || 'EN'}`)}">
+              </div>
+
+              <div>
+                <label class="fin-form-label">Project Labor Cost Center (P&amp;L Deduction)</label>
+                <select name="project_id" class="fin-form-select" id="fin-rec-proj-select">
                   <option value="">Corporate / General Overhead (No Project)</option>
                   ${projects.map(p => `
                     <option value="${escapeHtml(p.id)}" ${(slip?.project_id === p.id || (!slip && targetEmp?.project_id === p.id)) ? 'selected' : ''}>
@@ -978,113 +1542,17 @@ export function registerPayrollModules(FinanceApp) {
               </div>
             </div>
 
-            <!-- Section 2: Earnings & Allowances -->
-            <div style="font-size:0.78rem; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
-              Earnings Elements (AED)
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Basic Salary</label>
-                <input type="number" step="0.01" name="basic_salary" id="fin-ps-basic" class="fin-form-input" value="${slip?.basic_salary ?? (targetEmp?.basic_salary ?? 9500)}" oninput="window.finApp.calcPayslipTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">Accommodation</label>
-                <input type="number" step="0.01" name="accommodation_allowance" id="fin-ps-acc" class="fin-form-input" value="${slip?.accommodation_allowance ?? (targetEmp?.accommodation_allowance ?? 12500)}" oninput="window.finApp.calcPayslipTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">Consolidated</label>
-                <input type="number" step="0.01" name="consolidated_allowance" id="fin-ps-cons" class="fin-form-input" value="${slip?.consolidated_allowance ?? (targetEmp?.consolidated_allowance ?? 8000)}" oninput="window.finApp.calcPayslipTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">OT Amount</label>
-                <input type="number" step="0.01" name="normal_overtime" id="fin-ps-ot" class="fin-form-input" value="${slip?.normal_overtime ?? 1000}" oninput="window.finApp.calcPayslipTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">OT Hours</label>
-                <input type="text" name="overtime_hrs" class="fin-form-input" value="${escapeHtml(slip?.overtime_hrs ?? '10.0')}" placeholder="e.g. 10.0">
-              </div>
-            </div>
-
-            <!-- Section 3: Deductions -->
-            <div style="font-size:0.78rem; font-weight:700; color:#ef4444; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
-              Deductions Elements (AED)
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Salary Advance Deductions</label>
-                <input type="number" step="0.01" name="advance_deduction" id="fin-ps-adv" class="fin-form-input" value="${slip?.advance_deduction ?? 0}" oninput="window.finApp.calcPayslipTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">Absences / Unpaid Leaves</label>
-                <input type="number" step="0.01" name="absence_deduction" id="fin-ps-abs" class="fin-form-input" value="${slip?.absence_deduction ?? 0}" oninput="window.finApp.calcPayslipTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">Loan / Other Deductions</label>
-                <input type="number" step="0.01" name="loan_deduction" id="fin-ps-loan" class="fin-form-input" value="${slip?.loan_deduction ?? 0}" oninput="window.finApp.calcPayslipTotals()">
-              </div>
-            </div>
-
-            <!-- Summary Totals Preview -->
-            <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:1rem; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
-              <div>
-                <span style="font-size:0.75rem; color:#94a3b8; display:block;">Total Gross Earnings:</span>
-                <strong id="fin-ps-tot-earn" style="font-size:1.15rem; color:#38bdf8;">AED 31,000.00</strong>
-              </div>
-              <div>
-                <span style="font-size:0.75rem; color:#94a3b8; display:block;">Total Deductions:</span>
-                <strong id="fin-ps-tot-ded" style="font-size:1.15rem; color:#ef4444;">AED 0.00</strong>
-              </div>
-              <div style="background:rgba(16,185,129,0.12); padding:0.4rem 0.8rem; border-radius:8px; border:1px solid rgba(16,185,129,0.3);">
-                <span style="font-size:0.75rem; color:#10b981; font-weight:700; display:block;">Net Payable:</span>
-                <strong id="fin-ps-net-pay" style="font-size:1.25rem; color:#10b981;">AED 31,000.00</strong>
-              </div>
-            </div>
-
-            <!-- Section 4: Bank & Payout Execution Settings -->
-            <div style="font-size:0.78rem; font-weight:700; color:#c084fc; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
-              4. Payment &amp; Balance Deduction Settings
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Payment Status</label>
-                <select name="status" id="fin-ps-status" class="fin-form-select" onchange="window.finApp.onPayslipStatusChange(this.value)">
-                  <option value="Paid" ${slip?.status === 'Paid' ? 'selected' : ''}>Paid (Deduct from Account Now)</option>
-                  <option value="Pending" ${slip?.status === 'Pending' || !slip ? 'selected' : ''}>Pending / Awaiting Payout</option>
-                  <option value="Draft" ${slip?.status === 'Draft' ? 'selected' : ''}>Draft</option>
-                </select>
-              </div>
-              <div id="fin-ps-source-type-wrap">
-                <label class="fin-form-label">Disburse / Deduct From</label>
-                <select name="payout_source_type" id="fin-ps-source-type" class="fin-form-select" onchange="window.finApp.onPayslipSourceTypeChange(this.value)">
-                  <option value="bank" ${slip?.payout_source_type === 'bank' || !slip ? 'selected' : ''}>Bank Account</option>
-                  <option value="cash" ${slip?.payout_source_type === 'cash' ? 'selected' : ''}>RAYAN E-Wallets / Cash in Hand</option>
-                </select>
-              </div>
-              <div id="fin-ps-source-acc-wrap">
-                <label class="fin-form-label">Specific Account / Register</label>
-                <select name="payout_source_id" id="fin-ps-source-id" class="fin-form-select">
-                  ${bankAccounts.map(b => `<option value="${escapeHtml(b.id)}" ${slip?.payout_source_id === b.id ? 'selected' : ''}>🏦 ${escapeHtml(b.bank_name)} (${this.formatCurrency(b.balance)})</option>`).join('')}
-                </select>
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
-              <div>
-                <label class="fin-form-label">Pay Method Text on Slip</label>
-                <input type="text" name="pay_method" class="fin-form-input" value="${escapeHtml(slip?.pay_method || targetEmp?.default_pay_method || 'AED RAYAN GROUP Host To Host')}">
-              </div>
-              <div>
-                <label class="fin-form-label">Payout Reference / Cheque #</label>
-                <input type="text" name="payout_reference" class="fin-form-input" value="${escapeHtml(slip?.payout_reference || `TXN-PAYROLL-${new Date().toISOString().slice(0,10).replace(/-/g,'')}`)}" placeholder="e.g. TXN-PAYROLL-20260710-01">
-              </div>
-            </div>
-
             <!-- Footer Buttons -->
-            <div style="display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1.25rem;">
-              <button type="button" class="fin-btn-secondary" onclick="window.finApp.closePayslipModal()">Cancel</button>
-              <button type="submit" class="fin-btn-primary">
-                ${isEdit ? '💾 Update Pay Slip' : '✓ Generate &amp; Save Pay Slip'}
-              </button>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:1.25rem;">
+              <div style="font-size:0.75rem; color:#94a3b8;">
+                Selecting <strong>"Paid"</strong> will automatically deduct the net salary from the chosen Bank Account or RAYAN E-Wallets and record the ledger voucher.
+              </div>
+              <div style="display:flex; gap:0.75rem;">
+                <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeRecordEmployeePaymentModal()">Cancel</button>
+                <button type="submit" class="fin-btn-primary" style="background:#10b981; border-color:#10b981; padding:8px 16px; font-weight:700;">
+                  ✓ Confirm &amp; Save Payment
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -1092,77 +1560,136 @@ export function registerPayrollModules(FinanceApp) {
     `;
 
     this.showCustomModal(html);
-    this.calcPayslipTotals();
-    this.onPayslipSourceTypeChange(slip?.payout_source_type || 'bank');
+    this.calcRecordPaymentTotals();
   };
 
-  proto.onPayslipEmployeeChange = function (empId) {
+  proto.closeRecordEmployeePaymentModal = function () {
+    this.closeCustomModal('fin-record-payment-modal-backdrop');
+  };
+
+  proto.setRecordMonth = function (monthName) {
+    const sel = document.getElementById('fin-rec-month-select');
+    const input = document.getElementById('fin-rec-month-input');
+    if (sel) {
+      sel.value = monthName;
+      if (sel.value !== monthName) {
+        sel.value = 'custom';
+        if (input) {
+          input.style.display = 'block';
+          input.value = monthName;
+        }
+      } else if (input) {
+        input.style.display = 'none';
+        input.value = monthName;
+      }
+    }
+    const empId = document.getElementById('fin-rec-emp-select')?.value;
+    const emp = (this.db?.employees || []).find(e => e.id === empId);
+    const slipNoEl = document.getElementById('fin-rec-slip-no');
+    if (slipNoEl && emp) {
+      slipNoEl.value = `PS${monthName.replace(/\s+/g, '')}/${emp.employee_no || 'EN'}`;
+    }
+  };
+
+  proto.onRecordMonthSelectChange = function (val) {
+    const input = document.getElementById('fin-rec-month-input');
+    if (val === 'custom') {
+      if (input) {
+        input.style.display = 'block';
+        input.focus();
+      }
+    } else {
+      if (input) {
+        input.style.display = 'none';
+        input.value = val;
+      }
+      const empId = document.getElementById('fin-rec-emp-select')?.value;
+      const emp = (this.db?.employees || []).find(e => e.id === empId);
+      const slipNoEl = document.getElementById('fin-rec-slip-no');
+      if (slipNoEl && emp) {
+        slipNoEl.value = `PS${val.replace(/\s+/g, '')}/${emp.employee_no || 'EN'}`;
+      }
+    }
+  };
+
+  proto.onRecordEmpChange = function (empId) {
     const emp = (this.db?.employees || []).find(e => e.id === empId);
     if (!emp) return;
 
-    const slipNoEl = document.getElementById('fin-ps-slip-no');
-    if (slipNoEl && slipNoEl.value.includes('/')) {
-      const prefix = slipNoEl.value.split('/')[0];
-      slipNoEl.value = `${prefix}/${emp.employee_no || 'EN---'}`;
+    const monthVal = document.getElementById('fin-rec-month-select')?.value || 'June 2026';
+    const slipNoEl = document.getElementById('fin-rec-slip-no');
+    if (slipNoEl) {
+      slipNoEl.value = `PS${monthVal.replace(/\s+/g, '')}/${emp.employee_no || 'EN'}`;
     }
 
-    if (emp.basic_salary !== undefined) document.getElementById('fin-ps-basic').value = emp.basic_salary;
-    if (emp.accommodation_allowance !== undefined) document.getElementById('fin-ps-acc').value = emp.accommodation_allowance;
-    if (emp.consolidated_allowance !== undefined) document.getElementById('fin-ps-cons').value = emp.consolidated_allowance;
+    if (emp.basic_salary !== undefined) {
+      const el = document.getElementById('fin-rec-basic');
+      if (el) el.value = emp.basic_salary;
+    }
+    if (emp.accommodation_allowance !== undefined) {
+      const el = document.getElementById('fin-rec-acc');
+      if (el) el.value = emp.accommodation_allowance;
+    }
+    if (emp.consolidated_allowance !== undefined) {
+      const el = document.getElementById('fin-rec-cons');
+      if (el) el.value = emp.consolidated_allowance;
+    }
 
-    const projSel = document.getElementById('fin-ps-proj-select');
+    const projSel = document.getElementById('fin-rec-proj-select');
     if (projSel && emp.project_id) {
       projSel.value = emp.project_id;
     }
 
-    this.calcPayslipTotals();
+    this.calcRecordPaymentTotals();
   };
 
-  proto.calcPayslipTotals = function () {
-    const basic = parseFloat(document.getElementById('fin-ps-basic')?.value) || 0;
-    const acc = parseFloat(document.getElementById('fin-ps-acc')?.value) || 0;
-    const cons = parseFloat(document.getElementById('fin-ps-cons')?.value) || 0;
-    const ot = parseFloat(document.getElementById('fin-ps-ot')?.value) || 0;
-    const totEarn = basic + acc + cons + ot;
-
-    const adv = parseFloat(document.getElementById('fin-ps-adv')?.value) || 0;
-    const abs = parseFloat(document.getElementById('fin-ps-abs')?.value) || 0;
-    const loan = parseFloat(document.getElementById('fin-ps-loan')?.value) || 0;
-    const totDed = adv + abs + loan;
-
-    const net = Math.max(0, totEarn - totDed);
-
-    const earnEl = document.getElementById('fin-ps-tot-earn');
-    const dedEl = document.getElementById('fin-ps-tot-ded');
-    const netEl = document.getElementById('fin-ps-net-pay');
-
-    if (earnEl) earnEl.textContent = this.formatCurrency(totEarn);
-    if (dedEl) dedEl.textContent = this.formatCurrency(totDed);
-    if (netEl) netEl.textContent = this.formatCurrency(net);
-  };
-
-  proto.onPayslipSourceTypeChange = function (type) {
-    const idSel = document.getElementById('fin-ps-source-id');
+  proto.onRecordSourceTypeChange = function (type) {
+    const idSel = document.getElementById('fin-rec-source-id');
     if (!idSel) return;
 
     if (type === 'cash') {
       const cashRegisters = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
-      idSel.innerHTML = cashRegisters.map(c => `
-        <option value="${escapeHtml(c.id)}">💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${this.formatCurrency(c.balance)})</option>
+      const list = cashRegisters.length > 0 ? cashRegisters : [
+        { id: 'cash-mw5esv3w', register_name: 'RAYAN E-Wallets', balance: 1326786.10 }
+      ];
+      idSel.innerHTML = list.map(c => `
+        <option value="${escapeHtml(c.id)}" ${(c.id === 'cash-mw5esv3w' || (c.register_name || '').toLowerCase().includes('wallet')) ? 'selected' : ''}>💵 ${escapeHtml(c.register_name || 'RAYAN E-Wallets')} (${formatMoney(c.balance)})</option>
       `).join('');
     } else {
       const bankAccounts = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
-      idSel.innerHTML = bankAccounts.map(b => `
-        <option value="${escapeHtml(b.id)}">🏦 ${escapeHtml(b.bank_name)} (${this.formatCurrency(b.balance)})</option>
+      const list = bankAccounts.length > 0 ? bankAccounts : [
+        { id: 'bank-adcb-uae', bank_name: 'Abu Dhabi Commercial Bank (ADCB)', balance: 3114846.10 }
+      ];
+      idSel.innerHTML = list.map(b => `
+        <option value="${escapeHtml(b.id)}">🏦 ${escapeHtml(b.bank_name)} (${formatMoney(b.balance)})</option>
       `).join('');
     }
   };
 
-  proto.closePayslipModal = function () {
-    this.closeCustomModal('fin-payslip-modal-backdrop');
+  proto.calcRecordPaymentTotals = function () {
+    const basic = parseFloat(document.getElementById('fin-rec-basic')?.value) || 0;
+    const acc = parseFloat(document.getElementById('fin-rec-acc')?.value) || 0;
+    const cons = parseFloat(document.getElementById('fin-rec-cons')?.value) || 0;
+    const ot = parseFloat(document.getElementById('fin-rec-ot')?.value) || 0;
+    const totEarn = basic + acc + cons + ot;
+
+    const adv = parseFloat(document.getElementById('fin-rec-adv')?.value) || 0;
+    const abs = parseFloat(document.getElementById('fin-rec-abs')?.value) || 0;
+    const loan = parseFloat(document.getElementById('fin-rec-loan')?.value) || 0;
+    const totDed = adv + abs + loan;
+
+    const net = Math.max(0, totEarn - totDed);
+
+    const earnEl = document.getElementById('fin-rec-tot-earn');
+    const dedEl = document.getElementById('fin-rec-tot-ded');
+    const netEl = document.getElementById('fin-rec-net-pay');
+
+    if (earnEl) earnEl.textContent = formatMoney(totEarn);
+    if (dedEl) dedEl.textContent = formatMoney(totDed);
+    if (netEl) netEl.textContent = formatMoney(net);
   };
 
-  proto.savePayslipForm = async function (e) {
+  proto.saveRecordEmployeePaymentForm = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -1174,11 +1701,29 @@ export function registerPayrollModules(FinanceApp) {
     const prjId = formData.get('project_id') || '';
     const prj = (this.db?.projects || []).find(p => p.id === prjId);
 
+    let rawMonth = (formData.get('month_period_select') || '').trim();
+    if (rawMonth === 'custom' || !rawMonth) {
+      rawMonth = (formData.get('month_year') || '').trim() || 'June 2026';
+    }
+
+    let monthShort = rawMonth;
+    let periodLabel = rawMonth;
+    const matchedRef = PAYROLL_PERIODS.find(p => p.full.toLowerCase() === rawMonth.toLowerCase() || p.short.toLowerCase() === rawMonth.toLowerCase() || p.key === rawMonth);
+    if (matchedRef) {
+      monthShort = matchedRef.short;
+      periodLabel = matchedRef.full;
+    } else if (rawMonth.length > 7 && !rawMonth.includes('-')) {
+      const parts = rawMonth.split(' ');
+      if (parts.length === 2) {
+        monthShort = `${parts[0].slice(0, 3)}-${parts[1].slice(-2)}`;
+      }
+    }
+
     const basic = parseFloat(formData.get('basic_salary')) || 0;
     const acc = parseFloat(formData.get('accommodation_allowance')) || 0;
     const cons = parseFloat(formData.get('consolidated_allowance')) || 0;
     const ot = parseFloat(formData.get('normal_overtime')) || 0;
-    const otHrs = formData.get('overtime_hrs') || '';
+    const otHrs = (formData.get('overtime_hrs') || '').trim();
     const totEarn = basic + acc + cons + ot;
 
     const adv = parseFloat(formData.get('advance_deduction')) || 0;
@@ -1187,7 +1732,7 @@ export function registerPayrollModules(FinanceApp) {
     const totDed = adv + abs + loan;
 
     const netPay = Math.max(0, totEarn - totDed);
-    const status = formData.get('status') || 'Pending';
+    const status = formData.get('status') || 'Paid';
     const sourceType = formData.get('payout_source_type') || 'bank';
     const sourceId = formData.get('payout_source_id') || '';
 
@@ -1197,15 +1742,17 @@ export function registerPayrollModules(FinanceApp) {
       sourceName = reg ? reg.register_name : 'RAYAN E-Wallets';
     } else {
       const bank = (this.db?.bank_accounts || []).find(b => b.id === sourceId);
-      sourceName = bank ? bank.bank_name : 'Bank Transfer';
+      sourceName = bank ? bank.bank_name : 'Abu Dhabi Commercial Bank (ADCB)';
     }
 
     const payDate = formData.get('payment_date') || new Date().toISOString().split('T')[0];
-    const printedDate = formData.get('printed_date') || '10-Jul-26';
+    const userSlipNo = (formData.get('slip_no') || '').trim();
+    const slipNo = userSlipNo || `PS${periodLabel.replace(/\s+/g, '')}/${emp ? emp.employee_no : 'EN'}`;
+    const payRef = (formData.get('payout_reference') || '').trim() || `TXN-PAYROLL-${payDate.replace(/-/g, '')}-${emp ? emp.employee_no : 'EN'}`;
 
     const slipObj = {
       id: slipId,
-      slip_no: formData.get('slip_no') || '',
+      slip_no: slipNo,
       company_id: this.activeCompanyId || 'rayan-corp-uae',
       employee_id: empId,
       employee_no: emp ? emp.employee_no : '',
@@ -1214,9 +1761,9 @@ export function registerPayrollModules(FinanceApp) {
       department: emp ? emp.department : 'Rayan Engineering',
       date_of_appointment: emp ? (emp.date_of_joining || emp.date_of_appointment) : '2025-08-07',
       currency: emp ? emp.currency : 'AED',
-      month_year: formData.get('month_year') || 'Jun-26',
-      period_label: formData.get('month_year') || 'June 2026',
-      printed_date: printedDate,
+      month_year: monthShort,
+      period_label: periodLabel,
+      printed_date: payDate,
       payment_date: payDate,
       basic_salary: basic,
       accommodation_allowance: acc,
@@ -1239,13 +1786,13 @@ export function registerPayrollModules(FinanceApp) {
       swift: emp ? (emp.swift || 'EBILAEADXXX') : 'EBILAEADXXX',
       iban: emp ? (emp.iban || '') : '',
       account_no: emp ? (emp.account_no || '') : '',
-      pay_method: formData.get('pay_method') || 'AED RAYAN GROUP Host To Host',
+      pay_method: (sourceType === 'cash') ? 'RAYAN E-Wallets / Cash' : (emp ? (emp.default_pay_method || 'AED RAYAN GROUP Host To Host') : 'AED RAYAN GROUP Host To Host'),
       transferred_amount: netPay,
       status: status,
       payout_source_type: sourceType,
       payout_source_id: sourceId,
       payout_source_name: sourceName,
-      payout_reference: formData.get('payout_reference') || '',
+      payout_reference: payRef,
       project_id: prjId,
       project_name: prj ? prj.name : 'Corporate / General Overhead',
       updated_at: new Date().toISOString()
@@ -1262,24 +1809,73 @@ export function registerPayrollModules(FinanceApp) {
       this.db.payroll.unshift(slipObj);
     }
 
-    // Execute direct deduction from Bank Account or Cash in Hand if marked Paid!
+    // Execute direct balance deduction from selected Bank Account or RAYAN E-Wallets if marked Paid!
     if (status === 'Paid') {
       this.applyPayrollPayoutDeduction(slipObj);
     }
 
-    this.closePayslipModal();
+    this.closeRecordEmployeePaymentModal();
     this.normalizeAllBalances();
-    this.showToast ? this.showToast(`Pay Slip ${slipObj.slip_no} generated successfully!`, 'success') : null;
 
+    const deductionMsg = status === 'Paid'
+      ? ` and deducted ${this.formatCurrency(netPay)} from ${sourceName}`
+      : '';
+    this.showToast
+      ? this.showToast(`Pay slip ${slipObj.slip_no} (${periodLabel}) recorded${deductionMsg}!`, 'success')
+      : alert(`Pay slip recorded!`);
+
+    // Sync with backend API
     try {
       await this.syncWithBackend('save_payroll', { payroll: slipObj });
+      if (status === 'Paid') {
+        await this.syncWithBackend('disburse_payroll', {
+          slip_id: slipObj.id,
+          payroll: slipObj,
+          source_type: sourceType,
+          source_id: sourceId,
+          amount: netPay,
+          payment_date: payDate,
+          payout_reference: payRef
+        });
+      }
     } catch (err) {
-      console.warn('Payroll backend sync warning:', err);
+      console.warn('Backend payroll sync warning:', err);
     }
 
+    // Refresh history modal if it was open
+    const historyModal = document.getElementById('fin-emp-history-modal-backdrop');
+    if (historyModal && empId) {
+      this.openEmployeeSalaryHistoryModal(empId, this.lastEmployeeHistoryFilter || '3m');
+    }
+
+    // Refresh views if open
     if (this.activeTab === 'payroll') {
       this.renderPayrollTab(document.getElementById('fin-view-container'));
+    } else if (this.activeTab === 'employees') {
+      this.renderEmployeesTab(document.getElementById('fin-view-container'));
     }
+  };
+
+  // ==========================================================================
+  // 7. PAYSLIP MODAL (CREATE / EDIT) - Delegates to Record Payment Modal
+  // ==========================================================================
+  proto.openPayslipModal = function (slipId = null, preselectedEmpId = null) {
+    this.openRecordEmployeePaymentModal(preselectedEmpId, null, slipId);
+  };
+  proto.closePayslipModal = function () {
+    this.closeRecordEmployeePaymentModal();
+  };
+  proto.onPayslipEmployeeChange = function (empId) {
+    this.onRecordEmpChange(empId);
+  };
+  proto.calcPayslipTotals = function () {
+    this.calcRecordPaymentTotals();
+  };
+  proto.onPayslipSourceTypeChange = function (type) {
+    this.onRecordSourceTypeChange(type);
+  };
+  proto.savePayslipForm = function (e) {
+    return this.saveRecordEmployeePaymentForm(e);
   };
 
   proto.deletePayslip = async function (slipId) {
@@ -1989,3 +2585,4 @@ export function registerPayrollModules(FinanceApp) {
     URL.revokeObjectURL(url);
   };
 }
+
