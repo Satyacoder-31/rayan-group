@@ -1398,6 +1398,36 @@
       "notes": "",
       "created_at": "2026-11-09 18:58:03",
       "updated_at": "2026-11-09 18:58:03"
+    },
+    {
+      "id": "vend-toprock",
+      "code": "VEN-REC-44009",
+      "name": "M/S TOP ROCK INTERIORS LLC",
+      "company_id": "rayan-corp-uae",
+      "trn": "10457119600003",
+      "status": "Active"
+    },
+    {
+      "id": "vend-hayat",
+      "code": "VEN-REC-44010",
+      "name": "M/S HAYAT COMMUNICATIONS LLC",
+      "company_id": "rayan-corp-uae",
+      "status": "Active"
+    },
+    {
+      "id": "vend-focustech",
+      "code": "VEN-REC-44011",
+      "name": "M/S FOCUS TECH LLC",
+      "company_id": "rayan-corp-uae",
+      "status": "Active"
+    },
+    {
+      "id": "vend-alisons",
+      "code": "VEN-REC-44012",
+      "name": "M/S ALI & SONS CO. LLC",
+      "company_id": "rayan-corp-uae",
+      "trn": "100244272900003",
+      "status": "Active"
     }
   ],
   "items": [
@@ -9846,7 +9876,7 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "vendor_id": "vend-mw3q187t",
+      "vendor_id": "vend-toprock",
       "vendor_name": "M/S TOP ROCK INTERIORS LLC",
       "vendor_tax_regime": "trn",
       "vendor_gstin": "",
@@ -9892,7 +9922,7 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "vendor_id": "vend-mw3q187t",
+      "vendor_id": "vend-toprock",
       "vendor_name": "M/S TOP ROCK INTERIORS LLC",
       "vendor_tax_regime": "trn",
       "vendor_gstin": "",
@@ -9938,7 +9968,7 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "vendor_id": "vend-mw3q187t",
+      "vendor_id": "vend-alisons",
       "vendor_name": "M/S ALI & SONS CO. LLC",
       "vendor_tax_regime": "trn",
       "vendor_gstin": "",
@@ -9984,7 +10014,7 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "vendor_id": "vend-mw3q187t",
+      "vendor_id": "vend-focustech",
       "vendor_name": "M/S FOCUS TECH LLC",
       "vendor_tax_regime": "trn",
       "vendor_gstin": "",
@@ -10030,7 +10060,7 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "vendor_id": "vend-mw3q187t",
+      "vendor_id": "vend-hayat",
       "vendor_name": "M/S HAYAT COMMUNICATIONS LLC",
       "vendor_tax_regime": "trn",
       "vendor_gstin": "",
@@ -10122,7 +10152,7 @@
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
-      "vendor_id": "vend-mw3q187t",
+      "vendor_id": "vend-mw86p574",
       "vendor_name": "M/S HI PROFILE GENERAL MAINTENANCE LLC",
       "vendor_tax_regime": "trn",
       "vendor_gstin": "",

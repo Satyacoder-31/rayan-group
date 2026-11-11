@@ -3499,7 +3499,7 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
 function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
     if ($pdo) {
         try {
-            $chkMig93 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'clear_cash_in_hand_v93'")->fetchColumn();
+            $chkMig93 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'clear_cash_in_hand_v93_reseed_bills'")->fetchColumn();
             if ($chkMig93 !== 'completed') {
                 // 1. Delete all synthetic bank_to_cash withdrawal wires (wire-wdl-*) and fake outward wires
                 $pdo->exec("DELETE FROM finance_bank_transfers WHERE type = 'bank_to_cash' OR id LIKE 'wire-wdl-%' OR reference_no LIKE 'wire-wdl-%' OR id LIKE 'wire-pv-%' OR reference_no LIKE 'wire-pv-%' OR purpose LIKE '%replenish RAYAN E-Wallets%' OR purpose LIKE '%cash withdrawal%' OR counterparty LIKE '%GENERAL EXPENSES%'");
@@ -3509,13 +3509,36 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
                 $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id != 'cv-rcp-hln-scrap-44008' AND voucher_no != 'CV-RCP-44008' AND (voucher_no LIKE 'CV-WDL-%' OR voucher_no LIKE 'CV-PV-%' OR id LIKE 'cv-wdl-%' OR id LIKE 'cv-pv-%' OR payee LIKE '%GENERAL EXPENSES%' OR purpose LIKE '%replenish RAYAN E-Wallets%' OR purpose LIKE '%cash withdrawal%')");
 
                 // 3. Delete fake General Expenses purchase bills (BILL-REC-1008 through BILL-REC-1016)
-                $pdo->exec("DELETE FROM finance_purchase_bills WHERE vendor_name LIKE '%GENERAL EXPENSES%' OR vendor_id = 'vend-mw3q187t' OR bill_no IN ('BILL-REC-1008', 'BILL-REC-1009', 'BILL-REC-1010', 'BILL-REC-1011', 'BILL-REC-1012', 'BILL-REC-1013', 'BILL-REC-1014', 'BILL-REC-1015', 'BILL-REC-1016')");
+                $pdo->exec("DELETE FROM finance_purchase_bills WHERE vendor_name LIKE '%GENERAL EXPENSES%' OR bill_no IN ('BILL-REC-1008', 'BILL-REC-1009', 'BILL-REC-1010', 'BILL-REC-1011', 'BILL-REC-1012', 'BILL-REC-1013', 'BILL-REC-1014', 'BILL-REC-1015', 'BILL-REC-1016')");
 
                 // 4. Delete all synthetic vendor payments (since no bills are cleared)
                 $pdo->exec("DELETE FROM finance_vendor_payments WHERE vendor_name LIKE '%GENERAL EXPENSES%' OR vendor_id = 'vend-mw3q187t' OR voucher_no LIKE 'PV-REC-%' OR voucher_no LIKE 'PV-RG-%'");
 
-                // 5. Reset all genuine purchase bills to unpaid
-                $pdo->exec("UPDATE finance_purchase_bills SET amount_paid = 0.00, balance_due = grand_total, status = 'unpaid', data_json = JSON_SET(data_json, '$.amount_paid', 0.00, '$.balance_due', grand_total, '$.status', 'unpaid')");
+                // 5. Ensure all 8 canonical genuine purchase bills exist in MySQL and are marked unpaid
+                $canonicalBills = [
+                    ['id' => 'bill-1793974433713', 'bill_no' => 'BILL-REC-1001', 'vendor_id' => 'vend-mw86p574', 'vendor_name' => 'M/S HI PROFILE GENERAL MAINTENANCE LLC', 'grand_total' => 47231.00, 'po_no' => '701102', 'project_name' => 'Project # Mina Palace Laundry Refurbishment Work', 'bill_date' => '2023-09-13'],
+                    ['id' => 'bill-1793974961216', 'bill_no' => 'BILL-REC-1002', 'vendor_id' => 'vend-mw87fj64', 'vendor_name' => 'M/S MURGANTI GCC  l  UAE', 'grand_total' => 18500.00, 'po_no' => 'P92620', 'project_name' => 'Project # GIC - MBZ City Villa #43', 'bill_date' => '2023-07-17'],
+                    ['id' => 'bill-1793975224831', 'bill_no' => 'BILL-REC-1003', 'vendor_id' => 'vend-hayat', 'vendor_name' => 'M/S HAYAT COMMUNICATIONS LLC', 'grand_total' => 110000.00, 'po_no' => 'PODULL/107329', 'project_name' => 'Project # Hayat Communications Properties', 'bill_date' => '2024-11-15'],
+                    ['id' => 'bill-1793975959757', 'bill_no' => 'BILL-REC-1004', 'vendor_id' => 'vend-focustech', 'vendor_name' => 'M/S FOCUS TECH LLC', 'grand_total' => 129864.48, 'po_no' => 'FT/INFRA/PO-1065 R00/2024', 'project_name' => 'Project # Serenia Residences Palm Jumeirah', 'bill_date' => '2024-10-12'],
+                    ['id' => 'bill-1793976570260', 'bill_no' => 'BILL-REC-1005', 'vendor_id' => 'vend-alisons', 'vendor_name' => 'M/S ALI & SONS CO. LLC', 'grand_total' => 99.01, 'po_no' => '4500009126', 'project_name' => 'Project # Porsche service Centre Mussafah', 'bill_date' => '2024-03-22'],
+                    ['id' => 'bill-1793977952016', 'bill_no' => 'BILL-REC-1006', 'vendor_id' => 'vend-toprock', 'vendor_name' => 'M/S TOP ROCK INTERIORS LLC', 'grand_total' => 9902.52, 'po_no' => 'LPO-TRI-2024-88', 'project_name' => 'Project # Cafe Bateel @ Yas Mall', 'bill_date' => '2024-07-15'],
+                    ['id' => 'bill-1793987304049', 'bill_no' => 'BILL-REC-1007', 'vendor_id' => 'vend-toprock', 'vendor_name' => 'M/S TOP ROCK INTERIORS LLC', 'grand_total' => 90499.27, 'po_no' => 'PODSUB-2025/1826R1', 'project_name' => 'Project # Chipotle @ My Town Centre MBZ , Abu Dhabi', 'bill_date' => '2026-04-29'],
+                    ['id' => 'bill-1794329674071', 'bill_no' => 'BILL-REC-1017', 'vendor_id' => 'vend-mwaxigo5', 'vendor_name' => 'M/S AL MULUKI DECOR & GENERAL MAINTENANCE LLC', 'grand_total' => 19668.60, 'po_no' => 'AMGM/PO-2024/068', 'project_name' => 'Project # HM Villa Lower Ground Floor &  Guard Room & SPA Corridor', 'bill_date' => '2024-05-25']
+                ];
+                $stmtPb = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bno, 'General', 'rayan-corp-uae', :vid, :vname, :pname, :poid, :bdate, :bdate, :grand, 0.00, :grand, 'AED', 'unpaid', 'approved', :djson, NOW())");
+                foreach ($canonicalBills as $cb) {
+                    $stmtPb->execute([
+                        ':id' => $cb['id'],
+                        ':bno' => $cb['bill_no'],
+                        ':vid' => $cb['vendor_id'],
+                        ':vname' => $cb['vendor_name'],
+                        ':pname' => $cb['project_name'],
+                        ':poid' => $cb['po_no'],
+                        ':bdate' => $cb['bill_date'],
+                        ':grand' => $cb['grand_total'],
+                        ':djson' => json_encode($cb)
+                    ]);
+                }
 
                 // 6. Restore ADCB Bank Account balance to full client receipts (1,351,640.87 AED)
                 $pdo->exec("UPDATE finance_bank_accounts SET balance = 1351640.87, data_json = JSON_SET(data_json, '$.balance', '1351640.87') WHERE id = 'bank-adcb-uae'");
@@ -3523,7 +3546,7 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
                 // 7. Restore RAYAN E-Wallets Cash Balance to 5000.00 AED
                 $pdo->exec("UPDATE finance_cash_in_hand SET balance = 5000.00, data_json = JSON_SET(data_json, '$.balance', 5000.00) WHERE id = 'cash-mw5esv3w'");
 
-                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('clear_cash_in_hand_v93', 'completed', NOW())");
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('clear_cash_in_hand_v93_reseed_bills', 'completed', NOW())");
             }
         } catch (Exception $e) {
             error_log("Migration v93 error: " . $e->getMessage());
