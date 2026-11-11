@@ -3559,6 +3559,201 @@ function reconcileV79ChequeDeposits(&$data, $pdo) {
     }
 }
 
+function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
+    if (!$pdo) return;
+    try {
+        $chkMig92 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'bank_cheque_harmony_v92'")->fetchColumn();
+        if ($chkMig92 !== 'completed') {
+            // 1. Correct Cheque 014502 amount to 19615.27
+            $pdo->exec("UPDATE finance_cheques SET amount = 19615.27, data_json = JSON_SET(data_json, '$.amount', '19615.27') WHERE cheque_no = '014502' OR id = 'chq-rcp-rec-mvy6c2gy'");
+            $pdo->exec("UPDATE finance_bank_transfers SET amount = 19615.27, data_json = JSON_SET(data_json, '$.amount', '19615.27') WHERE id = 'wire-chq-chq-rcp-rec-mvy6c2gy' OR reference_no = 'CHQ-014502'");
+
+            // 2. Correct Cheque 017236 amount to 20044.01
+            $pdo->exec("UPDATE finance_cheques SET amount = 20044.01, data_json = JSON_SET(data_json, '$.amount', '20044.01') WHERE cheque_no = '017236' OR id = 'chq-rcp-rec-mvy4fwvn'");
+            $pdo->exec("UPDATE finance_bank_transfers SET amount = 20044.01, data_json = JSON_SET(data_json, '$.amount', '20044.01') WHERE id = 'wire-chq-chq-rcp-rec-mvy4fwvn' OR reference_no = 'CHQ-017236'");
+
+            // 3. Mark Cheque 000007 as PDC and remove its premature wire deposit
+            $pdo->exec("UPDATE finance_cheques SET status = 'Post-Dated Cheque (PDC)', data_json = JSON_SET(data_json, '$.status', 'Post-Dated Cheque (PDC)') WHERE cheque_no = '000007' OR id = 'chq-mvqh5lnb'");
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-chq-chq-mvqh5lnb' OR reference_no = 'CHQ-000007'");
+
+            // 4. Remove orphan duplicate wire-rcp-rec-mvyu2o9n
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-rcp-rec-mvyu2o9n'");
+
+            // 5. Remove phantom outward transfers that duplicate bank cash replenishments
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE id IN ('wire-pv-rec-44002', 'wire-pv-rec-44005', 'wire-pv-rec-44006', 'wire-pv-rec-44004', 'wire-pv-rec-44003')");
+
+            // 6. Ensure inward wires for REC-RV-44005 and REC-RV-44028 exist in MySQL
+            $stmt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, destination_account_id, destination_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :destination_account_id, :destination_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+            
+            $wire44005 = [
+                'id' => 'wire-rcp-rec-mvwqcuc7',
+                'receipt_id' => 'rec-mvwqcuc7',
+                'company_id' => 'rayan-corp-uae',
+                'reference_no' => 'PHUB295410356',
+                'date' => '2024-01-17',
+                'transfer_date' => '2024-01-17',
+                'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'source_account_id' => 'bank-adcb-uae',
+                'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'destination_account_id' => 'bank-adcb-uae',
+                'counterparty' => 'M/S HAYAT COMMUNICATIONS LLC',
+                'amount' => '42525.00',
+                'currency' => 'AED',
+                'type' => 'inward',
+                'type_label' => 'Inward Client Wire (REC-RV-44005)',
+                'purpose' => 'Client Wire Settlement against REC-RV-44005 (REC-RG-INV-1011)',
+                'status' => 'Cleared'
+            ];
+            $stmt->execute([
+                ':id' => $wire44005['id'],
+                ':company_id' => $wire44005['company_id'],
+                ':reference_no' => $wire44005['reference_no'],
+                ':transfer_date' => $wire44005['transfer_date'],
+                ':counterparty' => $wire44005['counterparty'],
+                ':source_account_id' => $wire44005['source_account_id'],
+                ':source_bank' => $wire44005['source_bank'],
+                ':destination_account_id' => $wire44005['destination_account_id'],
+                ':destination_bank' => $wire44005['destination_bank'],
+                ':type' => $wire44005['type'],
+                ':amount' => $wire44005['amount'],
+                ':currency' => $wire44005['currency'],
+                ':purpose' => $wire44005['purpose'],
+                ':status' => $wire44005['status'],
+                ':data_json' => json_encode($wire44005)
+            ]);
+
+            $wire44028 = [
+                'id' => 'wire-rcp-rec-mvxeob8e',
+                'receipt_id' => 'rec-mvxeob8e',
+                'company_id' => 'rayan-corp-uae',
+                'reference_no' => 'PHUB569424310',
+                'date' => '2025-11-18',
+                'transfer_date' => '2025-11-18',
+                'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'source_account_id' => 'bank-adcb-uae',
+                'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'destination_account_id' => 'bank-adcb-uae',
+                'counterparty' => 'M/S MAP OUT DECOR TECHNICAL SERVICES LLC',
+                'amount' => '19668.60',
+                'currency' => 'AED',
+                'type' => 'inward',
+                'type_label' => 'Inward Client Wire (REC-RV-44028)',
+                'purpose' => 'Client Wire Settlement against REC-RV-44028 (REC-RG-INV-44011)',
+                'status' => 'Cleared'
+            ];
+            $stmt->execute([
+                ':id' => $wire44028['id'],
+                ':company_id' => $wire44028['company_id'],
+                ':reference_no' => $wire44028['reference_no'],
+                ':transfer_date' => $wire44028['transfer_date'],
+                ':counterparty' => $wire44028['counterparty'],
+                ':source_account_id' => $wire44028['source_account_id'],
+                ':source_bank' => $wire44028['source_bank'],
+                ':destination_account_id' => $wire44028['destination_account_id'],
+                ':destination_bank' => $wire44028['destination_bank'],
+                ':type' => $wire44028['type'],
+                ':amount' => $wire44028['amount'],
+                ':currency' => $wire44028['currency'],
+                ':purpose' => $wire44028['purpose'],
+                ':status' => $wire44028['status'],
+                ':data_json' => json_encode($wire44028)
+            ]);
+
+            // 7. Update ADCB Bank Balance to 516195.81
+            $pdo->exec("UPDATE finance_bank_accounts SET balance = 516195.81, data_json = JSON_SET(data_json, '$.balance', '516195.81') WHERE id = 'bank-adcb-uae'");
+
+            // 8. Update RAYAN E-Wallets Cash Balance to 14000.00
+            $pdo->exec("UPDATE finance_cash_in_hand SET balance = 14000.00, data_json = JSON_SET(data_json, '$.balance', 14000.00) WHERE id = 'cash-mw5esv3w'");
+
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('bank_cheque_harmony_v92', 'completed', NOW())");
+        }
+    } catch (Exception $e) {
+        error_log("Migration v92 error: " . $e->getMessage());
+    }
+
+    // Memory reconciliation
+    if (!empty($data['cheques']) && is_array($data['cheques'])) {
+        foreach ($data['cheques'] as &$c) {
+            if (($c['cheque_no'] ?? '') === '014502') $c['amount'] = '19615.27';
+            if (($c['cheque_no'] ?? '') === '017236') $c['amount'] = '20044.01';
+            if (($c['cheque_no'] ?? '') === '000007' && ($c['status'] ?? '') === 'Cleared') $c['status'] = 'Post-Dated Cheque (PDC)';
+        }
+        unset($c);
+    }
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        $delIds = ['wire-rcp-rec-mvyu2o9n', 'wire-chq-chq-mvqh5lnb', 'wire-pv-rec-44002', 'wire-pv-rec-44005', 'wire-pv-rec-44006', 'wire-pv-rec-44004', 'wire-pv-rec-44003'];
+        $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($t) use ($delIds) {
+            return !in_array($t['id'] ?? '', $delIds) && ($t['reference_no'] ?? '') !== 'CHQ-000007';
+        }));
+        foreach ($data['bank_transfers'] as &$t) {
+            if (($t['id'] ?? '') === 'wire-chq-chq-rcp-rec-mvy6c2gy' || ($t['reference_no'] ?? '') === 'CHQ-014502') $t['amount'] = '19615.27';
+            if (($t['id'] ?? '') === 'wire-chq-chq-rcp-rec-mvy4fwvn' || ($t['reference_no'] ?? '') === 'CHQ-017236') $t['amount'] = '20044.01';
+        }
+        unset($t);
+        // Ensure missing wires exist
+        $has44005 = false;
+        $has44028 = false;
+        foreach ($data['bank_transfers'] as $t) {
+            if (($t['id'] ?? '') === 'wire-rcp-rec-mvwqcuc7' || ($t['reference_no'] ?? '') === 'PHUB295410356') $has44005 = true;
+            if (($t['id'] ?? '') === 'wire-rcp-rec-mvxeob8e' || ($t['reference_no'] ?? '') === 'PHUB569424310') $has44028 = true;
+        }
+        if (!$has44005) {
+            $data['bank_transfers'][] = [
+                'id' => 'wire-rcp-rec-mvwqcuc7',
+                'receipt_id' => 'rec-mvwqcuc7',
+                'company_id' => 'rayan-corp-uae',
+                'reference_no' => 'PHUB295410356',
+                'date' => '2024-01-17',
+                'transfer_date' => '2024-01-17',
+                'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'source_account_id' => 'bank-adcb-uae',
+                'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'destination_account_id' => 'bank-adcb-uae',
+                'counterparty' => 'M/S HAYAT COMMUNICATIONS LLC',
+                'amount' => '42525.00',
+                'currency' => 'AED',
+                'type' => 'inward',
+                'type_label' => 'Inward Client Wire (REC-RV-44005)',
+                'purpose' => 'Client Wire Settlement against REC-RV-44005 (REC-RG-INV-1011)',
+                'status' => 'Cleared'
+            ];
+        }
+        if (!$has44028) {
+            $data['bank_transfers'][] = [
+                'id' => 'wire-rcp-rec-mvxeob8e',
+                'receipt_id' => 'rec-mvxeob8e',
+                'company_id' => 'rayan-corp-uae',
+                'reference_no' => 'PHUB569424310',
+                'date' => '2025-11-18',
+                'transfer_date' => '2025-11-18',
+                'source_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'source_account_id' => 'bank-adcb-uae',
+                'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
+                'destination_account_id' => 'bank-adcb-uae',
+                'counterparty' => 'M/S MAP OUT DECOR TECHNICAL SERVICES LLC',
+                'amount' => '19668.60',
+                'currency' => 'AED',
+                'type' => 'inward',
+                'type_label' => 'Inward Client Wire (REC-RV-44028)',
+                'purpose' => 'Client Wire Settlement against REC-RV-44028 (REC-RG-INV-44011)',
+                'status' => 'Cleared'
+            ];
+        }
+    }
+    if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+        foreach ($data['bank_accounts'] as &$b) {
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '516195.81';
+        }
+        unset($b);
+    }
+    if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
+        foreach ($data['cash_in_hand'] as &$c) {
+            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 14000.00;
+        }
+        unset($c);
+    }
+}
+
 function reconcileV90CanonicalTrnAndBalances(&$data, $pdo) {
     if (!$pdo) return;
     try {
@@ -5584,7 +5779,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV78VendorSerialAtoZ($data, $pdo);
                     reconcileV79ChequeDeposits($data, $pdo);
                     reconcileV80CustomerTrnAndRelationalSync($data, $pdo);
-reconcileV90CanonicalTrnAndBalances($data, $pdo);
+                    reconcileV90CanonicalTrnAndBalances($data, $pdo);
+                    reconcileV92BankCashChequeHarmony($data, $pdo);
                     reconcileV81HMVillaFinancials($data, $pdo);
                     reconcileV82EmployeesAndPayroll($data, $pdo);
                     recalculateAllFinanceBalances($data);
@@ -6543,7 +6739,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_state') {
         echo json_encode([
             'success' => true,
-            'version_tag' => 'v90_canonical_sync',
+            'version_tag' => 'v92_bank_cheque_harmony',
             'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
             'data' => $db
         ]);
