@@ -1712,6 +1712,32 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 $inv['status'] = 'paid';
                 $changed = true;
             }
+            if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44006' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-44006') {
+                $inv['amount_paid'] = 185597.36;
+                $inv['balance_due'] = 0.00;
+                $inv['status'] = 'paid';
+                $changed = true;
+            }
+            if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44009' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-44009') {
+                $inv['amount_paid'] = 19668.60;
+                $inv['balance_due'] = 0.00;
+                $inv['status'] = 'paid';
+                $changed = true;
+            }
+            if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44003' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-44003') {
+                $inv['amount_paid'] = 9000.00;
+                $inv['balance_due'] = 0.00;
+                $inv['status'] = 'paid';
+                $inv['project_id'] = 'prj-mw4m1wc8';
+                $inv['project_name'] = 'Project # Al Lisaili Villa Dubai';
+                $changed = true;
+            }
+            if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-1005' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-1005') {
+                $inv['amount_paid'] = 48300.00;
+                $inv['balance_due'] = 0.00;
+                $inv['status'] = 'paid';
+                $changed = true;
+            }
         }
         unset($inv);
     }
@@ -6470,7 +6496,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($action === 'get_state') {
         echo json_encode([
             'success' => true,
-            'version_tag' => 'v77_bank_withdrawal_and_payment_out_fix',
+            'version_tag' => 'v78_reconcile_paid_invoices',
             'storage' => $pdo ? 'hostinger_mysql' : 'json_file',
             'data' => $db
         ]);
