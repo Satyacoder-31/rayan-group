@@ -49,3 +49,4 @@ if (php.includes(anchor)) {
 
 fs.writeFileSync('public/api/finance.php', php);
 console.log('public/api/finance.php saved!');
+

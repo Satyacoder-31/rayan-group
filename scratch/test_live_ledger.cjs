@@ -13,7 +13,7 @@ async function check() {
   const app = new MockApp(db);
   const content = fs.readFileSync('src/scripts/finance.js', 'utf8');
   const lines = content.split('\n');
-  const fnBody = lines.slice(9232, 9454).join('\n');
+  const fnBody = lines.slice(9238, 9460).join('\n');
   eval('MockApp.prototype.getProjectLedgerData = ' + fnBody.replace(/getProjectLedgerData\(projectId\)\s*\{/, 'function(projectId) {'));
 
   const ledger = app.getProjectLedgerData('prj-mw3rnn9m');

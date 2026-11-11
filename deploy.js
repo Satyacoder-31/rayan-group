@@ -1,5 +1,7 @@
 import { execSync } from 'child_process';
 import { Configuration, HostingCacheApi } from '@hostinger/sdk';
+import fs from 'fs';
+import path from 'path';
 
 const HOSTINGER_TOKEN = 'g9EFoDsji8oMJ3dJjP7IpLkWfYSzJa0LB27lzVqi67233ccf';
 const eraseAllFlag = process.argv.includes('--erase-all') ? '&erase_all=1' : '';
@@ -10,15 +12,54 @@ const SYNC_URLS = [
 const WEBHOOK_URL = 'https://webhooks.hostinger.com/deploy/8b37bfc2d831afd52165c2a8f6fe1551';
 
 async function deploy() {
-  console.log('📦 [1/5] Building production bundle (vite build)...');
+  console.log('🔄 [0/6] Syncing database files & cache version...');
+  try {
+    const dataSrc = path.resolve('data/finance-data.json');
+    if (fs.existsSync(dataSrc)) {
+      const content = fs.readFileSync(dataSrc, 'utf8');
+      const pubPath = path.resolve('public/data/finance-data.json');
+      const distPath = path.resolve('dist/data/finance-data.json');
+      fs.writeFileSync(pubPath, content, 'utf8');
+      const distDir = path.dirname(distPath);
+      if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
+      fs.writeFileSync(distPath, content, 'utf8');
+    }
+
+    // Auto-bump cache version
+    const finJsPath = path.resolve('src/scripts/finance.js');
+    if (fs.existsSync(finJsPath)) {
+      let finCode = fs.readFileSync(finJsPath, 'utf8');
+      const m = finCode.match(/CURRENT_DB_VERSION\s*=\s*['"]v2026_clean_v(\d+)['"]/);
+      if (m) {
+        const nextNum = parseInt(m[1], 10) + 1;
+        const newVer = `v2026_clean_v${nextNum}`;
+        finCode = finCode.replace(m[0], `CURRENT_DB_VERSION = '${newVer}'`);
+        fs.writeFileSync(finJsPath, finCode, 'utf8');
+        console.log(`Cache version auto-bumped to: ${newVer}`);
+      }
+    }
+  } catch (e) {
+    console.warn('Pre-build sync warning:', e.message);
+  }
+
+  console.log('\n📦 [1/6] Building production bundle (vite build)...');
   execSync('npm run build', { stdio: 'inherit' });
 
-  console.log('\n📤 [2/5] Staging & pushing changes to GitHub...');
+  // Ensure fresh dist copy after vite build
+  try {
+    const dataSrc = path.resolve('data/finance-data.json');
+    const distPath = path.resolve('dist/data/finance-data.json');
+    if (fs.existsSync(dataSrc)) {
+      fs.copyFileSync(dataSrc, distPath);
+    }
+  } catch (e) {}
+
+  console.log('\n📤 [2/6] Staging & pushing changes to GitHub...');
   execSync('git add -A', { stdio: 'inherit' });
   try {
     const status = execSync('git status --porcelain').toString().trim();
     if (status) {
-      const msg = process.argv.slice(2).join(' ') || 'deploy: update website content';
+      const msg = process.argv.slice(2).filter(a => !a.startsWith('--')).join(' ') || 'deploy: update website content & financials';
       execSync(`git commit -m "${msg}"`, { stdio: 'inherit' });
     }
   } catch (e) {
@@ -26,7 +67,7 @@ async function deploy() {
   }
   execSync('git push origin main', { stdio: 'inherit' });
 
-  console.log('\n🔄 [3/5] Triggering Hostinger deploy webhook...');
+  console.log('\n🔄 [3/6] Triggering Hostinger deploy webhook...');
   try {
     const payload = {
       ref: 'refs/heads/main',
@@ -52,7 +93,7 @@ async function deploy() {
   console.log('⏳ Waiting 10 seconds for Hostinger Git pull...');
   await new Promise(r => setTimeout(r, 10000));
 
-  console.log('\n⚙️ [4/5] Synchronizing production files to web root...');
+  console.log('\n⚙️ [4/6] Synchronizing production files to web root...');
   let synced = false;
   for (const url of SYNC_URLS) {
     try {
@@ -75,7 +116,33 @@ async function deploy() {
     console.error('All sync endpoints failed.');
   }
 
-  console.log('\n🧹 [5/5] Purging Hostinger CDN cache...');
+  console.log('\n🗄️ [5/6] Synchronizing full database to Hostinger MySQL...');
+  try {
+    const dbPath = path.resolve('data/finance-data.json');
+    if (fs.existsSync(dbPath)) {
+      const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+      const dbRes = await fetch('https://rayan-group.com/api/finance.php?action=sync_full', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_db: db,
+          user_name: 'Arshad Alam Shaikh',
+          user_role: 'super_admin',
+          user_email: 'superadmin@rayangroup.com'
+        })
+      });
+      if (dbRes.ok) {
+        const dbJson = await dbRes.json();
+        console.log(`Database Sync: SUCCESS ✅ (storage: ${dbJson.storage})`);
+      } else {
+        console.warn(`Database Sync returned HTTP ${dbRes.status}`);
+      }
+    }
+  } catch (err) {
+    console.warn('Database Sync warning:', err.message);
+  }
+
+  console.log('\n🧹 [6/6] Purging Hostinger CDN cache...');
   try {
     const config = new Configuration({ accessToken: HOSTINGER_TOKEN });
     const cacheApi = new HostingCacheApi(config);

@@ -27,3 +27,4 @@ db.credit_notes.filter(cn => {
 }).forEach(cn => {
   console.log(cn.credit_note_no, cn.invoice_no, cn.total_credit_amount, cn.taxable_amount, cn.tax_amount);
 });
+

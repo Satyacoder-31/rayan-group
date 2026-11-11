@@ -6,3 +6,4 @@ for (let i = 9185; i < 9500; i++) {
     console.log(i + 1, lines[i].trim());
   }
 }
+

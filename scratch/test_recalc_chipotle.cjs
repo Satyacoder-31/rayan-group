@@ -50,3 +50,4 @@ function recalculateInvoiceBalance(inv) {
     bal: inv.balance_due
   });
 });
+

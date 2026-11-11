@@ -85,3 +85,4 @@ if (code.includes(prjTarget)) {
 
 fs.writeFileSync('src/scripts/finance.js', code);
 console.log('src/scripts/finance.js updated successfully!');
+
