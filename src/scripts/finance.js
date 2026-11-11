@@ -1323,6 +1323,12 @@ class FinanceApp {
       inv44009.balance_due = 0.00;
       inv44009.status = 'paid';
     }
+    const inv44011 = (this.db.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44011');
+    if (inv44011) {
+      inv44011.amount_paid = 19668.60;
+      inv44011.balance_due = 0.00;
+      inv44011.status = 'paid';
+    }
     const inv44003 = (this.db.invoices || []).find(i => i.invoice_no === 'REC-RG-INV-44003');
     if (inv44003) {
       inv44003.amount_paid = 9000.00;
@@ -1360,6 +1366,30 @@ class FinanceApp {
           allocated_amount: 19668.60,
           allocations: [{ invoice_id: 'inv-rec-rg-inv-44009', invoice_no: 'REC-RG-INV-44009', amount_allocated: 19668.60 }],
           ref_invoice_no: 'REC-RG-INV-44009',
+          project_name: 'Project # Gateway Abu Dhabi Art, Manarat Al Saadiyat.',
+          status: 'Cleared'
+        });
+      }
+      if (!this.db.customer_receipts.some(r => r.id === 'rec-mvxeob8e' || (r.reference_no === 'PHUB569424310'))) {
+        this.db.customer_receipts.push({
+          id: 'rec-mvxeob8e',
+          receipt_no: 'REC-RV-44028',
+          customer_id: 'cust-mapout',
+          customer_name: 'M/S MAP OUT DECOR TECHNICAL SERVICES LLC',
+          contact_person: 'Mr. Sujith Surendran',
+          email: 'info@mapoutdecor.com',
+          company_id: 'rayan-corp-uae',
+          receipt_date: '2025-11-18',
+          receipt_time: '09:44 AM',
+          currency: 'AED',
+          payment_mode: 'Online',
+          payment_type: 'Online Bank Transfer',
+          reference_no: 'PHUB569424310',
+          bank_name: 'Abu Dhabi Commercial Bank (ADCB)',
+          amount_received: '19668.60',
+          allocated_amount: 19668.60,
+          allocations: [{ invoice_id: 'inv-rec-rg-inv-44011', invoice_no: 'REC-RG-INV-44011', amount_allocated: 19668.60 }],
+          ref_invoice_no: 'REC-RG-INV-44011',
           project_name: 'Project # Gateway Abu Dhabi Art, Manarat Al Saadiyat.',
           status: 'Cleared'
         });
@@ -1461,14 +1491,19 @@ class FinanceApp {
         return true;
       });
       this.db.purchase_bills.forEach(b => {
-        b.amount_paid = 0;
-        b.balance_due = Number(b.grand_total) || 0;
-        b.status = 'unpaid';
+        this.recalculateBillBalance(b);
       });
     }
 
-    // All purchase bills are unpaid, so vendor payments are cleared
-    this.db.vendor_payments = [];
+    if (!Array.isArray(this.db.vendor_payments)) {
+      this.db.vendor_payments = [];
+    } else {
+      this.db.vendor_payments = this.db.vendor_payments.filter(p => {
+        const vName = (p.vendor_name || '').toLowerCase();
+        const vId = (p.vendor_id || '').toLowerCase();
+        return !vName.includes('general expenses') && vId !== 'vend-mw3q187t';
+      });
+    }
 
     // Reconcile RAYAN E-Wallets and petty cash vouchers
     if (Array.isArray(this.db.cash_in_hand)) {
@@ -1825,7 +1860,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v95';
+    const CURRENT_DB_VERSION = 'v2026_clean_v96';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5928,8 +5963,8 @@ class FinanceApp {
           ${inv.status === 'draft' ? `
             <button type="button" class="fin-btn-row-action" style="color:#10b981; font-weight:700; border-color:#10b981;" onclick="window.finApp.postDraftInvoice('${inv.id}')" title="Officially Issue and Post Draft Invoice">Issue →</button>
           ` : ''}
-          ${inv.balance_due > 0 && inv.status !== 'draft' && this.hasPermission('record_receipt') ? `
-            <button type="button" class="fin-btn-row-action" onclick="window.finApp.openQuickPayInvoice('${inv.id}')" style="color:#10b981;" title="Record Customer Payment">Receive</button>
+          ${Number(inv.balance_due) > 0.01 && inv.status !== 'draft' ? `
+            <button type="button" class="fin-btn-row-action" onclick="window.finApp.openQuickPayInvoice('${inv.id}')" style="color:#10b981; font-weight:700;" title="Receive Customer Payment / Pay Invoice">Receive / Pay</button>
           ` : ''}
           ${inv.status !== 'void' && inv.status !== 'draft' && this.hasPermission('create_credit_note') ? `
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openCreateCreditNoteModal('${inv.id}')" title="Issue Credit Note">Cr. Note</button>
@@ -15953,8 +15988,12 @@ class FinanceApp {
         this.renderActiveTab();
 
         // 5. Sync with backend API
+        this._lastRecordedPayment = payload.payment;
         const res = await this.syncApi('record_payment', payload);
         if (res && res.success) {
+          if (res.payment) {
+            this._lastRecordedPayment = res.payment;
+          }
           if (res.data) {
             this.db = this.mergeWithSeedData(res.data);
             this.normalizeAllBalances();
@@ -23374,6 +23413,11 @@ class FinanceApp {
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadInvoiceDocument('${inv.id || ''}')">
               📥 Download Document
             </button>
+            ${(Number(inv.balance_due) > 0.01 && inv.status !== 'draft') ? `
+              <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openQuickPayInvoice('${inv.id || ''}')" style="color:#10b981; border-color:rgba(16,185,129,0.4);" title="Receive Customer Payment against this invoice">
+                💳 Receive / Pay Invoice
+              </button>
+            ` : ''}
             <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditInvoiceModal('${inv.id || ''}')" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);">
               ✏️ Edit Invoice
             </button>
@@ -27145,6 +27189,11 @@ class FinanceApp {
       const pIdStr = String(paymentId).trim();
       const pIdNorm = pIdStr.toLowerCase();
       pay = (this.db?.vendor_payments || []).find(p => p.id === pIdStr || p.voucher_no === pIdStr || (p.voucher_no || '').toLowerCase() === pIdNorm || (p.id || '').toLowerCase() === pIdNorm);
+      if (!pay && this._lastRecordedPayment) {
+        if (this._lastRecordedPayment.id === pIdStr || this._lastRecordedPayment.voucher_no === pIdStr) {
+          pay = this._lastRecordedPayment;
+        }
+      }
       if (!pay) {
         pay = (this.db?.vendor_payments || []).find(p => (p.allocations || []).some(a => a.bill_id === pIdStr || a.bill_no === pIdStr || (a.bill_no || '').toLowerCase() === pIdNorm));
       }
@@ -27173,22 +27222,23 @@ class FinanceApp {
     if (!pay) {
       // If paymentId was explicitly passed, look up any bill matching that ID to construct accurate voucher
       const matchedBill = paymentId ? (this.db?.purchase_bills || []).find(b => b.id === String(paymentId).trim() || b.bill_no === String(paymentId).trim()) : null;
+      const bAmt = matchedBill ? (Number(matchedBill.amount_paid) > 0 ? Number(matchedBill.amount_paid) : Number(matchedBill.grand_total) || 0) : (Number(this._lastRecordedPayment?.amount_paid) || 0);
       pay = {
         id: paymentId || 'pay-' + Date.now(),
-        voucher_no: matchedBill ? `PV-REC-${matchedBill.bill_no.replace(/[^0-9]/g, '')}` : (paymentId || 'PV-REC-44001'),
+        voucher_no: matchedBill ? `PV-REC-${matchedBill.bill_no.replace(/[^0-9]/g, '')}` : (this._lastRecordedPayment?.voucher_no || paymentId || 'PV-REC-44001'),
         company_id: matchedBill?.company_id || this.activeCompanyId,
         payment_date: matchedBill?.bill_date || new Date().toISOString().split('T')[0],
-        vendor_name: matchedBill?.vendor_name || 'Vendor Disbursement',
-        payment_mode: 'Online',
-        reference_no: 'Cash / Bank Transfer',
-        amount_paid: matchedBill ? (matchedBill.amount_paid || matchedBill.grand_total) : 0,
+        vendor_name: matchedBill?.vendor_name || this._lastRecordedPayment?.vendor_name || 'Vendor Disbursement',
+        payment_mode: this._lastRecordedPayment?.payment_mode || 'Online',
+        reference_no: this._lastRecordedPayment?.reference_no || 'Cash / Bank Transfer',
+        amount_paid: bAmt,
         allocations: matchedBill ? [{
           bill_id: matchedBill.id,
           bill_no: matchedBill.bill_no,
           vendor_invoice_no: matchedBill.vendor_invoice_no || 'General',
-          amount_allocated: matchedBill.amount_paid || matchedBill.grand_total
-        }] : [],
-        notes: matchedBill ? `Disbursement against ${matchedBill.bill_no}` : 'Corporate vendor disbursement voucher.'
+          amount_allocated: bAmt
+        }] : (this._lastRecordedPayment?.allocations || []),
+        notes: matchedBill ? `Disbursement against ${matchedBill.bill_no}` : (this._lastRecordedPayment?.notes || 'Corporate vendor disbursement voucher.')
       };
     }
 

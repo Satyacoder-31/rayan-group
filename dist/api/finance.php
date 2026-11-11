@@ -3592,15 +3592,15 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
             if (in_array($bNo, ['BILL-REC-1008', 'BILL-REC-1009', 'BILL-REC-1010', 'BILL-REC-1011', 'BILL-REC-1012', 'BILL-REC-1013', 'BILL-REC-1014', 'BILL-REC-1015', 'BILL-REC-1016'])) return false;
             return true;
         }));
-        foreach ($data['purchase_bills'] as &$b) {
-            $b['amount_paid'] = 0.00;
-            $b['balance_due'] = floatval($b['grand_total'] ?? 0);
-            $b['status'] = 'unpaid';
-        }
-        unset($b);
     }
 
-    $data['vendor_payments'] = [];
+    if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        $data['vendor_payments'] = array_values(array_filter($data['vendor_payments'], function($p) {
+            $vName = $p['vendor_name'] ?? '';
+            $vId = $p['vendor_id'] ?? '';
+            return stripos($vName, 'GENERAL EXPENSES') === false && $vId !== 'vend-mw3q187t';
+        }));
+    }
 
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
