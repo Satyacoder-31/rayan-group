@@ -1418,7 +1418,14 @@ class FinanceApp {
           status: 'Cleared'
         });
       }
-      if (!this.db.customer_receipts.some(r => r.id === 'rec-mobin-villa-44003' || (r.reference_no === 'PHUB604192801'))) {
+      const rMobin = this.db.customer_receipts.find(r => r.id === 'rec-mobin-villa-44003' || (r.voucher_no || r.receipt_no) === 'REC-RV-44032' || r.reference_no === 'PHUB604192801' || r.reference_no === 'CASH-MOBIN-44003');
+      if (rMobin) {
+        rMobin.payment_mode = 'Cash';
+        rMobin.payment_type = 'Cash / Direct Settlement';
+        rMobin.reference_no = 'CASH-MOBIN-44003';
+        rMobin.bank_name = 'Corporate Treasury / Cash in Hand';
+        rMobin.notes = 'Payment via Corporate Treasury Cash in Hand against 50% Advance for Al Lisaili Villa Dubai (REC-RG-INV-44003)';
+      } else {
         this.db.customer_receipts.push({
           id: 'rec-mobin-villa-44003',
           receipt_no: 'REC-RV-44032',
@@ -1430,15 +1437,16 @@ class FinanceApp {
           receipt_date: '2026-01-14',
           receipt_time: '11:00 AM',
           currency: 'AED',
-          payment_mode: 'Online',
-          payment_type: 'Online Bank Transfer',
-          reference_no: 'PHUB604192801',
-          bank_name: 'Abu Dhabi Commercial Bank (ADCB)',
+          payment_mode: 'Cash',
+          payment_type: 'Cash / Direct Settlement',
+          reference_no: 'CASH-MOBIN-44003',
+          bank_name: 'Corporate Treasury / Cash in Hand',
           amount_received: '9000.00',
           allocated_amount: 9000,
           allocations: [{ invoice_id: 'inv-rec-rg-inv-44003', invoice_no: 'REC-RG-INV-44003', amount_allocated: 9000 }],
           ref_invoice_no: 'REC-RG-INV-44003',
           project_name: 'Project # Al Lisaili Villa Dubai',
+          notes: 'Payment via Corporate Treasury Cash in Hand against 50% Advance for Al Lisaili Villa Dubai (REC-RG-INV-44003)',
           status: 'Cleared'
         });
       }
@@ -1531,14 +1539,66 @@ class FinanceApp {
       rayanWallet.is_primary = true;
 
       // Ensure customer cash collection receipts route into RAYAN E-Wallets
-      if (Array.isArray(this.db.cash_vouchers)) {
-        this.db.cash_vouchers.forEach(cv => {
-          if (cv.voucher_no === 'CV-REC-RV-44064' || cv.voucher_no === 'CV-REC-RV-44093' || (cv.category === 'Customer Cash Collection' && cv.type === 'inflow')) {
-            cv.register_id = rayanWallet.id;
-            cv.register_name = rayanWallet.register_name;
-          }
+      if (!Array.isArray(this.db.cash_vouchers)) this.db.cash_vouchers = [];
+
+      const v44030 = this.db.cash_vouchers.find(v => v.id === 'cv-rcp-hln-scrap-44008' || v.voucher_no === 'CV-RCP-44008' || v.voucher_no === 'REC-RV-44030');
+      if (v44030) {
+        v44030.voucher_no = 'REC-RV-44030';
+        v44030.register_id = rayanWallet.id;
+        v44030.register_name = rayanWallet.register_name;
+      } else {
+        this.db.cash_vouchers.push({
+          id: 'cv-rcp-hln-scrap-44008',
+          receipt_id: 'rec-hln-44008-scrap',
+          company_id: 'rayan-corp-uae',
+          voucher_no: 'REC-RV-44030',
+          register_id: rayanWallet.id,
+          register_name: rayanWallet.register_name,
+          custodian: 'Arshad Alam Shaikh',
+          date: '2025-11-26',
+          voucher_date: '2025-11-26',
+          type: 'inflow',
+          category: 'Customer Cash Collection',
+          purpose: 'Customer cash collection against REC-RG-INV-44008 (Scrap materials sold)',
+          payee: 'M/S HLN TECHNICAL SERVICES LLC',
+          amount: '5000.00',
+          currency: 'AED',
+          status: 'Cleared'
         });
       }
+
+      let vMobin = this.db.cash_vouchers.find(v => v.id === 'cv-rcp-mobin-villa-44003' || v.voucher_no === 'REC-RV-44032');
+      if (vMobin) {
+        vMobin.voucher_no = 'REC-RV-44032';
+        vMobin.register_id = rayanWallet.id;
+        vMobin.register_name = rayanWallet.register_name;
+      } else {
+        this.db.cash_vouchers.push({
+          id: 'cv-rcp-mobin-villa-44003',
+          receipt_id: 'rec-mobin-villa-44003',
+          company_id: 'rayan-corp-uae',
+          voucher_no: 'REC-RV-44032',
+          register_id: rayanWallet.id,
+          register_name: rayanWallet.register_name,
+          custodian: 'Arshad Alam Shaikh',
+          date: '2026-01-14',
+          voucher_date: '2026-01-14',
+          type: 'inflow',
+          category: 'Customer Cash Collection',
+          purpose: 'Customer cash collection against REC-RG-INV-44003 (Al Lisaili Villa Dubai)',
+          payee: 'MS MOBIN AL LISAILI VILLA DUBAI',
+          amount: '9000.00',
+          currency: 'AED',
+          status: 'Cleared'
+        });
+      }
+
+      this.db.cash_vouchers.forEach(cv => {
+        if (cv.voucher_no === 'CV-REC-RV-44064' || cv.voucher_no === 'CV-REC-RV-44093' || (cv.category === 'Customer Cash Collection' && cv.type === 'inflow')) {
+          cv.register_id = rayanWallet.id;
+          cv.register_name = rayanWallet.register_name;
+        }
+      });
 
       // Calculate live balances based on vouchers
       const vaultsMap = {};
@@ -1785,8 +1845,8 @@ class FinanceApp {
 
     if (Array.isArray(this.db.bank_transfers)) {
       // Remove phantom / duplicate transfers
-      const phantomIds = new Set(['wire-rcp-rec-mvyu2o9n', 'wire-chq-chq-mvqh5lnb', 'wire-pv-rec-44002', 'wire-pv-rec-44005', 'wire-pv-rec-44006', 'wire-pv-rec-44004', 'wire-pv-rec-44003']);
-      this.db.bank_transfers = this.db.bank_transfers.filter(t => !phantomIds.has(t.id) && t.reference_no !== 'CHQ-000007');
+      const phantomIds = new Set(['wire-rcp-mobin-villa-44003', 'wire-rcp-rec-mvyu2o9n', 'wire-chq-chq-mvqh5lnb', 'wire-pv-rec-44002', 'wire-pv-rec-44005', 'wire-pv-rec-44006', 'wire-pv-rec-44004', 'wire-pv-rec-44003']);
+      this.db.bank_transfers = this.db.bank_transfers.filter(t => !phantomIds.has(t.id) && t.reference_no !== 'CHQ-000007' && t.reference_no !== 'PHUB604192801');
 
       // Update Cheque 014502, 017236, and 000867 wires to exact amounts
       const w014502 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvy6c2gy' || t.reference_no === 'CHQ-014502');
@@ -1862,15 +1922,45 @@ class FinanceApp {
           }
         });
         const calcBal = Math.round((adcbIn - adcbOut) * 100) / 100;
-        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1351640.87';
+        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1342640.87';
       }
     }
+
+    // Clean company and customer names trailing dots (e.g. "LLC.", "EST.")
+    const cleanTrailingDot = (str) => {
+      if (!str || typeof str !== 'string') return str;
+      return str.replace(/\.+$/, '').trim();
+    };
+
+    (this.db.customers || []).forEach(c => {
+      if (c.name) c.name = cleanTrailingDot(c.name);
+      if (c.company_name) c.company_name = cleanTrailingDot(c.company_name);
+    });
+    (this.db.vendors || []).forEach(v => {
+      if (v.name) v.name = cleanTrailingDot(v.name);
+    });
+    (this.db.invoices || []).forEach(i => {
+      if (i.customer_name) i.customer_name = cleanTrailingDot(i.customer_name);
+    });
+    (this.db.customer_receipts || []).forEach(r => {
+      if (r.customer_name) r.customer_name = cleanTrailingDot(r.customer_name);
+    });
+    (this.db.cheques || []).forEach(c => {
+      if (c.party_name) c.party_name = cleanTrailingDot(c.party_name);
+    });
+    (this.db.bank_transfers || []).forEach(t => {
+      if (t.counterparty) t.counterparty = cleanTrailingDot(t.counterparty);
+      if (t.purpose) {
+        t.purpose = t.purpose.replace(/M\/S TOP ROCK INTERIORS LLC\./g, 'M/S TOP ROCK INTERIORS LLC')
+                             .replace(/M\/S AYAT TECHNICAL SERVICES EST\./g, 'M/S AYAT TECHNICAL SERVICES EST');
+      }
+    });
   }
 
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v101';
+    const CURRENT_DB_VERSION = 'v2026_clean_v102';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -7154,7 +7244,7 @@ class FinanceApp {
             <div class="fin-metric-card">
               <span class="fin-metric-label">Customer Cash in Hand</span>
               <div class="fin-metric-value" style="color:#a855f7;">${this.formatCurrency(rcpCash)}</div>
-              <span class="fin-metric-sub">Payment-In (${this.formatCurrency(totalReceived)}) = Bank + Cash (REC-RV-44030) ✓</span>
+              <span class="fin-metric-sub">Payment-In (${this.formatCurrency(totalReceived)}) = Bank + Cash (REC-RV-44030 &amp; REC-RV-44032) ✓</span>
             </div>
             <div class="fin-metric-card">
               <span class="fin-metric-label">Unallocated Client Advances</span>
