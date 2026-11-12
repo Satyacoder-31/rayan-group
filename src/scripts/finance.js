@@ -1761,7 +1761,7 @@ class FinanceApp {
       'vend-mw86p574': 'VEN-REC-44003', // M/S HI PROFILE GENERAL MAINTENANCE LLC
       'vend-mvzjrpcj': 'VEN-REC-44004', // M/S HLN TECHNICAL SERVICES LLC
       'vend-mw87fj64': 'VEN-REC-44005', // M/S MURGANTI GCC  l  UAE
-      'vend-8334':     'VEN-REC-44006', // M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC
+      'vend-8334': 'VEN-REC-44006', // M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC
       'vend-mvtborpo': 'VEN-REC-44007'  // M/S RUBY METAL INDUSTRIES SPC LLC
     };
     const canonicalVendorNameMap = {
@@ -1839,13 +1839,16 @@ class FinanceApp {
     });
 
     // 5. Auto-reconcile Bank Transfers, Cheques Register, Cash-in-Hand, and Bank Accounts Harmony
+    const r867Record = Array.isArray(this.db.customer_receipts) ? this.db.customer_receipts.find(r => r.id === 'rec-mvxegfg5' || r.cheque_no === '000867') : null;
+    const r867Amount = r867Record ? r867Record.amount_received : '35597.36';
+
     if (Array.isArray(this.db.cheques)) {
       const c014502 = this.db.cheques.find(c => c.cheque_no === '014502');
       if (c014502) c014502.amount = '19615.27';
       const c017236 = this.db.cheques.find(c => c.cheque_no === '017236');
       if (c017236) c017236.amount = '20044.01';
       const c000867 = this.db.cheques.find(c => c.cheque_no === '000867');
-      if (c000867 && r867) c000867.amount = r867.amount_received;
+      if (c000867) c000867.amount = r867Amount;
       const c000007 = this.db.cheques.find(c => c.cheque_no === '000007');
       if (c000007 && c000007.status === 'Cleared') c000007.status = 'Post-Dated Cheque (PDC)';
     }
@@ -1861,7 +1864,7 @@ class FinanceApp {
       const w017236 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvy4fwvn' || t.reference_no === 'CHQ-017236');
       if (w017236) w017236.amount = '20044.01';
       const w000867 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvxegfg5' || t.reference_no === 'CHQ-000867');
-      if (w000867 && r867) w000867.amount = r867.amount_received;
+      if (w000867) w000867.amount = r867Amount;
 
       // Ensure missing online inward client wires exist
       if (!this.db.bank_transfers.some(t => t.id === 'wire-rcp-rec-mvwqcuc7' || t.reference_no === 'PHUB295410356')) {
@@ -1968,7 +1971,7 @@ class FinanceApp {
       if (t.counterparty) t.counterparty = cleanTrailingDot(t.counterparty);
       if (t.purpose) {
         t.purpose = t.purpose.replace(/M\/S TOP ROCK INTERIORS LLC\./g, 'M/S TOP ROCK INTERIORS LLC')
-                             .replace(/M\/S AYAT TECHNICAL SERVICES EST\./g, 'M/S AYAT TECHNICAL SERVICES EST');
+          .replace(/M\/S AYAT TECHNICAL SERVICES EST\./g, 'M/S AYAT TECHNICAL SERVICES EST');
       }
     });
   }
@@ -1981,7 +1984,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v105';
+    const CURRENT_DB_VERSION = 'v2026_clean_v106';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2621,7 +2624,7 @@ class FinanceApp {
     if (action === 'transfer_petty_cash') {
       try {
         localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) {}
+      } catch (e) { }
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -5990,9 +5993,9 @@ class FinanceApp {
       this.invSort = sMode;
       const filtered = rawInvoices.filter(inv => {
         const trnText = (inv.customer_trn || inv.trn || inv.tax_number || '').toLowerCase();
-        const matchQ = (inv.invoice_no || '').toLowerCase().includes(q) || 
-                       (inv.customer_name || '').toLowerCase().includes(q) ||
-                       trnText.includes(q);
+        const matchQ = (inv.invoice_no || '').toLowerCase().includes(q) ||
+          (inv.customer_name || '').toLowerCase().includes(q) ||
+          trnText.includes(q);
         const matchSt = st === 'all' || inv.status === st;
         return matchQ && matchSt;
       });
@@ -6063,25 +6066,25 @@ class FinanceApp {
         <td style="white-space:nowrap !important; font-family:monospace; font-size:0.86rem; font-weight:700; color:#38bdf8; min-width:180px;">
           ${inv.invoice_no || '—'}
           ${(() => {
-            const rawLpo = (inv.lpo_no || inv.po_reference || inv.order_no || '').replace(/^\.\s*/, '').trim();
-            return (rawLpo && rawLpo !== '.' && rawLpo !== '/') ? `<div style="font-size:0.68rem; color:#94a3b8; font-weight:500; font-family:sans-serif;">LPO: ${rawLpo}</div>` : '';
-          })()}
+        const rawLpo = (inv.lpo_no || inv.po_reference || inv.order_no || '').replace(/^\.\s*/, '').trim();
+        return (rawLpo && rawLpo !== '.' && rawLpo !== '/') ? `<div style="font-size:0.68rem; color:#94a3b8; font-weight:500; font-family:sans-serif;">LPO: ${rawLpo}</div>` : '';
+      })()}
         </td>
         <td style="white-space:nowrap;">${this.formatDate(inv.invoice_date)}</td>
         <td style="white-space:nowrap; min-width:200px;">
           <span class="fin-customer-cell">${this.cleanName(inv.customer_name) || 'Valued Client'}</span>
           ${(() => {
-            const cust = (this.db?.customers || []).find(c => (inv.customer_id && c.id === inv.customer_id) || (c.name && inv.customer_name && c.name.toLowerCase() === inv.customer_name.toLowerCase()));
-            const isTopRock = (inv.customer_name || '').toLowerCase().includes('top rock') || inv.customer_id === 'cust-toprock';
-            const trn = inv.customer_trn || inv.trn || inv.tax_number || cust?.trn || (isTopRock ? '10457119600003' : '');
-            const gstin = inv.customer_gstin || cust?.gstin || '';
-            if (trn) {
-              return `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${trn}</div>`;
-            } else if (gstin) {
-              return `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${gstin}</div>`;
-            }
-            return '';
-          })()}
+        const cust = (this.db?.customers || []).find(c => (inv.customer_id && c.id === inv.customer_id) || (c.name && inv.customer_name && c.name.toLowerCase() === inv.customer_name.toLowerCase()));
+        const isTopRock = (inv.customer_name || '').toLowerCase().includes('top rock') || inv.customer_id === 'cust-toprock';
+        const trn = inv.customer_trn || inv.trn || inv.tax_number || cust?.trn || (isTopRock ? '10457119600003' : '');
+        const gstin = inv.customer_gstin || cust?.gstin || '';
+        if (trn) {
+          return `<div style="font-size:0.68rem; color:#38bdf8; font-weight:600;">TRN: ${trn}</div>`;
+        } else if (gstin) {
+          return `<div style="font-size:0.68rem; color:#94a3b8;">GSTIN: ${gstin}</div>`;
+        }
+        return '';
+      })()}
         </td>
         <td><span style="font-size:0.75rem;">${inv.place_of_supply || '—'}</span></td>
         <td style="white-space:nowrap;">${inv.currency_symbol || ''}${Number(inv.taxable_subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
@@ -8451,8 +8454,8 @@ class FinanceApp {
         ` : `
           <div class="fin-bank-grid">
             ${registers.map(r => {
-              const isPrimary = r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'));
-              return `
+      const isPrimary = r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'));
+      return `
               <div class="fin-bank-card" style="${isPrimary ? 'border-color:rgba(56,189,248,0.4); box-shadow:0 0 15px rgba(56,189,248,0.1);' : ''}">
                 <div class="fin-bank-card-header">
                   <div>
@@ -8484,7 +8487,8 @@ class FinanceApp {
                   `}
                 </div>
               </div>
-            `;}).join('')}
+            `;
+    }).join('')}
           </div>
         `}
 
@@ -10535,25 +10539,25 @@ class FinanceApp {
     const filteredReceipts = ledger.receipts.filter(r => {
       if (!search) return true;
       return (r.receipt_no && r.receipt_no.toLowerCase().includes(search)) ||
-             (r.customer_name && r.customer_name.toLowerCase().includes(search)) ||
-             (r.ref_no && r.ref_no.toLowerCase().includes(search)) ||
-             (r.allocations_desc && r.allocations_desc.toLowerCase().includes(search));
+        (r.customer_name && r.customer_name.toLowerCase().includes(search)) ||
+        (r.ref_no && r.ref_no.toLowerCase().includes(search)) ||
+        (r.allocations_desc && r.allocations_desc.toLowerCase().includes(search));
     });
 
     const filteredCreditNotes = ledger.creditNotes.filter(cn => {
       if (!search) return true;
       return (cn.credit_note_no && cn.credit_note_no.toLowerCase().includes(search)) ||
-             (cn.customer_name && cn.customer_name.toLowerCase().includes(search)) ||
-             (cn.invoice_no && cn.invoice_no.toLowerCase().includes(search)) ||
-             (cn.reason && cn.reason.toLowerCase().includes(search));
+        (cn.customer_name && cn.customer_name.toLowerCase().includes(search)) ||
+        (cn.invoice_no && cn.invoice_no.toLowerCase().includes(search)) ||
+        (cn.reason && cn.reason.toLowerCase().includes(search));
     });
 
     const filteredPayments = ledger.payments.filter(p => {
       if (!search) return true;
       return (p.voucher_no && p.voucher_no.toLowerCase().includes(search)) ||
-             (p.vendor_name && p.vendor_name.toLowerCase().includes(search)) ||
-             (p.channel && p.channel.toLowerCase().includes(search)) ||
-             (p.ref_no && p.ref_no.toLowerCase().includes(search));
+        (p.vendor_name && p.vendor_name.toLowerCase().includes(search)) ||
+        (p.channel && p.channel.toLowerCase().includes(search)) ||
+        (p.ref_no && p.ref_no.toLowerCase().includes(search));
     });
 
     root.innerHTML = `
@@ -14548,9 +14552,9 @@ class FinanceApp {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
               ${(() => {
-                const linkedPay = (this.db?.vendor_payments || []).find(p => (p.allocations || []).some(a => a.bill_id === bill.id || a.bill_no === bill.bill_no));
-                return `<button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal('${linkedPay ? (linkedPay.id || linkedPay.voucher_no) : ''}')">Payment Voucher</button>`;
-              })()}
+        const linkedPay = (this.db?.vendor_payments || []).find(p => (p.allocations || []).some(a => a.bill_id === bill.id || a.bill_no === bill.bill_no));
+        return `<button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal('${linkedPay ? (linkedPay.id || linkedPay.voucher_no) : ''}')">Payment Voucher</button>`;
+      })()}
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openBillPrintModal('${bill.id || ''}')">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
@@ -14710,11 +14714,11 @@ class FinanceApp {
                   </thead>
                   <tbody>
                     ${lineItems.map((item, idx) => {
-      const itemRate = Number(item.unit_price || item.rate || 0);
-      const itemQty = Number(item.qty || 1);
-      const itemTaxPct = Number(item.vat_rate || item.tax_rate || item.gst_rate || (isIndia ? 18 : 5));
-      const itemTotal = Number(item.total_amount || (itemRate * itemQty * (1 + itemTaxPct / 100)));
-      return `
+        const itemRate = Number(item.unit_price || item.rate || 0);
+        const itemQty = Number(item.qty || 1);
+        const itemTaxPct = Number(item.vat_rate || item.tax_rate || item.gst_rate || (isIndia ? 18 : 5));
+        const itemTotal = Number(item.total_amount || (itemRate * itemQty * (1 + itemTaxPct / 100)));
+        return `
                         <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                           <td style="border:1px solid #111827; padding:4px 4px; text-align:center; font-weight:700;">${idx + 1}</td>
                           <td style="border:1px solid #111827; padding:4px 6px; text-align:left; font-weight:600; color:#111827;">
@@ -14735,7 +14739,7 @@ class FinanceApp {
                           </td>
                         </tr>
                       `;
-    }).join('')}
+      }).join('')}
                   </tbody>
                   <tfoot>
                     <tr style="background:#f8fafc; border-top:1.5px solid #111827;">
@@ -21702,7 +21706,7 @@ class FinanceApp {
             created_at: new Date().toISOString()
           });
 
-          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
           await this.syncApi('transfer_bank_to_wallet', payload);
           this.closeModal('modal-bank-transfer');
@@ -22051,13 +22055,13 @@ class FinanceApp {
           created_at: new Date().toISOString()
         });
 
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
         const res = await this.syncApi('transfer_bank_to_wallet', payload);
         if (res && res.data) {
           this.db = this.mergeWithSeedData(res.data);
           this.normalizeAllBalances();
-          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
         }
         this.closeModal('modal-bank-to-wallet');
         this.renderActiveTab();
@@ -22170,7 +22174,7 @@ class FinanceApp {
       if (idx >= 0) this.db.bank_transfers[idx] = updatedTrn;
       else this.db.bank_transfers.unshift(updatedTrn);
 
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
       this.closeModal('modal-edit-bank-transfer');
       this.renderActiveTab();
       this.showNotification(`Bank wire "${updatedTrn.reference_no}" updated successfully.`, 'success');
@@ -22492,7 +22496,7 @@ class FinanceApp {
       this.db.cash_vouchers = this.db.cash_vouchers.filter(x => x.id !== vId && x.id !== voucherId && (vNo ? x.voucher_no !== vNo : true));
     }
     this.normalizeAllBalances();
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
     this.renderActiveTab();
     this.showNotification(`Petty cash voucher "${label}" deleted successfully.`, 'info');
 
@@ -22646,10 +22650,10 @@ class FinanceApp {
         const matched = projects.find(p => {
           const cName = (p.client_name || '').toLowerCase();
           const pName = (p.project_name || p.name || '').toLowerCase();
-          return (cName && vName.includes(cName)) || 
-                 (vName.includes('buildara') && (cName.includes('buildara') || pName.includes('yateem') || pName.includes('khalidiyah'))) ||
-                 (vName.includes('top rock') && (cName.includes('top rock') || pName.includes('police'))) ||
-                 (vLoc && pName.includes(vLoc));
+          return (cName && vName.includes(cName)) ||
+            (vName.includes('buildara') && (cName.includes('buildara') || pName.includes('yateem') || pName.includes('khalidiyah'))) ||
+            (vName.includes('top rock') && (cName.includes('top rock') || pName.includes('police'))) ||
+            (vLoc && pName.includes(vLoc));
         });
         if (matched && projectEl) {
           projectEl.value = matched.id;
