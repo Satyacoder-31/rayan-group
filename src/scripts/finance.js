@@ -31,6 +31,18 @@ class FinanceApp {
     this.poSort = 'serial-desc';
     this.expSort = 'serial-desc';
     this.prjSort = 'name-asc';
+    this._ctState = {
+      mode: 'live',
+      sbrElected: true,
+      simSales: 2000000,
+      simMaterials: 500000,
+      simLabour: 400000,
+      simSubcontractors: 250000,
+      simRent: 100000,
+      simTransport: 150000,
+      simNonDeductible: 0,
+      simSbrElected: false
+    };
   }
 
   async init() {
@@ -1984,7 +1996,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v107';
+    const CURRENT_DB_VERSION = 'v2026_clean_v108';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4606,7 +4618,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-accordion-body">
                   <div class="fin-nav-subitem ${this.activeTab === 'vat_management' ? 'active' : ''}" data-tab="vat_management">
-                    <span class="fin-subitem-text">🏛️ VAT Management</span>
+                    <span class="fin-subitem-text">🏛️ VAT &amp; Corporate Tax</span>
                   </div>
                   <div class="fin-nav-subitem ${this.activeTab === 'reports' ? 'active' : ''}" data-tab="reports">
                     <span class="fin-subitem-text">Financial Reports</span>
@@ -10580,9 +10592,9 @@ class FinanceApp {
       <div class="fin-panel-card">
         <div class="fin-panel-header">
           <div>
-            <h2 class="fin-panel-title">🏛️ VAT Management Desk &amp; Statutory Tax Return</h2>
+            <h2 class="fin-panel-title">🏛️ UAE VAT &amp; Corporate Tax Management Desk</h2>
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">
-              Cash-basis realized Output VAT (Payment-In) • Credit Notes managed separately • Recoverable Input VAT (Payment-Out)
+              Realized 5% Output VAT &bull; Separate Credit Notes &bull; Recoverable Input VAT &bull; UAE Corporate Tax (9% &amp; Small Business Relief)
             </p>
           </div>
           <div class="fin-panel-actions" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
@@ -10594,6 +10606,9 @@ class FinanceApp {
             </button>
             <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printVatReturn()">
               🖨️ Print Form 201 Return
+            </button>
+            <button type="button" class="fin-btn-quick" style="border-color:#34d399; color:#34d399; font-weight:600; background:rgba(16,185,129,0.1);" onclick="window.finApp.printCorporateTaxAssessment()">
+              🏢 Print CT Assessment
             </button>
           </div>
         </div>
@@ -10636,6 +10651,9 @@ class FinanceApp {
           <button type="button" class="fin-btn-quick ${subTab === 'payments' ? 'primary' : ''}" onclick="window.finApp.setVatSubTab('payments')" style="font-weight:600;">
             💸 Payment-Out Input VAT (${ledger.payments.length})
           </button>
+          <button type="button" class="fin-btn-quick ${subTab === 'corporate_tax' ? 'primary' : ''}" onclick="window.finApp.setVatSubTab('corporate_tax')" style="font-weight:600; ${subTab === 'corporate_tax' ? 'background:linear-gradient(135deg, #059669, #10b981); border-color:#10b981; color:#fff;' : 'border-color:rgba(16,185,129,0.5); color:#34d399;'}">
+            🏢 UAE Corporate Tax (9% &amp; SBR)
+          </button>
           
           <div style="margin-left:auto; position:relative; min-width:240px;">
             <input type="text" id="vat-search-inp" class="fin-filter-input" placeholder="🔍 Search records..." value="${this._vatSearch || ''}" style="width:100%; padding:0.4rem 1.8rem 0.4rem 0.75rem; font-size:0.8rem; box-sizing:border-box;">
@@ -10649,6 +10667,7 @@ class FinanceApp {
           ${subTab === 'receipts' ? this.renderVatReceiptsView(filteredReceipts, t) : ''}
           ${subTab === 'credit_notes' ? this.renderVatCreditNotesView(filteredCreditNotes, t) : ''}
           ${subTab === 'payments' ? this.renderVatPaymentsView(filteredPayments, t) : ''}
+          ${subTab === 'corporate_tax' ? this.renderCorporateTaxView() : ''}
         </div>
       </div>
     `;
@@ -10751,6 +10770,55 @@ class FinanceApp {
               <div style="font-size:0.72rem; color:#cbd5e1; margin-top:0.25rem;">
                 ${t.netVatPayable >= 0 ? '✓ Net Tax Payable for electronic transfer to UAE Federal Tax Authority (FTA)' : '✓ Net Tax Credit / Refund claimable from FTA'}
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Official UAE Corporate Tax Compliance & Small Business Relief Card -->
+        <div style="grid-column: 1 / -1; background:linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(15,23,42,0.85) 100%); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:1.25rem 1.5rem; margin-top:0.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.85rem; margin-bottom:1rem;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span style="font-size:1.5rem;">🏢</span>
+              <div>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                  <h3 style="font-size:1.05rem; color:#f8fafc; margin:0; font-weight:700;">UAE Corporate Tax Status (Federal Decree-Law No. 47 of 2022)</h3>
+                  <span class="fin-badge" style="background:rgba(16,185,129,0.2); color:#34d399; font-weight:700; font-size:0.7rem;">Small Business Relief Active</span>
+                </div>
+                <p style="font-size:0.75rem; color:#94a3b8; margin:0.2rem 0 0 0;">
+                  0% up to AED 375k &bull; 9% above AED 375k &bull; Small Business Relief applies up to AED 3,000,000 revenue (Extended to 31 Dec 2029)
+                </p>
+              </div>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#34d399; font-weight:600;" onclick="window.finApp.setVatSubTab('corporate_tax')">
+                📊 Open Corporate Tax Desk &amp; Simulator &rarr;
+              </button>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.85rem;">
+              <span style="font-size:0.72rem; color:#94a3b8; display:block; text-transform:uppercase;">Annual Invoiced Turnover</span>
+              <strong style="font-size:1.05rem; color:#f8fafc; display:block; margin:0.25rem 0;">AED 1,986,662.89</strong>
+              <span style="font-size:0.68rem; color:#38bdf8;">Taxable Base: AED 1,915,242.11</span>
+            </div>
+
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.85rem;">
+              <span style="font-size:0.72rem; color:#94a3b8; display:block; text-transform:uppercase;">Small Business Relief Limit</span>
+              <strong style="font-size:1.05rem; color:#f8fafc; display:block; margin:0.25rem 0;">AED 3,000,000.00</strong>
+              <span style="font-size:0.68rem; color:#10b981;">Valid until 31 Dec 2029</span>
+            </div>
+
+            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:0.85rem;">
+              <span style="font-size:0.72rem; color:#a7f3d0; display:block; text-transform:uppercase; font-weight:600;">SBR Eligibility Status</span>
+              <strong style="font-size:1.05rem; color:#10b981; display:block; margin:0.25rem 0;">QUALIFIED &amp; ELECTED</strong>
+              <span style="font-size:0.68rem; color:#cbd5e1;">Revenue &le; AED 3M threshold</span>
+            </div>
+
+            <div style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.3); border-radius:8px; padding:0.85rem;">
+              <span style="font-size:0.72rem; color:#e9d5ff; display:block; text-transform:uppercase; font-weight:700;">Corporate Tax Payable</span>
+              <strong style="font-size:1.15rem; color:#c084fc; display:block; margin:0.25rem 0;">AED 0.00</strong>
+              <span style="font-size:0.68rem; color:#a7f3d0;">AED 138,621.79 saved via SBR ✓</span>
             </div>
           </div>
         </div>
@@ -11038,6 +11106,593 @@ class FinanceApp {
 
         <div style="margin-top: 30px; font-size: 12px; color: #475569; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 6px;">
           <strong>Taxpayer Declaration:</strong> We hereby declare that the figures reported in this statement accurately represent all consideration received, sales returns credited, and eligible input taxes disbursed during the tax period, strictly adhering to UAE Federal Decree-Law No. (8) of 2017 on Value Added Tax.
+        </div>
+
+        <div class="footer">
+          <div>
+            <strong>Authorized Signatory:</strong> Arshad Alam Shaikh<br>
+            Managing Director / Designated Tax Representative
+          </div>
+          <div style="text-align: right;">
+            Official Digital Stamp &amp; Signature Verification<br>
+            RAYAN GROUP CORPORATE TREASURY
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 400);
+  }
+
+  // --------------------------------------------------------------------------
+  // 12.B UAE CORPORATE TAX & SMALL BUSINESS RELIEF (SBR) MODULE
+  // --------------------------------------------------------------------------
+  setCtMode(mode) {
+    this._ctState.mode = mode;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  toggleSbrRelief(elected) {
+    this._ctState.sbrElected = !!elected;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  toggleSimSbr(elected) {
+    this._ctState.simSbrElected = !!elected;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  updateCtSim(field, val) {
+    this._ctState[field] = parseFloat(val) || 0;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  resetCtSim() {
+    this._ctState.simSales = 2000000;
+    this._ctState.simMaterials = 500000;
+    this._ctState.simLabour = 400000;
+    this._ctState.simSubcontractors = 250000;
+    this._ctState.simRent = 100000;
+    this._ctState.simTransport = 150000;
+    this._ctState.simNonDeductible = 0;
+    this._ctState.simSbrElected = false;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  renderCorporateTaxView() {
+    const isSim = this._ctState.mode === 'simulator';
+    
+    // Live Data calculations:
+    const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
+    const currentIsUae = isUaeEntity(this.activeCompanyId);
+    const invoices = (this.db?.invoices || []).filter(i => {
+      const compId = i.company_id || 'rayan-corp-uae';
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && i.status !== 'void';
+    });
+    const bills = (this.db?.purchase_bills || []).filter(b => {
+      const compId = b.company_id || 'rayan-corp-uae';
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch && b.status !== 'void';
+    });
+    const expenses = (this.db?.expenses || []).filter(e => {
+      const compId = e.company_id || 'rayan-corp-uae';
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      return compMatch;
+    });
+
+    const liveGrossRevenue = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+    const liveTaxableRevenue = invoices.reduce((s, i) => s + (Number(i.taxable_subtotal) || 0), 0);
+    const liveBillsCost = bills.reduce((s, b) => s + (Number(b.taxable_subtotal) || 0), 0);
+    const liveExpensesCost = expenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+    const liveTotalExpenses = liveBillsCost + liveExpensesCost;
+    const liveAccountingProfit = Math.max(0, liveTaxableRevenue - liveTotalExpenses);
+    const liveTaxableProfit = liveAccountingProfit;
+    const liveSbrEligible = liveGrossRevenue <= 3000000;
+    const liveSbrElected = this._ctState.sbrElected && liveSbrEligible;
+    const liveTier1Excess = Math.max(0, liveTaxableProfit - 375000);
+    const liveTaxBeforeRelief = liveTier1Excess * 0.09;
+    const liveTaxPayable = liveSbrElected ? 0 : liveTaxBeforeRelief;
+
+    // Simulator calculations:
+    const simSales = Number(this._ctState.simSales) || 0;
+    const simMaterials = Number(this._ctState.simMaterials) || 0;
+    const simLabour = Number(this._ctState.simLabour) || 0;
+    const simSubcontractors = Number(this._ctState.simSubcontractors) || 0;
+    const simRent = Number(this._ctState.simRent) || 0;
+    const simTransport = Number(this._ctState.simTransport) || 0;
+    const simNonDeductible = Number(this._ctState.simNonDeductible) || 0;
+    const simTotalExpenses = simMaterials + simLabour + simSubcontractors + simRent + simTransport;
+    const simAccountingProfit = Math.max(0, simSales - simTotalExpenses);
+    const simTaxableProfit = simAccountingProfit + simNonDeductible;
+    const simSbrEligible = simSales <= 3000000;
+    const simSbrElected = this._ctState.simSbrElected && simSbrEligible;
+    const simTier1Excess = Math.max(0, simTaxableProfit - 375000);
+    const simTaxBeforeRelief = simTier1Excess * 0.09;
+    const simTaxPayable = simSbrElected ? 0 : simTaxBeforeRelief;
+
+    // Active Display Variables based on selected Mode:
+    const revenue = isSim ? simSales : liveGrossRevenue;
+    const totalExpenses = isSim ? simTotalExpenses : liveTotalExpenses;
+    const accountingProfit = isSim ? simAccountingProfit : liveAccountingProfit;
+    const taxableProfit = isSim ? simTaxableProfit : liveTaxableProfit;
+    const sbrEligible = isSim ? simSbrEligible : liveSbrEligible;
+    const sbrElected = isSim ? simSbrElected : liveSbrElected;
+    const tier1Excess = isSim ? simTier1Excess : liveTier1Excess;
+    const taxBeforeRelief = isSim ? simTaxBeforeRelief : liveTaxBeforeRelief;
+    const taxPayable = isSim ? simTaxPayable : liveTaxPayable;
+
+    return `
+      <div>
+        <!-- Mode Switcher & Overview Header -->
+        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:1rem; margin-bottom:1rem;">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <h3 style="font-size:1.15rem; color:#f8fafc; margin:0; font-weight:700;">🏢 UAE Corporate Tax Desk (Federal Decree-Law No. 47 of 2022)</h3>
+                <span class="fin-badge" style="background:rgba(16,185,129,0.2); color:#34d399; font-weight:700;">9% Standard Rate • 0% Threshold</span>
+              </div>
+              <p style="font-size:0.8rem; color:#94a3b8; margin:0.3rem 0 0 0;">
+                Statutory profit taxation framework for <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong> (TRN: 100234567800003). Corporate Tax is assessed strictly on net taxable profit, not on gross revenue.
+              </p>
+            </div>
+            
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-quick ${!isSim ? 'primary' : ''}" style="${!isSim ? 'background:#059669; border-color:#10b981;' : ''}" onclick="window.finApp.setCtMode('live')">
+                📊 Rayan Live Books
+              </button>
+              <button type="button" class="fin-btn-quick ${isSim ? 'primary' : ''}" style="${isSim ? 'background:#2563eb; border-color:#38bdf8;' : ''}" onclick="window.finApp.setCtMode('simulator')">
+                🧮 Interactive Contracting Simulator
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#34d399; font-weight:600;" onclick="window.finApp.printCorporateTaxAssessment()">
+                🖨️ Print CT Assessment
+              </button>
+            </div>
+          </div>
+
+          <!-- Small Business Relief (SBR) Callout Banner -->
+          <div style="background:${sbrEligible ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; border:1px solid ${sbrEligible ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}; border-radius:10px; padding:1rem 1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <span style="font-size:1.6rem;">${sbrEligible ? '🛡️' : '⚠️'}</span>
+                <div>
+                  <h4 style="color:#f8fafc; margin:0; font-size:0.95rem; font-weight:700;">
+                    ${sbrEligible ? 'Special Benefit: Small Business Relief (SBR) Eligible (AED 3,000,000 Threshold)' : 'Small Business Relief Ineligible (Turnover Exceeds AED 3,000,000)'}
+                  </h4>
+                  <p style="font-size:0.75rem; color:#cbd5e1; margin:0.25rem 0 0 0;">
+                    ${sbrEligible ? `Annual turnover of <strong>${this.formatCurrency(revenue)}</strong> is within the AED 3,000,000 threshold. The UAE Ministry of Finance has extended SBR until <strong>31 December 2029</strong>. When elected, taxable profit is treated as <strong>AED 0.00</strong>.` : `Annual turnover exceeds AED 3M limit. Standard 9% corporate tax is mandatory on profits above AED 375,000.`}
+                  </p>
+                </div>
+              </div>
+
+              ${sbrEligible ? `
+                <div style="display:flex; align-items:center; gap:0.6rem; background:rgba(0,0,0,0.3); padding:0.5rem 0.85rem; border-radius:8px; border:1px solid rgba(16,185,129,0.4);">
+                  <input type="checkbox" id="ct-sbr-switch" ${sbrElected ? 'checked' : ''} onchange="${isSim ? 'window.finApp.toggleSimSbr(this.checked)' : 'window.finApp.toggleSbrRelief(this.checked)'}" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;">
+                  <label for="ct-sbr-switch" style="font-size:0.8rem; color:#a7f3d0; font-weight:700; cursor:pointer;">
+                    ${sbrElected ? '✓ Small Business Relief ELECTED (Tax = AED 0.00)' : 'Click to Elect SBR Relief (Tax = AED 0.00)'}
+                  </label>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Key Corporate Tax Metrics Grid -->
+        <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">1. Annual Revenue (Turnover)</span>
+            <div class="fin-metric-value" style="color:#38bdf8;">${this.formatCurrency(revenue)}</div>
+            <span class="fin-metric-sub">${isSim ? 'Interactive simulation figure' : 'Actual posted sales turnover'}</span>
+          </div>
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">2. Allowable Business Expenses</span>
+            <div class="fin-metric-value" style="color:#f59e0b;">- ${this.formatCurrency(totalExpenses)}</div>
+            <span class="fin-metric-sub">Labour, materials, subs, rent, transport</span>
+          </div>
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">3. Taxable Profit Base</span>
+            <div class="fin-metric-value" style="color:#a78bfa;">${this.formatCurrency(taxableProfit)}</div>
+            <span class="fin-metric-sub">Accounting profit after tax adjustments</span>
+          </div>
+          <div class="fin-metric-card" style="border-color:${sbrElected ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}; background:${sbrElected ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'};">
+            <span class="fin-metric-label" style="color:${sbrElected ? '#34d399' : '#f87171'}; font-weight:700;">4. Corporate Tax Payable</span>
+            <div class="fin-metric-value" style="color:${sbrElected ? '#34d399' : '#f87171'}; font-weight:800;">${this.formatCurrency(taxPayable)}</div>
+            <span class="fin-metric-sub" style="color:#cbd5e1;">${sbrElected ? '🎉 AED 0.00 via Small Business Relief ✓' : `Payable to FTA (9% above 375k)`}</span>
+          </div>
+        </div>
+
+        <!-- Main Body: Simulator Panel (if sim) OR Live Ledger + Tax Calculation Schedule -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;">
+          
+          <!-- Column 1: Interactive Simulator Inputs OR Live Entity Books -->
+          ${isSim ? `
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
+                <div>
+                  <h3 style="font-size:1rem; color:#f8fafc; margin:0; font-weight:700;">🧮 Interactive Contracting Simulator</h3>
+                  <span style="font-size:0.72rem; color:#94a3b8;">Adjust any line to test tax outcomes</span>
+                </div>
+                <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-size:0.75rem;" onclick="window.finApp.resetCtSim()">
+                  🔄 Reset to Prompt Example
+                </button>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:0.75rem; font-size:0.82rem;">
+                <div>
+                  <label style="display:flex; justify-content:space-between; color:#94a3b8; margin-bottom:0.25rem;">
+                    <span>Total Sales Revenue (AED)</span>
+                    <strong style="color:#38bdf8;">${this.formatCurrency(simSales)}</strong>
+                  </label>
+                  <input type="number" step="10000" class="fin-filter-input" value="${simSales}" oninput="window.finApp.updateCtSim('simSales', this.value)" style="width:100%; box-sizing:border-box;">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem;">
+                  <div>
+                    <label style="display:block; color:#94a3b8; font-size:0.75rem; margin-bottom:0.25rem;">Building Materials (AED)</label>
+                    <input type="number" step="5000" class="fin-filter-input" value="${simMaterials}" oninput="window.finApp.updateCtSim('simMaterials', this.value)" style="width:100%; box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block; color:#94a3b8; font-size:0.75rem; margin-bottom:0.25rem;">Labour &amp; Salaries (AED)</label>
+                    <input type="number" step="5000" class="fin-filter-input" value="${simLabour}" oninput="window.finApp.updateCtSim('simLabour', this.value)" style="width:100%; box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem;">
+                  <div>
+                    <label style="display:block; color:#94a3b8; font-size:0.75rem; margin-bottom:0.25rem;">Subcontractor Payments (AED)</label>
+                    <input type="number" step="5000" class="fin-filter-input" value="${simSubcontractors}" oninput="window.finApp.updateCtSim('simSubcontractors', this.value)" style="width:100%; box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block; color:#94a3b8; font-size:0.75rem; margin-bottom:0.25rem;">Rent &amp; Office (AED)</label>
+                    <input type="number" step="5000" class="fin-filter-input" value="${simRent}" oninput="window.finApp.updateCtSim('simRent', this.value)" style="width:100%; box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.6rem;">
+                  <div>
+                    <label style="display:block; color:#94a3b8; font-size:0.75rem; margin-bottom:0.25rem;">Transport &amp; Vehicles (AED)</label>
+                    <input type="number" step="5000" class="fin-filter-input" value="${simTransport}" oninput="window.finApp.updateCtSim('simTransport', this.value)" style="width:100%; box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block; color:#f87171; font-size:0.75rem; margin-bottom:0.25rem;">Non-Deductible Fines (AED)</label>
+                    <input type="number" step="1000" class="fin-filter-input" value="${simNonDeductible}" oninput="window.finApp.updateCtSim('simNonDeductible', this.value)" style="width:100%; box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <div style="padding:0.75rem; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06); margin-top:0.25rem;">
+                  <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem;">
+                    <span style="color:#94a3b8;">Total Contracting Expenses:</span>
+                    <strong style="color:#f59e0b;">${this.formatCurrency(simTotalExpenses)}</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                    <span style="color:#e2e8f0; font-weight:600;">Net Accounting Profit:</span>
+                    <strong style="color:#34d399;">${this.formatCurrency(simAccountingProfit)}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : `
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+              <div style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
+                <h3 style="font-size:1rem; color:#f8fafc; margin:0; font-weight:700;">📊 Rayan Engineering Audited Books (FY 2025–2026)</h3>
+                <span style="font-size:0.72rem; color:#94a3b8;">Real-time figures from posted billing &amp; expense registers</span>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.83rem;">
+                <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
+                  <span style="color:#94a3b8;">Total Gross Invoiced Sales (80 Invoices):</span>
+                  <strong style="color:#f8fafc;">${this.formatCurrency(liveGrossRevenue)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
+                  <span style="color:#94a3b8;">Excluding 5% Output VAT:</span>
+                  <strong style="color:#38bdf8;">${this.formatCurrency(liveTaxableRevenue)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
+                  <span style="color:#94a3b8;">Allowable Vendor Purchase Bills (0 Bills):</span>
+                  <strong style="color:#94a3b8;">- ${this.formatCurrency(liveBillsCost)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
+                  <span style="color:#94a3b8;">Allowable Operational Expenses:</span>
+                  <strong style="color:#94a3b8;">- ${this.formatCurrency(liveExpensesCost)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:0.6rem 0.5rem; background:rgba(255,255,255,0.03); border-radius:6px; margin-top:0.25rem;">
+                  <span style="color:#e2e8f0; font-weight:600;">Net Taxable Accounting Profit:</span>
+                  <strong style="color:#34d399; font-size:0.95rem;">${this.formatCurrency(liveAccountingProfit)}</strong>
+                </div>
+              </div>
+
+              <div style="margin-top:1rem; padding:0.75rem; background:rgba(56,189,248,0.05); border-left:3px solid #38bdf8; border-radius:4px; font-size:0.75rem; color:#94a3b8; line-height:1.5;">
+                <strong>Relief Assessment:</strong> Because total revenue (${this.formatCurrency(liveGrossRevenue)}) is &le; AED 3,000,000.00, Rayan Engineering qualifies for zero corporate tax under Small Business Relief until 31 December 2029.
+              </div>
+            </div>
+          `}
+
+          <!-- Column 2: Two-Tier Corporate Tax Calculation Schedule -->
+          <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+            <div style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
+              <h3 style="font-size:1rem; color:#f8fafc; margin:0; font-weight:700;">📐 Statutory UAE Corporate Tax Calculation</h3>
+              <span style="font-size:0.72rem; color:#94a3b8;">Standard 0% &amp; 9% rate tiers (Federal Decree-Law No. 47)</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.83rem;">
+              <!-- Tier 1: 0% up to 375,000 -->
+              <div style="padding:0.75rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <span style="color:#e2e8f0; font-weight:600;">Tier 1: Taxable Profit up to AED 375,000.00</span>
+                    <span style="font-size:0.7rem; color:#94a3b8; display:block;">Applicable Rate: 0.0%</span>
+                  </div>
+                  <strong style="color:#10b981; font-size:0.95rem;">AED 0.00</strong>
+                </div>
+              </div>
+
+              <!-- Tier 2: 9% above 375,000 -->
+              <div style="padding:0.75rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <span style="color:#e2e8f0; font-weight:600;">Tier 2: Taxable Profit above AED 375,000.00</span>
+                    <span style="font-size:0.7rem; color:#94a3b8; display:block;">
+                      ${tier1Excess > 0 ? `${this.formatCurrency(tier1Excess)} &times; 9.0%` : 'No excess profit over AED 375k'}
+                    </span>
+                  </div>
+                  <strong style="color:${tier1Excess > 0 ? '#f59e0b' : '#94a3b8'}; font-size:0.95rem;">
+                    ${this.formatCurrency(taxBeforeRelief)}
+                  </strong>
+                </div>
+              </div>
+
+              <!-- Subtotal before Relief -->
+              <div style="display:flex; justify-content:space-between; padding:0.4rem 0.5rem; color:#94a3b8;">
+                <span>Total Corporate Tax (Before Relief):</span>
+                <strong style="color:#e2e8f0;">${this.formatCurrency(taxBeforeRelief)}</strong>
+              </div>
+
+              <!-- Small Business Relief Exemption Adjustment -->
+              ${sbrElected ? `
+                <div style="padding:0.6rem 0.75rem; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:8px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                      <span style="color:#a7f3d0; font-weight:700;">Small Business Relief (Art. 21 Exemption)</span>
+                      <span style="font-size:0.7rem; color:#cbd5e1; display:block;">Valid election: Taxable income treated as AED 0</span>
+                    </div>
+                    <strong style="color:#10b981; font-size:0.95rem;">- ${this.formatCurrency(taxBeforeRelief)}</strong>
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Final Net Payable -->
+              <div style="padding:0.9rem; background:${taxPayable === 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; border:1px solid ${taxPayable === 0 ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}; border-radius:8px; margin-top:0.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <span style="font-size:0.9rem; color:#f8fafc; font-weight:700;">Net Corporate Tax Payable to FTA:</span>
+                    <span style="font-size:0.72rem; color:#cbd5e1; display:block;">
+                      ${taxPayable === 0 ? '✓ Zero tax liability under valid SBR election' : '✓ Standard statutory amount due for corporate tax period'}
+                    </span>
+                  </div>
+                  <strong style="font-size:1.25rem; color:${taxPayable === 0 ? '#34d399' : '#f87171'};">
+                    ${this.formatCurrency(taxPayable)}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Statutory Allowable vs Non-Allowable Deductions Matrix (Contracting Specific) -->
+        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+          <div style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
+            <h3 style="font-size:1rem; color:#f8fafc; margin:0; font-weight:700;">📋 Contracting Expense Deductibility Reference Guide (FTA Corporate Tax Rules)</h3>
+            <span style="font-size:0.72rem; color:#94a3b8;">Article 28 (General Deductions) &bull; Article 33 (Non-Deductible Expenditure)</span>
+          </div>
+
+          <div class="fin-table-container">
+            <table class="fin-table">
+              <thead>
+                <tr>
+                  <th style="width:25%;">Expense Category</th>
+                  <th style="width:20%;">Corporate Tax Treatment</th>
+                  <th style="width:30%;">Contracting Business Context</th>
+                  <th style="width:25%;">Mandatory Documentation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Labour &amp; Staff Salaries</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>Site engineers, supervisors, foremen, and field workers</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">MOHRE contracts, WPS bank transfer statements</td>
+                </tr>
+                <tr>
+                  <td><strong>Subcontractor Payments</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>MEP, civil, joinery, and specialized trade subcontractors</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">Subcontract agreement, payment certificate, tax invoice</td>
+                </tr>
+                <tr>
+                  <td><strong>Building Materials</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>Ready-mix, steel, scaffolding, cement, gypsum, and hardware</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">Supplier tax invoice, LPO, delivery notes (POD)</td>
+                </tr>
+                <tr>
+                  <td><strong>Site Accommodation</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>Labour camp rent, site temporary facilities, and utilities</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">Tenancy contract, commercial utility invoices</td>
+                </tr>
+                <tr>
+                  <td><strong>Staff Transportation &amp; Fuel</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>Buses, site pick-ups, equipment diesel, and travel fuel</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">ADNOC/ENOC fuel cards, vehicle logs, lease contracts</td>
+                </tr>
+                <tr>
+                  <td><strong>Commercial Office Rent</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>Corporate office in Dalma Mall Branch / Abu Dhabi</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">Registered Tawtheeq / Ejari tenancy contract</td>
+                </tr>
+                <tr>
+                  <td><strong>Vehicle &amp; Plant Maintenance</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>Excavator, crane, truck service, and routine repairs</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">Garage repair bills, spare parts tax invoices</td>
+                </tr>
+                <tr>
+                  <td><strong>Equipment Depreciation</strong></td>
+                  <td><span class="fin-badge fin-badge-paid">Generally Deductible</span></td>
+                  <td>Construction machinery &amp; office IT capitalized assets</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">Fixed asset register, standard straight-line schedule</td>
+                </tr>
+                <tr style="background:rgba(239,68,68,0.04);">
+                  <td><strong style="color:#f87171;">Personal / Owner Drawings</strong></td>
+                  <td><span class="fin-badge" style="background:rgba(239,68,68,0.2); color:#f87171;">❌ Strictly Non-Deductible</span></td>
+                  <td>Personal expenses, family travel, private household costs</td>
+                  <td style="font-size:0.75rem; color:#f87171;">Treated as equity drawings / dividends (Art. 33)</td>
+                </tr>
+                <tr style="background:rgba(239,68,68,0.04);">
+                  <td><strong style="color:#f87171;">Fines &amp; Statutory Penalties</strong></td>
+                  <td><span class="fin-badge" style="background:rgba(239,68,68,0.2); color:#f87171;">❌ Strictly Non-Deductible</span></td>
+                  <td>Traffic violations, municipality fines, late filing penalties</td>
+                  <td style="font-size:0.75rem; color:#f87171;">Must be added back to taxable profit (Art. 33)</td>
+                </tr>
+                <tr>
+                  <td><strong>Client Entertainment</strong></td>
+                  <td><span class="fin-badge" style="background:rgba(245,158,11,0.2); color:#f59e0b;">⚠️ 50% Restricted</span></td>
+                  <td>Client meals, project hospitality, business entertainment</td>
+                  <td style="font-size:0.75rem; color:#94a3b8;">Only 50% is deductible; 50% added back (Art. 32)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  printCorporateTaxAssessment() {
+    const isSim = this._ctState?.mode === 'simulator';
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pop-up blocked. Please allow pop-ups to print the UAE Corporate Tax Statement.');
+      return;
+    }
+
+    const simSales = Number(this._ctState?.simSales) || 2000000;
+    const simTotalExpenses = (Number(this._ctState?.simMaterials) || 500000) + (Number(this._ctState?.simLabour) || 400000) + (Number(this._ctState?.simSubcontractors) || 250000) + (Number(this._ctState?.simRent) || 100000) + (Number(this._ctState?.simTransport) || 150000);
+    const simProfit = Math.max(0, simSales - simTotalExpenses);
+    const simSbrEligible = simSales <= 3000000;
+    const simSbrElected = this._ctState?.simSbrElected && simSbrEligible;
+    const simExcess = Math.max(0, simProfit - 375000);
+    const simTaxBefore = simExcess * 0.09;
+    const simTaxDue = simSbrElected ? 0 : simTaxBefore;
+
+    // Live Rayan Data
+    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
+    const liveGross = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
+    const liveTaxable = invoices.reduce((s, i) => s + (Number(i.taxable_subtotal) || 0), 0);
+    const liveSbrElected = this._ctState?.sbrElected !== false;
+    const liveExcess = Math.max(0, liveTaxable - 375000);
+    const liveTaxBefore = liveExcess * 0.09;
+    const liveTaxDue = liveSbrElected ? 0 : liveTaxBefore;
+
+    const rev = isSim ? simSales : liveGross;
+    const exp = isSim ? simTotalExpenses : 0;
+    const profit = isSim ? simProfit : liveTaxable;
+    const sbrActive = isSim ? simSbrElected : liveSbrElected;
+    const excess = isSim ? simExcess : liveExcess;
+    const taxBefore = isSim ? simTaxBefore : liveTaxBefore;
+    const taxFinal = isSim ? simTaxDue : liveTaxDue;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>UAE Corporate Tax &amp; SBR Return Statement - Rayan Group</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 40px; color: #1e293b; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px; }
+          .title { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; }
+          .sub { font-size: 13px; color: #64748b; margin-top: 5px; }
+          .box-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          .box-table th, .box-table td { border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 13px; }
+          .box-table th { background: #f8fafc; font-weight: 700; text-align: left; }
+          .highlight-row { background: #f1f5f9; font-weight: 700; }
+          .payable-box { background: #f0fdf4; border: 2px solid #16a34a !important; font-size: 15px !important; font-weight: 800; color: #15803d; }
+          .footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+          @media print { body { margin: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1 class="title">UNITED ARAB EMIRATES</h1>
+            <div style="font-size: 16px; font-weight: 700; color: #059669; margin-top: 4px;">FEDERAL TAX AUTHORITY (FTA) - CORPORATE TAX RETURN</div>
+            <div class="sub">Assessment under Federal Decree-Law No. (47) of 2022 &amp; Ministerial Decision No. 73 of 2023</div>
+          </div>
+          <div style="text-align: right; font-size: 12px; line-height: 1.6;">
+            <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
+            TRN: <strong>100234567800003</strong><br>
+            Dalma Mall Branch, Abu Dhabi, UAE<br>
+            Date Generated: ${new Date().toLocaleDateString('en-GB')}
+          </div>
+        </div>
+
+        <table class="box-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Schedule</th>
+              <th>Description / Statutory Computation Line</th>
+              <th style="text-align: right; width: 30%;">Amount (AED)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Line 1</strong></td>
+              <td>Total Gross Business Revenue / Turnover</td>
+              <td style="text-align: right; font-weight: 600;">${this.formatCurrency(rev)}</td>
+            </tr>
+            <tr>
+              <td><strong>Line 2</strong></td>
+              <td>Less: Allowable Contracting &amp; Operational Business Expenses</td>
+              <td style="text-align: right; color: #d97706;">- ${this.formatCurrency(exp)}</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>Line 3</strong></td>
+              <td>Net Accounting Profit before Tax Adjustments</td>
+              <td style="text-align: right; color: #2563eb;">${this.formatCurrency(profit)}</td>
+            </tr>
+            <tr>
+              <td><strong>Line 4</strong></td>
+              <td>Tier 1: Taxable Profit up to AED 375,000.00 @ 0.0%</td>
+              <td style="text-align: right; font-weight: 600;">AED 0.00</td>
+            </tr>
+            <tr>
+              <td><strong>Line 5</strong></td>
+              <td>Tier 2: Portion above AED 375,000 (${this.formatCurrency(excess)}) @ 9.0%</td>
+              <td style="text-align: right; font-weight: 600;">${this.formatCurrency(taxBefore)}</td>
+            </tr>
+            ${sbrActive ? `
+              <tr style="background: #f0fdf4; color: #15803d; font-weight: 700;">
+                <td><strong>Relief</strong></td>
+                <td>Small Business Relief (Ministerial Decision No. 73 of 2023 Exemption)</td>
+                <td style="text-align: right;">- ${this.formatCurrency(taxBefore)}</td>
+              </tr>
+            ` : ''}
+            <tr class="payable-box">
+              <td colspan="2"><strong>FINAL NET CORPORATE TAX PAYABLE TO FEDERAL TAX AUTHORITY</strong></td>
+              <td style="text-align: right; font-size: 16px;">${this.formatCurrency(taxFinal)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top: 25px; font-size: 12px; color: #475569; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #059669;">
+          <strong>Small Business Relief Statutory Election:</strong><br>
+          Under Article 21 of Federal Decree-Law No. (47) of 2022 and Ministerial Decision No. 73 of 2023 (Extended to 31 December 2029 by the UAE Ministry of Finance), Rayan Engineering &amp; Contracting LLC SPC hereby elects for Small Business Relief. Total revenue does not exceed AED 3,000,000.00 in the relevant tax period and all previous tax periods, resulting in treated taxable income of AED 0.00.
         </div>
 
         <div class="footer">
