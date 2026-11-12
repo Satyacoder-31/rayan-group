@@ -1870,7 +1870,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v98';
+    const CURRENT_DB_VERSION = 'v2026_clean_v99';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4461,7 +4461,7 @@ class FinanceApp {
               </div>
 
               <!-- Accordion: Reports & Compliance -->
-              <div class="fin-accordion-group ${['reports', 'calendar'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-reports">
+              <div class="fin-accordion-group ${['reports', 'calendar', 'vat_management'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-reports">
                 <div class="fin-accordion-header" data-toggle="fin-grp-reports">
                   <div class="fin-grp-title-wrap">
                     <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4476,6 +4476,9 @@ class FinanceApp {
                   </svg>
                 </div>
                 <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'vat_management' ? 'active' : ''}" data-tab="vat_management">
+                    <span class="fin-subitem-text">🏛️ VAT Management</span>
+                  </div>
                   <div class="fin-nav-subitem ${this.activeTab === 'reports' ? 'active' : ''}" data-tab="reports">
                     <span class="fin-subitem-text">Financial Reports</span>
                   </div>
@@ -5039,6 +5042,10 @@ class FinanceApp {
         break;
       case 'reports':
         this.renderReportsTab(root);
+        break;
+      case 'vat_management':
+      case 'vat':
+        this.renderVatManagementTab(root);
         break;
       case 'calendar':
         this.renderCalendarTab(root);
@@ -10113,6 +10120,9 @@ class FinanceApp {
             <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Audited reports, ${isIndia ? 'GSTR-1 Tax Summary' : 'UAE VAT 201 Summary'}, Profit &amp; Loss Statement, and Cash Flows.</p>
           </div>
           <div class="fin-panel-actions">
+            <button type="button" class="fin-btn-quick" style="background:rgba(168,85,247,0.15); color:#c084fc; border-color:rgba(168,85,247,0.4);" onclick="window.finApp.switchTab('vat_management')">
+              🏛️ VAT Management Desk
+            </button>
             <button type="button" class="fin-btn-quick" style="background:rgba(56,189,248,0.15); color:#38bdf8; border-color:rgba(56,189,248,0.4);" onclick="window.finApp.openConsolidatedCustomerSOA()">
               📑 Master Client SOA
             </button>
@@ -10186,6 +10196,725 @@ class FinanceApp {
       </div>
     `;
   }
+
+  // --------------------------------------------------------------------------
+  // 12B. VAT MANAGEMENT & STATUTORY TAX COMPLIANCE DESK (CASH REALIZATION BASIS)
+  // --------------------------------------------------------------------------
+  computeVatLedger() {
+    const rawReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId && r.status !== 'void');
+    const rawCreditNotes = (this.db?.credit_notes || []).filter(cn => this.matchesActiveCompany(cn.company_id) && cn.status !== 'void');
+    const rawPayments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id) && p.status !== 'void');
+
+    // 1. Output VAT from Payment-In (Realized Collections)
+    let totalRecGross = 0;
+    let totalRecTaxable = 0;
+    let totalRecVat = 0;
+    const receiptsData = rawReceipts.map(r => {
+      const gross = Number(r.amount_received) || 0;
+      totalRecGross += gross;
+      let vat = 0;
+      if (Array.isArray(r.allocations) && r.allocations.length > 0) {
+        r.allocations.forEach(a => {
+          const inv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
+          const allocAmt = Number(a.amount_allocated ?? a.amount) || 0;
+          if (inv && Number(inv.grand_total) > 0) {
+            const ratio = (Number(inv.total_tax || inv.vat_total) || 0) / Number(inv.grand_total);
+            vat += allocAmt * ratio;
+          } else {
+            vat += allocAmt * (5 / 105);
+          }
+        });
+      } else if (r.ref_invoice_no) {
+        const inv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
+        if (inv && Number(inv.grand_total) > 0) {
+          const ratio = (Number(inv.total_tax || inv.vat_total) || 0) / Number(inv.grand_total);
+          vat += gross * ratio;
+        } else {
+          vat += gross * (5 / 105);
+        }
+      } else {
+        vat += gross * (5 / 105);
+      }
+
+      if (r.unallocated_amount && Number(r.unallocated_amount) > 0) {
+        vat += Number(r.unallocated_amount) * (5 / 105);
+      }
+
+      vat = Math.round(vat * 100) / 100;
+      const taxable = Math.round((gross - vat) * 100) / 100;
+      totalRecTaxable += taxable;
+      totalRecVat += vat;
+
+      let client = r.customer_name || '';
+      if (!client || client === 'Customer' || client === 'Client') {
+        const firstAlloc = (r.allocations || [])[0];
+        if (firstAlloc) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, firstAlloc.invoice_no, firstAlloc.invoice_id));
+          if (mi?.customer_name) client = mi.customer_name;
+        } else if (r.ref_invoice_no) {
+          const mi = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
+          if (mi?.customer_name) client = mi.customer_name;
+        }
+      }
+
+      const allocDesc = (r.allocations || []).map(a => `${a.invoice_no || ''}${a.amount_allocated ? ` (${a.amount_allocated})` : ''}`).filter(Boolean).join('; ') || r.ref_invoice_no || (r.unallocated_amount ? `Unallocated Advance (${r.unallocated_amount})` : 'General Receipt');
+
+      return {
+        id: r.id,
+        receipt_no: r.receipt_no,
+        date: r.receipt_date,
+        customer_name: client,
+        payment_mode: r.payment_mode || 'Online',
+        ref_no: r.reference_no || r.cheque_no || '',
+        allocations_desc: allocDesc,
+        gross,
+        taxable,
+        vat,
+        unallocated_advance: Number(r.unallocated_amount) || 0
+      };
+    });
+
+    totalRecGross = Math.round(totalRecGross * 100) / 100;
+    totalRecTaxable = Math.round(totalRecTaxable * 100) / 100;
+    totalRecVat = Math.round(totalRecVat * 100) / 100;
+
+    // 2. Credit Notes Managed Separately
+    let totalCnGross = 0;
+    let totalCnTaxable = 0;
+    let totalCnVat = 0;
+    const creditNotesData = rawCreditNotes.map(cn => {
+      const gross = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
+      const vat = Number(cn.tax_amount) || Math.round((gross * 5 / 105) * 100) / 100;
+      const taxable = Number(cn.taxable_amount) || Math.round((gross - vat) * 100) / 100;
+
+      totalCnGross += gross;
+      totalCnTaxable += taxable;
+      totalCnVat += vat;
+
+      return {
+        id: cn.id,
+        credit_note_no: cn.credit_note_no || cn.note_no || '',
+        date: cn.credit_date || cn.date || '',
+        customer_name: cn.customer_name || '',
+        invoice_no: cn.invoice_no || cn.ref_invoice_no || '',
+        reason: cn.reason || cn.description || 'Client Credit Adjustment',
+        gross,
+        taxable,
+        vat,
+        status: cn.status || 'Active'
+      };
+    });
+
+    totalCnGross = Math.round(totalCnGross * 100) / 100;
+    totalCnTaxable = Math.round(totalCnTaxable * 100) / 100;
+    totalCnVat = Math.round(totalCnVat * 100) / 100;
+
+    // 3. Payment-Out (Vendor Payments & Purchase Bills Recoverable Input VAT)
+    let totalPmtGross = 0;
+    let totalPmtTaxable = 0;
+    let totalPmtVat = 0;
+    const paymentsData = rawPayments.map(p => {
+      const gross = Number(p.amount_paid) || 0;
+      totalPmtGross += gross;
+      let vat = 0;
+      if (Array.isArray(p.allocations) && p.allocations.length > 0) {
+        p.allocations.forEach(a => {
+          const bill = (this.db?.purchase_bills || []).find(b => b.id === a.bill_id || b.bill_no === a.bill_no);
+          const allocAmt = Number(a.amount_allocated ?? a.amount) || 0;
+          if (bill && Number(bill.grand_total) > 0) {
+            const ratio = (Number(bill.tax_total || bill.vat_total) || 0) / Number(bill.grand_total);
+            vat += allocAmt * ratio;
+          } else {
+            vat += allocAmt * (5 / 105);
+          }
+        });
+      } else if (p.ref_bill_no) {
+        const bill = (this.db?.purchase_bills || []).find(b => b.bill_no === p.ref_bill_no);
+        if (bill && Number(bill.grand_total) > 0) {
+          const ratio = (Number(bill.tax_total || bill.vat_total) || 0) / Number(bill.grand_total);
+          vat += gross * ratio;
+        } else {
+          vat += gross * (5 / 105);
+        }
+      } else {
+        vat += gross * (5 / 105);
+      }
+
+      vat = Math.round(vat * 100) / 100;
+      const taxable = Math.round((gross - vat) * 100) / 100;
+      totalPmtTaxable += taxable;
+      totalPmtVat += vat;
+
+      const allocBills = (p.allocations || []).map(a => `${a.bill_no || ''}${a.amount_allocated ? ` (${a.amount_allocated})` : ''}`).filter(Boolean).join('; ') || p.ref_bill_no || 'General Disbursement';
+
+      return {
+        id: p.id,
+        voucher_no: p.voucher_no || '',
+        date: p.payment_date || '',
+        vendor_name: p.vendor_name || '',
+        channel: p.remittance_channel || p.payment_method || 'Online Bank Transfer',
+        ref_no: p.reference_no || p.cheque_no || '',
+        alloc_bills: allocBills,
+        gross,
+        taxable,
+        vat,
+        status: p.status || 'Cleared'
+      };
+    });
+
+    totalPmtGross = Math.round(totalPmtGross * 100) / 100;
+    totalPmtTaxable = Math.round(totalPmtTaxable * 100) / 100;
+    totalPmtVat = Math.round(totalPmtVat * 100) / 100;
+
+    // Net Output Tax after Credit Notes
+    const netOutputVat = Math.round((totalRecVat - totalCnVat) * 100) / 100;
+    const netOutputTaxable = Math.round((totalRecTaxable - totalCnTaxable) * 100) / 100;
+
+    // Final Net VAT Payable to Government
+    const netVatPayable = Math.round((netOutputVat - totalPmtVat) * 100) / 100;
+
+    return {
+      receipts: receiptsData,
+      creditNotes: creditNotesData,
+      payments: paymentsData,
+      totals: {
+        recGross: totalRecGross,
+        recTaxable: totalRecTaxable,
+        recVat: totalRecVat,
+        cnGross: totalCnGross,
+        cnTaxable: totalCnTaxable,
+        cnVat: totalCnVat,
+        pmtGross: totalPmtGross,
+        pmtTaxable: totalPmtTaxable,
+        pmtVat: totalPmtVat,
+        netOutputTaxable,
+        netOutputVat,
+        netVatPayable
+      }
+    };
+  }
+
+  setVatSubTab(tab) {
+    this._vatSubTab = tab;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  renderVatManagementTab(root) {
+    if (!root) return;
+    const ledger = this.computeVatLedger();
+    const t = ledger.totals;
+    const subTab = this._vatSubTab || 'summary';
+    const search = (this._vatSearch || '').toLowerCase().trim();
+
+    const filteredReceipts = ledger.receipts.filter(r => {
+      if (!search) return true;
+      return (r.receipt_no && r.receipt_no.toLowerCase().includes(search)) ||
+             (r.customer_name && r.customer_name.toLowerCase().includes(search)) ||
+             (r.ref_no && r.ref_no.toLowerCase().includes(search)) ||
+             (r.allocations_desc && r.allocations_desc.toLowerCase().includes(search));
+    });
+
+    const filteredCreditNotes = ledger.creditNotes.filter(cn => {
+      if (!search) return true;
+      return (cn.credit_note_no && cn.credit_note_no.toLowerCase().includes(search)) ||
+             (cn.customer_name && cn.customer_name.toLowerCase().includes(search)) ||
+             (cn.invoice_no && cn.invoice_no.toLowerCase().includes(search)) ||
+             (cn.reason && cn.reason.toLowerCase().includes(search));
+    });
+
+    const filteredPayments = ledger.payments.filter(p => {
+      if (!search) return true;
+      return (p.voucher_no && p.voucher_no.toLowerCase().includes(search)) ||
+             (p.vendor_name && p.vendor_name.toLowerCase().includes(search)) ||
+             (p.channel && p.channel.toLowerCase().includes(search)) ||
+             (p.ref_no && p.ref_no.toLowerCase().includes(search));
+    });
+
+    root.innerHTML = `
+      <div class="fin-panel-card">
+        <div class="fin-panel-header">
+          <div>
+            <h2 class="fin-panel-title">🏛️ VAT Management Desk &amp; Statutory Tax Return</h2>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">
+              Cash-basis realized Output VAT (Payment-In) • Credit Notes managed separately • Recoverable Input VAT (Payment-Out)
+            </p>
+          </div>
+          <div class="fin-panel-actions" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-weight:600;" onclick="window.finApp.refreshFromBackend()" title="Synchronize with backend">
+              🔄 Sync &amp; Refresh
+            </button>
+            <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#10b981; font-weight:600;" onclick="window.finApp.exportVatAuditCSV()">
+              📥 Export VAT Return CSV
+            </button>
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printVatReturn()">
+              🖨️ Print Form 201 Return
+            </button>
+          </div>
+        </div>
+
+        <!-- Top 4 KPI Metrics Grid -->
+        <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">1. Realized Output VAT (Payment-In)</span>
+            <div class="fin-metric-value" style="color:#10b981;">${this.formatCurrency(t.recVat)}</div>
+            <span class="fin-metric-sub">From ${this.formatCurrency(t.recGross)} actual inward collections</span>
+          </div>
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">2. Credit Notes VAT Adjustment</span>
+            <div class="fin-metric-value" style="color:#f59e0b;">- ${this.formatCurrency(t.cnVat)}</div>
+            <span class="fin-metric-sub">Managed separately across ${ledger.creditNotes.length} credit notes</span>
+          </div>
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">3. Recoverable Input VAT (Payment-Out)</span>
+            <div class="fin-metric-value" style="color:#38bdf8;">- ${this.formatCurrency(t.pmtVat)}</div>
+            <span class="fin-metric-sub">Subtracted from vendor disbursements (${this.formatCurrency(t.pmtGross)})</span>
+          </div>
+          <div class="fin-metric-card" style="border-color:rgba(168,85,247,0.4); background:rgba(168,85,247,0.06);">
+            <span class="fin-metric-label" style="color:#c084fc; font-weight:700;">4. Final Net VAT Payable to FTA</span>
+            <div class="fin-metric-value" style="color:#c084fc; font-weight:800;">${this.formatCurrency(t.netVatPayable)}</div>
+            <span class="fin-metric-sub" style="color:#e9d5ff;">Amount to be paid to Government ✓</span>
+          </div>
+        </div>
+
+        <!-- Inner Sub-Tabs Navigation -->
+        <div style="display:flex; gap:0.5rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="fin-btn-quick ${subTab === 'summary' ? 'primary' : ''}" onclick="window.finApp.setVatSubTab('summary')" style="font-weight:600;">
+            📊 Form 201 Box Return
+          </button>
+          <button type="button" class="fin-btn-quick ${subTab === 'receipts' ? 'primary' : ''}" onclick="window.finApp.setVatSubTab('receipts')" style="font-weight:600;">
+            💳 Payment-In Realized VAT (${ledger.receipts.length})
+          </button>
+          <button type="button" class="fin-btn-quick ${subTab === 'credit_notes' ? 'primary' : ''}" onclick="window.finApp.setVatSubTab('credit_notes')" style="font-weight:600;">
+            📑 Credit Notes Managed Separately (${ledger.creditNotes.length})
+          </button>
+          <button type="button" class="fin-btn-quick ${subTab === 'payments' ? 'primary' : ''}" onclick="window.finApp.setVatSubTab('payments')" style="font-weight:600;">
+            💸 Payment-Out Input VAT (${ledger.payments.length})
+          </button>
+          
+          <div style="margin-left:auto; position:relative; min-width:240px;">
+            <input type="text" id="vat-search-inp" class="fin-filter-input" placeholder="🔍 Search records..." value="${this._vatSearch || ''}" style="width:100%; padding:0.4rem 1.8rem 0.4rem 0.75rem; font-size:0.8rem; box-sizing:border-box;">
+            ${search ? `<button type="button" onclick="window.finApp._vatSearch=''; window.finApp.renderVatManagementTab(document.getElementById('fin-content-pane'));" style="position:absolute; right:0.5rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer;">✕</button>` : ''}
+          </div>
+        </div>
+
+        <!-- Sub-Tab Content -->
+        <div id="vat-subtab-container">
+          ${subTab === 'summary' ? this.renderVatSummaryView(ledger) : ''}
+          ${subTab === 'receipts' ? this.renderVatReceiptsView(filteredReceipts, t) : ''}
+          ${subTab === 'credit_notes' ? this.renderVatCreditNotesView(filteredCreditNotes, t) : ''}
+          ${subTab === 'payments' ? this.renderVatPaymentsView(filteredPayments, t) : ''}
+        </div>
+      </div>
+    `;
+
+    const searchInp = document.getElementById('vat-search-inp');
+    if (searchInp) {
+      searchInp.oninput = (e) => {
+        this._vatSearch = e.target.value;
+        const cont = document.getElementById('vat-subtab-container');
+        if (!cont) return;
+        const freshLedger = this.computeVatLedger();
+        const s = (this._vatSearch || '').toLowerCase().trim();
+        const fRec = freshLedger.receipts.filter(r => !s || (r.receipt_no && r.receipt_no.toLowerCase().includes(s)) || (r.customer_name && r.customer_name.toLowerCase().includes(s)) || (r.ref_no && r.ref_no.toLowerCase().includes(s)));
+        const fCn = freshLedger.creditNotes.filter(cn => !s || (cn.credit_note_no && cn.credit_note_no.toLowerCase().includes(s)) || (cn.customer_name && cn.customer_name.toLowerCase().includes(s)));
+        const fPmt = freshLedger.payments.filter(p => !s || (p.voucher_no && p.voucher_no.toLowerCase().includes(s)) || (p.vendor_name && p.vendor_name.toLowerCase().includes(s)));
+
+        if (this._vatSubTab === 'receipts') cont.innerHTML = this.renderVatReceiptsView(fRec, freshLedger.totals);
+        else if (this._vatSubTab === 'credit_notes') cont.innerHTML = this.renderVatCreditNotesView(fCn, freshLedger.totals);
+        else if (this._vatSubTab === 'payments') cont.innerHTML = this.renderVatPaymentsView(fPmt, freshLedger.totals);
+      };
+    }
+  }
+
+  renderVatSummaryView(ledger) {
+    const t = ledger.totals;
+    return `
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.25rem;">
+        <!-- Official UAE FTA Form 201 Structure -->
+        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
+            <h3 style="font-size:1rem; color:#f8fafc; margin:0;">🏛️ UAE Federal Tax Authority (FTA) Form 201</h3>
+            <span style="font-size:0.72rem; color:#38bdf8; font-weight:700;">TRN: 100234567800003</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.83rem;">
+            <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
+              <span style="color:#94a3b8;">Box 1: Standard Rated Supplies (Realized Collections)</span>
+              <strong style="color:#10b981;">${this.formatCurrency(t.recVat)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
+              <span style="color:#94a3b8;">Box 2: Tax Adjustments / Credit Notes</span>
+              <strong style="color:#f59e0b;">- ${this.formatCurrency(t.cnVat)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.5rem 0; background:rgba(255,255,255,0.02); padding-left:0.5rem; padding-right:0.5rem; border-radius:6px;">
+              <span style="color:#e2e8f0; font-weight:600;">Net Realized Output Tax Due</span>
+              <strong style="color:#38bdf8;">${this.formatCurrency(t.netOutputVat)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
+              <span style="color:#94a3b8;">Box 9: Standard Rated Purchases (Recoverable Input VAT)</span>
+              <strong style="color:#38bdf8;">- ${this.formatCurrency(t.pmtVat)}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem 0.5rem; background:rgba(168,85,247,0.12); border:1px solid rgba(168,85,247,0.3); border-radius:8px; margin-top:0.5rem;">
+              <span style="color:#f3e8ff; font-weight:700; font-size:0.92rem;">Box 12: Total Payable Tax to Government</span>
+              <strong style="color:#c084fc; font-size:1.05rem;">${this.formatCurrency(t.netVatPayable)}</strong>
+            </div>
+          </div>
+
+          <div style="margin-top:1.25rem; padding:0.75rem; background:rgba(56,189,248,0.05); border-left:3px solid #38bdf8; border-radius:4px; font-size:0.75rem; color:#94a3b8; line-height:1.5;">
+            <strong>Statutory Filing Note:</strong> In accordance with UAE Federal Decree-Law No. (8) of 2017 on Value Added Tax, Output VAT is realized upon receipt of consideration (including unallocated advance payments). Credit notes adjust gross output tax directly, and input VAT is deducted upon qualifying disbursements.
+          </div>
+        </div>
+
+        <!-- Executive Tax Settlement Breakdown -->
+        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+          <div style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
+            <h3 style="font-size:1rem; color:#f8fafc; margin:0;">📋 Executive Tax Liability Equation</h3>
+            <span style="font-size:0.72rem; color:#94a3b8;">Exact formula requested for government remittance</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <div style="padding:0.75rem; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.8rem; color:#a7f3d0; font-weight:600;">(+) Payment-In Realized VAT</span>
+                <strong style="color:#10b981; font-size:0.95rem;">${this.formatCurrency(t.recVat)}</strong>
+              </div>
+              <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.25rem;">Taxable Base: ${this.formatCurrency(t.recTaxable)} • Gross: ${this.formatCurrency(t.recGross)}</div>
+            </div>
+
+            <div style="padding:0.75rem; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.8rem; color:#fde68a; font-weight:600;">(-) Credit Notes VAT Adjustment</span>
+                <strong style="color:#f59e0b; font-size:0.95rem;">- ${this.formatCurrency(t.cnVat)}</strong>
+              </div>
+              <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.25rem;">Managed separately • Taxable Credit: ${this.formatCurrency(t.cnTaxable)} • Gross: ${this.formatCurrency(t.cnGross)}</div>
+            </div>
+
+            <div style="padding:0.75rem; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.8rem; color:#bae6fd; font-weight:600;">(-) Payment-Out Input VAT</span>
+                <strong style="color:#38bdf8; font-size:0.95rem;">- ${this.formatCurrency(t.pmtVat)}</strong>
+              </div>
+              <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.25rem;">Taxable Paid: ${this.formatCurrency(t.pmtTaxable)} • Gross Disbursed: ${this.formatCurrency(t.pmtGross)}</div>
+            </div>
+
+            <div style="padding:0.9rem; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:8px; margin-top:0.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.85rem; color:#e9d5ff; font-weight:700;">(=) Amount to be Paid to Government</span>
+                <strong style="color:#c084fc; font-size:1.15rem;">${this.formatCurrency(t.netVatPayable)}</strong>
+              </div>
+              <div style="font-size:0.72rem; color:#cbd5e1; margin-top:0.25rem;">
+                ${t.netVatPayable >= 0 ? '✓ Net Tax Payable for electronic transfer to UAE Federal Tax Authority (FTA)' : '✓ Net Tax Credit / Refund claimable from FTA'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderVatReceiptsView(receipts, t) {
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h3 style="font-size:0.95rem; color:#f8fafc; margin:0;">💳 Payment-In Realized VAT Breakdown (${receipts.length} Vouchers)</h3>
+          <span style="font-size:0.8rem; color:#10b981; font-weight:700;">Total Realized VAT: ${this.formatCurrency(t.recVat)}</span>
+        </div>
+        <div class="fin-table-container">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>Receipt #</th>
+                <th>Date</th>
+                <th>Customer / Client</th>
+                <th>Mode</th>
+                <th>Allocated Invoice / Purpose</th>
+                <th style="text-align:right;">Gross Received</th>
+                <th style="text-align:right;">Taxable Value</th>
+                <th style="text-align:right; color:#10b981;">Output VAT (5%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${receipts.map(r => `
+                <tr>
+                  <td><strong>${r.receipt_no}</strong></td>
+                  <td>${r.date}</td>
+                  <td>${r.customer_name}</td>
+                  <td><span class="fin-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8;">${r.payment_mode}</span></td>
+                  <td style="font-size:0.78rem; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.allocations_desc}">${r.allocations_desc}</td>
+                  <td style="text-align:right; font-weight:600;">${this.formatCurrency(r.gross)}</td>
+                  <td style="text-align:right; color:#94a3b8;">${this.formatCurrency(r.taxable)}</td>
+                  <td style="text-align:right; color:#10b981; font-weight:700;">${this.formatCurrency(r.vat)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr style="font-weight:700; background:rgba(255,255,255,0.03);">
+                <td colspan="5">Total Realized Collections</td>
+                <td style="text-align:right;">${this.formatCurrency(t.recGross)}</td>
+                <td style="text-align:right;">${this.formatCurrency(t.recTaxable)}</td>
+                <td style="text-align:right; color:#10b981;">${this.formatCurrency(t.recVat)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  renderVatCreditNotesView(creditNotes, t) {
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h3 style="font-size:0.95rem; color:#f8fafc; margin:0;">📑 Credit Notes Managed Separately (${creditNotes.length} Notes)</h3>
+          <span style="font-size:0.8rem; color:#f59e0b; font-weight:700;">Total VAT Adjustment: - ${this.formatCurrency(t.cnVat)}</span>
+        </div>
+        <div class="fin-table-container">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>Credit Note #</th>
+                <th>Date</th>
+                <th>Customer / Client</th>
+                <th>Ref Invoice</th>
+                <th>Reason / Description</th>
+                <th style="text-align:right;">Credit Gross</th>
+                <th style="text-align:right;">Taxable Credit</th>
+                <th style="text-align:right; color:#f59e0b;">VAT Adjusted (5%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${creditNotes.map(cn => `
+                <tr>
+                  <td><strong>${cn.credit_note_no}</strong></td>
+                  <td>${cn.date}</td>
+                  <td>${cn.customer_name}</td>
+                  <td><span class="fin-badge" style="background:rgba(245,158,11,0.15); color:#f59e0b;">${cn.invoice_no || 'Direct'}</span></td>
+                  <td style="font-size:0.78rem; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${cn.reason}">${cn.reason}</td>
+                  <td style="text-align:right; font-weight:600;">${this.formatCurrency(cn.gross)}</td>
+                  <td style="text-align:right; color:#94a3b8;">${this.formatCurrency(cn.taxable)}</td>
+                  <td style="text-align:right; color:#f59e0b; font-weight:700;">- ${this.formatCurrency(cn.vat)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr style="font-weight:700; background:rgba(255,255,255,0.03);">
+                <td colspan="5">Total Credit Notes Adjustments</td>
+                <td style="text-align:right;">${this.formatCurrency(t.cnGross)}</td>
+                <td style="text-align:right;">${this.formatCurrency(t.cnTaxable)}</td>
+                <td style="text-align:right; color:#f59e0b;">- ${this.formatCurrency(t.cnVat)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  renderVatPaymentsView(payments, t) {
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h3 style="font-size:0.95rem; color:#f8fafc; margin:0;">💸 Payment-Out Realized Input VAT (${payments.length} Disbursements)</h3>
+          <span style="font-size:0.8rem; color:#38bdf8; font-weight:700;">Total Input VAT: - ${this.formatCurrency(t.pmtVat)}</span>
+        </div>
+        ${payments.length === 0 ? `
+          <div style="padding:2.5rem; text-align:center; background:rgba(15,23,42,0.4); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; color:#94a3b8;">
+            <p style="font-size:1.1rem; margin-bottom:0.5rem; color:#e2e8f0;">No Vendor Disbursements Recorded Yet</p>
+            <p style="font-size:0.8rem; margin:0;">When payments are disbursed to vendors against purchase bills in Payment-Out, recoverable Input VAT will automatically calculate here and reduce your net tax payable to the government.</p>
+          </div>
+        ` : `
+          <div class="fin-table-container">
+            <table class="fin-table">
+              <thead>
+                <tr>
+                  <th>Voucher #</th>
+                  <th>Date</th>
+                  <th>Vendor / Payee</th>
+                  <th>Channel</th>
+                  <th>Allocated Bills</th>
+                  <th style="text-align:right;">Gross Disbursed</th>
+                  <th style="text-align:right;">Taxable Paid</th>
+                  <th style="text-align:right; color:#38bdf8;">Input VAT (5%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${payments.map(p => `
+                  <tr>
+                    <td><strong>${p.voucher_no}</strong></td>
+                    <td>${p.date}</td>
+                    <td>${p.vendor_name}</td>
+                    <td><span class="fin-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8;">${p.channel}</span></td>
+                    <td style="font-size:0.78rem;">${p.alloc_bills}</td>
+                    <td style="text-align:right; font-weight:600;">${this.formatCurrency(p.gross)}</td>
+                    <td style="text-align:right; color:#94a3b8;">${this.formatCurrency(p.taxable)}</td>
+                    <td style="text-align:right; color:#38bdf8; font-weight:700;">- ${this.formatCurrency(p.vat)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr style="font-weight:700; background:rgba(255,255,255,0.03);">
+                  <td colspan="5">Total Vendor Disbursements</td>
+                  <td style="text-align:right;">${this.formatCurrency(t.pmtGross)}</td>
+                  <td style="text-align:right;">${this.formatCurrency(t.pmtTaxable)}</td>
+                  <td style="text-align:right; color:#38bdf8;">- ${this.formatCurrency(t.pmtVat)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        `}
+      </div>
+    `;
+  }
+
+  exportVatAuditCSV() {
+    const ledger = this.computeVatLedger();
+    const t = ledger.totals;
+
+    let csv = '=== RAYAN GROUP - VAT RETURN & AUDIT STATEMENT (REALIZATION BASIS) ===\n';
+    csv += `Entity,RAYAN ENGINEERING AND CONTRACTING LLC SPC\n`;
+    csv += `TRN,100234567800003\n`;
+    csv += `Filing Basis,Cash Realization Basis (Payment-In collections less Payment-Out disbursements)\n\n`;
+
+    csv += '--- SECTION 1: STATUTORY TAX RETURN (FORM 201 BOX BREAKDOWN) ---\n';
+    csv += 'Line / Box Description,Taxable Value (AED),Tax Amount (AED),Notes\n';
+    csv += `Box 1: Standard Rated Supplies (Payment-In Collections),${t.recTaxable.toFixed(2)},${t.recVat.toFixed(2)},Realized upon actual client receipt\n`;
+    csv += `Box 2: Credit Notes & Tax Adjustments,- ${t.cnTaxable.toFixed(2)},- ${t.cnVat.toFixed(2)},Managed separately across client credit notes\n`;
+    csv += `Net Realized Output Tax Due,${t.netOutputTaxable.toFixed(2)},${t.netOutputVat.toFixed(2)},Box 1 less Box 2\n`;
+    csv += `Box 9: Standard Rated Purchases (Payment-Out Disbursements),- ${t.pmtTaxable.toFixed(2)},- ${t.pmtVat.toFixed(2)},Recoverable input tax disbursed to vendors\n`;
+    csv += `Box 12: Final Net VAT Payable to Government,${t.netOutputTaxable.toFixed(2)},${t.netVatPayable.toFixed(2)},Amount due for remittance to Federal Tax Authority\n\n`;
+
+    csv += '--- SECTION 2: PAYMENT-IN REALIZED OUTPUT VAT LEDGER ---\n';
+    csv += 'Receipt #,Date,Customer / Client,Mode,Reference #,Allocated Invoices / Advance,Gross Received,Taxable Value,Output VAT (5%)\n';
+    ledger.receipts.forEach(r => {
+      csv += `${this.csvEscape(r.receipt_no)},${this.csvEscape(r.date)},${this.csvEscape(r.customer_name)},${this.csvEscape(r.payment_mode)},${this.csvEscape(r.ref_no)},${this.csvEscape(r.allocations_desc)},${r.gross.toFixed(2)},${r.taxable.toFixed(2)},${r.vat.toFixed(2)}\n`;
+    });
+    csv += '\n';
+
+    csv += '--- SECTION 3: CREDIT NOTES MANAGED SEPARATELY ---\n';
+    csv += 'Credit Note #,Date,Customer / Client,Reference Invoice,Reason,Gross Credit,Taxable Credit,VAT Adjustment (5%)\n';
+    ledger.creditNotes.forEach(cn => {
+      csv += `${this.csvEscape(cn.credit_note_no)},${this.csvEscape(cn.date)},${this.csvEscape(cn.customer_name)},${this.csvEscape(cn.invoice_no)},${this.csvEscape(cn.reason)},${cn.gross.toFixed(2)},${cn.taxable.toFixed(2)},${cn.vat.toFixed(2)}\n`;
+    });
+    csv += '\n';
+
+    csv += '--- SECTION 4: PAYMENT-OUT INPUT VAT LEDGER ---\n';
+    csv += 'Voucher #,Date,Vendor / Payee,Channel,Reference #,Allocated Bills,Gross Disbursed,Taxable Paid,Input VAT (5%)\n';
+    ledger.payments.forEach(p => {
+      csv += `${this.csvEscape(p.voucher_no)},${this.csvEscape(p.date)},${this.csvEscape(p.vendor_name)},${this.csvEscape(p.channel)},${this.csvEscape(p.ref_no)},${this.csvEscape(p.alloc_bills)},${p.gross.toFixed(2)},${p.taxable.toFixed(2)},${p.vat.toFixed(2)}\n`;
+    });
+
+    this.downloadFile(`Rayan_Group_VAT_Return_Audit_Realization_Basis_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+  }
+
+  printVatReturn() {
+    const ledger = this.computeVatLedger();
+    const t = ledger.totals;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pop-up blocked. Please allow pop-ups to print the Form 201 VAT Statement.');
+      return;
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Form 201 - UAE VAT Return Statement - Rayan Group</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 40px; color: #1e293b; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px; }
+          .title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; }
+          .sub { font-size: 13px; color: #64748b; margin-top: 5px; }
+          .box-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          .box-table th, .box-table td { border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 13px; }
+          .box-table th { background: #f8fafc; font-weight: 700; text-align: left; }
+          .highlight-row { background: #f1f5f9; font-weight: 700; }
+          .payable-box { background: #faf5ff; border: 2px solid #a855f7 !important; font-size: 15px !important; font-weight: 800; color: #7e22ce; }
+          .footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+          @media print { body { margin: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1 class="title">UNITED ARAB EMIRATES</h1>
+            <div style="font-size: 16px; font-weight: 700; color: #2563eb; margin-top: 4px;">FEDERAL TAX AUTHORITY (FTA) - FORM VAT 201</div>
+            <div class="sub">Cash-Basis Realization Tax Return Statement</div>
+          </div>
+          <div style="text-align: right; font-size: 12px; line-height: 1.6;">
+            <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
+            TRN: <strong>100234567800003</strong><br>
+            Dalma Mall Branch, Abu Dhabi, UAE<br>
+            Generated: ${new Date().toLocaleDateString('en-GB')}
+          </div>
+        </div>
+
+        <table class="box-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Box #</th>
+              <th>Statutory Description</th>
+              <th style="text-align: right; width: 22%;">Taxable Amount (AED)</th>
+              <th style="text-align: right; width: 22%;">Tax Amount (AED)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Box 1</strong></td>
+              <td>Standard rated supplies (Actual Realized Collections from Payment-In)</td>
+              <td style="text-align: right;">${this.formatCurrency(t.recTaxable)}</td>
+              <td style="text-align: right; font-weight: 700; color: #16a34a;">${this.formatCurrency(t.recVat)}</td>
+            </tr>
+            <tr>
+              <td><strong>Box 2</strong></td>
+              <td>Tax adjustments from Credit Notes (Managed Separately)</td>
+              <td style="text-align: right;">- ${this.formatCurrency(t.cnTaxable)}</td>
+              <td style="text-align: right; font-weight: 700; color: #d97706;">- ${this.formatCurrency(t.cnVat)}</td>
+            </tr>
+            <tr class="highlight-row">
+              <td colspan="2"><strong>Net Realized Output Tax Due for Period</strong></td>
+              <td style="text-align: right;">${this.formatCurrency(t.netOutputTaxable)}</td>
+              <td style="text-align: right; color: #2563eb;">${this.formatCurrency(t.netOutputVat)}</td>
+            </tr>
+            <tr>
+              <td><strong>Box 9</strong></td>
+              <td>Standard rated purchases &amp; expenses (Recoverable Input Tax from Payment-Out)</td>
+              <td style="text-align: right;">- ${this.formatCurrency(t.pmtTaxable)}</td>
+              <td style="text-align: right; font-weight: 700; color: #0284c7;">- ${this.formatCurrency(t.pmtVat)}</td>
+            </tr>
+            <tr class="payable-box">
+              <td colspan="2"><strong>BOX 12: TOTAL NET VAT PAYABLE TO FEDERAL TAX AUTHORITY</strong></td>
+              <td style="text-align: right;">${this.formatCurrency(t.netOutputTaxable)}</td>
+              <td style="text-align: right; font-size: 16px;">${this.formatCurrency(t.netVatPayable)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top: 30px; font-size: 12px; color: #475569; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 6px;">
+          <strong>Taxpayer Declaration:</strong> We hereby declare that the figures reported in this statement accurately represent all consideration received, sales returns credited, and eligible input taxes disbursed during the tax period, strictly adhering to UAE Federal Decree-Law No. (8) of 2017 on Value Added Tax.
+        </div>
+
+        <div class="footer">
+          <div>
+            <strong>Authorized Signatory:</strong> Arshad Alam Shaikh<br>
+            Managing Director / Designated Tax Representative
+          </div>
+          <div style="text-align: right;">
+            Official Digital Stamp &amp; Signature Verification<br>
+            RAYAN GROUP CORPORATE TREASURY
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 400);
+  }
+
+
 
   // --------------------------------------------------------------------------
   // 13. CALENDAR MODULE
