@@ -1446,6 +1446,9 @@ class FinanceApp {
       if (r867) {
         r867.customer_id = 'cust-hln';
         r867.customer_name = 'M/S HLN TECHNICAL SERVICES LLC';
+        r867.amount_received = '35597.36';
+        r867.allocated_amount = 35597.36;
+        r867.amount_in_words = 'Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.';
         r867.allocations = [{ invoice_id: 'inv-rec-rg-inv-44006', invoice_no: 'REC-RG-INV-44006', amount_allocated: 35597.36 }];
         r867.ref_invoice_no = 'REC-RG-INV-44006';
       }
@@ -1771,6 +1774,8 @@ class FinanceApp {
       if (c014502) c014502.amount = '19615.27';
       const c017236 = this.db.cheques.find(c => c.cheque_no === '017236');
       if (c017236) c017236.amount = '20044.01';
+      const c000867 = this.db.cheques.find(c => c.cheque_no === '000867');
+      if (c000867) c000867.amount = '35597.36';
       const c000007 = this.db.cheques.find(c => c.cheque_no === '000007');
       if (c000007 && c000007.status === 'Cleared') c000007.status = 'Post-Dated Cheque (PDC)';
     }
@@ -1780,11 +1785,13 @@ class FinanceApp {
       const phantomIds = new Set(['wire-rcp-rec-mvyu2o9n', 'wire-chq-chq-mvqh5lnb', 'wire-pv-rec-44002', 'wire-pv-rec-44005', 'wire-pv-rec-44006', 'wire-pv-rec-44004', 'wire-pv-rec-44003']);
       this.db.bank_transfers = this.db.bank_transfers.filter(t => !phantomIds.has(t.id) && t.reference_no !== 'CHQ-000007');
 
-      // Update Cheque 014502 and 017236 wires to exact amounts
+      // Update Cheque 014502, 017236, and 000867 wires to exact amounts
       const w014502 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvy6c2gy' || t.reference_no === 'CHQ-014502');
       if (w014502) w014502.amount = '19615.27';
       const w017236 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvy4fwvn' || t.reference_no === 'CHQ-017236');
       if (w017236) w017236.amount = '20044.01';
+      const w000867 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvxegfg5' || t.reference_no === 'CHQ-000867');
+      if (w000867) w000867.amount = '35597.36';
 
       // Ensure missing online inward client wires exist
       if (!this.db.bank_transfers.some(t => t.id === 'wire-rcp-rec-mvwqcuc7' || t.reference_no === 'PHUB295410356')) {
@@ -1852,7 +1859,7 @@ class FinanceApp {
           }
         });
         const calcBal = Math.round((adcbIn - adcbOut) * 100) / 100;
-        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1351640.87';
+        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1337238.23';
       }
     }
   }
@@ -1860,7 +1867,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v96';
+    const CURRENT_DB_VERSION = 'v2026_clean_v97';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);

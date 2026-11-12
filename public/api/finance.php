@@ -3482,9 +3482,47 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
             ];
         }
     }
+    if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+        foreach ($data['customer_receipts'] as &$r) {
+            if (($r['id'] ?? '') === 'rec-mvxegfg5' || ($r['receipt_no'] ?? '') === 'REC-RV-44026' || ($r['cheque_no'] ?? '') === '000867') {
+                $r['amount_received'] = '35597.36';
+                $r['allocated_amount'] = 35597.36;
+                $r['amount_in_words'] = 'Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.';
+                if (!empty($r['allocations'][0])) {
+                    $r['allocations'][0]['amount_allocated'] = 35597.36;
+                }
+            }
+            if (($r['id'] ?? '') === 'rec-mobin-villa-44003' || ($r['receipt_no'] ?? '') === 'REC-RV-44032') {
+                $r['payment_mode'] = 'Online';
+                $r['payment_type'] = 'Online Bank Transfer';
+                $r['bank_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
+                unset($r['deposit_vault_id'], $r['deposit_vault_name']);
+            }
+        }
+        unset($r);
+    }
+
+    if (!empty($data['cheques']) && is_array($data['cheques'])) {
+        foreach ($data['cheques'] as &$c) {
+            if (($c['cheque_no'] ?? '') === '000867' || ($c['receipt_id'] ?? '') === 'rec-mvxegfg5') {
+                $c['amount'] = '35597.36';
+            }
+        }
+        unset($c);
+    }
+
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        foreach ($data['bank_transfers'] as &$t) {
+            if (($t['reference_no'] ?? '') === 'CHQ-000867' || ($t['id'] ?? '') === 'wire-chq-chq-rcp-rec-mvxegfg5') {
+                $t['amount'] = '35597.36';
+            }
+        }
+        unset($t);
+    }
+
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
-            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1337238.23';
         }
         unset($b);
     }
@@ -3548,6 +3586,27 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
 
                 $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('clear_cash_in_hand_v93_reseed_bills', 'completed', NOW())");
             }
+
+            // Migration v97: Reconcile Payment-In Receipts, Invoices, Bank Transfers, and Cheques Harmony
+            $chkMig97 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_receipts_invoices_bank_harmony_v97'")->fetchColumn();
+            if ($chkMig97 !== 'completed') {
+                // 1. Correct Cheque 000867 (REC-RV-44026) amount to exact invoice settlement balance 35,597.36 AED
+                $pdo->exec("UPDATE finance_customer_receipts SET amount_received = 35597.36, allocated_amount = 35597.36, data_json = JSON_SET(data_json, '$.amount_received', '35597.36', '$.allocated_amount', 35597.36, '$.amount_in_words', 'Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.', '$.allocations[0].amount_allocated', 35597.36) WHERE id = 'rec-mvxegfg5' OR receipt_no = 'REC-RV-44026' OR reference_no = '000867'");
+                $pdo->exec("UPDATE finance_cheques SET amount = 35597.36, data_json = JSON_SET(data_json, '$.amount', '35597.36') WHERE cheque_no = '000867' OR receipt_id = 'rec-mvxegfg5'");
+                $pdo->exec("UPDATE finance_bank_transfers SET amount = 35597.36, data_json = JSON_SET(data_json, '$.amount', '35597.36') WHERE reference_no = 'CHQ-000867' OR id = 'wire-chq-chq-rcp-rec-mvxegfg5'");
+
+                // 2. Standardize REC-RV-44032 (Mobin Villa Dubai 9,000 AED) as Online Wire into ADCB
+                $pdo->exec("UPDATE finance_customer_receipts SET payment_mode = 'Online', bank_name = 'Abu Dhabi Commercial Bank (ADCB)', data_json = JSON_SET(data_json, '$.payment_mode', 'Online', '$.payment_type', 'Online Bank Transfer', '$.bank_name', 'Abu Dhabi Commercial Bank (ADCB)') WHERE id = 'rec-mobin-villa-44003' OR receipt_no = 'REC-RV-44032'");
+                $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id = 'cv-rcp-rec-mw5amp7q' OR voucher_no = 'CV-REC-RV-44044' OR voucher_no = 'CV-REC-RV-44064'");
+
+                // 3. Align ADCB Bank Account balance to exact bank receipts (1,337,238.23 AED)
+                $pdo->exec("UPDATE finance_bank_accounts SET balance = 1337238.23, data_json = JSON_SET(data_json, '$.balance', '1337238.23') WHERE id = 'bank-adcb-uae'");
+
+                // 4. Align RAYAN E-Wallets Cash Balance to exact cash receipts (5,000.00 AED)
+                $pdo->exec("UPDATE finance_cash_in_hand SET balance = 5000.00, data_json = JSON_SET(data_json, '$.balance', 5000.00) WHERE id = 'cash-mw5esv3w'");
+
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_receipts_invoices_bank_harmony_v97', 'completed', NOW())");
+            }
         } catch (Exception $e) {
             error_log("Migration v93 error: " . $e->getMessage());
         }
@@ -3602,9 +3661,47 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
         }));
     }
 
+    if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+        foreach ($data['customer_receipts'] as &$r) {
+            if (($r['id'] ?? '') === 'rec-mvxegfg5' || ($r['receipt_no'] ?? '') === 'REC-RV-44026' || ($r['cheque_no'] ?? '') === '000867') {
+                $r['amount_received'] = '35597.36';
+                $r['allocated_amount'] = 35597.36;
+                $r['amount_in_words'] = 'Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.';
+                if (!empty($r['allocations'][0])) {
+                    $r['allocations'][0]['amount_allocated'] = 35597.36;
+                }
+            }
+            if (($r['id'] ?? '') === 'rec-mobin-villa-44003' || ($r['receipt_no'] ?? '') === 'REC-RV-44032') {
+                $r['payment_mode'] = 'Online';
+                $r['payment_type'] = 'Online Bank Transfer';
+                $r['bank_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
+                unset($r['deposit_vault_id'], $r['deposit_vault_name']);
+            }
+        }
+        unset($r);
+    }
+
+    if (!empty($data['cheques']) && is_array($data['cheques'])) {
+        foreach ($data['cheques'] as &$c) {
+            if (($c['cheque_no'] ?? '') === '000867' || ($c['receipt_id'] ?? '') === 'rec-mvxegfg5') {
+                $c['amount'] = '35597.36';
+            }
+        }
+        unset($c);
+    }
+
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        foreach ($data['bank_transfers'] as &$t) {
+            if (($t['reference_no'] ?? '') === 'CHQ-000867' || ($t['id'] ?? '') === 'wire-chq-chq-rcp-rec-mvxegfg5') {
+                $t['amount'] = '35597.36';
+            }
+        }
+        unset($t);
+    }
+
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
-            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1337238.23';
         }
         unset($b);
     }
