@@ -3485,9 +3485,12 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
     if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
         foreach ($data['customer_receipts'] as &$r) {
             if (($r['id'] ?? '') === 'rec-mvxegfg5' || ($r['receipt_no'] ?? '') === 'REC-RV-44026' || ($r['cheque_no'] ?? '') === '000867') {
-                $r['amount_received'] = '35597.36';
+                $r['amount_received'] = '50000.00';
                 $r['allocated_amount'] = 35597.36;
-                $r['amount_in_words'] = 'Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.';
+                $r['unallocated_amount'] = 14402.64;
+                $r['advance_amount'] = 14402.64;
+                $r['amount_in_words'] = 'Fifty Thousand AED Only.';
+                $r['notes'] = 'Cheque #000867 (AED 50,000.00): Settled final balance of AED 35,597.36 on REC-RG-INV-44006; remaining AED 14,402.64 recorded as Unallocated Customer Advance for future billings.';
                 if (!empty($r['allocations'][0])) {
                     $r['allocations'][0]['amount_allocated'] = 35597.36;
                 }
@@ -3505,7 +3508,7 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
     if (!empty($data['cheques']) && is_array($data['cheques'])) {
         foreach ($data['cheques'] as &$c) {
             if (($c['cheque_no'] ?? '') === '000867' || ($c['receipt_id'] ?? '') === 'rec-mvxegfg5') {
-                $c['amount'] = '35597.36';
+                $c['amount'] = '50000.00';
             }
         }
         unset($c);
@@ -3514,7 +3517,7 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
     if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
         foreach ($data['bank_transfers'] as &$t) {
             if (($t['reference_no'] ?? '') === 'CHQ-000867' || ($t['id'] ?? '') === 'wire-chq-chq-rcp-rec-mvxegfg5') {
-                $t['amount'] = '35597.36';
+                $t['amount'] = '50000.00';
             }
         }
         unset($t);
@@ -3522,7 +3525,7 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
 
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
-            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1337238.23';
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
         }
         unset($b);
     }
@@ -3607,6 +3610,17 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
 
                 $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_receipts_invoices_bank_harmony_v97', 'completed', NOW())");
             }
+
+            // Migration v98: Record Cheque 000867 14,402.64 AED as Unallocated Customer Advance (Payment-In: 1,356,640.87 AED | Bank: 1,351,640.87 AED | Invoices Paid: 1,342,238.23 AED)
+            $chkMig98 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'reconcile_customer_advance_hln_harmony_v98'")->fetchColumn();
+            if ($chkMig98 !== 'completed') {
+                $pdo->exec("UPDATE finance_customer_receipts SET amount_received = 50000.00, allocated_amount = 35597.36, data_json = JSON_SET(data_json, '$.amount_received', '50000.00', '$.allocated_amount', 35597.36, '$.unallocated_amount', 14402.64, '$.advance_amount', 14402.64, '$.amount_in_words', 'Fifty Thousand AED Only.', '$.notes', 'Cheque #000867 (AED 50,000.00): Settled final balance of AED 35,597.36 on REC-RG-INV-44006; remaining AED 14,402.64 recorded as Unallocated Customer Advance for future billings.', '$.allocations[0].amount_allocated', 35597.36) WHERE id = 'rec-mvxegfg5' OR receipt_no = 'REC-RV-44026' OR reference_no = '000867'");
+                $pdo->exec("UPDATE finance_cheques SET amount = 50000.00, data_json = JSON_SET(data_json, '$.amount', '50000.00') WHERE cheque_no = '000867' OR receipt_id = 'rec-mvxegfg5'");
+                $pdo->exec("UPDATE finance_bank_transfers SET amount = 50000.00, data_json = JSON_SET(data_json, '$.amount', '50000.00') WHERE reference_no = 'CHQ-000867' OR id = 'wire-chq-chq-rcp-rec-mvxegfg5'");
+                $pdo->exec("UPDATE finance_bank_accounts SET balance = 1351640.87, data_json = JSON_SET(data_json, '$.balance', '1351640.87') WHERE id = 'bank-adcb-uae'");
+                $pdo->exec("UPDATE finance_customers SET data_json = JSON_SET(data_json, '$.unallocated_advance', 14402.64, '$.advance_balance', 14402.64) WHERE id = 'cust-hln' OR name LIKE '%HLN TECHNICAL%'");
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_customer_advance_hln_harmony_v98', 'completed', NOW())");
+            }
         } catch (Exception $e) {
             error_log("Migration v93 error: " . $e->getMessage());
         }
@@ -3664,9 +3678,12 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
     if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
         foreach ($data['customer_receipts'] as &$r) {
             if (($r['id'] ?? '') === 'rec-mvxegfg5' || ($r['receipt_no'] ?? '') === 'REC-RV-44026' || ($r['cheque_no'] ?? '') === '000867') {
-                $r['amount_received'] = '35597.36';
+                $r['amount_received'] = '50000.00';
                 $r['allocated_amount'] = 35597.36;
-                $r['amount_in_words'] = 'Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.';
+                $r['unallocated_amount'] = 14402.64;
+                $r['advance_amount'] = 14402.64;
+                $r['amount_in_words'] = 'Fifty Thousand AED Only.';
+                $r['notes'] = 'Cheque #000867 (AED 50,000.00): Settled final balance of AED 35,597.36 on REC-RG-INV-44006; remaining AED 14,402.64 recorded as Unallocated Customer Advance for future billings.';
                 if (!empty($r['allocations'][0])) {
                     $r['allocations'][0]['amount_allocated'] = 35597.36;
                 }
@@ -3684,7 +3701,7 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
     if (!empty($data['cheques']) && is_array($data['cheques'])) {
         foreach ($data['cheques'] as &$c) {
             if (($c['cheque_no'] ?? '') === '000867' || ($c['receipt_id'] ?? '') === 'rec-mvxegfg5') {
-                $c['amount'] = '35597.36';
+                $c['amount'] = '50000.00';
             }
         }
         unset($c);
@@ -3693,7 +3710,7 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
     if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
         foreach ($data['bank_transfers'] as &$t) {
             if (($t['reference_no'] ?? '') === 'CHQ-000867' || ($t['id'] ?? '') === 'wire-chq-chq-rcp-rec-mvxegfg5') {
-                $t['amount'] = '35597.36';
+                $t['amount'] = '50000.00';
             }
         }
         unset($t);
@@ -3701,7 +3718,7 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
 
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
-            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1337238.23';
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
         }
         unset($b);
     }

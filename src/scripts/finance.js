@@ -1446,9 +1446,12 @@ class FinanceApp {
       if (r867) {
         r867.customer_id = 'cust-hln';
         r867.customer_name = 'M/S HLN TECHNICAL SERVICES LLC';
-        r867.amount_received = '35597.36';
+        r867.amount_received = '50000.00';
         r867.allocated_amount = 35597.36;
-        r867.amount_in_words = 'Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.';
+        r867.unallocated_amount = 14402.64;
+        r867.advance_amount = 14402.64;
+        r867.amount_in_words = 'Fifty Thousand AED Only.';
+        r867.notes = 'Cheque #000867 (AED 50,000.00): Settled final balance of AED 35,597.36 on REC-RG-INV-44006; remaining AED 14,402.64 recorded as Unallocated Customer Advance for future billings.';
         r867.allocations = [{ invoice_id: 'inv-rec-rg-inv-44006', invoice_no: 'REC-RG-INV-44006', amount_allocated: 35597.36 }];
         r867.ref_invoice_no = 'REC-RG-INV-44006';
       }
@@ -1775,7 +1778,7 @@ class FinanceApp {
       const c017236 = this.db.cheques.find(c => c.cheque_no === '017236');
       if (c017236) c017236.amount = '20044.01';
       const c000867 = this.db.cheques.find(c => c.cheque_no === '000867');
-      if (c000867) c000867.amount = '35597.36';
+      if (c000867) c000867.amount = '50000.00';
       const c000007 = this.db.cheques.find(c => c.cheque_no === '000007');
       if (c000007 && c000007.status === 'Cleared') c000007.status = 'Post-Dated Cheque (PDC)';
     }
@@ -1791,7 +1794,7 @@ class FinanceApp {
       const w017236 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvy4fwvn' || t.reference_no === 'CHQ-017236');
       if (w017236) w017236.amount = '20044.01';
       const w000867 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvxegfg5' || t.reference_no === 'CHQ-000867');
-      if (w000867) w000867.amount = '35597.36';
+      if (w000867) w000867.amount = '50000.00';
 
       // Ensure missing online inward client wires exist
       if (!this.db.bank_transfers.some(t => t.id === 'wire-rcp-rec-mvwqcuc7' || t.reference_no === 'PHUB295410356')) {
@@ -1859,7 +1862,7 @@ class FinanceApp {
           }
         });
         const calcBal = Math.round((adcbIn - adcbOut) * 100) / 100;
-        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1337238.23';
+        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1351640.87';
       }
     }
   }
@@ -1867,7 +1870,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v97';
+    const CURRENT_DB_VERSION = 'v2026_clean_v98';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -7092,6 +7095,8 @@ class FinanceApp {
     });
 
     const totalReceived = rawReceipts.reduce((acc, r) => acc + (Number(r.amount_received) || 0), 0);
+    const totalAllocated = rawReceipts.reduce((acc, r) => acc + (Number(r.allocated_amount) || 0), 0);
+    const totalAdvance = Math.max(0, Math.round((totalReceived - totalAllocated) * 100) / 100);
     let rcpOnline = 0, rcpCheque = 0, rcpCash = 0;
     rawReceipts.forEach(r => {
       const amt = Number(r.amount_received) || 0;
@@ -7132,7 +7137,7 @@ class FinanceApp {
             <div class="fin-metric-card">
               <span class="fin-metric-label">Total Inward Collections</span>
               <div class="fin-metric-value" style="color:#10b981;">${this.formatCurrency(totalReceived)}</div>
-              <span class="fin-metric-sub">${rawReceipts.length} Official Bilingual Vouchers Issued</span>
+              <span class="fin-metric-sub">Invoices Paid: ${this.formatCurrency(totalAllocated)} | Advance: ${this.formatCurrency(totalAdvance)}</span>
             </div>
             <div class="fin-metric-card">
               <span class="fin-metric-label">Received in Bank (ADCB)</span>
@@ -7143,6 +7148,11 @@ class FinanceApp {
               <span class="fin-metric-label">Customer Cash in Hand</span>
               <div class="fin-metric-value" style="color:#a855f7;">${this.formatCurrency(rcpCash)}</div>
               <span class="fin-metric-sub">Payment-In (${this.formatCurrency(totalReceived)}) = Bank + Cash (REC-RV-44030) ✓</span>
+            </div>
+            <div class="fin-metric-card">
+              <span class="fin-metric-label">Unallocated Client Advances</span>
+              <div class="fin-metric-value" style="color:#f59e0b;">${this.formatCurrency(totalAdvance)}</div>
+              <span class="fin-metric-sub">M/S HLN Advance (Cheque #000867)</span>
             </div>
           </div>
 
@@ -24979,7 +24989,10 @@ class FinanceApp {
           if (mi?.customer_name) custName = mi.customer_name;
         }
       }
-      const allocInvs = (r.allocations || []).map(a => `${a.invoice_no || ''}${a.amount ? ` (${a.amount})` : ''}`).filter(Boolean).join('; ') || r.ref_invoice_no || '';
+      let allocInvs = (r.allocations || []).map(a => `${a.invoice_no || ''}${a.amount_allocated ? ` (${a.amount_allocated})` : (a.amount ? ` (${a.amount})` : '')}`).filter(Boolean).join('; ') || r.ref_invoice_no || '';
+      if (r.unallocated_amount && Number(r.unallocated_amount) > 0) {
+        allocInvs += (allocInvs ? '; ' : '') + `Unallocated Advance (${Number(r.unallocated_amount).toFixed(2)})`;
+      }
       csv += `${this.csvEscape(r.receipt_no)},${this.csvEscape(r.receipt_date)},${this.csvEscape(custName)},${this.csvEscape(r.payment_mode || r.mode || 'Online')},${this.csvEscape(r.bank_name || r.account_name || 'Corporate Bank')},${this.csvEscape(r.reference_no || r.cheque_no || r.transaction_ref || '')},${this.csvEscape(allocInvs)},${Number(r.amount_received || 0).toFixed(2)},${this.csvEscape(r.currency || 'AED')},${this.csvEscape(r.status || 'Cleared')},${this.csvEscape(r.notes || '')}\n`;
     });
     this.downloadFile(`Rayan_Group_Payment_In_Receipts_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
