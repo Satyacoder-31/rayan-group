@@ -121,6 +121,9 @@ async function deploy() {
     const dbPath = path.resolve('data/finance-data.json');
     if (fs.existsSync(dbPath)) {
       const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+      if (Array.isArray(db.audit_logs) && db.audit_logs.length > 50) {
+        db.audit_logs = db.audit_logs.slice(-50);
+      }
       const dbRes = await fetch('https://rayan-group.com/api/finance.php?action=sync_full', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

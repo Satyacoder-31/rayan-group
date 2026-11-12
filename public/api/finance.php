@@ -714,7 +714,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         'invoice_no' => 'REC-RG-INV-44035',
         'company_id' => 'rayan-corp-uae',
         'customer_id' => 'cust-toprock',
-        'customer_name' => 'M/S TOP ROCK INTERIORS LLC.',
+        'customer_name' => 'M/S TOP ROCK INTERIORS LLC',
         'customer_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
         'billing_address' => 'TRI Office No.1 Al Qusais Industrial Area 1, Dubai, UAE',
         'contact_person' => 'Mr. Shahil',
@@ -887,7 +887,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
 
             // Ensure canonical customer details are fully updated without forcing slug codes
             $pdo->exec("UPDATE finance_customers SET 
-                name = 'M/S TOP ROCK INTERIORS LLC.',
+                name = 'M/S TOP ROCK INTERIORS LLC',
                 contact_person = 'Mr. Shahil',
                 salutation = 'Mr.',
                 first_name = 'Shahil',
@@ -933,12 +933,12 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                 if (!$chkMig44050) {
                     $pdo->exec("UPDATE finance_invoices SET 
                         customer_id = 'cust-toprock',
-                        customer_name = 'M/S TOP ROCK INTERIORS LLC.',
+                        customer_name = 'M/S TOP ROCK INTERIORS LLC',
                         customer_trn = '10457119600003',
                         data_json = JSON_SET(
                             data_json, 
                             '$.customer_id', 'cust-toprock', 
-                            '$.customer_name', 'M/S TOP ROCK INTERIORS LLC.',
+                            '$.customer_name', 'M/S TOP ROCK INTERIORS LLC',
                             '$.customer_trn', '10457119600003',
                             '$.tax_number', '10457119600003',
                             '$.contact_person', 'Mr. Shahil',
@@ -1102,8 +1102,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     'name' => 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi',
                     'lpo_no' => 'LPO-TRI-2024-88',
                     'po_reference' => 'LPO-TRI-2024-88',
-                    'client' => 'M/S TOP ROCK INTERIORS LLC.',
-                    'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                    'client' => 'M/S TOP ROCK INTERIORS LLC',
+                    'client_name' => 'M/S TOP ROCK INTERIORS LLC',
                     'client_id' => 'cust-toprock',
                     'contract_value' => 34615.27,
                     'approved_budget' => 34615.27,
@@ -1142,8 +1142,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     'name' => 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
                     'lpo_no' => 'LPO-DPA-2026-01',
                     'po_reference' => 'LPO-DPA-2026-01',
-                    'client' => 'M/S TOP ROCK INTERIORS LLC.',
-                    'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                    'client' => 'M/S TOP ROCK INTERIORS LLC',
+                    'client_name' => 'M/S TOP ROCK INTERIORS LLC',
                     'client_id' => 'cust-toprock',
                     'contract_value' => 341835.68,
                     'approved_budget' => 500000.00,
@@ -1162,8 +1162,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     'name' => 'Project # AON Insurance Office Al Bateen Tower, Abu Dhabi',
                     'lpo_no' => 'LPO-AYAT-2026-14',
                     'po_reference' => 'LPO-AYAT-2026-14',
-                    'client' => 'M/S AYAT TECHNICAL SERVICES EST.',
-                    'client_name' => 'M/S AYAT TECHNICAL SERVICES EST.',
+                    'client' => 'M/S AYAT TECHNICAL SERVICES EST',
+                    'client_name' => 'M/S AYAT TECHNICAL SERVICES EST',
                     'client_id' => 'cust-ayat',
                     'contract_value' => 75393.30,
                     'approved_budget' => 65000.00,
@@ -1407,8 +1407,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                         'name' => 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi',
                     'lpo_no' => 'LPO-TRI-2024-88',
                     'po_reference' => 'LPO-TRI-2024-88',
-                        'client' => 'M/S TOP ROCK INTERIORS LLC.',
-                        'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                        'client' => 'M/S TOP ROCK INTERIORS LLC',
+                        'client_name' => 'M/S TOP ROCK INTERIORS LLC',
                         'client_id' => 'cust-toprock',
                         'contract_value' => 34615.27,
                         'approved_budget' => 34615.27,
@@ -1694,7 +1694,7 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
         foreach ($data['invoices'] as &$inv) {
             if (($inv['invoice_no'] ?? '') === 'REC-RG-INV-44050' || ($inv['id'] ?? '') === 'inv-rec-rg-inv-44050') {
                 $inv['customer_id'] = 'cust-toprock';
-                $inv['customer_name'] = 'M/S TOP ROCK INTERIORS LLC.';
+                $inv['customer_name'] = 'M/S TOP ROCK INTERIORS LLC';
                 $inv['customer_trn'] = '10457119600003';
                 $inv['tax_number'] = '10457119600003';
                 $inv['contact_person'] = 'Mr. Shahil';
@@ -1819,8 +1819,8 @@ function purgeDummyFinanceRecords($pdo, &$data, $dataFile, $candidates) {
                     $c['id'] = 'cust-toprock';
                     if (empty($c['code']) || $c['code'] === 'CUST-TOPROCK') $c['code'] = 'CUST-REC-1011';
                     $c['customer_type'] = 'Business';
-                    $c['name'] = 'M/S TOP ROCK INTERIORS LLC.';
-                    $c['display_name'] = 'M/S TOP ROCK INTERIORS LLC.';
+                    $c['name'] = 'M/S TOP ROCK INTERIORS LLC';
+                    $c['display_name'] = 'M/S TOP ROCK INTERIORS LLC';
                     $c['trn'] = '10457119600003';
                     $c['tax_treatment'] = 'VAT Registered';
                     $c['place_of_supply'] = 'Dubai, UAE';
@@ -2992,7 +2992,7 @@ function reconcileAllPaymentRecordsPhp(&$data, $pdo) {
             'source_account_id' => 'bank-adcb-uae',
             'destination_bank' => 'Abu Dhabi Commercial Bank (ADCB)',
             'destination_account_id' => 'bank-adcb-uae',
-            'counterparty' => 'M/S AYAT TECHNICAL SERVICES EST.',
+            'counterparty' => 'M/S AYAT TECHNICAL SERVICES EST',
             'amount' => 4743.70,
             'currency' => 'AED',
             'type' => 'inward',
@@ -3496,10 +3496,13 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
                 }
             }
             if (($r['id'] ?? '') === 'rec-mobin-villa-44003' || ($r['receipt_no'] ?? '') === 'REC-RV-44032') {
-                $r['payment_mode'] = 'Online';
-                $r['payment_type'] = 'Online Bank Transfer';
-                $r['bank_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
-                unset($r['deposit_vault_id'], $r['deposit_vault_name']);
+                $r['payment_mode'] = 'Cash';
+                $r['payment_type'] = 'Cash / Direct Settlement';
+                $r['reference_no'] = 'CASH-MOBIN-44003';
+                $r['bank_name'] = 'Corporate Treasury / Cash in Hand';
+                $r['deposit_vault_id'] = 'cash-mw5esv3w';
+                $r['deposit_vault_name'] = 'RAYAN E-Wallets';
+                $r['notes'] = 'Payment via Corporate Treasury Cash in Hand against 50% Advance for Al Lisaili Villa Dubai (REC-RG-INV-44003)';
             }
         }
         unset($r);
@@ -3525,13 +3528,13 @@ function reconcileV92BankCashChequeHarmony(&$data, $pdo) {
 
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
-            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1342640.87';
         }
         unset($b);
     }
     if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
         foreach ($data['cash_in_hand'] as &$c) {
-            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 5000.00;
+            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 14000.00;
         }
         unset($c);
     }
@@ -3621,6 +3624,35 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
                 $pdo->exec("UPDATE finance_customers SET data_json = JSON_SET(data_json, '$.unallocated_advance', 14402.64, '$.advance_balance', 14402.64) WHERE id = 'cust-hln' OR name LIKE '%HLN TECHNICAL%'");
                 $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_customer_advance_hln_harmony_v98', 'completed', NOW())");
             }
+
+            // Migration v103: Standardize Mobin Villa (REC-RV-44032) as Cash in Hand (14,000 AED Cash / 1,342,640.87 AED Bank), clean cash vouchers & strip trailing dots
+            $chkMig103 = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'harmony_mobin_cash_and_clean_names_v103'")->fetchColumn();
+            if ($chkMig103 !== 'completed') {
+                // 1. Set Mobin Villa to Cash
+                $pdo->exec("UPDATE finance_customer_receipts SET payment_mode = 'Cash', payment_type = 'Cash / Direct Settlement', reference_no = 'CASH-MOBIN-44003', bank_name = 'Corporate Treasury / Cash in Hand', notes = 'Payment via Corporate Treasury Cash in Hand against 50% Advance for Al Lisaili Villa Dubai (REC-RG-INV-44003)', data_json = JSON_SET(data_json, '$.payment_mode', 'Cash', '$.payment_type', 'Cash / Direct Settlement', '$.reference_no', 'CASH-MOBIN-44003', '$.bank_name', 'Corporate Treasury / Cash in Hand', '$.deposit_vault_id', 'cash-mw5esv3w', '$.deposit_vault_name', 'RAYAN E-Wallets', '$.notes', 'Payment via Corporate Treasury Cash in Hand against 50% Advance for Al Lisaili Villa Dubai (REC-RG-INV-44003)') WHERE id = 'rec-mobin-villa-44003' OR receipt_no = 'REC-RV-44032'");
+                $pdo->exec("DELETE FROM finance_bank_transfers WHERE id = 'wire-rcp-mobin-villa-44003' OR reference_no = 'PHUB604192801' OR counterparty LIKE '%MOBIN%'");
+
+                // 2. Fix Cash Vouchers: Update CV-RCP-44008 to REC-RV-44030, ensure REC-RV-44032 exists, delete synthetic ones
+                $pdo->exec("DELETE FROM finance_cash_vouchers WHERE voucher_no LIKE 'CV-WDL-%' OR voucher_no LIKE 'CV-PV-%' OR id LIKE 'cv-wdl-%' OR id LIKE 'cv-pv-%' OR payee LIKE '%GENERAL EXPENSES%' OR purpose LIKE '%replenish RAYAN E-Wallets%' OR purpose LIKE '%cash withdrawal%'");
+                $pdo->exec("UPDATE finance_cash_vouchers SET voucher_no = 'REC-RV-44030', data_json = JSON_SET(data_json, '$.voucher_no', 'REC-RV-44030') WHERE voucher_no = 'CV-RCP-44008' OR id = 'cv-rcp-hln-scrap-44008'");
+                $pdo->exec("REPLACE INTO finance_cash_vouchers (id, receipt_id, company_id, voucher_no, register_id, register_name, custodian, date, voucher_date, type, category, purpose, payee, amount, currency, status, created_at, updated_at) VALUES ('cv-rcp-mobin-villa-44003', 'rec-mobin-villa-44003', 'rayan-corp-uae', 'REC-RV-44032', 'cash-mw5esv3w', 'RAYAN E-Wallets', 'Arshad Alam Shaikh', '2026-01-14', '2026-01-14', 'inflow', 'Customer Cash Collection', 'Customer cash collection against REC-RG-INV-44003 (Al Lisaili Villa Dubai)', 'MS MOBIN AL LISAILI VILLA DUBAI', 9000.00, 'AED', 'Cleared', NOW(), NOW())");
+
+                // 3. Update Bank Accounts and Cash In Hand balances
+                $pdo->exec("UPDATE finance_bank_accounts SET balance = 1342640.87, data_json = JSON_SET(data_json, '$.balance', '1342640.87') WHERE id = 'bank-adcb-uae'");
+                $pdo->exec("UPDATE finance_cash_in_hand SET balance = 14000.00, data_json = JSON_SET(data_json, '$.balance', 14000.00) WHERE id = 'cash-mw5esv3w'");
+
+                // 4. Permanently strip trailing dots from company/customer/vendor names across relational tables
+                $pdo->exec("UPDATE finance_customers SET name = TRIM(TRAILING '.' FROM name), company_name = TRIM(TRAILING '.' FROM company_name), display_name = TRIM(TRAILING '.' FROM display_name)");
+                $pdo->exec("UPDATE finance_invoices SET customer_name = TRIM(TRAILING '.' FROM customer_name)");
+                $pdo->exec("UPDATE finance_receipts SET customer_name = TRIM(TRAILING '.' FROM customer_name)");
+                $pdo->exec("UPDATE finance_customer_receipts SET customer_name = TRIM(TRAILING '.' FROM customer_name)");
+                $pdo->exec("UPDATE finance_cheques SET party_name = TRIM(TRAILING '.' FROM party_name)");
+                $pdo->exec("UPDATE finance_bank_transfers SET counterparty = TRIM(TRAILING '.' FROM counterparty)");
+                $pdo->exec("UPDATE finance_cash_vouchers SET payee = TRIM(TRAILING '.' FROM payee)");
+                $pdo->exec("UPDATE finance_vendors SET name = TRIM(TRAILING '.' FROM name), display_name = TRIM(TRAILING '.' FROM display_name)");
+
+                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('harmony_mobin_cash_and_clean_names_v103', 'completed', NOW())");
+            }
         } catch (Exception $e) {
             error_log("Migration v93 error: " . $e->getMessage());
         }
@@ -3638,6 +3670,7 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
             if (strpos($id, 'wire-wdl-') === 0 || strpos($ref, 'wire-wdl-') === 0 || strpos($id, 'wire-pv-') === 0 || strpos($ref, 'wire-pv-') === 0) return false;
             if (stripos($purp, 'replenish rayan e-wallets') !== false || stripos($purp, 'cash withdrawal') !== false) return false;
             if (stripos($party, 'GENERAL EXPENSES') !== false) return false;
+            if ($id === 'wire-rcp-mobin-villa-44003' || $ref === 'PHUB604192801' || stripos($party, 'MOBIN') !== false) return false;
             return true;
         }));
     }
@@ -3654,6 +3687,42 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
             if (stripos($purp, 'replenish rayan e-wallets') !== false || stripos($purp, 'cash withdrawal') !== false) return false;
             return true;
         }));
+        foreach ($data['cash_vouchers'] as &$cv) {
+            if (($cv['voucher_no'] ?? '') === 'CV-RCP-44008' || ($cv['id'] ?? '') === 'cv-rcp-hln-scrap-44008') {
+                $cv['voucher_no'] = 'REC-RV-44030';
+            }
+            if (($cv['id'] ?? '') === 'cv-rcp-mobin-villa-44003' || ($cv['voucher_no'] ?? '') === 'REC-RV-44032') {
+                $cv['voucher_no'] = 'REC-RV-44032';
+            }
+        }
+        unset($cv);
+        $hasMobinVoucher = false;
+        foreach ($data['cash_vouchers'] as $cv) {
+            if (($cv['id'] ?? '') === 'cv-rcp-mobin-villa-44003' || ($cv['voucher_no'] ?? '') === 'REC-RV-44032') {
+                $hasMobinVoucher = true;
+                break;
+            }
+        }
+        if (!$hasMobinVoucher) {
+            $data['cash_vouchers'][] = [
+                'id' => 'cv-rcp-mobin-villa-44003',
+                'receipt_id' => 'rec-mobin-villa-44003',
+                'company_id' => 'rayan-corp-uae',
+                'voucher_no' => 'REC-RV-44032',
+                'register_id' => 'cash-mw5esv3w',
+                'register_name' => 'RAYAN E-Wallets',
+                'custodian' => 'Arshad Alam Shaikh',
+                'date' => '2026-01-14',
+                'voucher_date' => '2026-01-14',
+                'type' => 'inflow',
+                'category' => 'Customer Cash Collection',
+                'purpose' => 'Customer cash collection against REC-RG-INV-44003 (Al Lisaili Villa Dubai)',
+                'payee' => 'MS MOBIN AL LISAILI VILLA DUBAI',
+                'amount' => '9000.00',
+                'currency' => 'AED',
+                'status' => 'Cleared'
+            ];
+        }
     }
 
     if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
@@ -3689,10 +3758,13 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
                 }
             }
             if (($r['id'] ?? '') === 'rec-mobin-villa-44003' || ($r['receipt_no'] ?? '') === 'REC-RV-44032') {
-                $r['payment_mode'] = 'Online';
-                $r['payment_type'] = 'Online Bank Transfer';
-                $r['bank_name'] = 'Abu Dhabi Commercial Bank (ADCB)';
-                unset($r['deposit_vault_id'], $r['deposit_vault_name']);
+                $r['payment_mode'] = 'Cash';
+                $r['payment_type'] = 'Cash / Direct Settlement';
+                $r['reference_no'] = 'CASH-MOBIN-44003';
+                $r['bank_name'] = 'Corporate Treasury / Cash in Hand';
+                $r['deposit_vault_id'] = 'cash-mw5esv3w';
+                $r['deposit_vault_name'] = 'RAYAN E-Wallets';
+                $r['notes'] = 'Payment via Corporate Treasury Cash in Hand against 50% Advance for Al Lisaili Villa Dubai (REC-RG-INV-44003)';
             }
         }
         unset($r);
@@ -3718,16 +3790,74 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
 
     if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
         foreach ($data['bank_accounts'] as &$b) {
-            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1351640.87';
+            if (($b['id'] ?? '') === 'bank-adcb-uae') $b['balance'] = '1342640.87';
         }
         unset($b);
     }
 
     if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
         foreach ($data['cash_in_hand'] as &$c) {
-            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 5000.00;
+            if (($c['id'] ?? '') === 'cash-mw5esv3w') $c['balance'] = 14000.00;
         }
         unset($c);
+    }
+
+    // Strip trailing/leading dots from company and customer names across all collections
+    $cleanDotName = function($str) {
+        if (!is_string($str)) return $str;
+        return preg_replace('/^[.\s]+/', '', preg_replace('/[.\s]+$/', '', trim($str)));
+    };
+    if (!empty($data['customers']) && is_array($data['customers'])) {
+        foreach ($data['customers'] as &$c) {
+            if (!empty($c['name'])) $c['name'] = $cleanDotName($c['name']);
+            if (!empty($c['company_name'])) $c['company_name'] = $cleanDotName($c['company_name']);
+            if (!empty($c['display_name'])) $c['display_name'] = $cleanDotName($c['display_name']);
+        }
+        unset($c);
+    }
+    if (!empty($data['invoices']) && is_array($data['invoices'])) {
+        foreach ($data['invoices'] as &$inv) {
+            if (!empty($inv['customer_name'])) $inv['customer_name'] = $cleanDotName($inv['customer_name']);
+        }
+        unset($inv);
+    }
+    if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+        foreach ($data['customer_receipts'] as &$r) {
+            if (!empty($r['customer_name'])) $r['customer_name'] = $cleanDotName($r['customer_name']);
+        }
+        unset($r);
+    }
+    if (!empty($data['cheques']) && is_array($data['cheques'])) {
+        foreach ($data['cheques'] as &$chq) {
+            if (!empty($chq['party_name'])) $chq['party_name'] = $cleanDotName($chq['party_name']);
+        }
+        unset($chq);
+    }
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        foreach ($data['bank_transfers'] as &$bt) {
+            if (!empty($bt['counterparty'])) $bt['counterparty'] = $cleanDotName($bt['counterparty']);
+        }
+        unset($bt);
+    }
+    if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+        foreach ($data['cash_vouchers'] as &$cv) {
+            if (!empty($cv['payee'])) $cv['payee'] = $cleanDotName($cv['payee']);
+        }
+        unset($cv);
+    }
+    if (!empty($data['vendors']) && is_array($data['vendors'])) {
+        foreach ($data['vendors'] as &$v) {
+            if (!empty($v['name'])) $v['name'] = $cleanDotName($v['name']);
+            if (!empty($v['display_name'])) $v['display_name'] = $cleanDotName($v['display_name']);
+        }
+        unset($v);
+    }
+    if (!empty($data['projects']) && is_array($data['projects'])) {
+        foreach ($data['projects'] as &$p) {
+            if (!empty($p['client'])) $p['client'] = $cleanDotName($p['client']);
+            if (!empty($p['client_name'])) $p['client_name'] = $cleanDotName($p['client_name']);
+        }
+        unset($p);
     }
 }
 
@@ -4467,8 +4597,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             'name' => 'Project # Cafe Bateel @ Yas Mall, Abu Dhabi',
                     'lpo_no' => 'LPO-TRI-2024-88',
                     'po_reference' => 'LPO-TRI-2024-88',
-                            'client' => 'M/S TOP ROCK INTERIORS LLC.',
-                            'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                            'client' => 'M/S TOP ROCK INTERIORS LLC',
+                            'client_name' => 'M/S TOP ROCK INTERIORS LLC',
                             'client_id' => 'cust-toprock',
                             'contract_value' => 34615.27,
                             'approved_budget' => 34615.27,
@@ -4507,8 +4637,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             'name' => 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
                     'lpo_no' => 'LPO-DPA-2026-01',
                     'po_reference' => 'LPO-DPA-2026-01',
-                            'client' => 'M/S TOP ROCK INTERIORS LLC.',
-                            'client_name' => 'M/S TOP ROCK INTERIORS LLC.',
+                            'client' => 'M/S TOP ROCK INTERIORS LLC',
+                            'client_name' => 'M/S TOP ROCK INTERIORS LLC',
                             'client_id' => 'cust-toprock',
                             'contract_value' => 341835.68,
                             'approved_budget' => 500000.00,
@@ -4527,8 +4657,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             'name' => 'Project # AON Insurance Office Al Bateen Tower, Abu Dhabi',
                     'lpo_no' => 'LPO-AYAT-2026-14',
                     'po_reference' => 'LPO-AYAT-2026-14',
-                            'client' => 'M/S AYAT TECHNICAL SERVICES EST.',
-                            'client_name' => 'M/S AYAT TECHNICAL SERVICES EST.',
+                            'client' => 'M/S AYAT TECHNICAL SERVICES EST',
+                            'client_name' => 'M/S AYAT TECHNICAL SERVICES EST',
                             'client_id' => 'cust-ayat',
                             'contract_value' => 75393.30,
                             'approved_budget' => 65000.00,

@@ -1594,6 +1594,9 @@ class FinanceApp {
       }
 
       this.db.cash_vouchers.forEach(cv => {
+        if (cv.voucher_no === 'CV-RCP-44008' || cv.id === 'cv-rcp-hln-scrap-44008') {
+          cv.voucher_no = 'REC-RV-44030';
+        }
         if (cv.voucher_no === 'CV-REC-RV-44064' || cv.voucher_no === 'CV-REC-RV-44093' || (cv.category === 'Customer Cash Collection' && cv.type === 'inflow')) {
           cv.register_id = rayanWallet.id;
           cv.register_name = rayanWallet.register_name;
@@ -1926,18 +1929,20 @@ class FinanceApp {
       }
     }
 
-    // Clean company and customer names trailing dots (e.g. "LLC.", "EST.")
+    // Clean company and customer names trailing/leading dots (e.g. "LLC.", "EST.")
     const cleanTrailingDot = (str) => {
       if (!str || typeof str !== 'string') return str;
-      return str.replace(/\.+$/, '').trim();
+      return str.trim().replace(/[.\s]+$/, '').replace(/^[.\s]+/, '').trim();
     };
 
     (this.db.customers || []).forEach(c => {
       if (c.name) c.name = cleanTrailingDot(c.name);
       if (c.company_name) c.company_name = cleanTrailingDot(c.company_name);
+      if (c.display_name) c.display_name = cleanTrailingDot(c.display_name);
     });
     (this.db.vendors || []).forEach(v => {
       if (v.name) v.name = cleanTrailingDot(v.name);
+      if (v.display_name) v.display_name = cleanTrailingDot(v.display_name);
     });
     (this.db.invoices || []).forEach(i => {
       if (i.customer_name) i.customer_name = cleanTrailingDot(i.customer_name);
@@ -1948,6 +1953,13 @@ class FinanceApp {
     (this.db.cheques || []).forEach(c => {
       if (c.party_name) c.party_name = cleanTrailingDot(c.party_name);
     });
+    (this.db.cash_vouchers || []).forEach(cv => {
+      if (cv.payee) cv.payee = cleanTrailingDot(cv.payee);
+    });
+    (this.db.projects || []).forEach(p => {
+      if (p.client) p.client = cleanTrailingDot(p.client);
+      if (p.client_name) p.client_name = cleanTrailingDot(p.client_name);
+    });
     (this.db.bank_transfers || []).forEach(t => {
       if (t.counterparty) t.counterparty = cleanTrailingDot(t.counterparty);
       if (t.purpose) {
@@ -1957,10 +1969,15 @@ class FinanceApp {
     });
   }
 
+  cleanName(str) {
+    if (!str || typeof str !== 'string') return str || '';
+    return str.trim().replace(/[.\s]+$/, '').replace(/^[.\s]+/, '').trim();
+  }
+
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v102';
+    const CURRENT_DB_VERSION = 'v2026_clean_v103';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -6033,7 +6050,7 @@ class FinanceApp {
         </td>
         <td style="white-space:nowrap;">${this.formatDate(inv.invoice_date)}</td>
         <td style="white-space:nowrap; min-width:200px;">
-          <span class="fin-customer-cell">${inv.customer_name || 'Valued Client'}</span>
+          <span class="fin-customer-cell">${this.cleanName(inv.customer_name) || 'Valued Client'}</span>
           ${(() => {
             const cust = (this.db?.customers || []).find(c => (inv.customer_id && c.id === inv.customer_id) || (c.name && inv.customer_name && c.name.toLowerCase() === inv.customer_name.toLowerCase()));
             const isTopRock = (inv.customer_name || '').toLowerCase().includes('top rock') || inv.customer_id === 'cust-toprock';
@@ -7445,7 +7462,7 @@ class FinanceApp {
         <tr>
           <td><strong style="color:#38bdf8; font-family:monospace;">${r.receipt_no}</strong></td>
           <td>${this.formatDate(r.receipt_date)}</td>
-          <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${custDisp || 'Client'}</span></td>
+          <td style="white-space:nowrap; min-width:220px;"><span class="fin-customer-cell">${this.cleanName(custDisp) || 'Client'}</span></td>
           <td>
             <div>${(r.payment_mode === 'Corporate RTGS' || r.payment_mode === 'RTGS') ? 'Online' : (r.payment_mode || 'Online')}</div>
             <span style="font-size:0.68rem; color:#94a3b8;">${r.reference_no}${r.bank_name ? ` • ${r.bank_name}` : ''}</span>
@@ -8587,7 +8604,7 @@ class FinanceApp {
               ${v.project_name ? `<span style="font-size:0.68rem; color:#a78bfa; background:rgba(167,139,250,0.15); padding:1px 6px; border-radius:3px;">${v.project_name}</span>` : ''}
             </div>
           </td>
-          <td>${v.payee || 'Site Runner'}</td>
+          <td>${this.cleanName(v.payee) || 'Site Runner'}</td>
           <td style="text-align:right;"><strong style="color:${color};">${sign} ${this.formatCurrency(v.amount)}</strong></td>
           <td><span class="fin-badge fin-badge-paid">${v.status || 'Approved'}</span></td>
           <td style="text-align:center;">
