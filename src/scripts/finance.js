@@ -1984,7 +1984,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v106';
+    const CURRENT_DB_VERSION = 'v2026_clean_v107';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5397,12 +5397,28 @@ class FinanceApp {
     const totalPayables = bills.filter(b => b.status !== 'void' && b.status !== 'paid').reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
     const totalExpenses = expenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
 
-    // Cash and Bank derived from opening balance + total customer receipts - vendor payments
-    const isRayanEng = this.activeCompanyId === 'rayan-corp-uae';
-    const openingBank = isRayanEng ? 2500000 : 0;
-    const totalReceipts = receipts.reduce((s, r) => s + (Number(r.amount_received) || 0), 0);
-    const totalDisbursed = vendorPayments.reduce((s, p) => s + (Number(p.amount_paid) || 0), 0);
-    const cashBankBalance = isRayanEng ? (openingBank + totalReceipts - totalDisbursed) : (totalReceipts - totalDisbursed);
+    // Real Cash & Bank Balance: Actual Bank Liquidity + Vault Cash for active company
+    const activeBanks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const activeCashVaults = (this.db?.cash_in_hand || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const totalBankLiquidity = activeBanks.reduce((sum, b) => sum + (Number(b.balance) || 0), 0);
+    const totalCashVaults = activeCashVaults.reduce((sum, c) => sum + (Number(c.balance) || 0), 0);
+    const cashBankBalance = totalBankLiquidity + totalCashVaults;
+
+    // Receivables Aging Breakdown: Dynamic Calculation based on open balances & due dates
+    let age0_30 = 0;
+    let age31_60 = 0;
+    let age61_90 = 0;
+    let age90_plus = 0;
+    const nowRef = new Date();
+    invoices.filter(i => i.status !== 'void' && i.status !== 'paid' && Number(i.balance_due) > 0).forEach(inv => {
+      const bal = Number(inv.balance_due) || 0;
+      const invDate = new Date(inv.due_date || inv.invoice_date || nowRef);
+      const diffDays = Math.max(0, Math.floor((nowRef - invDate) / (1000 * 60 * 60 * 24)));
+      if (diffDays <= 30) age0_30 += bal;
+      else if (diffDays <= 60) age31_60 += bal;
+      else if (diffDays <= 90) age61_90 += bal;
+      else age90_plus += bal;
+    });
 
     // Net Profit: Authoritative derived from Sales (Taxable Subtotal) minus Purchases (Taxable Subtotal) minus Overhead Expenses
     const taxableSales = invoices.filter(i => i.status !== 'void').reduce((s, i) => s + (Number(i.taxable_subtotal) || 0), 0);
@@ -5474,15 +5490,15 @@ class FinanceApp {
         </div>
 
         <!-- 5. Cash & Bank Balances -->
-        <div class="fin-metric-card accent-cash" onclick="window.finApp.switchTab('payments')">
+        <div class="fin-metric-card accent-cash" onclick="window.finApp.switchTab('bank_accounts')">
           <div class="fin-metric-header">
             <span class="fin-metric-label">Cash &amp; Bank Balance</span>
             <div class="fin-metric-icon" style="color:#10b981;">🏦</div>
           </div>
           <div class="fin-metric-value">${this.formatCurrency(cashBankBalance)}</div>
           <div class="fin-metric-subtext">
-            <span>Bank Accounts</span>
-            <span style="color:#10b981;">Reconciled Live</span>
+            <span>Bank: ${this.formatCurrency(totalBankLiquidity)} | Cash: ${this.formatCurrency(totalCashVaults)}</span>
+            <span style="color:#10b981;">Reconciled Live ✓</span>
           </div>
         </div>
 
@@ -5682,23 +5698,23 @@ class FinanceApp {
           <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
             <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:0.85rem; text-align:center;">
               <span style="font-size:0.68rem; color:#94a3b8; display:block; text-transform:uppercase;">0-30 Days</span>
-              <strong style="font-size:1.1rem; color:#10b981;">${this.formatCurrency(5565000)}</strong>
-              <span style="font-size:0.65rem; color:#10b981; display:block;">Normal terms</span>
+              <strong style="font-size:1.1rem; color:#10b981;">${this.formatCurrency(age0_30)}</strong>
+              <span style="font-size:0.65rem; color:#10b981; display:block;">Current terms</span>
             </div>
             <div style="background:rgba(0,153,230,0.08); border:1px solid rgba(0,153,230,0.25); border-radius:8px; padding:0.85rem; text-align:center;">
               <span style="font-size:0.68rem; color:#94a3b8; display:block; text-transform:uppercase;">31-60 Days</span>
-              <strong style="font-size:1.1rem; color:#0099e6;">${this.formatCurrency(3280000)}</strong>
+              <strong style="font-size:1.1rem; color:#0099e6;">${this.formatCurrency(age31_60)}</strong>
               <span style="font-size:0.65rem; color:#0099e6; display:block;">Due soon</span>
             </div>
             <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:0.85rem; text-align:center;">
               <span style="font-size:0.68rem; color:#94a3b8; display:block; text-transform:uppercase;">61-90 Days</span>
-              <strong style="font-size:1.1rem; color:#f59e0b;">${this.formatCurrency(1425000)}</strong>
+              <strong style="font-size:1.1rem; color:#f59e0b;">${this.formatCurrency(age61_90)}</strong>
               <span style="font-size:0.65rem; color:#f59e0b; display:block;">Follow-up</span>
             </div>
             <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:8px; padding:0.85rem; text-align:center;">
               <span style="font-size:0.68rem; color:#94a3b8; display:block; text-transform:uppercase;">90+ Days</span>
-              <strong style="font-size:1.1rem; color:#ef4444;">${this.formatCurrency(8850000)}</strong>
-              <span style="font-size:0.65rem; color:#ef4444; display:block;">Critical Overdue</span>
+              <strong style="font-size:1.1rem; color:#ef4444;">${this.formatCurrency(age90_plus)}</strong>
+              <span style="font-size:0.65rem; color:#ef4444; display:block;">Overdue</span>
             </div>
           </div>
           <p style="font-size:0.75rem; color:#94a3b8; line-height:1.5;">
