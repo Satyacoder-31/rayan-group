@@ -354,7 +354,7 @@ class FinanceApp {
       'bill-rg-001', 'bill-rg-002', 'bill-rg-003',
       'pay-rg-001', 'pay-rg-002', 'pay-rg-003', 'pay-1792606054681',
       'dn-rg-001',
-      'exp-rg-001', 'exp-rg-002', 'exp-rg-003',
+      'exp-rg-001', 'exp-rg-002', 'exp-rg-003', 'exp-rg-2026-101', 'exp-1793127684907',
       'vend-001', 'vend-002', 'vend-003', 'vend-004',
       'cust-004', 'cust-005', 'cust-kgc-alias', 'prj-dpa-01',
       'rec-mvdvmilf', 'rec-mvy61blt', 'rec-rv-44073',
@@ -1870,7 +1870,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v100';
+    const CURRENT_DB_VERSION = 'v2026_clean_v101';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
