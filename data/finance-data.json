@@ -749,8 +749,8 @@
       "payment_terms_label": "30 Days",
       "created_at": "2026-11-11 06:37:11",
       "updated_at": "2026-11-11 06:37:11",
-      "unallocated_advance": 14402.64,
-      "advance_balance": 14402.64
+      "unallocated_advance": 0,
+      "advance_balance": 0
     },
     {
       "id": "cust-toprock",
@@ -10939,7 +10939,7 @@
       "bank_name": "Abu Dhabi Commercial Bank (ADCB)",
       "bank_branch": "Dubai",
       "cheque_status": "Cleared & Verified",
-      "amount_received": "50000.00",
+      "amount_received": "35597.36",
       "allocated_amount": 35597.36,
       "allocations": [
         {
@@ -10952,13 +10952,13 @@
       "project_name": "Project # Max - Al Wahda Mall, Civil Works , Abu Dhabi",
       "received_by": "RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C",
       "receiver_sign": "Arshad Alam Shaikh",
-      "notes": "Cheque #000867 (AED 50,000.00): Settled final balance of AED 35,597.36 on REC-RG-INV-44006; remaining AED 14,402.64 recorded as Unallocated Customer Advance for future billings.",
-      "amount_in_words": "Fifty Thousand AED Only.",
+      "notes": "Cheque #000867: Settled in full against final balance of REC-RG-INV-44006 (AED 35,597.36)",
+      "amount_in_words": "Thirty Five Thousand Five Hundred Ninety Seven and Thirty Six Fils AED Only.",
       "customer_trn": "100579896000003",
       "customer_address": "W/H 125, AL Habtoor ware house Al Qusais , Dubai",
       "status": "Cleared",
-      "unallocated_amount": 14402.64,
-      "advance_amount": 14402.64
+      "unallocated_amount": 0,
+      "advance_amount": 0
     },
     {
       "id": "rec-mvxemwxo",
@@ -33719,7 +33719,7 @@
       "swift": "ADCBAEAA",
       "branch": "Dalma Mall Branch - Abu Dhabi",
       "currency": "AED",
-      "balance": "1342640.87",
+      "balance": "1328238.23",
       "signatory": "Arshad Alam Shaikh",
       "status": "Active",
       "ifsc_code": "",
@@ -33996,7 +33996,7 @@
       "branch": "Dubai",
       "party_name": "M/S HLN TECHNICAL SERVICES LLC",
       "date": "2025-10-18",
-      "amount": "50000.00",
+      "amount": "35597.36",
       "currency": "AED",
       "status": "Cleared",
       "notes": "",
@@ -35079,7 +35079,7 @@
       "source_bank": "Abu Dhabi Commercial Bank (ADCB) (AED)",
       "type": "inward",
       "type_label": "Inward Cheque Deposit",
-      "amount": "50000.00",
+      "amount": "35597.36",
       "currency": "AED",
       "purpose": "Cheque #000867 clearance / deposit from M/S HLN TECHNICAL SERVICES LLC",
       "status": "Cleared",

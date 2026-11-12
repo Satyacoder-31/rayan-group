@@ -1454,13 +1454,17 @@ class FinanceApp {
       if (r867) {
         r867.customer_id = 'cust-hln';
         r867.customer_name = 'M/S HLN TECHNICAL SERVICES LLC';
-        r867.amount_received = '50000.00';
-        r867.allocated_amount = 35597.36;
-        r867.unallocated_amount = 14402.64;
-        r867.advance_amount = 14402.64;
-        r867.amount_in_words = 'Fifty Thousand AED Only.';
-        r867.notes = 'Cheque #000867 (AED 50,000.00): Settled final balance of AED 35,597.36 on REC-RG-INV-44006; remaining AED 14,402.64 recorded as Unallocated Customer Advance for future billings.';
-        r867.allocations = [{ invoice_id: 'inv-rec-rg-inv-44006', invoice_no: 'REC-RG-INV-44006', amount_allocated: 35597.36 }];
+        const curAmt = (Number(r867.amount_received) === 50000 || !r867.amount_received) ? 35597.36 : Number(r867.amount_received);
+        r867.amount_received = curAmt.toFixed(2);
+        r867.allocated_amount = Math.min(curAmt, 35597.36);
+        r867.unallocated_amount = Math.max(0, Math.round((curAmt - 35597.36) * 100) / 100);
+        r867.advance_amount = r867.unallocated_amount;
+        if (r867.unallocated_amount > 0) {
+          r867.notes = `Cheque #000867 (AED ${curAmt.toFixed(2)}): Settled final balance of AED 35,597.36 on REC-RG-INV-44006; remaining AED ${r867.unallocated_amount.toFixed(2)} recorded as Unallocated Customer Advance for future billings.`;
+        } else {
+          r867.notes = 'Cheque #000867 (AED 35,597.36): Settled in full against final balance of REC-RG-INV-44006.';
+        }
+        r867.allocations = [{ invoice_id: 'inv-rec-rg-inv-44006', invoice_no: 'REC-RG-INV-44006', amount_allocated: r867.allocated_amount }];
         r867.ref_invoice_no = 'REC-RG-INV-44006';
       }
     }
@@ -1841,7 +1845,7 @@ class FinanceApp {
       const c017236 = this.db.cheques.find(c => c.cheque_no === '017236');
       if (c017236) c017236.amount = '20044.01';
       const c000867 = this.db.cheques.find(c => c.cheque_no === '000867');
-      if (c000867) c000867.amount = '50000.00';
+      if (c000867 && r867) c000867.amount = r867.amount_received;
       const c000007 = this.db.cheques.find(c => c.cheque_no === '000007');
       if (c000007 && c000007.status === 'Cleared') c000007.status = 'Post-Dated Cheque (PDC)';
     }
@@ -1857,7 +1861,7 @@ class FinanceApp {
       const w017236 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvy4fwvn' || t.reference_no === 'CHQ-017236');
       if (w017236) w017236.amount = '20044.01';
       const w000867 = this.db.bank_transfers.find(t => t.id === 'wire-chq-chq-rcp-rec-mvxegfg5' || t.reference_no === 'CHQ-000867');
-      if (w000867) w000867.amount = '50000.00';
+      if (w000867 && r867) w000867.amount = r867.amount_received;
 
       // Ensure missing online inward client wires exist
       if (!this.db.bank_transfers.some(t => t.id === 'wire-rcp-rec-mvwqcuc7' || t.reference_no === 'PHUB295410356')) {
@@ -1925,7 +1929,7 @@ class FinanceApp {
           }
         });
         const calcBal = Math.round((adcbIn - adcbOut) * 100) / 100;
-        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1342640.87';
+        adcb.balance = calcBal > 0 ? calcBal.toFixed(2) : '1328238.23';
       }
     }
 
@@ -1977,7 +1981,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v103';
+    const CURRENT_DB_VERSION = 'v2026_clean_v105';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2880,7 +2884,18 @@ class FinanceApp {
       const isCleared = chqStatus.toLowerCase().includes('clear');
 
       const existingChq = db.cheques.find(c => c.receipt_id === receipt.id || (receipt.cheque_no && c.cheque_no === receipt.cheque_no));
-      if (!existingChq) {
+      if (existingChq) {
+        existingChq.amount = amt;
+        existingChq.party_name = this.formatCompanyName(receipt.customer_name) || existingChq.party_name;
+        existingChq.date = receipt.cheque_date || receipt.receipt_date || existingChq.date;
+        const chqRef = receipt.cheque_no || receipt.reference_no || `CHQ-${receipt.receipt_no}`;
+        const finalRef = chqRef.startsWith('CHQ-') ? chqRef : `CHQ-${chqRef}`;
+        const existingWire = db.bank_transfers.find(w => w.receipt_id === receipt.id || w.reference_no === finalRef || w.reference_no === chqRef);
+        if (existingWire) {
+          existingWire.amount = amt;
+          existingWire.counterparty = this.formatCompanyName(receipt.customer_name);
+        }
+      } else {
         db.cheques.unshift({
           id: `chq-rcp-${receipt.id || Date.now()}`,
           receipt_id: receipt.id,
@@ -2934,7 +2949,11 @@ class FinanceApp {
     } else {
       // Online / Wire / Bank Transfer / Card
       const existingTrf = db.bank_transfers.find(t => t.receipt_id === receipt.id || t.reference_no === (receipt.reference_no || `WIRE-${receipt.receipt_no}`));
-      if (!existingTrf) {
+      if (existingTrf) {
+        existingTrf.amount = amt;
+        existingTrf.counterparty = receipt.customer_name || 'Customer';
+        existingTrf.date = receipt.receipt_date || existingTrf.date;
+      } else {
         let bank = db.bank_accounts.find(b => b.company_id === companyId && b.currency === currency);
         if (!bank) {
           bank = db.bank_accounts.find(b => (currency === 'INR' ? b.id === 'bank-sbi-corp' : b.id === 'bank-adcb-uae')) || db.bank_accounts[0];
@@ -7266,7 +7285,7 @@ class FinanceApp {
             <div class="fin-metric-card">
               <span class="fin-metric-label">Unallocated Client Advances</span>
               <div class="fin-metric-value" style="color:#f59e0b;">${this.formatCurrency(totalAdvance)}</div>
-              <span class="fin-metric-sub">M/S HLN Advance (Cheque #000867)</span>
+              ${totalAdvance > 0 ? `<span class="fin-metric-sub">M/S HLN Advance (Cheque #000867)</span>` : `<span class="fin-metric-sub" style="color:#10b981;">All Receipts Reconciled (0 Discrepancy) ✓</span>`}
             </div>
           </div>
 
