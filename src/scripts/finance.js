@@ -1849,16 +1849,74 @@ class FinanceApp {
     const r867Record = Array.isArray(this.db.customer_receipts) ? this.db.customer_receipts.find(r => r.id === 'rec-mvxegfg5' || r.cheque_no === '000867') : null;
     const r867Amount = r867Record ? r867Record.amount_received : '35597.36';
 
-    if (Array.isArray(this.db.cheques)) {
-      const c014502 = this.db.cheques.find(c => c.cheque_no === '014502');
-      if (c014502) c014502.amount = '19615.27';
-      const c017236 = this.db.cheques.find(c => c.cheque_no === '017236');
-      if (c017236) c017236.amount = '20044.01';
-      const c000867 = this.db.cheques.find(c => c.cheque_no === '000867');
-      if (c000867) c000867.amount = r867Amount;
-      const c000007 = this.db.cheques.find(c => c.cheque_no === '000007');
-      if (c000007 && c000007.status === 'Cleared') c000007.status = 'Post-Dated Cheque (PDC)';
+    if (!Array.isArray(this.db.cheques)) this.db.cheques = [];
+
+    // Ensure Cheque 001464 (M/S MORGANTI GCC l UAE, AED 12,700.00 against REC-RV-44003) is present and Cleared
+    const c001464 = this.db.cheques.find(c => c.cheque_no === '001464' || c.id === 'chq-rcp-rec-mvwphhbz');
+    if (c001464) {
+      c001464.amount = '12700.00';
+      c001464.status = 'Cleared';
+    } else {
+      this.db.cheques.push({
+        id: 'chq-rcp-rec-mvwphhbz',
+        receipt_id: 'rec-mvwphhbz',
+        company_id: 'rayan-corp-uae',
+        type: 'inward',
+        cheque_no: '001464',
+        bank_name: 'Emirates NBD',
+        branch: 'Abu Dhabi',
+        party_name: 'M/S MORGANTI GCC l UAE',
+        date: '2023-09-09',
+        cheque_date: '2023-09-09',
+        amount: '12700.00',
+        currency: 'AED',
+        status: 'Cleared',
+        notes: 'Customer Cheque Clearance against REC-RV-44003',
+        bank_account_id: 'bank-adcb-uae',
+        bank_account_name: 'Abu Dhabi Commercial Bank (ADCB)'
+      });
     }
+
+    const c014502 = this.db.cheques.find(c => c.cheque_no === '014502');
+    if (c014502) { c014502.amount = '19615.27'; c014502.status = 'Cleared'; }
+    const c017236 = this.db.cheques.find(c => c.cheque_no === '017236');
+    if (c017236) { c017236.amount = '20044.01'; c017236.status = 'Cleared'; }
+    const c000867 = this.db.cheques.find(c => c.cheque_no === '000867');
+    if (c000867) { c000867.amount = r867Amount; c000867.status = 'Cleared'; }
+    const c019217 = this.db.cheques.find(c => c.cheque_no === '019217');
+    if (c019217) { c019217.amount = '67108.98'; c019217.status = 'Cleared'; }
+    const c000006 = this.db.cheques.find(c => c.cheque_no === '000006');
+    if (c000006) { c000006.amount = '29393.30'; c000006.status = 'Post-Dated Cheque (PDC)'; }
+    const c000007 = this.db.cheques.find(c => c.cheque_no === '000007');
+    if (c000007) { c000007.amount = '1000.00'; c000007.status = 'Post-Dated Cheque (PDC)'; }
+
+    // Reconcile all customer receipts having payment_mode === 'Cheque' into inward cheques
+    (this.db.customer_receipts || []).forEach(r => {
+      if ((r.payment_mode || '').toLowerCase() === 'cheque' && r.cheque_no) {
+        const chqNo = r.cheque_no.trim();
+        const existing = this.db.cheques.find(c => (c.cheque_no && c.cheque_no.trim() === chqNo) || c.receipt_id === r.id);
+        if (!existing) {
+          this.db.cheques.push({
+            id: `chq-${r.id || 'gen-' + chqNo}`,
+            receipt_id: r.id,
+            company_id: r.company_id || 'rayan-corp-uae',
+            type: 'inward',
+            cheque_no: chqNo,
+            bank_name: r.bank_name || 'Abu Dhabi Commercial Bank (ADCB)',
+            branch: r.bank_branch || 'Abu Dhabi',
+            party_name: r.customer_name || 'Corporate Client',
+            date: r.cheque_date || r.receipt_date || '2026-11-01',
+            cheque_date: r.cheque_date || r.receipt_date || '2026-11-01',
+            amount: String(r.amount_received || 0),
+            currency: r.currency || 'AED',
+            status: 'Cleared',
+            notes: `Customer Cheque Clearance against ${r.receipt_no}`,
+            bank_account_id: 'bank-adcb-uae',
+            bank_account_name: 'Abu Dhabi Commercial Bank (ADCB)'
+          });
+        }
+      }
+    });
 
     if (Array.isArray(this.db.bank_transfers)) {
       // Remove phantom / duplicate transfers
@@ -2009,7 +2067,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v114';
+    const CURRENT_DB_VERSION = 'v2026_clean_v115';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -8199,6 +8257,7 @@ class FinanceApp {
   // CASH & BANK MODULES (Full Multi-Company Enterprise Implementation)
   // --------------------------------------------------------------------------
   renderBankAccountsTab(root) {
+    this.normalizeAllBalances();
     const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const transfers = (this.db?.bank_transfers || []).filter(t => (t.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
@@ -8711,15 +8770,16 @@ class FinanceApp {
   }
 
   renderChequesTab(root) {
+    this.normalizeAllBalances();
     const cheques = (this.db?.cheques || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     const inward = cheques.filter(c => c.type === 'inward');
     const outward = cheques.filter(c => c.type === 'outward');
     const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
 
     const totalInwardAll = inward.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-    const inwardCleared = inward.filter(c => c.status === 'Cleared');
+    const inwardCleared = inward.filter(c => (c.status || '').toLowerCase() === 'cleared');
     const totalInwardCleared = inwardCleared.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-    const inwardPending = inward.filter(c => c.status !== 'Cleared');
+    const inwardPending = inward.filter(c => (c.status || '').toLowerCase() !== 'cleared');
     const totalInwardPending = inwardPending.reduce((s, c) => s + (Number(c.amount) || 0), 0);
     const totalOutwardAll = outward.reduce((s, c) => s + (Number(c.amount) || 0), 0);
 
@@ -25500,7 +25560,7 @@ class FinanceApp {
                         <td style="border:1px solid #111827; padding:5px 2px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
                         <td style="border:1px solid #111827; padding:5px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word; line-height:1.35;">${itemName}</td>
                         <td style="border:1px solid #111827; padding:5px 2px; text-align:center; color:#111827; font-weight:600;">${uom}</td>
-                        <td style="border:1px solid #111827; padding:5px 2px; text-align:center; color:#111827; font-weight:600;">${qty.toFixed(1)}</td>
+                        <td class="fin-doc-nowrap" style="border:1px solid #111827; padding:5px 2px; text-align:center; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important;">${Number.isInteger(qty) ? qty : parseFloat(qty.toFixed(2))}</td>
                         <td class="fin-doc-nowrap" style="border:1px solid #111827; padding:5px 2px; text-align:center; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important;">${wdPct}%</td>
                         <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="fin-cell-num" style="border:1px solid #111827; padding:5px 4px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${invAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
