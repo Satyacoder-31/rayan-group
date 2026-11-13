@@ -788,8 +788,8 @@
       "gstin": "",
       "shipping_address": "THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI\nDubai\nUnited Arab Emirates",
       "notes": "",
-      "created_at": "2026-11-13 07:30:03",
-      "updated_at": "2026-11-13 07:30:03",
+      "created_at": "2026-11-13 13:34:15",
+      "updated_at": "2026-11-13 13:34:15",
       "shipping_address_details": {
         "attention": "",
         "attention_ar": "",
@@ -1248,6 +1248,26 @@
     }
   ],
   "vendors": [
+    {
+      "id": "vend-mwf2xtie",
+      "code": "VEN-REC-44013",
+      "name": "M/S GOLDEN ELEGANC INTERIOR DECORATION L.L.C",
+      "company_id": "rayan-corp-uae",
+      "status": "Active",
+      "category": "Subcontracting & Labor",
+      "contact_person": "+971526415395",
+      "email": "estimation@goldenvolcano.ae",
+      "phone": "",
+      "country": "UAE",
+      "gstin": "",
+      "trn": "104590462800003",
+      "pan": "",
+      "bank_name": "",
+      "account_no": "",
+      "ifsc_code": "",
+      "created_at": "2026-11-13 14:36:15",
+      "updated_at": "2026-11-13 14:36:15"
+    },
     {
       "id": "vend-mwaxigo5",
       "code": "VEN-REC-44008",
@@ -3883,8 +3903,8 @@
       "project_name": "The New Dubai Police Academy @ Al Rowaiyah, Dubai",
       "po_reference": "PODSUB-2026/1433",
       "invoice_date": "2026-10-20",
-      "due_date": "2026-11-19",
-      "payment_terms": 30,
+      "due_date": "2026-10-27",
+      "payment_terms": 7,
       "payment_terms_label": "Due Upon Receipt / No Due Date",
       "line_items": [
         {
@@ -3924,14 +3944,14 @@
       "notes": "Thanks for your business.",
       "amount_in_words": "Twenty Five Thousand Six Hundred Thirty Five and Twenty Eight Fils AED Only.",
       "created_by": "Arshad Alam Shaikh",
-      "created_at": "2026-11-13 05:14:44",
+      "created_at": "2026-11-13 13:32:47",
       "amount_credited": 0,
       "item_description": "Installation of veneer panel  (PODSUB-2026/1433)",
       "item_name": "Installation of veneer panel  (PODSUB-2026/1433)",
       "description": "Installation of veneer panel  (PODSUB-2026/1433)",
       "billing_address": "TRI Office No.1, Al Qusais Ind Area 1, Dubai, UAE",
       "lpo_no": "PODSUB-2026/1433",
-      "updated_at": "2026-11-13 05:14:44",
+      "updated_at": "2026-11-13 13:32:47",
       "trn": "10457119600003"
     },
     {
@@ -8198,9 +8218,9 @@
       "vat_total": 570,
       "total_tax": 570,
       "grand_total": "11970.00",
-      "amount_paid": 0,
-      "balance_due": 11970,
-      "status": "unpaid",
+      "amount_paid": 11966.85,
+      "balance_due": 3.15,
+      "status": "partially_paid",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
       "created_at": "2026-11-13 05:14:44",
@@ -9403,8 +9423,8 @@
       "project_name": "Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai",
       "po_reference": "PODSUB-2026/0858 , 1034 & 1035",
       "invoice_date": "2026-10-24",
-      "due_date": "2026-11-23",
-      "payment_terms": 30,
+      "due_date": "2026-11-01",
+      "payment_terms": 7,
       "payment_terms_label": "Net 30 Days",
       "tax_inclusive": false,
       "line_items": [
@@ -9415,8 +9435,8 @@
           "item_name": "Hold Payment for REC-RG-INV-44043 FOR  PODSUB-2026/0858 , 1034 & 1035",
           "hsn_sac_code": "",
           "qty": 1,
-          "uom": "Sqm",
-          "unit": "Sqm",
+          "uom": "LSUM",
+          "unit": "LSUM",
           "unit_price": 63607.05,
           "rate": 63607.05,
           "wd_pct": 100,
@@ -9442,7 +9462,7 @@
       "status": "unpaid",
       "notes": "Payment via ADCB / Direct Wire. Official Rayan Engineering Tax Invoice.",
       "created_by": "Arshad Alam Shaikh",
-      "created_at": "2026-11-13 05:14:44",
+      "created_at": "2026-11-13 13:34:15",
       "amount_credited": 0,
       "contract_base_value": 63607.05,
       "adjustment": 0,
@@ -9453,7 +9473,7 @@
       "order_no": "PODSUB-2026/0858 , 1034 & 1035",
       "order_number": "PODSUB-2026/0858 , 1034 & 1035",
       "lpo_no": "PODSUB-2026/0858 , 1034 & 1035",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 13:34:15"
     },
     {
       "id": "inv-rec-rg-inv-1001",
@@ -10020,6 +10040,48 @@
   ],
   "purchase_bills": [],
   "customer_receipts": [
+    {
+      "id": "rec-mwf5ck4a",
+      "receipt_no": "REC-RV-44065",
+      "customer_id": "cust-buildara",
+      "customer_name": "M/S BUILDARA GENERAL CONTRACTING LLC",
+      "contact_person": "Engr. Sooraj Kumar",
+      "email": "buildaradevelopers@gmail.com",
+      "company_id": "rayan-corp-uae",
+      "receipt_date": "2026-11-13",
+      "receipt_time": "07:42 PM",
+      "currency": "AED",
+      "payment_mode": "Online",
+      "payment_type": "Online Bank Transfer",
+      "deposit_vault_id": null,
+      "deposit_vault_name": null,
+      "reference_no": "196276948",
+      "cheque_no": "",
+      "cheque_date": "2026-11-13",
+      "bank_name": "RAKBANK (National Bank of Ras Al Khaimah)",
+      "bank_branch": "",
+      "cheque_status": "Cleared & Verified",
+      "cash_location": "",
+      "cash_bearer": "",
+      "cashier": "",
+      "amount_received": 11966.85,
+      "allocated_amount": 11966.85,
+      "allocations": [
+        {
+          "invoice_id": "inv-rec-rg-inv-44051",
+          "invoice_no": "REC-RG-INV-44051",
+          "amount_allocated": 11966.85
+        }
+      ],
+      "ref_invoice_no": "REC-RG-INV-44051",
+      "project_name": "Project # Yateem Optician, Khalidiyah Mall, Abu Dhabi",
+      "received_by": "RAYAN ENGINEERING AND CONTRACTING L.L.C - S.P.C",
+      "receiver_sign": "Arshad Alam Shaikh",
+      "notes": "",
+      "amount_in_words": "Eleven Thousand Nine Hundred Sixty Six and Eighty Five Fils AED Only.",
+      "recorded_by": "Arshad Alam Shaikh",
+      "recorded_at": "2026-11-13T15:43:41.531Z"
+    },
     {
       "id": "rec-mvvdpkym",
       "receipt_no": "REC-RV-44001",
@@ -13160,6 +13222,148 @@
   "expenses": [],
   "purchase_orders": [
     {
+      "id": "po-1794580661284",
+      "po_no": "PO-REC-4500009127",
+      "company_id": "rayan-corp-uae",
+      "type": "vendor_po",
+      "direction": "outward",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-mwf2xtie",
+      "vendor_name": "M/S GOLDEN ELEGANC INTERIOR DECORATION L.L.C",
+      "supplier_name": "M/S GOLDEN ELEGANC INTERIOR DECORATION L.L.C",
+      "supplier_trn": "104590462800003",
+      "project_id": "prj-toprock-police-01",
+      "project_name": "Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai",
+      "date": "2026-09-03",
+      "expected_delivery": "2026-09-03",
+      "subtotal": 55000,
+      "subtotal_ex_vat": 55000,
+      "tax_total": 2750,
+      "vat_total": 2750,
+      "total_value": 57750,
+      "grand_total": 57750,
+      "status": "approved",
+      "approved_by": "Arshad Alam Shaikh",
+      "line_items": [
+        {
+          "item_id": "item-milestone-pct",
+          "name": "% Progressive Work Certification (Custom Milestone Claim)",
+          "qty": 1000,
+          "uom": "%",
+          "unit_price": 55,
+          "taxable_amount": 55000,
+          "gst_rate": 0,
+          "vat_rate": 5,
+          "tax_amount": 2750,
+          "total_amount": 57750
+        }
+      ],
+      "custom_terms": [
+        {
+          "num": 1,
+          "title": "The Order",
+          "text": "Entered into with RAYAN ENGINEERING AND CONTRACTING LLC SPC for sale, delivery and installation of goods described. These terms are non-varying unless expressly agreed in writing."
+        },
+        {
+          "num": 2,
+          "title": "Prices",
+          "text": "Final and not subject to escalation under any circumstances."
+        },
+        {
+          "num": 3,
+          "title": "Identification of Material",
+          "text": "All packages must be marked with PO number and accompanied by a Delivery Note quoting quantities & descriptions."
+        },
+        {
+          "num": 4,
+          "title": "Packing & Protection",
+          "text": "Materials must be protected individually against damage, transit shock, and environmental degradation."
+        },
+        {
+          "num": 5,
+          "title": "Delivery of Goods/Services",
+          "text": "As per agreed INCOTERMS to specified address. Partial or early delivery requires written authorization."
+        },
+        {
+          "num": 6,
+          "title": "Performance Guarantee",
+          "text": "Supplier shall submit a 10% performance bond in a form accepted to RAYAN, unless agreed in writing otherwise."
+        },
+        {
+          "num": 7,
+          "title": "Receipt & Acceptance",
+          "text": "Subject to final inspection and testing by RAYAN. Rejected goods held at Supplier's risk and expense."
+        },
+        {
+          "num": 8,
+          "title": "Rejection of Goods/Services",
+          "text": "RAYAN reserves the right to withhold payment for non-compliant goods/services with applicable delay penalties."
+        },
+        {
+          "num": 9,
+          "title": "Cancellation of Order",
+          "text": "Right reserved to cancel for non-delivery by stipulated date without liability."
+        },
+        {
+          "num": 10,
+          "title": "Invoicing Regulations",
+          "text": "Tax invoices must be submitted within 30 days of supply (Decree-Law Art. 67). Must state correct legal company name, TRN, PO reference, delivery note, and compliant VAT details."
+        },
+        {
+          "num": 11,
+          "title": "Delay Penalties",
+          "text": "1% of delayed items value for 1st week, increasing 2% weekly up to maximum 10%."
+        },
+        {
+          "num": 12,
+          "title": "Risk Purchase",
+          "text": "Following penalty exhaustion, RAYAN may cancel, draw bank guarantee, and procure from alternate sources with 5% admin charge charged to Supplier."
+        },
+        {
+          "num": 13,
+          "title": "Warranty",
+          "text": "Merchantable, fit for purpose, free from defects for warranty period. Supplier bears all replacement, labor, and transport charges."
+        },
+        {
+          "num": 14,
+          "title": "Termination",
+          "text": "Buyer may terminate for convenience with 30 days written notice without liability except for accepted delivered items."
+        },
+        {
+          "num": 15,
+          "title": "Force Majeure",
+          "text": "Relieves obligations during duration of qualifying events with prompt written notification."
+        },
+        {
+          "num": 16,
+          "title": "Taxes & Banking",
+          "text": "All taxes, duties, and banking charges borne by Seller unless expressly exempted."
+        },
+        {
+          "num": 17,
+          "title": "Indemnity",
+          "text": "Supplier defends and holds Buyer harmless against damages, claims, costs, injuries, or third-party breaches."
+        },
+        {
+          "num": 18,
+          "title": "Governing Law",
+          "text": "Laws of Abu Dhabi and UAE federal laws. Disputes referred to Abu Dhabi competent courts."
+        },
+        {
+          "num": 19,
+          "title": "Payment Term",
+          "text": "Payment shall be made on a weekly progressive basis. Payment shall be released within one week of submission of the invoice, along with the duly verified and approved measurement sheet & Drawings."
+        },
+        {
+          "num": 20,
+          "title": "Invoice Requirements",
+          "text": "Approved time sheets, delivery notes, and stamped original tax invoices submitted to HO."
+        }
+      ],
+      "payment_terms_detail": "Payment shall be made on a weekly progressive basis. Payment shall be released within one week of submission of the invoice, along with the duly verified and approved measurement sheet & Drawings."
+    },
+    {
       "id": "po-cust-1794329674070",
       "po_no": "AMGM/PO-2024/068",
       "company_id": "rayan-corp-uae",
@@ -14149,9 +14353,220 @@
       "po_type": "customer_lpo",
       "direction": "inward",
       "customer_name": "M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC"
+    },
+    {
+      "id": "po-vendor-11011",
+      "po_no": "PO-REC-11011",
+      "company_id": "rayan-corp-uae",
+      "type": "vendor_po",
+      "direction": "outward",
+      "po_type": "Supply",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-kaswan",
+      "vendor_name": "KASWAN TECHNICAL SERVICES LLC",
+      "supplier_name": "KASWAN TECHNICAL SERVICES LLC",
+      "supplier_attn": "Mr.Mohit Raghuveer",
+      "supplier_trn": "100531684700003",
+      "supplier_mobile": "+971568022368",
+      "supplier_email": "kaswantech@gmail.com",
+      "supplier_address": "Dubai , United Arab Emirates",
+      "supplier_po_box": "—",
+      "quote_ref": "Quotation —",
+      "iref": "2026-KTS-SUB",
+      "responsible_person": "Mohammad Suhel",
+      "responsible_person_phone": "+971 589827866",
+      "project_code": "J21-108",
+      "project_id": "prj-toprock-police-01",
+      "project_name": "Project No. J21-108 - The New Dubai Police Academy & al Rowaiyah, Dubai Fitout Work",
+      "scope_of_work": "Fitout Work",
+      "ship_to_address": "Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800",
+      "date": "2026-07-07",
+      "payment_terms": "PDC30",
+      "site_location": "The New Dubai Police Academy & al Rowaiyah, Dubai",
+      "working_hours": "8:00 AM – 6:00 PM",
+      "misc_charges": 0,
+      "subtotal": 64,
+      "subtotal_ex_vat": 64,
+      "tax_total": 3.2,
+      "vat_total": 3.2,
+      "total_value": 67.2,
+      "grand_total": 67.2,
+      "amount_in_words": "Sixty Seven and Twenty Fils Only.",
+      "status": "Approved",
+      "approved_by": "Arshad Alam Shaikh",
+      "notes_to_supplier": "1. Location / Site - The New Dubai Police Academy & al Rowaiyah, Dubai. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools & Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.",
+      "line_items": [
+        {
+          "sr": 1,
+          "name": "Installation of Wall Tiles.\n1-600x300x9mm\n2-1200x600x9mm\n3-600x300x9.4mm",
+          "description": "Installation of Wall Tiles.\n1-600x300x9mm\n2-1200x600x9mm\n3-600x300x9.4mm",
+          "unit": "Sqm",
+          "qty": 1,
+          "unit_price": 31,
+          "invoice_amount": 31,
+          "vat_rate": 5,
+          "vat_amount": 1.55,
+          "total_amount": 32.55
+        },
+        {
+          "sr": 2,
+          "name": "Installation of Floor Tiles.\n1-600x300x9mm\n2-1200x600x9mm\n3-1200x200x9mm\n4-600x600x9mm\n5-600x600x9.5mm\n6-300x300x8mm",
+          "description": "Installation of Floor Tiles.\n1-600x300x9mm\n2-1200x600x9mm\n3-1200x200x9mm\n4-600x600x9mm\n5-600x600x9.5mm\n6-300x300x8mm",
+          "unit": "Sqm",
+          "qty": 1,
+          "unit_price": 33,
+          "invoice_amount": 33,
+          "vat_rate": 5,
+          "vat_amount": 1.65,
+          "total_amount": 34.65
+        }
+      ]
+    },
+    {
+      "id": "po-vendor-11012",
+      "po_no": "PO-REC-11012",
+      "company_id": "rayan-corp-uae",
+      "type": "vendor_po",
+      "direction": "outward",
+      "po_type": "Subcontract",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-goldenelegance",
+      "vendor_name": "M/S GOLDEN ELEGANCE INTERIOR DECORATION L.L.C",
+      "supplier_name": "M/S GOLDEN ELEGANCE INTERIOR DECORATION L.L.C",
+      "supplier_attn": "Mr.Mohit Raghuveer",
+      "supplier_trn": "104590462800003",
+      "supplier_mobile": "+971 589827866",
+      "supplier_email": "contact@goldenelegance.ae",
+      "supplier_address": "Office No. 14, Al Quoz 3, Dubai, UAE",
+      "supplier_po_box": "—",
+      "quote_ref": "Quotation —",
+      "iref": "2026-KGN-SUB",
+      "responsible_person": "Mohammad Suhel",
+      "responsible_person_phone": "+971 589827866",
+      "project_code": "PRJ-DPA-2026",
+      "project_id": "prj-toprock-police-01",
+      "project_name": "PROJECT # THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI",
+      "scope_of_work": "% Progressive Work Certification (Custom Milestone Claim)",
+      "ship_to_address": "Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800",
+      "date": "2026-09-03",
+      "payment_terms": "PDC30",
+      "site_location": "Al Foah Mall - Alain",
+      "working_hours": "8:00 AM – 6:00 PM",
+      "misc_charges": 0,
+      "subtotal": 55000,
+      "subtotal_ex_vat": 55000,
+      "tax_total": 2750,
+      "vat_total": 2750,
+      "total_value": 57750,
+      "grand_total": 57750,
+      "amount_in_words": "Fifty Seven Thousand Seven Hundred Fifty AED Only.",
+      "status": "Approved",
+      "approved_by": "Arshad Alam Shaikh",
+      "notes_to_supplier": "1. Location / Site - Al Foah Mall - Alain. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools & Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.",
+      "notes": "Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.",
+      "line_items": [
+        {
+          "sr": 1,
+          "name": "% Progressive Work Certification (Custom Milestone Claim)",
+          "description": "% Progressive Work Certification (Custom Milestone Claim)",
+          "unit": "%",
+          "qty": 1000,
+          "unit_price": 55,
+          "invoice_amount": 55000,
+          "vat_rate": 5,
+          "vat_amount": 2750,
+          "total_amount": 57750
+        }
+      ]
     }
   ],
   "audit_logs": [
+    {
+      "id": "aud-1a1d59433a9",
+      "timestamp": "2026-11-13T15:43:41+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "receipt",
+      "entity_id": "REC-RV-44065",
+      "details": "Recorded customer receipt of 11966.85",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
+      "id": "aud-1a1d55a3028",
+      "timestamp": "2026-11-13T14:40:20+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "update",
+      "entity": "po",
+      "entity_id": "PO-REC-4500009127",
+      "details": "Updated purchase order PO-REC-4500009127",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
+      "id": "aud-1a1d557c5a2",
+      "timestamp": "2026-11-13T14:37:41+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "po",
+      "entity_id": "PO-REC-4500009127",
+      "details": "Issued purchase order PO-REC-4500009127",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
+      "id": "aud-1a1d5567339",
+      "timestamp": "2026-11-13T14:36:15+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "vendor",
+      "entity_id": "GOLDEN ELEGANC INTERIOR DECORATION L.L.C",
+      "details": "Added supplier/subcontractor GOLDEN ELEGANC INTERIOR DECORATION L.L.C",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
+      "id": "aud-1a1d51db048",
+      "timestamp": "2026-11-13T13:34:15+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "update",
+      "entity": "invoice",
+      "entity_id": "REC-RG-INV-44052",
+      "details": "Updated tax invoice for M/S TOP ROCK INTERIORS LLC",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
+      "id": "aud-1a1d51d3347",
+      "timestamp": "2026-11-13T13:33:43+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "customer",
+      "entity_id": "M/S TOP ROCK INTERIORS LLC",
+      "details": "Added client M/S TOP ROCK INTERIORS LLC",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
+      "id": "aud-1a1d51c5828",
+      "timestamp": "2026-11-13T13:32:47+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "customer",
+      "entity_id": "M/S TOP ROCK INTERIORS LLC",
+      "details": "Added client M/S TOP ROCK INTERIORS LLC",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
     {
       "id": "aud-1a1d3d043fa",
       "timestamp": "2026-11-13T07:30:03+00:00",
@@ -15532,6 +15947,25 @@
     }
   ],
   "bank_transfers": [
+    {
+      "id": "wire-rcp-rec-mwf5ck4a",
+      "receipt_id": "rec-mwf5ck4a",
+      "company_id": "rayan-corp-uae",
+      "reference_no": "196276948",
+      "date": "2026-11-13",
+      "source_bank": "RAKBANK (National Bank of Ras Al Khaimah)",
+      "source_account_id": "bank-adcb-uae",
+      "destination_bank": "Abu Dhabi Commercial Bank (ADCB)",
+      "destination_account_id": "bank-adcb-uae",
+      "counterparty": "M/S BUILDARA GENERAL CONTRACTING LLC",
+      "amount": 11966.85,
+      "currency": "AED",
+      "type": "inward",
+      "type_label": "Inward Client Wire (REC-RV-44065)",
+      "purpose": "",
+      "status": "Cleared",
+      "created_at": "2026-11-13T15:43:41+00:00"
+    },
     {
       "id": "wire-chq-chq-mvqgvbby",
       "company_id": "rayan-corp-uae",

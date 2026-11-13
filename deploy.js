@@ -31,6 +31,17 @@ async function deploy() {
               }
             });
           }
+          if (fs.existsSync(dataSrc)) {
+            try {
+              const localData = JSON.parse(fs.readFileSync(dataSrc, 'utf8'));
+              const localVendorPos = (localData.purchase_orders || []).filter(p => p.type === 'vendor_po');
+              localVendorPos.forEach(vpo => {
+                if (!liveJson.data.purchase_orders.some(p => p.id === vpo.id || p.po_no === vpo.po_no)) {
+                  liveJson.data.purchase_orders.push(vpo);
+                }
+              });
+            } catch (e) {}
+          }
           fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');
           console.log(`✓ Preserved live database snapshot from production (${liveJson.data.invoices.length} invoices, ${liveJson.data.customer_receipts?.length || 0} receipts)`);
         }

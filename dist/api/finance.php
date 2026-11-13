@@ -8283,6 +8283,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db['purchase_orders'] = [];
                 }
                 array_unshift($db['purchase_orders'], $po);
+                if ($pdo) {
+                    try {
+                        $stmtUpPo = $pdo->prepare("REPLACE INTO finance_purchase_orders (id, po_no, company_id, vendor_id, vendor_name, project_id, project_name, po_date, total_value, currency, status, data_json, updated_at) VALUES (:id, :po_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_date, :total_value, :currency, :status, :data_json, NOW())");
+                        $stmtUpPo->execute([
+                            ':id' => $po['id'] ?? ('po-' . ($po['po_no'] ?? '')),
+                            ':po_no' => $po['po_no'] ?? '',
+                            ':company_id' => $po['company_id'] ?? 'rayan-corp-uae',
+                            ':vendor_id' => $po['vendor_id'] ?? '',
+                            ':vendor_name' => $po['vendor_name'] ?? ($po['supplier_name'] ?? ''),
+                            ':project_id' => $po['project_id'] ?? '',
+                            ':project_name' => $po['project_name'] ?? '',
+                            ':po_date' => $po['date'] ?? ($po['po_date'] ?? date('Y-m-d')),
+                            ':total_value' => floatval($po['total_value'] ?? ($po['grand_total'] ?? 0)),
+                            ':currency' => $po['currency'] ?? 'AED',
+                            ':status' => $po['status'] ?? 'approved',
+                            ':data_json' => json_encode($po, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
                 $addAuditLog('create', 'po', $po['po_no'] ?? '', 'Issued purchase order ' . ($po['po_no'] ?? ''));
             }
             break;

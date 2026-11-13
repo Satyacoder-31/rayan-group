@@ -2114,7 +2114,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v119';
+    const CURRENT_DB_VERSION = 'v2026_clean_v120';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4013,14 +4013,20 @@ class FinanceApp {
 
   getNextPONumber() {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
-    const pos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id));
+    const pos = (this.db?.purchase_orders || []).filter(p => 
+      this.matchesActiveCompany(p.company_id) && 
+      (p.type === 'vendor_po' || p.direction === 'outward' || !p.customer_name)
+    );
     let maxSeq = 11010;
     pos.forEach(p => {
       const pNo = p.po_no || '';
-      const m = pNo.match(/PO-.*-(\d+)/i) || pNo.match(/(\d{4,})$/);
+      // Only match 5-digit sequences in 11000 - 99999 range (prevent 10-digit SAP numbers like 4500009126)
+      const m = pNo.match(/PO-(?:REC|ASH|AE)-(\d{5})\b/i) || pNo.match(/-(\d{5})$/);
       if (m) {
         const num = parseInt(m[1], 10);
-        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+        if (!isNaN(num) && num >= 11000 && num < 100000 && num > maxSeq) {
+          maxSeq = num;
+        }
       }
     });
     const prefix = isIndia ? 'PO-ASH-2026' : 'PO-REC';
@@ -4788,7 +4794,7 @@ class FinanceApp {
                   <div class="fin-nav-subitem" onclick="window.finApp.openExpensePrintModal()">
                     <span class="fin-subitem-text">Expense Claim Receipt</span>
                   </div>
-                  <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-lpo-bd-2026-12')">
+                  <div class="fin-nav-subitem" onclick="window.finApp.openPOPrintModal('po-vendor-11012')">
                     <span class="fin-subitem-text">Purchase Order (2p)</span>
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openCreditNotePrintModal()">
@@ -22267,59 +22273,138 @@ class FinanceApp {
     const vendors = (this.db?.vendors || []).filter(v => !v.company_id || this.matchesActiveCompany(v.company_id));
     const projects = (this.db?.projects || []).filter(p => !p.company_id || this.matchesActiveCompany(p.company_id));
     const items = (this.db?.items || []).filter(it => !it.company_id || this.matchesActiveCompany(it.company_id));
+    const nextPoNo = this.getNextPONumber();
 
     const modalHtml = `
-      <div class="fin-modal-backdrop open" id="modal-po">
-        <div class="fin-modal-dialog" style="max-width:680px;">
+      <div class="fin-modal-backdrop open" id="modal-po" style="z-index:100010;">
+        <div class="fin-modal-dialog" style="max-width:760px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">📑 Create Purchase Order (${currLabel})</h3>
+            <h3 class="fin-modal-title">📑 Issue Official Purchase Order (${currLabel})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-po')">&times;</button>
           </div>
-          <div class="fin-modal-body">
+          <div class="fin-modal-body" style="max-height:82vh; overflow-y:auto;">
             <form id="create-po-form">
+              <!-- Row 1: PO Number & Type -->
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Vendor <span style="color:#ef4444;">*</span></label>
+                  <label class="fin-form-label">Purchase Order # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="po-no" class="fin-form-input" value="${nextPoNo}" required placeholder="PO-REC-11013" style="font-weight:700; color:#38bdf8;">
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Sequential 5-digit vendor PO sequence (e.g. PO-REC-11013)</div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">PO Type <span style="color:#ef4444;">*</span></label>
+                  <select id="po-type" class="fin-form-select" required>
+                    <option value="Supply" selected>Supply</option>
+                    <option value="Subcontract">Subcontract</option>
+                    <option value="Services">Services</option>
+                    <option value="Supply & Install">Supply &amp; Install</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Row 2: Vendor & Project -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Vendor / Supplier <span style="color:#ef4444;">*</span></label>
                   <select id="po-vend" class="fin-form-select" required>
                     <option value="" disabled selected>Select Vendor (${currLabel})</option>
-                    ${vendors.map(v => `<option value="${v.id}">${v.name}</option>`).join('')}
+                    ${vendors.map(v => `<option value="${v.id}" data-trn="${v.trn || v.gstin || ''}" data-attn="${v.contact_person || ''}" data-mobile="${v.phone || ''}" data-email="${v.email || ''}">${v.name}</option>`).join('')}
                   </select>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Project Association <span style="color:#ef4444;">*</span></label>
                   <select id="po-prj" class="fin-form-select" required>
                     <option value="" disabled selected>Select Project</option>
-                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`).join('')}
+                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}" data-code="${p.code || p.id}">${p.name}</option>`).join('')}
                   </select>
                 </div>
               </div>
 
+              <!-- Row 3: Quotation Reference & Internal Ref -->
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">PO Order Date</label>
+                  <label class="fin-form-label">Quotation Reference <span style="color:#38bdf8;">(Quote Ref.)</span></label>
+                  <input type="text" id="po-quote-ref" class="fin-form-input" value="Quotation —" placeholder="e.g. Quotation — or QT-2026-991">
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed on Page 1 metadata &amp; supplier details</div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Internal Ref (iRef)</label>
+                  <input type="text" id="po-iref" class="fin-form-input" value="2026-KTS-SUB" placeholder="e.g. 2026-KTS-SUB">
+                </div>
+              </div>
+
+              <!-- Row 4: Responsible Person & Mobile -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Responsible Person <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="po-person" class="fin-form-input" value="Mohammad Suhel" required placeholder="e.g. Mohammad Suhel">
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed on Page 1 metadata &amp; Ship To block</div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Responsible Person Mobile</label>
+                  <input type="text" id="po-person-phone" class="fin-form-input" value="+971 589827866" placeholder="+971 589827866">
+                </div>
+              </div>
+
+              <!-- Row 5: Scope of Work Banner -->
+              <div class="fin-form-group">
+                <label class="fin-form-label">Scope of Work / Work Description <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="po-scope" class="fin-form-input" value="% Progressive Work Certification (Custom Milestone Claim)" required placeholder="e.g. % Progressive Work Certification (Custom Milestone Claim) or Fitout Work">
+                <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Rendered as the prominent green scope banner above items table</div>
+              </div>
+
+              <!-- Row 6: Dates & Terms -->
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Order Date</label>
                   <input type="date" id="po-date" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Expected Site Delivery</label>
-                  <input type="date" id="po-delivery" class="fin-form-input" required>
+                  <input type="date" id="po-delivery" class="fin-form-input" value="${new Date().toISOString().split('T')[0]}">
                 </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Payment Terms</label>
+                  <input type="text" id="po-terms" class="fin-form-input" value="PDC30" placeholder="e.g. PDC30, 30 Days Net">
+                </div>
+              </div>
+
+              <!-- Row 7: Site Location & Working Hours -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Site / Delivery Location</label>
+                  <input type="text" id="po-site" class="fin-form-input" value="The New Dubai Police Academy &amp; al Rowaiyah, Dubai" placeholder="Site Location">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Working Hours</label>
+                  <input type="text" id="po-hours" class="fin-form-input" value="8:00 AM – 6:00 PM" placeholder="8:00 AM – 6:00 PM">
+                </div>
+              </div>
+
+              <!-- Item Scope & Pricing -->
+              <div class="fin-form-group">
+                <label class="fin-form-label">Item / Technical Scope Description <span style="color:#ef4444;">*</span></label>
+                <textarea id="po-desc" class="fin-form-input" rows="2" required placeholder="Detailed item description...">% Progressive Work Certification (Custom Milestone Claim)</textarea>
               </div>
 
               <div class="fin-form-grid-3">
                 <div class="fin-form-group">
-                  <label class="fin-form-label">Item / Material</label>
-                  <select id="po-item-sel" class="fin-form-select">
-                    ${items.length ? items.map(it => `<option value="${it.id}" data-price="${it.purchase_price || 0}">${it.name}</option>`).join('') : '<option value="">Custom Procurement Item</option>'}
-                  </select>
+                  <label class="fin-form-label">Unit</label>
+                  <input type="text" id="po-unit" class="fin-form-input" value="%" placeholder="Sqm, %, LS, Nos">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Quantity</label>
-                  <input type="number" id="po-qty" class="fin-form-input" value="10" min="1">
+                  <input type="number" id="po-qty" class="fin-form-input" value="1000" min="1" step="any" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Unit Price (${currLabel})</label>
-                  <input type="number" id="po-rate" class="fin-form-input" value="${items[0]?.purchase_price || (isIndia ? 61200 : 60)}" step="any">
+                  <input type="number" id="po-rate" class="fin-form-input" value="55" step="any" required>
                 </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Notes to Supplier</label>
+                <textarea id="po-notes" class="fin-form-input" rows="3" style="line-height:1.4; font-size:0.80rem;">1. Location / Site - The New Dubai Police Academy &amp; al Rowaiyah, Dubai. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools &amp; Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.</textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -22334,26 +22419,36 @@ class FinanceApp {
 
     this.getModalContainer().innerHTML = modalHtml;
 
-    const itemSel = document.getElementById('po-item-sel');
-    const rateInp = document.getElementById('po-rate');
-    itemSel.onchange = () => {
-      const it = items.find(x => x.id === itemSel.value);
-      if (it) rateInp.value = it.purchase_price || 0;
-    };
-
     document.getElementById('create-po-form').onsubmit = async (e) => {
       e.preventDefault();
-      const vend = vendors.find(v => v.id === document.getElementById('po-vend').value);
+      const vendSelect = document.getElementById('po-vend');
+      const vendOpt = vendSelect.options[vendSelect.selectedIndex];
+      const vend = vendors.find(v => v.id === vendSelect.value);
       const prjSel = document.getElementById('po-prj');
-      const it = items.find(x => x.id === itemSel.value);
+      const prjOpt = prjSel.options[prjSel.selectedIndex];
 
+      const poNo = document.getElementById('po-no').value.trim() || nextPoNo;
+      const poType = document.getElementById('po-type').value;
+      const quoteRef = document.getElementById('po-quote-ref').value.trim() || 'Quotation —';
+      const iref = document.getElementById('po-iref').value.trim() || '2026-KTS-SUB';
+      const person = document.getElementById('po-person').value.trim() || 'Mohammad Suhel';
+      const personPhone = document.getElementById('po-person-phone').value.trim() || '+971 589827866';
+      const scopeOfWork = document.getElementById('po-scope').value.trim() || '% Progressive Work Certification (Custom Milestone Claim)';
+      const poDate = document.getElementById('po-date').value;
+      const poDelivery = document.getElementById('po-delivery').value;
+      const poTerms = document.getElementById('po-terms').value.trim() || 'PDC30';
+      const siteLocation = document.getElementById('po-site').value.trim() || 'The New Dubai Police Academy & al Rowaiyah, Dubai';
+      const workingHours = document.getElementById('po-hours').value.trim() || '8:00 AM – 6:00 PM';
+      const desc = document.getElementById('po-desc').value.trim();
+      const unit = document.getElementById('po-unit').value.trim() || '%';
       const qty = Number(document.getElementById('po-qty').value) || 1;
-      const rate = Number(rateInp.value) || 0;
+      const rate = Number(document.getElementById('po-rate').value) || 0;
+      const notes = document.getElementById('po-notes').value.trim();
+
       const subtotal = qty * rate;
       const taxRate = isIndia ? 0.18 : 0.05;
-      const tax = subtotal * taxRate;
+      const tax = Math.round(subtotal * taxRate * 100) / 100;
       const total = subtotal + tax;
-      const poNo = this.getNextPONumber();
 
       const payload = {
         po: {
@@ -22362,35 +22457,57 @@ class FinanceApp {
           company_id: this.activeCompanyId,
           type: 'vendor_po',
           direction: 'outward',
+          po_type: poType,
           currency: isIndia ? 'INR' : 'AED',
           currency_symbol: currSym,
           vendor_id: vend ? vend.id : null,
-          vendor_name: vend ? vend.name : '',
-          supplier_name: vend ? vend.name : '',
-          supplier_trn: vend ? (vend.trn || '') : '',
+          vendor_name: vend ? vend.name : (vendOpt ? vendOpt.text : ''),
+          supplier_name: vend ? vend.name : (vendOpt ? vendOpt.text : ''),
+          supplier_trn: vendOpt ? (vendOpt.getAttribute('data-trn') || (vend ? (vend.trn || '') : '')) : '',
+          supplier_attn: vendOpt ? (vendOpt.getAttribute('data-attn') || 'Mr.Mohit Raghuveer') : 'Mr.Mohit Raghuveer',
+          supplier_mobile: vendOpt ? (vendOpt.getAttribute('data-mobile') || '+971 589827866') : '+971 589827866',
+          supplier_email: vendOpt ? (vendOpt.getAttribute('data-email') || 'contact@goldenelegance.ae') : 'contact@goldenelegance.ae',
+          supplier_address: 'Office No. 14, Al Quoz 3, Dubai, UAE',
+          supplier_po_box: '—',
+          quote_ref: quoteRef,
+          iref: iref,
+          responsible_person: person,
+          responsible_person_phone: personPhone,
           project_id: prjSel.value,
-          project_name: prjSel.options[prjSel.selectedIndex]?.getAttribute('data-name') || '',
-          date: document.getElementById('po-date').value,
-          expected_delivery: document.getElementById('po-delivery').value,
-          subtotal,
+          project_code: prjOpt ? prjOpt.getAttribute('data-code') : 'PRJ-2026',
+          project_name: prjOpt ? prjOpt.getAttribute('data-name') : '',
+          scope_of_work: scopeOfWork,
+          ship_to_address: 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800',
+          date: poDate,
+          expected_delivery: poDelivery,
+          payment_terms: poTerms,
+          payment_terms_detail: poTerms + ' as agreed in commercial specifications.',
+          site_location: siteLocation,
+          working_hours: workingHours,
+          subtotal: subtotal,
           subtotal_ex_vat: subtotal,
           tax_total: tax,
           vat_total: isIndia ? 0 : tax,
           total_value: total,
           grand_total: total,
           status: 'approved',
-          approved_by: this.currentUser?.name || 'Executive Sign-off',
+          approved_by: this.currentUser?.name || 'Arshad Alam Shaikh',
+          notes: notes,
+          notes_to_supplier: notes,
           line_items: [
             {
-              item_id: it ? it.id : null,
-              name: it ? it.name : 'Procurement Material / Application',
-              qty,
-              uom: it ? (it.uom || 'UNITS') : 'UNITS',
+              sr: 1,
+              name: desc,
+              description: desc,
+              unit: unit,
+              qty: qty,
               unit_price: rate,
+              invoice_amount: subtotal,
               taxable_amount: subtotal,
               gst_rate: isIndia ? 18 : 0,
               vat_rate: isIndia ? 0 : 5,
               tax_amount: tax,
+              vat_amount: isIndia ? 0 : tax,
               total_amount: total
             }
           ]
@@ -22399,9 +22516,14 @@ class FinanceApp {
 
       const res = await this.syncApi('create_po', payload);
       if (res && res.success) {
-        alert(`Purchase Order ${res.po?.po_no || poNo} issued to ${vend?.name || 'Vendor'} in ${currLabel}.`);
+        if (this.db?.purchase_orders) {
+          this.db.purchase_orders.unshift(payload.po);
+          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        }
         this.closeModal('modal-po');
-        this.switchTab('pos');
+        this.showNotification(`Purchase Order ${payload.po.po_no} issued successfully.`, 'success');
+        this.openPOPrintModal(payload.po.id);
+        this.renderActiveTab();
       }
     };
   }
@@ -27472,7 +27594,10 @@ class FinanceApp {
   openPOPrintModal(poId, isVerifiedScan = false) {
     let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
     if (!po) {
-      po = (this.db?.purchase_orders || []).find(p => p.po_no === 'LPO/BD/2026/12') || (this.db?.purchase_orders || [])[0] || {};
+      po = (this.db?.purchase_orders || []).find(p => p.po_no === 'PO-REC-11012') ||
+           (this.db?.purchase_orders || []).find(p => p.po_no === 'PO-REC-11011') ||
+           (this.db?.purchase_orders || []).find(p => p.type === 'vendor_po' || p.direction === 'outward') ||
+           (this.db?.purchase_orders || [])[0] || {};
     }
 
     const curr = po.currency || 'AED';
@@ -27491,32 +27616,46 @@ class FinanceApp {
       compName = comp.name.replace('&', 'AND').replace(/[.]/g, '').toUpperCase();
     }
 
-    const compPhone = comp.phone || '+971 2 565 4497';
+    const compPhone = comp.phone || '+971 25 654497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
-    const totalVal = Number(po.total_value || po.grand_total || 10080);
-    const subtotalVal = Number(po.subtotal_ex_vat || po.subtotal || 9600);
-    const vatVal = Number(po.vat_total || po.tax_total || 480);
+    const totalVal = Number(po.total_value || po.grand_total || 57750);
+    const subtotalVal = Number(po.subtotal_ex_vat || po.subtotal || 55000);
+    const vatVal = Number(po.vat_total || po.tax_total || 2750);
     const miscVal = Number(po.misc_charges || 0);
-    const formattedDate = po.date ? this.formatDate(po.date) : '23 Jun 2026';
+    const formattedDate = po.date ? this.formatDate(po.date) : '03 Sept 2026';
     const amountInWords = this.formatAmountInWords(po.amount_in_words || totalVal, curr);
     if (po.amount_in_words) po.amount_in_words = amountInWords;
-    const paymentTermsClause = po.payment_terms_detail || (po.payment_terms ? `${po.payment_terms} as per commercial procurement agreement.` : '50% advance upon order confirmation; remaining 50% upon client inspection and certification.');
 
-    // Dynamic Terms calculation (Articles 1 - 20+)
-    const poTerms = this.getPOTermsForPO(po);
-    const halfTerms = Math.ceil(poTerms.length / 2);
-    const col1Terms = poTerms.slice(0, halfTerms);
-    const col2Terms = poTerms.slice(halfTerms);
+    // Remove "Site Office: " prefix strictly
+    const rawShipTo = po.ship_to_address || 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800';
+    const cleanShipTo = rawShipTo.replace(/^Site Office:\s*/i, '').trim();
 
-    const renderTermsCol = (items) => items.map(t => `
-      <p style="margin:0 0 5px 0;">
+    // Terms distribution: Page 1 = Articles 1 to 7; Page 2 = Articles 8 to 20
+    const allTerms = this.getPOTermsForPO(po);
+    const page1Terms = allTerms.filter(t => t.num <= 7);
+    const page2Terms = allTerms.filter(t => t.num > 7);
+
+    const renderTermItem = (t) => `
+      <p style="margin:0 0 4px 0;">
         <strong>${t.num ? t.num + '. ' : ''}${t.title}:</strong>
         <span id="po-term-val-${t.num}">${t.text}</span>
         <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 3px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
       </p>
-    `).join('');
+    `;
+
+    const renderTermsGrid = (items) => {
+      const mid = Math.ceil(items.length / 2);
+      const c1 = items.slice(0, mid);
+      const c2 = items.slice(mid);
+      return `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; font-size:0.60rem; color:#374151; line-height:1.35;">
+          <div>${c1.map(renderTermItem).join('')}</div>
+          <div>${c2.map(renderTermItem).join('')}</div>
+        </div>
+      `;
+    };
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
@@ -27558,220 +27697,276 @@ class FinanceApp {
           <!-- PAGE 1 OF PURCHASE ORDER -->
           <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
 
+            <!-- Top Cyan Gradient Banner -->
+            <div style="height:6px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-8mm -12mm 10px -12mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
+
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
 
             <!-- Main Document Content Layer -->
             <div style="position:relative; z-index:1;">
 
-            <!-- Header Section (Left: Logo & Company, Right: PO Title & Metadata) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; gap:1.25rem;">
-              <div style="max-width:50%; flex-shrink:1;">
-                <div style="margin-bottom:0.75rem;">
-                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
+            <!-- Header Section (Left: Logo & Company, Center: Bilingual Title, Right: PO Metadata) -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1rem;">
+              <div style="max-width:40%; flex-shrink:1;">
+                <div style="margin-bottom:0.5rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:46px; width:auto; display:block;">
                 </div>
-                <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:3px; white-space:nowrap;">
+                <div style="font-size:0.78rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:2px;">
                   ${compName}
                 </div>
-                <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                <div style="font-size:0.75rem; color:#4b5563; line-height:1.4;">
                   ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(po, 'po')}
               </div>
 
+              <!-- Center Bilingual Title matching Official Rayan PDF -->
+              <div style="text-align:center; padding-top:4px; flex-shrink:0;">
+                <div style="font-family:'Amiri', serif; font-size:1.45rem; font-weight:700; color:#0284c7; line-height:1.1;">امر شراء</div>
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.65rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">PURCHASE ORDER</div>
+                <div style="font-size:0.72rem; color:#64748b; font-weight:600; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROCUREMENT DOCUMENT</div>
+              </div>
+
               <div style="text-align:right; flex-shrink:0;">
-                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.85rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1;">
-                  PURCHASE ORDER
-                </div>
-                <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px; white-space:nowrap;">
-                  # ${po.po_no || 'LPO/BD/2026/12'}
+                <div style="font-size:0.95rem; font-weight:800; color:#111827; margin-bottom:8px; white-space:nowrap;">
+                  <span># ${po.po_no || 'PO-REC-11012'}</span>
+                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONumber('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Edit PO Number">✏️</button>
                 </div>
 
-                <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
+                <table style="margin-left:auto; font-size:0.78rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">PO Date :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${formattedDate}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">PO Date :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDate}</td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Payment Terms :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">
+                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Payment Terms :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
                       <span>${po.payment_terms || 'PDC30'}</span>
                       <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOPaymentTerms('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Payment Terms">✏️</button>
                     </td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Internal Ref (iRef) :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${po.iref || '2026-KGN-SUB'}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Quote Ref. :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                      <span>${po.quote_ref || 'Quotation —'}</span>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOQuoteRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Quotation Reference">✏️</button>
+                    </td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 8px; color:#6b7280; white-space:nowrap !important; word-break:keep-all !important;">Responsible Person :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 8px; font-weight:700; color:#111827; white-space:nowrap !important; word-break:keep-all !important;">${po.responsible_person || 'Mohammad Suhel'}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Internal Ref (iRef) :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                      <span>${po.iref || '2026-KGN-SUB'}</span>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOIRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Internal Ref">✏️</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">PO Type :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                      <span>${po.po_type || 'Subcontract'}</span>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOType('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit PO Type">✏️</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Responsible Person :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                      <span>${po.responsible_person || 'Mohammad Suhel'}</span>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Responsible Person">✏️</button>
+                    </td>
                   </tr>
                 </table>
               </div>
             </div>
 
-            <!-- Supplier & Ship-To Details Grid -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; font-size:0.8rem; line-height:1.45;">
-              <div>
-                <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">SUPPLIER / VENDOR</div>
-                <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
-                  ${po.supplier_name || po.vendor_name || 'ARIBA GM INTERIOR DÉCOR LLC'}
+            <!-- Supplier & Ship-To Details Grid (Boxed layout matching sample PDF) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1rem; font-size:0.78rem; line-height:1.42;">
+              <div style="border:1px solid #e5e7eb; border-radius:6px; padding:10px 12px; background:#fbfcfe;">
+                <div style="font-size:0.72rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:3px;">SUPPLIER / VENDOR (بيانات المورد)</div>
+                <div style="font-size:0.92rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+                  ${po.supplier_name || po.vendor_name || 'M/S GOLDEN ELEGANCE INTERIOR DECORATION L.L.C'}
                 </div>
                 ${po.supplier_attn ? `<div style="color:#4b5563;">Attn: ${po.supplier_attn}</div>` : ''}
                 ${po.supplier_address ? `<div style="color:#4b5563;">${po.supplier_address}</div>` : ''}
-                ${po.supplier_trn ? `<div style="color:#4b5563;">TRN: ${po.supplier_trn}</div>` : ''}
-                ${po.supplier_mobile ? `<div style="color:#4b5563;">Mobile: ${po.supplier_mobile}</div>` : ''}
+                <div style="color:#4b5563;">TRN: ${po.supplier_trn || '104590462800003'}</div>
+                <div style="color:#4b5563;">Mobile: ${po.supplier_mobile || '+971 589827866'}</div>
+                <div style="color:#4b5563;">Email: ${po.supplier_email || 'contact@goldenelegance.ae'}</div>
+                <div style="color:#0284c7; font-weight:600; margin-top:2px;">
+                  Quote Ref.: ${po.quote_ref || 'Quotation —'}
+                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOQuoteRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.72rem; padding:0 3px;" title="Edit Quotation Reference">✏️</button>
+                </div>
               </div>
 
-              <div>
-                <div style="font-size:0.75rem; font-weight:700; color:#4b5563; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">SHIP TO &amp; SCOPE</div>
-                <div style="font-size:0.95rem; font-weight:800; color:#111827; margin-bottom:3px;">
+              <div style="border:1px solid #e5e7eb; border-radius:6px; padding:10px 12px; background:#fbfcfe;">
+                <div style="font-size:0.72rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:3px;">SHIP TO &amp; SCOPE (جهة الاستلام والمشروع)</div>
+                <div style="font-size:0.92rem; font-weight:800; color:#111827; margin-bottom:3px;">
                   ${compName}
                 </div>
-                <div style="color:#4b5563;">Site Office: ${po.ship_to_address || 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi'}</div>
-                <div style="color:#4b5563;">Contact: ${po.responsible_person || 'Mohammad Suhel'} (${po.ship_to_phone || '+971 25 654497'})</div>
-                <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-top:10px; text-transform:uppercase;">
-                  Project : ${po.project_name || 'Al Foah Mall Screeding Work'}
+                <!-- Clean address strictly without 'Site Office:' prefix -->
+                <div style="color:#4b5563; line-height:1.4;">${cleanShipTo}</div>
+                <div style="color:#4b5563;">Attn: Mr. Arshad Alam Shaikh</div>
+                <div style="color:#4b5563;">TRN: ${compTrn || '100234567800003'} &nbsp;|&nbsp; Phone: ${compPhone}</div>
+                <div style="color:#111827; font-weight:700; margin-top:2px;">
+                  Responsible Person: ${po.responsible_person || 'Mohammad Suhel'} ${po.responsible_person_phone ? `(${po.responsible_person_phone})` : ''}
+                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.72rem; padding:0 3px;" title="Edit Responsible Person">✏️</button>
+                </div>
+                <!-- Project Container with robust word wrap to prevent ACADEMY from breaking into EMY -->
+                <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-top:6px; text-transform:uppercase; word-break:break-word; overflow-wrap:break-word; line-height:1.35; max-width:100%;">
+                  PROJECT : ${po.project_name || 'PROJECT # THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI'}
                 </div>
               </div>
             </div>
 
-            <!-- Modern Line Items Table (Matching Invoice Theme) -->
+            <!-- Scope of Work Prominent Green Banner (Matching Sample PDF) -->
+            <div style="background:#eaf3ec; border:1.5px solid #111827; border-bottom:none; padding:7px 12px; font-weight:800; font-size:0.80rem; color:#111827; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">
+              <div style="word-break:break-word; line-height:1.35;">
+                ${po.project_code ? `Project No. ${po.project_code} - ` : ''}${po.project_name || 'Project'} • ${po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)'}
+              </div>
+              <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOScopeOfWork('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:4px; font-size:0.68rem; font-weight:700; padding:2px 8px; cursor:pointer; margin-left:8px; flex-shrink:0;" title="Edit Scope of Work">✏️ Edit Scope</button>
+            </div>
+
+            <!-- Modern Line Items Table with Balanced 100% Column Widths -->
             <div class="fin-doc-table-scroll-hint">
               <span>↔</span> Swipe table horizontally to view full columns
             </div>
-            <div class="fin-doc-table-wrapper" style="margin-top:1rem; margin-bottom:1rem;">
-              <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.78rem; font-family:'Plus Jakarta Sans', sans-serif;">
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0.75rem;">
+              <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.76rem; font-family:'Plus Jakarta Sans', sans-serif;">
                 <colgroup>
                   <col style="width:4%;">    <!-- Sr. No -->
-                  <col style="width:55%;">   <!-- Description & Scope -->
-                  <col style="width:4.5%;">  <!-- Unit -->
-                  <col style="width:4.5%;">  <!-- Qty -->
-                  <col style="width:10%;">   <!-- Unit Price -->
-                  <col style="width:8%;">    <!-- VAT 5% -->
-                  <col style="width:14%;">   <!-- Total Amount -->
+                  <col style="width:36%;">   <!-- Description & Scope -->
+                  <col style="width:6%;">    <!-- Unit -->
+                  <col style="width:8%;">    <!-- Qty (8% gives ample space for 1000+) -->
+                  <col style="width:11%;">   <!-- Unit Price -->
+                  <col style="width:13%;">   <!-- VAT 5% (13% gives ample space for 2,750.00) -->
+                  <col style="width:22%;">   <!-- Total Amount (22% gives ample space for AED 57,750.00) -->
                 </colgroup>
                 <thead>
                   <tr style="background:#ffffff; color:#111827; border-bottom:1.5px solid #111827;">
                     <th style="border:1px solid #111827; padding:5px 4px; width:4%; text-align:center; vertical-align:middle;">
                       <div>Sr. No.</div>
-                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 8px; width:55%; vertical-align:middle; text-align:left;">
+                    <th style="border:1px solid #111827; padding:5px 8px; width:36%; vertical-align:middle; text-align:left;">
                       <div>Description &amp; Scope</div>
-                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
+                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:4.5%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:6%; text-align:center; vertical-align:middle;">
                       <div>Unit</div>
-                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
+                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:4.5%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 4px; width:8%; text-align:center; vertical-align:middle;">
                       <div>Qty</div>
-                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
+                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:10%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 6px; width:11%; text-align:right; vertical-align:middle;">
                       <div>Unit Price</div>
-                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">السعر</div>
+                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">سعر الوحدة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:8%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 6px; width:13%; text-align:right; vertical-align:middle;">
                       <div>VAT 5%</div>
-                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:14%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:5px 8px; width:22%; text-align:right; vertical-align:middle;">
                       <div>Total Amount</div>
-                      <div style="font-size:0.68rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${(po.line_items && po.line_items.length ? po.line_items : [
-        {
-          sr: 1,
-          name: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
-          description: "Supply and Application of Screeding 8-10 Cm Thickness with ( Polythen Sheet below screed)",
-          unit: "Sqm",
-          qty: 160,
-          unit_price: 60,
-          invoice_amount: 9600,
-          vat_amount: 480,
-          total_amount: 10080
-        }
-      ]).map((item, idx) => {
-        const itemUnitPrice = Number(item.unit_price || 60);
-        const itemQty = Number(item.qty || 160);
-        const itemInvAmt = Number(item.invoice_amount || (itemUnitPrice * itemQty));
-        const itemVat = Number(item.vat_amount || item.tax_amount || (itemInvAmt * 0.05));
-        const itemTotal = Number(item.total_amount && item.total_amount > itemInvAmt ? item.total_amount : (itemInvAmt + itemVat));
-        return `
-                    <tr style="border-bottom:1px solid #111827; background:#ffffff;">
-                      <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700; color:#111827;">${item.sr || (idx + 1)}</td>
-                      <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word;">
-                        ${item.name || item.description}
-                      </td>
-                      <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600;">${item.unit || item.uom || 'Sqm'}</td>
-                      <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600;">${itemQty}</td>
-                      <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${curr.trim()} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  `;
-      }).join('')}
+                  ${((po.line_items && po.line_items.length) ? po.line_items : [
+                    {
+                      sr: 1,
+                      name: po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)',
+                      description: po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)',
+                      unit: '%',
+                      qty: 1000,
+                      unit_price: 55,
+                      invoice_amount: 55000,
+                      vat_rate: 5,
+                      vat_amount: 2750,
+                      total_amount: 57750
+                    }
+                  ]).map((item, idx) => {
+                    const itemQty = Number(item.qty || 1);
+                    const itemUnitPrice = Number(item.unit_price || item.rate || 0);
+                    const itemTaxable = Number(item.taxable_amount || item.invoice_amount || (itemQty * itemUnitPrice));
+                    const itemVat = Number(item.vat_amount || item.tax_amount || (itemTaxable * 0.05));
+                    const itemTotal = Number(item.total_amount || (itemTaxable + itemVat));
+
+                    return `
+                      <tr style="border-bottom:1px solid #111827;">
+                        <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600;">${item.sr || idx + 1}</td>
+                        <td style="border:1px solid #111827; padding:6px 8px; color:#111827; word-break:break-word; line-height:1.4; white-space:pre-line;">
+                          ${item.name || item.description}
+                        </td>
+                        <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600; white-space:nowrap !important;">${item.unit || item.uom || '%'}</td>
+                        <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important;">${itemQty}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 8px; text-align:right; color:#111827; font-weight:800; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${curr.trim()} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
                 <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
                   <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:10px 14px; vertical-align:middle; background:#eaf3ec;">
-                      <div style="font-size:0.82rem; font-weight:700; color:#111827; line-height:1.45;">
+                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:8px 12px; vertical-align:middle; background:#eaf3ec;">
+                      <div style="font-size:0.80rem; font-weight:700; color:#111827; line-height:1.4;">
                         Total In Words : ${amountInWords}
                       </div>
-                      <div style="font-size:0.75rem; color:#4b5563; margin-top:4px;">
-                        <strong>Site Location:</strong> ${po.site_location || 'Al Foah Mall - Alain'} • Working Hours: 8:00 AM – 6:00 PM
+                      <div style="font-size:0.72rem; color:#4b5563; margin-top:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <span><strong>Site Location:</strong> ${po.site_location || 'Al Foah Mall - Alain'} • Working Hours: ${po.working_hours || '8:00 AM – 6:00 PM'}</span>
+                        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOSiteLocation('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0;" title="Edit Site Location &amp; Hours">✏️</button>
                       </div>
                     </td>
-                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">Sub-Total EX-VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; background:#eaf3ec;">Sub-Total EX-VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; background:#eaf3ec;">VAT 5%</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.80rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; background:#eaf3ec;">VAT 5%</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; background:#eaf3ec;">Total Incl. VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.86rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.84rem; background:#eaf3ec;">Total Incl. VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.84rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
-            <!-- Notes Section Below Items -->
-            <div style="margin-top:1.5rem; font-size:0.8rem; color:#4b5563; line-height:1.5;">
-              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
-              <div style="color:#4b5563;">${po.notes || 'Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.'}</div>
-            </div>
-
-            <!-- Contact & Company Details Below Notes -->
-            <div style="margin-top:1.25rem; font-size:0.8rem; color:#4b5563; line-height:1.55;">
-              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
-              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
-              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
-              <div>Hotline : ${compPhone}</div>
-              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
-              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
-            </div>
-
-            <!-- Fixed System Generated Footer (Page 1) -->
-            <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
-              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system-generated purchase order and does not require a signature or stamp.
+            <!-- Notes to Supplier Box (Matching Sample PDF) -->
+            <div style="margin-top:0.75rem; border:1px solid #111827; padding:7px 10px; background:#f9fafb; font-size:0.72rem; line-height:1.42;">
+              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
+                <span>Notes to Supplier:</span>
+                <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONotes('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0 3px;" title="Edit Notes to Supplier">✏️ Edit Notes</button>
               </div>
-              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">1 / 2</div>
+              <div style="color:#374151;">${po.notes_to_supplier || po.notes || '1. Location / Site - The New Dubai Police Academy & al Rowaiyah, Dubai. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools & Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.'}</div>
             </div>
 
-            </div> <!-- End Main Document Content Layer Page 1 -->
+            <!-- Page 1: General Terms and Conditions for Supplies (Articles 1 - 7) -->
+            <div style="margin-top:0.85rem; border-top:1.5px solid #111827; padding-top:6px;">
+              <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.02em;">
+                GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 1 – 7)
+              </div>
+              ${renderTermsGrid(page1Terms)}
+            </div>
+
+            <!-- Page 1 Fixed Footer -->
+            <div style="margin-top:0.75rem; padding-top:4px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#6b7280;">
+              <div>${po.po_no} • info@rayan-group.com</div>
+              <div style="font-weight:700; color:#9ca3af;">Page 1 of 2</div>
+            </div>
+
+            <!-- Page 1 Bottom Cyan Gradient Banner -->
+            <div style="height:4px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:8px -12mm -6mm -12mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
+
+            </div> <!-- End Main Document Content Layer -->
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
           <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+
+            <!-- Top Cyan Gradient Banner (Page 2) -->
+            <div style="height:6px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-8mm -12mm 10px -12mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -27780,51 +27975,97 @@ class FinanceApp {
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section Page 2 -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1.25rem; border-bottom:1.5px solid #111827; padding-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem; border-bottom:1.5px solid #111827; padding-bottom:6px;">
               <div style="display:flex; align-items:center; gap:10px;">
-                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:36px; width:auto; display:block;">
+                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:34px; width:auto; display:block;">
                 <div>
-                  <div style="font-size:0.80rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
-                  <div style="font-size:0.72rem; color:#4b5563; display:flex; align-items:center; gap:8px;">
-                    <span>General Terms &amp; Conditions of Procurement Specification</span>
+                  <div style="font-size:0.78rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
+                  <div style="font-size:0.70rem; color:#4b5563; display:flex; align-items:center; gap:8px;">
+                    <span>General Terms &amp; Conditions for Supplies (Contd.)</span>
                     <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:4px; font-size:0.62rem; font-weight:700; padding:2px 7px; cursor:pointer;" title="Edit all 20 terms for this company / order">✏️ Edit Terms</button>
                   </div>
                 </div>
               </div>
               <div style="text-align:right;">
-                <div style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
-                <div style="font-size:0.80rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'LPO/BD/2026/12'}</div>
+                <div style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
+                <div style="font-size:0.78rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'PO-REC-11012'}</div>
               </div>
             </div>
 
-            <!-- Structured Modern Terms Grid (Articles 1 to 20+ - Compact Legal Specification) -->
-            <div class="fin-po-terms-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1.15rem; font-size:0.62rem; color:#374151; line-height:1.38;">
+            <!-- Page 2: General Terms and Conditions for Supplies (Articles 8 - 20) -->
+            <div style="margin-bottom:0.75rem;">
+              <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.02em;">
+                GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 8 – 20)
+              </div>
+              ${renderTermsGrid(page2Terms)}
+            </div>
+
+            <!-- Invoice Requirements Box (Matching Official PDF Sample) -->
+            <div style="margin-top:0.75rem; border:1px solid #111827; padding:7px 10px; background:#f9fafb; font-size:0.62rem; line-height:1.36;">
+              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px;">Invoice Requirements:</div>
+              <div style="color:#374151;">
+                <div><strong>10.2.1.</strong> The tax invoice is dated not older than 14 calendar days (in par with Decree-LAW).</div>
+                <div><strong>10.2.2.</strong> The tax invoice is an original and includes all required details such as:</div>
+                <div style="padding-left:10px;">
+                  • 10.2.2.1. Correct company name and TRN &nbsp;|&nbsp; 10.2.2.2. PO/Contract reference<br>
+                  • 10.2.2.3. With supplier signature and stamp (except for electronic invoices)<br>
+                  • 10.2.2.4. Description, quantity and amount of supply matching with supporting documents<br>
+                  • 10.2.2.5. Correct VAT amount &nbsp;|&nbsp; 10.3. The tax invoice has complete supporting documentations
+                </div>
+                <div style="margin-top:2px;"><strong>1.</strong> Time Sheets approved by the RAYAN representative at the site.</div>
+                <div><strong>2.</strong> Delivery Note approved by the RAYAN representative at the site.</div>
+                <div><strong>20.</strong> Payment Term: ${po.payment_terms_detail || po.payment_terms || 'First Invoice within 10 Days and remaining invoices by Every 20 Days.'}</div>
+              </div>
+            </div>
+
+            <!-- Dual Signature Blocks (Matching Official Sample PDF with Arshad Alam Shaikh & Official Rayan Stamp) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:1.15rem; padding-top:0.65rem; border-top:1px solid #cbd5e1;">
+              <!-- Rayan Engineering Authorized Signatory Block -->
+              <div style="text-align:center; min-height:120px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase;">
+                  ${compName}
+                </div>
+                <div style="position:relative; width:220px; height:80px; margin:2px auto; display:flex; justify-content:center; align-items:center;">
+                  <!-- Rayan Circular Stamp -->
+                  <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; width:88px; height:auto; opacity:0.88; pointer-events:none; left:25px; top:-5px;">
+                  <!-- Arshad Alam Shaikh Signature -->
+                  <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; width:145px; height:auto; z-index:2; left:45px; top:10px;">
+                </div>
+                <div>
+                  <div style="border-top:1.5px solid #111827; width:180px; margin:0 auto 2px auto;"></div>
+                  <div style="font-size:0.72rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="font-size:0.68rem; color:#4b5563;">Arshad Alam Shaikh</div>
+                </div>
+              </div>
+
+              <!-- Supplier Representative Authorized Signatory Block -->
+              <div style="text-align:center; min-height:120px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase;">
+                  ${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}
+                </div>
+                <div style="position:relative; width:220px; height:80px; margin:2px auto; display:flex; justify-content:center; align-items:center;">
+                  <div style="border:1.5px dashed #cbd5e1; border-radius:6px; width:160px; height:65px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.65rem; font-weight:600;">
+                    [ Acceptance &amp; Official Stamp ]
+                  </div>
+                </div>
+                <div>
+                  <div style="border-top:1.5px solid #111827; width:180px; margin:0 auto 2px auto;"></div>
+                  <div style="font-size:0.72rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="font-size:0.68rem; color:#4b5563;">${po.supplier_attn || 'Supplier Representative'}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Page 2 Footer -->
+            <div style="margin-top:0.85rem; padding-top:4px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#6b7280;">
               <div>
-                ${renderTermsCol(col1Terms)}
+                <strong>Best Wishes</strong> • ${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'} • Hotline : ${compPhone} • <a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:none;">${compEmail}</a> • <a href="http://rayan-group.com" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a>
               </div>
-
-              <div>
-                ${renderTermsCol(col2Terms)}
-              </div>
+              <div style="font-weight:700; color:#9ca3af;">Page 2 of 2</div>
             </div>
 
-            <!-- Contact & Company Details Below Terms (Page 2) -->
-            <div style="margin-top:1.25rem; font-size:0.78rem; color:#4b5563; line-height:1.45;">
-              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
-              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
-              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
-              <div>Hotline : ${compPhone}</div>
-              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
-              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
-            </div>
-
-            <!-- Fixed System Generated Footer (Page 2) -->
-            <div style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#6b7280; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
-              <div style="flex:1; text-align:center; letter-spacing:0.01em;">
-                This is a system-generated purchase order and does not require a signature or stamp.
-              </div>
-              <div style="min-width:20px; text-align:right; font-weight:600; color:#9ca3af;">2 / 2</div>
-            </div>
+            <!-- Page 2 Bottom Cyan Gradient Banner -->
+            <div style="height:4px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:8px -12mm -6mm -12mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
 
             </div> <!-- End Main Document Content Layer Page 2 -->
           </div>
@@ -30651,10 +30892,12 @@ class FinanceApp {
     const currSym = isIndia ? '₹' : 'AED ';
     const lineItems = (po.line_items && po.line_items.length) ? po.line_items : [
       {
-        name: 'Procurement Scope',
-        qty: 1,
-        unit_price: Number(po.subtotal) || 1000,
-        taxable_amount: Number(po.subtotal) || 1000
+        name: po.scope_of_work || 'Procurement Scope',
+        description: po.scope_of_work || 'Procurement Scope',
+        unit: '%',
+        qty: 1000,
+        unit_price: Number(po.subtotal) ? (Number(po.subtotal) / 1000) : 55,
+        taxable_amount: Number(po.subtotal) || 55000
       }
     ];
 
@@ -30663,13 +30906,31 @@ class FinanceApp {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-edit-po" style="z-index:100010;">
-        <div class="fin-modal-dialog" style="max-width:720px;">
+        <div class="fin-modal-dialog" style="max-width:760px;">
           <div class="fin-modal-header">
             <h3 class="fin-modal-title">✏️ Edit Purchase Order (${po.po_no})</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-edit-po')">&times;</button>
           </div>
-          <div class="fin-modal-body" style="max-height:80vh; overflow-y:auto;">
+          <div class="fin-modal-body" style="max-height:82vh; overflow-y:auto;">
             <form id="edit-po-form">
+              <!-- Row 1: PO Number & Type -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Purchase Order # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-po-no" class="fin-form-input" value="${po.po_no || ''}" required placeholder="PO-REC-11012" style="font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">PO Type <span style="color:#ef4444;">*</span></label>
+                  <select id="edit-po-type" class="fin-form-select" required>
+                    <option value="Supply" ${(po.po_type === 'Supply') ? 'selected' : ''}>Supply</option>
+                    <option value="Subcontract" ${(po.po_type === 'Subcontract' || !po.po_type) ? 'selected' : ''}>Subcontract</option>
+                    <option value="Services" ${(po.po_type === 'Services') ? 'selected' : ''}>Services</option>
+                    <option value="Supply & Install" ${(po.po_type === 'Supply & Install') ? 'selected' : ''}>Supply &amp; Install</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Row 2: Vendor & Project -->
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Vendor / Supplier <span style="color:#ef4444;">*</span></label>
@@ -30681,7 +30942,40 @@ class FinanceApp {
                 </div>
               </div>
 
+              <!-- Row 3: Quotation Reference & Internal Ref -->
               <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Quotation Reference <span style="color:#38bdf8;">(Quote Ref.)</span></label>
+                  <input type="text" id="edit-po-quote-ref" class="fin-form-input" value="${po.quote_ref || 'Quotation —'}" placeholder="e.g. Quotation — or QT-2026-991">
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed on Page 1 metadata &amp; supplier details</div>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Internal Ref (iRef)</label>
+                  <input type="text" id="edit-po-iref" class="fin-form-input" value="${po.iref || '2026-KTS-SUB'}">
+                </div>
+              </div>
+
+              <!-- Row 4: Responsible Person & Mobile -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Responsible Person <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="edit-po-person" class="fin-form-input" value="${po.responsible_person || 'Mohammad Suhel'}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Responsible Person Mobile</label>
+                  <input type="text" id="edit-po-person-phone" class="fin-form-input" value="${po.responsible_person_phone || '+971 589827866'}">
+                </div>
+              </div>
+
+              <!-- Row 5: Scope of Work Banner -->
+              <div class="fin-form-group">
+                <label class="fin-form-label">Scope of Work / Work Description <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="edit-po-scope" class="fin-form-input" value="${po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)'}" required>
+                <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Rendered as the prominent green scope banner above items table</div>
+              </div>
+
+              <!-- Row 6: Dates & Terms -->
+              <div class="fin-form-grid-3">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Order Date</label>
                   <input type="date" id="edit-po-date" class="fin-form-input" value="${po.date || ''}" required>
@@ -30690,12 +30984,9 @@ class FinanceApp {
                   <label class="fin-form-label">Expected Delivery Date</label>
                   <input type="date" id="edit-po-delivery" class="fin-form-input" value="${po.expected_delivery || ''}">
                 </div>
-              </div>
-
-              <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Payment Terms (Header Tag) <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="edit-po-payment-terms" class="fin-form-input" list="edit-po-terms-presets" value="${currentShortTerms.replace(/"/g, '&quot;')}" required placeholder="e.g. PDC30, 30 Days Net, 50% Advance">
+                  <input type="text" id="edit-po-payment-terms" class="fin-form-input" list="edit-po-terms-presets" value="${currentShortTerms.replace(/"/g, '&quot;')}" required placeholder="e.g. PDC30, 30 Days Net">
                   <datalist id="edit-po-terms-presets">
                     <option value="PDC30">
                     <option value="30 Days Net">
@@ -30703,22 +30994,29 @@ class FinanceApp {
                     <option value="50% Advance / 50% Completion">
                     <option value="100% Advance">
                     <option value="Cash on Delivery (COD)">
-                    <option value="Letter of Credit (LC)">
                   </datalist>
-                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed on Page 1 Header Metadata</div>
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Internal Ref (iRef)</label>
-                  <input type="text" id="edit-po-iref" class="fin-form-input" value="${po.iref || '2026-KGN-SUB'}">
                 </div>
               </div>
 
+              <!-- Row 7: Site Location & Working Hours -->
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Site / Delivery Location</label>
+                  <input type="text" id="edit-po-site" class="fin-form-input" value="${po.site_location || 'The New Dubai Police Academy & al Rowaiyah, Dubai'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Working Hours</label>
+                  <input type="text" id="edit-po-hours" class="fin-form-input" value="${po.working_hours || '8:00 AM – 6:00 PM'}">
+                </div>
+              </div>
+
+              <!-- Article 19 Detail Terms -->
               <div class="fin-form-group">
                 <label class="fin-form-label">Article 19: Payment Terms Specification (Page 2 Contract Clause)</label>
                 <textarea id="edit-po-payment-detail" class="fin-form-input" rows="3" style="line-height:1.4; font-size:0.80rem;" placeholder="Enter specific commercial payment term clause for specification terms...">${currentDetailTerms}</textarea>
-                <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Printed under Article 19 on Specification Sheet</div>
               </div>
 
+              <!-- Terms Modal shortcut -->
               <div style="background:rgba(255, 255, 255, 0.04); border:1px solid rgba(255, 255, 255, 0.1); border-radius:8px; padding:10px 14px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
                 <div>
                   <div style="font-weight:700; font-size:0.82rem; color:#f8fafc;">📜 General Terms &amp; Conditions (Articles 1 – 20)</div>
@@ -30729,30 +31027,24 @@ class FinanceApp {
                 </button>
               </div>
 
-              <div class="fin-form-grid-2">
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Responsible Person / Contact</label>
-                  <input type="text" id="edit-po-person" class="fin-form-input" value="${po.responsible_person || 'Mohammad Suhel'}">
-                </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Site / Delivery Location</label>
-                  <input type="text" id="edit-po-site" class="fin-form-input" value="${po.site_location || po.ship_to_address || 'Al Foah Mall - Alain'}">
-                </div>
-              </div>
-
+              <!-- Item Scope & Pricing -->
               <div class="fin-form-group">
                 <label class="fin-form-label">Item / Technical Scope Description <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="edit-po-desc" class="fin-form-input" value="${lineItems[0]?.name || lineItems[0]?.description || ''}" required>
+                <textarea id="edit-po-desc" class="fin-form-input" rows="2" required>${lineItems[0]?.name || lineItems[0]?.description || po.scope_of_work || ''}</textarea>
               </div>
 
-              <div class="fin-form-grid-3">
+              <div class="fin-form-grid-4" style="display:grid; grid-template-columns:1fr 1fr 1.5fr 1.5fr; gap:0.75rem;">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Unit</label>
+                  <input type="text" id="edit-po-unit" class="fin-form-input" value="${lineItems[0]?.unit || lineItems[0]?.uom || '%'}">
+                </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Quantity</label>
-                  <input type="number" id="edit-po-qty" class="fin-form-input" value="${lineItems[0]?.qty || 1}" min="1">
+                  <input type="number" id="edit-po-qty" class="fin-form-input" value="${lineItems[0]?.qty || 1000}" min="1" step="any">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Unit Price (${currLabel})</label>
-                  <input type="number" id="edit-po-rate" class="fin-form-input" value="${lineItems[0]?.unit_price || 0}" step="any" required>
+                  <input type="number" id="edit-po-rate" class="fin-form-input" value="${lineItems[0]?.unit_price || 55}" step="any" required>
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Total Value (${currLabel})</label>
@@ -30761,8 +31053,8 @@ class FinanceApp {
               </div>
 
               <div class="fin-form-group">
-                <label class="fin-form-label">Notes &amp; Special Conditions</label>
-                <textarea id="edit-po-notes" class="fin-form-input" rows="2" style="line-height:1.4; font-size:0.80rem;">${po.notes || 'Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.'}</textarea>
+                <label class="fin-form-label">Notes to Supplier</label>
+                <textarea id="edit-po-notes" class="fin-form-input" rows="3" style="line-height:1.4; font-size:0.80rem;">${po.notes_to_supplier || po.notes || 'Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, and site safety certifications.'}</textarea>
               </div>
 
               <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
@@ -30799,21 +31091,28 @@ class FinanceApp {
       const r = Number(rateInp.value) || 0;
       const subtotal = q * r;
       const taxRate = isIndia ? 0.18 : 0.05;
-      const tax = subtotal * taxRate;
+      const tax = Math.round(subtotal * taxRate * 100) / 100;
       const grand = subtotal + tax;
 
+      po.po_no = document.getElementById('edit-po-no').value.trim() || po.po_no;
+      po.po_type = document.getElementById('edit-po-type').value;
       po.supplier_name = document.getElementById('edit-po-vend').value.trim();
       po.vendor_name = po.supplier_name;
       po.project_name = document.getElementById('edit-po-prj').value.trim();
+      po.quote_ref = document.getElementById('edit-po-quote-ref').value.trim() || 'Quotation —';
+      po.iref = document.getElementById('edit-po-iref').value.trim() || '2026-KTS-SUB';
+      po.responsible_person = document.getElementById('edit-po-person').value.trim() || 'Mohammad Suhel';
+      po.responsible_person_phone = document.getElementById('edit-po-person-phone').value.trim() || '+971 589827866';
+      po.scope_of_work = document.getElementById('edit-po-scope').value.trim() || '% Progressive Work Certification (Custom Milestone Claim)';
       po.date = document.getElementById('edit-po-date').value;
       po.expected_delivery = document.getElementById('edit-po-delivery').value;
       po.payment_terms = document.getElementById('edit-po-payment-terms').value.trim();
       po.payment_terms_detail = document.getElementById('edit-po-payment-detail').value.trim();
-      po.iref = document.getElementById('edit-po-iref').value.trim();
-      po.responsible_person = document.getElementById('edit-po-person').value.trim();
       po.site_location = document.getElementById('edit-po-site').value.trim();
-      po.ship_to_address = po.site_location;
+      po.working_hours = document.getElementById('edit-po-hours').value.trim();
+      po.ship_to_address = 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800';
       po.notes = document.getElementById('edit-po-notes').value.trim();
+      po.notes_to_supplier = po.notes;
       po.subtotal = subtotal;
       po.subtotal_ex_vat = subtotal;
       po.tax_total = tax;
@@ -30821,13 +31120,18 @@ class FinanceApp {
       po.total_value = grand;
       po.grand_total = grand;
 
+      const desc = document.getElementById('edit-po-desc').value.trim();
+      const unit = document.getElementById('edit-po-unit').value.trim() || '%';
+
       po.line_items = [
         {
           sr: 1,
-          name: document.getElementById('edit-po-desc').value.trim(),
-          description: document.getElementById('edit-po-desc').value.trim(),
+          name: desc,
+          description: desc,
+          unit: unit,
           qty: q,
           unit_price: r,
+          invoice_amount: subtotal,
           taxable_amount: subtotal,
           vat_rate: isIndia ? 0 : 5,
           vat_amount: tax,
@@ -30870,14 +31174,10 @@ class FinanceApp {
     };
   }
 
-  // 6B. QUICK EDIT PO PAYMENT TERMS (DIRECT FROM PO PREVIEW)
+  // 6B. QUICK EDIT SUITE (DIRECT FROM PO PREVIEW)
   quickEditPOPaymentTerms(poId) {
     const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
-    if (!po) {
-      alert('Purchase Order not found.');
-      return;
-    }
-
+    if (!po) { alert('Purchase Order not found.'); return; }
     const currentShort = po.payment_terms || 'PDC30';
     const currentDetail = po.payment_terms_detail || (po.payment_terms ? `${po.payment_terms} as agreed in commercial specifications.` : '50% advance upon order confirmation; remaining 50% upon client inspection and certification.');
 
@@ -30892,7 +31192,7 @@ class FinanceApp {
             <form id="quick-po-terms-form">
               <div class="fin-form-group">
                 <label class="fin-form-label">Payment Terms Header (Page 1 Summary) <span style="color:#ef4444;">*</span></label>
-                <input type="text" id="quick-po-short-terms" class="fin-form-input" list="quick-po-terms-presets" value="${currentShort.replace(/"/g, '&quot;')}" required placeholder="e.g. PDC30, 30 Days Net, 50% Advance">
+                <input type="text" id="quick-po-short-terms" class="fin-form-input" list="quick-po-terms-presets" value="${currentShort.replace(/"/g, '&quot;')}" required placeholder="e.g. PDC30, 30 Days Net">
                 <datalist id="quick-po-terms-presets">
                   <option value="PDC30">
                   <option value="30 Days Net">
@@ -30900,14 +31200,13 @@ class FinanceApp {
                   <option value="50% Advance / 50% Completion">
                   <option value="100% Advance">
                   <option value="Cash on Delivery (COD)">
-                  <option value="Letter of Credit (LC)">
                 </datalist>
                 <div style="font-size:0.72rem; color:#64748b; margin-top:3px;">Printed on Page 1 metadata table</div>
               </div>
 
               <div class="fin-form-group">
                 <label class="fin-form-label">Article 19: Payment Term Clause (Page 2 Contract Specification)</label>
-                <textarea id="quick-po-detail-terms" class="fin-form-input" rows="4" style="line-height:1.45; font-size:0.82rem;" placeholder="Enter legal payment clause for terms & conditions...">${currentDetail}</textarea>
+                <textarea id="quick-po-detail-terms" class="fin-form-input" rows="4" style="line-height:1.45; font-size:0.82rem;">${currentDetail}</textarea>
                 <div style="font-size:0.72rem; color:#64748b; margin-top:3px;">Full commercial clause printed under Article 19 on Specification Sheet</div>
               </div>
 
@@ -30921,11 +31220,11 @@ class FinanceApp {
       </div>
     `;
 
-    let existingQuick = document.getElementById('modal-quick-po-terms');
-    if (existingQuick) existingQuick.remove();
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = modalHtml;
-    document.body.appendChild(wrapper.firstElementChild);
+    let el = document.getElementById('modal-quick-po-terms');
+    if (el) el.remove();
+    const wrap = document.createElement('div');
+    wrap.innerHTML = modalHtml;
+    document.body.appendChild(wrap.firstElementChild);
 
     document.getElementById('quick-po-terms-form').onsubmit = async (e) => {
       e.preventDefault();
@@ -30935,16 +31234,129 @@ class FinanceApp {
         const t19 = po.custom_terms.find(t => t.num === 19);
         if (t19) t19.text = po.payment_terms_detail;
       }
-
       await this.syncApi('update_po', { po });
       this.closeModal('modal-quick-po-terms');
-      const el = document.getElementById('modal-quick-po-terms');
-      if (el) el.remove();
-
+      const m = document.getElementById('modal-quick-po-terms'); if (m) m.remove();
       this.showNotification(`Payment Terms for PO ${po.po_no} updated successfully.`, 'success');
       this.openPOPrintModal(po.id || po.po_no);
       this.renderActiveTab();
     };
+  }
+
+  quickEditPONumber(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const newNo = prompt('Edit Purchase Order Number:', po.po_no);
+    if (newNo && newNo.trim() && newNo.trim() !== po.po_no) {
+      po.po_no = newNo.trim();
+      this.syncApi('update_po', { po }).then(() => {
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        this.showNotification(`PO Number updated to ${po.po_no}.`, 'success');
+        this.openPOPrintModal(po.id || po.po_no);
+        this.renderActiveTab();
+      });
+    }
+  }
+
+  quickEditPOQuoteRef(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const newRef = prompt('Edit Quotation Reference (Quote Ref.):', po.quote_ref || 'Quotation —');
+    if (newRef !== null && newRef.trim() !== (po.quote_ref || '')) {
+      po.quote_ref = newRef.trim() || 'Quotation —';
+      this.syncApi('update_po', { po }).then(() => {
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        this.showNotification('Quotation Reference updated.', 'success');
+        this.openPOPrintModal(po.id || po.po_no);
+      });
+    }
+  }
+
+  quickEditPOIRef(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const newIRef = prompt('Edit Internal Reference (iRef):', po.iref || '2026-KTS-SUB');
+    if (newIRef !== null && newIRef.trim() !== (po.iref || '')) {
+      po.iref = newIRef.trim() || '2026-KTS-SUB';
+      this.syncApi('update_po', { po }).then(() => {
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        this.showNotification('Internal Ref updated.', 'success');
+        this.openPOPrintModal(po.id || po.po_no);
+      });
+    }
+  }
+
+  quickEditPOType(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const newType = prompt('Edit PO Type (Supply, Subcontract, Services, Supply & Install):', po.po_type || 'Supply');
+    if (newType !== null && newType.trim() !== (po.po_type || '')) {
+      po.po_type = newType.trim();
+      this.syncApi('update_po', { po }).then(() => {
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        this.showNotification('PO Type updated.', 'success');
+        this.openPOPrintModal(po.id || po.po_no);
+      });
+    }
+  }
+
+  quickEditPOResponsiblePerson(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const person = prompt('Responsible Person Name:', po.responsible_person || 'Mohammad Suhel');
+    if (person === null) return;
+    const phone = prompt('Responsible Person Mobile:', po.responsible_person_phone || '+971 589827866');
+    po.responsible_person = person.trim() || 'Mohammad Suhel';
+    if (phone !== null) po.responsible_person_phone = phone.trim() || '+971 589827866';
+    this.syncApi('update_po', { po }).then(() => {
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+      this.showNotification('Responsible Person updated.', 'success');
+      this.openPOPrintModal(po.id || po.po_no);
+    });
+  }
+
+  quickEditPOScopeOfWork(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const scope = prompt('Edit Scope of Work / Banner Description:', po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)');
+    if (scope !== null && scope.trim() !== (po.scope_of_work || '')) {
+      po.scope_of_work = scope.trim();
+      this.syncApi('update_po', { po }).then(() => {
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        this.showNotification('Scope of Work banner updated.', 'success');
+        this.openPOPrintModal(po.id || po.po_no);
+      });
+    }
+  }
+
+  quickEditPOSiteLocation(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const site = prompt('Site Location:', po.site_location || 'Al Foah Mall - Alain');
+    if (site === null) return;
+    const hours = prompt('Working Hours:', po.working_hours || '8:00 AM – 6:00 PM');
+    po.site_location = site.trim() || 'Al Foah Mall - Alain';
+    if (hours !== null) po.working_hours = hours.trim() || '8:00 AM – 6:00 PM';
+    this.syncApi('update_po', { po }).then(() => {
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+      this.showNotification('Site Location and Working Hours updated.', 'success');
+      this.openPOPrintModal(po.id || po.po_no);
+    });
+  }
+
+  quickEditPONotes(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    const notes = prompt('Edit Notes to Supplier:', po.notes_to_supplier || po.notes || '');
+    if (notes !== null && notes.trim() !== (po.notes_to_supplier || '')) {
+      po.notes_to_supplier = notes.trim();
+      po.notes = notes.trim();
+      this.syncApi('update_po', { po }).then(() => {
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        this.showNotification('Notes to Supplier updated.', 'success');
+        this.openPOPrintModal(po.id || po.po_no);
+      });
+    }
   }
 
   // 7. EDIT CREDIT NOTE MODAL
