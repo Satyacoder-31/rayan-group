@@ -2007,7 +2007,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v110';
+    const CURRENT_DB_VERSION = 'v2026_clean_v111';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -11190,6 +11190,38 @@ class FinanceApp {
     this.renderVatManagementTab(document.getElementById('fin-content-pane'));
   }
 
+  setCtSimScenario(scenario) {
+    if (scenario === 'under_3m') {
+      this._ctState.simSales = 2000000;
+      this._ctState.simMaterials = 500000;
+      this._ctState.simLabour = 400000;
+      this._ctState.simSubcontractors = 250000;
+      this._ctState.simRent = 100000;
+      this._ctState.simTransport = 150000;
+      this._ctState.simNonDeductible = 0;
+      this._ctState.simSbrElected = true;
+    } else if (scenario === 'over_3m') {
+      this._ctState.simSales = 3500000;
+      this._ctState.simMaterials = 900000;
+      this._ctState.simLabour = 600000;
+      this._ctState.simSubcontractors = 400000;
+      this._ctState.simRent = 100000;
+      this._ctState.simTransport = 100000;
+      this._ctState.simNonDeductible = 0;
+      this._ctState.simSbrElected = false;
+    } else if (scenario === 'over_5m') {
+      this._ctState.simSales = 5000000;
+      this._ctState.simMaterials = 1500000;
+      this._ctState.simLabour = 900000;
+      this._ctState.simSubcontractors = 500000;
+      this._ctState.simRent = 150000;
+      this._ctState.simTransport = 150000;
+      this._ctState.simNonDeductible = 0;
+      this._ctState.simSbrElected = false;
+    }
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
   renderCorporateTaxView() {
     const isSim = this._ctState.mode === 'simulator';
     
@@ -11303,7 +11335,11 @@ class FinanceApp {
                     ${sbrElected ? '✓ Small Business Relief ELECTED (Tax = AED 0.00)' : 'Click to Elect SBR Relief (Tax = AED 0.00)'}
                   </label>
                 </div>
-              ` : ''}
+              ` : `
+                <div style="background:rgba(239,68,68,0.18); padding:0.55rem 0.95rem; border-radius:8px; border:1px solid rgba(239,68,68,0.45); font-size:0.8rem; color:#fca5a5; font-weight:700;">
+                  ⚠️ Turnover &gt; AED 3M: SBR Ineligible &bull; 9% Tax Mandatory
+                </div>
+              `}
             </div>
           </div>
         </div>
@@ -11328,7 +11364,7 @@ class FinanceApp {
           <div class="fin-metric-card" style="border-color:${sbrElected ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}; background:${sbrElected ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'};">
             <span class="fin-metric-label" style="color:${sbrElected ? '#34d399' : '#f87171'}; font-weight:700;">4. Corporate Tax Payable</span>
             <div class="fin-metric-value" style="color:${sbrElected ? '#34d399' : '#f87171'}; font-weight:800;">${this.formatCurrency(taxPayable)}</div>
-            <span class="fin-metric-sub" style="color:#cbd5e1;">${sbrElected ? '🎉 AED 0.00 via Small Business Relief ✓' : `Payable to FTA (9% above 375k)`}</span>
+            <span class="fin-metric-sub" style="color:#cbd5e1;">${sbrElected ? '🎉 AED 0.00 via Small Business Relief ✓' : (revenue > 3000000 ? '🚨 Turnover > AED 3M: Mandatory 9% on profit above 375k' : `Payable to FTA (9% above 375k)`)}</span>
           </div>
         </div>
 
@@ -11341,10 +11377,24 @@ class FinanceApp {
               <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
                 <div>
                   <h3 style="font-size:1rem; color:#f8fafc; margin:0; font-weight:700;">🧮 Interactive Contracting Simulator</h3>
-                  <span style="font-size:0.72rem; color:#94a3b8;">Adjust any line to test tax outcomes</span>
+                  <span style="font-size:0.72rem; color:#94a3b8;">Adjust any line or choose a quick scenario</span>
                 </div>
                 <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-size:0.75rem;" onclick="window.finApp.resetCtSim()">
-                  🔄 Reset to Prompt Example
+                  🔄 Reset Default
+                </button>
+              </div>
+
+              <!-- Quick Scenario Buttons -->
+              <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.85rem; padding:0.55rem 0.75rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.07); border-radius:8px;">
+                <span style="font-size:0.72rem; color:#94a3b8; font-weight:700;">Presets:</span>
+                <button type="button" class="fin-btn-quick" style="border-color:#10b981; color:#34d399; font-size:0.72rem; padding:0.25rem 0.6rem;" onclick="window.finApp.setCtSimScenario('under_3m')" title="Revenue <= AED 3M: SBR Eligible (Tax = 0 AED)">
+                  🛡️ &le; AED 3M (SBR Active)
+                </button>
+                <button type="button" class="fin-btn-quick" style="border-color:#ef4444; color:#f87171; font-size:0.72rem; padding:0.25rem 0.6rem;" onclick="window.finApp.setCtSimScenario('over_3m')" title="Revenue > AED 3M: SBR Ineligible (9% Tax Mandatory)">
+                  📈 &gt; AED 3M (9% Tax Mandatory)
+                </button>
+                <button type="button" class="fin-btn-quick" style="border-color:#f59e0b; color:#fbbf24; font-size:0.72rem; padding:0.25rem 0.6rem;" onclick="window.finApp.setCtSimScenario('over_5m')" title="Revenue > AED 5M: Large Contracting Scale">
+                  🏢 AED 5M+ (Large Contracting)
                 </button>
               </div>
 
@@ -11622,7 +11672,8 @@ class FinanceApp {
     const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
     const liveGross = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
     const liveTaxable = invoices.reduce((s, i) => s + (Number(i.taxable_subtotal) || 0), 0);
-    const liveSbrElected = this._ctState?.sbrElected !== false;
+    const liveSbrEligible = liveGross <= 3000000;
+    const liveSbrElected = liveSbrEligible && (this._ctState?.sbrElected !== false);
     const liveExcess = Math.max(0, liveTaxable - 375000);
     const liveTaxBefore = liveExcess * 0.09;
     const liveTaxDue = liveSbrElected ? 0 : liveTaxBefore;
