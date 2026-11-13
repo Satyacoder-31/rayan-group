@@ -1849,6 +1849,53 @@ class FinanceApp {
     const r867Record = Array.isArray(this.db.customer_receipts) ? this.db.customer_receipts.find(r => r.id === 'rec-mvxegfg5' || r.cheque_no === '000867') : null;
     const r867Amount = r867Record ? r867Record.amount_received : '35597.36';
 
+        // Ensure purchase orders have their correct classification (customer_po vs vendor_po)
+    const CUST_PO_MAP = {
+      'AMGM/PO-2024/068': { customer_id: 'cust-almuluki', customer_name: 'M/S AL MULUKI DECOR & GENERAL MAINTENANCE LLC' },
+      'DPA-2026-01': { customer_id: 'cust-toprock', customer_name: 'M/S TOP ROCK INTERIORS LLC' },
+      'LPO/SD/2026/09': { customer_id: 'cust-sadeco', customer_name: 'M/S SADECO DÉCOR LLC' },
+      'LPO-DPA-2026-01': { customer_id: 'cust-toprock', customer_name: 'M/S TOP ROCK INTERIORS LLC' },
+      'LPO-WALD-2026-11': { customer_id: 'cust-specon', customer_name: 'M/S SPECON DESIGN INTERIOR & EVENTS LLC' },
+      'LPO-IB-2026-004': { customer_id: 'cust-ironbeam', customer_name: 'M/S IRON BEAM GENERAL CONTRACTING LLC' },
+      'LPO-AYAT-2026-14': { customer_id: 'cust-ayat', customer_name: 'M/S AYAT TECHNICAL SERVICES EST' },
+      'LPO-TRI-2024-88': { customer_id: 'cust-toprock', customer_name: 'M/S TOP ROCK INTERIORS LLC' },
+      '4500009126': { customer_id: 'cust-alisons', customer_name: 'M/S ALI & SONS CO. LLC' },
+      'FT/INFRA/PO-1065 R00/2024': { customer_id: 'cust-focustech', customer_name: 'M/S FOCUS TECH LLC' },
+      'PODULL/107329': { customer_id: 'cust-hayat', customer_name: 'M/S HAYAT COMMUNICATIONS LLC' },
+      'P92620': { customer_id: 'cust-morganti', customer_name: 'M/S MORGANTI GCC l UAE' },
+      '701102': { customer_id: 'cust-hiprofile', customer_name: 'M/S HI PROFILE GENERAL MAINTENANCE LLC' },
+      'MOD.0022025': { customer_id: 'cust-mapout', customer_name: 'M/S MAP OUT DECOR TECHNICAL SERVICES LLC' },
+      '26-R3-378': { customer_id: 'cust-solidmarble', customer_name: 'M/S SOLID MARBLE INDUSTRIES LLC' },
+      'PODSUB-2025/1826R1': { customer_id: 'cust-toprock', customer_name: 'M/S TOP ROCK INTERIORS LLC' },
+      'PODSUB-2024/0944': { customer_id: 'cust-toprock', customer_name: 'M/S TOP ROCK INTERIORS LLC' },
+      'IB-037-136': { customer_id: 'cust-ironbeam', customer_name: 'M/S IRON BEAM GENERAL CONTRACTING LLC' },
+      'SD-SHJ/SC/26/1072': { customer_id: 'cust-sadeco', customer_name: 'M/S SADECO DÉCOR LLC' },
+      'HLN/PO/0526/2025': { customer_id: 'cust-hln', customer_name: 'M/S HLN TECHNICAL SERVICES LLC' },
+      'LPO/BD/2026/12': { customer_id: 'cust-buildara', customer_name: 'M/S BUILDARA GENERAL CONTRACTING LLC' }
+    };
+
+    if (Array.isArray(this.db.purchase_orders)) {
+      this.db.purchase_orders.forEach(po => {
+        if (po) {
+          const mapped = CUST_PO_MAP[po.po_no];
+          if (mapped) {
+            po.customer_id = mapped.customer_id;
+            po.customer_name = mapped.customer_name;
+            po.type = 'customer_po';
+            po.po_type = 'customer_lpo';
+            po.direction = 'inward';
+            po.supplier_name = 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C';
+            po.supplier_trn = '100234567800003';
+          } else if (!po.type) {
+            po.type = 'customer_po';
+            po.po_type = 'customer_lpo';
+            po.direction = 'inward';
+            if (!po.customer_name && po.vendor_name) po.customer_name = po.vendor_name;
+          }
+        }
+      });
+    }
+
     if (!Array.isArray(this.db.cheques)) this.db.cheques = [];
 
     // Ensure Cheque 001464 (M/S MORGANTI GCC l UAE, AED 12,700.00 against REC-RV-44003) is present and Cleared
@@ -2067,7 +2114,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v115';
+    const CURRENT_DB_VERSION = 'v2026_clean_v116';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4493,7 +4540,7 @@ class FinanceApp {
               </div>
 
               <!-- Accordion: Sales & Income -->
-              <div class="fin-accordion-group ${['invoices', 'payment_in', 'payments', 'customers', 'credit_notes'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-sales">
+              <div class="fin-accordion-group ${['invoices', 'customer_pos', 'payment_in', 'payments', 'customers', 'credit_notes'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-sales">
                 <div class="fin-accordion-header" data-toggle="fin-grp-sales">
                   <div class="fin-grp-title-wrap">
                     <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4512,6 +4559,10 @@ class FinanceApp {
                   <div class="fin-nav-subitem ${this.activeTab === 'invoices' ? 'active' : ''}" data-tab="invoices">
                     <span class="fin-subitem-text">Sales Invoices</span>
                     <button type="button" class="fin-subitem-plus" title="Create Sales Invoice" data-action="new-invoice">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'customer_pos' ? 'active' : ''}" data-tab="customer_pos">
+                    <span class="fin-subitem-text">Purchase Orders (Client LPO)</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Client LPO" data-action="new-customer-po">+</button>
                   </div>
                   <div class="fin-nav-subitem ${['payment_in', 'payments'].includes(this.activeTab) ? 'active' : ''}" data-tab="payment_in">
                     <span class="fin-subitem-text">Payment-In</span>
@@ -4560,7 +4611,7 @@ class FinanceApp {
                     <button type="button" class="fin-subitem-plus" title="Record Expense" data-action="new-expense">+</button>
                   </div>
                   <div class="fin-nav-subitem ${this.activeTab === 'pos' ? 'active' : ''}" data-tab="pos">
-                    <span class="fin-subitem-text">Purchase Order</span>
+                    <span class="fin-subitem-text">Purchase Order (Vendor PO)</span>
                     <button type="button" class="fin-subitem-plus" title="Issue Purchase Order" data-action="new-po">+</button>
                   </div>
                   <div class="fin-nav-subitem ${['debit_notes', 'notes'].includes(this.activeTab) ? 'active' : ''}" data-tab="debit_notes">
@@ -5016,6 +5067,9 @@ class FinanceApp {
           case 'new-po':
             this.openCreatePOModal();
             break;
+          case 'new-customer-po':
+            this.openRecordClientLPOModal();
+            break;
           case 'new-debit-note':
             this.openCreateNotePrompt('debit_note');
             break;
@@ -5179,6 +5233,7 @@ class FinanceApp {
       const titles = {
         dashboard: 'Executive Dashboard',
         invoices: 'Sales & Tax Invoices',
+        customer_pos: 'Client Purchase Orders (Customer LPOs)',
         payment_in: 'Payment-In (Customer Receipts)',
         payments: 'Payments & Receipts',
         customers: 'Customers & Clients',
@@ -5221,6 +5276,9 @@ class FinanceApp {
         break;
       case 'invoices':
         this.renderInvoicesTab(root);
+        break;
+      case 'customer_pos':
+        this.renderCustomerPOTab(root);
         break;
       case 'payment_in':
         this.renderPaymentInTab(root);
@@ -9604,8 +9662,910 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // 10. PURCHASE ORDERS MODULE
   // --------------------------------------------------------------------------
-  renderPOTab(root) {
-    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id));
+
+  // --------------------------------------------------------------------------
+  // CLIENT PURCHASE ORDERS / LPOS (SALES & INCOME INWARD POs)
+  // --------------------------------------------------------------------------
+  renderCustomerPOTab(root) {
+    this.normalizeAllBalances();
+    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type));
+    this.customerPoSort = this.customerPoSort || 'serial-desc';
+    this.customerPoAttachFilter = this.customerPoAttachFilter || 'all';
+
+    const totalLpoValue = rawPos.reduce((sum, p) => sum + (Number(p.grand_total || p.total_value || p.total || 0)), 0);
+
+    const invoices = (this.db?.invoices || []).filter(i => this.matchesActiveCompany(i.company_id) && i.status !== 'void');
+    let realizedInvoiced = 0;
+    rawPos.forEach(p => {
+      const pNo = (p.po_no || '').trim().toLowerCase();
+      const pPrj = (p.project_name || '').trim().toLowerCase();
+      invoices.forEach(inv => {
+        const invPo = (inv.po_reference || inv.lpo_no || inv.order_no || inv.order_number || '').trim().toLowerCase();
+        const invPrj = (inv.project_name || '').trim().toLowerCase();
+        if ((pNo && invPo && (invPo === pNo || invPo.includes(pNo) || pNo.includes(invPo))) ||
+            (pPrj && invPrj && pPrj === invPrj)) {
+          realizedInvoiced += (Number(inv.grand_total) || 0);
+        }
+      });
+    });
+    realizedInvoiced = Math.min(realizedInvoiced, totalLpoValue);
+    const unbilledBalance = Math.max(0, totalLpoValue - realizedInvoiced);
+    const posWithPdf = rawPos.filter(p => !!(p.pdf_url || p.pdf_data));
+
+    const sortedInitialPos = this.sortRecords(rawPos, this.customerPoSort, {
+      num: 'po_no',
+      date: 'date',
+      name: 'customer_name',
+      amount: 'total_value'
+    });
+
+    const getCustomerName = (po) => po.customer_name || po.vendor_name || po.supplier_name || 'Corporate Client';
+
+    root.innerHTML = `
+      <div class="fin-panel-card">
+        <div class="fin-panel-header">
+          <div>
+            <h2 class="fin-panel-title">📑 Client Purchase Orders (Customer LPOs)</h2>
+            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">Inward Purchase Orders &amp; Work Orders issued to Rayan Group by corporate clients and main contractors.</p>
+          </div>
+          <div class="fin-panel-actions">
+            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.openRecordClientLPOModal()">
+              + Record Client LPO
+            </button>
+            <button type="button" class="fin-btn-quick" onclick="window.finApp.exportCustomerPOsCSV()">
+              📥 Export CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary KPIs -->
+        <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.25rem;">
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">Total Inward Client LPOs</span>
+            <div class="fin-metric-value" style="color:#38bdf8;">${this.formatCurrency(totalLpoValue)}</div>
+            <span class="fin-metric-sub">${rawPos.length} Orders from Clients</span>
+          </div>
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">Realized Invoiced Work</span>
+            <div class="fin-metric-value" style="color:#10b981;">${this.formatCurrency(realizedInvoiced)}</div>
+            <span class="fin-metric-sub">Billed against contract LPOs</span>
+          </div>
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">Unbilled Contract Balance</span>
+            <div class="fin-metric-value" style="color:#f59e0b;">${this.formatCurrency(unbilledBalance)}</div>
+            <span class="fin-metric-sub">Remaining balance to be invoiced</span>
+          </div>
+          <div class="fin-metric-card">
+            <span class="fin-metric-label">Original LPO Documents</span>
+            <div class="fin-metric-value" style="color:#a855f7;">${posWithPdf.length} / ${rawPos.length}</div>
+            <span class="fin-metric-sub">${posWithPdf.length} LPOs with attached PDF</span>
+          </div>
+        </div>
+
+        <!-- Filter / Search Bar -->
+        <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
+          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
+            <input type="text" id="clpo-filter-search" class="fin-filter-input" placeholder="🔍 Search LPO #, client, project, approved by..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
+            <button type="button" id="clpo-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+          </div>
+          <select id="clpo-filter-sort" class="fin-select-pill" title="Order Client LPOs">
+            <option value="serial-desc" ${this.customerPoSort === 'serial-desc' ? 'selected' : ''}>🔢 LPO # (High to Low)</option>
+            <option value="serial-asc" ${this.customerPoSort === 'serial-asc' ? 'selected' : ''}>🔢 LPO # (Low to High)</option>
+            <option value="date-desc" ${this.customerPoSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+            <option value="date-asc" ${this.customerPoSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+            <option value="name-asc" ${this.customerPoSort === 'name-asc' ? 'selected' : ''}>🔤 Client (A to Z)</option>
+            <option value="name-desc" ${this.customerPoSort === 'name-desc' ? 'selected' : ''}>🔤 Client (Z to A)</option>
+            <option value="amount-desc" ${this.customerPoSort === 'amount-desc' ? 'selected' : ''}>💰 LPO Value (Highest First)</option>
+            <option value="amount-asc" ${this.customerPoSort === 'amount-asc' ? 'selected' : ''}>💰 LPO Value (Lowest First)</option>
+          </select>
+          <select id="clpo-filter-attach" class="fin-select-pill" title="Filter by PDF attachment">
+            <option value="all" ${this.customerPoAttachFilter === 'all' ? 'selected' : ''}>📎 All Documents (${rawPos.length})</option>
+            <option value="has_pdf" ${this.customerPoAttachFilter === 'has_pdf' ? 'selected' : ''}>📄 With PDF Attached (${posWithPdf.length})</option>
+            <option value="no_pdf" ${this.customerPoAttachFilter === 'no_pdf' ? 'selected' : ''}>⚠️ Missing PDF (${rawPos.length - posWithPdf.length})</option>
+          </select>
+          <div id="clpo-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
+            Showing <span id="clpo-showing-count">${rawPos.length}</span> of ${rawPos.length} client orders
+          </div>
+        </div>
+
+        <div class="fin-table-responsive">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th id="th-clpo-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by LPO #">
+                  Client LPO # <span id="clpo-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.customerPoSort === 'serial-asc' ? '▲' : (this.customerPoSort === 'serial-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-clpo-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
+                  Date <span id="clpo-sort-icon-date" style="color:#38bdf8; font-size:0.75rem;">${this.customerPoSort === 'date-asc' ? '▲' : (this.customerPoSort === 'date-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-clpo-cust" style="white-space:nowrap; min-width:200px; cursor:pointer; user-select:none;" title="Click to sort by Client">
+                  Client / Customer <span id="clpo-sort-icon-cust" style="color:#38bdf8; font-size:0.75rem;">${this.customerPoSort === 'name-asc' ? '▲' : (this.customerPoSort === 'name-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th style="white-space:nowrap; min-width:180px;">Project</th>
+                <th id="th-clpo-amount" style="text-align:right; white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Amount">
+                  LPO Value <span id="clpo-sort-icon-amount" style="color:#38bdf8; font-size:0.75rem;">${this.customerPoSort === 'amount-asc' ? '▲' : (this.customerPoSort === 'amount-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th style="white-space:nowrap; text-align:center;">Original LPO PDF</th>
+                <th style="white-space:nowrap;">Status</th>
+                <th style="text-align:right; white-space:nowrap;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customer-pos-table-body">
+              ${this.renderCustomerPOTableRows(sortedInitialPos)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const searchInput = document.getElementById('clpo-filter-search');
+    const clearBtn = document.getElementById('clpo-search-clear');
+    const sortSelect = document.getElementById('clpo-filter-sort');
+    const attachSelect = document.getElementById('clpo-filter-attach');
+    const tbody = document.getElementById('customer-pos-table-body');
+    const countSpan = document.getElementById('clpo-showing-count');
+
+    const updateTable = () => {
+      const q = (searchInput.value || '').toLowerCase().trim();
+      const sortVal = sortSelect.value;
+      const attachVal = attachSelect.value;
+      this.customerPoSort = sortVal;
+      this.customerPoAttachFilter = attachVal;
+
+      clearBtn.style.display = q ? 'block' : 'none';
+
+      let filtered = rawPos.filter(po => {
+        if (attachVal === 'has_pdf' && !(po.pdf_url || po.pdf_data)) return false;
+        if (attachVal === 'no_pdf' && !!(po.pdf_url || po.pdf_data)) return false;
+        if (!q) return true;
+        const num = (po.po_no || '').toLowerCase();
+        const client = getCustomerName(po).toLowerCase();
+        const prj = (po.project_name || '').toLowerCase();
+        const appBy = (po.approved_by || '').toLowerCase();
+        const status = (po.status || '').toLowerCase();
+        return num.includes(q) || client.includes(q) || prj.includes(q) || appBy.includes(q) || status.includes(q);
+      });
+
+      const sorted = this.sortRecords(filtered, sortVal, {
+        num: 'po_no',
+        date: 'date',
+        name: 'customer_name',
+        amount: 'total_value'
+      });
+
+      tbody.innerHTML = this.renderCustomerPOTableRows(sorted);
+      if (countSpan) countSpan.textContent = sorted.length;
+    };
+
+    if (searchInput) searchInput.oninput = updateTable;
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        searchInput.value = '';
+        searchInput.focus();
+        updateTable();
+      };
+    }
+    if (sortSelect) sortSelect.onchange = updateTable;
+    if (attachSelect) attachSelect.onchange = updateTable;
+
+    const setupThSort = (thId, sortAsc, sortDesc) => {
+      const th = document.getElementById(thId);
+      if (th) {
+        th.onclick = () => {
+          sortSelect.value = (sortSelect.value === sortDesc) ? sortAsc : sortDesc;
+          updateTable();
+        };
+      }
+    };
+    setupThSort('th-clpo-serial', 'serial-asc', 'serial-desc');
+    setupThSort('th-clpo-date', 'date-asc', 'date-desc');
+    setupThSort('th-clpo-cust', 'name-asc', 'name-desc');
+    setupThSort('th-clpo-amount', 'amount-asc', 'amount-desc');
+  }
+
+  renderCustomerPOTableRows(posList) {
+    if (!posList || posList.length === 0) {
+      return `
+        <tr>
+          <td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+            <div style="font-size:2rem; margin-bottom:0.4rem;">📑</div>
+            <div style="font-size:0.95rem; font-weight:700; color:#cbd5e1;">No Client Purchase Orders Found</div>
+            <div style="font-size:0.78rem; margin-top:0.25rem;">Click "+ Record Client LPO" to record a purchase order received from a client.</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    const getCustomerName = (po) => po.customer_name || po.vendor_name || po.supplier_name || 'Corporate Client';
+
+    return posList.map(po => {
+      const hasPdf = !!(po.pdf_url || po.pdf_data);
+      const isApproved = (po.status || 'approved').toLowerCase() === 'approved';
+      const statusClass = isApproved ? 'fin-badge-paid' : 'fin-badge-pending';
+      const statusLabel = isApproved ? 'Approved' : (po.status ? po.status.toUpperCase() : 'ACTIVE');
+
+      return `
+        <tr>
+          <td style="font-family:monospace; font-weight:700; color:#38bdf8; white-space:nowrap;">
+            <a href="javascript:void(0)" onclick="window.finApp.openRecordClientLPOModal('${po.id}')" style="color:#38bdf8; text-decoration:none;" title="Click to view/edit this Client LPO">
+              ${po.po_no}
+            </a>
+          </td>
+          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.8rem;">
+            ${this.formatDate(po.date || po.po_date)}
+          </td>
+          <td style="font-weight:600; color:#f8fafc;">
+            ${getCustomerName(po)}
+          </td>
+          <td style="color:#94a3b8; font-size:0.8rem; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${po.project_name || ''}">
+            ${po.project_name || '<span style="color:#64748b;">—</span>'}
+          </td>
+          <td class="fin-cell-num" style="font-weight:700; color:#34d399; white-space:nowrap;">
+            ${this.formatCurrency(po.grand_total || po.total_value)}
+          </td>
+          <td style="text-align:center; white-space:nowrap;">
+            ${hasPdf ? `
+              <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.15); border-color:#38bdf8; color:#38bdf8; font-weight:700; font-size:0.75rem; padding:0.28rem 0.65rem;" onclick="window.finApp.openViewLPOModal('${po.id}')" title="View original client LPO PDF">
+                📄 View LPO (PDF)
+              </button>
+            ` : `
+              <button type="button" class="fin-btn-row-action" style="border-color:#64748b; color:#94a3b8; font-size:0.75rem; padding:0.28rem 0.65rem;" onclick="window.finApp.openAttachLPOModal('${po.id}')" title="Attach client LPO PDF">
+                📎 Attach PDF
+              </button>
+            `}
+          </td>
+          <td style="white-space:nowrap;">
+            <span class="fin-badge ${statusClass}">${statusLabel}</span>
+          </td>
+          <td class="fin-cell-actions" style="text-align:right; white-space:nowrap;">
+            <button type="button" class="fin-btn-row-action" onclick="window.finApp.openClientLPOSlipModal('${po.id}')" title="View / Print Summary Slip">Slip</button>
+            <button type="button" class="fin-btn-row-action" onclick="window.finApp.openRecordClientLPOModal('${po.id}')" title="Edit Client LPO">Edit</button>
+            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCustomerPO('${po.id}')" title="Delete Client LPO">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  openViewLPOModal(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) {
+      alert('Client Purchase Order not found.');
+      return;
+    }
+    const src = po.pdf_data || po.pdf_url;
+    if (!src) {
+      this.openAttachLPOModal(poId);
+      return;
+    }
+
+    const isImage = src.startsWith('data:image/') || /\.(png|jpe?g|webp)$/i.test(po.pdf_name || src);
+    const fileName = po.pdf_name || `${po.po_no}_Client_LPO.pdf`;
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-view-lpo" style="z-index:100020;">
+        <div class="fin-modal-dialog" style="max-width:960px; width:95vw; height:90vh; max-height:92vh; display:flex; flex-direction:column; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:12px; overflow:hidden;">
+          <div class="fin-modal-header" style="background:#0b111e; border-bottom:1px solid rgba(255,255,255,0.1); padding:0.85rem 1.25rem; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <span style="font-size:1.4rem;">📄</span>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.05rem; color:#f8fafc;">
+                  Client LPO Document: <span style="color:#38bdf8;">${po.po_no}</span>
+                </h3>
+                <p style="margin:0; font-size:0.75rem; color:#94a3b8;">
+                  Issued by: <strong style="color:#ffffff;">${po.customer_name || po.vendor_name || 'Client'}</strong> &bull; Project: ${po.project_name || 'General Project'} &bull; Value: <strong style="color:#34d399;">${this.formatCurrency(po.grand_total || po.total_value)}</strong>
+                </p>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-size:0.78rem; padding:0.35rem 0.75rem;" onclick="window.finApp.openLPOInNewTab('${po.id}')" title="Open PDF in full browser tab">
+                ↗️ Open Full Window
+              </button>
+              <a href="${src}" download="${fileName}" class="fin-btn-quick" style="border-color:#10b981; color:#10b981; font-size:0.78rem; padding:0.35rem 0.75rem; text-decoration:none;" title="Download PDF document">
+                📥 Download
+              </a>
+              <button type="button" class="fin-btn-quick" style="border-color:#a855f7; color:#c084fc; font-size:0.78rem; padding:0.35rem 0.75rem;" onclick="window.finApp.openAttachLPOModal('${po.id}')" title="Replace PDF attachment">
+                🔄 Replace
+              </button>
+              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-view-lpo')">&times;</button>
+            </div>
+          </div>
+          <div class="fin-modal-body" style="padding:0.75rem; flex:1; background:#1e293b; overflow:hidden; display:flex; justify-content:center; align-items:center;">
+            ${isImage ? `
+              <img src="${src}" alt="Client LPO Document" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; box-shadow:0 4px 20px rgba(0,0,0,0.5);">
+            ` : `
+              <iframe src="${src}#toolbar=1&navpanes=0" style="width:100%; height:100%; border:none; border-radius:6px; background:#ffffff;" title="Client LPO Document Viewer"></iframe>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+  }
+
+  openLPOInNewTab(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po || (!po.pdf_data && !po.pdf_url)) return;
+    const src = po.pdf_data || po.pdf_url;
+    if (src.startsWith('data:')) {
+      const win = window.open();
+      if (win) {
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head><title>Client LPO: ${po.po_no} - ${po.customer_name || 'Client'}</title></head>
+            <body style="margin:0; background:#0f172a;">
+              <iframe src="${src}" style="width:100vw; height:100vh; border:none;"></iframe>
+            </body>
+          </html>
+        `);
+        win.document.close();
+        return;
+      }
+    }
+    window.open(src, '_blank');
+  }
+
+  openAttachLPOModal(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) {
+      alert('Client Purchase Order not found.');
+      return;
+    }
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-attach-lpo" style="z-index:100030;">
+        <div class="fin-modal-dialog" style="max-width:540px; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:12px;">
+          <div class="fin-modal-header" style="background:#0b111e; border-bottom:1px solid rgba(255,255,255,0.1); padding:0.85rem 1.25rem;">
+            <h3 class="fin-modal-title" style="margin:0; font-size:1.05rem; color:#f8fafc;">
+              📎 Attach Client LPO Document: <span style="color:#38bdf8;">${po.po_no}</span>
+            </h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-attach-lpo')">&times;</button>
+          </div>
+          <div class="fin-modal-body" style="padding:1.25rem;">
+            <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.15rem; font-size:0.82rem; color:#cbd5e1;">
+              Attach the actual original LPO (PDF or scanned image) received from <strong style="color:#ffffff;">${po.customer_name || po.vendor_name || 'Client'}</strong>.
+            </div>
+
+            <div class="fin-file-dropzone" id="quick-attach-dropzone" style="border:2px dashed rgba(56,189,248,0.5); border-radius:10px; padding:2rem 1.5rem; text-align:center; background:rgba(15,23,42,0.6); cursor:pointer; transition:all 0.2s;">
+              <input type="file" id="quick-attach-file-input" accept="application/pdf,image/*" style="display:none;">
+              <div id="quick-attach-prompt">
+                <div style="font-size:2.5rem; margin-bottom:0.5rem;">📁</div>
+                <div style="font-weight:700; color:#38bdf8; font-size:1rem;">Click to Select or Drop Client LPO PDF Here</div>
+                <div style="font-size:0.76rem; color:#94a3b8; margin-top:0.35rem;">Supported formats: PDF, PNG, JPG, WEBP (Max 25MB)</div>
+              </div>
+              <div id="quick-attach-preview" style="display:none; flex-direction:column; align-items:center; gap:0.4rem;">
+                <div style="font-size:2.2rem;">📄</div>
+                <div id="quick-attach-filename" style="font-weight:700; color:#34d399; font-size:0.95rem; word-break:break-all;"></div>
+                <div id="quick-attach-filesize" style="font-size:0.75rem; color:#94a3b8;"></div>
+                <button type="button" id="quick-attach-remove-btn" class="fin-btn-row-action" style="color:#ef4444; border-color:#ef4444; margin-top:0.4rem;">✕ Choose Another File</button>
+              </div>
+            </div>
+
+            <input type="hidden" id="quick-attach-pdf-data" value="">
+            <input type="hidden" id="quick-attach-pdf-name" value="">
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.6rem;">
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-attach-lpo')">Cancel</button>
+              <button type="button" id="quick-attach-save-btn" class="fin-btn-quick primary" disabled>💾 Save &amp; Attach Document</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+
+    const dropzone = document.getElementById('quick-attach-dropzone');
+    const fileInput = document.getElementById('quick-attach-file-input');
+    const promptDiv = document.getElementById('quick-attach-prompt');
+    const previewDiv = document.getElementById('quick-attach-preview');
+    const filenameDiv = document.getElementById('quick-attach-filename');
+    const filesizeDiv = document.getElementById('quick-attach-filesize');
+    const removeBtn = document.getElementById('quick-attach-remove-btn');
+    const pdfDataInp = document.getElementById('quick-attach-pdf-data');
+    const pdfNameInp = document.getElementById('quick-attach-pdf-name');
+    const saveBtn = document.getElementById('quick-attach-save-btn');
+
+    const handleFile = (file) => {
+      if (!file) return;
+      if (file.size > 25 * 1024 * 1024) {
+        alert('File size exceeds 25MB limit. Please upload a smaller PDF or compressed file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        pdfDataInp.value = e.target.result;
+        pdfNameInp.value = file.name;
+        filenameDiv.textContent = file.name;
+        filesizeDiv.textContent = `Size: ${(file.size / 1024).toFixed(1)} KB`;
+        promptDiv.style.display = 'none';
+        previewDiv.style.display = 'flex';
+        saveBtn.disabled = false;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    dropzone.onclick = (e) => {
+      if (e.target !== removeBtn) fileInput.click();
+    };
+    fileInput.onchange = () => {
+      if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+    };
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.style.borderColor = '#38bdf8'; };
+    dropzone.ondragleave = () => { dropzone.style.borderColor = 'rgba(56,189,248,0.5)'; };
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = 'rgba(56,189,248,0.5)';
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    };
+
+    if (removeBtn) {
+      removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        fileInput.value = '';
+        pdfDataInp.value = '';
+        pdfNameInp.value = '';
+        previewDiv.style.display = 'none';
+        promptDiv.style.display = 'block';
+        saveBtn.disabled = true;
+      };
+    }
+
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        if (!pdfDataInp.value) return;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = 'Saving Document...';
+
+        po.pdf_data = pdfDataInp.value;
+        po.pdf_name = pdfNameInp.value || `${po.po_no}_Client_LPO.pdf`;
+        po.pdf_url = pdfDataInp.value;
+        po.type = 'customer_po';
+        po.direction = 'inward';
+
+        await this.syncApi('update_po', { po });
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+
+        this.closeModal('modal-attach-lpo');
+        this.showNotification(`✓ Client LPO document "${po.pdf_name}" attached successfully!`, 'success');
+        this.renderActiveTab();
+      };
+    }
+  }
+
+  openRecordClientLPOModal(editPoId = null) {
+    const isEdit = !!editPoId;
+    const po = isEdit ? (this.db?.purchase_orders || []).find(p => p.id === editPoId || p.po_no === editPoId) : null;
+    const customers = (this.db?.customers || []).filter(c => !c.company_id || this.matchesActiveCompany(c.company_id));
+    const projects = (this.db?.projects || []).filter(p => !p.company_id || this.matchesActiveCompany(p.company_id));
+
+    const defaultDate = po ? (po.date || po.po_date || '') : new Date().toISOString().split('T')[0];
+    const defaultDelivery = po ? (po.expected_delivery || defaultDate) : defaultDate;
+    const defaultAmount = po ? (po.grand_total || po.total_value || 0) : 0;
+    const defaultPoNo = po ? po.po_no : '';
+    const defaultNotes = po ? (po.notes || (po.line_items && po.line_items[0]?.name) || '') : '';
+    const hasPdf = !!(po && (po.pdf_data || po.pdf_url));
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-record-client-lpo" style="z-index:100010;">
+        <div class="fin-modal-dialog" style="max-width:740px; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:12px;">
+          <div class="fin-modal-header" style="background:#0b111e; border-bottom:1px solid rgba(255,255,255,0.1); padding:0.9rem 1.35rem;">
+            <h3 class="fin-modal-title" style="margin:0; font-size:1.1rem; color:#f8fafc;">
+              ${isEdit ? '✏️ Edit Client Purchase Order (LPO)' : '📑 Record Client Purchase Order (Inward LPO)'}
+            </h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-record-client-lpo')">&times;</button>
+          </div>
+          <div class="fin-modal-body" style="padding:1.35rem; max-height:80vh; overflow-y:auto;">
+            <form id="record-client-lpo-form">
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client / Customer <span style="color:#ef4444;">*</span></label>
+                  <select id="clpo-cust" class="fin-form-select" required>
+                    <option value="" disabled ${!po ? 'selected' : ''}>Select Client / Debtor (AED)</option>
+                    ${customers.map(c => `<option value="${c.id}" ${po && (po.customer_id === c.id || (po.customer_name && po.customer_name === c.name)) ? 'selected' : ''}>${c.name}</option>`).join('')}
+                    <option value="custom" ${po && !customers.some(c => c.id === po.customer_id) ? 'selected' : ''}>+ Other / Custom Client...</option>
+                  </select>
+                </div>
+                <div class="fin-form-group" id="clpo-custom-name-wrap" style="display:${po && !customers.some(c => c.id === po.customer_id) ? 'block' : 'none'};">
+                  <label class="fin-form-label">Custom Client Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="clpo-custom-name" class="fin-form-input" value="${po ? (po.customer_name || po.vendor_name || '') : ''}" placeholder="e.g. M/S NEW CLIENT LLC">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Client LPO / PO Number <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="clpo-no" class="fin-form-input" value="${defaultPoNo}" placeholder="e.g. PODSUB-2026/0858, LPO/SD/2026/09" required>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Project Association <span style="color:#ef4444;">*</span></label>
+                  <select id="clpo-prj" class="fin-form-select" required>
+                    <option value="" disabled ${!po ? 'selected' : ''}>Select Project</option>
+                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}" ${po && (po.project_id === p.id || po.project_name === p.name) ? 'selected' : ''}>${p.name}</option>`).join('')}
+                    <option value="custom" ${po && !projects.some(p => p.id === po.project_id) ? 'selected' : ''}>+ General / Other Project...</option>
+                  </select>
+                </div>
+                <div class="fin-form-group" id="clpo-custom-prj-wrap" style="display:${po && !projects.some(p => p.id === po.project_id) ? 'block' : 'none'};">
+                  <label class="fin-form-label">Custom Project Name</label>
+                  <input type="text" id="clpo-custom-prj" class="fin-form-input" value="${po ? (po.project_name || '') : ''}" placeholder="e.g. Project # Luxury Villa Renovation">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Total Contract Value (AED) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" id="clpo-amount" class="fin-form-input" step="0.01" value="${defaultAmount}" required style="font-weight:700; color:#34d399;">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">LPO Issue / Receipt Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="clpo-date" class="fin-form-input" value="${defaultDate}" required>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Expected Completion / Delivery</label>
+                  <input type="date" id="clpo-delivery" class="fin-form-input" value="${defaultDelivery}">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Status</label>
+                <select id="clpo-status" class="fin-form-select">
+                  <option value="approved" ${!po || po.status === 'approved' ? 'selected' : ''}>Approved &amp; Active</option>
+                  <option value="in_progress" ${po && po.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                  <option value="invoiced" ${po && po.status === 'invoiced' ? 'selected' : ''}>Fully Invoiced</option>
+                  <option value="partially_invoiced" ${po && po.status === 'partially_invoiced' ? 'selected' : ''}>Partially Invoiced</option>
+                  <option value="draft" ${po && po.status === 'draft' ? 'selected' : ''}>Draft / Under Review</option>
+                </select>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Scope of Work / Material Description</label>
+                <textarea id="clpo-notes" class="fin-form-textarea" rows="2" placeholder="Describe scope of work or supply item specifications...">${defaultNotes}</textarea>
+              </div>
+
+              <!-- PDF Attachment Dropzone -->
+              <div class="fin-form-group" style="margin-top:1.25rem;">
+                <label class="fin-form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>📎 Original Client LPO Document (PDF / Image)</span>
+                  <span style="font-size:0.75rem; color:#38bdf8; font-weight:400;">Can be viewed directly in portal</span>
+                </label>
+                <div class="fin-file-dropzone" id="form-clpo-dropzone" style="border:2px dashed rgba(56,189,248,0.4); border-radius:10px; padding:1.5rem; text-align:center; background:rgba(15,23,42,0.6); cursor:pointer;">
+                  <input type="file" id="form-clpo-file-input" accept="application/pdf,image/*" style="display:none;">
+                  <div id="form-clpo-prompt" style="display:${hasPdf ? 'none' : 'block'};">
+                    <div style="font-size:2rem; margin-bottom:0.35rem;">📄</div>
+                    <div style="font-weight:700; color:#38bdf8; font-size:0.95rem;">Click to Select or Drag &amp; Drop Client LPO PDF</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.25rem;">Supported formats: PDF, PNG, JPG, WEBP (Max 25MB)</div>
+                  </div>
+                  <div id="form-clpo-preview" style="display:${hasPdf ? 'flex' : 'none'}; flex-direction:column; align-items:center; gap:0.4rem;">
+                    <div style="font-size:2rem;">📄</div>
+                    <div id="form-clpo-filename" style="font-weight:700; color:#34d399; font-size:0.95rem; word-break:break-all;">
+                      ${po?.pdf_name || (hasPdf ? `${po.po_no}_Client_LPO.pdf` : '')}
+                    </div>
+                    <div id="form-clpo-filesize" style="font-size:0.75rem; color:#94a3b8;">
+                      ${hasPdf ? 'Attached Document Verified' : ''}
+                    </div>
+                    <div style="display:flex; gap:0.5rem; margin-top:0.35rem;">
+                      <button type="button" id="form-clpo-replace-btn" class="fin-btn-row-action" style="color:#38bdf8; border-color:#38bdf8;">🔄 Change File</button>
+                      <button type="button" id="form-clpo-remove-btn" class="fin-btn-row-action" style="color:#ef4444; border-color:#ef4444;">✕ Remove</button>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" id="form-clpo-pdf-data" value="${po?.pdf_data || po?.pdf_url || ''}">
+                <input type="hidden" id="form-clpo-pdf-name" value="${po?.pdf_name || ''}">
+              </div>
+
+              <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.6rem;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-record-client-lpo')">Cancel</button>
+                <button type="submit" id="clpo-submit-btn" class="fin-btn-quick primary">
+                  ${isEdit ? '💾 Save &amp; Update Client LPO' : '+ Record Client LPO'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+
+    const custSel = document.getElementById('clpo-cust');
+    const custCustomWrap = document.getElementById('clpo-custom-name-wrap');
+    if (custSel && custCustomWrap) {
+      custSel.onchange = () => {
+        custCustomWrap.style.display = (custSel.value === 'custom') ? 'block' : 'none';
+      };
+    }
+
+    const prjSel = document.getElementById('clpo-prj');
+    const prjCustomWrap = document.getElementById('clpo-custom-prj-wrap');
+    if (prjSel && prjCustomWrap) {
+      prjSel.onchange = () => {
+        prjCustomWrap.style.display = (prjSel.value === 'custom') ? 'block' : 'none';
+      };
+    }
+
+    const dropzone = document.getElementById('form-clpo-dropzone');
+    const fileInput = document.getElementById('form-clpo-file-input');
+    const promptDiv = document.getElementById('form-clpo-prompt');
+    const previewDiv = document.getElementById('form-clpo-preview');
+    const filenameDiv = document.getElementById('form-clpo-filename');
+    const filesizeDiv = document.getElementById('form-clpo-filesize');
+    const replaceBtn = document.getElementById('form-clpo-replace-btn');
+    const removeBtn = document.getElementById('form-clpo-remove-btn');
+    const pdfDataInp = document.getElementById('form-clpo-pdf-data');
+    const pdfNameInp = document.getElementById('form-clpo-pdf-name');
+
+    const handleFormFile = (file) => {
+      if (!file) return;
+      if (file.size > 25 * 1024 * 1024) {
+        alert('File size exceeds 25MB limit. Please upload a smaller PDF or compressed file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        pdfDataInp.value = e.target.result;
+        pdfNameInp.value = file.name;
+        filenameDiv.textContent = file.name;
+        filesizeDiv.textContent = `Size: ${(file.size / 1024).toFixed(1)} KB`;
+        promptDiv.style.display = 'none';
+        previewDiv.style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    };
+
+    dropzone.onclick = (e) => {
+      if (e.target !== removeBtn && e.target !== replaceBtn) fileInput.click();
+    };
+    if (replaceBtn) replaceBtn.onclick = (e) => { e.stopPropagation(); fileInput.click(); };
+    fileInput.onchange = () => {
+      if (fileInput.files && fileInput.files[0]) handleFormFile(fileInput.files[0]);
+    };
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.style.borderColor = '#38bdf8'; };
+    dropzone.ondragleave = () => { dropzone.style.borderColor = 'rgba(56,189,248,0.4)'; };
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = 'rgba(56,189,248,0.4)';
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFormFile(e.dataTransfer.files[0]);
+    };
+
+    if (removeBtn) {
+      removeBtn.onclick = (e) => {
+        e.stopPropagation();
+        fileInput.value = '';
+        pdfDataInp.value = '';
+        pdfNameInp.value = '';
+        previewDiv.style.display = 'none';
+        promptDiv.style.display = 'block';
+      };
+    }
+
+    document.getElementById('record-client-lpo-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('clpo-submit-btn');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = 'Saving Client LPO...'; }
+
+      try {
+        const poNoVal = document.getElementById('clpo-no').value.trim();
+        let custIdVal = custSel.value;
+        let custNameVal = '';
+        if (custIdVal === 'custom') {
+          custNameVal = document.getElementById('clpo-custom-name').value.trim() || 'Client';
+          custIdVal = null;
+        } else {
+          const matchedCust = customers.find(c => c.id === custIdVal);
+          custNameVal = matchedCust ? matchedCust.name : 'Client';
+        }
+
+        let prjIdVal = prjSel.value;
+        let prjNameVal = '';
+        if (prjIdVal === 'custom') {
+          prjNameVal = document.getElementById('clpo-custom-prj').value.trim() || 'General Project';
+          prjIdVal = null;
+        } else {
+          const matchedPrj = projects.find(p => p.id === prjIdVal);
+          prjNameVal = matchedPrj ? matchedPrj.name : 'General Project';
+        }
+
+        const amountVal = Number(document.getElementById('clpo-amount').value) || 0;
+        const dateVal = document.getElementById('clpo-date').value;
+        const deliveryVal = document.getElementById('clpo-delivery').value || dateVal;
+        const statusVal = document.getElementById('clpo-status').value;
+        const notesVal = document.getElementById('clpo-notes').value.trim();
+
+        const poRecord = {
+          id: po ? po.id : ('po-cust-' + Date.now()),
+          po_no: poNoVal,
+          company_id: this.activeCompanyId,
+          type: 'customer_po',
+          po_type: 'customer_lpo',
+          direction: 'inward',
+          customer_id: custIdVal,
+          customer_name: custNameVal,
+          supplier_name: 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
+          supplier_trn: '100234567800003',
+          project_id: prjIdVal,
+          project_name: prjNameVal,
+          date: dateVal,
+          po_date: dateVal,
+          expected_delivery: deliveryVal,
+          subtotal: amountVal,
+          total_value: amountVal,
+          grand_total: amountVal,
+          currency: 'AED',
+          currency_symbol: 'AED ',
+          status: statusVal,
+          approved_by: this.currentUser?.name || 'Arshad Alam Shaikh',
+          notes: notesVal,
+          pdf_data: pdfDataInp.value || (po?.pdf_data || ''),
+          pdf_name: pdfNameInp.value || (po?.pdf_name || ''),
+          pdf_url: pdfDataInp.value || (po?.pdf_url || ''),
+          line_items: (po?.line_items && po.line_items.length) ? po.line_items : [
+            {
+              name: notesVal || `Scope of Work as per Client LPO ${poNoVal}`,
+              qty: 1,
+              uom: 'LSUM',
+              unit_price: amountVal,
+              taxable_amount: amountVal,
+              vat_rate: 5,
+              total_amount: amountVal
+            }
+          ]
+        };
+
+        if (!this.db.purchase_orders) this.db.purchase_orders = [];
+        const existingIdx = this.db.purchase_orders.findIndex(p => p.id === poRecord.id || p.po_no === poRecord.po_no);
+        if (existingIdx >= 0) {
+          this.db.purchase_orders[existingIdx] = poRecord;
+        } else {
+          this.db.purchase_orders.unshift(poRecord);
+        }
+
+        await this.syncApi(isEdit ? 'update_po' : 'create_po', { po: poRecord });
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+
+        this.closeModal('modal-record-client-lpo');
+        this.showNotification(`Client Purchase Order ${poRecord.po_no} saved successfully!`, 'success');
+        this.switchTab('customer_pos');
+      } catch (err) {
+        console.error('Error saving client LPO:', err);
+        alert('Error saving client LPO: ' + (err.message || 'Please verify form fields.'));
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = isEdit ? '💾 Save &amp; Update Client LPO' : '+ Record Client LPO'; }
+      }
+    };
+  }
+
+  openClientLPOSlipModal(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) {
+      alert('Client LPO not found.');
+      return;
+    }
+
+    const hasPdf = !!(po.pdf_data || po.pdf_url);
+    const getCustomerName = (p) => p.customer_name || p.vendor_name || p.supplier_name || 'Client';
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-client-lpo-slip" style="z-index:100010;">
+        <div class="fin-modal-dialog" style="max-width:700px; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:12px;">
+          <div class="fin-modal-header" style="background:#0b111e; border-bottom:1px solid rgba(255,255,255,0.1); padding:0.85rem 1.25rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <span style="font-size:1.3rem;">📑</span>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.05rem; color:#f8fafc;">
+                  Client LPO Summary: <span style="color:#38bdf8;">${po.po_no}</span>
+                </h3>
+                <p style="margin:0; font-size:0.75rem; color:#94a3b8;">Inward Purchase Order Record</p>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              ${hasPdf ? `
+                <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openViewLPOModal('${po.id}')">
+                  📄 View Original PDF
+                </button>
+              ` : `
+                <button type="button" class="fin-btn-quick" style="border-color:#64748b; color:#94a3b8;" onclick="window.finApp.openAttachLPOModal('${po.id}')">
+                  📎 Attach PDF
+                </button>
+              `}
+              <button type="button" class="fin-btn-quick primary" onclick="window.print()">
+                🖨️ Print Slip
+              </button>
+              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-client-lpo-slip')">&times;</button>
+            </div>
+          </div>
+          <div class="fin-modal-body" style="padding:1.5rem; background:#ffffff; color:#111827; border-radius:0 0 12px 12px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #111827; padding-bottom:1rem; margin-bottom:1.25rem;">
+              <div>
+                <h2 style="margin:0; font-size:1.35rem; color:#111827; font-weight:800;">RAYAN ENGINEERING &amp; CONTRACTING LLC SPC</h2>
+                <div style="font-size:0.82rem; color:#475569; margin-top:0.2rem;">Office 09, Plot 42, Mussafah M-40, Abu Dhabi, UAE &bull; TRN: 100234567800003</div>
+                <div style="font-size:0.88rem; color:#0284c7; font-weight:700; margin-top:0.4rem;">INWARD CLIENT PURCHASE ORDER SUMMARY SLIP</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:1.15rem; font-weight:800; color:#111827; font-family:monospace;">${po.po_no}</div>
+                <div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">Date: <strong>${this.formatDate(po.date || po.po_date)}</strong></div>
+                <span class="fin-badge fin-badge-paid" style="margin-top:0.35rem;">${(po.status || 'APPROVED').toUpperCase()}</span>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem;">
+              <div>
+                <div style="font-size:0.75rem; text-transform:uppercase; color:#64748b; font-weight:700;">Issuing Client / Customer</div>
+                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">${getCustomerName(po)}</div>
+                <div style="font-size:0.8rem; color:#475569; margin-top:0.2rem;">Project: <strong>${po.project_name || 'General Contracting Work'}</strong></div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem; text-transform:uppercase; color:#64748b; font-weight:700;">Contractual Scope &amp; Value</div>
+                <div style="font-size:1.2rem; font-weight:800; color:#059669; margin-top:0.25rem;">${this.formatCurrency(po.grand_total || po.total_value)}</div>
+                <div style="font-size:0.8rem; color:#475569; margin-top:0.2rem;">Delivery: <strong>${this.formatDate(po.expected_delivery || po.date)}</strong></div>
+              </div>
+            </div>
+
+            ${po.notes ? `
+              <div style="margin-bottom:1.25rem; padding:0.75rem; background:#f1f5f9; border-radius:6px; font-size:0.85rem; color:#334155;">
+                <strong style="color:#0f172a;">Scope Description / Specifications:</strong> ${po.notes}
+              </div>
+            ` : ''}
+
+            <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#64748b;">
+              <div>Recorded By: <strong>${po.approved_by || 'Corporate Administration'}</strong></div>
+              <div>Original Document: <strong>${hasPdf ? (po.pdf_name || 'PDF Verified') : 'No PDF Attached'}</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+  }
+
+  async deleteCustomerPO(poId) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po) return;
+    if (!confirm(`Are you sure you want to delete Client Purchase Order "${po.po_no}"?`)) return;
+
+    if (this.db?.purchase_orders) {
+      this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== poId && p.po_no !== poId);
+    }
+    await this.syncApi('delete_po', { po_id: poId, id: poId });
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+    this.showNotification(`Client LPO ${po.po_no} deleted successfully.`, 'success');
+    this.renderActiveTab();
+  }
+
+  exportCustomerPOsCSV() {
+    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type));
+    if (!rawPos.length) {
+      alert('No Client Purchase Orders to export.');
+      return;
+    }
+
+    const headers = ['LPO #', 'Date', 'Customer/Client', 'Project', 'Amount (AED)', 'Status', 'Has Attached PDF', 'Attached File Name'];
+    const rows = rawPos.map(p => [
+      `"${p.po_no || ''}"`,
+      `"${p.date || p.po_date || ''}"`,
+      `"${(p.customer_name || p.vendor_name || '').replace(/"/g, '""')}"`,
+      `"${(p.project_name || '').replace(/"/g, '""')}"`,
+      (Number(p.grand_total || p.total_value) || 0).toFixed(2),
+      `"${p.status || 'approved'}"`,
+      (p.pdf_url || p.pdf_data) ? 'YES' : 'NO',
+      `"${(p.pdf_name || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Rayan_Group_Client_LPOs_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+    renderPOTab(root) {
+    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && p.type === 'vendor_po');
     this.poSort = this.poSort || 'serial-desc';
 
     const sortedInitialPos = this.sortRecords(rawPos, this.poSort, {
@@ -21400,6 +22360,8 @@ class FinanceApp {
           id: 'po-' + Date.now(),
           po_no: poNo,
           company_id: this.activeCompanyId,
+          type: 'vendor_po',
+          direction: 'outward',
           currency: isIndia ? 'INR' : 'AED',
           currency_symbol: currSym,
           vendor_id: vend ? vend.id : null,
