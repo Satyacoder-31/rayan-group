@@ -6301,22 +6301,14 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($inv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
-            // Automatically purge any rows in finance_invoices that no longer exist in $data['invoices']
-            if (!empty($validInvNos)) {
-                $inClause = implode(',', array_fill(0, count($validInvNos), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_invoices WHERE invoice_no NOT IN ($inClause)");
-                $stmtClean->execute($validInvNos);
-            }
         }
 
         // 2. Customers
         if (!empty($data['customers']) && is_array($data['customers'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_customers (id, code, name, contact_person, email, phone, trn, gstin, credit_limit, data_json, updated_at) VALUES (:id, :code, :name, :contact_person, :email, :phone, :trn, :gstin, :credit_limit, :data_json, NOW())");
-            $validCustIds = [];
             foreach ($data['customers'] as $c) {
                 if (empty($c['name'])) continue;
                 $cid = $c['id'] ?? ('cust-' . rand(1000, 9999));
-                $validCustIds[] = $cid;
                 $stmt->execute([
                     ':id' => $cid,
                     ':code' => $c['code'] ?? '',
@@ -6330,20 +6322,13 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($c, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
-            if (!empty($validCustIds)) {
-                $inClause = implode(',', array_fill(0, count($validCustIds), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_customers WHERE id NOT IN ($inClause)");
-                $stmtClean->execute($validCustIds);
-            }
         }
 
         // 3. Customer Receipts
         if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_receipts (id, receipt_no, customer_id, customer_name, receipt_date, amount_received, currency, payment_mode, reference_no, data_json, updated_at) VALUES (:id, :receipt_no, :customer_id, :customer_name, :receipt_date, :amount_received, :currency, :payment_mode, :reference_no, :data_json, NOW())");
-            $validRcpNos = [];
             foreach ($data['customer_receipts'] as $r) {
                 if (empty($r['receipt_no'])) continue;
-                $validRcpNos[] = $r['receipt_no'];
                 $stmt->execute([
                     ':id' => $r['id'] ?? ('rec-' . $r['receipt_no']),
                     ':receipt_no' => $r['receipt_no'],
@@ -6357,21 +6342,14 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($r, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
-            if (!empty($validRcpNos)) {
-                $inClause = implode(',', array_fill(0, count($validRcpNos), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_receipts WHERE receipt_no NOT IN ($inClause)");
-                $stmtClean->execute($validRcpNos);
-            }
         }
 
         // 4. Purchase Bills
         if (!empty($data['purchase_bills']) && is_array($data['purchase_bills'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_id, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bill_no, :vendor_invoice_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_id, :bill_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :approval_status, :data_json, NOW())");
-            $validPbIds = [];
             foreach ($data['purchase_bills'] as $b) {
                 if (empty($b['bill_no'])) continue;
                 $pbid = $b['id'] ?? ('bill-' . $b['bill_no']);
-                $validPbIds[] = $pbid;
                 $stmt->execute([
                     ':id' => $pbid,
                     ':bill_no' => $b['bill_no'],
@@ -6393,21 +6371,14 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($b, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
-            if (!empty($validPbIds)) {
-                $inClause = implode(',', array_fill(0, count($validPbIds), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_purchase_bills WHERE id NOT IN ($inClause)");
-                $stmtClean->execute($validPbIds);
-            }
         }
 
         // 5. Vendor Payments
         if (isset($data['vendor_payments']) && is_array($data['vendor_payments'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_vendor_payments (id, voucher_no, company_id, vendor_id, vendor_name, payment_date, payment_mode, reference_no, amount_paid, currency, data_json, updated_at) VALUES (:id, :voucher_no, :company_id, :vendor_id, :vendor_name, :payment_date, :payment_mode, :reference_no, :amount_paid, :currency, :data_json, NOW())");
-            $validVpIds = [];
             foreach ($data['vendor_payments'] as $vp) {
                 if (empty($vp['voucher_no'])) continue;
                 $vpid = $vp['id'] ?? ('pay-' . $vp['voucher_no']);
-                $validVpIds[] = $vpid;
                 $stmt->execute([
                     ':id' => $vpid,
                     ':voucher_no' => $vp['voucher_no'],
@@ -6422,23 +6393,14 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($vp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
-            if (!empty($validVpIds)) {
-                $inClause = implode(',', array_fill(0, count($validVpIds), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_vendor_payments WHERE id NOT IN ($inClause)");
-                $stmtClean->execute($validVpIds);
-            } else {
-                $pdo->exec("DELETE FROM finance_vendor_payments");
-            }
         }
 
         // 6. Vendors
         if (!empty($data['vendors']) && is_array($data['vendors'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_vendors (id, code, company_id, name, country, trn, gstin, status, data_json, updated_at) VALUES (:id, :code, :company_id, :name, :country, :trn, :gstin, :status, :data_json, NOW())");
-            $validVendIds = [];
             foreach ($data['vendors'] as $v) {
                 if (empty($v['name'])) continue;
                 $vid = $v['id'] ?? ('vend-' . rand(1000, 9999));
-                $validVendIds[] = $vid;
                 $stmt->execute([
                     ':id' => $vid,
                     ':code' => $v['code'] ?? '',
@@ -6450,11 +6412,6 @@ function syncToRelationalTables($pdo, &$data) {
                     ':status' => $v['status'] ?? 'active',
                     ':data_json' => json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
-            }
-            if (!empty($validVendIds)) {
-                $inClause = implode(',', array_fill(0, count($validVendIds), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_vendors WHERE id NOT IN ($inClause)");
-                $stmtClean->execute($validVendIds);
             }
         }
 
@@ -6552,22 +6509,15 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($po, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
-            if (!empty($validPoIds)) {
-                $inClause = implode(',', array_fill(0, count($validPoIds), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_purchase_orders WHERE id NOT IN ($inClause)");
-                $stmtClean->execute($validPoIds);
-            }
         }
 
         // 11. Credit Notes
         if (!empty($data['credit_notes']) && is_array($data['credit_notes'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_credit_notes (id, credit_note_no, company_id, invoice_id, invoice_no, customer_id, customer_name, total_credit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :credit_note_no, :company_id, :invoice_id, :invoice_no, :customer_id, :customer_name, :total_credit_amount, :currency, :reason, :status, :data_json, NOW())");
-            $validCnIds = [];
             foreach ($data['credit_notes'] as $cn) {
                 $no = $cn['credit_note_no'] ?? $cn['id'] ?? '';
                 if (empty($no)) continue;
                 $cid = $cn['id'] ?? ('cn-' . $no);
-                $validCnIds[] = $cid;
                 $stmt->execute([
                     ':id' => $cid,
                     ':credit_note_no' => $no,
@@ -6583,22 +6533,15 @@ function syncToRelationalTables($pdo, &$data) {
                     ':data_json' => json_encode($cn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
-            if (!empty($validCnIds)) {
-                $inClause = implode(',', array_fill(0, count($validCnIds), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_credit_notes WHERE id NOT IN ($inClause)");
-                $stmtClean->execute($validCnIds);
-            }
         }
 
         // 12. Debit Notes
         if (!empty($data['debit_notes']) && is_array($data['debit_notes'])) {
             $stmt = $pdo->prepare("REPLACE INTO finance_debit_notes (id, debit_note_no, company_id, bill_no, vendor_name, note_date, total_debit_amount, currency, reason, status, data_json, updated_at) VALUES (:id, :debit_note_no, :company_id, :bill_no, :vendor_name, :note_date, :total_debit_amount, :currency, :reason, :status, :data_json, NOW())");
-            $validDnIds = [];
             foreach ($data['debit_notes'] as $dn) {
                 $no = $dn['debit_note_no'] ?? $dn['id'] ?? '';
                 if (empty($no)) continue;
                 $did = $dn['id'] ?? ('dn-' . $no);
-                $validDnIds[] = $did;
                 $stmt->execute([
                     ':id' => $did,
                     ':debit_note_no' => $no,
@@ -6612,11 +6555,6 @@ function syncToRelationalTables($pdo, &$data) {
                     ':status' => $dn['status'] ?? 'issued',
                     ':data_json' => json_encode($dn, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
-            }
-            if (!empty($validDnIds)) {
-                $inClause = implode(',', array_fill(0, count($validDnIds), '?'));
-                $stmtClean = $pdo->prepare("DELETE FROM finance_debit_notes WHERE id NOT IN ($inClause)");
-                $stmtClean->execute($validDnIds);
             }
         }
 

@@ -12,9 +12,23 @@ const SYNC_URLS = [
 const WEBHOOK_URL = 'https://webhooks.hostinger.com/deploy/8b37bfc2d831afd52165c2a8f6fe1551';
 
 async function deploy() {
-  console.log('🔄 [0/6] Syncing database files & cache version...');
+  console.log('🔄 [0/6] Pulling live database from Hostinger & syncing cache version...');
   try {
     const dataSrc = path.resolve('data/finance-data.json');
+    // 1. Pull authoritative live database from Hostinger MySQL so no user data is ever lost
+    try {
+      const liveRes = await fetch('https://rayan-group.com/api/finance.php');
+      if (liveRes.ok) {
+        const liveJson = await liveRes.json();
+        if (liveJson.data && liveJson.data.invoices && liveJson.data.invoices.length > 0) {
+          fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');
+          console.log(`✓ Preserved live database snapshot from production (${liveJson.data.invoices.length} invoices, ${liveJson.data.customer_receipts?.length || 0} receipts)`);
+        }
+      }
+    } catch (pullErr) {
+      console.warn('Could not pull live DB from server, using local snapshot:', pullErr.message);
+    }
+
     if (fs.existsSync(dataSrc)) {
       const content = fs.readFileSync(dataSrc, 'utf8');
       const pubPath = path.resolve('public/data/finance-data.json');
@@ -116,33 +130,17 @@ async function deploy() {
     console.error('All sync endpoints failed.');
   }
 
-  console.log('\n🗄️ [5/6] Synchronizing full database to Hostinger MySQL...');
+  console.log('\n🗄️ [5/6] Verifying database connectivity & integrity...');
   try {
-    const dbPath = path.resolve('data/finance-data.json');
-    if (fs.existsSync(dbPath)) {
-      const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-      if (Array.isArray(db.audit_logs) && db.audit_logs.length > 50) {
-        db.audit_logs = db.audit_logs.slice(-50);
-      }
-      const dbRes = await fetch('https://rayan-group.com/api/finance.php?action=sync_full', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_db: db,
-          user_name: 'Arshad Alam Shaikh',
-          user_role: 'super_admin',
-          user_email: 'superadmin@rayangroup.com'
-        })
-      });
-      if (dbRes.ok) {
-        const dbJson = await dbRes.json();
-        console.log(`Database Sync: SUCCESS ✅ (storage: ${dbJson.storage})`);
-      } else {
-        console.warn(`Database Sync returned HTTP ${dbRes.status}`);
-      }
+    const healthRes = await fetch('https://rayan-group.com/api/finance.php');
+    if (healthRes.ok) {
+      const healthJson = await healthRes.json();
+      console.log(`Database Health: ONLINE ✅ (storage: ${healthJson.storage}, invoices: ${healthJson.data?.invoices?.length || 0})`);
+    } else {
+      console.warn(`Database Health Check returned HTTP ${healthRes.status}`);
     }
   } catch (err) {
-    console.warn('Database Sync warning:', err.message);
+    console.warn('Database health check warning:', err.message);
   }
 
   console.log('\n🧹 [6/6] Purging Hostinger CDN cache...');
