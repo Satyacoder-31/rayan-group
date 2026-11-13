@@ -2009,7 +2009,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v112';
+    const CURRENT_DB_VERSION = 'v2026_clean_v113';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5926,6 +5926,8 @@ class FinanceApp {
   }
 
   renderInvoicesTab(root) {
+    root = root || document.getElementById('fin-tab-content-root') || document.querySelector('.fin-main-content');
+    if (!root) return;
     this.normalizeAllBalances();
     const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
     const currentIsUae = isUaeEntity(this.activeCompanyId);
@@ -10440,12 +10442,12 @@ class FinanceApp {
 
   setVatPeriod(period) {
     this._vatPeriod = period;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   setCtPeriod(period) {
     this._ctPeriod = period;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   computeVatLedger(period = this._vatPeriod || '3_months') {
@@ -10715,10 +10717,11 @@ class FinanceApp {
 
   setVatSubTab(tab) {
     this._vatSubTab = tab;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   renderVatManagementTab(root) {
+    root = root || document.getElementById('fin-tab-content-root') || document.querySelector('.fin-main-content');
     if (!root) return;
     const ledger = this.computeVatLedger();
     const t = ledger.totals;
@@ -10862,7 +10865,7 @@ class FinanceApp {
           
           <div style="margin-left:auto; position:relative; min-width:240px;">
             <input type="text" id="vat-search-inp" class="fin-filter-input" placeholder="🔍 Search records..." value="${this._vatSearch || ''}" style="width:100%; padding:0.4rem 1.8rem 0.4rem 0.75rem; font-size:0.8rem; box-sizing:border-box;">
-            ${search ? `<button type="button" onclick="window.finApp._vatSearch=''; window.finApp.renderVatManagementTab(document.getElementById('fin-content-pane'));" style="position:absolute; right:0.5rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer;">✕</button>` : ''}
+            ${search ? `<button type="button" onclick="window.finApp._vatSearch=''; window.finApp.renderVatManagementTab();" style="position:absolute; right:0.5rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer;">✕</button>` : ''}
           </div>
         </div>
 
@@ -11246,111 +11249,122 @@ class FinanceApp {
   printVatReturn() {
     const ledger = this.computeVatLedger();
     const t = ledger.totals;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Pop-up blocked. Please allow pop-ups to print the Form 201 VAT Statement.');
-      return;
-    }
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Form 201 - UAE VAT Return Statement - Rayan Group</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 40px; color: #1e293b; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px; }
-          .title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; }
-          .sub { font-size: 13px; color: #64748b; margin-top: 5px; }
-          .box-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          .box-table th, .box-table td { border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 13px; }
-          .box-table th { background: #f8fafc; font-weight: 700; text-align: left; }
-          .highlight-row { background: #f1f5f9; font-weight: 700; }
-          .payable-box { background: #faf5ff; border: 2px solid #a855f7 !important; font-size: 15px !important; font-weight: 800; color: #7e22ce; }
-          .footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-          @media print { body { margin: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div>
-            <h1 class="title">UNITED ARAB EMIRATES</h1>
-            <div style="font-size: 16px; font-weight: 700; color: #2563eb; margin-top: 4px;">FEDERAL TAX AUTHORITY (FTA) - FORM VAT 201</div>
-            <div class="sub">Cash-Basis Realization Tax Return Statement &bull; <strong>${ledger.range.label}</strong></div>
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🏛️</span>
+              <span>Federal Tax Authority (FTA) Form 201 — ${ledger.range.shortLabel}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.printVatReturn()">Form 201 Return</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.printCorporateTaxAssessment()">CT Assessment</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA</button>
+            </div>
           </div>
-          <div style="text-align: right; font-size: 12px; line-height: 1.6;">
-            <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
-            TRN: <strong>100234567800003</strong><br>
-            Dalma Mall Branch, Abu Dhabi, UAE<br>
-            Period: <strong>${ledger.range.shortLabel}</strong><br>
-            ${ledger.range.id === '3_months' ? '<span style="color:#059669; font-weight:700;">✓ Prior taxes settled (< 01 Aug 2026): ' + this.formatCurrency(ledger.priorSettledNetVat) + '</span><br>' : ''}
-            Generated: ${new Date().toLocaleDateString('en-GB')}
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.exportVatAuditCSV()">
+              📥 Export CSV
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
           </div>
         </div>
 
-        <table class="box-table">
-          <thead>
-            <tr>
-              <th style="width: 15%;">Box #</th>
-              <th>Statutory Description</th>
-              <th style="text-align: right; width: 22%;">Taxable Amount (AED)</th>
-              <th style="text-align: right; width: 22%;">Tax Amount (AED)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Box 1</strong></td>
-              <td>Standard rated supplies (Actual Realized Collections from Payment-In: ${ledger.receipts.length} vouchers)</td>
-              <td style="text-align: right;">${this.formatCurrency(t.recTaxable)}</td>
-              <td style="text-align: right; font-weight: 700; color: #16a34a;">${this.formatCurrency(t.recVat)}</td>
-            </tr>
-            <tr>
-              <td><strong>Box 2</strong></td>
-              <td>Tax adjustments from Credit Notes (Managed Separately: ${ledger.creditNotes.length} notes)</td>
-              <td style="text-align: right;">- ${this.formatCurrency(t.cnTaxable)}</td>
-              <td style="text-align: right; font-weight: 700; color: #d97706;">- ${this.formatCurrency(t.cnVat)}</td>
-            </tr>
-            <tr class="highlight-row">
-              <td colspan="2"><strong>Net Realized Output Tax Due for Period</strong></td>
-              <td style="text-align: right;">${this.formatCurrency(t.netOutputTaxable)}</td>
-              <td style="text-align: right; color: #2563eb;">${this.formatCurrency(t.netOutputVat)}</td>
-            </tr>
-            <tr>
-              <td><strong>Box 9</strong></td>
-              <td>Standard rated purchases &amp; expenses (Recoverable Input Tax from Payment-Out: ${ledger.payments.length} disbursements)</td>
-              <td style="text-align: right;">- ${this.formatCurrency(t.pmtTaxable)}</td>
-              <td style="text-align: right; font-weight: 700; color: #0284c7;">- ${this.formatCurrency(t.pmtVat)}</td>
-            </tr>
-            <tr class="payable-box">
-              <td colspan="2"><strong>BOX 12: TOTAL NET VAT PAYABLE TO FEDERAL TAX AUTHORITY</strong></td>
-              <td style="text-align: right;">${this.formatCurrency(t.netOutputTaxable)}</td>
-              <td style="text-align: right; font-size: 16px;">${this.formatCurrency(t.netVatPayable)}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#1e293b; padding:10mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; box-sizing:border-box; width:100%; max-width:880px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative;">
+            
+            ${this.getRayanWatermark()}
 
-        <div style="margin-top: 30px; font-size: 12px; color: #475569; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 6px;">
-          <strong>Taxpayer Declaration &amp; Settlement Statement:</strong> We hereby declare that the figures reported in this statement accurately represent all consideration received, sales returns credited, and eligible input taxes disbursed during the designated filing period (${ledger.range.label}), strictly adhering to UAE Federal Decree-Law No. (8) of 2017 on Value Added Tax. All taxes prior to 01 August 2026 have been settled and paid.
-        </div>
+            <div style="position:relative; z-index:1;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0f172a; padding-bottom:16px; margin-bottom:20px;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="Rayan Group" style="height:40px; width:auto; display:block;" onerror="this.style.display='none'">
+                  </div>
+                  <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase; letter-spacing:0.02em;">UNITED ARAB EMIRATES</h1>
+                  <div style="font-size:15px; font-weight:700; color:#2563eb; margin-top:3px;">FEDERAL TAX AUTHORITY (FTA) - FORM VAT 201</div>
+                  <div style="font-size:12px; color:#64748b; margin-top:4px;">Cash-Basis Realization Tax Return Statement &bull; <strong>${ledger.range.label}</strong></div>
+                </div>
+                <div style="text-align:right; font-size:12px; line-height:1.6; color:#334155;">
+                  <strong style="color:#0f172a; font-size:13px;">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
+                  TRN: <strong style="color:#0f172a;">100234567800003</strong><br>
+                  Dalma Mall Branch, Abu Dhabi, UAE<br>
+                  Filing Period: <strong style="color:#2563eb;">${ledger.range.shortLabel}</strong><br>
+                  ${ledger.range.id === '3_months' ? '<span style="color:#059669; font-weight:700;">✓ Prior taxes settled (&lt; 01 Aug 2026): ' + this.formatCurrency(ledger.priorSettledNetVat) + '</span><br>' : ''}
+                  Generated: <strong>${new Date().toLocaleDateString('en-GB')}</strong>
+                </div>
+              </div>
 
-        <div class="footer">
-          <div>
-            <strong>Authorized Signatory:</strong> Arshad Alam Shaikh<br>
-            Managing Director / Designated Tax Representative
-          </div>
-          <div style="text-align: right;">
-            Official Digital Stamp &amp; Signature Verification<br>
-            RAYAN GROUP CORPORATE TREASURY
+              <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; font-weight:700; text-align:left; width:15%;">Box #</th>
+                    <th style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; font-weight:700; text-align:left;">Statutory Description</th>
+                    <th style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; font-weight:700; text-align:right; width:22%;">Taxable Amount (AED)</th>
+                    <th style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; font-weight:700; text-align:right; width:22%;">Tax Amount (AED)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Box 1</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Standard rated supplies (Actual Realized Collections from Payment-In: ${ledger.receipts.length} vouchers)</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right;">${this.formatCurrency(t.recTaxable)}</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; font-weight:700; color:#16a34a;">${this.formatCurrency(t.recVat)}</td>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Box 2</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Tax adjustments from Credit Notes (Managed Separately: ${ledger.creditNotes.length} notes)</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right;">- ${this.formatCurrency(t.cnTaxable)}</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; font-weight:700; color:#d97706;">- ${this.formatCurrency(t.cnVat)}</td>
+                  </tr>
+                  <tr style="background:#f1f5f9; font-weight:700;">
+                    <td colspan="2" style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Net Realized Output Tax Due for Period</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right;">${this.formatCurrency(t.netOutputTaxable)}</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; color:#2563eb;">${this.formatCurrency(t.netOutputVat)}</td>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Box 9</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Standard rated purchases &amp; expenses (Recoverable Input Tax from Payment-Out: ${ledger.payments.length} disbursements)</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right;">- ${this.formatCurrency(t.pmtTaxable)}</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; font-weight:700; color:#0284c7;">- ${this.formatCurrency(t.pmtVat)}</td>
+                  </tr>
+                  <tr style="background:#faf5ff; border:2px solid #a855f7; font-weight:800; color:#7e22ce;">
+                    <td colspan="2" style="border:2px solid #a855f7; padding:12px; font-size:13px;"><strong>BOX 12: TOTAL NET VAT PAYABLE TO FEDERAL TAX AUTHORITY</strong></td>
+                    <td style="border:2px solid #a855f7; padding:12px; font-size:13px; text-align:right;">${this.formatCurrency(t.netOutputTaxable)}</td>
+                    <td style="border:2px solid #a855f7; padding:12px; font-size:16px; text-align:right;">${this.formatCurrency(t.netVatPayable)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style="margin-top:24px; font-size:12px; color:#475569; line-height:1.6; background:#f8fafc; padding:14px; border-radius:6px; border-left:4px solid #2563eb;">
+                <strong>Taxpayer Declaration &amp; Settlement Statement:</strong> We hereby declare that the figures reported in this statement accurately represent all consideration received, sales returns credited, and eligible input taxes disbursed during the designated filing period (${ledger.range.label}), strictly adhering to UAE Federal Decree-Law No. (8) of 2017 on Value Added Tax. All taxes prior to 01 August 2026 have been settled and paid.
+              </div>
+
+              <div style="margin-top:30px; display:flex; justify-content:space-between; font-size:12px; color:#64748b; border-top:1px solid #e2e8f0; padding-top:16px;">
+                <div>
+                  <strong>Authorized Signatory:</strong> Arshad Alam Shaikh<br>
+                  Managing Director / Designated Tax Representative
+                </div>
+                <div style="text-align:right;">
+                  Official Digital Stamp &amp; Signature Verification<br>
+                  <strong style="color:#0f172a;">RAYAN GROUP CORPORATE TREASURY</strong>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </body>
-      </html>
+      </div>
     `;
 
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => { printWindow.print(); }, 400);
+    this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
   // --------------------------------------------------------------------------
@@ -11358,22 +11372,22 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   setCtMode(mode) {
     this._ctState.mode = mode;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   toggleSbrRelief(elected) {
     this._ctState.sbrElected = !!elected;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   toggleSimSbr(elected) {
     this._ctState.simSbrElected = !!elected;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   updateCtSim(field, val) {
     this._ctState[field] = parseFloat(val) || 0;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   resetCtSim() {
@@ -11385,7 +11399,7 @@ class FinanceApp {
     this._ctState.simTransport = 150000;
     this._ctState.simNonDeductible = 0;
     this._ctState.simSbrElected = false;
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   setCtSimScenario(scenario) {
@@ -11417,7 +11431,7 @@ class FinanceApp {
       this._ctState.simNonDeductible = 0;
       this._ctState.simSbrElected = false;
     }
-    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+    this.renderVatManagementTab();
   }
 
   renderCorporateTaxView() {
@@ -11886,11 +11900,6 @@ class FinanceApp {
     const isSim = this._ctState?.mode === 'simulator';
     const ctPeriod = this._ctPeriod || '1_year';
     const ctRange = this.getTaxPeriodDateRange(ctPeriod);
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Pop-up blocked. Please allow pop-ups to print the UAE Corporate Tax Statement.');
-      return;
-    }
 
     const simSales = Number(this._ctState?.simSales) || 2000000;
     const simTotalExpenses = (Number(this._ctState?.simMaterials) || 500000) + (Number(this._ctState?.simLabour) || 400000) + (Number(this._ctState?.simSubcontractors) || 250000) + (Number(this._ctState?.simRent) || 100000) + (Number(this._ctState?.simTransport) || 150000);
@@ -11946,117 +11955,125 @@ class FinanceApp {
     const taxBefore = isSim ? simTaxBefore : liveTaxBefore;
     const taxFinal = isSim ? simTaxDue : liveTaxDue;
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>UAE Corporate Tax &amp; SBR Return Statement - Rayan Group</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 40px; color: #1e293b; line-height: 1.5; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px; }
-          .title { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; }
-          .sub { font-size: 13px; color: #64748b; margin-top: 5px; }
-          .box-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          .box-table th, .box-table td { border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 13px; }
-          .box-table th { background: #f8fafc; font-weight: 700; text-align: left; }
-          .highlight-row { background: #f1f5f9; font-weight: 700; }
-          .payable-box { background: #f0fdf4; border: 2px solid #16a34a !important; font-size: 15px !important; font-weight: 800; color: #15803d; }
-          .footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-          @media print { body { margin: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div>
-            <h1 class="title">UNITED ARAB EMIRATES</h1>
-            <div style="font-size: 16px; font-weight: 700; color: #059669; margin-top: 4px;">FEDERAL TAX AUTHORITY (FTA) - CORPORATE TAX RETURN</div>
-            <div class="sub">Assessment under Federal Decree-Law No. (47) of 2022 &amp; Ministerial Decision No. 73 of 2023</div>
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🏢</span>
+              <span>UAE Corporate Tax Assessment — ${ctRange.shortLabel}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.printVatReturn()">Form 201 Return</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.printCorporateTaxAssessment()">CT Assessment</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA</button>
+            </div>
           </div>
-          <div style="text-align: right; font-size: 12px; line-height: 1.6;">
-            <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
-            TRN: <strong>100234567800003</strong><br>
-            Dalma Mall Branch, Abu Dhabi, UAE<br>
-            Assessment Period: <strong>${ctRange.label}</strong><br>
-            Date Generated: ${new Date().toLocaleDateString('en-GB')}
-          </div>
-        </div>
-            TRN: <strong>100234567800003</strong><br>
-            Dalma Mall Branch, Abu Dhabi, UAE<br>
-            Date Generated: ${new Date().toLocaleDateString('en-GB')}
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
+              🖨️ Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
+              ✕ Close
+            </button>
           </div>
         </div>
 
-        <table class="box-table">
-          <thead>
-            <tr>
-              <th style="width: 15%;">Schedule</th>
-              <th>Description / Statutory Computation Line</th>
-              <th style="text-align: right; width: 30%;">Amount (AED)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Line 1</strong></td>
-              <td>Total Gross Business Revenue / Turnover</td>
-              <td style="text-align: right; font-weight: 600;">${this.formatCurrency(rev)}</td>
-            </tr>
-            <tr>
-              <td><strong>Line 2</strong></td>
-              <td>Less: Allowable Contracting &amp; Operational Business Expenses</td>
-              <td style="text-align: right; color: #d97706;">- ${this.formatCurrency(exp)}</td>
-            </tr>
-            <tr class="highlight-row">
-              <td><strong>Line 3</strong></td>
-              <td>Net Accounting Profit before Tax Adjustments</td>
-              <td style="text-align: right; color: #2563eb;">${this.formatCurrency(profit)}</td>
-            </tr>
-            <tr>
-              <td><strong>Line 4</strong></td>
-              <td>Tier 1: Taxable Profit up to AED 375,000.00 @ 0.0%</td>
-              <td style="text-align: right; font-weight: 600;">AED 0.00</td>
-            </tr>
-            <tr>
-              <td><strong>Line 5</strong></td>
-              <td>Tier 2: Portion above AED 375,000 (${this.formatCurrency(excess)}) @ 9.0%</td>
-              <td style="text-align: right; font-weight: 600;">${this.formatCurrency(taxBefore)}</td>
-            </tr>
-            ${sbrActive ? `
-              <tr style="background: #f0fdf4; color: #15803d; font-weight: 700;">
-                <td><strong>Relief</strong></td>
-                <td>Small Business Relief (Ministerial Decision No. 73 of 2023 Exemption)</td>
-                <td style="text-align: right;">- ${this.formatCurrency(taxBefore)}</td>
-              </tr>
-            ` : ''}
-            <tr class="payable-box">
-              <td colspan="2"><strong>FINAL NET CORPORATE TAX PAYABLE TO FEDERAL TAX AUTHORITY</strong></td>
-              <td style="text-align: right; font-size: 16px;">${this.formatCurrency(taxFinal)}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#1e293b; padding:10mm 14mm 10mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; box-sizing:border-box; width:100%; max-width:880px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative;">
+            
+            ${this.getRayanWatermark()}
 
-        <div style="margin-top: 25px; font-size: 12px; color: #475569; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 6px; border-left: 4px solid #059669;">
-          <strong>Small Business Relief Statutory Election:</strong><br>
-          Under Article 21 of Federal Decree-Law No. (47) of 2022 and Ministerial Decision No. 73 of 2023 (Extended to 31 December 2029 by the UAE Ministry of Finance), Rayan Engineering &amp; Contracting LLC SPC hereby elects for Small Business Relief. Total revenue does not exceed AED 3,000,000.00 in the relevant tax period and all previous tax periods, resulting in treated taxable income of AED 0.00.
-        </div>
+            <div style="position:relative; z-index:1;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0f172a; padding-bottom:16px; margin-bottom:20px;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="Rayan Group" style="height:40px; width:auto; display:block;" onerror="this.style.display='none'">
+                  </div>
+                  <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin:0; text-transform:uppercase; letter-spacing:0.02em;">UNITED ARAB EMIRATES</h1>
+                  <div style="font-size:15px; font-weight:700; color:#059669; margin-top:3px;">FEDERAL TAX AUTHORITY (FTA) - CORPORATE TAX RETURN</div>
+                  <div style="font-size:12px; color:#64748b; margin-top:4px;">Assessment under Federal Decree-Law No. (47) of 2022 &amp; Ministerial Decision No. 73 of 2023</div>
+                </div>
+                <div style="text-align:right; font-size:12px; line-height:1.6; color:#334155;">
+                  <strong style="color:#0f172a; font-size:13px;">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
+                  TRN: <strong style="color:#0f172a;">100234567800003</strong><br>
+                  Dalma Mall Branch, Abu Dhabi, UAE<br>
+                  Assessment Period: <strong style="color:#059669;">${ctRange.label}</strong><br>
+                  Date Generated: <strong>${new Date().toLocaleDateString('en-GB')}</strong>
+                </div>
+              </div>
 
-        <div class="footer">
-          <div>
-            <strong>Authorized Signatory:</strong> Arshad Alam Shaikh<br>
-            Managing Director / Designated Tax Representative
-          </div>
-          <div style="text-align: right;">
-            Official Digital Stamp &amp; Signature Verification<br>
-            RAYAN GROUP CORPORATE TREASURY
+              <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; font-weight:700; text-align:left; width:15%;">Schedule</th>
+                    <th style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; font-weight:700; text-align:left;">Description / Statutory Computation Line</th>
+                    <th style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; font-weight:700; text-align:right; width:30%;">Amount (AED)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Line 1</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Total Gross Business Revenue / Turnover</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; font-weight:600;">${this.formatCurrency(rev)}</td>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Line 2</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Less: Allowable Contracting &amp; Operational Business Expenses</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; color:#d97706;">- ${this.formatCurrency(exp)}</td>
+                  </tr>
+                  <tr style="background:#f1f5f9; font-weight:700;">
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Line 3</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Net Accounting Profit before Tax Adjustments</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; color:#2563eb;">${this.formatCurrency(profit)}</td>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Line 4</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Tier 1: Taxable Profit up to AED 375,000.00 @ 0.0%</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; font-weight:600;">AED 0.00</td>
+                  </tr>
+                  <tr>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Line 5</strong></td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Tier 2: Portion above AED 375,000 (${this.formatCurrency(excess)}) @ 9.0%</td>
+                    <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right; font-weight:600;">${this.formatCurrency(taxBefore)}</td>
+                  </tr>
+                  ${sbrActive ? `
+                    <tr style="background:#f0fdf4; color:#15803d; font-weight:700;">
+                      <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;"><strong>Relief</strong></td>
+                      <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px;">Small Business Relief (Ministerial Decision No. 73 of 2023 Exemption)</td>
+                      <td style="border:1px solid #cbd5e1; padding:9px 12px; font-size:12px; text-align:right;">- ${this.formatCurrency(taxBefore)}</td>
+                    </tr>
+                  ` : ''}
+                  <tr style="background:#f0fdf4; border:2px solid #16a34a; font-weight:800; color:#15803d;">
+                    <td colspan="2" style="border:2px solid #16a34a; padding:12px; font-size:13px;"><strong>FINAL NET CORPORATE TAX PAYABLE TO FEDERAL TAX AUTHORITY</strong></td>
+                    <td style="border:2px solid #16a34a; padding:12px; font-size:16px; text-align:right;">${this.formatCurrency(taxFinal)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style="margin-top:24px; font-size:12px; color:#475569; line-height:1.6; background:#f8fafc; padding:14px; border-radius:6px; border-left:4px solid #059669;">
+                <strong>Small Business Relief Statutory Election:</strong><br>
+                Under Article 21 of Federal Decree-Law No. (47) of 2022 and Ministerial Decision No. 73 of 2023 (Extended to 31 December 2029 by the UAE Ministry of Finance), Rayan Engineering &amp; Contracting LLC SPC hereby elects for Small Business Relief. Total revenue does not exceed AED 3,000,000.00 in the relevant tax period and all previous tax periods, resulting in treated taxable income of AED 0.00.
+              </div>
+
+              <div style="margin-top:30px; display:flex; justify-content:space-between; font-size:12px; color:#64748b; border-top:1px solid #e2e8f0; padding-top:16px;">
+                <div>
+                  <strong>Authorized Signatory:</strong> Arshad Alam Shaikh<br>
+                  Managing Director / Designated Tax Representative
+                </div>
+                <div style="text-align:right;">
+                  Official Digital Stamp &amp; Signature Verification<br>
+                  <strong style="color:#0f172a;">RAYAN GROUP CORPORATE TREASURY</strong>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </body>
-      </html>
+      </div>
     `;
 
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => { printWindow.print(); }, 400);
+    this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   }
 
 
@@ -15478,7 +15495,7 @@ class FinanceApp {
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     } catch (e) { }
     await this.syncApi('create_invoice', { invoice: inv });
-    this.renderInvoicesTab(document.getElementById('fin-content-pane'));
+    this.renderInvoicesTab(document.getElementById('fin-tab-content-root'));
     alert(`✓ Invoice ${inv.invoice_no} has been officially issued and posted.`);
     this.openInvoicePrintModal(inv.id);
   }
