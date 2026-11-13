@@ -2114,7 +2114,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v116';
+    const CURRENT_DB_VERSION = 'v2026_clean_v118';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -26445,13 +26445,13 @@ class FinanceApp {
               <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.75rem; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
                 <colgroup>
                   <col style="width:4%;">    <!-- Sr. No -->
-                  <col style="width:37%;">   <!-- Description -->
-                  <col style="width:4.5%;">  <!-- Unit -->
-                  <col style="width:4.5%;">  <!-- Qty -->
+                  <col style="width:35%;">   <!-- Description -->
+                  <col style="width:5%;">    <!-- Unit -->
+                  <col style="width:6%;">    <!-- Qty -->
                   <col style="width:5.5%;">  <!-- WD% -->
-                  <col style="width:10%;">   <!-- Project Price -->
+                  <col style="width:9.5%;">  <!-- Project Price -->
                   <col style="width:10%;">   <!-- Invoice Amount -->
-                  <col style="width:8.5%;">  <!-- VAT 5% -->
+                  <col style="width:9%;">    <!-- VAT 5% -->
                   <col style="width:16%;">   <!-- Total Amount -->
                 </colgroup>
                 <thead>
