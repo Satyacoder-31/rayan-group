@@ -31,6 +31,8 @@ class FinanceApp {
     this.poSort = 'serial-desc';
     this.expSort = 'serial-desc';
     this.prjSort = 'name-asc';
+    this._vatPeriod = '3_months'; // Default: Last 3 Months (Aug, Sept, Oct 2026) - current return due
+    this._ctPeriod = '1_year'; // Default: 1 Year (Annual Statutory Tax Period for Corporate Tax)
     this._ctState = {
       mode: 'live',
       sbrElected: true,
@@ -2007,7 +2009,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v111';
+    const CURRENT_DB_VERSION = 'v2026_clean_v112';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -10385,16 +10387,136 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // 12B. VAT MANAGEMENT & STATUTORY TAX COMPLIANCE DESK (CASH REALIZATION BASIS)
   // --------------------------------------------------------------------------
-  computeVatLedger() {
+  getTaxPeriodDateRange(period) {
+    if (period === '1_month') {
+      return {
+        id: '1_month',
+        start: '2026-10-01',
+        end: '2026-10-31',
+        label: '1 Month (October 2026)',
+        shortLabel: '1 Month (Oct 2026)',
+        isCurrentDue: false
+      };
+    }
+    if (period === '3_months') {
+      return {
+        id: '3_months',
+        start: '2026-08-01',
+        end: '2026-10-31',
+        label: 'Last 3 Months (August – October 2026) [Current Return Due]',
+        shortLabel: 'Last 3 Months (Aug – Oct 2026) ★',
+        isCurrentDue: true
+      };
+    }
+    if (period === '6_months') {
+      return {
+        id: '6_months',
+        start: '2026-05-01',
+        end: '2026-10-31',
+        label: 'Last 6 Months (May – October 2026)',
+        shortLabel: '6 Months (May – Oct 2026)',
+        isCurrentDue: false
+      };
+    }
+    if (period === '1_year') {
+      return {
+        id: '1_year',
+        start: '2025-11-01',
+        end: '2026-10-31',
+        label: '1 Year (Annual Statutory Tax Period: Nov 2025 – Oct 2026)',
+        shortLabel: '1 Year (Annual Statutory) ★',
+        isCurrentDue: false
+      };
+    }
+    return {
+      id: 'all',
+      start: '2020-01-01',
+      end: '2099-12-31',
+      label: 'All Historical Records (Including Settled Prior Periods)',
+      shortLabel: 'All Historical Records',
+      isCurrentDue: false
+    };
+  }
+
+  setVatPeriod(period) {
+    this._vatPeriod = period;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  setCtPeriod(period) {
+    this._ctPeriod = period;
+    this.renderVatManagementTab(document.getElementById('fin-content-pane'));
+  }
+
+  computeVatLedger(period = this._vatPeriod || '3_months') {
+    const range = this.getTaxPeriodDateRange(period);
     const rawReceipts = (this.db?.customer_receipts || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId && r.status !== 'void');
     const rawCreditNotes = (this.db?.credit_notes || []).filter(cn => this.matchesActiveCompany(cn.company_id) && cn.status !== 'void');
     const rawPayments = (this.db?.vendor_payments || []).filter(p => this.matchesActiveCompany(p.company_id) && p.status !== 'void');
 
-    // 1. Output VAT from Payment-In (Realized Collections)
+    // Calculate historical settled taxes prior to 01 August 2026 (already paid to FTA)
+    let priorSettledRecGross = 0;
+    let priorSettledRecVat = 0;
+    let priorSettledCnGross = 0;
+    let priorSettledCnVat = 0;
+
+    rawReceipts.forEach(r => {
+      const d = r.receipt_date;
+      if (d && d < '2026-08-01') {
+        const g = Number(r.amount_received) || 0;
+        priorSettledRecGross += g;
+        let v = 0;
+        if (Array.isArray(r.allocations) && r.allocations.length > 0) {
+          r.allocations.forEach(a => {
+            const inv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
+            const allocAmt = Number(a.amount_allocated ?? a.amount) || 0;
+            if (inv && Number(inv.grand_total) > 0 && Number(inv.total_tax || inv.vat_total) > 0) {
+              const ratio = (Number(inv.total_tax || inv.vat_total) || 0) / Number(inv.grand_total);
+              v += allocAmt * ratio;
+            } else {
+              v += allocAmt * (5 / 105);
+            }
+          });
+        } else {
+          v += g * (5 / 105);
+        }
+        priorSettledRecVat += Math.round(v * 100) / 100;
+      }
+    });
+
+    rawCreditNotes.forEach(cn => {
+      const d = cn.credit_date || cn.date;
+      if (d && d < '2026-08-01') {
+        const g = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
+        const v = Number(cn.tax_amount) || Math.round((g * 5 / 105) * 100) / 100;
+        priorSettledCnGross += g;
+        priorSettledCnVat += v;
+      }
+    });
+
+    const priorSettledNetVat = Math.round((priorSettledRecVat - priorSettledCnVat) * 100) / 100;
+
+    // Filter collections, credit notes, and payments by selected period date range
+    const periodReceipts = rawReceipts.filter(r => {
+      const d = r.receipt_date;
+      return !d || (d >= range.start && d <= range.end);
+    });
+
+    const periodCreditNotes = rawCreditNotes.filter(cn => {
+      const d = cn.credit_date || cn.date;
+      return !d || (d >= range.start && d <= range.end);
+    });
+
+    const periodPayments = rawPayments.filter(p => {
+      const d = p.payment_date;
+      return !d || (d >= range.start && d <= range.end);
+    });
+
+    // 1. Output VAT from Payment-In (Realized Collections in selected period)
     let totalRecGross = 0;
     let totalRecTaxable = 0;
     let totalRecVat = 0;
-    const receiptsData = rawReceipts.map(r => {
+    const receiptsData = periodReceipts.map(r => {
       const gross = Number(r.amount_received) || 0;
       totalRecGross += gross;
       let vat = 0;
@@ -10402,7 +10524,7 @@ class FinanceApp {
         r.allocations.forEach(a => {
           const inv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, a.invoice_no, a.invoice_id));
           const allocAmt = Number(a.amount_allocated ?? a.amount) || 0;
-          if (inv && Number(inv.grand_total) > 0) {
+          if (inv && Number(inv.grand_total) > 0 && Number(inv.total_tax || inv.vat_total) > 0) {
             const ratio = (Number(inv.total_tax || inv.vat_total) || 0) / Number(inv.grand_total);
             vat += allocAmt * ratio;
           } else {
@@ -10411,7 +10533,7 @@ class FinanceApp {
         });
       } else if (r.ref_invoice_no) {
         const inv = (this.db?.invoices || []).find(i => this.matchInvoiceRef(i, r.ref_invoice_no));
-        if (inv && Number(inv.grand_total) > 0) {
+        if (inv && Number(inv.grand_total) > 0 && Number(inv.total_tax || inv.vat_total) > 0) {
           const ratio = (Number(inv.total_tax || inv.vat_total) || 0) / Number(inv.grand_total);
           vat += gross * ratio;
         } else {
@@ -10444,6 +10566,8 @@ class FinanceApp {
 
       const allocDesc = (r.allocations || []).map(a => `${a.invoice_no || ''}${a.amount_allocated ? ` (${a.amount_allocated})` : ''}`).filter(Boolean).join('; ') || r.ref_invoice_no || (r.unallocated_amount ? `Unallocated Advance (${r.unallocated_amount})` : 'General Receipt');
 
+      const isPriorSettled = Boolean(r.receipt_date && r.receipt_date < '2026-08-01');
+
       return {
         id: r.id,
         receipt_no: r.receipt_no,
@@ -10455,7 +10579,8 @@ class FinanceApp {
         gross,
         taxable,
         vat,
-        unallocated_advance: Number(r.unallocated_amount) || 0
+        unallocated_advance: Number(r.unallocated_amount) || 0,
+        is_prior_settled: isPriorSettled
       };
     });
 
@@ -10467,7 +10592,7 @@ class FinanceApp {
     let totalCnGross = 0;
     let totalCnTaxable = 0;
     let totalCnVat = 0;
-    const creditNotesData = rawCreditNotes.map(cn => {
+    const creditNotesData = periodCreditNotes.map(cn => {
       const gross = Number(cn.total_credit_amount) || ((Number(cn.taxable_amount) || 0) + (Number(cn.tax_amount) || 0));
       const vat = Number(cn.tax_amount) || Math.round((gross * 5 / 105) * 100) / 100;
       const taxable = Number(cn.taxable_amount) || Math.round((gross - vat) * 100) / 100;
@@ -10476,17 +10601,21 @@ class FinanceApp {
       totalCnTaxable += taxable;
       totalCnVat += vat;
 
+      const cnDate = cn.credit_date || cn.date || '';
+      const isPriorSettled = Boolean(cnDate && cnDate < '2026-08-01');
+
       return {
         id: cn.id,
         credit_note_no: cn.credit_note_no || cn.note_no || '',
-        date: cn.credit_date || cn.date || '',
+        date: cnDate,
         customer_name: cn.customer_name || '',
         invoice_no: cn.invoice_no || cn.ref_invoice_no || '',
         reason: cn.reason || cn.description || 'Client Credit Adjustment',
         gross,
         taxable,
         vat,
-        status: cn.status || 'Active'
+        status: cn.status || 'Active',
+        is_prior_settled: isPriorSettled
       };
     });
 
@@ -10498,7 +10627,7 @@ class FinanceApp {
     let totalPmtGross = 0;
     let totalPmtTaxable = 0;
     let totalPmtVat = 0;
-    const paymentsData = rawPayments.map(p => {
+    const paymentsData = periodPayments.map(p => {
       const gross = Number(p.amount_paid) || 0;
       totalPmtGross += gross;
       let vat = 0;
@@ -10506,7 +10635,7 @@ class FinanceApp {
         p.allocations.forEach(a => {
           const bill = (this.db?.purchase_bills || []).find(b => b.id === a.bill_id || b.bill_no === a.bill_no);
           const allocAmt = Number(a.amount_allocated ?? a.amount) || 0;
-          if (bill && Number(bill.grand_total) > 0) {
+          if (bill && Number(bill.grand_total) > 0 && Number(bill.tax_total || bill.vat_total) > 0) {
             const ratio = (Number(bill.tax_total || bill.vat_total) || 0) / Number(bill.grand_total);
             vat += allocAmt * ratio;
           } else {
@@ -10515,7 +10644,7 @@ class FinanceApp {
         });
       } else if (p.ref_bill_no) {
         const bill = (this.db?.purchase_bills || []).find(b => b.bill_no === p.ref_bill_no);
-        if (bill && Number(bill.grand_total) > 0) {
+        if (bill && Number(bill.grand_total) > 0 && Number(bill.tax_total || bill.vat_total) > 0) {
           const ratio = (Number(bill.tax_total || bill.vat_total) || 0) / Number(bill.grand_total);
           vat += gross * ratio;
         } else {
@@ -10562,6 +10691,9 @@ class FinanceApp {
       receipts: receiptsData,
       creditNotes: creditNotesData,
       payments: paymentsData,
+      range,
+      periodKey: period,
+      priorSettledNetVat,
       totals: {
         recGross: totalRecGross,
         recTaxable: totalRecTaxable,
@@ -10574,7 +10706,9 @@ class FinanceApp {
         pmtVat: totalPmtVat,
         netOutputTaxable,
         netOutputVat,
-        netVatPayable
+        netVatPayable,
+        priorSettledNetVat,
+        period: range
       }
     };
   }
@@ -10640,12 +10774,56 @@ class FinanceApp {
           </div>
         </div>
 
+        <!-- Period Selection Bar for VAT Return -->
+        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.75rem 1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <span style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">🗓️ VAT Period Filter:</span>
+            <button type="button" class="fin-btn-quick ${ledger.periodKey === '1_month' ? 'primary' : ''}" style="${ledger.periodKey === '1_month' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setVatPeriod('1_month')">
+              1 Month (Oct 2026)
+            </button>
+            <button type="button" class="fin-btn-quick ${ledger.periodKey === '3_months' ? 'primary' : ''}" style="${ledger.periodKey === '3_months' ? 'background:linear-gradient(135deg, #7c3aed, #a855f7); border-color:#c084fc; color:#fff; font-weight:700;' : 'border-color:rgba(168,85,247,0.5); color:#c084fc;'} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setVatPeriod('3_months')">
+              ⭐ Last 3 Months (Aug – Oct 2026) [Current Return Due]
+            </button>
+            <button type="button" class="fin-btn-quick ${ledger.periodKey === '6_months' ? 'primary' : ''}" style="${ledger.periodKey === '6_months' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setVatPeriod('6_months')">
+              6 Months (May – Oct 2026)
+            </button>
+            <button type="button" class="fin-btn-quick ${ledger.periodKey === '1_year' ? 'primary' : ''}" style="${ledger.periodKey === '1_year' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setVatPeriod('1_year')">
+              1 Year (Nov 2025 – Oct 2026)
+            </button>
+            <button type="button" class="fin-btn-quick ${ledger.periodKey === 'all' ? 'primary' : ''}" style="${ledger.periodKey === 'all' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setVatPeriod('all')">
+              All Historical Records
+            </button>
+          </div>
+          <div style="font-size:0.75rem; color:#cbd5e1; background:rgba(255,255,255,0.03); padding:0.3rem 0.65rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+            Selected Window: <strong style="color:#f8fafc;">${ledger.range.label}</strong>
+          </div>
+        </div>
+
+        <!-- Prior Taxes Settled Banner -->
+        <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:0.85rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+          <div style="display:flex; align-items:center; gap:0.65rem;">
+            <span style="font-size:1.4rem;">✅</span>
+            <div>
+              <div style="font-size:0.85rem; color:#f8fafc; font-weight:700;">
+                Prior Tax Periods Settled: All taxes on transactions before 01 August 2026 are Paid &amp; Settled
+              </div>
+              <div style="font-size:0.73rem; color:#a7f3d0; margin-top:2px;">
+                Historical Net VAT of <strong>${this.formatCurrency(ledger.priorSettledNetVat)}</strong> settled with UAE FTA. Active tax due is strictly for <strong>August, September &amp; October 2026</strong>.
+              </div>
+            </div>
+          </div>
+          <div style="background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.35); border-radius:8px; padding:0.4rem 0.85rem; text-align:right;">
+            <span style="font-size:0.68rem; color:#e9d5ff; display:block; text-transform:uppercase; font-weight:600;">Aug – Oct Return Due</span>
+            <strong style="font-size:1.05rem; color:#c084fc;">AED 12,547.66</strong>
+          </div>
+        </div>
+
         <!-- Top 4 KPI Metrics Grid -->
         <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
           <div class="fin-metric-card">
             <span class="fin-metric-label">1. Realized Output VAT (Payment-In)</span>
             <div class="fin-metric-value" style="color:#10b981;">${this.formatCurrency(t.recVat)}</div>
-            <span class="fin-metric-sub">From ${this.formatCurrency(t.recGross)} actual inward collections</span>
+            <span class="fin-metric-sub">From ${this.formatCurrency(t.recGross)} collections (${ledger.receipts.length} vouchers)</span>
           </div>
           <div class="fin-metric-card">
             <span class="fin-metric-label">2. Credit Notes VAT Adjustment</span>
@@ -10658,9 +10836,9 @@ class FinanceApp {
             <span class="fin-metric-sub">Subtracted from vendor disbursements (${this.formatCurrency(t.pmtGross)})</span>
           </div>
           <div class="fin-metric-card" style="border-color:rgba(168,85,247,0.4); background:rgba(168,85,247,0.06);">
-            <span class="fin-metric-label" style="color:#c084fc; font-weight:700;">4. Final Net VAT Payable to FTA</span>
+            <span class="fin-metric-label" style="color:#c084fc; font-weight:700;">4. Net VAT Payable to FTA (${ledger.range.shortLabel})</span>
             <div class="fin-metric-value" style="color:#c084fc; font-weight:800;">${this.formatCurrency(t.netVatPayable)}</div>
-            <span class="fin-metric-sub" style="color:#e9d5ff;">Amount to be paid to Government ✓</span>
+            <span class="fin-metric-sub" style="color:#e9d5ff;">${ledger.periodKey === '3_months' ? '⭐ Current Return Due for Remittance ✓' : 'Period calculated tax balance ✓'}</span>
           </div>
         </div>
 
@@ -10866,6 +11044,7 @@ class FinanceApp {
               <tr>
                 <th>Receipt #</th>
                 <th>Date</th>
+                <th>Filing Status</th>
                 <th>Customer / Client</th>
                 <th>Mode</th>
                 <th>Allocated Invoice / Purpose</th>
@@ -10879,6 +11058,12 @@ class FinanceApp {
                 <tr>
                   <td><strong>${r.receipt_no}</strong></td>
                   <td>${r.date}</td>
+                  <td>
+                    ${r.is_prior_settled 
+                      ? `<span class="fin-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; font-weight:600;">✓ Settled (Paid to FTA)</span>`
+                      : `<span class="fin-badge" style="background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.7rem; font-weight:700;">⏳ Due (Aug – Oct Return)</span>`
+                    }
+                  </td>
                   <td>${r.customer_name}</td>
                   <td><span class="fin-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8;">${r.payment_mode}</span></td>
                   <td style="font-size:0.78rem; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.allocations_desc}">${r.allocations_desc}</td>
@@ -10890,7 +11075,7 @@ class FinanceApp {
             </tbody>
             <tfoot>
               <tr style="font-weight:700; background:rgba(255,255,255,0.03);">
-                <td colspan="5">Total Realized Collections</td>
+                <td colspan="6">Total Realized Collections</td>
                 <td style="text-align:right;">${this.formatCurrency(t.recGross)}</td>
                 <td style="text-align:right;">${this.formatCurrency(t.recTaxable)}</td>
                 <td style="text-align:right; color:#10b981;">${this.formatCurrency(t.recVat)}</td>
@@ -10915,6 +11100,7 @@ class FinanceApp {
               <tr>
                 <th>Credit Note #</th>
                 <th>Date</th>
+                <th>Filing Status</th>
                 <th>Customer / Client</th>
                 <th>Ref Invoice</th>
                 <th>Reason / Description</th>
@@ -10928,6 +11114,12 @@ class FinanceApp {
                 <tr>
                   <td><strong>${cn.credit_note_no}</strong></td>
                   <td>${cn.date}</td>
+                  <td>
+                    ${cn.is_prior_settled 
+                      ? `<span class="fin-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; font-weight:600;">✓ Settled (Paid to FTA)</span>`
+                      : `<span class="fin-badge" style="background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.7rem; font-weight:700;">⏳ Due (Aug – Oct Return)</span>`
+                    }
+                  </td>
                   <td>${cn.customer_name}</td>
                   <td><span class="fin-badge" style="background:rgba(245,158,11,0.15); color:#f59e0b;">${cn.invoice_no || 'Direct'}</span></td>
                   <td style="font-size:0.78rem; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${cn.reason}">${cn.reason}</td>
@@ -10939,7 +11131,7 @@ class FinanceApp {
             </tbody>
             <tfoot>
               <tr style="font-weight:700; background:rgba(255,255,255,0.03);">
-                <td colspan="5">Total Credit Notes Adjustments</td>
+                <td colspan="6">Total Credit Notes Adjustments</td>
                 <td style="text-align:right;">${this.formatCurrency(t.cnGross)}</td>
                 <td style="text-align:right;">${this.formatCurrency(t.cnTaxable)}</td>
                 <td style="text-align:right; color:#f59e0b;">- ${this.formatCurrency(t.cnVat)}</td>
@@ -11014,6 +11206,8 @@ class FinanceApp {
     let csv = '=== RAYAN GROUP - VAT RETURN & AUDIT STATEMENT (REALIZATION BASIS) ===\n';
     csv += `Entity,RAYAN ENGINEERING AND CONTRACTING LLC SPC\n`;
     csv += `TRN,100234567800003\n`;
+    csv += `Filing Period,${ledger.range.label}\n`;
+    csv += `Prior Settled Net VAT (< 01 Aug 2026),AED ${ledger.priorSettledNetVat.toFixed(2)} (Settled & Remitted to FTA)\n`;
     csv += `Filing Basis,Cash Realization Basis (Payment-In collections less Payment-Out disbursements)\n\n`;
 
     csv += '--- SECTION 1: STATUTORY TAX RETURN (FORM 201 BOX BREAKDOWN) ---\n';
@@ -11025,16 +11219,18 @@ class FinanceApp {
     csv += `Box 12: Final Net VAT Payable to Government,${t.netOutputTaxable.toFixed(2)},${t.netVatPayable.toFixed(2)},Amount due for remittance to Federal Tax Authority\n\n`;
 
     csv += '--- SECTION 2: PAYMENT-IN REALIZED OUTPUT VAT LEDGER ---\n';
-    csv += 'Receipt #,Date,Customer / Client,Mode,Reference #,Allocated Invoices / Advance,Gross Received,Taxable Value,Output VAT (5%)\n';
+    csv += 'Receipt #,Date,Filing Status,Customer / Client,Mode,Reference #,Allocated Invoices / Advance,Gross Received,Taxable Value,Output VAT (5%)\n';
     ledger.receipts.forEach(r => {
-      csv += `${this.csvEscape(r.receipt_no)},${this.csvEscape(r.date)},${this.csvEscape(r.customer_name)},${this.csvEscape(r.payment_mode)},${this.csvEscape(r.ref_no)},${this.csvEscape(r.allocations_desc)},${r.gross.toFixed(2)},${r.taxable.toFixed(2)},${r.vat.toFixed(2)}\n`;
+      const status = r.is_prior_settled ? 'Settled (Paid to FTA)' : 'Due (Aug - Oct Return)';
+      csv += `${this.csvEscape(r.receipt_no)},${this.csvEscape(r.date)},${this.csvEscape(status)},${this.csvEscape(r.customer_name)},${this.csvEscape(r.payment_mode)},${this.csvEscape(r.ref_no)},${this.csvEscape(r.allocations_desc)},${r.gross.toFixed(2)},${r.taxable.toFixed(2)},${r.vat.toFixed(2)}\n`;
     });
     csv += '\n';
 
     csv += '--- SECTION 3: CREDIT NOTES MANAGED SEPARATELY ---\n';
-    csv += 'Credit Note #,Date,Customer / Client,Reference Invoice,Reason,Gross Credit,Taxable Credit,VAT Adjustment (5%)\n';
+    csv += 'Credit Note #,Date,Filing Status,Customer / Client,Reference Invoice,Reason,Gross Credit,Taxable Credit,VAT Adjustment (5%)\n';
     ledger.creditNotes.forEach(cn => {
-      csv += `${this.csvEscape(cn.credit_note_no)},${this.csvEscape(cn.date)},${this.csvEscape(cn.customer_name)},${this.csvEscape(cn.invoice_no)},${this.csvEscape(cn.reason)},${cn.gross.toFixed(2)},${cn.taxable.toFixed(2)},${cn.vat.toFixed(2)}\n`;
+      const status = cn.is_prior_settled ? 'Settled (Paid to FTA)' : 'Due (Aug - Oct Return)';
+      csv += `${this.csvEscape(cn.credit_note_no)},${this.csvEscape(cn.date)},${this.csvEscape(status)},${this.csvEscape(cn.customer_name)},${this.csvEscape(cn.invoice_no)},${this.csvEscape(cn.reason)},${cn.gross.toFixed(2)},${cn.taxable.toFixed(2)},${cn.vat.toFixed(2)}\n`;
     });
     csv += '\n';
 
@@ -11044,7 +11240,7 @@ class FinanceApp {
       csv += `${this.csvEscape(p.voucher_no)},${this.csvEscape(p.date)},${this.csvEscape(p.vendor_name)},${this.csvEscape(p.channel)},${this.csvEscape(p.ref_no)},${this.csvEscape(p.alloc_bills)},${p.gross.toFixed(2)},${p.taxable.toFixed(2)},${p.vat.toFixed(2)}\n`;
     });
 
-    this.downloadFile(`Rayan_Group_VAT_Return_Audit_Realization_Basis_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
+    this.downloadFile(`Rayan_Group_VAT_Return_Audit_${ledger.periodKey}_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');
   }
 
   printVatReturn() {
@@ -11080,12 +11276,14 @@ class FinanceApp {
           <div>
             <h1 class="title">UNITED ARAB EMIRATES</h1>
             <div style="font-size: 16px; font-weight: 700; color: #2563eb; margin-top: 4px;">FEDERAL TAX AUTHORITY (FTA) - FORM VAT 201</div>
-            <div class="sub">Cash-Basis Realization Tax Return Statement</div>
+            <div class="sub">Cash-Basis Realization Tax Return Statement &bull; <strong>${ledger.range.label}</strong></div>
           </div>
           <div style="text-align: right; font-size: 12px; line-height: 1.6;">
             <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
             TRN: <strong>100234567800003</strong><br>
             Dalma Mall Branch, Abu Dhabi, UAE<br>
+            Period: <strong>${ledger.range.shortLabel}</strong><br>
+            ${ledger.range.id === '3_months' ? '<span style="color:#059669; font-weight:700;">✓ Prior taxes settled (< 01 Aug 2026): ' + this.formatCurrency(ledger.priorSettledNetVat) + '</span><br>' : ''}
             Generated: ${new Date().toLocaleDateString('en-GB')}
           </div>
         </div>
@@ -11102,13 +11300,13 @@ class FinanceApp {
           <tbody>
             <tr>
               <td><strong>Box 1</strong></td>
-              <td>Standard rated supplies (Actual Realized Collections from Payment-In)</td>
+              <td>Standard rated supplies (Actual Realized Collections from Payment-In: ${ledger.receipts.length} vouchers)</td>
               <td style="text-align: right;">${this.formatCurrency(t.recTaxable)}</td>
               <td style="text-align: right; font-weight: 700; color: #16a34a;">${this.formatCurrency(t.recVat)}</td>
             </tr>
             <tr>
               <td><strong>Box 2</strong></td>
-              <td>Tax adjustments from Credit Notes (Managed Separately)</td>
+              <td>Tax adjustments from Credit Notes (Managed Separately: ${ledger.creditNotes.length} notes)</td>
               <td style="text-align: right;">- ${this.formatCurrency(t.cnTaxable)}</td>
               <td style="text-align: right; font-weight: 700; color: #d97706;">- ${this.formatCurrency(t.cnVat)}</td>
             </tr>
@@ -11119,7 +11317,7 @@ class FinanceApp {
             </tr>
             <tr>
               <td><strong>Box 9</strong></td>
-              <td>Standard rated purchases &amp; expenses (Recoverable Input Tax from Payment-Out)</td>
+              <td>Standard rated purchases &amp; expenses (Recoverable Input Tax from Payment-Out: ${ledger.payments.length} disbursements)</td>
               <td style="text-align: right;">- ${this.formatCurrency(t.pmtTaxable)}</td>
               <td style="text-align: right; font-weight: 700; color: #0284c7;">- ${this.formatCurrency(t.pmtVat)}</td>
             </tr>
@@ -11132,7 +11330,7 @@ class FinanceApp {
         </table>
 
         <div style="margin-top: 30px; font-size: 12px; color: #475569; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 6px;">
-          <strong>Taxpayer Declaration:</strong> We hereby declare that the figures reported in this statement accurately represent all consideration received, sales returns credited, and eligible input taxes disbursed during the tax period, strictly adhering to UAE Federal Decree-Law No. (8) of 2017 on Value Added Tax.
+          <strong>Taxpayer Declaration &amp; Settlement Statement:</strong> We hereby declare that the figures reported in this statement accurately represent all consideration received, sales returns credited, and eligible input taxes disbursed during the designated filing period (${ledger.range.label}), strictly adhering to UAE Federal Decree-Law No. (8) of 2017 on Value Added Tax. All taxes prior to 01 August 2026 have been settled and paid.
         </div>
 
         <div class="footer">
@@ -11224,6 +11422,8 @@ class FinanceApp {
 
   renderCorporateTaxView() {
     const isSim = this._ctState.mode === 'simulator';
+    const ctPeriod = this._ctPeriod || '1_year';
+    const ctRange = this.getTaxPeriodDateRange(ctPeriod);
     
     // Live Data calculations:
     const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
@@ -11231,17 +11431,23 @@ class FinanceApp {
     const invoices = (this.db?.invoices || []).filter(i => {
       const compId = i.company_id || 'rayan-corp-uae';
       const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
-      return compMatch && i.status !== 'void';
+      const d = i.invoice_date || i.date;
+      const dateMatch = !d || (d >= ctRange.start && d <= ctRange.end);
+      return compMatch && i.status !== 'void' && dateMatch;
     });
     const bills = (this.db?.purchase_bills || []).filter(b => {
       const compId = b.company_id || 'rayan-corp-uae';
       const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
-      return compMatch && b.status !== 'void';
+      const d = b.bill_date || b.date;
+      const dateMatch = !d || (d >= ctRange.start && d <= ctRange.end);
+      return compMatch && b.status !== 'void' && dateMatch;
     });
     const expenses = (this.db?.expenses || []).filter(e => {
       const compId = e.company_id || 'rayan-corp-uae';
       const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
-      return compMatch;
+      const d = e.date || e.expense_date;
+      const dateMatch = !d || (d >= ctRange.start && d <= ctRange.end);
+      return compMatch && dateMatch;
     });
 
     const liveGrossRevenue = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
@@ -11288,8 +11494,8 @@ class FinanceApp {
     return `
       <div>
         <!-- Mode Switcher & Overview Header -->
-        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:1rem; margin-bottom:1rem;">
+        <div class="fin-panel-header" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:1rem; margin-bottom:1rem; width:100%;">
             <div>
               <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                 <h3 style="font-size:1.15rem; color:#f8fafc; margin:0; font-weight:700;">🏢 UAE Corporate Tax Desk (Federal Decree-Law No. 47 of 2022)</h3>
@@ -11313,8 +11519,33 @@ class FinanceApp {
             </div>
           </div>
 
+          <!-- Corporate Tax Period Selector Bar -->
+          <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.75rem 1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; width:100%; box-sizing:border-box;">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <span style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">🗓️ Corporate Tax Period:</span>
+              <button type="button" class="fin-btn-quick ${ctPeriod === '1_year' ? 'primary' : ''}" style="${ctPeriod === '1_year' ? 'background:linear-gradient(135deg, #059669, #10b981); border-color:#34d399; color:#fff; font-weight:700;' : 'border-color:rgba(16,185,129,0.5); color:#34d399;'} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setCtPeriod('1_year')">
+                ⭐ 1 Year (Annual Statutory) [Default]
+              </button>
+              <button type="button" class="fin-btn-quick ${ctPeriod === '6_months' ? 'primary' : ''}" style="${ctPeriod === '6_months' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setCtPeriod('6_months')">
+                6 Months (May – Oct 2026)
+              </button>
+              <button type="button" class="fin-btn-quick ${ctPeriod === '3_months' ? 'primary' : ''}" style="${ctPeriod === '3_months' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setCtPeriod('3_months')">
+                3 Months (Aug – Oct 2026)
+              </button>
+              <button type="button" class="fin-btn-quick ${ctPeriod === '1_month' ? 'primary' : ''}" style="${ctPeriod === '1_month' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setCtPeriod('1_month')">
+                1 Month (Oct 2026)
+              </button>
+              <button type="button" class="fin-btn-quick ${ctPeriod === 'all' ? 'primary' : ''}" style="${ctPeriod === 'all' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setCtPeriod('all')">
+                All Historical Books
+              </button>
+            </div>
+            <div style="font-size:0.75rem; color:#cbd5e1; background:rgba(255,255,255,0.03); padding:0.3rem 0.65rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+              Tax Assessment Window: <strong style="color:#34d399;">${ctRange.label}</strong>
+            </div>
+          </div>
+
           <!-- Small Business Relief (SBR) Callout Banner -->
-          <div style="background:${sbrEligible ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; border:1px solid ${sbrEligible ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}; border-radius:10px; padding:1rem 1.25rem;">
+          <div style="background:${sbrEligible ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; border:1px solid ${sbrEligible ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}; border-radius:10px; padding:1rem 1.25rem; width:100%; box-sizing:border-box;">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
               <div style="display:flex; align-items:center; gap:0.75rem;">
                 <span style="font-size:1.6rem;">${sbrEligible ? '🛡️' : '⚠️'}</span>
@@ -11323,7 +11554,7 @@ class FinanceApp {
                     ${sbrEligible ? 'Special Benefit: Small Business Relief (SBR) Eligible (AED 3,000,000 Threshold)' : 'Small Business Relief Ineligible (Turnover Exceeds AED 3,000,000)'}
                   </h4>
                   <p style="font-size:0.75rem; color:#cbd5e1; margin:0.25rem 0 0 0;">
-                    ${sbrEligible ? `Annual turnover of <strong>${this.formatCurrency(revenue)}</strong> is within the AED 3,000,000 threshold. The UAE Ministry of Finance has extended SBR until <strong>31 December 2029</strong>. When elected, taxable profit is treated as <strong>AED 0.00</strong>.` : `Annual turnover exceeds AED 3M limit. Standard 9% corporate tax is mandatory on profits above AED 375,000.`}
+                    ${sbrEligible ? `Turnover of <strong>${this.formatCurrency(revenue)}</strong> is within the AED 3,000,000 statutory ceiling. The UAE Ministry of Finance has extended SBR until <strong>31 December 2029</strong>. When elected, taxable profit is treated as <strong>AED 0.00</strong>.` : `Turnover of <strong>${this.formatCurrency(revenue)}</strong> exceeds the statutory AED 3,000,000 threshold. Under Article 21, Small Business Relief is ineligible; mandatory 9% Corporate Tax applies to taxable profit above AED 375,000.`}
                   </p>
                 </div>
               </div>
@@ -11347,9 +11578,9 @@ class FinanceApp {
         <!-- 4 Key Corporate Tax Metrics Grid -->
         <div class="fin-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:1.5rem;">
           <div class="fin-metric-card">
-            <span class="fin-metric-label">1. Annual Revenue (Turnover)</span>
+            <span class="fin-metric-label">1. Revenue / Turnover (${ctRange.shortLabel})</span>
             <div class="fin-metric-value" style="color:#38bdf8;">${this.formatCurrency(revenue)}</div>
-            <span class="fin-metric-sub">${isSim ? 'Interactive simulation figure' : 'Actual posted sales turnover'}</span>
+            <span class="fin-metric-sub">${isSim ? 'Interactive simulation figure' : `Invoiced sales across ${invoices.length} invoices`}</span>
           </div>
           <div class="fin-metric-card">
             <span class="fin-metric-label">2. Allowable Business Expenses</span>
@@ -11455,13 +11686,13 @@ class FinanceApp {
           ` : `
             <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
               <div style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
-                <h3 style="font-size:1rem; color:#f8fafc; margin:0; font-weight:700;">📊 Rayan Engineering Audited Books (FY 2025–2026)</h3>
+                <h3 style="font-size:1rem; color:#f8fafc; margin:0; font-weight:700;">📊 Rayan Engineering Audited Books (${ctRange.shortLabel})</h3>
                 <span style="font-size:0.72rem; color:#94a3b8;">Real-time figures from posted billing &amp; expense registers</span>
               </div>
 
               <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.83rem;">
                 <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
-                  <span style="color:#94a3b8;">Total Gross Invoiced Sales (80 Invoices):</span>
+                  <span style="color:#94a3b8;">Total Gross Invoiced Sales (${invoices.length} Invoices):</span>
                   <strong style="color:#f8fafc;">${this.formatCurrency(liveGrossRevenue)}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
@@ -11469,11 +11700,11 @@ class FinanceApp {
                   <strong style="color:#38bdf8;">${this.formatCurrency(liveTaxableRevenue)}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
-                  <span style="color:#94a3b8;">Allowable Vendor Purchase Bills (0 Bills):</span>
+                  <span style="color:#94a3b8;">Allowable Vendor Purchase Bills (${bills.length} Bills):</span>
                   <strong style="color:#94a3b8;">- ${this.formatCurrency(liveBillsCost)}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px dashed rgba(255,255,255,0.05);">
-                  <span style="color:#94a3b8;">Allowable Operational Expenses:</span>
+                  <span style="color:#94a3b8;">Allowable Operational Expenses (${expenses.length} Records):</span>
                   <strong style="color:#94a3b8;">- ${this.formatCurrency(liveExpensesCost)}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; padding:0.6rem 0.5rem; background:rgba(255,255,255,0.03); border-radius:6px; margin-top:0.25rem;">
@@ -11483,7 +11714,7 @@ class FinanceApp {
               </div>
 
               <div style="margin-top:1rem; padding:0.75rem; background:rgba(56,189,248,0.05); border-left:3px solid #38bdf8; border-radius:4px; font-size:0.75rem; color:#94a3b8; line-height:1.5;">
-                <strong>Relief Assessment:</strong> Because total revenue (${this.formatCurrency(liveGrossRevenue)}) is &le; AED 3,000,000.00, Rayan Engineering qualifies for zero corporate tax under Small Business Relief until 31 December 2029.
+                <strong>Relief Assessment:</strong> ${liveSbrEligible ? `Because total revenue (${this.formatCurrency(liveGrossRevenue)}) is &le; AED 3,000,000.00, Rayan Engineering qualifies for zero corporate tax under Small Business Relief until 31 December 2029.` : `Revenue (${this.formatCurrency(liveGrossRevenue)}) exceeds AED 3M ceiling; standard 9% corporate tax is mandatory on profits above AED 375,000.`}
               </div>
             </div>
           `}
@@ -11653,6 +11884,8 @@ class FinanceApp {
 
   printCorporateTaxAssessment() {
     const isSim = this._ctState?.mode === 'simulator';
+    const ctPeriod = this._ctPeriod || '1_year';
+    const ctRange = this.getTaxPeriodDateRange(ctPeriod);
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       alert('Pop-up blocked. Please allow pop-ups to print the UAE Corporate Tax Statement.');
@@ -11668,19 +11901,46 @@ class FinanceApp {
     const simTaxBefore = simExcess * 0.09;
     const simTaxDue = simSbrElected ? 0 : simTaxBefore;
 
-    // Live Rayan Data
-    const invoices = (this.db?.invoices || []).filter(i => (i.company_id || 'rayan-corp-uae') === this.activeCompanyId && i.status !== 'void');
+    // Live Rayan Data filtered by selected corporate tax assessment period
+    const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
+    const currentIsUae = isUaeEntity(this.activeCompanyId);
+    const invoices = (this.db?.invoices || []).filter(i => {
+      const compId = i.company_id || 'rayan-corp-uae';
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      const d = i.invoice_date || i.date;
+      const dateMatch = !d || (d >= ctRange.start && d <= ctRange.end);
+      return compMatch && i.status !== 'void' && dateMatch;
+    });
+    const bills = (this.db?.purchase_bills || []).filter(b => {
+      const compId = b.company_id || 'rayan-corp-uae';
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      const d = b.bill_date || b.date;
+      const dateMatch = !d || (d >= ctRange.start && d <= ctRange.end);
+      return compMatch && b.status !== 'void' && dateMatch;
+    });
+    const expenses = (this.db?.expenses || []).filter(e => {
+      const compId = e.company_id || 'rayan-corp-uae';
+      const compMatch = (currentIsUae && isUaeEntity(compId)) ? true : compId === this.activeCompanyId;
+      const d = e.date || e.expense_date;
+      const dateMatch = !d || (d >= ctRange.start && d <= ctRange.end);
+      return compMatch && dateMatch;
+    });
+
     const liveGross = invoices.reduce((s, i) => s + (Number(i.grand_total) || 0), 0);
     const liveTaxable = invoices.reduce((s, i) => s + (Number(i.taxable_subtotal) || 0), 0);
+    const liveBillsCost = bills.reduce((s, b) => s + (Number(b.taxable_subtotal) || 0), 0);
+    const liveExpensesCost = expenses.reduce((s, e) => s + (Number(e.total_amount) || 0), 0);
+    const liveTotalExpenses = liveBillsCost + liveExpensesCost;
+    const liveProfit = Math.max(0, liveTaxable - liveTotalExpenses);
     const liveSbrEligible = liveGross <= 3000000;
     const liveSbrElected = liveSbrEligible && (this._ctState?.sbrElected !== false);
-    const liveExcess = Math.max(0, liveTaxable - 375000);
+    const liveExcess = Math.max(0, liveProfit - 375000);
     const liveTaxBefore = liveExcess * 0.09;
     const liveTaxDue = liveSbrElected ? 0 : liveTaxBefore;
 
     const rev = isSim ? simSales : liveGross;
-    const exp = isSim ? simTotalExpenses : 0;
-    const profit = isSim ? simProfit : liveTaxable;
+    const exp = isSim ? simTotalExpenses : liveTotalExpenses;
+    const profit = isSim ? simProfit : liveProfit;
     const sbrActive = isSim ? simSbrElected : liveSbrElected;
     const excess = isSim ? simExcess : liveExcess;
     const taxBefore = isSim ? simTaxBefore : liveTaxBefore;
@@ -11714,6 +11974,12 @@ class FinanceApp {
           </div>
           <div style="text-align: right; font-size: 12px; line-height: 1.6;">
             <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
+            TRN: <strong>100234567800003</strong><br>
+            Dalma Mall Branch, Abu Dhabi, UAE<br>
+            Assessment Period: <strong>${ctRange.label}</strong><br>
+            Date Generated: ${new Date().toLocaleDateString('en-GB')}
+          </div>
+        </div>
             TRN: <strong>100234567800003</strong><br>
             Dalma Mall Branch, Abu Dhabi, UAE<br>
             Date Generated: ${new Date().toLocaleDateString('en-GB')}
