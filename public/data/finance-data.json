@@ -13193,7 +13193,11 @@
       ],
       "po_date": "2024-05-25",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S AL MULUKI DECOR & GENERAL MAINTENANCE LLC"
     },
     {
       "id": "po-cust-1794244248177",
@@ -13229,7 +13233,11 @@
       ],
       "po_date": "2026-11-09",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S GENERAL EXPENSES FOR THE PROJECT"
     },
     {
       "id": "po-cust-1794116337895",
@@ -13274,7 +13282,11 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC"
     },
     {
       "id": "po-cust-1793992888250",
@@ -13321,7 +13333,11 @@
       "vat_total": 9726.6515,
       "po_date": "2026-11-01",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S TOP ROCK INTERIORS LLC"
     },
     {
       "id": "po-cust-1793991899635",
@@ -13368,7 +13384,11 @@
       "vat_total": 719.821,
       "po_date": "2026-06-07",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S SPECON DESING INTERIOR & EVENTS"
     },
     {
       "id": "po-cust-1793991829340",
@@ -13415,7 +13435,11 @@
       "vat_total": 509.425,
       "po_date": "2026-06-22",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S IRON BEAM BUILDING CONTRACTING L.L.C"
     },
     {
       "id": "po-cust-1793990680528",
@@ -13462,7 +13486,11 @@
       "vat_total": 3406.8115,
       "po_date": "2026-03-19",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S AYAT TECHNICAL SERVICES EST"
     },
     {
       "id": "po-cust-1793977952015",
@@ -13498,7 +13526,11 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S GENERAL EXPENSES FOR THE PROJECT"
     },
     {
       "id": "po-cust-1793976570259",
@@ -13543,7 +13575,11 @@
       ],
       "po_date": "2024-03-22",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S ALI & SONS COMPANY OWNED BY ALI & SONS  HOLDING COMPNAY - SOLE PROPRIETORSHIP LLC."
     },
     {
       "id": "po-cust-1793975959755",
@@ -13590,7 +13626,11 @@
       "vat_total": 6493.224,
       "po_date": "2024-10-12",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S FOCUS TECH LLC"
     },
     {
       "id": "po-cust-1793975224829",
@@ -13626,7 +13666,11 @@
       ],
       "po_date": "2024-11-15",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S GENERAL EXPENSES FOR THE PROJECT"
     },
     {
       "id": "po-cust-1793974961214",
@@ -13671,7 +13715,11 @@
       ],
       "po_date": "2023-07-06",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S MURGANTI GCC  l  UAE"
     },
     {
       "id": "po-cust-1793974237091",
@@ -13716,7 +13764,11 @@
       ],
       "po_date": "2023-09-13",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S GENERAL EXPENSES FOR THE PROJECT"
     },
     {
       "id": "po-cust-1793947339219",
@@ -13761,7 +13813,11 @@
       ],
       "po_date": "2025-11-19",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S MAP OUT DECOR TECHNICAL SERVICES LLC"
     },
     {
       "id": "po-cust-1793945504650",
@@ -13806,7 +13862,11 @@
       ],
       "po_date": "2026-06-06",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S SPECON DESING INTERIOR & EVENTS"
     },
     {
       "id": "po-cust-1793897332944",
@@ -13853,7 +13913,11 @@
       "vat_total": 4524.963500000001,
       "po_date": "2026-06-19",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S TOP ROCK INTERIORS LLC"
     },
     {
       "id": "po-cust-1793896178475",
@@ -13898,7 +13962,11 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S GENERAL EXPENSES FOR THE PROJECT"
     },
     {
       "id": "po-cust-1793894214537",
@@ -13943,7 +14011,11 @@
       ],
       "po_date": "2026-06-28",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S IRON BEAM BUILDING CONTRACTING L.L.C"
     },
     {
       "id": "po-cust-1793890119963",
@@ -13979,7 +14051,11 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC"
     },
     {
       "id": "po-cust-1793641982441",
@@ -14024,7 +14100,11 @@
       ],
       "po_date": "2026-10-04",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S HLN TECHNICAL SERVICES LLC"
     },
     {
       "id": "po-cust-1793293136782",
@@ -14064,7 +14144,11 @@
       "vat_total": 0,
       "po_date": "2026-10-26",
       "created_at": "2026-11-13 05:14:44",
-      "updated_at": "2026-11-13 05:14:44"
+      "updated_at": "2026-11-13 05:14:44",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "M/S PINK CITY CERAMIC AND SANITARY TRADING LLC SPC"
     }
   ],
   "audit_logs": [

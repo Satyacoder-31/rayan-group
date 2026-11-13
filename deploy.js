@@ -21,6 +21,16 @@ async function deploy() {
       if (liveRes.ok) {
         const liveJson = await liveRes.json();
         if (liveJson.data && liveJson.data.invoices && liveJson.data.invoices.length > 0) {
+          if (Array.isArray(liveJson.data.purchase_orders)) {
+            liveJson.data.purchase_orders.forEach(po => {
+              if (po && (!po.type || po.type === 'purchase_order')) {
+                po.type = 'customer_po';
+                po.po_type = 'customer_lpo';
+                po.direction = 'inward';
+                if (!po.customer_name && po.vendor_name) po.customer_name = po.vendor_name;
+              }
+            });
+          }
           fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');
           console.log(`✓ Preserved live database snapshot from production (${liveJson.data.invoices.length} invoices, ${liveJson.data.customer_receipts?.length || 0} receipts)`);
         }
