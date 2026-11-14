@@ -2114,7 +2114,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v120';
+    const CURRENT_DB_VERSION = 'v2026_clean_v121';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -22384,7 +22384,12 @@ class FinanceApp {
               <!-- Item Scope & Pricing -->
               <div class="fin-form-group">
                 <label class="fin-form-label">Item / Technical Scope Description <span style="color:#ef4444;">*</span></label>
-                <textarea id="po-desc" class="fin-form-input" rows="2" required placeholder="Detailed item description...">% Progressive Work Certification (Custom Milestone Claim)</textarea>
+                <textarea id="po-desc" class="fin-form-input" rows="5" required style="line-height:1.45; font-size:0.82rem;" placeholder="Detailed item description and work scope...">% Progressive Work Certification (Custom Milestone Claim)
+Scope of Work & Technical Execution:
+• Installation of Wall Lining with Stud 50mm & Furring Channel for Academy Building.
+• Gypsum Board Partitioning & Rockwool Acoustic Insulation.
+• Installation of Ceiling Suspension, Bulkhead (350mm), Shadow Angle, Cove Light & Curtain Box.
+• Supply & Installation of Access Panels for Academy A and Academy B, including framing, fixing accessories as per site requirements.</textarea>
               </div>
 
               <div class="fin-form-grid-3">
@@ -27637,11 +27642,12 @@ class FinanceApp {
     const page1Terms = allTerms.filter(t => t.num <= 7);
     const page2Terms = allTerms.filter(t => t.num > 7);
 
+    // Fine-print compact legal terms font size matching official PDF sample
     const renderTermItem = (t) => `
-      <p style="margin:0 0 4px 0;">
+      <p style="margin:0 0 2.5px 0; font-size:0.53rem; line-height:1.24;">
         <strong>${t.num ? t.num + '. ' : ''}${t.title}:</strong>
         <span id="po-term-val-${t.num}">${t.text}</span>
-        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 3px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
+        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.55rem; padding:0 2px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
       </p>
     `;
 
@@ -27650,7 +27656,7 @@ class FinanceApp {
       const c1 = items.slice(0, mid);
       const c2 = items.slice(mid);
       return `
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; font-size:0.60rem; color:#374151; line-height:1.35;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; font-size:0.53rem; color:#374151; line-height:1.24;">
           <div>${c1.map(renderTermItem).join('')}</div>
           <div>${c2.map(renderTermItem).join('')}</div>
         </div>
@@ -27678,10 +27684,10 @@ class FinanceApp {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700;" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')">
+            <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')">
               📜 Edit Terms &amp; Conditions
             </button>
-            <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700;" onclick="window.finApp.openEditPOModal('${po.id || po.po_no}')">
+            <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditPOModal('${po.id || po.po_no}')">
               ✏️ Edit Purchase Order
             </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
@@ -27695,10 +27701,10 @@ class FinanceApp {
 
         <div class="fin-doc-viewport">
           <!-- PAGE 1 OF PURCHASE ORDER -->
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
 
             <!-- Top Cyan Gradient Banner -->
-            <div style="height:6px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-8mm -12mm 10px -12mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
+            <div style="height:5px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-7mm -11mm 8px -11mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -27707,71 +27713,71 @@ class FinanceApp {
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section (Left: Logo & Company, Center: Bilingual Title, Right: PO Metadata) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1rem;">
-              <div style="max-width:40%; flex-shrink:1;">
-                <div style="margin-bottom:0.5rem;">
-                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:46px; width:auto; display:block;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:0.75rem;">
+              <div style="max-width:38%; flex-shrink:1;">
+                <div style="margin-bottom:0.35rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
                 </div>
-                <div style="font-size:0.78rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.3; margin-bottom:2px;">
+                <div style="font-size:0.74rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:1px;">
                   ${compName}
                 </div>
-                <div style="font-size:0.75rem; color:#4b5563; line-height:1.4;">
+                <div style="font-size:0.68rem; color:#4b5563; line-height:1.3;">
                   ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(po, 'po')}
               </div>
 
               <!-- Center Bilingual Title matching Official Rayan PDF -->
-              <div style="text-align:center; padding-top:4px; flex-shrink:0;">
-                <div style="font-family:'Amiri', serif; font-size:1.45rem; font-weight:700; color:#0284c7; line-height:1.1;">امر شراء</div>
-                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.65rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">PURCHASE ORDER</div>
-                <div style="font-size:0.72rem; color:#64748b; font-weight:600; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROCUREMENT DOCUMENT</div>
+              <div style="text-align:center; padding-top:2px; flex-shrink:0;">
+                <div style="font-family:'Amiri', serif; font-size:1.25rem; font-weight:700; color:#0284c7; line-height:1.1;">امر شراء</div>
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">PURCHASE ORDER</div>
+                <div style="font-size:0.62rem; color:#64748b; font-weight:600; margin-top:1px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROCUREMENT DOCUMENT</div>
               </div>
 
               <div style="text-align:right; flex-shrink:0;">
-                <div style="font-size:0.95rem; font-weight:800; color:#111827; margin-bottom:8px; white-space:nowrap;">
+                <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-bottom:5px; white-space:nowrap;">
                   <span># ${po.po_no || 'PO-REC-11012'}</span>
-                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONumber('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Edit PO Number">✏️</button>
+                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONumber('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0 2px; vertical-align:middle;" title="Edit PO Number">✏️</button>
                 </div>
 
-                <table style="margin-left:auto; font-size:0.78rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
+                <table style="margin-left:auto; font-size:0.68rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">PO Date :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 5px; color:#6b7280;">PO Date :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 5px; font-weight:700; color:#111827;">${formattedDate}</td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Payment Terms :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                    <td class="fin-doc-nowrap" style="padding:1px 5px; color:#6b7280;">Payment Terms :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 5px; font-weight:700; color:#111827;">
                       <span>${po.payment_terms || 'PDC30'}</span>
-                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOPaymentTerms('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Payment Terms">✏️</button>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOPaymentTerms('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px; vertical-align:middle;" title="Click to edit Payment Terms">✏️</button>
                     </td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Quote Ref. :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                    <td class="fin-doc-nowrap" style="padding:1px 5px; color:#6b7280;">Quote Ref. :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 5px; font-weight:700; color:#111827;">
                       <span>${po.quote_ref || 'Quotation —'}</span>
-                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOQuoteRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Quotation Reference">✏️</button>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOQuoteRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px; vertical-align:middle;" title="Click to edit Quotation Reference">✏️</button>
                     </td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Internal Ref (iRef) :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                    <td class="fin-doc-nowrap" style="padding:1px 5px; color:#6b7280;">Internal Ref (iRef) :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 5px; font-weight:700; color:#111827;">
                       <span>${po.iref || '2026-KGN-SUB'}</span>
-                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOIRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Internal Ref">✏️</button>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOIRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px; vertical-align:middle;" title="Click to edit Internal Ref">✏️</button>
                     </td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">PO Type :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                    <td class="fin-doc-nowrap" style="padding:1px 5px; color:#6b7280;">PO Type :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 5px; font-weight:700; color:#111827;">
                       <span>${po.po_type || 'Subcontract'}</span>
-                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOType('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit PO Type">✏️</button>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOType('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px; vertical-align:middle;" title="Click to edit PO Type">✏️</button>
                     </td>
                   </tr>
                   <tr>
-                    <td class="fin-doc-nowrap" style="padding:1px 6px; color:#6b7280;">Responsible Person :</td>
-                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">
+                    <td class="fin-doc-nowrap" style="padding:1px 5px; color:#6b7280;">Responsible Person :</td>
+                    <td class="fin-doc-nowrap" style="padding:1px 0 1px 5px; font-weight:700; color:#111827;">
                       <span>${po.responsible_person || 'Mohammad Suhel'}</span>
-                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0 3px; vertical-align:middle;" title="Click to edit Responsible Person">✏️</button>
+                      <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px; vertical-align:middle;" title="Click to edit Responsible Person">✏️</button>
                     </td>
                   </tr>
                 </table>
@@ -27779,10 +27785,10 @@ class FinanceApp {
             </div>
 
             <!-- Supplier & Ship-To Details Grid (Boxed layout matching sample PDF) -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1rem; font-size:0.78rem; line-height:1.42;">
-              <div style="border:1px solid #e5e7eb; border-radius:6px; padding:10px 12px; background:#fbfcfe;">
-                <div style="font-size:0.72rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:3px;">SUPPLIER / VENDOR (بيانات المورد)</div>
-                <div style="font-size:0.92rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:0.75rem; font-size:0.68rem; line-height:1.32;">
+              <div style="border:1px solid #e5e7eb; border-radius:5px; padding:7px 10px; background:#fbfcfe;">
+                <div style="font-size:0.64rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px;">SUPPLIER / VENDOR (بيانات المورد)</div>
+                <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-bottom:2px; text-transform:uppercase;">
                   ${po.supplier_name || po.vendor_name || 'M/S GOLDEN ELEGANCE INTERIOR DECORATION L.L.C'}
                 </div>
                 ${po.supplier_attn ? `<div style="color:#4b5563;">Attn: ${po.supplier_attn}</div>` : ''}
@@ -27792,82 +27798,82 @@ class FinanceApp {
                 <div style="color:#4b5563;">Email: ${po.supplier_email || 'contact@goldenelegance.ae'}</div>
                 <div style="color:#0284c7; font-weight:600; margin-top:2px;">
                   Quote Ref.: ${po.quote_ref || 'Quotation —'}
-                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOQuoteRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.72rem; padding:0 3px;" title="Edit Quotation Reference">✏️</button>
+                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOQuoteRef('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px;" title="Edit Quotation Reference">✏️</button>
                 </div>
               </div>
 
-              <div style="border:1px solid #e5e7eb; border-radius:6px; padding:10px 12px; background:#fbfcfe;">
-                <div style="font-size:0.72rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:3px;">SHIP TO &amp; SCOPE (جهة الاستلام والمشروع)</div>
-                <div style="font-size:0.92rem; font-weight:800; color:#111827; margin-bottom:3px;">
+              <div style="border:1px solid #e5e7eb; border-radius:5px; padding:7px 10px; background:#fbfcfe;">
+                <div style="font-size:0.64rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px;">SHIP TO &amp; SCOPE (جهة الاستلام والمشروع)</div>
+                <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-bottom:2px;">
                   ${compName}
                 </div>
                 <!-- Clean address strictly without 'Site Office:' prefix -->
-                <div style="color:#4b5563; line-height:1.4;">${cleanShipTo}</div>
+                <div style="color:#4b5563; line-height:1.3;">${cleanShipTo}</div>
                 <div style="color:#4b5563;">Attn: Mr. Arshad Alam Shaikh</div>
                 <div style="color:#4b5563;">TRN: ${compTrn || '100234567800003'} &nbsp;|&nbsp; Phone: ${compPhone}</div>
                 <div style="color:#111827; font-weight:700; margin-top:2px;">
                   Responsible Person: ${po.responsible_person || 'Mohammad Suhel'} ${po.responsible_person_phone ? `(${po.responsible_person_phone})` : ''}
-                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.72rem; padding:0 3px;" title="Edit Responsible Person">✏️</button>
+                  <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px;" title="Edit Responsible Person">✏️</button>
                 </div>
                 <!-- Project Container with robust word wrap to prevent ACADEMY from breaking into EMY -->
-                <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-top:6px; text-transform:uppercase; word-break:break-word; overflow-wrap:break-word; line-height:1.35; max-width:100%;">
+                <div style="font-size:0.72rem; font-weight:800; color:#111827; margin-top:4px; text-transform:uppercase; word-break:break-word; overflow-wrap:break-word; line-height:1.25; max-width:100%;">
                   PROJECT : ${po.project_name || 'PROJECT # THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI'}
                 </div>
               </div>
             </div>
 
             <!-- Scope of Work Prominent Green Banner (Matching Sample PDF) -->
-            <div style="background:#eaf3ec; border:1.5px solid #111827; border-bottom:none; padding:7px 12px; font-weight:800; font-size:0.80rem; color:#111827; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">
-              <div style="word-break:break-word; line-height:1.35;">
+            <div style="background:#eaf3ec; border:1.5px solid #111827; border-bottom:none; padding:5px 10px; font-weight:700; font-size:0.68rem; color:#111827; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">
+              <div style="word-break:break-word; line-height:1.25;">
                 ${po.project_code ? `Project No. ${po.project_code} - ` : ''}${po.project_name || 'Project'} • ${po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)'}
               </div>
-              <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOScopeOfWork('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:4px; font-size:0.68rem; font-weight:700; padding:2px 8px; cursor:pointer; margin-left:8px; flex-shrink:0;" title="Edit Scope of Work">✏️ Edit Scope</button>
+              <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOScopeOfWork('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:3px; font-size:0.62rem; font-weight:700; padding:1px 6px; cursor:pointer; margin-left:6px; flex-shrink:0;" title="Edit Scope of Work">✏️ Edit Scope</button>
             </div>
 
-            <!-- Modern Line Items Table with Balanced 100% Column Widths -->
+            <!-- Modern Line Items Table with Compact PDF Proportions -->
             <div class="fin-doc-table-scroll-hint">
               <span>↔</span> Swipe table horizontally to view full columns
             </div>
-            <div class="fin-doc-table-wrapper" style="margin-bottom:0.75rem;">
-              <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.76rem; font-family:'Plus Jakarta Sans', sans-serif;">
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0.65rem;">
+              <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.66rem; font-family:'Plus Jakarta Sans', sans-serif;">
                 <colgroup>
                   <col style="width:4%;">    <!-- Sr. No -->
-                  <col style="width:36%;">   <!-- Description & Scope -->
-                  <col style="width:6%;">    <!-- Unit -->
-                  <col style="width:8%;">    <!-- Qty (8% gives ample space for 1000+) -->
+                  <col style="width:40%;">   <!-- Description & Scope (Detailed Scope of Work) -->
+                  <col style="width:5%;">    <!-- Unit -->
+                  <col style="width:7%;">    <!-- Qty -->
                   <col style="width:11%;">   <!-- Unit Price -->
-                  <col style="width:13%;">   <!-- VAT 5% (13% gives ample space for 2,750.00) -->
-                  <col style="width:22%;">   <!-- Total Amount (22% gives ample space for AED 57,750.00) -->
+                  <col style="width:13%;">   <!-- VAT 5% -->
+                  <col style="width:20%;">   <!-- Total Amount -->
                 </colgroup>
                 <thead>
                   <tr style="background:#ffffff; color:#111827; border-bottom:1.5px solid #111827;">
-                    <th style="border:1px solid #111827; padding:5px 4px; width:4%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:4px 3px; width:4%; text-align:center; vertical-align:middle;">
                       <div>Sr. No.</div>
-                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
+                      <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 8px; width:36%; vertical-align:middle; text-align:left;">
-                      <div>Description &amp; Scope</div>
-                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
+                    <th style="border:1px solid #111827; padding:4px 6px; width:40%; vertical-align:middle; text-align:left;">
+                      <div>Description &amp; Scope (تفاصيل نطاق العمل)</div>
+                      <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:6%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:4px 3px; width:5%; text-align:center; vertical-align:middle;">
                       <div>Unit</div>
-                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
+                      <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">وحدة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 4px; width:8%; text-align:center; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:4px 3px; width:7%; text-align:center; vertical-align:middle;">
                       <div>Qty</div>
-                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
+                      <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">الكمية</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:11%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:4px 5px; width:11%; text-align:right; vertical-align:middle;">
                       <div>Unit Price</div>
-                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">سعر الوحدة</div>
+                      <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">سعر الوحدة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 6px; width:13%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:4px 5px; width:13%; text-align:right; vertical-align:middle;">
                       <div>VAT 5%</div>
-                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
+                      <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">ضريبة</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:5px 8px; width:22%; text-align:right; vertical-align:middle;">
+                    <th style="border:1px solid #111827; padding:4px 6px; width:20%; text-align:right; vertical-align:middle;">
                       <div>Total Amount</div>
-                      <div style="font-size:0.65rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
+                      <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">المبلغ الإجمالي</div>
                     </th>
                   </tr>
                 </thead>
@@ -27875,8 +27881,8 @@ class FinanceApp {
                   ${((po.line_items && po.line_items.length) ? po.line_items : [
                     {
                       sr: 1,
-                      name: po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)',
-                      description: po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)',
+                      name: po.line_items?.[0]?.name || detailedScopeText,
+                      description: po.line_items?.[0]?.description || detailedScopeText,
                       unit: '%',
                       qty: 1000,
                       unit_price: 55,
@@ -27891,82 +27897,86 @@ class FinanceApp {
                     const itemTaxable = Number(item.taxable_amount || item.invoice_amount || (itemQty * itemUnitPrice));
                     const itemVat = Number(item.vat_amount || item.tax_amount || (itemTaxable * 0.05));
                     const itemTotal = Number(item.total_amount || (itemTaxable + itemVat));
+                    const itemDesc = (item.description || item.name || '').trim();
 
                     return `
                       <tr style="border-bottom:1px solid #111827;">
-                        <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600;">${item.sr || idx + 1}</td>
-                        <td style="border:1px solid #111827; padding:6px 8px; color:#111827; word-break:break-word; line-height:1.4; white-space:pre-line;">
-                          ${item.name || item.description}
+                        <td style="border:1px solid #111827; padding:4px 3px; text-align:center; color:#111827; font-weight:600; vertical-align:top;">${item.sr || idx + 1}</td>
+                        <td style="border:1px solid #111827; padding:4px 6px; color:#111827; word-break:break-word; line-height:1.35; white-space:pre-line; vertical-align:top; font-size:0.65rem;">
+                          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px;">
+                            <div style="flex:1;">${itemDesc}</div>
+                            <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOLineItemScope('${po.id || po.po_no}', ${idx})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0 2px; flex-shrink:0;" title="Edit Work Scope Details">✏️</button>
+                          </div>
                         </td>
-                        <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:600; white-space:nowrap !important;">${item.unit || item.uom || '%'}</td>
-                        <td style="border:1px solid #111827; padding:6px 4px; text-align:center; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important;">${itemQty}</td>
-                        <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 6px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${itemVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="fin-cell-num" style="border:1px solid #111827; padding:6px 8px; text-align:right; color:#111827; font-weight:800; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box;">${curr.trim()} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="border:1px solid #111827; padding:4px 3px; text-align:center; color:#111827; font-weight:600; white-space:nowrap !important; vertical-align:top;">${item.unit || item.uom || '%'}</td>
+                        <td style="border:1px solid #111827; padding:4px 3px; text-align:center; color:#111827; font-weight:700; white-space:nowrap !important; word-break:keep-all !important; vertical-align:top;">${itemQty}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:4px 5px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box; vertical-align:top;">${itemUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:4px 5px; text-align:right; color:#111827; font-weight:600; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box; vertical-align:top;">${itemVat.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="fin-cell-num" style="border:1px solid #111827; padding:4px 6px; text-align:right; color:#111827; font-weight:800; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box; vertical-align:top;">${curr.trim()} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     `;
                   }).join('')}
                 </tbody>
                 <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
                   <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:8px 12px; vertical-align:middle; background:#eaf3ec;">
-                      <div style="font-size:0.80rem; font-weight:700; color:#111827; line-height:1.4;">
+                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:6px 10px; vertical-align:middle; background:#eaf3ec;">
+                      <div style="font-size:0.68rem; font-weight:700; color:#111827; line-height:1.3;">
                         Total In Words : ${amountInWords}
                       </div>
-                      <div style="font-size:0.72rem; color:#4b5563; margin-top:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <div style="font-size:0.62rem; color:#4b5563; margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                         <span><strong>Site Location:</strong> ${po.site_location || 'Al Foah Mall - Alain'} • Working Hours: ${po.working_hours || '8:00 AM – 6:00 PM'}</span>
-                        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOSiteLocation('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0;" title="Edit Site Location &amp; Hours">✏️</button>
+                        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOSiteLocation('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0;" title="Edit Site Location &amp; Hours">✏️</button>
                       </div>
                     </td>
-                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; background:#eaf3ec;">Sub-Total EX-VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#eaf3ec;">Sub-Total EX-VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; background:#eaf3ec;">VAT 5%</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:5px 8px; font-weight:700; color:#111827; text-align:right; font-size:0.78rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#eaf3ec;">VAT 5%</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.84rem; background:#eaf3ec;">Total Incl. VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:6px 8px; font-weight:800; color:#111827; text-align:right; font-size:0.84rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; background:#eaf3ec;">Total Incl. VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
             <!-- Notes to Supplier Box (Matching Sample PDF) -->
-            <div style="margin-top:0.75rem; border:1px solid #111827; padding:7px 10px; background:#f9fafb; font-size:0.72rem; line-height:1.42;">
+            <div style="margin-top:0.65rem; border:1px solid #111827; padding:5px 8px; background:#f9fafb; font-size:0.60rem; line-height:1.32;">
               <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
                 <span>Notes to Supplier:</span>
-                <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONotes('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0 3px;" title="Edit Notes to Supplier">✏️ Edit Notes</button>
+                <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONotes('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px;" title="Edit Notes to Supplier">✏️ Edit Notes</button>
               </div>
               <div style="color:#374151;">${po.notes_to_supplier || po.notes || '1. Location / Site - The New Dubai Police Academy & al Rowaiyah, Dubai. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools & Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.'}</div>
             </div>
 
             <!-- Page 1: General Terms and Conditions for Supplies (Articles 1 - 7) -->
-            <div style="margin-top:0.85rem; border-top:1.5px solid #111827; padding-top:6px;">
-              <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.02em;">
+            <div style="margin-top:0.65rem; border-top:1.5px solid #111827; padding-top:4px;">
+              <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
                 GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 1 – 7)
               </div>
               ${renderTermsGrid(page1Terms)}
             </div>
 
             <!-- Page 1 Fixed Footer -->
-            <div style="margin-top:0.75rem; padding-top:4px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#6b7280;">
+            <div style="margin-top:0.5rem; padding-top:3px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
               <div>${po.po_no} • info@rayan-group.com</div>
               <div style="font-weight:700; color:#9ca3af;">Page 1 of 2</div>
             </div>
 
             <!-- Page 1 Bottom Cyan Gradient Banner -->
-            <div style="height:4px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:8px -12mm -6mm -12mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
+            <div style="height:3px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:6px -11mm -5mm -11mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
 
             </div> <!-- End Main Document Content Layer -->
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
-          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden;">
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
 
             <!-- Top Cyan Gradient Banner (Page 2) -->
-            <div style="height:6px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-8mm -12mm 10px -12mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
+            <div style="height:5px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-7mm -11mm 8px -11mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -27975,38 +27985,38 @@ class FinanceApp {
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section Page 2 -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1.25rem; border-bottom:1.5px solid #111827; padding-bottom:6px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:34px; width:auto; display:block;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.6rem; gap:1rem; border-bottom:1.5px solid #111827; padding-bottom:4px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:30px; width:auto; display:block;">
                 <div>
-                  <div style="font-size:0.78rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
-                  <div style="font-size:0.70rem; color:#4b5563; display:flex; align-items:center; gap:8px;">
+                  <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
+                  <div style="font-size:0.62rem; color:#4b5563; display:flex; align-items:center; gap:6px;">
                     <span>General Terms &amp; Conditions for Supplies (Contd.)</span>
-                    <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:4px; font-size:0.62rem; font-weight:700; padding:2px 7px; cursor:pointer;" title="Edit all 20 terms for this company / order">✏️ Edit Terms</button>
+                    <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:3px; font-size:0.58rem; font-weight:700; padding:1px 6px; cursor:pointer;" title="Edit all 20 terms for this company / order">✏️ Edit Terms</button>
                   </div>
                 </div>
               </div>
               <div style="text-align:right;">
-                <div style="font-family:'Outfit', sans-serif; font-size:1rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
-                <div style="font-size:0.78rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'PO-REC-11012'}</div>
+                <div style="font-family:'Outfit', sans-serif; font-size:0.92rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
+                <div style="font-size:0.72rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'PO-REC-11012'}</div>
               </div>
             </div>
 
-            <!-- Page 2: General Terms and Conditions for Supplies (Articles 8 - 20) -->
-            <div style="margin-bottom:0.75rem;">
-              <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.02em;">
+            <!-- Page 2: General Terms and Conditions for Supplies (Articles 8 - 20) with fine-print compact font -->
+            <div style="margin-bottom:0.6rem;">
+              <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
                 GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 8 – 20)
               </div>
               ${renderTermsGrid(page2Terms)}
             </div>
 
             <!-- Invoice Requirements Box (Matching Official PDF Sample) -->
-            <div style="margin-top:0.75rem; border:1px solid #111827; padding:7px 10px; background:#f9fafb; font-size:0.62rem; line-height:1.36;">
-              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px;">Invoice Requirements:</div>
+            <div style="margin-top:0.6rem; border:1px solid #111827; padding:5px 8px; background:#f9fafb; font-size:0.54rem; line-height:1.24;">
+              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; font-size:0.60rem;">Invoice Requirements:</div>
               <div style="color:#374151;">
                 <div><strong>10.2.1.</strong> The tax invoice is dated not older than 14 calendar days (in par with Decree-LAW).</div>
                 <div><strong>10.2.2.</strong> The tax invoice is an original and includes all required details such as:</div>
-                <div style="padding-left:10px;">
+                <div style="padding-left:8px;">
                   • 10.2.2.1. Correct company name and TRN &nbsp;|&nbsp; 10.2.2.2. PO/Contract reference<br>
                   • 10.2.2.3. With supplier signature and stamp (except for electronic invoices)<br>
                   • 10.2.2.4. Description, quantity and amount of supply matching with supporting documents<br>
@@ -28019,45 +28029,45 @@ class FinanceApp {
             </div>
 
             <!-- Dual Signature Blocks (Matching Official Sample PDF with Arshad Alam Shaikh & Official Rayan Stamp) -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:1.15rem; padding-top:0.65rem; border-top:1px solid #cbd5e1;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:0.85rem; padding-top:0.5rem; border-top:1px solid #cbd5e1;">
               <!-- Rayan Engineering Authorized Signatory Block -->
-              <div style="text-align:center; min-height:120px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
-                <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase;">
+              <div style="text-align:center; min-height:105px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.66rem; font-weight:800; color:#111827; text-transform:uppercase;">
                   ${compName}
                 </div>
-                <div style="position:relative; width:220px; height:80px; margin:2px auto; display:flex; justify-content:center; align-items:center;">
+                <div style="position:relative; width:190px; height:70px; margin:1px auto; display:flex; justify-content:center; align-items:center;">
                   <!-- Rayan Circular Stamp -->
-                  <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; width:88px; height:auto; opacity:0.88; pointer-events:none; left:25px; top:-5px;">
+                  <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; width:72px; height:auto; opacity:0.88; pointer-events:none; left:20px; top:-5px;">
                   <!-- Arshad Alam Shaikh Signature -->
-                  <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; width:145px; height:auto; z-index:2; left:45px; top:10px;">
+                  <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; width:120px; height:auto; z-index:2; left:38px; top:8px;">
                 </div>
                 <div>
-                  <div style="border-top:1.5px solid #111827; width:180px; margin:0 auto 2px auto;"></div>
-                  <div style="font-size:0.72rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                  <div style="font-size:0.68rem; color:#4b5563;">Arshad Alam Shaikh</div>
+                  <div style="border-top:1.5px solid #111827; width:160px; margin:0 auto 2px auto;"></div>
+                  <div style="font-size:0.65rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="font-size:0.60rem; color:#4b5563;">Arshad Alam Shaikh</div>
                 </div>
               </div>
 
               <!-- Supplier Representative Authorized Signatory Block -->
-              <div style="text-align:center; min-height:120px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
-                <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase;">
+              <div style="text-align:center; min-height:105px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.66rem; font-weight:800; color:#111827; text-transform:uppercase;">
                   ${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}
                 </div>
-                <div style="position:relative; width:220px; height:80px; margin:2px auto; display:flex; justify-content:center; align-items:center;">
-                  <div style="border:1.5px dashed #cbd5e1; border-radius:6px; width:160px; height:65px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.65rem; font-weight:600;">
+                <div style="position:relative; width:190px; height:70px; margin:1px auto; display:flex; justify-content:center; align-items:center;">
+                  <div style="border:1.5px dashed #cbd5e1; border-radius:5px; width:140px; height:55px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.58rem; font-weight:600;">
                     [ Acceptance &amp; Official Stamp ]
                   </div>
                 </div>
                 <div>
-                  <div style="border-top:1.5px solid #111827; width:180px; margin:0 auto 2px auto;"></div>
-                  <div style="font-size:0.72rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                  <div style="font-size:0.68rem; color:#4b5563;">${po.supplier_attn || 'Supplier Representative'}</div>
+                  <div style="border-top:1.5px solid #111827; width:160px; margin:0 auto 2px auto;"></div>
+                  <div style="font-size:0.65rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="font-size:0.60rem; color:#4b5563;">${po.supplier_attn || 'Supplier Representative'}</div>
                 </div>
               </div>
             </div>
 
             <!-- Page 2 Footer -->
-            <div style="margin-top:0.85rem; padding-top:4px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#6b7280;">
+            <div style="margin-top:0.65rem; padding-top:3px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
               <div>
                 <strong>Best Wishes</strong> • ${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'} • Hotline : ${compPhone} • <a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:none;">${compEmail}</a> • <a href="http://rayan-group.com" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a>
               </div>
@@ -28065,7 +28075,7 @@ class FinanceApp {
             </div>
 
             <!-- Page 2 Bottom Cyan Gradient Banner -->
-            <div style="height:4px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:8px -12mm -6mm -12mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
+            <div style="height:3px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:6px -11mm -5mm -11mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
 
             </div> <!-- End Main Document Content Layer Page 2 -->
           </div>
@@ -31030,7 +31040,7 @@ class FinanceApp {
               <!-- Item Scope & Pricing -->
               <div class="fin-form-group">
                 <label class="fin-form-label">Item / Technical Scope Description <span style="color:#ef4444;">*</span></label>
-                <textarea id="edit-po-desc" class="fin-form-input" rows="2" required>${lineItems[0]?.name || lineItems[0]?.description || po.scope_of_work || ''}</textarea>
+                <textarea id="edit-po-desc" class="fin-form-input" rows="5" required style="line-height:1.45; font-size:0.82rem;">${lineItems[0]?.description || lineItems[0]?.name || po.scope_of_work || ''}</textarea>
               </div>
 
               <div class="fin-form-grid-4" style="display:grid; grid-template-columns:1fr 1fr 1.5fr 1.5fr; gap:0.75rem;">
@@ -31327,6 +31337,67 @@ class FinanceApp {
         this.openPOPrintModal(po.id || po.po_no);
       });
     }
+  }
+
+  quickEditPOLineItemScope(poId, itemIndex = 0) {
+    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    if (!po || !po.line_items || !po.line_items[itemIndex]) return;
+    const item = po.line_items[itemIndex];
+    const currentScope = item.description || item.name || '';
+
+    // Remove existing quick scope edit modal if open
+    const existingModal = document.getElementById('quick-scope-edit-modal');
+    if (existingModal) existingModal.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'quick-scope-edit-modal';
+    overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; padding:1.25rem; backdrop-filter:blur(4px);';
+    overlay.innerHTML = `
+      <div style="background:#0f172a; border:1px solid #334155; border-radius:12px; width:100%; max-width:680px; padding:1.5rem; box-shadow:0 25px 50px -12px rgba(0,0,0,0.7); color:#f8fafc; font-family:'Plus Jakarta Sans', sans-serif;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #1e293b; padding-bottom:0.75rem;">
+          <div>
+            <h3 style="margin:0; font-size:1.05rem; font-weight:700; color:#38bdf8; display:flex; align-items:center; gap:8px;">
+              <span>📝</span> Edit Work Scope & Technical Details
+            </h3>
+            <p style="margin:4px 0 0; font-size:0.75rem; color:#94a3b8;">Item #${Number(itemIndex) + 1} • ${this.escapeHtml(po.po_no || po.id || '')} (${this.escapeHtml(po.supplier_name || po.vendor_name || '')})</p>
+          </div>
+          <button id="close-scope-modal" style="background:none; border:none; color:#94a3b8; font-size:1.5rem; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+        <div style="margin-bottom:1.25rem;">
+          <label style="display:block; font-size:0.8rem; font-weight:600; color:#cbd5e1; margin-bottom:0.5rem;">
+            Detailed Scope of Work, Technical Execution, Milestones & Specs:
+          </label>
+          <textarea id="scope-textarea" rows="10" style="width:100%; background:#1e293b; border:1px solid #475569; border-radius:8px; padding:0.75rem; color:#f8fafc; font-size:0.85rem; font-family:inherit; line-height:1.55; resize:vertical; box-sizing:border-box;"></textarea>
+          <p style="margin:6px 0 0; font-size:0.72rem; color:#94a3b8;">Supports line breaks, bullet points (&bull;), and numbered milestones. Printed directly under Description &amp; Scope in the official PO.</p>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+          <button id="cancel-scope-modal" type="button" style="background:#334155; color:#f8fafc; border:none; padding:8px 16px; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">Cancel</button>
+          <button id="save-scope-modal" type="button" style="background:#0284c7; color:#ffffff; border:none; padding:8px 20px; border-radius:6px; font-size:0.85rem; font-weight:700; cursor:pointer;">Save Work Scope</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const txtArea = overlay.querySelector('#scope-textarea');
+    txtArea.value = currentScope;
+    txtArea.focus();
+
+    const closeModal = () => overlay.remove();
+    overlay.querySelector('#close-scope-modal').onclick = closeModal;
+    overlay.querySelector('#cancel-scope-modal').onclick = closeModal;
+    overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
+
+    overlay.querySelector('#save-scope-modal').onclick = () => {
+      const newScope = txtArea.value.trim();
+      item.description = newScope;
+      item.name = newScope.split('\n')[0] || newScope;
+      this.syncApi('update_po', { po }).then(() => {
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        this.showNotification('Work scope details updated successfully.', 'success');
+        closeModal();
+        this.openPOPrintModal(po.id || po.po_no);
+      });
+    };
   }
 
   quickEditPOSiteLocation(poId) {
