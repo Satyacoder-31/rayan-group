@@ -2114,7 +2114,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v123';
+    const CURRENT_DB_VERSION = 'v2026_clean_v124';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -27637,17 +27637,15 @@ Scope of Work & Technical Execution:
     const rawShipTo = po.ship_to_address || 'Office No. 09, Plot 42, Mussafah M-36, Abu Dhabi P.O. Box 91800';
     const cleanShipTo = rawShipTo.replace(/^Site Office:\s*/i, '').trim();
 
-    // Terms distribution: Page 1 = Articles 1 to 7; Page 2 = Articles 8 to 20
+    // All 20 General Terms and Conditions placed together on Page 2
     const allTerms = this.getPOTermsForPO(po);
-    const page1Terms = allTerms.filter(t => t.num <= 7);
-    const page2Terms = allTerms.filter(t => t.num > 7);
 
     // Fine-print compact legal terms font size matching official PDF sample
     const renderTermItem = (t) => `
-      <p style="margin:0 0 2.5px 0; font-size:0.53rem; line-height:1.24;">
-        <strong>${t.num ? t.num + '. ' : ''}${t.title}:</strong>
+      <p style="margin:0 0 2px 0; font-size:0.50rem; line-height:1.20;">
+        <strong style="color:#0f172a;">${t.num ? t.num + '. ' : ''}${t.title}:</strong>
         <span id="po-term-val-${t.num}">${t.text}</span>
-        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.55rem; padding:0 2px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
+        <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.52rem; padding:0 2px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
       </p>
     `;
 
@@ -27656,7 +27654,7 @@ Scope of Work & Technical Execution:
       const c1 = items.slice(0, mid);
       const c2 = items.slice(mid);
       return `
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; font-size:0.53rem; color:#374151; line-height:1.24;">
+        <div class="fin-po-terms-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; font-size:0.50rem; color:#374151; line-height:1.20;">
           <div>${c1.map(renderTermItem).join('')}</div>
           <div>${c2.map(renderTermItem).join('')}</div>
         </div>
@@ -27685,16 +27683,19 @@ Scope of Work & Technical Execution:
           </div>
           <div class="fin-doc-toolbar-right">
             <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')">
-              📜 Edit Terms &amp; Conditions
+              <span>📜</span> Edit 20 Terms
             </button>
             <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditPOModal('${po.id || po.po_no}')">
-              ✏️ Edit Purchase Order
+              <span>✏️</span> Edit PO Details
             </button>
-            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
-              🖨️ Print / Save as PDF
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
             </button>
-            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
-              ✕ Close
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadPODocument('${po.id || po.po_no}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-close" onclick="window.finApp.closePrintModal()">
+              <span>✕</span> Close
             </button>
           </div>
         </div>
@@ -27822,8 +27823,8 @@ Scope of Work & Technical Execution:
               </div>
             </div>
 
-            <!-- Scope of Work Prominent Green Banner (Matching Sample PDF) -->
-            <div style="background:#eaf3ec; border:1.5px solid #111827; border-bottom:none; padding:5px 10px; font-weight:700; font-size:0.68rem; color:#111827; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">
+            <!-- Scope of Work Banner with Rayan Corporate Color Communication -->
+            <div style="background:#f0f9ff; border:1.5px solid #0284c7; border-bottom:none; padding:5px 10px; font-weight:700; font-size:0.68rem; color:#0f172a; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">
               <div style="word-break:break-word; line-height:1.25;">
                 ${po.project_code ? `Project No. ${po.project_code} - ` : ''}${po.project_name || 'Project'} • ${po.scope_of_work || '% Progressive Work Certification (Custom Milestone Claim)'}
               </div>
@@ -27851,8 +27852,8 @@ Scope of Work & Technical Execution:
                       <div>Sr. No.</div>
                       <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">رقم</div>
                     </th>
-                    <th style="border:1px solid #111827; padding:4px 6px; width:40%; vertical-align:middle; text-align:left;">
-                      <div>Description &amp; Scope (تفاصيل نطاق العمل)</div>
+                    <th style="border:1px solid #111827; padding:4px 6px; width:40%; text-align:left; vertical-align:middle;">
+                      <div>Description &amp; Scope</div>
                       <div style="font-size:0.58rem; font-weight:600; font-family:'Amiri', serif;">وصف الأعمال</div>
                     </th>
                     <th style="border:1px solid #111827; padding:4px 3px; width:5%; text-align:center; vertical-align:middle;">
@@ -27878,14 +27879,15 @@ Scope of Work & Technical Execution:
                   </tr>
                 </thead>
                 <tbody>
-                  ${((po.line_items && po.line_items.length) ? po.line_items : [
+                  ${(po.line_items || po.items || [
                     {
                       sr: 1,
-                      name: po.line_items?.[0]?.name || detailedScopeText,
-                      description: po.line_items?.[0]?.description || detailedScopeText,
+                      description: '% Progressive Work Certification (Custom Milestone Claim)',
                       unit: '%',
                       qty: 1000,
+                      rate: 55,
                       unit_price: 55,
+                      taxable_amount: 55000,
                       invoice_amount: 55000,
                       vat_rate: 5,
                       vat_amount: 2750,
@@ -27918,8 +27920,8 @@ Scope of Work & Technical Execution:
                   }).join('')}
                 </tbody>
                 <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
-                  <tr style="background:#eaf3ec; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:6px 10px; vertical-align:middle; background:#eaf3ec;">
+                  <tr style="background:#f0f9ff; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:6px 10px; vertical-align:middle; background:#f0f9ff;">
                       <div style="font-size:0.68rem; font-weight:700; color:#111827; line-height:1.3;">
                         Total In Words : ${amountInWords}
                       </div>
@@ -27928,23 +27930,23 @@ Scope of Work & Technical Execution:
                         <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOSiteLocation('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0;" title="Edit Site Location &amp; Hours">✏️</button>
                       </div>
                     </td>
-                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#eaf3ec;">Sub-Total EX-VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#f0f9ff;">Sub-Total EX-VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#eaf3ec;">VAT 5%</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <tr style="background:#f0f9ff; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#f0f9ff;">VAT 5%</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                  <tr style="background:#eaf3ec; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; background:#eaf3ec;">Total Incl. VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#eaf3ec;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <tr style="background:#f0f9ff; page-break-inside:avoid !important; break-inside:avoid !important;">
+                    <td colspan="2" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; background:#f0f9ff;">Total Incl. VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
-            <!-- Notes to Supplier Box (Matching Sample PDF) -->
-            <div style="margin-top:0.65rem; border:1px solid #111827; padding:5px 8px; background:#f9fafb; font-size:0.60rem; line-height:1.32;">
+            <!-- Notes to Supplier Box (Matching Sample PDF - Page 1 Ends Cleanly Here) -->
+            <div style="margin-top:0.65rem; border:1px solid #111827; padding:5px 8px; background:#f8fafc; font-size:0.60rem; line-height:1.32;">
               <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
                 <span>Notes to Supplier:</span>
                 <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONotes('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px;" title="Edit Notes to Supplier">✏️ Edit Notes</button>
@@ -27952,24 +27954,13 @@ Scope of Work & Technical Execution:
               <div style="color:#374151;">${po.notes_to_supplier || po.notes || '1. Location / Site - The New Dubai Police Academy & al Rowaiyah, Dubai. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools & Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.'}</div>
             </div>
 
-            <!-- Page 1: General Terms and Conditions for Supplies (Articles 1 - 7) -->
-            <div style="margin-top:0.65rem; border-top:1.5px solid #111827; padding-top:4px;">
-              <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
-                GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 1 – 7)
-              </div>
-              ${renderTermsGrid(page1Terms)}
-            </div>
-
-            <!-- Page 1 Fixed Footer -->
-            <div style="margin-top:0.5rem; padding-top:3px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
-              <div>${po.po_no} • info@rayan-group.com</div>
+            <!-- Page 1 Clean Footer (Terms moved to Page 2) -->
+            <div style="margin-top:0.8rem; padding-top:4px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
+              <div>${po.po_no} • RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
               <div style="font-weight:700; color:#9ca3af;">Page 1 of 2</div>
             </div>
 
-            <!-- Page 1 Bottom Cyan Gradient Banner -->
-            <div style="height:3px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:6px -11mm -5mm -11mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
-
-            </div> <!-- End Main Document Content Layer -->
+            </div> <!-- End Main Document Content Layer Page 1 -->
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
@@ -27985,14 +27976,14 @@ Scope of Work & Technical Execution:
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section Page 2 -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.6rem; gap:1rem; border-bottom:1.5px solid #111827; padding-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; gap:1rem; border-bottom:1.5px solid #111827; padding-bottom:4px;">
               <div style="display:flex; align-items:center; gap:8px;">
                 <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:30px; width:auto; display:block;">
                 <div>
                   <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
-                  <div style="font-size:0.62rem; color:#4b5563; display:flex; align-items:center; gap:6px;">
-                    <span>General Terms &amp; Conditions for Supplies (Contd.)</span>
-                    <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:3px; font-size:0.58rem; font-weight:700; padding:1px 6px; cursor:pointer;" title="Edit all 20 terms for this company / order">✏️ Edit Terms</button>
+                  <div style="font-size:0.60rem; color:#4b5563; display:flex; align-items:center; gap:6px;">
+                    <span>General Terms &amp; Conditions for Supplies (Articles 1 – 20)</span>
+                    <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')" style="background:#0284c7; color:#ffffff; border:none; border-radius:3px; font-size:0.56rem; font-weight:700; padding:1px 6px; cursor:pointer;" title="Edit all 20 terms for this company / order">✏️ Edit Terms</button>
                   </div>
                 </div>
               </div>
@@ -28002,17 +27993,17 @@ Scope of Work & Technical Execution:
               </div>
             </div>
 
-            <!-- Page 2: General Terms and Conditions for Supplies (Articles 8 - 20) with fine-print compact font -->
-            <div style="margin-bottom:0.6rem;">
-              <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
-                GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 8 – 20)
+            <!-- Page 2: All 20 General Terms and Conditions in 2-Column Compact Grid -->
+            <div style="margin-bottom:0.45rem;">
+              <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 1 – 20)
               </div>
-              ${renderTermsGrid(page2Terms)}
+              ${renderTermsGrid(allTerms)}
             </div>
 
             <!-- Invoice Requirements Box (Matching Official PDF Sample) -->
-            <div style="margin-top:0.6rem; border:1px solid #111827; padding:5px 8px; background:#f9fafb; font-size:0.54rem; line-height:1.24;">
-              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; font-size:0.60rem;">Invoice Requirements:</div>
+            <div style="margin-top:0.4rem; border:1px solid #111827; padding:4px 7px; background:#f8fafc; font-size:0.50rem; line-height:1.20;">
+              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; font-size:0.56rem;">Invoice Requirements:</div>
               <div style="color:#374151;">
                 <div><strong>10.2.1.</strong> The tax invoice is dated not older than 14 calendar days (in par with Decree-LAW).</div>
                 <div><strong>10.2.2.</strong> The tax invoice is an original and includes all required details such as:</div>
@@ -28028,54 +28019,59 @@ Scope of Work & Technical Execution:
               </div>
             </div>
 
-            <!-- Dual Signature Blocks (Matching Official Sample PDF with Arshad Alam Shaikh & Official Rayan Stamp) -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:0.85rem; padding-top:0.5rem; border-top:1px solid #cbd5e1;">
-              <!-- Rayan Engineering Authorized Signatory Block -->
-              <div style="text-align:center; min-height:105px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
-                <div style="font-size:0.66rem; font-weight:800; color:#111827; text-transform:uppercase;">
-                  ${compName}
-                </div>
-                <div style="position:relative; width:190px; height:70px; margin:1px auto; display:flex; justify-content:center; align-items:center;">
-                  <!-- Rayan Circular Stamp -->
-                  <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; width:72px; height:auto; opacity:0.88; pointer-events:none; left:20px; top:-5px;">
-                  <!-- Arshad Alam Shaikh Signature -->
-                  <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; width:120px; height:auto; z-index:2; left:38px; top:8px;">
-                </div>
-                <div>
-                  <div style="border-top:1.5px solid #111827; width:160px; margin:0 auto 2px auto;"></div>
-                  <div style="font-size:0.65rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                  <div style="font-size:0.60rem; color:#4b5563;">Arshad Alam Shaikh</div>
-                </div>
+            <!-- Page 2 Bottom Section: Left Notes Signoff, Right Dual Signatures -->
+            <div style="display:grid; grid-template-columns:220px 1fr; gap:1.25rem; margin-top:0.6rem; padding-top:0.45rem; border-top:1px solid #cbd5e1; align-items:flex-end;">
+              <!-- Left Column: Rayan Authentic Signoff Notes Block ("Keep this as well in last pages") -->
+              <div style="font-size:0.60rem; color:#475569; line-height:1.4; padding-bottom:2px;">
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">Notes:</div>
+                <div style="margin-bottom:5px; color:#475569;">Please keep a copy of this PO for your records.</div>
+                <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                <div>Abu Dhabi, U.A.E</div>
+                <div>Hotline : +971 2 565 4497</div>
+                <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a></div>
+                <div><a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
               </div>
 
-              <!-- Supplier Representative Authorized Signatory Block -->
-              <div style="text-align:center; min-height:105px; display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
-                <div style="font-size:0.66rem; font-weight:800; color:#111827; text-transform:uppercase;">
-                  ${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}
-                </div>
-                <div style="position:relative; width:190px; height:70px; margin:1px auto; display:flex; justify-content:center; align-items:center;">
-                  <div style="border:1.5px dashed #cbd5e1; border-radius:5px; width:140px; height:55px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.58rem; font-weight:600;">
-                    [ Acceptance &amp; Official Stamp ]
+              <!-- Right Column: Dual Signatures ("Signature and stamp need setup") -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:flex-end;">
+                <!-- Buyer Signatory (Rayan Engineering) -->
+                <div style="text-align:center;">
+                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; min-height:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    ${compName}
                   </div>
+                  <div style="position:relative; width:150px; height:60px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                    <!-- Circular Rayan Stamp -->
+                    <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; width:64px; height:auto; opacity:0.85; pointer-events:none; left:50%; top:50%; transform:translate(-70%, -50%);">
+                    <!-- Arshad Alam Shaikh Signature -->
+                    <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; width:108px; height:auto; z-index:2; left:50%; top:50%; transform:translate(-40%, -45%);">
+                  </div>
+                  <div style="border-top:1.5px solid #111827; width:140px; margin:2px auto 3px auto;"></div>
+                  <div style="font-size:0.62rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
                 </div>
-                <div>
-                  <div style="border-top:1.5px solid #111827; width:160px; margin:0 auto 2px auto;"></div>
-                  <div style="font-size:0.65rem; font-weight:800; color:#111827;">Authorised Signatory</div>
-                  <div style="font-size:0.60rem; color:#4b5563;">${po.supplier_attn || 'Supplier Representative'}</div>
+
+                <!-- Supplier Signatory -->
+                <div style="text-align:center;">
+                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; min-height:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}">
+                    ${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}
+                  </div>
+                  <div style="position:relative; width:150px; height:60px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                    <div style="border:1.5px dashed #cbd5e1; border-radius:4px; width:130px; height:48px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.55rem; font-weight:600; background:#f8fafc;">
+                      [ Acceptance &amp; Stamp ]
+                    </div>
+                  </div>
+                  <div style="border-top:1.5px solid #111827; width:140px; margin:2px auto 3px auto;"></div>
+                  <div style="font-size:0.62rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="font-size:0.58rem; color:#4b5563;">${po.supplier_attn || 'Supplier Representative'}</div>
                 </div>
               </div>
             </div>
 
-            <!-- Page 2 Footer -->
-            <div style="margin-top:0.65rem; padding-top:3px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
-              <div>
-                <strong>Best Wishes</strong> • ${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'} • Hotline : ${compPhone} • <a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:none;">${compEmail}</a> • <a href="http://rayan-group.com" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a>
-              </div>
-              <div style="font-weight:700; color:#9ca3af;">Page 2 of 2</div>
+            <!-- Page 2 Clean Footer -->
+            <div style="margin-top:0.4rem; padding-top:2px; display:flex; justify-content:flex-end; font-size:0.58rem; font-weight:700; color:#9ca3af;">
+              Page 2 of 2
             </div>
-
-            <!-- Page 2 Bottom Cyan Gradient Banner -->
-            <div style="height:3px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:6px -11mm -5mm -11mm; border-bottom-left-radius:4px; border-bottom-right-radius:4px;"></div>
 
             </div> <!-- End Main Document Content Layer Page 2 -->
           </div>
