@@ -10275,13 +10275,10 @@
       "vendor_id": "vend-mwhjzf3x",
       "vendor_name": "M/S SOLID MARBLE INDUSTRIES LLC",
       "vendor_tax_regime": "trn",
-      "vendor_gstin": "",
       "vendor_trn": "100260193600003",
       "vendor_invoice_no": "SMI-26-0089",
       "po_id": "po-smi-26-0089",
       "po_no": "SMI-26-0089",
-      "po_number": "SMI-26-0089",
-      "po_reference": "SMI-26-0089",
       "project_id": "prj-abudhabi-luxury-island",
       "project_name": "Project # Abu Dhabi Luxury Island",
       "bill_date": "2026-05-13",
@@ -10289,11 +10286,11 @@
       "payment_terms": 30,
       "taxable_subtotal": 7809.53,
       "tax_total": 390.47,
-      "grand_total": 8200,
+      "grand_total": "8200.00",
       "amount_paid": 0,
       "balance_due": 8200,
-      "approval_status": "approved",
       "status": "unpaid",
+      "approval_status": "approved",
       "line_items": [
         {
           "name": "External Cladding stone installation 600mm x1200 mm omega pin bracket installation as per (Measurement Sheet)",
@@ -10301,16 +10298,14 @@
           "uom": "LSUM",
           "unit_price": 7809.53,
           "taxable_amount": 7809.53,
-          "gst_rate": 0,
           "vat_rate": 5,
           "tax_amount": 390.47,
           "total_amount": 8200
         }
       ],
-      "notes": "",
       "amount_debited": 0,
-      "created_at": "2026-11-15 08:11:47",
-      "updated_at": "2026-11-15 08:11:47"
+      "created_at": "2026-11-15 10:20:34",
+      "updated_at": "2026-11-15 10:20:34"
     },
     {
       "id": "bill-1794730254000",
@@ -10321,13 +10316,10 @@
       "vendor_id": "vend-mwhjy9wm",
       "vendor_name": "M/S IRON BEAM BUILDING CONTRACTING L.L.C",
       "vendor_tax_regime": "trn",
-      "vendor_gstin": "",
       "vendor_trn": "104941765000003",
       "vendor_invoice_no": "Direct Expenses",
       "po_id": "po-cust-1793894214537",
       "po_no": "IB-037-136",
-      "po_number": "IB-037-136",
-      "po_reference": "IB-037-136",
       "project_id": "prj-foah-mall-alain",
       "project_name": "Project # Foah Mall Alain",
       "bill_date": "2026-06-28",
@@ -10335,11 +10327,11 @@
       "payment_terms": 17,
       "taxable_subtotal": 10697.93,
       "tax_total": 0,
-      "grand_total": 10697.93,
+      "grand_total": "10697.93",
       "amount_paid": 0,
       "balance_due": 10697.93,
-      "approval_status": "approved",
       "status": "unpaid",
+      "approval_status": "approved",
       "line_items": [
         {
           "name": "All project materials and employee salary payments have been paid by Rayan Engineering through the company account.",
@@ -10347,16 +10339,13 @@
           "uom": "LSUM",
           "unit_price": 10697.93,
           "taxable_amount": 10697.93,
-          "gst_rate": 0,
-          "vat_rate": 0,
           "tax_amount": 0,
           "total_amount": 10697.93
         }
       ],
-      "notes": "",
       "amount_debited": 0,
-      "created_at": "2026-11-15 08:10:54",
-      "updated_at": "2026-11-15 08:10:54"
+      "created_at": "2026-11-15 10:20:33",
+      "updated_at": "2026-11-15 10:20:33"
     },
     {
       "id": "bill-1794730202844",
@@ -10367,13 +10356,10 @@
       "vendor_id": "vend-mwhjy9wm",
       "vendor_name": "M/S IRON BEAM BUILDING CONTRACTING L.L.C",
       "vendor_tax_regime": "trn",
-      "vendor_gstin": "",
       "vendor_trn": "104941765000003",
       "vendor_invoice_no": "Direct Expenses",
       "po_id": "po-cust-1794730202844",
       "po_no": "IB-037-113",
-      "po_number": "IB-037-113",
-      "po_reference": "IB-037-113",
       "project_id": "prj-mw3qgo20",
       "project_name": "Project # Emirates Driving Company- Dalma Mall",
       "bill_date": "2026-06-03",
@@ -10381,11 +10367,11 @@
       "payment_terms": 15,
       "taxable_subtotal": 8696.11,
       "tax_total": 0,
-      "grand_total": 8696.11,
+      "grand_total": "8696.11",
       "amount_paid": 0,
       "balance_due": 8696.11,
-      "approval_status": "approved",
       "status": "unpaid",
+      "approval_status": "approved",
       "line_items": [
         {
           "name": "All project materials and employee salary payments have been paid by Rayan Engineering through the company account.",
@@ -10393,16 +10379,13 @@
           "uom": "LSUM",
           "unit_price": 8696.11,
           "taxable_amount": 8696.11,
-          "gst_rate": 0,
-          "vat_rate": 0,
           "tax_amount": 0,
           "total_amount": 8696.11
         }
       ],
-      "notes": "",
       "amount_debited": 0,
-      "created_at": "2026-11-15 08:10:04",
-      "updated_at": "2026-11-15 08:10:04"
+      "created_at": "2026-11-15 10:20:33",
+      "updated_at": "2026-11-15 10:20:33"
     },
     {
       "id": "bill-1794729462182",
@@ -10413,13 +10396,10 @@
       "vendor_id": "vend-mwhjjiju",
       "vendor_name": "M/S Remaya International Company L.L.C",
       "vendor_tax_regime": "trn",
-      "vendor_gstin": "",
       "vendor_trn": "100310240500003",
       "vendor_invoice_no": "Direct Expenses",
       "po_id": "po-cust-1794729462182",
       "po_no": "4500041005",
-      "po_number": "4500041005",
-      "po_reference": "4500041005",
       "project_id": "prj-remaya-hq",
       "project_name": "Project # Remaya International Company L.L.C,",
       "bill_date": "2026-01-26",
@@ -10427,11 +10407,11 @@
       "payment_terms": 20,
       "taxable_subtotal": 13734.97,
       "tax_total": 0,
-      "grand_total": 13734.97,
+      "grand_total": "13734.97",
       "amount_paid": 0,
       "balance_due": 13734.97,
-      "approval_status": "approved",
       "status": "unpaid",
+      "approval_status": "approved",
       "line_items": [
         {
           "name": "All project materials and employee salary payments have been paid by Rayan Engineering through the company account.",
@@ -10439,16 +10419,13 @@
           "uom": "LSUM",
           "unit_price": 13734.97,
           "taxable_amount": 13734.97,
-          "gst_rate": 0,
-          "vat_rate": 0,
           "tax_amount": 0,
           "total_amount": 13734.97
         }
       ],
-      "notes": "",
       "amount_debited": 0,
-      "created_at": "2026-11-15 07:57:43",
-      "updated_at": "2026-11-15 07:57:43"
+      "created_at": "2026-11-15 10:20:32",
+      "updated_at": "2026-11-15 10:20:32"
     },
     {
       "id": "bill-1794729122358",
@@ -10459,25 +10436,21 @@
       "vendor_id": "vend-mwhjckqc",
       "vendor_name": "M/S White Crescent International Contracting and Fitout LLC",
       "vendor_tax_regime": "trn",
-      "vendor_gstin": "",
       "vendor_trn": "104511436800003",
       "vendor_invoice_no": "Direct Expenses",
       "po_id": "po-cust-1794729122358",
       "po_no": "SC26-138",
-      "po_number": "SC26-138",
-      "po_reference": "SC26-138",
       "project_id": "prj-saadiyat-mamsha",
       "project_name": "Project # Saadiyat Mamsha Villa -3 Bedroom Apartment Renovation",
       "bill_date": "2026-03-10",
       "due_date": "2026-03-24",
-      "payment_terms": 14,
       "taxable_subtotal": 1695,
       "tax_total": 0,
-      "grand_total": 1695,
+      "grand_total": "1695.00",
       "amount_paid": 0,
       "balance_due": 1695,
-      "approval_status": "approved",
       "status": "unpaid",
+      "approval_status": "approved",
       "line_items": [
         {
           "name": "All project materials and employee salary payments have been paid by Rayan Engineering through the company account.",
@@ -10485,16 +10458,13 @@
           "uom": "LSUM",
           "unit_price": 1695,
           "taxable_amount": 1695,
-          "gst_rate": 0,
-          "vat_rate": 0,
           "tax_amount": 0,
           "total_amount": 1695
         }
       ],
-      "notes": "",
       "amount_debited": 0,
-      "created_at": "2026-11-15 07:52:03",
-      "updated_at": "2026-11-15 07:52:03"
+      "created_at": "2026-11-15 10:15:31",
+      "updated_at": "2026-11-15 10:15:31"
     },
     {
       "id": "bill-1794728911563",
@@ -14136,7 +14106,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S SOLID MARBLE INDUSTRIES LLC"
+      "customer_name": "M/S SOLID MARBLE INDUSTRIES LLC",
+      "client_po_no": "SMI-26-0089"
     },
     {
       "id": "po-cust-1794730202844",
@@ -14162,7 +14133,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S IRON BEAM BUILDING CONTRACTING L.L.C"
+      "customer_name": "M/S IRON BEAM BUILDING CONTRACTING L.L.C",
+      "client_po_no": "IB-037-113"
     },
     {
       "id": "po-cust-1794729462182",
@@ -14188,7 +14160,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S Remaya International Company L.L.C"
+      "customer_name": "M/S Remaya International Company L.L.C",
+      "client_po_no": "4500041005"
     },
     {
       "id": "po-cust-1794729122358",
@@ -14228,7 +14201,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S White Crescent International Contracting and Fitout LLC"
+      "customer_name": "M/S White Crescent International Contracting and Fitout LLC",
+      "client_po_no": "SC26-138"
     },
     {
       "id": "po-cust-1794722941543",
@@ -16710,6 +16684,54 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": "aud-1a1deb916f4",
+      "timestamp": "2026-11-15T10:20:34+00:00",
+      "actor_name": "Authorized Personnel",
+      "actor_role": "finance",
+      "actor_email": "system@rayangroup.com",
+      "action": "create",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1012",
+      "details": "Created purchase bill for M/S SOLID MARBLE INDUSTRIES LLC",
+      "ip_address": "27.97.213.8"
+    },
+    {
+      "id": "aud-1a1deb9153f",
+      "timestamp": "2026-11-15T10:20:33+00:00",
+      "actor_name": "Authorized Personnel",
+      "actor_role": "finance",
+      "actor_email": "system@rayangroup.com",
+      "action": "create",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1011",
+      "details": "Created purchase bill for M/S IRON BEAM BUILDING CONTRACTING L.L.C",
+      "ip_address": "27.97.213.8"
+    },
+    {
+      "id": "aud-1a1deb91389",
+      "timestamp": "2026-11-15T10:20:33+00:00",
+      "actor_name": "Authorized Personnel",
+      "actor_role": "finance",
+      "actor_email": "system@rayangroup.com",
+      "action": "create",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1010",
+      "details": "Created purchase bill for M/S IRON BEAM BUILDING CONTRACTING L.L.C",
+      "ip_address": "27.97.213.8"
+    },
+    {
+      "id": "aud-1a1deb91099",
+      "timestamp": "2026-11-15T10:20:32+00:00",
+      "actor_name": "Authorized Personnel",
+      "actor_role": "finance",
+      "actor_email": "system@rayangroup.com",
+      "action": "create",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1009",
+      "details": "Created purchase bill for M/S Remaya International Company L.L.C",
+      "ip_address": "27.97.213.8"
+    },
     {
       "id": "aud-1a1deb4771e",
       "timestamp": "2026-11-15T10:15:31+00:00",
