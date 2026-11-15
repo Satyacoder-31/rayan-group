@@ -4288,8 +4288,8 @@ body.fin-doc-open .fin-app-wrapper {
     border: none !important;
     outline: none !important;
     border-radius: 0 !important;
-    margin: 0 !important;
-    padding: 3mm 4mm 3mm 4mm !important;
+    margin: 0 auto !important;
+    padding: 7mm 11mm 5mm 11mm !important;
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
@@ -4499,8 +4499,10 @@ body.fin-doc-open .fin-app-wrapper {
 
   /* 8. Multi-page & Notice Formatting */
   .fin-doc-page-2 {
-    page-break-before: always;
-    break-before: page;
+    page-break-before: always !important;
+    break-before: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     margin-top: 0 !important;
   }
 

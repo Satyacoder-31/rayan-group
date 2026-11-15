@@ -2114,7 +2114,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v124';
+    const CURRENT_DB_VERSION = 'v2026_clean_v125';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4566,13 +4566,13 @@ class FinanceApp {
                     <span class="fin-subitem-text">Sales Invoices</span>
                     <button type="button" class="fin-subitem-plus" title="Create Sales Invoice" data-action="new-invoice">+</button>
                   </div>
-                  <div class="fin-nav-subitem ${this.activeTab === 'customer_pos' ? 'active' : ''}" data-tab="customer_pos">
-                    <span class="fin-subitem-text">Purchase Orders (Client LPO)</span>
-                    <button type="button" class="fin-subitem-plus" title="Record Client LPO" data-action="new-customer-po">+</button>
-                  </div>
                   <div class="fin-nav-subitem ${['payment_in', 'payments'].includes(this.activeTab) ? 'active' : ''}" data-tab="payment_in">
                     <span class="fin-subitem-text">Payment-In</span>
                     <button type="button" class="fin-subitem-plus" title="Record Payment-In" data-action="new-receipt">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'customer_pos' ? 'active' : ''}" data-tab="customer_pos">
+                    <span class="fin-subitem-text">Purchase Orders (Client LPO)</span>
+                    <button type="button" class="fin-subitem-plus" title="Record Client LPO" data-action="new-customer-po">+</button>
                   </div>
                   <div class="fin-nav-subitem ${this.activeTab === 'customers' ? 'active' : ''}" data-tab="customers">
                     <span class="fin-subitem-text">Customers &amp; Clients</span>
@@ -27642,11 +27642,11 @@ Scope of Work & Technical Execution:
 
     // Fine-print compact legal terms font size matching official PDF sample
     const renderTermItem = (t) => `
-      <p style="margin:0 0 2px 0; font-size:0.50rem; line-height:1.20;">
+      <div style="margin:0 0 2px 0; font-size:0.50rem; line-height:1.20;">
         <strong style="color:#0f172a;">${t.num ? t.num + '. ' : ''}${t.title}:</strong>
         <span id="po-term-val-${t.num}">${t.text}</span>
         <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.52rem; padding:0 2px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
-      </p>
+      </div>
     `;
 
     const renderTermsGrid = (items) => {
@@ -27654,10 +27654,20 @@ Scope of Work & Technical Execution:
       const c1 = items.slice(0, mid);
       const c2 = items.slice(mid);
       return `
-        <div class="fin-po-terms-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; font-size:0.50rem; color:#374151; line-height:1.20;">
-          <div>${c1.map(renderTermItem).join('')}</div>
-          <div>${c2.map(renderTermItem).join('')}</div>
-        </div>
+        <table class="fin-po-terms-grid" style="width:100%; table-layout:fixed; border-collapse:collapse; margin-bottom:0.25rem;">
+          <colgroup>
+            <col style="width:50%;">
+            <col style="width:50%;">
+          </colgroup>
+          <tr>
+            <td style="vertical-align:top; padding-right:8px; font-size:0.50rem; color:#374151; line-height:1.20;">
+              ${c1.map(renderTermItem).join('')}
+            </td>
+            <td style="vertical-align:top; padding-left:8px; font-size:0.50rem; color:#374151; line-height:1.20;">
+              ${c2.map(renderTermItem).join('')}
+            </td>
+          </tr>
+        </table>
       `;
     };
 
@@ -27702,7 +27712,7 @@ Scope of Work & Technical Execution:
 
         <div class="fin-doc-viewport">
           <!-- PAGE 1 OF PURCHASE ORDER -->
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
 
             <!-- Top Cyan Gradient Banner -->
             <div style="height:5px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-7mm -11mm 8px -11mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
@@ -27714,7 +27724,7 @@ Scope of Work & Technical Execution:
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section (Left: Logo & Company, Center: Bilingual Title, Right: PO Metadata) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.65rem; gap:0.75rem;">
               <div style="max-width:38%; flex-shrink:1;">
                 <div style="margin-bottom:0.35rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
@@ -27736,7 +27746,7 @@ Scope of Work & Technical Execution:
               </div>
 
               <div style="text-align:right; flex-shrink:0;">
-                <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-bottom:5px; white-space:nowrap;">
+                <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-bottom:4px; white-space:nowrap;">
                   <span># ${po.po_no || 'PO-REC-11012'}</span>
                   <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONumber('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0 2px; vertical-align:middle;" title="Edit PO Number">✏️</button>
                 </div>
@@ -27786,8 +27796,8 @@ Scope of Work & Technical Execution:
             </div>
 
             <!-- Supplier & Ship-To Details Grid (Boxed layout matching sample PDF) -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:0.75rem; font-size:0.68rem; line-height:1.32;">
-              <div style="border:1px solid #e5e7eb; border-radius:5px; padding:7px 10px; background:#fbfcfe;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.65rem; font-size:0.68rem; line-height:1.32;">
+              <div style="border:1px solid #e5e7eb; border-radius:5px; padding:6px 9px; background:#fbfcfe;">
                 <div style="font-size:0.64rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px;">SUPPLIER / VENDOR (بيانات المورد)</div>
                 <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-bottom:2px; text-transform:uppercase;">
                   ${po.supplier_name || po.vendor_name || 'M/S GOLDEN ELEGANCE INTERIOR DECORATION L.L.C'}
@@ -27803,7 +27813,7 @@ Scope of Work & Technical Execution:
                 </div>
               </div>
 
-              <div style="border:1px solid #e5e7eb; border-radius:5px; padding:7px 10px; background:#fbfcfe;">
+              <div style="border:1px solid #e5e7eb; border-radius:5px; padding:6px 9px; background:#fbfcfe;">
                 <div style="font-size:0.64rem; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px;">SHIP TO &amp; SCOPE (جهة الاستلام والمشروع)</div>
                 <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-bottom:2px;">
                   ${compName}
@@ -27817,7 +27827,7 @@ Scope of Work & Technical Execution:
                   <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px;" title="Edit Responsible Person">✏️</button>
                 </div>
                 <!-- Project Container with robust word wrap to prevent ACADEMY from breaking into EMY -->
-                <div style="font-size:0.72rem; font-weight:800; color:#111827; margin-top:4px; text-transform:uppercase; word-break:break-word; overflow-wrap:break-word; line-height:1.25; max-width:100%;">
+                <div style="font-size:0.72rem; font-weight:800; color:#111827; margin-top:3px; text-transform:uppercase; word-break:break-word; overflow-wrap:break-word; line-height:1.25; max-width:100%;">
                   PROJECT : ${po.project_name || 'PROJECT # THE NEW DUBAI POLICE ACADEMY @ AL ROWAIYAH, DUBAI'}
                 </div>
               </div>
@@ -27835,7 +27845,7 @@ Scope of Work & Technical Execution:
             <div class="fin-doc-table-scroll-hint">
               <span>↔</span> Swipe table horizontally to view full columns
             </div>
-            <div class="fin-doc-table-wrapper" style="margin-bottom:0.65rem;">
+            <div class="fin-doc-table-wrapper" style="margin-bottom:0.55rem;">
               <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:1.5px solid #111827; font-size:0.66rem; font-family:'Plus Jakarta Sans', sans-serif;">
                 <colgroup>
                   <col style="width:4%;">    <!-- Sr. No -->
@@ -27921,32 +27931,32 @@ Scope of Work & Technical Execution:
                 </tbody>
                 <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
                   <tr style="background:#f0f9ff; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:6px 10px; vertical-align:middle; background:#f0f9ff;">
+                    <td colspan="4" rowspan="3" style="border:1px solid #111827; padding:5px 9px; vertical-align:middle; background:#f0f9ff;">
                       <div style="font-size:0.68rem; font-weight:700; color:#111827; line-height:1.3;">
                         Total In Words : ${amountInWords}
                       </div>
-                      <div style="font-size:0.62rem; color:#4b5563; margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                      <div style="font-size:0.62rem; color:#4b5563; margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                         <span><strong>Site Location:</strong> ${po.site_location || 'Al Foah Mall - Alain'} • Working Hours: ${po.working_hours || '8:00 AM – 6:00 PM'}</span>
                         <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOSiteLocation('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0;" title="Edit Site Location &amp; Hours">✏️</button>
                       </div>
                     </td>
-                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#f0f9ff;">Sub-Total EX-VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:3px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#f0f9ff;">Sub-Total EX-VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:3px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${subtotalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="background:#f0f9ff; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#f0f9ff;">VAT 5%</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:3px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; background:#f0f9ff;">VAT 5%</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:3px 6px; font-weight:700; color:#111827; text-align:right; font-size:0.68rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${vatVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr style="background:#f0f9ff; page-break-inside:avoid !important; break-inside:avoid !important;">
-                    <td colspan="2" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; background:#f0f9ff;">Total Incl. VAT</td>
-                    <td colspan="1" style="border:1px solid #111827; padding:5px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td colspan="2" style="border:1px solid #111827; padding:4px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; background:#f0f9ff;">Total Incl. VAT</td>
+                    <td colspan="1" style="border:1px solid #111827; padding:4px 6px; font-weight:800; color:#111827; text-align:right; font-size:0.72rem; white-space:nowrap; font-variant-numeric:tabular-nums; background:#f0f9ff;">${curr.trim()} ${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
             <!-- Notes to Supplier Box (Matching Sample PDF - Page 1 Ends Cleanly Here) -->
-            <div style="margin-top:0.65rem; border:1px solid #111827; padding:5px 8px; background:#f8fafc; font-size:0.60rem; line-height:1.32;">
+            <div style="margin-top:0.5rem; border:1px solid #111827; padding:4px 8px; background:#f8fafc; font-size:0.60rem; line-height:1.30;">
               <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
                 <span>Notes to Supplier:</span>
                 <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONotes('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px;" title="Edit Notes to Supplier">✏️ Edit Notes</button>
@@ -27955,7 +27965,7 @@ Scope of Work & Technical Execution:
             </div>
 
             <!-- Page 1 Clean Footer (Terms moved to Page 2) -->
-            <div style="margin-top:0.8rem; padding-top:4px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
+            <div style="margin-top:0.65rem; padding-top:3px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
               <div>${po.po_no} • RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
               <div style="font-weight:700; color:#9ca3af;">Page 1 of 2</div>
             </div>
@@ -27964,7 +27974,7 @@ Scope of Work & Technical Execution:
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
-          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid; break-inside:avoid; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
 
             <!-- Top Cyan Gradient Banner (Page 2) -->
             <div style="height:5px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-7mm -11mm 8px -11mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
@@ -27976,9 +27986,9 @@ Scope of Work & Technical Execution:
             <div style="position:relative; z-index:1;">
 
             <!-- Header Section Page 2 -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; gap:1rem; border-bottom:1.5px solid #111827; padding-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.45rem; gap:1rem; border-bottom:1.5px solid #111827; padding-bottom:3px;">
               <div style="display:flex; align-items:center; gap:8px;">
-                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:30px; width:auto; display:block;">
+                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:28px; width:auto; display:block;">
                 <div>
                   <div style="font-size:0.72rem; font-weight:800; color:#111827; text-transform:uppercase;">${compName}</div>
                   <div style="font-size:0.60rem; color:#4b5563; display:flex; align-items:center; gap:6px;">
@@ -27988,22 +27998,22 @@ Scope of Work & Technical Execution:
                 </div>
               </div>
               <div style="text-align:right;">
-                <div style="font-family:'Outfit', sans-serif; font-size:0.92rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
-                <div style="font-size:0.72rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'PO-REC-11012'}</div>
+                <div style="font-family:'Outfit', sans-serif; font-size:0.90rem; font-weight:800; color:#111827;">PURCHASE ORDER</div>
+                <div style="font-size:0.70rem; font-weight:700; color:#0284c7;"># ${po.po_no || 'PO-REC-11012'}</div>
               </div>
             </div>
 
-            <!-- Page 2: All 20 General Terms and Conditions in 2-Column Compact Grid -->
-            <div style="margin-bottom:0.45rem;">
-              <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+            <!-- Page 2: All 20 General Terms and Conditions in 2-Column Compact Table -->
+            <div style="margin-bottom:0.35rem;">
+              <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; letter-spacing:0.02em;">
                 GENERAL TERMS AND CONDITIONS FOR SUPPLIES (ARTICLES 1 – 20)
               </div>
               ${renderTermsGrid(allTerms)}
             </div>
 
             <!-- Invoice Requirements Box (Matching Official PDF Sample) -->
-            <div style="margin-top:0.4rem; border:1px solid #111827; padding:4px 7px; background:#f8fafc; font-size:0.50rem; line-height:1.20;">
-              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; font-size:0.56rem;">Invoice Requirements:</div>
+            <div style="margin-top:0.35rem; border:1px solid #111827; padding:4px 7px; background:#f8fafc; font-size:0.50rem; line-height:1.20;">
+              <div style="font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:2px; font-size:0.55rem;">Invoice Requirements:</div>
               <div style="color:#374151;">
                 <div><strong>10.2.1.</strong> The tax invoice is dated not older than 14 calendar days (in par with Decree-LAW).</div>
                 <div><strong>10.2.2.</strong> The tax invoice is an original and includes all required details such as:</div>
@@ -28019,54 +28029,60 @@ Scope of Work & Technical Execution:
               </div>
             </div>
 
-            <!-- Page 2 Bottom Section: Left Notes Signoff, Right Dual Signatures -->
-            <div style="display:grid; grid-template-columns:220px 1fr; gap:1.25rem; margin-top:0.6rem; padding-top:0.45rem; border-top:1px solid #cbd5e1; align-items:flex-end;">
-              <!-- Left Column: Rayan Authentic Signoff Notes Block ("Keep this as well in last pages") -->
-              <div style="font-size:0.60rem; color:#475569; line-height:1.4; padding-bottom:2px;">
-                <div style="font-weight:700; color:#111827; margin-bottom:2px;">Notes:</div>
-                <div style="margin-bottom:5px; color:#475569;">Please keep a copy of this PO for your records.</div>
-                <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                <div>Abu Dhabi, U.A.E</div>
-                <div>Hotline : +971 2 565 4497</div>
-                <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a></div>
-                <div><a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
-              </div>
+            <!-- Page 2 Bottom Section: Table layout (100% compliant in screen and print) -->
+            <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <colgroup>
+                <col style="width:36%;">
+                <col style="width:32%;">
+                <col style="width:32%;">
+              </colgroup>
+              <tr>
+                <!-- Left Column: Rayan Authentic Signoff Notes Block ("Keep this as well in last pages") -->
+                <td style="vertical-align:bottom; padding-right:12px; padding-bottom:2px;">
+                  <div style="font-size:0.60rem; color:#475569; line-height:1.40;">
+                    <div style="font-weight:700; color:#111827; margin-bottom:2px;">Notes:</div>
+                    <div style="margin-bottom:4px; color:#475569;">Please keep a copy of this PO for your records.</div>
+                    <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                    <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                    <div>Abu Dhabi, U.A.E</div>
+                    <div>Hotline : +971 2 565 4497</div>
+                    <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a></div>
+                    <div><a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+                  </div>
+                </td>
 
-              <!-- Right Column: Dual Signatures ("Signature and stamp need setup") -->
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:flex-end;">
-                <!-- Buyer Signatory (Rayan Engineering) -->
-                <div style="text-align:center;">
-                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; min-height:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                <!-- Middle Column: Buyer Signatory (Rayan Engineering) with perfectly aligned stamp and signature -->
+                <td style="vertical-align:bottom; text-align:center; padding:0 6px;">
+                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     ${compName}
                   </div>
-                  <div style="position:relative; width:150px; height:60px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
-                    <!-- Circular Rayan Stamp -->
-                    <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; width:64px; height:auto; opacity:0.85; pointer-events:none; left:50%; top:50%; transform:translate(-70%, -50%);">
-                    <!-- Arshad Alam Shaikh Signature -->
-                    <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; width:108px; height:auto; z-index:2; left:50%; top:50%; transform:translate(-40%, -45%);">
+                  <div style="position:relative; width:160px; height:68px; margin:0 auto;">
+                    <!-- Circular Rayan Official Stamp (Left-Center) -->
+                    <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; left:12px; top:2px; width:65px; height:65px; opacity:0.92; pointer-events:none; z-index:1;">
+                    <!-- Arshad Alam Shaikh Authentic Signature (Overlapping stamp & resting on signature line) -->
+                    <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:36px; top:14px; width:114px; height:auto; z-index:2; pointer-events:none;">
                   </div>
-                  <div style="border-top:1.5px solid #111827; width:140px; margin:2px auto 3px auto;"></div>
+                  <div style="border-top:1.5px solid #111827; width:145px; margin:2px auto 3px auto;"></div>
                   <div style="font-size:0.62rem; font-weight:800; color:#111827;">Authorised Signatory</div>
                   <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
-                </div>
+                </td>
 
-                <!-- Supplier Signatory -->
-                <div style="text-align:center;">
-                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; min-height:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}">
+                <!-- Right Column: Supplier Signatory with neat acceptance box -->
+                <td style="vertical-align:bottom; text-align:center; padding:0 6px;">
+                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}">
                     ${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}
                   </div>
-                  <div style="position:relative; width:150px; height:60px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
-                    <div style="border:1.5px dashed #cbd5e1; border-radius:4px; width:130px; height:48px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.55rem; font-weight:600; background:#f8fafc;">
+                  <div style="position:relative; width:160px; height:68px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                    <div style="border:1.5px dashed #cbd5e1; border-radius:4px; width:140px; height:52px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.55rem; font-weight:600; background:#f8fafc;">
                       [ Acceptance &amp; Stamp ]
                     </div>
                   </div>
-                  <div style="border-top:1.5px solid #111827; width:140px; margin:2px auto 3px auto;"></div>
+                  <div style="border-top:1.5px solid #111827; width:145px; margin:2px auto 3px auto;"></div>
                   <div style="font-size:0.62rem; font-weight:800; color:#111827;">Authorised Signatory</div>
                   <div style="font-size:0.58rem; color:#4b5563;">${po.supplier_attn || 'Supplier Representative'}</div>
-                </div>
-              </div>
-            </div>
+                </td>
+              </tr>
+            </table>
 
             <!-- Page 2 Clean Footer -->
             <div style="margin-top:0.4rem; padding-top:2px; display:flex; justify-content:flex-end; font-size:0.58rem; font-weight:700; color:#9ca3af;">
