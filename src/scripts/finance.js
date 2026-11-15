@@ -2123,7 +2123,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v128';
+    const CURRENT_DB_VERSION = 'v2026_clean_v129';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -23562,6 +23562,11 @@ Scope of Work & Technical Execution:
   closeDocPrintModal() {
     const el = document.getElementById('fin-doc-print-modal');
     if (el) el.remove();
+    const container = document.getElementById('fin-modal-container');
+    if (container) {
+      const modal = container.querySelector('#fin-doc-print-modal');
+      if (modal) modal.remove();
+    }
     document.body.classList.remove('fin-doc-open');
     this.updateFloatingScrollbar();
     if (window.location.search.includes('verify=') || window.location.search.includes('doc=')) {
@@ -23574,6 +23579,10 @@ Scope of Work & Technical Execution:
         window.history.replaceState({}, document.title, window.location.pathname);
       } catch (e) { }
     }
+  }
+
+  closePrintModal() {
+    this.closeDocPrintModal();
   }
 
   printDocument() {
@@ -27780,7 +27789,7 @@ Scope of Work & Technical Execution:
 
     // Fine-print compact legal terms font size matching official PDF sample
     const renderTermItem = (t) => `
-      <div style="margin:0 0 2px 0; font-size:0.50rem; line-height:1.20;">
+      <div style="margin:0 0 3px 0; font-size:0.54rem; line-height:1.26; text-align:justify;">
         <strong style="color:#0f172a;">${t.num ? t.num + '. ' : ''}${t.title}:</strong>
         <span id="po-term-val-${t.num}">${t.text}</span>
         <button type="button" class="fin-doc-print-hide" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}', ${t.num})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.52rem; padding:0 2px; vertical-align:middle;" title="Edit Article ${t.num}">✏️</button>
@@ -27792,20 +27801,14 @@ Scope of Work & Technical Execution:
       const c1 = items.slice(0, mid);
       const c2 = items.slice(mid);
       return `
-        <table class="fin-po-terms-grid" style="width:100%; table-layout:fixed; border-collapse:collapse; margin-bottom:0.25rem;">
-          <colgroup>
-            <col style="width:50%;">
-            <col style="width:50%;">
-          </colgroup>
-          <tr>
-            <td style="vertical-align:top; padding-right:8px; font-size:0.50rem; color:#374151; line-height:1.20;">
-              ${c1.map(renderTermItem).join('')}
-            </td>
-            <td style="vertical-align:top; padding-left:8px; font-size:0.50rem; color:#374151; line-height:1.20;">
-              ${c2.map(renderTermItem).join('')}
-            </td>
-          </tr>
-        </table>
+        <div class="fin-po-terms-grid" style="display:grid; grid-template-columns:1fr 1fr; column-gap:1.25rem; row-gap:0.15rem; width:100%; box-sizing:border-box; margin-bottom:0.35rem;">
+          <div style="font-size:0.54rem; color:#374151; line-height:1.26; width:100%; box-sizing:border-box;">
+            ${c1.map(renderTermItem).join('')}
+          </div>
+          <div style="font-size:0.54rem; color:#374151; line-height:1.26; width:100%; box-sizing:border-box;">
+            ${c2.map(renderTermItem).join('')}
+          </div>
+        </div>
       `;
     };
 
@@ -27842,7 +27845,7 @@ Scope of Work & Technical Execution:
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadPODocument('${po.id || po.po_no}')">
               <span>⬇️</span> Download Document
             </button>
-            <button type="button" class="fin-btn-print-close" onclick="window.finApp.closePrintModal()">
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
               <span>✕</span> Close
             </button>
           </div>
@@ -28178,11 +28181,11 @@ Scope of Work & Technical Execution:
                   <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     ${compName}
                   </div>
-                  <div style="position:relative; width:170px; height:70px; margin:0 auto;">
-                    <!-- Circular Rayan Official Stamp (Left-Center) -->
-                    <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; left:12px; top:2px; width:65px; height:65px; opacity:0.92; pointer-events:none; z-index:1;">
-                    <!-- Arshad Alam Shaikh Authentic Signature (Overlapping stamp & resting on signature line) -->
-                    <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:36px; top:14px; width:114px; height:auto; z-index:2; pointer-events:none;">
+                  <div style="position:relative; width:180px; height:74px; margin:0 auto;">
+                    <!-- Circular Rayan Official Stamp (Complete Full Round Stamp) -->
+                    <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+                    <!-- Arshad Alam Shaikh Authentic Signature (Blended seamlessly into stamp and paper) -->
+                    <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
                   </div>
                   <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
                   <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
@@ -33152,6 +33155,21 @@ Scope of Work & Technical Execution:
   }
 
   bindGlobalEvents() {
+    // Escape key closes print modal or topmost dialog
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const printModal = document.getElementById('fin-doc-print-modal');
+        if (printModal) {
+          this.closeDocPrintModal();
+          return;
+        }
+        const openModal = document.querySelector('.fin-modal-backdrop.open');
+        if (openModal && openModal.id) {
+          this.closeModal(openModal.id);
+        }
+      }
+    });
+
     // Intercept clicks on any element with data-finance-login or href="/billing/#login"
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('#header-finance-login-btn, .btn-finance-portal-trigger, .header-top-link-finance');
