@@ -3760,7 +3760,7 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
             $vId = $b['vendor_id'] ?? '';
             $bNo = $b['bill_no'] ?? '';
             if (stripos($vName, 'GENERAL EXPENSES') !== false || $vId === 'vend-mw3q187t') return false;
-            if (in_array($bNo, ['BILL-REC-1008', 'BILL-REC-1009', 'BILL-REC-1010', 'BILL-REC-1011', 'BILL-REC-1012', 'BILL-REC-1013', 'BILL-REC-1014', 'BILL-REC-1015', 'BILL-REC-1016'])) return false;
+            // Allow real bills BILL-REC-1008 and beyond
             return true;
         }));
     }

@@ -48,6 +48,14 @@ async function deploy() {
                   if (!target.client_po_no) target.client_po_no = cpo.client_po_no || cpo.po_no;
                 }
               });
+              const localBills = (localData.purchase_bills || []);
+              if (!Array.isArray(liveJson.data.purchase_bills)) liveJson.data.purchase_bills = [];
+              localBills.forEach(b => {
+                if (!liveJson.data.purchase_bills.some(p => p.id === b.id || p.bill_no === b.bill_no)) {
+                  liveJson.data.purchase_bills.push(b);
+                }
+              });
+              liveJson.data.purchase_bills.sort((a,b) => (b.bill_no || '').localeCompare(a.bill_no || ''));
             } catch (e) {}
           }
           fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');

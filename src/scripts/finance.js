@@ -49,7 +49,8 @@ class FinanceApp {
 
   async init() {
     this.initSession();
-    await this.loadDatabase();
+    // Instantaneous local database load (takes < 10ms from cache/seed)
+    this.loadDatabaseLocal();
     this.bindGlobalEvents();
     this.renderHeaderStatus();
 
@@ -68,6 +69,14 @@ class FinanceApp {
     } else {
       this.showAuthView();
     }
+
+    // Background fetch fresh state from Hostinger MySQL without delaying UI rendering
+    this.fetchRemoteDatabase().then((updated) => {
+      if (updated && this.currentUser && !document.body.classList.contains('fin-doc-open')) {
+        this.renderHeaderStatus();
+        this.renderMainContent();
+      }
+    });
   }
 
   handlePublicDocumentVerification(verifyId, docType = '') {
@@ -1512,7 +1521,7 @@ class FinanceApp {
         const vId = (b.vendor_id || '').toLowerCase();
         const bNo = (b.bill_no || '').toUpperCase();
         if (vName.includes('general expenses') || vId === 'vend-mw3q187t') return false;
-        if (['BILL-REC-1008', 'BILL-REC-1009', 'BILL-REC-1010', 'BILL-REC-1011', 'BILL-REC-1012', 'BILL-REC-1013', 'BILL-REC-1014', 'BILL-REC-1015', 'BILL-REC-1016'].includes(bNo)) return false;
+        // Blacklist removed: allow real bills BILL-REC-1008 and beyond
         return true;
       });
       this.db.purchase_bills.forEach(b => {
@@ -2111,10 +2120,10 @@ class FinanceApp {
     return str.trim().replace(/[.\s]+$/, '').replace(/^[.\s]+/, '').trim();
   }
 
-  async loadDatabase() {
+  loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v126';
+    const CURRENT_DB_VERSION = 'v2026_clean_v127';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2140,7 +2149,9 @@ class FinanceApp {
     this.sanitizeInvoices();
     this.sanitizeBankAccounts();
     this.normalizeAllBalances();
+  }
 
+  async fetchRemoteDatabase() {
     // 2. Fetch authoritative state directly from Hostinger MySQL Database API
     const endpoints = ['/api/finance.php?action=get_state', '/api/finance?action=get_state'];
     for (const ep of endpoints) {
@@ -2160,13 +2171,22 @@ class FinanceApp {
             this.sanitizeInvoices();
             this.sanitizeBankAccounts();
             this.normalizeAllBalances();
-            return;
+            try {
+              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+            } catch (e) {}
+            return true;
           }
         }
       } catch (e) {
         console.warn(`Attempt to load from ${ep} failed:`, e);
       }
     }
+    return false;
+  }
+
+  async loadDatabase() {
+    this.loadDatabaseLocal();
+    await this.fetchRemoteDatabase();
   }
 
   async syncApi(action, payload = {}) {
@@ -27936,8 +27956,7 @@ Scope of Work & Technical Execution:
                 <div style="font-size:0.82rem; font-weight:800; color:#111827; margin-bottom:2px;">
                   ${compName}
                 </div>
-                <!-- Clean address strictly without 'Site Office:' prefix -->
-                <div style="color:#4b5563; line-height:1.3;">${cleanShipTo}</div>
+                <!-- Site Office address removed per client request -->
                 <div style="color:#4b5563;">Attn: Mr. Arshad Alam Shaikh</div>
                 <div style="color:#4b5563;">TRN: ${compTrn || '100234567800003'} &nbsp;|&nbsp; Phone: ${compPhone}</div>
                 <div style="color:#111827; font-weight:700; margin-top:2px;">
@@ -28147,64 +28166,58 @@ Scope of Work & Technical Execution:
               </div>
             </div>
 
-            <!-- Page 2 Bottom Section: Table layout (100% compliant in screen and print) -->
-            <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
+            <!-- Page 2 Signatures Section (2 Spacious Columns: Buyer & Supplier) -->
+            <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.45rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
               <colgroup>
-                <col style="width:36%;">
-                <col style="width:32%;">
-                <col style="width:32%;">
+                <col style="width:50%;">
+                <col style="width:50%;">
               </colgroup>
               <tr>
-                <!-- Left Column: Rayan Authentic Signoff Notes Block ("Keep this as well in last pages") -->
-                <td style="vertical-align:bottom; padding-right:12px; padding-bottom:2px;">
-                  <div style="font-size:0.60rem; color:#475569; line-height:1.40;">
-                    <div style="font-weight:700; color:#111827; margin-bottom:2px;">Notes:</div>
-                    <div style="margin-bottom:4px; color:#475569;">Please keep a copy of this PO for your records.</div>
-                    <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                    <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                    <div>Abu Dhabi, U.A.E</div>
-                    <div>Hotline : +971 2 565 4497</div>
-                    <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a></div>
-                    <div><a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
-                  </div>
-                </td>
-
-                <!-- Middle Column: Buyer Signatory (Rayan Engineering) with perfectly aligned stamp and signature -->
-                <td style="vertical-align:bottom; text-align:center; padding:0 6px;">
-                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                <!-- Left Column: Buyer Signatory (Rayan Engineering) with perfectly aligned stamp and signature -->
+                <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     ${compName}
                   </div>
-                  <div style="position:relative; width:160px; height:68px; margin:0 auto;">
+                  <div style="position:relative; width:170px; height:70px; margin:0 auto;">
                     <!-- Circular Rayan Official Stamp (Left-Center) -->
                     <img src="/assets/docs/po_obj42_194x190_rgba.png" alt="Rayan Stamp" style="position:absolute; left:12px; top:2px; width:65px; height:65px; opacity:0.92; pointer-events:none; z-index:1;">
                     <!-- Arshad Alam Shaikh Authentic Signature (Overlapping stamp & resting on signature line) -->
                     <img src="/assets/docs/po_obj41_240x127_rgba.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:36px; top:14px; width:114px; height:auto; z-index:2; pointer-events:none;">
                   </div>
-                  <div style="border-top:1.5px solid #111827; width:145px; margin:2px auto 3px auto;"></div>
-                  <div style="font-size:0.62rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
                   <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
                 </td>
 
-                <!-- Right Column: Supplier Signatory with neat acceptance box -->
-                <td style="vertical-align:bottom; text-align:center; padding:0 6px;">
-                  <div style="font-size:0.62rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}">
+                <!-- Right Column: Supplier Signatory with spacious acceptance stamp box -->
+                <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}">
                     ${po.supplier_name || po.vendor_name || 'SUPPLIER / VENDOR'}
                   </div>
-                  <div style="position:relative; width:160px; height:68px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
-                    <div style="border:1.5px dashed #cbd5e1; border-radius:4px; width:140px; height:52px; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.55rem; font-weight:600; background:#f8fafc;">
-                      [ Acceptance &amp; Stamp ]
+                  <div style="position:relative; width:180px; height:70px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                    <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                      [ Acceptance &amp; Official Stamp ]
                     </div>
                   </div>
-                  <div style="border-top:1.5px solid #111827; width:145px; margin:2px auto 3px auto;"></div>
-                  <div style="font-size:0.62rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
                   <div style="font-size:0.58rem; color:#4b5563;">${po.supplier_attn || 'Supplier Representative'}</div>
                 </td>
               </tr>
             </table>
 
-            <!-- Page 2 Clean Footer -->
-            <div style="margin-top:0.4rem; padding-top:2px; display:flex; justify-content:flex-end; font-size:0.58rem; font-weight:700; color:#9ca3af;">
-              Page 2 of 2
+            <!-- Page 2 Bottom Notes & Page Footer ("Keep this as well in last pages") -->
+            <div style="margin-top:0.45rem; padding-top:4px; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:flex-end; font-size:0.58rem; color:#475569; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="line-height:1.35; max-width:80%;">
+                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
+                <div style="margin-bottom:2px; color:#475569;">Please keep a copy of this purchase order for your records.</div>
+                <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;•&nbsp; Hotline : +971 2 565 4497 &nbsp;•&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;•&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              </div>
+              <div style="font-weight:700; color:#9ca3af; white-space:nowrap; flex-shrink:0;">
+                Page 2 of 2
+              </div>
             </div>
 
             </div> <!-- End Main Document Content Layer Page 2 -->
