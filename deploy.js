@@ -40,6 +40,14 @@ async function deploy() {
                   liveJson.data.purchase_orders.push(vpo);
                 }
               });
+              const localCustPos = (localData.purchase_orders || []).filter(p => p.type === 'customer_po');
+              localCustPos.forEach(cpo => {
+                const target = liveJson.data.purchase_orders.find(p => p.id === cpo.id || p.po_no === cpo.po_no);
+                if (target) {
+                  if (!target.internal_ref && cpo.internal_ref) target.internal_ref = cpo.internal_ref;
+                  if (!target.client_po_no) target.client_po_no = cpo.client_po_no || cpo.po_no;
+                }
+              });
             } catch (e) {}
           }
           fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');

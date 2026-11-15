@@ -2114,7 +2114,7 @@ class FinanceApp {
   async loadDatabase() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v125';
+    const CURRENT_DB_VERSION = 'v2026_clean_v126';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -4033,7 +4033,25 @@ class FinanceApp {
     return `${prefix}-${maxSeq + 1}`;
   }
 
-  formatCurrency(amount, withSymbol = true) {
+    getNextCustomerLPONumber() {
+    const pos = (this.db?.purchase_orders || []).filter(p => 
+      this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type)
+    );
+    let maxSeq = 44022;
+    pos.forEach(p => {
+      const ref = p.internal_ref || p.ref_no || p.rec_ref || '';
+      const m = ref.match(/REC-CLPO-(\d+)/i) || ref.match(/(\d{5})/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) {
+          maxSeq = num;
+        }
+      }
+    });
+    return `REC-CLPO-${maxSeq + 1}`;
+  }
+
+formatCurrency(amount, withSymbol = true) {
     const num = Number(amount) || 0;
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const symbol = withSymbol ? (isIndia ? '₹' : 'AED ') : '';
@@ -9675,8 +9693,19 @@ class FinanceApp {
   renderCustomerPOTab(root) {
     this.normalizeAllBalances();
     const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type));
-    this.customerPoSort = this.customerPoSort || 'serial-desc';
+    
+    // Ensure all existing customer POs have an internal_ref if missing
+    rawPos.forEach((p, idx) => {
+      if (!p.internal_ref) {
+        p.internal_ref = `REC-CLPO-${44001 + idx}`;
+        p.ref_no = p.internal_ref;
+        p.client_po_no = p.po_no;
+      }
+    });
+
+    this.customerPoSort = this.customerPoSort || 'date-desc';
     this.customerPoAttachFilter = this.customerPoAttachFilter || 'all';
+    this.customerPoYearFilter = this.customerPoYearFilter || 'all';
 
     const totalLpoValue = rawPos.reduce((sum, p) => sum + (Number(p.grand_total || p.total_value || p.total || 0)), 0);
 
@@ -9684,11 +9713,13 @@ class FinanceApp {
     let realizedInvoiced = 0;
     rawPos.forEach(p => {
       const pNo = (p.po_no || '').trim().toLowerCase();
+      const pRef = (p.internal_ref || '').trim().toLowerCase();
       const pPrj = (p.project_name || '').trim().toLowerCase();
       invoices.forEach(inv => {
         const invPo = (inv.po_reference || inv.lpo_no || inv.order_no || inv.order_number || '').trim().toLowerCase();
         const invPrj = (inv.project_name || '').trim().toLowerCase();
         if ((pNo && invPo && (invPo === pNo || invPo.includes(pNo) || pNo.includes(invPo))) ||
+            (pRef && invPo && (invPo === pRef || invPo.includes(pRef) || pRef.includes(invPo))) ||
             (pPrj && invPrj && pPrj === invPrj)) {
           realizedInvoiced += (Number(inv.grand_total) || 0);
         }
@@ -9698,14 +9729,42 @@ class FinanceApp {
     const unbilledBalance = Math.max(0, totalLpoValue - realizedInvoiced);
     const posWithPdf = rawPos.filter(p => !!(p.pdf_url || p.pdf_data));
 
-    const sortedInitialPos = this.sortRecords(rawPos, this.customerPoSort, {
-      num: 'po_no',
-      date: 'date',
-      name: 'customer_name',
-      amount: 'total_value'
+    // Calculate Fiscal Year breakdown
+    const yearCounts = {};
+    rawPos.forEach(p => {
+      const yr = (p.date || p.po_date || '').slice(0, 4) || '2026';
+      yearCounts[yr] = (yearCounts[yr] || 0) + 1;
     });
+    const sortedYears = Object.keys(yearCounts).filter(y => /^\d{4}$/.test(y)).sort((a, b) => b - a);
 
     const getCustomerName = (po) => po.customer_name || po.vendor_name || po.supplier_name || 'Corporate Client';
+
+    // Helper sorting function
+    const sortList = (list, sortVal) => {
+      const sorted = [...list];
+      if (sortVal === 'date-desc') {
+        sorted.sort((a, b) => new Date(b.date || b.po_date || '2026-01-01') - new Date(a.date || a.po_date || '2026-01-01'));
+      } else if (sortVal === 'date-asc') {
+        sorted.sort((a, b) => new Date(a.date || a.po_date || '2026-01-01') - new Date(b.date || b.po_date || '2026-01-01'));
+      } else if (sortVal === 'ref-desc') {
+        sorted.sort((a, b) => this.extractSerialNum(b.internal_ref || '') - this.extractSerialNum(a.internal_ref || ''));
+      } else if (sortVal === 'ref-asc') {
+        sorted.sort((a, b) => this.extractSerialNum(a.internal_ref || '') - this.extractSerialNum(b.internal_ref || ''));
+      } else if (sortVal === 'serial-desc') {
+        sorted.sort((a, b) => String(b.po_no || '').localeCompare(String(a.po_no || '')));
+      } else if (sortVal === 'serial-asc') {
+        sorted.sort((a, b) => String(a.po_no || '').localeCompare(String(b.po_no || '')));
+      } else if (sortVal === 'amount-desc') {
+        sorted.sort((a, b) => (Number(b.grand_total || b.total_value || 0) - Number(a.grand_total || a.total_value || 0)));
+      } else if (sortVal === 'amount-asc') {
+        sorted.sort((a, b) => (Number(a.grand_total || a.total_value || 0) - Number(b.grand_total || b.total_value || 0)));
+      } else if (sortVal === 'name-asc') {
+        sorted.sort((a, b) => getCustomerName(a).localeCompare(getCustomerName(b)));
+      }
+      return sorted;
+    };
+
+    const initialSortedPos = sortList(rawPos, this.customerPoSort);
 
     root.innerHTML = `
       <div class="fin-panel-card">
@@ -9748,30 +9807,48 @@ class FinanceApp {
           </div>
         </div>
 
-        <!-- Filter / Search Bar -->
+        <!-- Filter / Search Bar with Fiscal Year Dropdown Pill -->
         <div class="fin-table-filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:1.15rem;">
-          <div style="position:relative; flex:1; min-width:280px; max-width:480px;">
-            <input type="text" id="clpo-filter-search" class="fin-filter-input" placeholder="🔍 Search LPO #, client, project, approved by..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
+          <div style="position:relative; flex:1; min-width:260px; max-width:440px;">
+            <input type="text" id="clpo-filter-search" class="fin-filter-input" placeholder="🔍 Search Rayan Ref #, Client LPO #, client, project..." style="width:100%; padding-left:2.2rem; padding-right:2rem; box-sizing:border-box;">
             <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b; font-size:0.9rem; pointer-events:none;">🔍</span>
-            <button type="button" id="clpo-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
+            <button type="button" id="clpo-search-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; font-size:1rem; cursor:pointer; padding:0 4px;" title="Clear search">&times;</button>
           </div>
-          <select id="clpo-filter-sort" class="fin-select-pill" title="Order Client LPOs">
-            <option value="serial-desc" ${this.customerPoSort === 'serial-desc' ? 'selected' : ''}>🔢 LPO # (High to Low)</option>
-            <option value="serial-asc" ${this.customerPoSort === 'serial-asc' ? 'selected' : ''}>🔢 LPO # (Low to High)</option>
-            <option value="date-desc" ${this.customerPoSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
-            <option value="date-asc" ${this.customerPoSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
-            <option value="name-asc" ${this.customerPoSort === 'name-asc' ? 'selected' : ''}>🔤 Client (A to Z)</option>
-            <option value="name-desc" ${this.customerPoSort === 'name-desc' ? 'selected' : ''}>🔤 Client (Z to A)</option>
-            <option value="amount-desc" ${this.customerPoSort === 'amount-desc' ? 'selected' : ''}>💰 LPO Value (Highest First)</option>
-            <option value="amount-asc" ${this.customerPoSort === 'amount-asc' ? 'selected' : ''}>💰 LPO Value (Lowest First)</option>
-          </select>
-          <select id="clpo-filter-attach" class="fin-select-pill" title="Filter by PDF attachment">
+
+          <!-- Fiscal Year Dropdown Pill -->
+          <div style="display:flex; align-items:center; gap:0.35rem;">
+            <label style="font-size:0.75rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Fiscal Year:</label>
+            <select id="clpo-filter-year" class="fin-filter-input" style="min-width:160px; cursor:pointer; font-weight:600;" title="Filter Client LPOs by Fiscal Year">
+              <option value="all" ${this.customerPoYearFilter === 'all' ? 'selected' : ''}>All Fiscal Years (${rawPos.length})</option>
+              ${sortedYears.map(yr => `<option value="${yr}" ${this.customerPoYearFilter === yr ? 'selected' : ''}>${yr} (${yearCounts[yr]} LPOs)</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Sort Select -->
+          <div style="display:flex; align-items:center; gap:0.35rem;">
+            <label style="font-size:0.75rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sort By:</label>
+            <select id="clpo-filter-sort" class="fin-filter-input" style="min-width:185px;">
+              <option value="date-desc" ${this.customerPoSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
+              <option value="date-asc" ${this.customerPoSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
+              <option value="ref-desc" ${this.customerPoSort === 'ref-desc' ? 'selected' : ''}>🔢 Rayan Ref # (High to Low)</option>
+              <option value="ref-asc" ${this.customerPoSort === 'ref-asc' ? 'selected' : ''}>🔢 Rayan Ref # (Low to High)</option>
+              <option value="serial-asc" ${this.customerPoSort === 'serial-asc' ? 'selected' : ''}>Client LPO # (A to Z)</option>
+              <option value="serial-desc" ${this.customerPoSort === 'serial-desc' ? 'selected' : ''}>Client LPO # (Z to A)</option>
+              <option value="amount-desc" ${this.customerPoSort === 'amount-desc' ? 'selected' : ''}>LPO Value (High to Low)</option>
+              <option value="amount-asc" ${this.customerPoSort === 'amount-asc' ? 'selected' : ''}>LPO Value (Low to High)</option>
+              <option value="name-asc" ${this.customerPoSort === 'name-asc' ? 'selected' : ''}>Client Name (A to Z)</option>
+            </select>
+          </div>
+
+          <!-- Document Attachment Filter -->
+          <select id="clpo-filter-attach" class="fin-filter-input" style="min-width:160px;">
             <option value="all" ${this.customerPoAttachFilter === 'all' ? 'selected' : ''}>📎 All Documents (${rawPos.length})</option>
-            <option value="has_pdf" ${this.customerPoAttachFilter === 'has_pdf' ? 'selected' : ''}>📄 With PDF Attached (${posWithPdf.length})</option>
-            <option value="no_pdf" ${this.customerPoAttachFilter === 'no_pdf' ? 'selected' : ''}>⚠️ Missing PDF (${rawPos.length - posWithPdf.length})</option>
+            <option value="has_pdf" ${this.customerPoAttachFilter === 'has_pdf' ? 'selected' : ''}>With Attached PDF (${posWithPdf.length})</option>
+            <option value="no_pdf" ${this.customerPoAttachFilter === 'no_pdf' ? 'selected' : ''}>Missing PDF (${rawPos.length - posWithPdf.length})</option>
           </select>
+
           <div id="clpo-count-badge" style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin-left:auto;">
-            Showing <span id="clpo-showing-count">${rawPos.length}</span> of ${rawPos.length} client orders
+            Showing <span id="clpo-showing-count">${initialSortedPos.length}</span> of ${rawPos.length} client orders
           </div>
         </div>
 
@@ -9779,7 +9856,10 @@ class FinanceApp {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th id="th-clpo-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by LPO #">
+                <th id="th-clpo-ref" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Rayan Ref #">
+                  Rayan Ref # <span id="clpo-sort-icon-ref" style="color:#38bdf8; font-size:0.75rem;">${this.customerPoSort === 'ref-asc' ? '▲' : (this.customerPoSort === 'ref-desc' ? '▼' : '↕')}</span>
+                </th>
+                <th id="th-clpo-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Client LPO #">
                   Client LPO # <span id="clpo-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.customerPoSort === 'serial-asc' ? '▲' : (this.customerPoSort === 'serial-desc' ? '▼' : '↕')}</span>
                 </th>
                 <th id="th-clpo-date" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Date">
@@ -9798,7 +9878,7 @@ class FinanceApp {
               </tr>
             </thead>
             <tbody id="customer-pos-table-body">
-              ${this.renderCustomerPOTableRows(sortedInitialPos)}
+              ${this.renderCustomerPOTableRows(initialSortedPos)}
             </tbody>
           </table>
         </div>
@@ -9807,41 +9887,56 @@ class FinanceApp {
 
     const searchInput = document.getElementById('clpo-filter-search');
     const clearBtn = document.getElementById('clpo-search-clear');
+    const yearSelect = document.getElementById('clpo-filter-year');
     const sortSelect = document.getElementById('clpo-filter-sort');
     const attachSelect = document.getElementById('clpo-filter-attach');
     const tbody = document.getElementById('customer-pos-table-body');
     const countSpan = document.getElementById('clpo-showing-count');
 
     const updateTable = () => {
-      const q = (searchInput.value || '').toLowerCase().trim();
-      const sortVal = sortSelect.value;
-      const attachVal = attachSelect.value;
+      const q = (searchInput?.value || '').toLowerCase().trim();
+      const sortVal = sortSelect?.value || 'date-desc';
+      const attachVal = attachSelect?.value || 'all';
+      const yearVal = yearSelect?.value || 'all';
       this.customerPoSort = sortVal;
       this.customerPoAttachFilter = attachVal;
+      this.customerPoYearFilter = yearVal;
 
-      clearBtn.style.display = q ? 'block' : 'none';
+      if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
 
       let filtered = rawPos.filter(po => {
+        if (yearVal !== 'all') {
+          const yr = (po.date || po.po_date || '').slice(0, 4);
+          if (yr !== yearVal) return false;
+        }
         if (attachVal === 'has_pdf' && !(po.pdf_url || po.pdf_data)) return false;
         if (attachVal === 'no_pdf' && !!(po.pdf_url || po.pdf_data)) return false;
         if (!q) return true;
+        const ref = (po.internal_ref || '').toLowerCase();
         const num = (po.po_no || '').toLowerCase();
         const client = getCustomerName(po).toLowerCase();
         const prj = (po.project_name || '').toLowerCase();
         const appBy = (po.approved_by || '').toLowerCase();
         const status = (po.status || '').toLowerCase();
-        return num.includes(q) || client.includes(q) || prj.includes(q) || appBy.includes(q) || status.includes(q);
+        return ref.includes(q) || num.includes(q) || client.includes(q) || prj.includes(q) || appBy.includes(q) || status.includes(q);
       });
 
-      const sorted = this.sortRecords(filtered, sortVal, {
-        num: 'po_no',
-        date: 'date',
-        name: 'customer_name',
-        amount: 'total_value'
-      });
+      const sorted = sortList(filtered, sortVal);
 
-      tbody.innerHTML = this.renderCustomerPOTableRows(sorted);
+      if (tbody) tbody.innerHTML = this.renderCustomerPOTableRows(sorted);
       if (countSpan) countSpan.textContent = sorted.length;
+
+      // Update sort icons in table headers
+      const iconRef = document.getElementById('clpo-sort-icon-ref');
+      const iconSerial = document.getElementById('clpo-sort-icon-serial');
+      const iconDate = document.getElementById('clpo-sort-icon-date');
+      const iconCust = document.getElementById('clpo-sort-icon-cust');
+      const iconAmount = document.getElementById('clpo-sort-icon-amount');
+      if (iconRef) iconRef.textContent = sortVal === 'ref-asc' ? '▲' : (sortVal === 'ref-desc' ? '▼' : '↕');
+      if (iconSerial) iconSerial.textContent = sortVal === 'serial-asc' ? '▲' : (sortVal === 'serial-desc' ? '▼' : '↕');
+      if (iconDate) iconDate.textContent = sortVal === 'date-asc' ? '▲' : (sortVal === 'date-desc' ? '▼' : '↕');
+      if (iconCust) iconCust.textContent = sortVal === 'name-asc' ? '▲' : '↕';
+      if (iconAmount) iconAmount.textContent = sortVal === 'amount-asc' ? '▲' : (sortVal === 'amount-desc' ? '▼' : '↕');
     };
 
     if (searchInput) searchInput.oninput = updateTable;
@@ -9852,21 +9947,23 @@ class FinanceApp {
         updateTable();
       };
     }
+    if (yearSelect) yearSelect.onchange = updateTable;
     if (sortSelect) sortSelect.onchange = updateTable;
     if (attachSelect) attachSelect.onchange = updateTable;
 
     const setupThSort = (thId, sortAsc, sortDesc) => {
       const th = document.getElementById(thId);
-      if (th) {
+      if (th && sortSelect) {
         th.onclick = () => {
           sortSelect.value = (sortSelect.value === sortDesc) ? sortAsc : sortDesc;
           updateTable();
         };
       }
     };
+    setupThSort('th-clpo-ref', 'ref-asc', 'ref-desc');
     setupThSort('th-clpo-serial', 'serial-asc', 'serial-desc');
     setupThSort('th-clpo-date', 'date-asc', 'date-desc');
-    setupThSort('th-clpo-cust', 'name-asc', 'name-desc');
+    setupThSort('th-clpo-cust', 'name-asc', 'date-desc');
     setupThSort('th-clpo-amount', 'amount-asc', 'amount-desc');
   }
 
@@ -9874,7 +9971,7 @@ class FinanceApp {
     if (!posList || posList.length === 0) {
       return `
         <tr>
-          <td colspan="8" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+          <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
             <div style="font-size:2rem; margin-bottom:0.4rem;">📑</div>
             <div style="font-size:0.95rem; font-weight:700; color:#cbd5e1;">No Client Purchase Orders Found</div>
             <div style="font-size:0.78rem; margin-top:0.25rem;">Click "+ Record Client LPO" to record a purchase order received from a client.</div>
@@ -9893,10 +9990,17 @@ class FinanceApp {
 
       return `
         <tr>
-          <td style="font-family:monospace; font-weight:700; color:#38bdf8; white-space:nowrap;">
-            <a href="javascript:void(0)" onclick="window.finApp.openRecordClientLPOModal('${po.id}')" style="color:#38bdf8; text-decoration:none;" title="Click to view/edit this Client LPO">
-              ${po.po_no}
+          <!-- Rayan Internal Reference Sequence (REC-CLPO-44xxx) -->
+          <td style="font-family:monospace; font-weight:700; white-space:nowrap;">
+            <a href="javascript:void(0)" onclick="window.finApp.openRecordClientLPOModal('${po.id}')" style="text-decoration:none;" title="Click to view/edit ${po.internal_ref}">
+              <span style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); color:#38bdf8; padding:3px 7px; border-radius:4px; font-weight:800; letter-spacing:0.02em; font-size:0.80rem;">
+                ${po.internal_ref || 'REC-CLPO-44...'}
+              </span>
             </a>
+          </td>
+          <!-- Client LPO # (External Client Order String) -->
+          <td style="font-family:monospace; font-weight:700; color:#f8fafc; white-space:nowrap; font-size:0.82rem;">
+            ${po.po_no}
           </td>
           <td style="white-space:nowrap; color:#cbd5e1; font-size:0.8rem;">
             ${this.formatDate(po.date || po.po_date)}
@@ -10152,6 +10256,7 @@ class FinanceApp {
     const defaultDelivery = po ? (po.expected_delivery || defaultDate) : defaultDate;
     const defaultAmount = po ? (po.grand_total || po.total_value || 0) : 0;
     const defaultPoNo = po ? po.po_no : '';
+    const defaultRefNo = po ? (po.internal_ref || po.ref_no || po.rec_ref || '') : this.getNextCustomerLPONumber();
     const defaultNotes = po ? (po.notes || (po.line_items && po.line_items[0]?.name) || '') : '';
     const hasPdf = !!(po && (po.pdf_data || po.pdf_url));
 
@@ -10180,8 +10285,14 @@ class FinanceApp {
                   <input type="text" id="clpo-custom-name" class="fin-form-input" value="${po ? (po.customer_name || po.vendor_name || '') : ''}" placeholder="e.g. M/S NEW CLIENT LLC">
                 </div>
                 <div class="fin-form-group">
+                  <label class="fin-form-label">Rayan LPO Ref # <span style="color:#38bdf8;">(Internal Serial)</span> <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="clpo-ref-no" class="fin-form-input" value="${defaultRefNo}" placeholder="REC-CLPO-44023" required style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Sequential Rayan reference sequence (e.g. REC-CLPO-44023)</div>
+                </div>
+                <div class="fin-form-group">
                   <label class="fin-form-label">Client LPO / PO Number <span style="color:#ef4444;">*</span></label>
-                  <input type="text" id="clpo-no" class="fin-form-input" value="${defaultPoNo}" placeholder="e.g. PODSUB-2026/0858, LPO/SD/2026/09" required>
+                  <input type="text" id="clpo-no" class="fin-form-input" value="${defaultPoNo}" placeholder="e.g. PODSUB-2026/0858, LPO/SD/2026/09" required style="font-weight:700;">
+                  <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">Original external order number stated by client on document</div>
                 </div>
               </div>
 
@@ -10353,6 +10464,7 @@ class FinanceApp {
       if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = 'Saving Client LPO...'; }
 
       try {
+        const refNoVal = (document.getElementById('clpo-ref-no')?.value || '').trim() || this.getNextCustomerLPONumber();
         const poNoVal = document.getElementById('clpo-no').value.trim();
         let custIdVal = custSel.value;
         let custNameVal = '';
@@ -10382,6 +10494,10 @@ class FinanceApp {
 
         const poRecord = {
           id: po ? po.id : ('po-cust-' + Date.now()),
+          internal_ref: refNoVal,
+          ref_no: refNoVal,
+          rec_ref: refNoVal,
+          client_po_no: poNoVal,
           po_no: poNoVal,
           company_id: this.activeCompanyId,
           type: 'customer_po',
@@ -10490,7 +10606,8 @@ class FinanceApp {
                 <div style="font-size:0.88rem; color:#0284c7; font-weight:700; margin-top:0.4rem;">INWARD CLIENT PURCHASE ORDER SUMMARY SLIP</div>
               </div>
               <div style="text-align:right;">
-                <div style="font-size:1.15rem; font-weight:800; color:#111827; font-family:monospace;">${po.po_no}</div>
+                <div style="font-size:1.15rem; font-weight:800; color:#0284c7; font-family:monospace;">${po.internal_ref || 'REC-CLPO-44...'}</div>
+                <div style="font-size:0.82rem; font-weight:700; color:#111827; font-family:monospace; margin-top:2px;">Client LPO: ${po.po_no}</div>
                 <div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">Date: <strong>${this.formatDate(po.date || po.po_date)}</strong></div>
                 <span class="fin-badge fin-badge-paid" style="margin-top:0.35rem;">${(po.status || 'APPROVED').toUpperCase()}</span>
               </div>
@@ -10548,8 +10665,9 @@ class FinanceApp {
       return;
     }
 
-    const headers = ['LPO #', 'Date', 'Customer/Client', 'Project', 'Amount (AED)', 'Status', 'Has Attached PDF', 'Attached File Name'];
+    const headers = ['Rayan Ref #', 'Client LPO #', 'Date', 'Customer/Client', 'Project', 'Amount (AED)', 'Status', 'Has Attached PDF', 'Attached File Name'];
     const rows = rawPos.map(p => [
+      `"${p.internal_ref || ''}"`,
       `"${p.po_no || ''}"`,
       `"${p.date || p.po_date || ''}"`,
       `"${(p.customer_name || p.vendor_name || '').replace(/"/g, '""')}"`,
