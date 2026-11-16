@@ -187,6 +187,22 @@ class FinanceApp {
       return;
     }
 
+    // Check Employment Certificate
+    if (docType === 'employment_certificate' || docType === 'emp_cert' || upper.startsWith('REC/HC') || upper.includes('11004') || upper.includes('EMP-CERT')) {
+      const cert = (this.db?.employment_certificates || []).find(c => c.id === cleanId || c.cert_no === cleanId || c.ref_no === cleanId) ||
+        (this.db?.employment_certificates || [])[0] || { cert_no: cleanId };
+      this.openEmploymentCertificatePrintModal(cert.id || cleanId, true);
+      return;
+    }
+
+    // Check Letter of Assignment
+    if (docType === 'letter_of_assignment' || docType === 'loa' || upper.startsWith('RG/HC/LOA') || upper.includes('11047') || upper.includes('ASSIGNMENT')) {
+      const loa = (this.db?.letters_of_assignment || []).find(l => l.id === cleanId || l.loa_no === cleanId || l.ref_no === cleanId) ||
+        (this.db?.letters_of_assignment || [])[0] || { loa_no: cleanId };
+      this.openLetterOfAssignmentPrintModal(loa.id || cleanId, true);
+      return;
+    }
+
     // Default Tax Invoice
     const inv = (this.db?.invoices || []).find(i => i.id === cleanId || i.invoice_no === cleanId) ||
       (this.db?.invoices || [])[0] || { invoice_no: cleanId };
@@ -1858,7 +1874,7 @@ class FinanceApp {
     const r867Record = Array.isArray(this.db.customer_receipts) ? this.db.customer_receipts.find(r => r.id === 'rec-mvxegfg5' || r.cheque_no === '000867') : null;
     const r867Amount = r867Record ? r867Record.amount_received : '35597.36';
 
-        // Ensure purchase orders have their correct classification (customer_po vs vendor_po)
+    // Ensure purchase orders have their correct classification (customer_po vs vendor_po)
     const CUST_PO_MAP = {
       'AMGM/PO-2024/068': { customer_id: 'cust-almuluki', customer_name: 'M/S AL MULUKI DECOR & GENERAL MAINTENANCE LLC' },
       'DPA-2026-01': { customer_id: 'cust-toprock', customer_name: 'M/S TOP ROCK INTERIORS LLC' },
@@ -2123,7 +2139,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v129';
+    const CURRENT_DB_VERSION = 'v2026_clean_v130';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -2173,7 +2189,7 @@ class FinanceApp {
             this.normalizeAllBalances();
             try {
               localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-            } catch (e) {}
+            } catch (e) { }
             return true;
           }
         }
@@ -4033,8 +4049,8 @@ class FinanceApp {
 
   getNextPONumber() {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
-    const pos = (this.db?.purchase_orders || []).filter(p => 
-      this.matchesActiveCompany(p.company_id) && 
+    const pos = (this.db?.purchase_orders || []).filter(p =>
+      this.matchesActiveCompany(p.company_id) &&
       (p.type === 'vendor_po' || p.direction === 'outward' || !p.customer_name)
     );
     let maxSeq = 11010;
@@ -4053,8 +4069,8 @@ class FinanceApp {
     return `${prefix}-${maxSeq + 1}`;
   }
 
-    getNextCustomerLPONumber() {
-    const pos = (this.db?.purchase_orders || []).filter(p => 
+  getNextCustomerLPONumber() {
+    const pos = (this.db?.purchase_orders || []).filter(p =>
       this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type)
     );
     let maxSeq = 44022;
@@ -4071,7 +4087,7 @@ class FinanceApp {
     return `REC-CLPO-${maxSeq + 1}`;
   }
 
-formatCurrency(amount, withSymbol = true) {
+  formatCurrency(amount, withSymbol = true) {
     const num = Number(amount) || 0;
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const symbol = withSymbol ? (isIndia ? '₹' : 'AED ') : '';
@@ -4702,7 +4718,7 @@ formatCurrency(amount, withSymbol = true) {
               </div>
 
               <!-- Accordion: HR & Payroll -->
-              <div class="fin-accordion-group ${['employees', 'payroll'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-hr">
+              <div class="fin-accordion-group ${['employees', 'payroll', 'employment_certificates', 'letters_of_assignment'].includes(this.activeTab) ? 'open' : ''}" id="fin-grp-hr">
                 <div class="fin-accordion-header" data-toggle="fin-grp-hr">
                   <div class="fin-grp-title-wrap">
                     <svg class="fin-grp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4725,6 +4741,14 @@ formatCurrency(amount, withSymbol = true) {
                   <div class="fin-nav-subitem ${this.activeTab === 'payroll' ? 'active' : ''}" data-tab="payroll">
                     <span class="fin-subitem-text">Payroll &amp; Pay Slips</span>
                     <button type="button" class="fin-subitem-plus" title="Create Monthly Pay Slip" onclick="event.stopPropagation(); window.finApp.openPayslipModal()">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'employment_certificates' ? 'active' : ''}" data-tab="employment_certificates">
+                    <span class="fin-subitem-text">Employment Certificates</span>
+                    <button type="button" class="fin-subitem-plus" title="Issue Employment Certificate" onclick="event.stopPropagation(); window.finApp.openEditEmploymentCertModal()">+</button>
+                  </div>
+                  <div class="fin-nav-subitem ${this.activeTab === 'letters_of_assignment' ? 'active' : ''}" data-tab="letters_of_assignment">
+                    <span class="fin-subitem-text">Letters of Assignment</span>
+                    <button type="button" class="fin-subitem-plus" title="Issue Letter of Assignment" onclick="event.stopPropagation(); window.finApp.openEditLetterOfAssignmentModal()">+</button>
                   </div>
                 </div>
               </div>
@@ -4852,6 +4876,12 @@ formatCurrency(amount, withSymbol = true) {
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openCustomLetterPrintModal()">
                     <span class="fin-subitem-text">Corporate Letterhead</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openEmploymentCertificatePrintModal()">
+                    <span class="fin-subitem-text" style="color:#38bdf8;">🏛️ Employment Certificate (Bilingual)</span>
+                  </div>
+                  <div class="fin-nav-subitem" onclick="window.finApp.openLetterOfAssignmentPrintModal()">
+                    <span class="fin-subitem-text" style="color:#818cf8;">📜 Letter of Assignment (2-Page)</span>
                   </div>
                   <div class="fin-nav-subitem" onclick="window.finApp.openConsolidatedCustomerSOA()">
                     <span class="fin-subitem-text" style="color:#38bdf8; font-weight:600;">📑 Master Statement (All Clients)</span>
@@ -5302,6 +5332,8 @@ formatCurrency(amount, withSymbol = true) {
         delivery_notes: 'Material Delivery Notes',
         undertaking_letters: 'Subcontractor Undertaking Letters',
         letters: 'Official Corporate Letters (Editable)',
+        employment_certificates: 'Official Employment Certificates (Bilingual)',
+        letters_of_assignment: 'Official Letters of Assignment (2-Page)',
         users: 'Users & Audit Logs',
         settings: 'Entity Settings'
       };
@@ -5393,6 +5425,12 @@ formatCurrency(amount, withSymbol = true) {
         break;
       case 'payroll':
         this.renderPayrollTab(root);
+        break;
+      case 'employment_certificates':
+        this.renderEmploymentCertificatesTab(root);
+        break;
+      case 'letters_of_assignment':
+        this.renderLettersOfAssignmentTab(root);
         break;
       case 'bank_accounts':
         this.renderBankAccountsTab(root);
@@ -9713,7 +9751,7 @@ formatCurrency(amount, withSymbol = true) {
   renderCustomerPOTab(root) {
     this.normalizeAllBalances();
     const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type));
-    
+
     // Ensure all existing customer POs have an internal_ref if missing
     rawPos.forEach((p, idx) => {
       if (!p.internal_ref) {
@@ -9739,8 +9777,8 @@ formatCurrency(amount, withSymbol = true) {
         const invPo = (inv.po_reference || inv.lpo_no || inv.order_no || inv.order_number || '').trim().toLowerCase();
         const invPrj = (inv.project_name || '').trim().toLowerCase();
         if ((pNo && invPo && (invPo === pNo || invPo.includes(pNo) || pNo.includes(invPo))) ||
-            (pRef && invPo && (invPo === pRef || invPo.includes(pRef) || pRef.includes(invPo))) ||
-            (pPrj && invPrj && pPrj === invPrj)) {
+          (pRef && invPo && (invPo === pRef || invPo.includes(pRef) || pRef.includes(invPo))) ||
+          (pPrj && invPrj && pPrj === invPrj)) {
           realizedInvoiced += (Number(inv.grand_total) || 0);
         }
       });
@@ -10257,7 +10295,7 @@ formatCurrency(amount, withSymbol = true) {
         po.direction = 'inward';
 
         await this.syncApi('update_po', { po });
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
 
         this.closeModal('modal-attach-lpo');
         this.showNotification(`✓ Client LPO document "${po.pdf_name}" attached successfully!`, 'success');
@@ -10565,7 +10603,7 @@ formatCurrency(amount, withSymbol = true) {
         }
 
         await this.syncApi(isEdit ? 'update_po' : 'create_po', { po: poRecord });
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
         this.closeModal('modal-record-client-lpo');
         this.showNotification(`Client Purchase Order ${poRecord.po_no} saved successfully!`, 'success');
@@ -10673,7 +10711,7 @@ formatCurrency(amount, withSymbol = true) {
       this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== poId && p.po_no !== poId);
     }
     await this.syncApi('delete_po', { po_id: poId, id: poId });
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
     this.showNotification(`Client LPO ${po.po_no} deleted successfully.`, 'success');
     this.renderActiveTab();
   }
@@ -10708,7 +10746,7 @@ formatCurrency(amount, withSymbol = true) {
     URL.revokeObjectURL(url);
   }
 
-    renderPOTab(root) {
+  renderPOTab(root) {
     const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && p.type === 'vendor_po');
     this.poSort = this.poSort || 'serial-desc';
 
@@ -12226,10 +12264,10 @@ formatCurrency(amount, withSymbol = true) {
                   <td><strong>${r.receipt_no}</strong></td>
                   <td>${r.date}</td>
                   <td>
-                    ${r.is_prior_settled 
-                      ? `<span class="fin-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; font-weight:600;">✓ Settled (Paid to FTA)</span>`
-                      : `<span class="fin-badge" style="background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.7rem; font-weight:700;">⏳ Due (Aug – Oct Return)</span>`
-                    }
+                    ${r.is_prior_settled
+        ? `<span class="fin-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; font-weight:600;">✓ Settled (Paid to FTA)</span>`
+        : `<span class="fin-badge" style="background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.7rem; font-weight:700;">⏳ Due (Aug – Oct Return)</span>`
+      }
                   </td>
                   <td>${r.customer_name}</td>
                   <td><span class="fin-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8;">${r.payment_mode}</span></td>
@@ -12282,10 +12320,10 @@ formatCurrency(amount, withSymbol = true) {
                   <td><strong>${cn.credit_note_no}</strong></td>
                   <td>${cn.date}</td>
                   <td>
-                    ${cn.is_prior_settled 
-                      ? `<span class="fin-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; font-weight:600;">✓ Settled (Paid to FTA)</span>`
-                      : `<span class="fin-badge" style="background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.7rem; font-weight:700;">⏳ Due (Aug – Oct Return)</span>`
-                    }
+                    ${cn.is_prior_settled
+        ? `<span class="fin-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.35); font-size:0.7rem; font-weight:600;">✓ Settled (Paid to FTA)</span>`
+        : `<span class="fin-badge" style="background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.7rem; font-weight:700;">⏳ Due (Aug – Oct Return)</span>`
+      }
                   </td>
                   <td>${cn.customer_name}</td>
                   <td><span class="fin-badge" style="background:rgba(245,158,11,0.15); color:#f59e0b;">${cn.invoice_no || 'Direct'}</span></td>
@@ -12602,7 +12640,7 @@ formatCurrency(amount, withSymbol = true) {
     const isSim = this._ctState.mode === 'simulator';
     const ctPeriod = this._ctPeriod || '1_year';
     const ctRange = this.getTaxPeriodDateRange(ctPeriod);
-    
+
     // Live Data calculations:
     const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
     const currentIsUae = isUaeEntity(this.activeCompanyId);
@@ -16756,6 +16794,8 @@ formatCurrency(amount, withSymbol = true) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -19945,6 +19985,8 @@ formatCurrency(amount, withSymbol = true) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCustomerSOADocument('${cust.id}')">Customer SOA</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -23567,6 +23609,7 @@ Scope of Work & Technical Execution:
       const modal = container.querySelector('#fin-doc-print-modal');
       if (modal) modal.remove();
     }
+    document.querySelectorAll('.fin-doc-modal-backdrop').forEach(m => m.remove());
     document.body.classList.remove('fin-doc-open');
     this.updateFloatingScrollbar();
     if (window.location.search.includes('verify=') || window.location.search.includes('doc=')) {
@@ -26608,6 +26651,8 @@ Scope of Work & Technical Execution:
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${inv.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -27057,6 +27102,8 @@ Scope of Work & Technical Execution:
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal('${linkedInv?.invoice_no || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -27747,9 +27794,9 @@ Scope of Work & Technical Execution:
     let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
     if (!po) {
       po = (this.db?.purchase_orders || []).find(p => p.po_no === 'PO-REC-11012') ||
-           (this.db?.purchase_orders || []).find(p => p.po_no === 'PO-REC-11011') ||
-           (this.db?.purchase_orders || []).find(p => p.type === 'vendor_po' || p.direction === 'outward') ||
-           (this.db?.purchase_orders || [])[0] || {};
+        (this.db?.purchase_orders || []).find(p => p.po_no === 'PO-REC-11011') ||
+        (this.db?.purchase_orders || []).find(p => p.type === 'vendor_po' || p.direction === 'outward') ||
+        (this.db?.purchase_orders || [])[0] || {};
     }
 
     const curr = po.currency || 'AED';
@@ -27830,6 +27877,8 @@ Scope of Work & Technical Execution:
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -28030,28 +28079,28 @@ Scope of Work & Technical Execution:
                 </thead>
                 <tbody>
                   ${(po.line_items || po.items || [
-                    {
-                      sr: 1,
-                      description: '% Progressive Work Certification (Custom Milestone Claim)',
-                      unit: '%',
-                      qty: 1000,
-                      rate: 55,
-                      unit_price: 55,
-                      taxable_amount: 55000,
-                      invoice_amount: 55000,
-                      vat_rate: 5,
-                      vat_amount: 2750,
-                      total_amount: 57750
-                    }
-                  ]).map((item, idx) => {
-                    const itemQty = Number(item.qty || 1);
-                    const itemUnitPrice = Number(item.unit_price || item.rate || 0);
-                    const itemTaxable = Number(item.taxable_amount || item.invoice_amount || (itemQty * itemUnitPrice));
-                    const itemVat = Number(item.vat_amount || item.tax_amount || (itemTaxable * 0.05));
-                    const itemTotal = Number(item.total_amount || (itemTaxable + itemVat));
-                    const itemDesc = (item.description || item.name || '').trim();
+        {
+          sr: 1,
+          description: '% Progressive Work Certification (Custom Milestone Claim)',
+          unit: '%',
+          qty: 1000,
+          rate: 55,
+          unit_price: 55,
+          taxable_amount: 55000,
+          invoice_amount: 55000,
+          vat_rate: 5,
+          vat_amount: 2750,
+          total_amount: 57750
+        }
+      ]).map((item, idx) => {
+        const itemQty = Number(item.qty || 1);
+        const itemUnitPrice = Number(item.unit_price || item.rate || 0);
+        const itemTaxable = Number(item.taxable_amount || item.invoice_amount || (itemQty * itemUnitPrice));
+        const itemVat = Number(item.vat_amount || item.tax_amount || (itemTaxable * 0.05));
+        const itemTotal = Number(item.total_amount || (itemTaxable + itemVat));
+        const itemDesc = (item.description || item.name || '').trim();
 
-                    return `
+        return `
                       <tr style="border-bottom:1px solid #111827;">
                         <td style="border:1px solid #111827; padding:4px 3px; text-align:center; color:#111827; font-weight:600; vertical-align:top;">${item.sr || idx + 1}</td>
                         <td style="border:1px solid #111827; padding:4px 6px; color:#111827; word-break:break-word; line-height:1.35; white-space:pre-line; vertical-align:top; font-size:0.65rem;">
@@ -28067,7 +28116,7 @@ Scope of Work & Technical Execution:
                         <td class="fin-cell-num" style="border:1px solid #111827; padding:4px 6px; text-align:right; color:#111827; font-weight:800; white-space:nowrap !important; word-break:keep-all !important; font-variant-numeric:tabular-nums; box-sizing:border-box; vertical-align:top;">${curr.trim()} ${itemTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     `;
-                  }).join('')}
+      }).join('')}
                 </tbody>
                 <tfoot style="page-break-inside:avoid !important; break-inside:avoid !important;">
                   <tr style="background:#f0f9ff; border-top:1.5px solid #111827; page-break-inside:avoid !important; break-inside:avoid !important;">
@@ -30255,6 +30304,8 @@ Scope of Work & Technical Execution:
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -30623,6 +30674,8 @@ Scope of Work & Technical Execution:
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -31406,7 +31459,7 @@ Scope of Work & Technical Execution:
     if (newNo && newNo.trim() && newNo.trim() !== po.po_no) {
       po.po_no = newNo.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
         this.showNotification(`PO Number updated to ${po.po_no}.`, 'success');
         this.openPOPrintModal(po.id || po.po_no);
         this.renderActiveTab();
@@ -31421,7 +31474,7 @@ Scope of Work & Technical Execution:
     if (newRef !== null && newRef.trim() !== (po.quote_ref || '')) {
       po.quote_ref = newRef.trim() || 'Quotation —';
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
         this.showNotification('Quotation Reference updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -31435,7 +31488,7 @@ Scope of Work & Technical Execution:
     if (newIRef !== null && newIRef.trim() !== (po.iref || '')) {
       po.iref = newIRef.trim() || '2026-KTS-SUB';
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
         this.showNotification('Internal Ref updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -31449,7 +31502,7 @@ Scope of Work & Technical Execution:
     if (newType !== null && newType.trim() !== (po.po_type || '')) {
       po.po_type = newType.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
         this.showNotification('PO Type updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -31465,7 +31518,7 @@ Scope of Work & Technical Execution:
     po.responsible_person = person.trim() || 'Mohammad Suhel';
     if (phone !== null) po.responsible_person_phone = phone.trim() || '+971 589827866';
     this.syncApi('update_po', { po }).then(() => {
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       this.showNotification('Responsible Person updated.', 'success');
       this.openPOPrintModal(po.id || po.po_no);
     });
@@ -31478,7 +31531,7 @@ Scope of Work & Technical Execution:
     if (scope !== null && scope.trim() !== (po.scope_of_work || '')) {
       po.scope_of_work = scope.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
         this.showNotification('Scope of Work banner updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -31538,7 +31591,7 @@ Scope of Work & Technical Execution:
       item.description = newScope;
       item.name = newScope.split('\n')[0] || newScope;
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
         this.showNotification('Work scope details updated successfully.', 'success');
         closeModal();
         this.openPOPrintModal(po.id || po.po_no);
@@ -31555,7 +31608,7 @@ Scope of Work & Technical Execution:
     po.site_location = site.trim() || 'Al Foah Mall - Alain';
     if (hours !== null) po.working_hours = hours.trim() || '8:00 AM – 6:00 PM';
     this.syncApi('update_po', { po }).then(() => {
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
       this.showNotification('Site Location and Working Hours updated.', 'success');
       this.openPOPrintModal(po.id || po.po_no);
     });
@@ -31569,7 +31622,7 @@ Scope of Work & Technical Execution:
       po.notes_to_supplier = notes.trim();
       po.notes = notes.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) {}
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
         this.showNotification('Notes to Supplier updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -32632,6 +32685,8 @@ Scope of Work & Technical Execution:
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCreditNotePrintModal('${cn.id || ''}')">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -32945,6 +33000,8 @@ Scope of Work & Technical Execution:
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openDebitNotePrintModal('${dn.id || ''}')">Debit Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -33158,7 +33215,7 @@ Scope of Work & Technical Execution:
     // Escape key closes print modal or topmost dialog
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const printModal = document.getElementById('fin-doc-print-modal');
+        const printModal = document.getElementById('fin-doc-print-modal') || document.querySelector('.fin-doc-modal-backdrop');
         if (printModal) {
           this.closeDocPrintModal();
           return;

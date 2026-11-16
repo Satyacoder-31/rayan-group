@@ -21018,6 +21018,27 @@
       "project_name": "The New Dubai Police Academy @ Al Rowaiyah, Dubai",
       "status": "Active",
       "created_at": "2025-08-07T09:00:00Z"
+    },
+    {
+      "id": "emp-rg11047",
+      "employee_no": "RG11047",
+      "company_id": "rayan-corp-uae",
+      "name": "Md Ashraf Ali",
+      "position": "General Mason/Tiles Mason",
+      "department": "Rayan Engineering",
+      "date_of_joining": "2026-09-15",
+      "date_of_appointment": "2026-08-26",
+      "currency": "AED",
+      "nationality": "India",
+      "passport_no": "C6976631",
+      "visa_status": "Employment Visa (Rayan Engineering)",
+      "basic_salary": 1100,
+      "accommodation_allowance": 0,
+      "consolidated_allowance": 200,
+      "other_allowance": 200,
+      "bank_name": "Cash / On-Hand",
+      "status": "Active",
+      "created_at": "2026-08-26T09:00:00Z"
     }
   ],
   "payroll": [
@@ -21098,6 +21119,66 @@
       "project_name": "The New Dubai Police Academy @ Al Rowaiyah, Dubai",
       "notes": "Operation Manager monthly compensation for June 2026",
       "created_at": "2026-07-10T11:30:00Z"
+    }
+  ],
+  "employment_certificates": [
+    {
+      "id": "cert-rec-hc-2025-11004",
+      "cert_no": "REC/HC/2025/11004",
+      "ref_no": "REC/HC/2025/11004",
+      "company_id": "rayan-corp-uae",
+      "date": "August 13, 2025",
+      "employee_id": "emp-en12001",
+      "employee_name_en": "Bakhteyar Alam Mokhtar Ahmad",
+      "employee_name_ar": "بختيار عالم مختار احمد",
+      "job_title_en": "Civil Engineer",
+      "job_title_ar": "مهندس مدني",
+      "joining_date_en": "07/08/2025",
+      "joining_date_ar": "2025-08-07",
+      "nationality_en": "India",
+      "nationality_ar": "هندي",
+      "passport_no": "S3552106",
+      "currency": "AED",
+      "basic_salary": 9500,
+      "accommodation_allowance": 5500,
+      "total_salary": 15000,
+      "purpose": "This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.",
+      "purpose_ar": "وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.",
+      "verification_email": "rayan@rayan-group.com",
+      "signatory_name": "Arshad Alam Shaikh",
+      "signatory_name_ar": "ارشد عالم شيخ",
+      "signatory_title": "Chief Officer of People & Culture",
+      "signatory_title_ar": "الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية",
+      "status": "Issued",
+      "created_at": "2025-08-13T10:00:00Z"
+    }
+  ],
+  "letters_of_assignment": [
+    {
+      "id": "loa-rg-hc-2026-11047",
+      "loa_no": "RG/HC/LOA/2026/11047",
+      "ref_no": "RG/HC/LOA/2026/11047",
+      "company_id": "rayan-corp-uae",
+      "date": "26/08/2026",
+      "employee_name": "Md Ashraf Ali",
+      "passport_no": "C6976631",
+      "nationality": "India",
+      "position": "General Mason/Tiles Mason",
+      "reporting_manager": "Site Supervisor or his designated nominee",
+      "working_hours": "08 hours a day and 6 days a week",
+      "currency": "AED",
+      "basic_salary": 1100,
+      "food_allowance": 200,
+      "overtime_amount": 200,
+      "overtime_hours": "2-3 HRS.Per/Day",
+      "grand_total": 1500,
+      "joining_deadline": "15-09-2026",
+      "signatory_name": "Arshad Alam Shaikh",
+      "signatory_name_ar": "ارشد عالم شيخ",
+      "signatory_title": "Chief Executive Officer",
+      "signatory_title_ar": "الرئيس التنفيذي",
+      "status": "Issued",
+      "created_at": "2026-08-26T09:00:00Z"
     }
   ]
 }

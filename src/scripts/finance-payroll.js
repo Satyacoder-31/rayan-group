@@ -94,8 +94,10 @@ export function registerPayrollModules(FinanceApp) {
           id: 'emp-en12001',
           employee_no: 'EN12001',
           company_id: this.activeCompanyId || 'rayan-corp-uae',
-          name: 'Bakhteyar Alam',
-          position: 'Operation Manager',
+          name: 'Bakhteyar Alam Mokhtar Ahmad',
+          name_ar: 'بختيار عالم مختار احمد',
+          position: 'Civil Engineer',
+          position_ar: 'مهندس مدني',
           department: 'Rayan Engineering',
           date_of_joining: '2025-08-07',
           date_of_appointment: '2025-08-07',
@@ -103,11 +105,13 @@ export function registerPayrollModules(FinanceApp) {
           phone: '+971 50 123 4567',
           email: 'bakhteyar@rayan-group.com',
           emirates_id: '784-1988-1234567-1',
-          passport_no: 'N1234567',
+          passport_no: 'S3552106',
+          nationality: 'India',
+          nationality_ar: 'هندي',
           visa_status: 'Employment Visa (Rayan Engineering)',
           basic_salary: 9500.00,
-          accommodation_allowance: 12500.00,
-          consolidated_allowance: 8000.00,
+          accommodation_allowance: 5500.00,
+          consolidated_allowance: 0.00,
           other_allowance: 0.00,
           bank_name: 'Emirates NBD Bank PJSC',
           swift: 'EBILAEADXXX',
@@ -118,9 +122,135 @@ export function registerPayrollModules(FinanceApp) {
           project_name: 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
           status: 'Active',
           created_at: '2025-08-07T09:00:00Z'
+        },
+        {
+          id: 'emp-rg11047',
+          employee_no: 'RG11047',
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          name: 'Md Ashraf Ali',
+          name_ar: 'محمد اشرف علي',
+          position: 'General Mason/Tiles Mason',
+          position_ar: 'بناء عام / بلاط',
+          department: 'Rayan Engineering',
+          date_of_joining: '2026-09-15',
+          date_of_appointment: '2026-08-26',
+          currency: 'AED',
+          nationality: 'India',
+          nationality_ar: 'هندي',
+          passport_no: 'C6976631',
+          visa_status: 'Employment Visa (Rayan Engineering)',
+          basic_salary: 1100.00,
+          accommodation_allowance: 0.00,
+          consolidated_allowance: 200.00,
+          other_allowance: 200.00,
+          bank_name: 'Cash / On-Hand',
+          status: 'Active',
+          created_at: '2026-08-26T09:00:00Z'
+        }
+      ];
+    } else {
+      const bakht = this.db.employees.find(e => e.id === 'emp-en12001' || e.name.includes('Bakhteyar'));
+      if (bakht) {
+        bakht.passport_no = 'S3552106';
+        bakht.name = 'Bakhteyar Alam Mokhtar Ahmad';
+        if (!bakht.name_ar) bakht.name_ar = 'بختيار عالم مختار احمد';
+        if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
+      }
+      if (!this.db.employees.find(e => e.passport_no === 'C6976631' || e.name === 'Md Ashraf Ali')) {
+        this.db.employees.push({
+          id: 'emp-rg11047',
+          employee_no: 'RG11047',
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          name: 'Md Ashraf Ali',
+          name_ar: 'محمد اشرف علي',
+          position: 'General Mason/Tiles Mason',
+          position_ar: 'بناء عام / بلاط',
+          department: 'Rayan Engineering',
+          date_of_joining: '2026-09-15',
+          date_of_appointment: '2026-08-26',
+          currency: 'AED',
+          nationality: 'India',
+          nationality_ar: 'هندي',
+          passport_no: 'C6976631',
+          visa_status: 'Employment Visa (Rayan Engineering)',
+          basic_salary: 1100.00,
+          accommodation_allowance: 0.00,
+          consolidated_allowance: 200.00,
+          other_allowance: 200.00,
+          bank_name: 'Cash / On-Hand',
+          status: 'Active',
+          created_at: '2026-08-26T09:00:00Z'
+        });
+      }
+    }
+
+    if (!Array.isArray(this.db.employment_certificates) || this.db.employment_certificates.length === 0) {
+      this.db.employment_certificates = [
+        {
+          id: 'cert-rec-hc-2025-11004',
+          cert_no: 'REC/HC/2025/11004',
+          ref_no: 'REC/HC/2025/11004',
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          date: 'August 13, 2025',
+          employee_id: 'emp-en12001',
+          employee_name_en: 'Bakhteyar Alam Mokhtar Ahmad',
+          employee_name_ar: 'بختيار عالم مختار احمد',
+          job_title_en: 'Civil Engineer',
+          job_title_ar: 'مهندس مدني',
+          joining_date_en: '07/08/2025',
+          joining_date_ar: '2025-08-07',
+          nationality_en: 'India',
+          nationality_ar: 'هندي',
+          passport_no: 'S3552106',
+          currency: 'AED',
+          basic_salary: 9500.00,
+          accommodation_allowance: 5500.00,
+          total_salary: 15000.00,
+          purpose: 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.',
+          purpose_ar: 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.',
+          verification_email: 'rayan@rayan-group.com',
+          signatory_name: 'Arshad Alam Shaikh',
+          signatory_name_ar: 'ارشد عالم شيخ',
+          signatory_title: 'Chief Officer of People & Culture',
+          signatory_title_ar: 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية',
+          status: 'Issued',
+          created_at: '2025-08-13T10:00:00Z'
         }
       ];
     }
+
+    if (!Array.isArray(this.db.letters_of_assignment) || this.db.letters_of_assignment.length === 0) {
+      this.db.letters_of_assignment = [
+        {
+          id: 'loa-rg-hc-2026-11047',
+          loa_no: 'RG/HC/LOA/2026/11047',
+          ref_no: 'RG/HC/LOA/2026/11047',
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          date: '26/08/2026',
+          employee_id: 'emp-rg11047',
+          employee_name: 'Md Ashraf Ali',
+          passport_no: 'C6976631',
+          nationality: 'India',
+          position: 'General Mason/Tiles Mason',
+          reporting_manager: 'Site Supervisor or his designated nominee',
+          working_hours: '08 hours a day and 6 days a week',
+          currency: 'AED',
+          basic_salary: 1100.00,
+          food_allowance: 200.00,
+          overtime_amount: 200.00,
+          overtime_hours: '2-3 HRS.Per/Day',
+          grand_total: 1500.00,
+          joining_deadline: '15-09-2026',
+          signatory_name: 'Arshad Alam Shaikh',
+          signatory_name_ar: 'ارشد عالم شيخ',
+          signatory_title: 'Chief Executive Officer',
+          signatory_title_ar: 'الرئيس التنفيذي',
+          status: 'Issued',
+          created_at: '2026-08-26T09:00:00Z'
+        }
+      ];
+    }
+
     if (!Array.isArray(this.db.payroll) || this.db.payroll.length === 0) {
       this.db.payroll = [
         {
@@ -129,8 +259,8 @@ export function registerPayrollModules(FinanceApp) {
           company_id: this.activeCompanyId || 'rayan-corp-uae',
           employee_id: 'emp-en12001',
           employee_no: 'EN12001',
-          employee_name: 'Bakhteyar Alam',
-          position: 'Operation Manager',
+          employee_name: 'Bakhteyar Alam Mokhtar Ahmad',
+          position: 'Civil Engineer',
           department: 'Rayan Engineering',
           date_of_appointment: '2025-08-07',
           currency: 'AED',
@@ -139,30 +269,28 @@ export function registerPayrollModules(FinanceApp) {
           printed_date: '10-Jul-26',
           payment_date: '2026-07-10',
           basic_salary: 9500.00,
-          accommodation_allowance: 12500.00,
-          consolidated_allowance: 8000.00,
-          normal_overtime: 1000.00,
-          overtime_hrs: '10.0',
+          accommodation_allowance: 5500.00,
+          consolidated_allowance: 0.00,
+          normal_overtime: 0.00,
+          overtime_hrs: '0',
           other_earnings: 0.00,
-          total_earnings: 31000.00,
+          total_earnings: 15000.00,
           advance_deduction: 0.00,
           absence_deduction: 0.00,
           loan_deduction: 0.00,
           other_deductions: 0.00,
           total_deductions: 0.00,
-          net_pay: 31000.00,
+          net_pay: 15000.00,
           breakdown_items: [
             { date: '10/07/2026', element_name: 'Basic Salary', element_type: 'Standard Earnings', remark: 'Standard Basic Monthly', hrs: '', amount: 9500.00 },
-            { date: '10/07/2026', element_name: 'Accommodation Allowance', element_type: 'Standard Earnings', remark: 'Executive Housing Allowance', hrs: '', amount: 12500.00 },
-            { date: '10/07/2026', element_name: 'Consolidated Allowance', element_type: 'Standard Earnings', remark: 'Transport & Corporate Allowance', hrs: '', amount: 8000.00 },
-            { date: '10/07/2026', element_name: 'Normal Overtime', element_type: 'Standard Earnings', remark: 'Project Operations Supervision', hrs: '10', amount: 1000.00 }
+            { date: '10/07/2026', element_name: 'Accommodation Allowance', element_type: 'Standard Earnings', remark: 'Housing Allowance', hrs: '', amount: 5500.00 }
           ],
           bank_name: 'Emirates NBD Bank PJSC',
           swift: 'EBILAEADXXX',
           iban: 'AE860260001015934645101',
           account_no: 'AE860260001015934645101',
           pay_method: 'AED RAYAN GROUP Host To Host',
-          transferred_amount: 31000.00,
+          transferred_amount: 15000.00,
           status: 'Paid',
           payout_source_type: 'bank',
           payout_source_id: 'bank-adcb-uae',
@@ -170,7 +298,7 @@ export function registerPayrollModules(FinanceApp) {
           payout_reference: 'TXN-PAYROLL-20260710-01',
           project_id: 'prj-toprock-police-01',
           project_name: 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
-          notes: 'Operation Manager monthly compensation for June 2026',
+          notes: 'Civil Engineer monthly compensation for June 2026',
           created_at: '2026-07-10T11:30:00Z'
         }
       ];
@@ -387,6 +515,12 @@ export function registerPayrollModules(FinanceApp) {
               </button>
               <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 8px; font-size:0.75rem;" onclick="window.finApp.openPayslipModal(null, '${emp.id}')" title="Create Monthly Pay Slip">
                 📜 Pay Slip
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.35); padding:4px 8px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openEmploymentCertificatePrintModal('${emp.id}')" title="Issue / Print Bilingual Employment Certificate">
+                🏛️ Emp Cert
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.35); padding:4px 8px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openLetterOfAssignmentPrintModal('${emp.id}')" title="Issue / Print 2-Page Letter of Assignment">
+                📄 Assignment
               </button>
               <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 7px; font-size:0.75rem;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Profile">
                 ✏️
@@ -2167,6 +2301,8 @@ export function registerPayrollModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPayslipPrintModal('${slip.id}')">Employee Pay Slip</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -2584,5 +2720,1188 @@ export function registerPayrollModules(FinanceApp) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-}
 
+
+  // ==========================================================================
+  // 8. EMPLOYMENT CERTIFICATES (شهادة عمل - BILINGUAL)
+  // ==========================================================================
+  proto.getEmploymentCertificates = function () {
+    this.ensurePayrollSeedData();
+    return (this.db?.employment_certificates || []).filter(c => this.matchesActiveCompany(c.company_id));
+  };
+
+  proto.openEmploymentCertificatePrintModal = function (certOrEmpId, isVerifiedScan = false) {
+    this.ensurePayrollSeedData();
+    let cert = null;
+    const certs = this.getEmploymentCertificates();
+
+    if (certOrEmpId) {
+      cert = certs.find(c => c.id === certOrEmpId || c.cert_no === certOrEmpId || c.ref_no === certOrEmpId || c.employee_id === certOrEmpId);
+      if (!cert) {
+        const emp = (this.db?.employees || []).find(e => e.id === certOrEmpId || e.name === certOrEmpId || e.employee_no === certOrEmpId);
+        if (emp) {
+          cert = {
+            id: `cert-${emp.id}`,
+            cert_no: `REC/HC/${new Date().getFullYear()}/11004`,
+            ref_no: `REC/HC/${new Date().getFullYear()}/11004`,
+            company_id: emp.company_id || this.activeCompanyId,
+            date: 'August 13, 2025',
+            employee_id: emp.id,
+            employee_name_en: emp.name,
+            employee_name_ar: emp.name_ar || emp.name,
+            job_title_en: emp.position || 'Civil Engineer',
+            job_title_ar: emp.position_ar || 'مهندس مدني',
+            joining_date_en: emp.date_of_joining ? this.formatDate(emp.date_of_joining) : '07/08/2025',
+            joining_date_ar: emp.date_of_joining || '2025-08-07',
+            nationality_en: emp.nationality || 'India',
+            nationality_ar: emp.nationality_ar || 'هندي',
+            passport_no: emp.passport_no || 'S3552106',
+            basic_salary: Number(emp.basic_salary) || 9500.00,
+            accommodation_allowance: Number(emp.accommodation_allowance) || 5500.00,
+            total_salary: (Number(emp.basic_salary) || 9500) + (Number(emp.accommodation_allowance) || 5500),
+            currency: emp.currency || 'AED',
+            purpose: 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.',
+            purpose_ar: 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.',
+            verification_email: 'rayan@rayan-group.com',
+            signatory_name: 'Arshad Alam Shaikh',
+            signatory_name_ar: 'ارشد عالم شيخ',
+            signatory_title: 'Chief Officer of People & Culture',
+            signatory_title_ar: 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية',
+            status: 'Issued'
+          };
+        }
+      }
+    }
+    if (!cert) cert = certs[0] || (this.db?.employment_certificates || [])[0];
+
+    const basicVal = Number(cert.basic_salary) || 9500;
+    const accVal = Number(cert.accommodation_allowance) || 5500;
+    const totalVal = basicVal + accVal;
+    const curr = cert.currency || 'AED';
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🏛️</span>
+              <span>Rayan Engineering Official Employment Certificate (شهادة عمل)</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openEmploymentCertificatePrintModal('${cert.id}')">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditEmploymentCertModal('${cert.id}')">
+              <span>✏️</span> Edit Certificate
+            </button>
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadEmploymentCertificateDocument('${cert.id}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
+              <span>✕</span> Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 14mm 8mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+
+            <!-- Header Logo (Rayan Engineering Centered) -->
+            <div style="text-align:center; margin-bottom:1.25rem;">
+              <img src="/assets/docs/rayan-engineering-header-logo.png" alt="Rayan Engineering" style="height:46px; width:auto; display:inline-block;">
+            </div>
+
+            <!-- Date & Reference Row -->
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; font-weight:700; color:#0f172a; margin-bottom:1.5rem;">
+              <div>Date: ${cert.date || 'August 13, 2025'}</div>
+              <div>Ref.: ${cert.ref_no || cert.cert_no || 'REC/HC/2025/11004'}</div>
+            </div>
+
+            <!-- Two-Column Bilingual Body Grid with Center Vertical Cyan Divider -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:1.25rem;">
+              <colgroup>
+                <col style="width:49%;">
+                <col style="width:2%;">
+                <col style="width:49%;">
+              </colgroup>
+              <tr>
+                <!-- Left Column (English) -->
+                <td style="vertical-align:top; padding-right:14px; font-size:0.80rem; line-height:1.55; color:#1e293b;">
+                  <h1 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin:0 0 0.85rem 0; font-family:'Outfit', sans-serif;">Employment Certificate</h1>
+                  <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:1rem;">Whom It May Concern</div>
+                  
+                  <p style="margin:0 0 1rem 0; text-align:justify; color:#334155;">
+                    RAYAN Engineering and Contracting l.l.c- s.p.c, a subsidiary of RAYAN Group, certifies that the under mentioned employee is currently in the service of the company and receiving a monthly salary as below:
+                  </p>
+
+                  <div style="margin-bottom:0.9rem; line-height:1.6;">
+                    <div><strong>Name:</strong> ${cert.employee_name_en || 'Bakhteyar Alam Mokhtar Ahmad'}</div>
+                    <div><strong>Job Tile:</strong> ${cert.job_title_en || 'Civil Engineer'}</div>
+                    <div><strong>Date of Joining:</strong> ${cert.joining_date_en || '07/08/2025'}</div>
+                    <div><strong>Nationality:</strong> ${cert.nationality_en || 'India'}</div>
+                    <div><strong>Passport No.:</strong> ${cert.passport_no || 'S3552106'}</div>
+                    <div style="margin-top:2px;"><strong>Monthly Salary:</strong> (${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}) AE DIRHAM Only</div>
+                  </div>
+
+                  <!-- Salary Breakdown Table (English) -->
+                  <table style="width:100%; max-width:280px; font-size:0.75rem; border-collapse:collapse; margin-bottom:1rem;">
+                    <tr>
+                      <td style="padding:1px 0; color:#475569;">BASIC SALARY</td>
+                      <td style="text-align:right; font-weight:600;">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 0; color:#475569;">ACCOMMODATION ALLOW.</td>
+                      <td style="text-align:right; font-weight:600;">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</td>
+                    </tr>
+                    <tr style="border-top:1px solid #94a3b8; font-weight:800;">
+                      <td style="padding:3px 0; color:#0f172a;">Total:</td>
+                      <td style="text-align:right; color:#0f172a;">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</td>
+                    </tr>
+                  </table>
+
+                  <p style="font-size:0.75rem; line-height:1.45; color:#475569; margin:0 0 0.85rem 0;">
+                    ${cert.purpose || 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.'}
+                  </p>
+
+                  <div style="font-size:0.75rem; color:#475569;">
+                    For verification inquires, contact us at<br>
+                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;">${cert.verification_email || 'rayan@rayan-group.com'}</a>
+                  </div>
+                </td>
+
+                <!-- Center Vertical Line -->
+                <td style="vertical-align:stretch; padding:0; text-align:center;">
+                  <div style="background:#0284c7; width:2px; height:100%; min-height:280px; margin:0 auto; border-radius:1px;"></div>
+                </td>
+
+                <!-- Right Column (Arabic, RTL) -->
+                <td style="vertical-align:top; padding-left:14px; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.86rem; line-height:1.65; color:#1e293b;">
+                  <h1 style="font-size:1.55rem; font-weight:800; color:#0f172a; margin:0 0 0.85rem 0; font-family:'Amiri', serif;">شـــــهــــــــــــــــــــادة عــــــــمــــــــــــــــــــل</h1>
+                  <div style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem;">لمن يهمه الامر</div>
+
+                  <p style="margin:0 0 1rem 0; text-align:justify; color:#334155;">
+                    تشهد شركة ريان الهندسيه و للمقاولات - ذ م م - ش ش و إحدى شركات مجموعة رايان بأن الموظف المذكور أدناه يعمل لدينا، ولايزال على رأس عمله حتى تاريخه ويتقاضى راتب شهري كما يلي:
+                  </p>
+
+                  <div style="margin-bottom:0.9rem; line-height:1.65;">
+                    <div><strong>الاسم :</strong> ${cert.employee_name_ar || 'بختيار عالم مختار احمد'}</div>
+                    <div><strong>المسمى الوظيفي:</strong> ${cert.job_title_ar || 'مهندس مدني'}</div>
+                    <div><strong>تاريخ التعيين:</strong> ${cert.joining_date_ar || '2025-08-07'}</div>
+                    <div><strong>الجنسية:</strong> ${cert.nationality_ar || 'هندي'}</div>
+                    <div><strong>رقم الجواز:</strong> ${cert.passport_no || 'S3552106'}</div>
+                    <div style="margin-top:2px;"><strong>الراتب الشهري :</strong> (${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}) درهم فقط</div>
+                  </div>
+
+                  <!-- Salary Breakdown Table (Arabic) -->
+                  <table style="width:100%; max-width:280px; font-size:0.82rem; border-collapse:collapse; margin-bottom:1rem; direction:rtl; text-align:right; font-family:'Amiri', serif;">
+                    <tr>
+                      <td style="padding:1px 0; color:#475569;">راتب اساسي</td>
+                      <td style="text-align:left; font-weight:600;">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 0; color:#475569;">علاوة سكن</td>
+                      <td style="text-align:left; font-weight:600;">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</td>
+                    </tr>
+                    <tr style="border-top:1px solid #94a3b8; font-weight:800;">
+                      <td style="padding:3px 0; color:#0f172a;">الإجمالي:</td>
+                      <td style="text-align:left; color:#0f172a;">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</td>
+                    </tr>
+                  </table>
+
+                  <p style="font-size:0.82rem; line-height:1.55; color:#475569; margin:0 0 0.85rem 0;">
+                    ${cert.purpose_ar || 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.'}
+                  </p>
+
+                  <div style="font-size:0.82rem; color:#475569;">
+                    لإلستفسارات، يمكنكم التواصل معنا عبر البريد اإللكتروني<br>
+                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;">${cert.verification_email || 'rayan@rayan-group.com'}</a>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Center Signatory & Official People & Culture Stamp Box -->
+            <div style="text-align:center; margin:1.2rem auto 1.5rem auto; position:relative; width:280px;">
+              <!-- Official Round People & Culture Stamp -->
+              <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:10px; top:-22px; width:98px; height:98px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+              <!-- Arshad Alam Shaikh Signature -->
+              <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:6px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+              
+              <div style="position:relative; z-index:3; padding-top:40px;">
+                <div style="font-family:'Amiri', serif; font-size:1.05rem; font-weight:700; color:#0f172a;">${cert.signatory_name_ar || 'ارشد عالم شيخ'}</div>
+                <div style="font-weight:800; font-size:0.88rem; color:#0f172a;">${cert.signatory_name || 'Arshad Alam Shaikh'}</div>
+                <div style="font-family:'Amiri', serif; font-size:0.80rem; font-weight:700; color:#0f172a;">${cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'}</div>
+                <div style="font-weight:700; font-size:0.75rem; color:#0f172a;">${cert.signatory_title || 'Chief Officer of People & Culture'}</div>
+              </div>
+            </div>
+
+            <!-- Group Includes 4 Logos Strip -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.6rem 0; font-size:0.72rem; color:#475569; border-top:1px solid #e2e8f0; padding-top:0.6rem;">
+              <div style="font-weight:600;">* The Group Includes:</div>
+              <img src="/assets/docs/rayan-group-four-logos-strip.png" alt="Rayan Group Subsidiaries" style="height:24px; width:auto;">
+              <div style="font-family:'Amiri', serif; font-weight:700; direction:rtl;">*تشمل المجموعة</div>
+            </div>
+
+            <!-- Bilingual Notes Section -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; font-size:0.68rem; color:#64748b; line-height:1.45; margin-bottom:0.75rem;">
+              <div style="width:48%;">
+                <strong>Note:</strong><br>
+                - Any amendment or change will revoke this certificate.<br>
+                - The validity of this certificate is one month from the date of issuance.<br>
+                - This is a system generated certificate with electronic signature &amp; company stamp.
+              </div>
+              <div style="width:48%; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.74rem;">
+                <strong>ملاحظة:</strong><br>
+                -أي شطب أو تعديل في هذه الشهادة يلغيها.<br>
+                -صلاحية الشهادة شهر واحد من تاريخ إصدارها .<br>
+                -اصدرت هذه الشهادة عبر النظام اإللكتروني مع التوقيع و ختم الشركة.
+              </div>
+            </div>
+
+            <!-- Bottom Corporate Address Footer -->
+            <div style="border-top:1px solid #e2e8f0; padding-top:5px; text-align:left;">
+              <div style="color:#0284c7; font-weight:800; font-size:0.85rem; font-family:'Plus Jakarta Sans', sans-serif;">Abu Dhabi, UAE</div>
+              <div style="font-size:0.70rem; color:#475569; font-family:'Plus Jakarta Sans', sans-serif;">
+                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | rayan@rayan-group.com | www.rayan-group.com
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  };
+
+  proto.downloadEmploymentCertificateDocument = function (certId) {
+    let cert = (this.db?.employment_certificates || []).find(c => c.id === certId || c.cert_no === certId || c.ref_no === certId) || (this.db?.employment_certificates || [])[0];
+    if (!cert) return;
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Employment Certificate - ${cert.ref_no || cert.cert_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 20px; background: #f1f5f9; display: flex; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    @media print {
+      body { background: transparent !important; padding: 0 !important; }
+      .fin-document-paper { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${(cert.ref_no || cert.cert_no).replace(/[^a-zA-Z0-9_-]/g, '_')}_Employment_Certificate.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded Employment Certificate ${cert.ref_no}.`, 'success');
+    }
+  };
+
+  proto.openEditEmploymentCertModal = function (certId) {
+    this.ensurePayrollSeedData();
+    let cert = (this.db?.employment_certificates || []).find(c => c.id === certId || c.ref_no === certId);
+    if (!cert) cert = (this.db?.employment_certificates || [])[0] || {};
+
+    const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
+    const empOptions = employees.map(e => `<option value="${e.id}" ${cert.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')})</option>`).join('');
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-emp-cert-edit" style="z-index:100030;">
+        <div class="fin-modal-dialog" style="max-width:720px; width:95%;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title"><span>🏛️</span> Edit Employment Certificate Details</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-emp-cert-edit')">&times;</button>
+          </div>
+          <form id="form-emp-cert-edit" onsubmit="event.preventDefault(); window.finApp.saveEmploymentCertForm(event);">
+            <input type="hidden" name="id" value="${cert.id || ''}">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Reference Number (Ref.:)</label>
+                <input type="text" class="fin-input" name="ref_no" value="${escapeHtml(cert.ref_no || 'REC/HC/2025/11004')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Certificate Date</label>
+                <input type="text" class="fin-input" name="date" value="${escapeHtml(cert.date || 'August 13, 2025')}" required>
+              </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+              <label class="fin-field-label">Select Employee (Auto-fill)</label>
+              <select class="fin-input" id="edit-cert-emp-select" onchange="window.finApp.onCertEmployeeSelectChange(this.value)">
+                <option value="">-- Choose Employee to load details --</option>
+                ${empOptions}
+              </select>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Employee Name (English)</label>
+                <input type="text" class="fin-input" id="cert-emp-name-en" name="employee_name_en" value="${escapeHtml(cert.employee_name_en || '')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Employee Name (Arabic - الاسم)</label>
+                <input type="text" class="fin-input" id="cert-emp-name-ar" name="employee_name_ar" value="${escapeHtml(cert.employee_name_ar || '')}" style="direction:rtl;" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Job Title (English)</label>
+                <input type="text" class="fin-input" id="cert-job-title-en" name="job_title_en" value="${escapeHtml(cert.job_title_en || '')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Job Title (Arabic - المسمى الوظيفي)</label>
+                <input type="text" class="fin-input" id="cert-job-title-ar" name="job_title_ar" value="${escapeHtml(cert.job_title_ar || '')}" style="direction:rtl;" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Passport No.</label>
+                <input type="text" class="fin-input" id="cert-passport-no" name="passport_no" value="${escapeHtml(cert.passport_no || 'S3552106')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Nationality (EN / AR)</label>
+                <input type="text" class="fin-input" id="cert-nationality-en" name="nationality_en" value="${escapeHtml(cert.nationality_en || 'India')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Joining Date (EN / AR)</label>
+                <input type="text" class="fin-input" id="cert-joining-date-en" name="joining_date_en" value="${escapeHtml(cert.joining_date_en || '07/08/2025')}" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+              <div>
+                <label class="fin-field-label">Basic Salary (AED)</label>
+                <input type="number" step="0.01" class="fin-input" id="cert-basic-salary" name="basic_salary" value="${cert.basic_salary || 9500}" oninput="window.finApp.calcCertTotalSalary()" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Accommodation (AED)</label>
+                <input type="number" step="0.01" class="fin-input" id="cert-acc-salary" name="accommodation_allowance" value="${cert.accommodation_allowance || 5500}" oninput="window.finApp.calcCertTotalSalary()" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Total Monthly Salary (AED)</label>
+                <input type="number" step="0.01" class="fin-input" id="cert-total-salary" name="total_salary" value="${cert.total_salary || 15000}" readonly style="background:#0f172a; font-weight:700; color:#10b981;">
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+              <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeModal('modal-emp-cert-edit')">Cancel</button>
+              <button type="submit" class="fin-btn-primary">💾 Save Certificate &amp; Preview</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+  };
+
+  proto.onCertEmployeeSelectChange = function (empId) {
+    if (!empId) return;
+    const emp = (this.db?.employees || []).find(e => e.id === empId);
+    if (!emp) return;
+    const nameEn = document.getElementById('cert-emp-name-en');
+    const nameAr = document.getElementById('cert-emp-name-ar');
+    const titleEn = document.getElementById('cert-job-title-en');
+    const pass = document.getElementById('cert-passport-no');
+    const nat = document.getElementById('cert-nationality-en');
+    const join = document.getElementById('cert-joining-date-en');
+    const basic = document.getElementById('cert-basic-salary');
+    const acc = document.getElementById('cert-acc-salary');
+
+    if (nameEn) nameEn.value = emp.name || '';
+    if (nameAr && !nameAr.value) nameAr.value = emp.name_ar || emp.name || '';
+    if (titleEn) titleEn.value = emp.position || 'Civil Engineer';
+    if (pass) pass.value = emp.passport_no || 'S3552106';
+    if (nat) nat.value = emp.nationality || 'India';
+    if (join) join.value = emp.date_of_joining ? this.formatDate(emp.date_of_joining) : '07/08/2025';
+    if (basic) basic.value = emp.basic_salary || 9500;
+    if (acc) acc.value = emp.accommodation_allowance || 5500;
+    this.calcCertTotalSalary();
+  };
+
+  proto.calcCertTotalSalary = function () {
+    const basic = parseFloat(document.getElementById('cert-basic-salary')?.value) || 0;
+    const acc = parseFloat(document.getElementById('cert-acc-salary')?.value) || 0;
+    const totalEl = document.getElementById('cert-total-salary');
+    if (totalEl) totalEl.value = (basic + acc).toFixed(2);
+  };
+
+  proto.saveEmploymentCertForm = async function (e) {
+    const form = e.target;
+    const formData = new FormData(form);
+    const id = formData.get('id') || `cert-${Date.now()}`;
+
+    const updated = {
+      id,
+      cert_no: formData.get('ref_no'),
+      ref_no: formData.get('ref_no'),
+      company_id: this.activeCompanyId || 'rayan-corp-uae',
+      date: formData.get('date'),
+      employee_name_en: formData.get('employee_name_en'),
+      employee_name_ar: formData.get('employee_name_ar'),
+      job_title_en: formData.get('job_title_en'),
+      job_title_ar: formData.get('job_title_ar'),
+      joining_date_en: formData.get('joining_date_en'),
+      joining_date_ar: formData.get('joining_date_en'),
+      nationality_en: formData.get('nationality_en'),
+      nationality_ar: formData.get('nationality_en') === 'India' ? 'هندي' : formData.get('nationality_en'),
+      passport_no: formData.get('passport_no'),
+      basic_salary: parseFloat(formData.get('basic_salary')) || 0,
+      accommodation_allowance: parseFloat(formData.get('accommodation_allowance')) || 0,
+      total_salary: parseFloat(formData.get('total_salary')) || 0,
+      currency: 'AED',
+      purpose: 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.',
+      purpose_ar: 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.',
+      verification_email: 'rayan@rayan-group.com',
+      signatory_name: 'Arshad Alam Shaikh',
+      signatory_name_ar: 'ارشد عالم شيخ',
+      signatory_title: 'Chief Officer of People & Culture',
+      signatory_title_ar: 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية',
+      status: 'Issued',
+      updated_at: new Date().toISOString()
+    };
+
+    if (!Array.isArray(this.db.employment_certificates)) this.db.employment_certificates = [];
+    const idx = this.db.employment_certificates.findIndex(c => c.id === id);
+    if (idx >= 0) this.db.employment_certificates[idx] = { ...this.db.employment_certificates[idx], ...updated };
+    else this.db.employment_certificates.unshift(updated);
+
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    this.closeModal('modal-emp-cert-edit');
+    this.showNotification(`Employment Certificate ${updated.ref_no} saved.`, 'success');
+    this.openEmploymentCertificatePrintModal(updated.id);
+    await this.syncApi('save_employment_certificate', { certificate: updated });
+  };
+
+  proto.deleteEmploymentCertificate = async function (certId) {
+    const cert = (this.db?.employment_certificates || []).find(c => c.id === certId || c.ref_no === certId);
+    const label = cert ? cert.ref_no : certId;
+    if (!confirm(`Are you sure you want to delete Employment Certificate ${label}?`)) return;
+
+    if (this.db.employment_certificates) {
+      this.db.employment_certificates = this.db.employment_certificates.filter(c => c.id !== certId && c.ref_no !== certId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    this.renderActiveTab();
+    this.showNotification(`Certificate ${label} deleted.`, 'info');
+    await this.syncApi('delete_employment_certificate', { id: certId });
+  };
+
+  proto.renderEmploymentCertificatesTab = function (root) {
+    this.ensurePayrollSeedData();
+    const certs = this.getEmploymentCertificates();
+
+    root.innerHTML = `
+      <div class="fin-tab-header">
+        <div class="fin-tab-title-wrap">
+          <h2 class="fin-panel-title">🏛️ Official Employment Certificates (شهادات عمل)</h2>
+          <p class="fin-panel-sub">Official bilingual (English &amp; Arabic) salary verification certificates with electronic signatures &amp; People &amp; Culture corporate stamps</p>
+        </div>
+        <div class="fin-tab-actions">
+          <button type="button" class="fin-btn-secondary" onclick="window.finApp.openEmploymentCertificatePrintModal()">
+            📄 Sample Certificate
+          </button>
+          <button type="button" class="fin-btn-primary" onclick="window.finApp.openEditEmploymentCertModal()">
+            + Issue Employment Certificate
+          </button>
+        </div>
+      </div>
+
+      <div class="fin-panel-card">
+        <div class="fin-table-wrapper">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Certificate Ref #</th>
+                <th>Date</th>
+                <th>Employee Name (English / Arabic)</th>
+                <th>Designation</th>
+                <th>Passport #</th>
+                <th style="text-align:right;">Monthly Salary</th>
+                <th style="text-align:center;">Status</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${certs.length === 0 ? `
+                <tr>
+                  <td colspan="9" style="text-align:center; padding:3rem 1rem; color:#94a3b8;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">🏛️</div>
+                    <div style="font-weight:600; font-size:1rem; color:#cbd5e1;">No Employment Certificates Found</div>
+                    <div style="font-size:0.8rem; margin-top:4px;">Click "+ Issue Employment Certificate" to generate an official certificate.</div>
+                  </td>
+                </tr>
+              ` : certs.map((c, idx) => `
+                <tr>
+                  <td style="color:#64748b; font-size:0.8rem;">${idx + 1}</td>
+                  <td>
+                    <strong style="color:#38bdf8; font-weight:700; cursor:pointer;" onclick="window.finApp.openEmploymentCertificatePrintModal('${c.id}')" title="Preview Certificate">
+                      ${escapeHtml(c.ref_no || c.cert_no || '')}
+                    </strong>
+                  </td>
+                  <td>${escapeHtml(c.date || '')}</td>
+                  <td>
+                    <div style="font-weight:700; color:#f8fafc;">${escapeHtml(c.employee_name_en || '')}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; font-family:'Amiri', serif;">${escapeHtml(c.employee_name_ar || '')}</div>
+                  </td>
+                  <td>
+                    <div>${escapeHtml(c.job_title_en || '')}</div>
+                    <div style="font-size:0.72rem; color:#38bdf8; font-family:'Amiri', serif;">${escapeHtml(c.job_title_ar || '')}</div>
+                  </td>
+                  <td style="font-family:monospace; color:#cbd5e1;">${escapeHtml(c.passport_no || '')}</td>
+                  <td style="text-align:right; font-weight:800; color:#10b981;">
+                    ${this.formatCurrency(c.total_salary || 15000, c.currency || 'AED')}
+                  </td>
+                  <td style="text-align:center;">
+                    <span style="display:inline-block; padding:3px 9px; border-radius:12px; font-size:0.72rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3);">
+                      ${escapeHtml(c.status || 'Issued')}
+                    </span>
+                  </td>
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex; gap:0.35rem; align-items:center;">
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openEmploymentCertificatePrintModal('${c.id}')" title="View &amp; Print">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openEditEmploymentCertModal('${c.id}')" title="Edit">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteEmploymentCertificate('${c.id}')" title="Delete">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  };
+
+  // ==========================================================================
+  // 9. LETTERS OF ASSIGNMENT (خطاب التكليف والتعيين - 2 PAGES)
+  // ==========================================================================
+  proto.getLettersOfAssignment = function () {
+    this.ensurePayrollSeedData();
+    return (this.db?.letters_of_assignment || []).filter(l => this.matchesActiveCompany(l.company_id));
+  };
+
+  proto.openLetterOfAssignmentPrintModal = function (loaOrEmpId, isVerifiedScan = false) {
+    this.ensurePayrollSeedData();
+    let loa = null;
+    const loas = this.getLettersOfAssignment();
+
+    if (loaOrEmpId) {
+      loa = loas.find(l => l.id === loaOrEmpId || l.loa_no === loaOrEmpId || l.ref_no === loaOrEmpId || l.employee_id === loaOrEmpId);
+      if (!loa) {
+        const emp = (this.db?.employees || []).find(e => e.id === loaOrEmpId || e.name === loaOrEmpId || e.employee_no === loaOrEmpId);
+        if (emp) {
+          loa = {
+            id: `loa-${emp.id}`,
+            loa_no: `RG/HC/LOA/${new Date().getFullYear()}/11047`,
+            ref_no: `RG/HC/LOA/${new Date().getFullYear()}/11047`,
+            company_id: emp.company_id || this.activeCompanyId,
+            date: '26/08/2026',
+            employee_id: emp.id,
+            employee_name: emp.name,
+            passport_no: emp.passport_no || 'C6976631',
+            nationality: emp.nationality || 'India',
+            position: emp.position || 'General Mason/Tiles Mason',
+            reporting_manager: 'Site Supervisor or his designated nominee',
+            working_hours: '08 hours a day and 6 days a week',
+            basic_salary: Number(emp.basic_salary) || 1100.00,
+            food_allowance: Number(emp.consolidated_allowance) || 200.00,
+            overtime_amount: Number(emp.other_allowance) || 200.00,
+            overtime_hours: '2-3 HRS.Per/Day',
+            grand_total: (Number(emp.basic_salary) || 1100) + (Number(emp.consolidated_allowance) || 200) + (Number(emp.other_allowance) || 200),
+            currency: emp.currency || 'AED',
+            joining_deadline: '15-09-2026',
+            signatory_name: 'Arshad Alam Shaikh',
+            signatory_name_ar: 'ارشد عالم شيخ',
+            signatory_title: 'Chief Executive Officer',
+            signatory_title_ar: 'الرئيس التنفيذي',
+            status: 'Issued'
+          };
+        }
+      }
+    }
+    if (!loa) loa = loas[0] || (this.db?.letters_of_assignment || [])[0];
+
+    const basicVal = Number(loa.basic_salary) || 1100;
+    const foodVal = Number(loa.food_allowance) || 200;
+    const otVal = Number(loa.overtime_amount) || 200;
+    const grandTotalVal = basicVal + foodVal + otVal;
+
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📜</span>
+              <span>Rayan Group Official Letter of Assignment (خطاب التكليف والتعيين - 2 Pages)</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openLetterOfAssignmentPrintModal('${loa.id}')">Assignment Letter</button>
+            </div>
+          </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditLetterOfAssignmentModal('${loa.id}')">
+              <span>✏️</span> Edit LOA Details
+            </button>
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadLetterOfAssignmentDocument('${loa.id}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
+              <span>✕</span> Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <!-- PAGE 1 OF LETTER OF ASSIGNMENT -->
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 15mm 8mm 15mm; font-family:'Times New Roman', Times, serif; font-size:12.5px; line-height:1.42; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+            
+            ${this.getRayanWatermark()}
+
+            <!-- Top Header Logo (Rayan Group Centered) -->
+            <div style="text-align:center; margin-bottom:1.25rem;">
+              <img src="/assets/docs/rayan-group-header-logo.png" alt="Rayan Group" style="height:54px; width:auto; display:inline-block;">
+            </div>
+
+            <!-- Ref and Date Line -->
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; font-weight:700; color:#000000; margin-bottom:1.2rem;">
+              <div>REF: ${loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047'}</div>
+              <div>Date: ${loa.date || '26/08/2026'}</div>
+            </div>
+
+            <div style="font-size:0.85rem; color:#000000; margin-bottom:0.75rem;">Private and confidential</div>
+
+            <!-- Document Title -->
+            <div style="text-align:center; font-size:1.15rem; font-weight:800; text-decoration:underline; letter-spacing:0.04em; margin:0.85rem 0 1.25rem 0;">
+              LETTER OF ASSIGNMENT
+            </div>
+
+            <!-- Employee Recipient Block -->
+            <div style="font-size:0.85rem; line-height:1.45; color:#000000; margin-bottom:1.1rem;">
+              <div><strong>${loa.employee_name || 'Md Ashraf Ali'}</strong></div>
+              <div><strong>Passport No. ${loa.passport_no || 'C6976631'}</strong></div>
+              <div>Nationality. ${loa.nationality || 'India'}</div>
+            </div>
+
+            <!-- Salutation -->
+            <div style="font-size:0.85rem; line-height:1.45; color:#000000; margin-bottom:0.9rem;">
+              <div><strong>Dear Mr. ${loa.employee_name || 'Md Ashraf Ali'}</strong></div>
+              <div><strong>Congratulations!!</strong></div>
+            </div>
+
+            <!-- Offer Paragraph -->
+            <p style="font-size:0.82rem; line-height:1.42; color:#000000; margin:0 0 0.85rem 0; text-align:justify;">
+              We are pleased to offer you employment in the position of <strong>${loa.position || 'General Mason/Tiles Mason'}</strong> with us here at <strong>Rayan Group</strong> based on the interview, discussions you had with us, and your application submitted to us. All Visa Formalities and your commencement of work at <strong>Rayan Engineering and Contracting L.L.C-S.P.C</strong> Please find below the details of the terms and conditions of our agreement:
+            </p>
+
+            <div style="font-size:0.82rem; line-height:1.42; color:#000000; margin-bottom:0.65rem;">
+              <div><strong>Reporting Manager:</strong> ${loa.reporting_manager || 'You will report to the Site Supervisor or his designated nominee.'}</div>
+              <div><strong>Working hours:</strong> ${loa.working_hours || '08 hours a day and 6 days a week.'}</div>
+            </div>
+
+            <!-- Remuneration Details -->
+            <div style="font-size:0.82rem; color:#000000; margin-bottom:0.65rem;">
+              <div style="font-weight:700; text-decoration:underline; margin-bottom:2px;">Remuneration per Month.</div>
+              <table style="width:100%; max-width:680px; font-size:12px; border-collapse:collapse; margin-bottom:4px;">
+                <tr>
+                  <td style="width:260px; padding:1px 0;">Basic salary</td>
+                  <td>: AED. ${basicVal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:1px 0;">Food allowance</td>
+                  <td>: AED. ${foodVal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:1px 0;">Approximate Over Time(${loa.overtime_hours || '2-3 HRS.Per/Day'})</td>
+                  <td>: AED. ${otVal.toFixed(2)} <span style="font-size:10.5px;">(Overtime will be as per work requirement and approved by Management)</span></td>
+                </tr>
+                <tr style="font-weight:800; border-top:1px solid #64748b;">
+                  <td style="padding:3px 0;">GRAND TOTAL</td>
+                  <td style="padding:3px 0;">: AED. ${grandTotalVal}/-</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Articles 1 through 10 (Page 1) -->
+            <div style="font-size:11.8px; line-height:1.38; color:#000000; text-align:justify;">
+              <div style="margin-bottom:3px;"><strong>1. Accommodation allowance:</strong> Shared Accommodation (Provision or allowance) will be provided by the company.</div>
+              <div style="margin-bottom:3px;"><strong>2. Transportation:</strong> Shared Transportation to and from the site is under company scope.</div>
+              <div style="margin-bottom:3px;"><strong>3. Vacation and Earned leave:</strong> You are entitled to 60 calendar annual leave after completion of 2 years of service, in accordance with UAE Labor Law. Leave can be availed only on the due approval</div>
+              <div style="margin-bottom:3px;"><strong>4. Contract:</strong> Contract shall be two years’ term of employment. Employer acknowledges and agrees that Employee shall be the Corporation may terminate an “At Will” Employee and that Employee’s employment at any time, with or without cause.</div>
+              <div style="margin-bottom:3px;"><strong>5. Air Ticket:</strong> You are entitled to Economy Class return air ticket from the UAE to the nearest international airport in your home country every two years. This will become effective only upon completion of two years of service.</div>
+              <div style="margin-bottom:3px;"><strong>6. Medical and Insurance:</strong> You will be covered under Group Life. Personal Accident and Medical Insurance Schemes of the Company as per UAE Law and Company policy.</div>
+              <div style="margin-bottom:3px;"><strong>7. Probation:</strong> The first 6 months of employment will be probationary. During this period if the performance of the employee is not found satisfactory, the company may terminate the employee without any notice period.</div>
+              <div style="margin-bottom:3px;"><strong>8. Termination of Employment:</strong> This agreement can be terminated by either serving the other with Three-month prior notice in writing.</div>
+              <div style="margin-bottom:3px;"><strong>9. Protection against religious discrimination:</strong> It is illegal to discriminate against any individual based on their religion in all activities of the company i.e., Recruitment, Training, Promotions, Increments, and Termination. Equal opportunity is mandated for all irrespective of their religious background. This policy prohibits unlawful harassment of any kind, including jokes, slurs, offensive gestures, and bullying based on religion.</div>
+              <div><strong>10. Confidentiality:</strong></div>
+              <div style="padding-left:14px;">
+                a) By accepting this Letter of Assignment, you acknowledge and agree that you will not, during the course of your employment or thereafter, except with the consent of the employer, as required by law or in the performance of your duties, use or disclose confidential information.<br>
+                b) Relating the business of the employer, including but not limited to client lists, trade secrets, client details, and pricing structures.<br>
+                c) Upon termination of this Agreement of upon the written request of the employer, the employee will return all copies of confidential information to the employer and, in the case of the employer requests the destruction of Confidential Information, will provide written certification of the destruction.
+              </div>
+            </div>
+
+            <!-- Page 1 Footer -->
+            <div style="margin-top:0.85rem; border-top:1px solid #cbd5e1; padding-top:4px;">
+              <div style="color:#0284c7; font-weight:800; font-size:0.85rem; font-family:'Plus Jakarta Sans', sans-serif;">Abu Dhabi, UAE</div>
+              <div style="font-size:0.72rem; color:#475569; font-family:'Plus Jakarta Sans', sans-serif;">
+                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+              </div>
+            </div>
+
+          </div>
+
+          <!-- PAGE 2 OF LETTER OF ASSIGNMENT -->
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#0f172a; padding:10mm 15mm 8mm 15mm; font-family:'Times New Roman', Times, serif; font-size:12.5px; line-height:1.42; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+            
+            ${this.getRayanWatermark()}
+
+            <!-- Top Header Logo (Rayan Group Centered) -->
+            <div style="text-align:center; margin-bottom:1.25rem;">
+              <img src="/assets/docs/rayan-group-header-logo.png" alt="Rayan Group" style="height:54px; width:auto; display:inline-block;">
+            </div>
+
+            <!-- Ref and Date Line -->
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; font-weight:700; color:#000000; margin-bottom:1.2rem;">
+              <div>REF: ${loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047'}</div>
+              <div>Date: ${loa.date || '26/08/2026'}</div>
+            </div>
+
+            <!-- Articles Continuation (Page 2) -->
+            <div style="font-size:11.8px; line-height:1.38; color:#000000; text-align:justify;">
+              <div style="padding-left:14px; margin-bottom:6px;">
+                d) <strong>Company protects its employees from discrimination based on religion.</strong> It is illegal for an employee to discriminate against individuals because of their religion in hiring, firing, and other terms and conditions of employment such as promotions, increments, and other job opportunities. Any employee who is found guilty of violating this clause will face immediate termination.
+              </div>
+
+              <div style="margin-bottom:6px;">
+                <strong>11. Employment Terms &amp; Conditions:</strong><br>
+                All the terms and conditions of employment are governed by the UAE Labor Law and are subject to change as per the Company Policy, which might change from time to time, based on the business requirements.
+              </div>
+
+              <div style="margin-bottom:8px;">
+                <strong>12. Entire agreement</strong><br>
+                a) The employment is subject to visa approval from the ministries in the UAE.<br>
+                b) The offer is valid subject to client approval, medical fitness and CICPA Approval.<br>
+                c) The remuneration will be paid after the work permit is approved and physical joining at work.<br>
+                d) The terms and conditions referred to in this Agreement constitute all the terms and conditions of your employment and replace any prior understanding or agreement between you and the employer.<br>
+                e) The terms and conditions referred to in this Agreement may only be varied by a written agreement signed by both you and the employer.<br>
+                f) During employment with the Company, the employee shall be subject to and must abide by rules and regulations stipulated by the company.<br>
+                g) This information and any changes made therein should be treated as personal and confidential. Should the employee have any queries, he is advised to contact his reporting manager or the HR department.<br>
+                h) <strong>Work Assignments and Locations.</strong> Company may assign or re-assign Employee anywhere in maintains facilities or conducts operations including but not limited to Employee being transferred “onshore” or “offshore”. Employee acknowledges and agrees that Employee may be temporarily or permanently assigned to various affiliates of employer. Therefore, Employee further acknowledges and agrees that he may be temporarily or permanently assigned to work under the control and supervision of such affiliate of Employer.
+              </div>
+            </div>
+
+            <!-- Closing Statement -->
+            <div style="font-size:12px; line-height:1.45; color:#000000; margin:0.85rem 0;">
+              <div>We are delighted to send you this offer to be approved and signed by you to start the job Latest by <strong>${loa.joining_deadline || '15-09-2026'}</strong>. Looking forward to seeing you on board.</div>
+              <div style="margin-top:6px;">Please provide your signature on one copy of this letter of acceptance of these terms and conditions which shall constitute an agreement between us.</div>
+              <div style="margin-top:6px;">We look forward to establishing a professional working relationship with you and welcome to our team.</div>
+              <div style="margin-top:6px;">Your Sincerely,</div>
+            </div>
+
+            <!-- Signatures Section: Left Employer (Stamp + Sign), Right Employee Acceptance -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:1.1rem; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <!-- Left Column: For Rayan Group -->
+              <div style="width:230px;">
+                <div style="font-weight:700; font-size:0.88rem; margin-bottom:2px;">For Rayan Group</div>
+                <div style="position:relative; width:220px; height:85px; margin:4px 0;">
+                  <!-- Rayan Group Round Stamp -->
+                  <img src="/assets/docs/rayan-group-round-stamp.png" alt="Rayan Group Stamp" style="position:absolute; left:0; top:-10px; width:88px; height:88px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+                  <!-- Arshad Alam Shaikh Signature -->
+                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:12px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+                </div>
+                <div style="font-family:'Amiri', serif; font-size:1rem; font-weight:700; color:#0f172a;">${loa.signatory_name_ar || 'ارشد عالم شيخ'}</div>
+                <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">${loa.signatory_name || 'Arshad Alam Shaikh'}</div>
+                <div style="font-family:'Amiri', serif; font-size:0.78rem; font-weight:700; color:#0f172a;">${loa.signatory_title_ar || 'الرئيس التنفيذي'}</div>
+                <div style="font-weight:700; font-size:0.75rem; color:#0f172a;">${loa.signatory_title || 'Chief Executive Officer'}</div>
+              </div>
+
+              <!-- Right Column: Employee Acceptance -->
+              <div style="width:380px; font-size:11.5px; line-height:1.45; color:#000000;">
+                <div>I, <strong>${loa.employee_name || 'Md Ashraf Ali'}</strong>, have read and understood this letter and accept.</div>
+                <div style="margin-top:3px;">The offer of employment from Rayan Group, Abu Dhabi on the terms and conditions set out in the Letter. I accept them of my own free choice and will.</div>
+                
+                <table style="width:100%; font-size:11.5px; margin-top:1.1rem; border-collapse:collapse;">
+                  <tr>
+                    <td style="width:170px; padding:4px 0;">Name:</td>
+                    <td><strong>${loa.employee_name || 'Md Ashraf Ali'}</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;">Date of Joining:</td>
+                    <td style="border-bottom:1px solid #475569; width:180px;">&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;">Date of signing this contract:</td>
+                    <td style="border-bottom:1px solid #475569; width:180px;">&nbsp;</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Page 2 Footer -->
+            <div style="margin-top:1.5rem; border-top:1px solid #cbd5e1; padding-top:4px;">
+              <div style="color:#0284c7; font-weight:800; font-size:0.85rem; font-family:'Plus Jakarta Sans', sans-serif;">Abu Dhabi, UAE</div>
+              <div style="font-size:0.72rem; color:#475569; font-family:'Plus Jakarta Sans', sans-serif;">
+                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  };
+
+  proto.downloadLetterOfAssignmentDocument = function (loaId) {
+    let loa = (this.db?.letters_of_assignment || []).find(l => l.id === loaId || l.loa_no === loaId || l.ref_no === loaId) || (this.db?.letters_of_assignment || [])[0];
+    if (!loa) return;
+    const papers = document.querySelectorAll('#fin-doc-print-modal .fin-document-paper');
+    if (papers && papers.length) {
+      let pagesHtml = '';
+      papers.forEach(p => { pagesHtml += p.outerHTML; });
+
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Letter of Assignment - ${loa.ref_no || loa.loa_no}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 20px; background: #f1f5f9; display: flex; flex-direction: column; align-items: center; font-family: 'Times New Roman', Times, serif; }
+    .fin-document-paper { box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    @media print {
+      body { background: transparent !important; padding: 0 !important; }
+      .fin-document-paper { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+      .fin-doc-page-2 { page-break-before: always !important; break-before: page !important; }
+    }
+  </style>
+</head>
+<body>
+  ${pagesHtml}
+</body>
+</html>`;
+      this.downloadFile(`${(loa.ref_no || loa.loa_no).replace(/[^a-zA-Z0-9_-]/g, '_')}_Letter_Of_Assignment.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded Letter of Assignment ${loa.ref_no}.`, 'success');
+    }
+  };
+
+  proto.openEditLetterOfAssignmentModal = function (loaId) {
+    this.ensurePayrollSeedData();
+    let loa = (this.db?.letters_of_assignment || []).find(l => l.id === loaId || l.ref_no === loaId);
+    if (!loa) loa = (this.db?.letters_of_assignment || [])[0] || {};
+
+    const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
+    const empOptions = employees.map(e => `<option value="${e.id}" ${loa.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')})</option>`).join('');
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-loa-edit" style="z-index:100030;">
+        <div class="fin-modal-dialog" style="max-width:720px; width:95%;">
+          <div class="fin-modal-header">
+            <h3 class="fin-modal-title"><span>📜</span> Edit Letter of Assignment Details</h3>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-loa-edit')">&times;</button>
+          </div>
+          <form id="form-loa-edit" onsubmit="event.preventDefault(); window.finApp.saveLetterOfAssignmentForm(event);">
+            <input type="hidden" name="id" value="${loa.id || ''}">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Reference Number (REF:)</label>
+                <input type="text" class="fin-input" name="ref_no" value="${escapeHtml(loa.ref_no || 'RG/HC/LOA/2026/11047')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Date</label>
+                <input type="text" class="fin-input" name="date" value="${escapeHtml(loa.date || '26/08/2026')}" required>
+              </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+              <label class="fin-field-label">Select Employee (Auto-fill)</label>
+              <select class="fin-input" id="edit-loa-emp-select" onchange="window.finApp.onLoaEmployeeSelectChange(this.value)">
+                <option value="">-- Choose Employee to load details --</option>
+                ${empOptions}
+              </select>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Employee Name</label>
+                <input type="text" class="fin-input" id="loa-emp-name" name="employee_name" value="${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Passport No.</label>
+                <input type="text" class="fin-input" id="loa-passport-no" name="passport_no" value="${escapeHtml(loa.passport_no || 'C6976631')}" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Position / Trade</label>
+                <input type="text" class="fin-input" id="loa-position" name="position" value="${escapeHtml(loa.position || 'General Mason/Tiles Mason')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Nationality</label>
+                <input type="text" class="fin-input" id="loa-nationality" name="nationality" value="${escapeHtml(loa.nationality || 'India')}" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Reporting Manager</label>
+                <input type="text" class="fin-input" name="reporting_manager" value="${escapeHtml(loa.reporting_manager || 'Site Supervisor or his designated nominee')}" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Working Hours</label>
+                <input type="text" class="fin-input" name="working_hours" value="${escapeHtml(loa.working_hours || '08 hours a day and 6 days a week')}" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+              <div>
+                <label class="fin-field-label">Basic Salary (AED)</label>
+                <input type="number" step="0.01" class="fin-input" id="loa-basic-salary" name="basic_salary" value="${loa.basic_salary || 1100}" oninput="window.finApp.calcLoaGrandTotal()" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Food Allowance (AED)</label>
+                <input type="number" step="0.01" class="fin-input" id="loa-food-salary" name="food_allowance" value="${loa.food_allowance || 200}" oninput="window.finApp.calcLoaGrandTotal()" required>
+              </div>
+              <div>
+                <label class="fin-field-label">Overtime (AED)</label>
+                <input type="number" step="0.01" class="fin-input" id="loa-ot-salary" name="overtime_amount" value="${loa.overtime_amount || 200}" oninput="window.finApp.calcLoaGrandTotal()" required>
+              </div>
+              <div>
+                <label class="fin-field-label">GRAND TOTAL (AED)</label>
+                <input type="number" step="0.01" class="fin-input" id="loa-grand-total" name="grand_total" value="${loa.grand_total || 1500}" readonly style="background:#0f172a; font-weight:700; color:#10b981;">
+              </div>
+            </div>
+
+            <div style="margin-bottom:1.25rem;">
+              <label class="fin-field-label">Joining Deadline Date</label>
+              <input type="text" class="fin-input" name="joining_deadline" value="${escapeHtml(loa.joining_deadline || '15-09-2026')}" required>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+              <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeModal('modal-loa-edit')">Cancel</button>
+              <button type="submit" class="fin-btn-primary">💾 Save LOA &amp; Preview</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+  };
+
+  proto.onLoaEmployeeSelectChange = function (empId) {
+    if (!empId) return;
+    const emp = (this.db?.employees || []).find(e => e.id === empId);
+    if (!emp) return;
+    const nameEl = document.getElementById('loa-emp-name');
+    const passEl = document.getElementById('loa-passport-no');
+    const posEl = document.getElementById('loa-position');
+    const natEl = document.getElementById('loa-nationality');
+    const basicEl = document.getElementById('loa-basic-salary');
+    const foodEl = document.getElementById('loa-food-salary');
+    const otEl = document.getElementById('loa-ot-salary');
+
+    if (nameEl) nameEl.value = emp.name || '';
+    if (passEl) passEl.value = emp.passport_no || 'C6976631';
+    if (posEl) posEl.value = emp.position || 'General Mason/Tiles Mason';
+    if (natEl) natEl.value = emp.nationality || 'India';
+    if (basicEl) basicEl.value = emp.basic_salary || 1100;
+    if (foodEl) foodEl.value = emp.consolidated_allowance || 200;
+    if (otEl) otEl.value = emp.other_allowance || 200;
+    this.calcLoaGrandTotal();
+  };
+
+  proto.calcLoaGrandTotal = function () {
+    const basic = parseFloat(document.getElementById('loa-basic-salary')?.value) || 0;
+    const food = parseFloat(document.getElementById('loa-food-salary')?.value) || 0;
+    const ot = parseFloat(document.getElementById('loa-ot-salary')?.value) || 0;
+    const totalEl = document.getElementById('loa-grand-total');
+    if (totalEl) totalEl.value = (basic + food + ot).toFixed(2);
+  };
+
+  proto.saveLetterOfAssignmentForm = async function (e) {
+    const form = e.target;
+    const formData = new FormData(form);
+    const id = formData.get('id') || `loa-${Date.now()}`;
+
+    const updated = {
+      id,
+      loa_no: formData.get('ref_no'),
+      ref_no: formData.get('ref_no'),
+      company_id: this.activeCompanyId || 'rayan-corp-uae',
+      date: formData.get('date'),
+      employee_name: formData.get('employee_name'),
+      passport_no: formData.get('passport_no'),
+      nationality: formData.get('nationality'),
+      position: formData.get('position'),
+      reporting_manager: formData.get('reporting_manager'),
+      working_hours: formData.get('working_hours'),
+      basic_salary: parseFloat(formData.get('basic_salary')) || 0,
+      food_allowance: parseFloat(formData.get('food_allowance')) || 0,
+      overtime_amount: parseFloat(formData.get('overtime_amount')) || 0,
+      overtime_hours: '2-3 HRS.Per/Day',
+      grand_total: parseFloat(formData.get('grand_total')) || 0,
+      currency: 'AED',
+      joining_deadline: formData.get('joining_deadline'),
+      signatory_name: 'Arshad Alam Shaikh',
+      signatory_name_ar: 'ارشد عالم شيخ',
+      signatory_title: 'Chief Executive Officer',
+      signatory_title_ar: 'الرئيس التنفيذي',
+      status: 'Issued',
+      updated_at: new Date().toISOString()
+    };
+
+    if (!Array.isArray(this.db.letters_of_assignment)) this.db.letters_of_assignment = [];
+    const idx = this.db.letters_of_assignment.findIndex(l => l.id === id);
+    if (idx >= 0) this.db.letters_of_assignment[idx] = { ...this.db.letters_of_assignment[idx], ...updated };
+    else this.db.letters_of_assignment.unshift(updated);
+
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    this.closeModal('modal-loa-edit');
+    this.showNotification(`Letter of Assignment ${updated.ref_no} saved.`, 'success');
+    this.openLetterOfAssignmentPrintModal(updated.id);
+    await this.syncApi('save_letter_of_assignment', { letter_of_assignment: updated });
+  };
+
+  proto.deleteLetterOfAssignment = async function (loaId) {
+    const loa = (this.db?.letters_of_assignment || []).find(l => l.id === loaId || l.ref_no === loaId);
+    const label = loa ? loa.ref_no : loaId;
+    if (!confirm(`Are you sure you want to delete Letter of Assignment ${label}?`)) return;
+
+    if (this.db.letters_of_assignment) {
+      this.db.letters_of_assignment = this.db.letters_of_assignment.filter(l => l.id !== loaId && l.ref_no !== loaId);
+    }
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+    this.renderActiveTab();
+    this.showNotification(`Letter ${label} deleted.`, 'info');
+    await this.syncApi('delete_letter_of_assignment', { id: loaId });
+  };
+
+  proto.renderLettersOfAssignmentTab = function (root) {
+    this.ensurePayrollSeedData();
+    const loas = this.getLettersOfAssignment();
+
+    root.innerHTML = `
+      <div class="fin-tab-header">
+        <div class="fin-tab-title-wrap">
+          <h2 class="fin-panel-title">📜 Official Letters of Assignment (خطابات التكليف والتعيين)</h2>
+          <p class="fin-panel-sub">Official 2-page employment offer letters with compensation structures, legal conditions &amp; executive seals</p>
+        </div>
+        <div class="fin-tab-actions">
+          <button type="button" class="fin-btn-secondary" onclick="window.finApp.openLetterOfAssignmentPrintModal()">
+            📄 Sample Letter (2p)
+          </button>
+          <button type="button" class="fin-btn-primary" onclick="window.finApp.openEditLetterOfAssignmentModal()">
+            + Issue Letter of Assignment
+          </button>
+        </div>
+      </div>
+
+      <div class="fin-panel-card">
+        <div class="fin-table-wrapper">
+          <table class="fin-data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Letter Ref #</th>
+                <th>Date</th>
+                <th>Employee / Nominee</th>
+                <th>Position</th>
+                <th>Passport #</th>
+                <th>Joining Deadline</th>
+                <th style="text-align:right;">Grand Total (AED)</th>
+                <th style="text-align:center;">Status</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${loas.length === 0 ? `
+                <tr>
+                  <td colspan="10" style="text-align:center; padding:3rem 1rem; color:#94a3b8;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">📜</div>
+                    <div style="font-weight:600; font-size:1rem; color:#cbd5e1;">No Letters of Assignment Found</div>
+                    <div style="font-size:0.8rem; margin-top:4px;">Click "+ Issue Letter of Assignment" to generate an official 2-page offer letter.</div>
+                  </td>
+                </tr>
+              ` : loas.map((l, idx) => `
+                <tr>
+                  <td style="color:#64748b; font-size:0.8rem;">${idx + 1}</td>
+                  <td>
+                    <strong style="color:#38bdf8; font-weight:700; cursor:pointer;" onclick="window.finApp.openLetterOfAssignmentPrintModal('${l.id}')" title="Preview Letter">
+                      ${escapeHtml(l.ref_no || l.loa_no || '')}
+                    </strong>
+                  </td>
+                  <td>${escapeHtml(l.date || '')}</td>
+                  <td>
+                    <div style="font-weight:700; color:#f8fafc;">${escapeHtml(l.employee_name || '')}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">${escapeHtml(l.nationality || '')}</div>
+                  </td>
+                  <td>${escapeHtml(l.position || '')}</td>
+                  <td style="font-family:monospace; color:#cbd5e1;">${escapeHtml(l.passport_no || '')}</td>
+                  <td style="color:#f59e0b; font-weight:600;">${escapeHtml(l.joining_deadline || '')}</td>
+                  <td style="text-align:right; font-weight:800; color:#10b981;">
+                    ${this.formatCurrency(l.grand_total || 1500, l.currency || 'AED')}
+                  </td>
+                  <td style="text-align:center;">
+                    <span style="display:inline-block; padding:3px 9px; border-radius:12px; font-size:0.72rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3);">
+                      ${escapeHtml(l.status || 'Issued')}
+                    </span>
+                  </td>
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex; gap:0.35rem; align-items:center;">
+                      <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openLetterOfAssignmentPrintModal('${l.id}')" title="View &amp; Print">Print / View</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openEditLetterOfAssignmentModal('${l.id}')" title="Edit">Edit</button>
+                      <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteLetterOfAssignment('${l.id}')" title="Delete">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  };
+
+}

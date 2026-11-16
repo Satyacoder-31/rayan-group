@@ -2069,6 +2069,8 @@ export function registerDocumentModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -2319,6 +2321,8 @@ export function registerDocumentModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openUndertakingLetterPrintModal('${ult.id}')">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -2526,6 +2530,8 @@ export function registerDocumentModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
@@ -2719,6 +2725,9 @@ export function registerDocumentModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDeliveryNotePrintModal()">Delivery Note</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openCustomLetterPrintModal('${ltr.id}')">Official Letter</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">

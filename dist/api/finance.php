@@ -496,6 +496,38 @@ if ($pdo) {
                 INDEX idx_ult_ref (ref_no)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+            CREATE TABLE IF NOT EXISTS finance_employment_certificates (
+                id VARCHAR(64) PRIMARY KEY,
+                cert_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                date DATE,
+                employee_id VARCHAR(64),
+                employee_name VARCHAR(255),
+                designation VARCHAR(255),
+                salary DECIMAL(15,2) DEFAULT 0,
+                status VARCHAR(32) DEFAULT 'Approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_empcert_no (cert_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS finance_letters_of_assignment (
+                id VARCHAR(64) PRIMARY KEY,
+                ref_no VARCHAR(64) NOT NULL UNIQUE,
+                company_id VARCHAR(64) DEFAULT 'rayan-corp-uae',
+                date DATE,
+                employee_id VARCHAR(64),
+                employee_name VARCHAR(255),
+                designation VARCHAR(255),
+                remuneration DECIMAL(15,2) DEFAULT 0,
+                status VARCHAR(32) DEFAULT 'Approved',
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_loa_ref (ref_no)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
             CREATE TABLE IF NOT EXISTS finance_employees (
                 id VARCHAR(64) PRIMARY KEY,
                 employee_no VARCHAR(64) NOT NULL,
@@ -4202,6 +4234,12 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         if (empty($data['custom_letters']) && !empty($masterSeed['custom_letters'])) {
                             $data['custom_letters'] = $masterSeed['custom_letters'];
                         }
+                        if (empty($data['employment_certificates']) && !empty($masterSeed['employment_certificates'])) {
+                            $data['employment_certificates'] = $masterSeed['employment_certificates'];
+                        }
+                        if (empty($data['letters_of_assignment']) && !empty($masterSeed['letters_of_assignment'])) {
+                            $data['letters_of_assignment'] = $masterSeed['letters_of_assignment'];
+                        }
                     }
                     $companyOrder = ['rayan-group', 'rayan-corp-uae', 'rayan-energy-uae', 'rayan-properties-uae', 'ashaz-eng-in'];
                     usort($data['companies'], function($a, $b) use ($companyOrder) {
@@ -6236,7 +6274,7 @@ function saveFinanceDb($pdo, $dataFile, &$data, $candidates = []) {
         }
     }
 
-    $extraDocCols = ['work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters', 'employees', 'payroll'];
+    $extraDocCols = ['work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters', 'employees', 'payroll', 'employment_certificates', 'letters_of_assignment'];
     foreach ($extraDocCols as $col) {
         if (empty($data[$col])) {
             $seed = getMasterSeed($candidates);
@@ -10653,6 +10691,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (Exception $e) {}
                 }
                 $addAuditLog('delete', 'custom_letter', $targetId, 'Deleted official letter ' . $targetId);
+            }
+            break;
+
+        case 'save_employment_certificate':
+            $cert = $body['certificate'] ?? [];
+            if (!empty($cert)) {
+                if (empty($cert['id'])) {
+                    $cert['id'] = 'cert-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['employment_certificates']) || !is_array($db['employment_certificates'])) {
+                    $db['employment_certificates'] = [];
+                }
+                $found = false;
+                foreach ($db['employment_certificates'] as &$existing) {
+                    if (($existing['id'] ?? '') === $cert['id'] || (!empty($cert['cert_no']) && strcasecmp($existing['cert_no'] ?? '', $cert['cert_no']) === 0)) {
+                        $existing = array_merge($existing, $cert);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['employment_certificates'], $cert);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_employment_certificates (id, cert_no, company_id, date, employee_id, employee_name, designation, salary, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $cert['id'],
+                            $cert['cert_no'] ?? '',
+                            $cert['company_id'] ?? 'rayan-corp-uae',
+                            $cert['date'] ?? date('Y-m-d'),
+                            $cert['employee_id'] ?? '',
+                            $cert['employee_name'] ?? '',
+                            $cert['designation'] ?? '',
+                            $cert['monthly_salary_num'] ?? 0,
+                            $cert['status'] ?? 'Approved',
+                            json_encode($cert)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_employment_certificate DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'employment_certificate', $cert['cert_no'] ?? $cert['id'], 'Saved employment certificate ' . ($cert['cert_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_employment_certificate':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['employment_certificates'])) {
+                $db['employment_certificates'] = array_values(array_filter($db['employment_certificates'], function($c) use ($targetId) {
+                    return ($c['id'] ?? '') !== $targetId && ($c['cert_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_employment_certificates WHERE id = ? OR cert_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'employment_certificate', $targetId, 'Deleted employment certificate ' . $targetId);
+            }
+            break;
+
+        case 'save_letter_of_assignment':
+            $loa = $body['loa'] ?? [];
+            if (!empty($loa)) {
+                if (empty($loa['id'])) {
+                    $loa['id'] = 'loa-' . round(microtime(true) * 1000);
+                }
+                if (!isset($db['letters_of_assignment']) || !is_array($db['letters_of_assignment'])) {
+                    $db['letters_of_assignment'] = [];
+                }
+                $found = false;
+                foreach ($db['letters_of_assignment'] as &$existing) {
+                    if (($existing['id'] ?? '') === $loa['id'] || (!empty($loa['ref_no']) && strcasecmp($existing['ref_no'] ?? '', $loa['ref_no']) === 0)) {
+                        $existing = array_merge($existing, $loa);
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($existing);
+                if (!$found) {
+                    array_unshift($db['letters_of_assignment'], $loa);
+                }
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("REPLACE INTO finance_letters_of_assignment (id, ref_no, company_id, date, employee_id, employee_name, designation, remuneration, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        $stmt->execute([
+                            $loa['id'],
+                            $loa['ref_no'] ?? '',
+                            $loa['company_id'] ?? 'rayan-corp-uae',
+                            $loa['date'] ?? date('Y-m-d'),
+                            $loa['employee_id'] ?? '',
+                            $loa['employee_name'] ?? '',
+                            $loa['designation'] ?? '',
+                            $loa['grand_total_num'] ?? 0,
+                            $loa['status'] ?? 'Approved',
+                            json_encode($loa)
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("save_letter_of_assignment DB error: " . $e->getMessage());
+                    }
+                }
+                $addAuditLog('save', 'letter_of_assignment', $loa['ref_no'] ?? $loa['id'], 'Saved letter of assignment ' . ($loa['ref_no'] ?? ''));
+            }
+            break;
+
+        case 'delete_letter_of_assignment':
+            $targetId = $body['id'] ?? '';
+            if (!empty($targetId) && !empty($db['letters_of_assignment'])) {
+                $db['letters_of_assignment'] = array_values(array_filter($db['letters_of_assignment'], function($l) use ($targetId) {
+                    return ($l['id'] ?? '') !== $targetId && ($l['ref_no'] ?? '') !== $targetId;
+                }));
+                if ($pdo) {
+                    try {
+                        $stmt = $pdo->prepare("DELETE FROM finance_letters_of_assignment WHERE id = ? OR ref_no = ?");
+                        $stmt->execute([$targetId, $targetId]);
+                    } catch (Exception $e) {}
+                }
+                $addAuditLog('delete', 'letter_of_assignment', $targetId, 'Deleted letter of assignment ' . $targetId);
             }
             break;
 

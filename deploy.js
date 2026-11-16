@@ -56,6 +56,30 @@ async function deploy() {
                 }
               });
               liveJson.data.purchase_bills.sort((a,b) => (b.bill_no || '').localeCompare(a.bill_no || ''));
+
+              const localEmpCerts = (localData.employment_certificates || []);
+              if (!Array.isArray(liveJson.data.employment_certificates)) liveJson.data.employment_certificates = [];
+              localEmpCerts.forEach(ec => {
+                if (!liveJson.data.employment_certificates.some(p => p.id === ec.id || p.cert_no === ec.cert_no)) {
+                  liveJson.data.employment_certificates.push(ec);
+                }
+              });
+
+              const localLoas = (localData.letters_of_assignment || []);
+              if (!Array.isArray(liveJson.data.letters_of_assignment)) liveJson.data.letters_of_assignment = [];
+              localLoas.forEach(l => {
+                if (!liveJson.data.letters_of_assignment.some(p => p.id === l.id || p.ref_no === l.ref_no)) {
+                  liveJson.data.letters_of_assignment.push(l);
+                }
+              });
+
+              const localEmployees = (localData.employees || []);
+              if (!Array.isArray(liveJson.data.employees)) liveJson.data.employees = [];
+              localEmployees.forEach(emp => {
+                if (!liveJson.data.employees.some(p => p.id === emp.id || p.employee_no === emp.employee_no)) {
+                  liveJson.data.employees.push(emp);
+                }
+              });
             } catch (e) {}
           }
           fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');
