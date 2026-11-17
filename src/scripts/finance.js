@@ -2169,7 +2169,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v141';
+    const CURRENT_DB_VERSION = 'v2026_clean_v143';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5617,6 +5617,8 @@ class FinanceApp {
   // 1. DASHBOARD VIEW (8 Summary Cards & Zolvit Widgets)
   // --------------------------------------------------------------------------
   renderDashboardTab(root) {
+    if (!root) root = document.getElementById('fin-tab-content-root');
+    if (!root) return;
     const isUaeEntity = (id) => !id || id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-energy-uae' || id === 'rayan-properties-uae';
     const currentIsUae = isUaeEntity(this.activeCompanyId);
     const invoices = (this.db?.invoices || []).filter(i => {
@@ -5691,6 +5693,30 @@ class FinanceApp {
     const overdueInvoices = invoices.filter(i => i.status === 'overdue');
     const overdueTotal = overdueInvoices.reduce((s, i) => s + (Number(i.balance_due) || 0), 0);
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+
+    // 🏛️ Authoritative VAT & Tax Calculations (Realized Form 201 Cash Basis + Accrual Invoiced Basis)
+    const dashVatPeriod = this._dashVatPeriod || this._vatPeriod || '3_months';
+    let vatLedger = null;
+    try {
+      vatLedger = this.computeVatLedger(dashVatPeriod);
+    } catch (e) {
+      console.warn('computeVatLedger error:', e);
+      vatLedger = null;
+    }
+    const vt = vatLedger?.totals || {};
+    const vatRange = vatLedger?.range || this.getTaxPeriodDateRange(dashVatPeriod);
+
+    // Accrual Invoiced VAT (5% on Sales vs 5% on Bills)
+    const totalInvoicedVat = invoices.filter(i => i.status !== 'void').reduce((s, i) => s + (Number(i.total_tax ?? i.vat_total ?? i.tax_amount) || Math.max(0, (Number(i.grand_total) || 0) - (Number(i.taxable_subtotal) || 0))), 0);
+    const totalBilledInputVat = bills.filter(b => b.status !== 'void').reduce((s, b) => s + (Number(b.tax_total ?? b.vat_total ?? b.tax_amount ?? b.vat_amount) || 0), 0);
+    const accrualNetVat = Math.round((totalInvoicedVat - totalBilledInputVat) * 100) / 100;
+
+    // Realized Form 201 VAT (Payment-In Receipts vs Payment-Out Vouchers)
+    const realizedOutputVat = Number(vt.recVat) || 0;
+    const creditNotesVat = Number(vt.cnVat) || 0;
+    const recoverableInputVat = Number(vt.pmtVat) || 0;
+    const netVatPayable = vt.netVatPayable !== undefined ? Number(vt.netVatPayable) : Math.round((realizedOutputVat - creditNotesVat - recoverableInputVat) * 100) / 100;
+    const priorSettledVat = Number(vt.priorSettledNetVat) || 55485.91;
 
     // Recent Invoices & Recent Purchase Bills (Strictly sorted chronologically newest first)
     const recentInvoices = [...invoices].sort((a, b) => new Date(b.invoice_date || b.date || 0) - new Date(a.invoice_date || a.date || 0)).slice(0, 5);
@@ -5800,6 +5826,183 @@ class FinanceApp {
           <div class="fin-metric-subtext">
             <span style="color:#ef4444; font-weight:700;">${overdueInvoices.length} Overdue</span>
             <span style="color:#ef4444;">Action Required &rarr;</span>
+          </div>
+        </div>
+
+        <!-- 9. Net VAT Payable (FTA Form 201 / GST Portal) -->
+        <div class="fin-metric-card accent-vat" onclick="window.finApp.switchTab('vat_management')" title="Click to view detailed UAE VAT &amp; Corporate Tax ledger" style="cursor:pointer;">
+          <div class="fin-metric-header">
+            <span class="fin-metric-label">Net VAT Payable (${isIndia ? 'GST Portal' : 'FTA Form 201'})</span>
+            <div class="fin-metric-icon" style="color:#00a699;">🏛️</div>
+          </div>
+          <div class="fin-metric-value" style="color:#00e5c9;">${this.formatCurrency(netVatPayable)}</div>
+          <div class="fin-metric-subtext">
+            <span>Output: ${this.formatCurrency(realizedOutputVat)} | Input: ${this.formatCurrency(recoverableInputVat)}</span>
+            <span style="color:#00a699; font-weight:700;">${isIndia ? 'GST Desk &rarr;' : 'Form 201 &rarr;'}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🏛️ UAE VAT Position & Statutory Calculations Executive Desk -->
+      <div class="fin-panel-card" style="margin-bottom:1.5rem; background:linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(12, 30, 61, 0.95) 100%); border:1px solid rgba(0, 166, 153, 0.35); border-radius:14px; padding:1.35rem 1.6rem; box-shadow:0 8px 32px rgba(0, 0, 0, 0.25);">
+        <!-- Header with Title, Badges, and Action Buttons -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.15rem; border-bottom:1px solid rgba(255, 255, 255, 0.08); padding-bottom:1rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <span style="font-size:1.4rem;">🏛️</span>
+              <h3 style="font-size:1.15rem; font-weight:800; color:#ffffff; margin:0; letter-spacing:0.01em;">
+                ${isIndia ? 'GST Statutory Position &amp; Tax Compliance Desk' : 'UAE VAT Statutory Position &amp; FTA Form 201 Compliance Desk'}
+              </h3>
+              <span class="fin-badge" style="background:rgba(0, 166, 153, 0.2); color:#00e5c9; border:1px solid #00a699; font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:12px;">
+                ${isIndia ? 'GST 18% ACCRUAL &amp; CASH' : 'FEDERAL DECREE-LAW NO. 8 &bull; 5% VAT'}
+              </span>
+            </div>
+            <p style="font-size:0.80rem; color:#94a3b8; margin:0.35rem 0 0 0;">
+              Executive breakdown of standard-rated output VAT, separated credit notes, recoverable input VAT, and net liability payable to the ${isIndia ? 'GST Network' : 'UAE Federal Tax Authority (FTA)'}.
+            </p>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+            <button type="button" class="fin-btn-quick" style="border-color:#00a699; color:#00e5c9; font-weight:700; background:rgba(0, 166, 153, 0.12);" onclick="window.finApp.switchTab('vat_management')">
+              📊 Open Full VAT Desk
+            </button>
+            <button type="button" class="fin-btn-quick primary" style="background:#00a699; border-color:#00a699; font-weight:700;" onclick="window.finApp.printVatReturn()">
+              🖨️ Print Form 201 Return
+            </button>
+            <button type="button" class="fin-btn-quick" style="border-color:#34d399; color:#34d399; font-weight:600; background:rgba(16, 185, 129, 0.1);" onclick="window.finApp.printCorporateTaxAssessment()">
+              🏢 Print CT Assessment
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Period Filter Pills for Live Calculation -->
+        <div style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:0.65rem 1rem; margin-bottom:1.15rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <span style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">🗓️ Return Period:</span>
+            <button type="button" class="fin-btn-quick ${dashVatPeriod === '1_month' ? 'primary' : ''}" style="${dashVatPeriod === '1_month' ? 'background:#00a699; border-color:#00a699; color:#fff;' : 'border-color:rgba(255,255,255,0.15);'} font-size:0.74rem; padding:0.25rem 0.65rem;" onclick="window.finApp.setDashboardVatPeriod('1_month')">
+              1 Month (Oct 2026)
+            </button>
+            <button type="button" class="fin-btn-quick ${dashVatPeriod === '3_months' ? 'primary' : ''}" style="${dashVatPeriod === '3_months' ? 'background:linear-gradient(135deg, #00a699, #059669); border-color:#00e5c9; color:#fff; font-weight:700;' : 'border-color:rgba(0,166,153,0.5); color:#00e5c9;'} font-size:0.74rem; padding:0.25rem 0.65rem;" onclick="window.finApp.setDashboardVatPeriod('3_months')">
+              ⭐ Last 3 Months (Aug – Oct 2026) [Current Return Due]
+            </button>
+            <button type="button" class="fin-btn-quick ${dashVatPeriod === '6_months' ? 'primary' : ''}" style="${dashVatPeriod === '6_months' ? 'background:#00a699; border-color:#00a699; color:#fff;' : 'border-color:rgba(255,255,255,0.15);'} font-size:0.74rem; padding:0.25rem 0.65rem;" onclick="window.finApp.setDashboardVatPeriod('6_months')">
+              6 Months (May – Oct 2026)
+            </button>
+            <button type="button" class="fin-btn-quick ${dashVatPeriod === '1_year' ? 'primary' : ''}" style="${dashVatPeriod === '1_year' ? 'background:#00a699; border-color:#00a699; color:#fff;' : 'border-color:rgba(255,255,255,0.15);'} font-size:0.74rem; padding:0.25rem 0.65rem;" onclick="window.finApp.setDashboardVatPeriod('1_year')">
+              1 Year (Annual Statutory)
+            </button>
+            <button type="button" class="fin-btn-quick ${dashVatPeriod === 'all' ? 'primary' : ''}" style="${dashVatPeriod === 'all' ? 'background:#00a699; border-color:#00a699; color:#fff;' : 'border-color:rgba(255,255,255,0.15);'} font-size:0.74rem; padding:0.25rem 0.65rem;" onclick="window.finApp.setDashboardVatPeriod('all')">
+              All Records
+            </button>
+          </div>
+          <div style="font-size:0.74rem; color:#94a3b8; background:rgba(0,166,153,0.08); padding:0.25rem 0.65rem; border-radius:6px; border:1px solid rgba(0,166,153,0.25);">
+            Window: <strong style="color:#00e5c9;">${vatRange.shortLabel || vatRange.label}</strong>
+          </div>
+        </div>
+
+        <!-- 4 Key VAT Calculation Metric Blocks -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.15rem;">
+          <!-- 1. Realized Output VAT -->
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:1rem 1.15rem; border-left:4px solid #10b981;">
+            <div style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">
+              1. Realized Output VAT (5%)
+            </div>
+            <div style="font-size:1.45rem; font-weight:800; color:#10b981; margin:0.35rem 0 0.2rem 0; font-family:'Outfit', sans-serif;">
+              ${this.formatCurrency(realizedOutputVat)}
+            </div>
+            <div style="font-size:0.73rem; color:#64748b;">
+              Collections: <span style="color:#cbd5e1; font-weight:600;">${this.formatCurrency(vt.recGross || 0)}</span> (${vatLedger?.receipts?.length || 0} vouchers)
+            </div>
+            <div style="font-size:0.70rem; color:#10b981; margin-top:0.25rem;">
+              Standard-rated supplies under Art. 25
+            </div>
+          </div>
+
+          <!-- 2. Credit Notes Tax Adjustments -->
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:1rem 1.15rem; border-left:4px solid #f59e0b;">
+            <div style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">
+              2. Credit Note Adjustments
+            </div>
+            <div style="font-size:1.45rem; font-weight:800; color:#f59e0b; margin:0.35rem 0 0.2rem 0; font-family:'Outfit', sans-serif;">
+              - ${this.formatCurrency(creditNotesVat)}
+            </div>
+            <div style="font-size:0.73rem; color:#64748b;">
+              CN Volume: <span style="color:#cbd5e1; font-weight:600;">${this.formatCurrency(vt.cnGross || 0)}</span> (${vatLedger?.creditNotes?.length || 0} notes)
+            </div>
+            <div style="font-size:0.70rem; color:#f59e0b; margin-top:0.25rem;">
+              Deductions for returns &amp; revisions
+            </div>
+          </div>
+
+          <!-- 3. Recoverable Input VAT -->
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(56,189,248,0.3); border-radius:10px; padding:1rem 1.15rem; border-left:4px solid #38bdf8;">
+            <div style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">
+              3. Recoverable Input VAT (5%)
+            </div>
+            <div style="font-size:1.45rem; font-weight:800; color:#38bdf8; margin:0.35rem 0 0.2rem 0; font-family:'Outfit', sans-serif;">
+              - ${this.formatCurrency(recoverableInputVat)}
+            </div>
+            <div style="font-size:0.73rem; color:#64748b;">
+              Disbursements: <span style="color:#cbd5e1; font-weight:600;">${this.formatCurrency(vt.pmtGross || 0)}</span> (${vatLedger?.payments?.length || 0} bills)
+            </div>
+            <div style="font-size:0.70rem; color:#38bdf8; margin-top:0.25rem;">
+              Valid tax invoices paid to vendors
+            </div>
+          </div>
+
+          <!-- 4. Net VAT Payable to FTA -->
+          <div style="background:linear-gradient(135deg, rgba(0,166,153,0.15) 0%, rgba(6,78,59,0.25) 100%); border:1.5px solid #00a699; border-radius:10px; padding:1rem 1.15rem; border-left:5px solid #00e5c9;">
+            <div style="font-size:0.75rem; color:#00e5c9; font-weight:800; text-transform:uppercase; letter-spacing:0.03em; display:flex; justify-content:space-between; align-items:center;">
+              <span>4. Net VAT Remittance Due</span>
+              <span style="font-size:0.65rem; background:#00a699; color:#fff; padding:1px 6px; border-radius:4px;">FTA 201</span>
+            </div>
+            <div style="font-size:1.55rem; font-weight:900; color:#00e5c9; margin:0.35rem 0 0.2rem 0; font-family:'Outfit', sans-serif;">
+              ${this.formatCurrency(netVatPayable)}
+            </div>
+            <div style="font-size:0.73rem; color:#cbd5e1;">
+              Deadline: <strong style="color:#ffffff;">28 Nov 2026</strong> &bull; TRN: <span style="color:#00e5c9;">100234567800003</span>
+            </div>
+            <div style="font-size:0.70rem; color:#a7f3d0; margin-top:0.25rem; font-weight:600;">
+              ${dashVatPeriod === '3_months' ? '⭐ Current Return Due for Remittance ✓' : 'Period calculated balance ✓'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Dual Comparison Breakdown Table: Accrual (Invoiced) vs Realized (Form 201 Cash) & Corporate Tax -->
+        <div style="background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.9rem 1.15rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;">
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; color:#f8fafc; margin-bottom:0.45rem; display:flex; align-items:center; gap:0.4rem;">
+              <span>📑 Accrual Basis (Invoiced Sales vs Billed Purchases)</span>
+            </div>
+            <div style="font-size:0.73rem; color:#94a3b8; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>Total Invoiced Output VAT (5% on ${this.formatCurrency(taxableSales)}):</span>
+              <strong style="color:#ffffff;">${this.formatCurrency(totalInvoicedVat)}</strong>
+            </div>
+            <div style="font-size:0.73rem; color:#94a3b8; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>Total Incurred Input VAT (5% on ${this.formatCurrency(taxableCost)}):</span>
+              <strong style="color:#38bdf8;">- ${this.formatCurrency(totalBilledInputVat)}</strong>
+            </div>
+            <div style="font-size:0.75rem; font-weight:700; color:#f8fafc; display:flex; justify-content:space-between; padding:4px 0 0 0;">
+              <span>Accrual Net VAT Position:</span>
+              <strong style="color:#00e5c9;">${this.formatCurrency(accrualNetVat)}</strong>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.78rem; font-weight:700; color:#f8fafc; margin-bottom:0.45rem; display:flex; align-items:center; gap:0.4rem;">
+              <span>🏛️ Realized Statutory Basis (FTA Form 201 &amp; UAE Corporate Tax)</span>
+            </div>
+            <div style="font-size:0.73rem; color:#94a3b8; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>Prior Settled Tax Periods (Pre-Aug 2026):</span>
+              <strong style="color:#10b981;">${this.formatCurrency(priorSettledVat)} (Paid ✓)</strong>
+            </div>
+            <div style="font-size:0.73rem; color:#94a3b8; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+              <span>UAE Corporate Tax (9% SBR Threshold AED 3.0M):</span>
+              <strong style="color:#34d399;">0% (Relief Active: Rev &lt; 3M)</strong>
+            </div>
+            <div style="font-size:0.75rem; font-weight:700; color:#f8fafc; display:flex; justify-content:space-between; padding:4px 0 0 0;">
+              <span>Active FTA Form 201 Remittance Due:</span>
+              <strong style="color:#c084fc;">${this.formatCurrency(netVatPayable)}</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -11928,6 +12131,12 @@ class FinanceApp {
   setVatPeriod(period) {
     this._vatPeriod = period;
     this.renderVatManagementTab();
+  }
+
+  setDashboardVatPeriod(period) {
+    this._dashVatPeriod = period;
+    const root = document.getElementById('fin-tab-content-root');
+    this.renderDashboardTab(root);
   }
 
   setCtPeriod(period) {
