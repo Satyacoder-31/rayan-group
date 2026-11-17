@@ -2169,7 +2169,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v140';
+    const CURRENT_DB_VERSION = 'v2026_clean_v141';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -29229,8 +29229,6 @@ Scope of Work & Technical Execution:
               </div>
               <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 1 of 2</div>
             </div>
-
-            </div> <!-- End Main Document Content Layer Page 1 -->
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
@@ -29347,7 +29345,6 @@ Scope of Work & Technical Execution:
             </div>
 
             </div>
-</div> <!-- End Main Document Content Layer Page 2 -->
           </div>
         </div>
       </div>
