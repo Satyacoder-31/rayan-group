@@ -2242,7 +2242,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v149';
+    const CURRENT_DB_VERSION = 'v2026_clean_v150';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -5951,9 +5951,18 @@ class FinanceApp {
         <div style="background:rgba(15, 23, 42, 0.6); border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:0.65rem 1rem; margin-bottom:1.15rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             <span style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">🗓️ Return Period:</span>
-            <button type="button" class="fin-btn-quick ${dashVatPeriod === '1_month' ? 'primary' : ''}" style="${dashVatPeriod === '1_month' ? 'background:#00a699; border-color:#00a699; color:#fff;' : 'border-color:rgba(255,255,255,0.15);'} font-size:0.74rem; padding:0.25rem 0.65rem;" onclick="window.finApp.setDashboardVatPeriod('1_month')">
-              1 Month (Oct 2026)
-            </button>
+            <!-- Dedicated Month Selector Dropdown -->
+            <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(0,166,153,0.12); border:1px solid ${vatRange.isSpecificMonth ? '#00e5c9' : 'rgba(0,166,153,0.35)'}; border-radius:6px; padding:0.15rem 0.5rem;">
+              <span style="font-size:0.72rem; font-weight:700; color:#00e5c9; white-space:nowrap;">📅 Month:</span>
+              <select class="fin-select" style="background:#0f172a; color:#f8fafc; border:1px solid rgba(0,166,153,0.4); border-radius:4px; padding:0.15rem 0.4rem; font-size:0.72rem; font-weight:700; cursor:pointer;" onchange="window.finApp.setDashboardVatPeriod(this.value)">
+                <option value="" disabled ${!vatRange.isSpecificMonth ? 'selected' : ''}>-- Month --</option>
+                ${this.getAvailableVatMonths().map(m => `
+                  <option value="${m.id}" ${(vatRange.monthKey === m.key || dashVatPeriod === m.id) ? 'selected' : ''}>
+                    ${m.label}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
             <button type="button" class="fin-btn-quick ${dashVatPeriod === '3_months' ? 'primary' : ''}" style="${dashVatPeriod === '3_months' ? 'background:linear-gradient(135deg, #00a699, #059669); border-color:#00e5c9; color:#fff; font-weight:700;' : 'border-color:rgba(0,166,153,0.5); color:#00e5c9;'} font-size:0.74rem; padding:0.25rem 0.65rem;" onclick="window.finApp.setDashboardVatPeriod('3_months')">
               ⭐ Last 3 Months (Aug – Oct 2026) [Current Return Due]
             </button>
@@ -12195,15 +12204,71 @@ class FinanceApp {
   // --------------------------------------------------------------------------
   // 12B. VAT MANAGEMENT & STATUTORY TAX COMPLIANCE DESK (CASH REALIZATION BASIS)
   // --------------------------------------------------------------------------
+  getAvailableVatMonths() {
+    const monthsSet = new Set();
+    const scan = (arr, prop) => {
+      if (Array.isArray(arr)) {
+        arr.forEach(item => {
+          const d = item ? item[prop] : null;
+          if (d && typeof d === 'string' && d.match(/^\d{4}-\d{2}/)) {
+            monthsSet.add(d.slice(0, 7));
+          }
+        });
+      }
+    };
+    scan(this.db?.customer_receipts, 'receipt_date');
+    scan(this.db?.invoices, 'invoice_date');
+    scan(this.db?.purchase_bills, 'bill_date');
+    scan(this.db?.vendor_payments, 'payment_date');
+    scan(this.db?.credit_notes, 'credit_date');
+
+    ['2026-11', '2026-10', '2026-09', '2026-08', '2026-07', '2026-06', '2026-05', '2026-04', '2026-03', '2026-02', '2026-01', '2025-12', '2025-11', '2025-10'].forEach(m => monthsSet.add(m));
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return [...monthsSet].sort().reverse().map(ym => {
+      const [y, m] = ym.split('-').map(Number);
+      return {
+        key: ym,
+        id: `month:${ym}`,
+        label: `${monthNames[m - 1]} ${y}`
+      };
+    });
+  }
+
   getTaxPeriodDateRange(period) {
+    if (!period) period = '3_months';
     if (period === '1_month') {
       return {
         id: '1_month',
         start: '2026-10-01',
         end: '2026-10-31',
-        label: '1 Month (October 2026)',
-        shortLabel: '1 Month (Oct 2026)',
-        isCurrentDue: false
+        label: 'October 2026 (01 Oct – 31 Oct 2026)',
+        shortLabel: 'Oct 2026',
+        isCurrentDue: false,
+        isSpecificMonth: true,
+        monthKey: '2026-10'
+      };
+    }
+    const monthMatch = String(period).match(/^(?:month:)?(\d{4})-(\d{2})$/);
+    if (monthMatch) {
+      const year = parseInt(monthMatch[1], 10);
+      const monthNum = parseInt(monthMatch[2], 10);
+      const lastDay = new Date(year, monthNum, 0).getDate();
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const mName = monthNames[monthNum - 1] || 'Month';
+      const mShort = monthShort[monthNum - 1] || 'M';
+      const start = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+      const end = `${year}-${String(monthNum).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      return {
+        id: `month:${year}-${String(monthNum).padStart(2, '0')}`,
+        start,
+        end,
+        label: `${mName} ${year} (01 ${mShort} – ${lastDay} ${mShort} ${year})`,
+        shortLabel: `${mShort} ${year}`,
+        isCurrentDue: (year === 2026 && monthNum === 10),
+        isSpecificMonth: true,
+        monthKey: `${year}-${String(monthNum).padStart(2, '0')}`
       };
     }
     if (period === '3_months') {
@@ -12589,13 +12654,26 @@ class FinanceApp {
           </div>
         </div>
 
-        <!-- Period Selection Bar for VAT Return -->
+        <!-- Period Selection Bar for VAT Return with Month Selector & Dynamic VAT Totals -->
         <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.75rem 1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
           <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
             <span style="font-size:0.75rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">🗓️ VAT Period Filter:</span>
-            <button type="button" class="fin-btn-quick ${ledger.periodKey === '1_month' ? 'primary' : ''}" style="${ledger.periodKey === '1_month' ? 'background:#0284c7; border-color:#38bdf8;' : ''} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setVatPeriod('1_month')">
-              1 Month (Oct 2026)
-            </button>
+
+            <!-- Dedicated Specific Month Dropdown Picker -->
+            <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(2,132,199,0.12); border:1px solid ${ledger.range.isSpecificMonth ? '#38bdf8' : 'rgba(56,189,248,0.35)'}; border-radius:8px; padding:0.25rem 0.6rem;">
+              <span style="font-size:0.75rem; font-weight:700; color:#38bdf8; display:flex; align-items:center; gap:4px; white-space:nowrap;">
+                <span>📅</span> Select Month:
+              </span>
+              <select id="fin-vat-month-select" class="fin-select" style="background:#0f172a; color:#f8fafc; border:1px solid rgba(56,189,248,0.4); border-radius:6px; padding:0.25rem 0.5rem; font-size:0.75rem; font-weight:700; cursor:pointer;" onchange="window.finApp.setVatPeriod(this.value)">
+                <option value="" disabled ${!ledger.range.isSpecificMonth ? 'selected' : ''}>-- Choose Specific Month --</option>
+                ${this.getAvailableVatMonths().map(m => `
+                  <option value="${m.id}" ${(ledger.range.monthKey === m.key || ledger.periodKey === m.id) ? 'selected' : ''}>
+                    ${m.label} ${m.key === '2026-10' ? '(Latest Return)' : ''}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
             <button type="button" class="fin-btn-quick ${ledger.periodKey === '3_months' ? 'primary' : ''}" style="${ledger.periodKey === '3_months' ? 'background:linear-gradient(135deg, #7c3aed, #a855f7); border-color:#c084fc; color:#fff; font-weight:700;' : 'border-color:rgba(168,85,247,0.5); color:#c084fc;'} font-size:0.75rem; padding:0.3rem 0.75rem;" onclick="window.finApp.setVatPeriod('3_months')">
               ⭐ Last 3 Months (Aug – Oct 2026) [Current Return Due]
             </button>
@@ -12609,12 +12687,20 @@ class FinanceApp {
               All Historical Records
             </button>
           </div>
-          <div style="font-size:0.75rem; color:#cbd5e1; background:rgba(255,255,255,0.03); padding:0.3rem 0.65rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
-            Selected Window: <strong style="color:#f8fafc;">${ledger.range.label}</strong>
+
+          <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap;">
+            <div style="font-size:0.75rem; color:#cbd5e1; background:rgba(255,255,255,0.03); padding:0.3rem 0.65rem; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
+              Selected Window: <strong style="color:#f8fafc;">${ledger.range.label}</strong>
+            </div>
+            <!-- Live Total VAT Pill for Selected Month / Period -->
+            <div style="font-size:0.75rem; color:#ffffff; background:linear-gradient(135deg, #0284c7, #0369a1); padding:0.3rem 0.75rem; border-radius:6px; border:1px solid #38bdf8; font-weight:800; display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(2,132,199,0.3);">
+              <span>Total VAT:</span>
+              <span style="color:#38bdf8; font-family:monospace; font-size:0.85rem;">AED ${this.formatCurrency(t.netVatPayable)}</span>
+            </div>
           </div>
         </div>
 
-        <!-- Prior Taxes Settled Banner -->
+        <!-- Prior Taxes Settled Banner with Dynamic Return Due Total -->
         <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:0.85rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
           <div style="display:flex; align-items:center; gap:0.65rem;">
             <span style="font-size:1.4rem;">✅</span>
@@ -12627,9 +12713,13 @@ class FinanceApp {
               </div>
             </div>
           </div>
-          <div style="background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.35); border-radius:8px; padding:0.4rem 0.85rem; text-align:right;">
-            <span style="font-size:0.68rem; color:#e9d5ff; display:block; text-transform:uppercase; font-weight:600;">Aug – Oct Return Due</span>
-            <strong style="font-size:1.05rem; color:#c084fc;">AED 12,547.66</strong>
+          <div style="background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.45); border-radius:8px; padding:0.4rem 0.95rem; text-align:right; box-shadow:0 2px 10px rgba(168,85,247,0.2);">
+            <span style="font-size:0.68rem; color:#e9d5ff; display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.02em;">
+              ${ledger.range.isCurrentDue ? 'Aug – Oct Return Due' : `${ledger.range.shortLabel} Total VAT Due`}
+            </span>
+            <strong style="font-size:1.15rem; color:#c084fc; font-family:monospace;">
+              AED ${this.formatCurrency(t.netVatPayable)}
+            </strong>
           </div>
         </div>
 

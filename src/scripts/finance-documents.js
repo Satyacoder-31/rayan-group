@@ -2125,7 +2125,7 @@ export function registerDocumentModules(FinanceApp) {
 
               <div>
                 <!-- Top 3-Column Corporate Bilingual Header (No cyan strip) -->
-                <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:1rem; gap:1rem; width:100%;">
+                <div style="display:grid; grid-template-columns:minmax(0, 1fr) auto minmax(0, 1.3fr); align-items:start; margin-bottom:1rem; gap:0.75rem; width:100%;">
                   <!-- Column 1: Left (Logo, Company, TRN, Dynamic QR/Barcode) -->
                   <div style="justify-self:start; max-width:100%;">
                     <div style="margin-bottom:0.35rem;">
@@ -2149,21 +2149,21 @@ export function registerDocumentModules(FinanceApp) {
 
                   <!-- Column 3: Right (Metadata & Dates) -->
                   <div style="text-align:right; justify-self:end;">
-                    <table style="font-size:0.75rem; border-collapse:collapse; margin-left:auto;">
+                    <table style="font-size:0.70rem; border-collapse:collapse; margin-left:auto; white-space:nowrap;">
                       <tr>
-                        <td style="font-weight:700; color:#64748b; padding:1px 6px 1px 0; text-align:right;">Date :</td>
-                        <td style="font-weight:800; color:#111827; text-align:left;" contenteditable="true" spellcheck="false">${this.formatDate(cert.date)} ${cert.time || ''}</td>
-                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 6px; text-align:right;">التاريخ:</td>
+                        <td style="font-weight:700; color:#64748b; padding:1px 4px 1px 0; text-align:right; white-space:nowrap; font-size:0.68rem;">Date :</td>
+                        <td style="font-weight:800; color:#111827; text-align:left; padding:0 4px; white-space:nowrap; font-size:0.68rem;" contenteditable="true" spellcheck="false">${this.formatDate(cert.date)} ${cert.time || ''}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 4px; text-align:right; white-space:nowrap; font-size:0.70rem;">التاريخ:</td>
                       </tr>
                       <tr>
-                        <td style="font-weight:700; color:#64748b; padding:1px 6px 1px 0; text-align:right;">Reference No :</td>
-                        <td style="font-weight:800; color:#dc2626; text-align:left;" contenteditable="true" spellcheck="false">${cert.cert_no || cert.reference_no || 'REC-JOB COM-11021'}</td>
-                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 6px; text-align:right;">الرقم المرجعي:</td>
+                        <td style="font-weight:700; color:#64748b; padding:1px 4px 1px 0; text-align:right; white-space:nowrap; font-size:0.68rem;">Reference No :</td>
+                        <td style="font-weight:800; color:#dc2626; text-align:left; font-size:0.68rem; white-space:nowrap; padding:0 4px; letter-spacing:0.01em;" contenteditable="true" spellcheck="false">${cert.cert_no || cert.reference_no || 'REC-JOB COM-11021'}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 4px; text-align:right; white-space:nowrap; font-size:0.70rem;">الرقم المرجعي:</td>
                       </tr>
                       <tr>
-                        <td style="font-weight:700; color:#64748b; padding:1px 6px 1px 0; text-align:right; line-height:1.15;">Sub-Contract :</td>
-                        <td style="font-weight:800; color:#111827; text-align:left;" contenteditable="true" spellcheck="false">${cert.subcontract_agreement || cert.po_no || 'PODSUB-2026/0810'}</td>
-                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 6px; text-align:right;">طلب شراء محلي:</td>
+                        <td style="font-weight:700; color:#64748b; padding:1px 4px 1px 0; text-align:right; line-height:1.15; white-space:nowrap; font-size:0.68rem;">Sub-Contract :</td>
+                        <td style="font-weight:800; color:#111827; text-align:left; font-size:0.68rem; white-space:nowrap; padding:0 4px;" contenteditable="true" spellcheck="false">${cert.subcontract_agreement || cert.po_no || 'PODSUB-2026/0810'}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 4px; text-align:right; white-space:nowrap; font-size:0.70rem;">طلب شراء محلي:</td>
                       </tr>
                     </table>
                   </div>
