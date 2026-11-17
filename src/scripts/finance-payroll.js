@@ -28,6 +28,14 @@ export function registerPayrollModules(FinanceApp) {
       .replace(/'/g, '&#039;');
   };
 
+  proto.escapeHtml = escapeHtml;
+  proto.syncWithBackend = function (action, payload) {
+    if (typeof this.syncApi === 'function') {
+      return this.syncApi(action, payload);
+    }
+    return Promise.resolve({ ok: true });
+  };
+
   // Standard Monthly Payroll Periods Reference
   const PAYROLL_PERIODS = [
     { key: '2026-07', short: 'Jul-26', full: 'July 2026', label: 'July 2026' },
@@ -149,17 +157,59 @@ export function registerPayrollModules(FinanceApp) {
         }
       ];
     } else {
-      const bakht = this.db.employees.find(e => e.id === 'emp-en12001' || e.name.includes('Bakhteyar'));
+      let bakht = this.db.employees.find(e => e.id === 'emp-en12001' || (e.name && e.name.toLowerCase().includes('bakhteyar')) || e.employee_no === 'EN12001');
       if (bakht) {
-        bakht.passport_no = 'S3552106';
-        bakht.name = 'Bakhteyar Alam Mokhtar Ahmad';
+        bakht.passport_no = bakht.passport_no || 'S3552106';
+        if (!bakht.name || !bakht.name.includes('Mokhtar')) bakht.name = 'Bakhteyar Alam Mokhtar Ahmad';
         if (!bakht.name_ar) bakht.name_ar = 'بختيار عالم مختار احمد';
         if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
+        if (!bakht.position) bakht.position = 'Civil Engineer';
+        if (!bakht.company_id) bakht.company_id = this.activeCompanyId || 'rayan-corp-uae';
+      } else {
+        this.db.employees.unshift({
+          id: 'emp-en12001',
+          employee_no: 'EN12001',
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          name: 'Bakhteyar Alam Mokhtar Ahmad',
+          name_ar: 'بختيار عالم مختار احمد',
+          position: 'Civil Engineer',
+          position_ar: 'مهندس مدني',
+          department: 'Rayan Engineering',
+          date_of_joining: '2025-08-07',
+          date_of_appointment: '2025-08-07',
+          currency: 'AED',
+          phone: '+971 50 123 4567',
+          email: 'bakhteyar@rayan-group.com',
+          emirates_id: '784-1988-1234567-1',
+          passport_no: 'S3552106',
+          nationality: 'India',
+          nationality_ar: 'هندي',
+          visa_status: 'Employment Visa (Rayan Engineering)',
+          basic_salary: 9500.00,
+          accommodation_allowance: 5500.00,
+          consolidated_allowance: 0.00,
+          other_allowance: 0.00,
+          bank_name: 'Emirates NBD Bank PJSC',
+          swift: 'EBILAEADXXX',
+          iban: 'AE860260001015934645101',
+          account_no: 'AE860260001015934645101',
+          default_pay_method: 'AED RAYAN GROUP Host To Host',
+          project_id: 'prj-toprock-police-01',
+          project_name: 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+          status: 'Active',
+          created_at: '2025-08-07T09:00:00Z'
+        });
       }
-      if (!this.db.employees.find(e => e.passport_no === 'C6976631' || e.name === 'Md Ashraf Ali')) {
+
+      let ashraf = this.db.employees.find(e => e.id === 'emp-rg11047' || (e.name && e.name.toLowerCase().includes('ashraf')) || e.employee_no === 'RG11647' || e.employee_no === 'RG11047');
+      if (ashraf) {
+        if (!ashraf.name_ar) ashraf.name_ar = 'محمد اشرف علي';
+        if (!ashraf.position_ar) ashraf.position_ar = 'بناء عام / بلاط';
+        if (!ashraf.company_id) ashraf.company_id = this.activeCompanyId || 'rayan-corp-uae';
+      } else {
         this.db.employees.push({
           id: 'emp-rg11047',
-          employee_no: 'RG11047',
+          employee_no: 'RG11647',
           company_id: this.activeCompanyId || 'rayan-corp-uae',
           name: 'Md Ashraf Ali',
           name_ar: 'محمد اشرف علي',
@@ -249,6 +299,29 @@ export function registerPayrollModules(FinanceApp) {
           created_at: '2026-08-26T09:00:00Z'
         }
       ];
+    }
+
+    // Cross-sync: ensure any employee data in employment_certificates is reflected in employees
+    if (Array.isArray(this.db.employment_certificates) && Array.isArray(this.db.employees)) {
+      this.db.employment_certificates.forEach(cert => {
+        if (!cert) return;
+        const certName = (cert.employee_name_en || '').toLowerCase().trim();
+        const emp = this.db.employees.find(e => {
+          const eName = (e.name || '').toLowerCase().trim();
+          return (cert.passport_no && e.passport_no === cert.passport_no) ||
+                 (certName && eName && (eName === certName || eName.includes(certName) || certName.includes(eName)));
+        });
+        if (emp) {
+          if (cert.employee_name_en) emp.name = cert.employee_name_en;
+          if (cert.employee_name_ar) emp.name_ar = cert.employee_name_ar;
+          if (cert.job_title_en) { emp.position = cert.job_title_en; emp.designation = cert.job_title_en; }
+          if (cert.job_title_ar) emp.position_ar = cert.job_title_ar;
+          if (cert.passport_no) emp.passport_no = cert.passport_no;
+          if (cert.nationality_en) emp.nationality = cert.nationality_en;
+          if (cert.basic_salary) emp.basic_salary = cert.basic_salary;
+          if (cert.accommodation_allowance !== undefined) emp.accommodation_allowance = cert.accommodation_allowance;
+        }
+      });
     }
 
     if (!Array.isArray(this.db.payroll) || this.db.payroll.length === 0) {
@@ -1116,12 +1189,41 @@ export function registerPayrollModules(FinanceApp) {
       this.db.employees.unshift(empObj);
     }
 
+    // Sync matching Employment Certificate(s) and Letter of Assignment(s)
+    if (Array.isArray(this.db.employment_certificates)) {
+      this.db.employment_certificates.forEach(c => {
+        if ((c.employee_id && c.employee_id === empObj.id) || 
+            (c.employee_name_en && empObj.name && (c.employee_name_en.toLowerCase() === empObj.name.toLowerCase() || c.employee_name_en.toLowerCase().includes(empObj.name.toLowerCase()))) ||
+            (c.passport_no && empObj.passport_no && c.passport_no === empObj.passport_no)) {
+          c.employee_name_en = empObj.name;
+          c.job_title_en = empObj.position;
+          c.basic_salary = empObj.basic_salary;
+          c.accommodation_allowance = empObj.accommodation_allowance;
+          c.total_salary = empObj.basic_salary + empObj.accommodation_allowance;
+        }
+      });
+    }
+
+    if (Array.isArray(this.db.letters_of_assignment)) {
+      this.db.letters_of_assignment.forEach(l => {
+        if ((l.employee_id && l.employee_id === empObj.id) || 
+            (l.employee_name && empObj.name && (l.employee_name.toLowerCase() === empObj.name.toLowerCase() || l.employee_name.toLowerCase().includes(empObj.name.toLowerCase()))) ||
+            (l.passport_no && empObj.passport_no && l.passport_no === empObj.passport_no)) {
+          l.employee_name = empObj.name;
+          l.position = empObj.position;
+          l.basic_salary = empObj.basic_salary;
+        }
+      });
+    }
+
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+
     this.closeEmployeeModal();
     this.showToast ? this.showToast('Employee profile saved successfully!', 'success') : alert('Employee profile saved successfully!');
 
     // Sync with backend API
     try {
-      await this.syncWithBackend('save_employee', { employee: empObj });
+      await this.syncApi('save_employee', { employee: empObj });
     } catch (err) {
       console.warn('Employee backend sync warning:', err);
     }
@@ -1140,6 +1242,7 @@ export function registerPayrollModules(FinanceApp) {
     }
 
     this.db.employees = this.db.employees.filter(e => e.id !== empId);
+    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
     // Sync deletion with backend
     try {
@@ -3644,11 +3747,71 @@ export function registerPayrollModules(FinanceApp) {
     if (idx >= 0) this.db.employment_certificates[idx] = { ...this.db.employment_certificates[idx], ...updated };
     else this.db.employment_certificates.unshift(updated);
 
+    // Two-way synchronization with Employee Directory
+    if (!Array.isArray(this.db.employees)) this.db.employees = [];
+    const normName = (updated.employee_name_en || '').toLowerCase().trim();
+    let empIdx = this.db.employees.findIndex(em => {
+      const emName = (em.name || '').toLowerCase().trim();
+      return (updated.passport_no && em.passport_no === updated.passport_no) ||
+             (emName && normName && (emName === normName || emName.includes(normName) || normName.includes(emName)));
+    });
+
+    let syncedEmp = null;
+    if (empIdx >= 0) {
+      this.db.employees[empIdx] = {
+        ...this.db.employees[empIdx],
+        name: updated.employee_name_en,
+        name_ar: updated.employee_name_ar || this.db.employees[empIdx].name_ar,
+        position: updated.job_title_en,
+        designation: updated.job_title_en,
+        position_ar: updated.job_title_ar || this.db.employees[empIdx].position_ar,
+        passport_no: updated.passport_no || this.db.employees[empIdx].passport_no,
+        nationality: updated.nationality_en || this.db.employees[empIdx].nationality,
+        date_of_joining: updated.joining_date_en || this.db.employees[empIdx].date_of_joining,
+        basic_salary: updated.basic_salary,
+        accommodation_allowance: updated.accommodation_allowance,
+        updated_at: new Date().toISOString()
+      };
+      syncedEmp = this.db.employees[empIdx];
+    } else {
+      syncedEmp = {
+        id: `emp-${Date.now().toString(36)}`,
+        employee_no: `EN${Math.floor(12000 + Math.random() * 900)}`,
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        name: updated.employee_name_en,
+        name_ar: updated.employee_name_ar,
+        position: updated.job_title_en,
+        designation: updated.job_title_en,
+        position_ar: updated.job_title_ar,
+        department: 'Rayan Engineering',
+        date_of_joining: updated.joining_date_en || '2025-08-07',
+        date_of_appointment: updated.joining_date_en || '2025-08-07',
+        currency: 'AED',
+        phone: '+971 50 123 4567',
+        email: 'bakhteyar@rayan-group.com',
+        emirates_id: '784-1988-1234567-1',
+        passport_no: updated.passport_no,
+        nationality: updated.nationality_en,
+        visa_status: 'Employment Visa (Rayan Engineering)',
+        basic_salary: updated.basic_salary,
+        accommodation_allowance: updated.accommodation_allowance,
+        consolidated_allowance: 0,
+        other_allowance: 0,
+        bank_name: 'Emirates NBD Bank PJSC',
+        status: 'Active',
+        updated_at: new Date().toISOString()
+      };
+      this.db.employees.unshift(syncedEmp);
+    }
+
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
     this.closeModal('modal-emp-cert-edit');
-    this.showNotification(`Employment Certificate ${updated.ref_no} saved (${updated.salary_option === 'without_salary' ? 'Without Salary' : 'With Salary'}).`, 'success');
+    this.showNotification(`Employment Certificate ${updated.ref_no} & Employee Directory saved successfully.`, 'success');
     this.openEmploymentCertificatePrintModal(updated.id);
     await this.syncApi('save_employment_certificate', { certificate: updated });
+    if (syncedEmp) {
+      await this.syncApi('save_employee', { employee: syncedEmp });
+    }
   };
 
   proto.deleteEmploymentCertificate = async function (certId) {
@@ -4404,11 +4567,63 @@ export function registerPayrollModules(FinanceApp) {
     if (idx >= 0) this.db.letters_of_assignment[idx] = { ...this.db.letters_of_assignment[idx], ...updated };
     else this.db.letters_of_assignment.unshift(updated);
 
+    // Two-way synchronization with Employee Directory
+    if (!Array.isArray(this.db.employees)) this.db.employees = [];
+    const normName = (updated.employee_name || '').toLowerCase().trim();
+    let empIdx = this.db.employees.findIndex(em => {
+      const emName = (em.name || '').toLowerCase().trim();
+      return (updated.passport_no && em.passport_no === updated.passport_no) ||
+             (emName && normName && (emName === normName || emName.includes(normName) || normName.includes(emName)));
+    });
+
+    let syncedEmp = null;
+    if (empIdx >= 0) {
+      this.db.employees[empIdx] = {
+        ...this.db.employees[empIdx],
+        name: updated.employee_name,
+        position: updated.position,
+        designation: updated.position,
+        passport_no: updated.passport_no || this.db.employees[empIdx].passport_no,
+        nationality: updated.nationality || this.db.employees[empIdx].nationality,
+        basic_salary: updated.basic_salary,
+        other_allowance: updated.food_allowance,
+        updated_at: new Date().toISOString()
+      };
+      syncedEmp = this.db.employees[empIdx];
+    } else {
+      syncedEmp = {
+        id: `emp-${Date.now().toString(36)}`,
+        employee_no: 'RG11647',
+        company_id: this.activeCompanyId || 'rayan-corp-uae',
+        name: updated.employee_name,
+        position: updated.position,
+        designation: updated.position,
+        department: 'Rayan Engineering',
+        date_of_joining: updated.date || '2026-09-15',
+        date_of_appointment: updated.date || '2026-08-26',
+        currency: 'AED',
+        passport_no: updated.passport_no,
+        nationality: updated.nationality,
+        visa_status: 'Employment Visa (Rayan Engineering)',
+        basic_salary: updated.basic_salary,
+        accommodation_allowance: 0,
+        consolidated_allowance: 200,
+        other_allowance: updated.food_allowance || 200,
+        bank_name: 'Cash / On-Hand',
+        status: 'Active',
+        updated_at: new Date().toISOString()
+      };
+      this.db.employees.push(syncedEmp);
+    }
+
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
     this.closeModal('modal-loa-edit');
-    this.showNotification(`Letter of Assignment ${updated.ref_no} saved.`, 'success');
+    this.showNotification(`Letter of Assignment ${updated.ref_no} & Employee Directory saved.`, 'success');
     this.openLetterOfAssignmentPrintModal(updated.id);
     await this.syncApi('save_letter_of_assignment', { letter_of_assignment: updated });
+    if (syncedEmp) {
+      await this.syncApi('save_employee', { employee: syncedEmp });
+    }
   };
 
   proto.deleteLetterOfAssignment = async function (loaId) {

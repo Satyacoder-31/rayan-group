@@ -391,6 +391,7 @@ class FinanceApp {
       'bank_accounts', 'cash_in_hand', 'cheques', 'loan_accounts',
       'bank_transfers', 'cash_vouchers', 'loan_transactions',
       'work_completion_certificates', 'delivery_notes', 'undertaking_letters', 'custom_letters',
+      'employment_certificates', 'letters_of_assignment',
       'employees', 'payroll'
     ];
 
@@ -443,6 +444,14 @@ class FinanceApp {
       }
       if (colKey === 'undertaking_letters' || colKey === 'custom_letters') {
         if (item.ref_no) return `ref-${item.ref_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'employment_certificates') {
+        if (item.ref_no || item.cert_no) return `cert-${(item.ref_no || item.cert_no).trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'letters_of_assignment') {
+        if (item.ref_no || item.loa_no) return `loa-${(item.ref_no || item.loa_no).trim().toLowerCase()}`;
         return item.id;
       }
       if (colKey === 'payroll') {
@@ -2242,7 +2251,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v151';
+    const CURRENT_DB_VERSION = 'v2026_clean_v152';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
