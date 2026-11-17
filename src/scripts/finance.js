@@ -2140,7 +2140,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v131';
+    const CURRENT_DB_VERSION = 'v2026_clean_v132';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -28175,10 +28175,13 @@ Scope of Work & Technical Execution:
               <div style="color:#374151;">${po.notes_to_supplier || po.notes || '1. Location / Site - The New Dubai Police Academy & al Rowaiyah, Dubai. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools & Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.'}</div>
             </div>
 
-            <!-- Page 1 Clean Footer (Terms moved to Page 2) -->
-            <div style="margin-top:0.65rem; padding-top:3px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; color:#6b7280;">
-              <div>${po.po_no} • RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
-              <div style="font-weight:700; color:#9ca3af;">Page 1 of 2</div>
+            <!-- Page 1 Clean System-Generated Footer Below the Line (Spaced) -->
+            <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="min-width:60px; font-weight:600; color:#9ca3af;">${po.po_no}</div>
+              <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                This is a system-generated Purchase Order.
+              </div>
+              <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 1 of 2</div>
             </div>
 
             </div> <!-- End Main Document Content Layer Page 1 -->
@@ -28277,18 +28280,22 @@ Scope of Work & Technical Execution:
               </tr>
             </table>
 
-            <!-- Page 2 Bottom Notes & Page Footer ("Keep this as well in last pages") -->
-            <div style="margin-top:0.45rem; padding-top:4px; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:flex-end; font-size:0.58rem; color:#475569; page-break-inside:avoid !important; break-inside:avoid !important;">
-              <div style="line-height:1.35; max-width:80%;">
-                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
-                <div style="margin-bottom:2px; color:#475569;">Please keep a copy of this purchase order for your records.</div>
-                <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;•&nbsp; Hotline : +971 2 565 4497 &nbsp;•&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;•&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+            <!-- Page 2 Bottom Notes & Best Wishes ("Keep this as well in last pages") -->
+            <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
+              <div style="margin-bottom:2px; color:#475569;">Please keep a copy of this purchase order for your records.</div>
+              <div style="font-weight:800; color:#111827;">Best wishes,</div>
+              <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+              <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;•&nbsp; Hotline : +971 2 565 4497 &nbsp;•&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;•&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Page 2 Clean Fixed System-Generated Footer Below the Line (Spaced) -->
+            <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="min-width:60px; font-weight:600; color:#9ca3af;">${po.po_no}</div>
+              <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                This is a system-generated Purchase Order.
               </div>
-              <div style="font-weight:700; color:#9ca3af; white-space:nowrap; flex-shrink:0;">
-                Page 2 of 2
-              </div>
+              <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 2 of 2</div>
             </div>
 
             </div> <!-- End Main Document Content Layer Page 2 -->
@@ -28299,6 +28306,39 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+  }
+
+  downloadPODocument(poId) {
+    let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+    const viewportHtml = document.querySelector('#fin-doc-print-modal .fin-doc-viewport')?.innerHTML;
+    if (viewportHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Purchase Order - ${po?.po_no || 'Document'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    table { width: 100% !important; border-collapse: collapse !important; }
+    @media print {
+      @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
+      body { background: #fff; padding: 0; gap: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; page-break-after: always !important; }
+      .fin-doc-page-2 { page-break-after: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  ${viewportHtml}
+</body>
+</html>`;
+      this.downloadFile(`${po?.po_no || 'Purchase_Order'}.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${po?.po_no || 'Purchase Order'} document.`, 'success');
+    }
   }
 
   // --------------------------------------------------------------------------
