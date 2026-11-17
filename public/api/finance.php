@@ -5975,6 +5975,25 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV93ClearCashInHandAndFakeLoops($data, $pdo);
                     reconcileV81HMVillaFinancials($data, $pdo);
                     reconcileV82EmployeesAndPayroll($data, $pdo);
+                    // Migration v133: Ensure debit note serial prefix is DN-REC-2026-101 and update MySQL table
+                    if ($pdo) {
+                        try {
+                            $chkMigDN = $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'debit_note_rg_to_rec_v133'")->fetchColumn();
+                            if (!$chkMigDN) {
+                                $pdo->exec("UPDATE finance_debit_notes SET debit_note_no = 'DN-REC-2026-101' WHERE debit_note_no = 'DN-RG-2026-101'");
+                                $pdo->exec("UPDATE finance_audit_logs SET entity_id = 'DN-REC-2026-101', details = REPLACE(details, 'DN-RG-2026-101', 'DN-REC-2026-101') WHERE entity_id = 'DN-RG-2026-101' OR details LIKE '%DN-RG-2026-101%'");
+                                $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('debit_note_rg_to_rec_v133', '1', NOW())");
+                            }
+                        } catch (Exception $e) {}
+                    }
+                    if (isset($data['debit_notes']) && is_array($data['debit_notes'])) {
+                        foreach ($data['debit_notes'] as &$dn) {
+                            if (($dn['debit_note_no'] ?? '') === 'DN-RG-2026-101') {
+                                $dn['debit_note_no'] = 'DN-REC-2026-101';
+                            }
+                        }
+                        unset($dn);
+                    }
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -8247,7 +8266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $exp['currency'] = ($exp['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
                 }
                 if (empty($exp['expense_no'])) {
-                    $prefix = ($exp['company_id'] === 'ashaz-eng-in') ? 'EXP-ASH' : 'EXP-RG-2026';
+                    $prefix = ($exp['company_id'] === 'ashaz-eng-in') ? 'EXP-ASH' : 'EXP-REC-2026';
                     $exp['expense_no'] = $prefix . '-' . rand(100, 999);
                 }
                 if (empty($exp['status'])) {
@@ -8384,7 +8403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($dn['company_id'])) $dn['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
                 if (empty($dn['currency'])) $dn['currency'] = ($dn['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
                 if (empty($dn['debit_note_no'])) {
-                    $prefix = ($dn['company_id'] === 'ashaz-eng-in') ? 'DN-ASH' : 'DN-RG-2026';
+                    $prefix = ($dn['company_id'] === 'ashaz-eng-in') ? 'DN-ASH' : 'DN-REC-2026';
                     $dn['debit_note_no'] = $prefix . '-' . rand(100, 999);
                 }
                 if (empty($dn['status'])) $dn['status'] = 'applied';

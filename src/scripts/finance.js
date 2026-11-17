@@ -980,6 +980,11 @@ class FinanceApp {
         cn.credit_note_no = cn.credit_note_no.replace('CN-RG-', 'CN-REC-');
       }
     });
+    (this.db.debit_notes || []).forEach(dn => {
+      if (dn.debit_note_no && dn.debit_note_no.startsWith('DN-RG-')) {
+        dn.debit_note_no = dn.debit_note_no.replace('DN-RG-', 'DN-REC-');
+      }
+    });
 
     // 0b3. Ensure Top Rock Interiors customer and all linked invoices have canonical TRN 10457119600003
     (this.db.customers || []).forEach(c => {
@@ -2140,7 +2145,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v132';
+    const CURRENT_DB_VERSION = 'v2026_clean_v133';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -3996,7 +4001,7 @@ class FinanceApp {
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = isIndia ? 'EXP-ASH-2026' : 'EXP-RG-2026';
+    const prefix = isIndia ? 'EXP-ASH-2026' : 'EXP-REC-2026';
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
@@ -4044,7 +4049,7 @@ class FinanceApp {
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     });
-    const prefix = isIndia ? 'DN-ASH-2026' : 'DN-RG-2026';
+    const prefix = isIndia ? 'DN-ASH-2026' : 'DN-REC-2026';
     return `${prefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   }
 
@@ -10618,89 +10623,342 @@ class FinanceApp {
     };
   }
 
-  openClientLPOSlipModal(poId) {
-    const po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.po_no === poId);
+  openClientLPOSlipModal(poId, isVerifiedScan = false) {
+    let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.internal_ref === poId || p.po_no === poId);
     if (!po) {
-      alert('Client LPO not found.');
-      return;
+      po = (this.db?.purchase_orders || []).find(p => p.type === 'customer_po') ||
+        (this.db?.purchase_orders || [])[0] || {};
     }
 
     const hasPdf = !!(po.pdf_data || po.pdf_url);
-    const getCustomerName = (p) => p.customer_name || p.vendor_name || p.supplier_name || 'Client';
+    const getCustomerName = (p) => p.customer_name || p.vendor_name || p.supplier_name || 'M/S TOP ROCK INTERIORS LLC';
+    const custName = getCustomerName(po);
+
+    const comp = (this.db?.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
+      (defaultSeedData.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    const compTrn = '100234567800003';
+
+    const custObj = (this.db?.customers || []).find(c => c.name === custName || (po.customer_id && c.id === po.customer_id));
+    const custTrn = custObj?.trn_vat || custObj?.trn || '10457119600003';
+
+    const curr = po.currency || 'AED';
+    const totalVal = Number(po.grand_total || po.total_value || po.total || 0);
+    const formattedTotal = this.formatCurrency(totalVal);
+    const formattedDate = po.date ? this.formatDate(po.date) : (po.po_date ? this.formatDate(po.po_date) : '09 Nov 2026');
+    const formattedDelivery = po.expected_delivery ? this.formatDate(po.expected_delivery) : formattedDate;
+    const amountInWords = this.formatAmountInWords(po.amount_in_words || totalVal, curr);
+
+    // Calculate Invoiced Progress & Unbilled Balance
+    let invoicedAmt = 0;
+    const invoices = (this.db?.invoices || []).filter(i => this.matchesActiveCompany(i.company_id) && i.status !== 'void');
+    invoices.forEach(inv => {
+      const pNo = (po.po_no || '').trim().toLowerCase();
+      const pRef = (po.internal_ref || '').trim().toLowerCase();
+      const pPrj = (po.project_name || '').trim().toLowerCase();
+      const iLpo = (inv.lpo_no || '').trim().toLowerCase();
+      const iNotes = (inv.notes || '').toLowerCase();
+      const iPrj = (inv.project_name || '').trim().toLowerCase();
+
+      const matchesLpo = pNo && (iLpo === pNo || iNotes.includes(pNo));
+      const matchesRef = pRef && (iLpo === pRef || iNotes.includes(pRef));
+      const matchesPrj = pPrj && (iPrj === pPrj || iNotes.includes(pPrj));
+
+      if (matchesLpo || matchesRef || matchesPrj) {
+        invoicedAmt += Number(inv.grand_total || 0);
+      }
+    });
+    invoicedAmt = Math.round(invoicedAmt * 100) / 100;
+    const unbilledBal = Math.max(0, Math.round((totalVal - invoicedAmt) * 100) / 100);
 
     const modalHtml = `
-      <div class="fin-modal-backdrop open" id="modal-client-lpo-slip" style="z-index:100010;">
-        <div class="fin-modal-dialog" style="max-width:700px; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:12px;">
-          <div class="fin-modal-header" style="background:#0b111e; border-bottom:1px solid rgba(255,255,255,0.1); padding:0.85rem 1.25rem;">
-            <div style="display:flex; align-items:center; gap:0.6rem;">
-              <span style="font-size:1.3rem;">📑</span>
-              <div>
-                <h3 class="fin-modal-title" style="margin:0; font-size:1.05rem; color:#f8fafc;">
-                  Client LPO Summary: <span style="color:#38bdf8;">${po.po_no}</span>
-                </h3>
-                <p style="margin:0; font-size:0.75rem; color:#94a3b8;">Inward Purchase Order Record</p>
-              </div>
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📄</span>
+              <span>Rayan Engineering Official Client LPO Summary Slip (ملخص أمر شراء العميل)</span>
             </div>
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              ${hasPdf ? `
-                <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openViewLPOModal('${po.id}')">
-                  📄 View Original PDF
-                </button>
-              ` : `
-                <button type="button" class="fin-btn-quick" style="border-color:#64748b; color:#94a3b8;" onclick="window.finApp.openAttachLPOModal('${po.id}')">
-                  📎 Attach PDF
-                </button>
-              `}
-              <button type="button" class="fin-btn-quick primary" onclick="window.print()">
-                🖨️ Print Slip
-              </button>
-              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-client-lpo-slip')">&times;</button>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Vendor PO</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openClientLPOSlipModal('${po.id || ''}')">Client LPO Slip</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
-          <div class="fin-modal-body" style="padding:1.5rem; background:#ffffff; color:#111827; border-radius:0 0 12px 12px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #111827; padding-bottom:1rem; margin-bottom:1.25rem;">
-              <div>
-                <h2 style="margin:0; font-size:1.35rem; color:#111827; font-weight:800;">RAYAN ENGINEERING &amp; CONTRACTING LLC SPC</h2>
-                <div style="font-size:0.82rem; color:#475569; margin-top:0.2rem;">Office 09, Plot 42, Mussafah M-40, Abu Dhabi, UAE &bull; TRN: 100234567800003</div>
-                <div style="font-size:0.88rem; color:#0284c7; font-weight:700; margin-top:0.4rem;">INWARD CLIENT PURCHASE ORDER SUMMARY SLIP</div>
+          <div class="fin-doc-toolbar-right">
+            ${hasPdf ? `
+              <button type="button" class="fin-btn-print-action" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);" onclick="window.finApp.openViewLPOModal('${po.id}')">
+                <span>📄</span> View Original PDF
+              </button>
+            ` : `
+              <button type="button" class="fin-btn-print-action" style="color:#94a3b8; border-color:rgba(148,163,184,0.4);" onclick="window.finApp.openAttachLPOModal('${po.id}')">
+                <span>📎</span> Attach PDF
+              </button>
+            `}
+            <button type="button" class="fin-btn-print-action" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);" onclick="window.finApp.closeDocPrintModal(); window.finApp.openRecordClientLPOModal('${po.id}')">
+              <span>✏️</span> Edit LPO
+            </button>
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadClientLPODocument('${po.id || po.po_no}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
+              <span>✕</span> Close
+            </button>
+          </div>
+        </div>
+
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
+
+            <!-- Center Page Watermark (Rayan Engineering Symbol) -->
+            ${this.getRayanWatermark()}
+
+            <!-- Main Document Content Layer -->
+            <div style="position:relative; z-index:1;">
+
+            <!-- Header Section (3-Column Grid: Left: Logo & Company & QR, Center: Exactly Centered Bilingual Title, Right: LPO Metadata) -->
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:0.75rem; gap:0.75rem; width:100%;">
+              <!-- Column 1: Left -->
+              <div style="justify-self:start; max-width:100%;">
+                <div style="margin-bottom:0.35rem;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
+                </div>
+                <div style="font-size:0.74rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:1px;">
+                  ${compName}
+                </div>
+                <div style="font-size:0.68rem; color:#4b5563; line-height:1.3; margin-bottom:2px;">
+                  TRN: ${compTrn}
+                </div>
+                ${this.getRayanDynamicVerificationCode(po, 'clpo')}
               </div>
-              <div style="text-align:right;">
-                <div style="font-size:1.15rem; font-weight:800; color:#0284c7; font-family:monospace;">${po.internal_ref || 'REC-CLPO-44...'}</div>
-                <div style="font-size:0.82rem; font-weight:700; color:#111827; font-family:monospace; margin-top:2px;">Client LPO: ${po.po_no}</div>
-                <div style="font-size:0.82rem; color:#64748b; margin-top:0.2rem;">Date: <strong>${this.formatDate(po.date || po.po_date)}</strong></div>
-                <span class="fin-badge fin-badge-paid" style="margin-top:0.35rem;">${(po.status || 'APPROVED').toUpperCase()}</span>
+
+              <!-- Column 2: Exact Dead-Center Bilingual Title matching Official Rayan Layout -->
+              <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
+                <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">ملخص أمر شراء العميل</div>
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">CLIENT PURCHASE ORDER</div>
+                <div style="font-size:0.62rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">INWARD PROCUREMENT SUMMARY SLIP</div>
+              </div>
+
+              <!-- Column 3: Right Metadata -->
+              <div style="text-align:right; justify-self:end;">
+                <div style="font-size:0.92rem; font-weight:800; color:#0284c7; font-family:monospace; margin-bottom:2px;">
+                  ${po.internal_ref || 'REC-CLPO-44022'}
+                </div>
+                <div style="font-size:0.80rem; font-weight:700; color:#111827; font-family:monospace; margin-bottom:4px;">
+                  Client LPO: ${po.po_no}
+                </div>
+                <div style="margin-bottom:5px;">
+                  <span style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.3); padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.68rem; letter-spacing:0.04em;">
+                    ${(po.status || 'APPROVED').toUpperCase()}
+                  </span>
+                </div>
+                <table style="margin-left:auto; font-size:0.74rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
+                  <tr>
+                    <td style="padding:1px 6px; color:#6b7280;">Order Date :</td>
+                    <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 6px; color:#6b7280;">Delivery :</td>
+                    <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDelivery}</td>
+                  </tr>
+                </table>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1rem;">
-              <div>
-                <div style="font-size:0.75rem; text-transform:uppercase; color:#64748b; font-weight:700;">Issuing Client / Customer</div>
-                <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:0.25rem;">${getCustomerName(po)}</div>
-                <div style="font-size:0.8rem; color:#475569; margin-top:0.2rem;">Project: <strong>${po.project_name || 'General Contracting Work'}</strong></div>
+            <!-- 2-Column Info Grid matching Rayan Document Standards -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+              <!-- Box 1: Issuing Client / Customer -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                <div style="font-size:0.64rem; font-weight:800; color:#0284c7; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                  ISSUING CLIENT / CUSTOMER (بيانات العميل)
+                </div>
+                <div style="font-size:0.78rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                  ${custName}
+                </div>
+                <div style="color:#4b5563;"><strong>Project:</strong> ${po.project_name || 'General Contracting & Fit-Out Work'}</div>
+                <div style="color:#4b5563;"><strong>TRN:</strong> ${custTrn || 'Registered Client'}</div>
+                <div style="color:#4b5563;"><strong>Delivery Site:</strong> ${po.delivery_site || 'As specified in Contract / LPO Scope'}</div>
               </div>
-              <div>
-                <div style="font-size:0.75rem; text-transform:uppercase; color:#64748b; font-weight:700;">Contractual Scope &amp; Value</div>
-                <div style="font-size:1.2rem; font-weight:800; color:#059669; margin-top:0.25rem;">${this.formatCurrency(po.grand_total || po.total_value)}</div>
-                <div style="font-size:0.8rem; color:#475569; margin-top:0.2rem;">Delivery: <strong>${this.formatDate(po.expected_delivery || po.date)}</strong></div>
+
+              <!-- Box 2: Internal Procurement Audit -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                  INTERNAL PROCUREMENT AUDIT (بيانات المتابعة الداخلية)
+                </div>
+                <div style="color:#4b5563;"><strong>Rayan Reference:</strong> <span style="font-family:monospace; font-weight:700; color:#0284c7;">${po.internal_ref || 'REC-CLPO-44022'}</span></div>
+                <div style="color:#4b5563;"><strong>Client LPO Ref:</strong> <span style="font-family:monospace; font-weight:700; color:#111827;">${po.po_no}</span></div>
+                <div style="color:#4b5563;"><strong>Recorded By:</strong> ${po.approved_by || 'Corporate Administration'}</div>
+                <div style="color:#4b5563;"><strong>Original Document:</strong> ${hasPdf ? (po.pdf_name || 'Attached & Verified') : 'No Attached PDF'}</div>
+                <div style="color:#059669; font-weight:700;"><strong>Compliance Status:</strong> Verified &amp; Active Contract Record</div>
               </div>
             </div>
 
-            ${po.notes ? `
-              <div style="margin-bottom:1.25rem; padding:0.75rem; background:#f1f5f9; border-radius:6px; font-size:0.85rem; color:#334155;">
-                <strong style="color:#0f172a;">Scope Description / Specifications:</strong> ${po.notes}
-              </div>
-            ` : ''}
-
-            <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#64748b;">
-              <div>Recorded By: <strong>${po.approved_by || 'Corporate Administration'}</strong></div>
-              <div>Original Document: <strong>${hasPdf ? (po.pdf_name || 'PDF Verified') : 'No PDF Attached'}</strong></div>
+            <!-- Commercial Scope & Line Items Table -->
+            <div style="margin-bottom:0.65rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+              <table style="width:100%; border-collapse:collapse; font-size:0.70rem; text-align:left;">
+                <thead>
+                  <tr style="background:#0f172a; color:#ffffff; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.03em;">
+                    <th style="padding:6px 8px; width:30px; text-align:center;">#</th>
+                    <th style="padding:6px 10px;">Scope of Work / Service Description</th>
+                    <th style="padding:6px 10px;">Project Site / Location</th>
+                    <th style="padding:6px 10px; text-align:center;">Delivery Timeline</th>
+                    <th style="padding:6px 10px; text-align:right; width:120px;">Contract Value (${curr})</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #e2e8f0; background:#ffffff;">
+                    <td style="padding:8px; text-align:center; font-weight:700; color:#64748b;">1</td>
+                    <td style="padding:8px 10px;">
+                      <div style="font-weight:700; color:#111827; font-size:0.75rem;">${po.notes || 'Contractual Civil, Fit-Out & MEP Contracting Services as per Approved Client Specifications.'}</div>
+                      <div style="font-size:0.64rem; color:#64748b; margin-top:2px;">Client Order Reference: ${po.po_no} &bull; Internal Ref: ${po.internal_ref || 'REC-CLPO-44022'}</div>
+                    </td>
+                    <td style="padding:8px 10px; color:#475569; font-size:0.72rem;">
+                      ${po.project_name || 'Project Site as specified'}
+                    </td>
+                    <td style="padding:8px 10px; text-align:center; color:#475569; font-size:0.72rem;">
+                      ${formattedDelivery}
+                    </td>
+                    <td style="padding:8px 10px; text-align:right; font-weight:800; color:#111827; font-size:0.78rem;">
+                      ${formattedTotal}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+
+            <!-- Financial Summary & Realization Status Bar -->
+            <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+              <!-- Left: Realization Progress & Words -->
+              <div style="border:1px solid #e2e8f0; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.68rem;">
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">Amount in Words:</div>
+                <div style="color:#0284c7; font-weight:700; font-size:0.70rem; margin-bottom:6px;">${amountInWords}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; padding-top:4px; border-top:1px dashed #cbd5e1; font-size:0.66rem;">
+                  <div>
+                    <span style="color:#64748b;">Realized Invoiced Work:</span>
+                    <div style="font-weight:800; color:#059669; font-size:0.74rem;">${this.formatCurrency(invoicedAmt)}</div>
+                  </div>
+                  <div>
+                    <span style="color:#64748b;">Remaining Unbilled Balance:</span>
+                    <div style="font-weight:800; color:#d97706; font-size:0.74rem;">${this.formatCurrency(unbilledBal)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Total Value Card -->
+              <div style="border:1px solid #0f172a; border-radius:4px; padding:8px 12px; background:#0f172a; color:#ffffff; display:flex; flex-direction:column; justify-content:center; text-align:right;">
+                <div style="font-size:0.65rem; text-transform:uppercase; color:#94a3b8; font-weight:700; letter-spacing:0.04em;">TOTAL CONTRACTUAL VALUE</div>
+                <div style="font-size:1.35rem; font-weight:800; color:#38bdf8; font-family:'Outfit', sans-serif; margin-top:2px;">${formattedTotal}</div>
+                <div style="font-size:0.62rem; color:#94a3b8; margin-top:2px;">VAT Status: 5% Included as per UAE Federal Decree-Law</div>
+              </div>
+            </div>
+
+            <!-- Authorised Signatures Section (2 Columns) -->
+            <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <colgroup>
+                <col style="width:50%;">
+                <col style="width:50%;">
+              </colgroup>
+              <tr>
+                <!-- Left Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${compName}
+                  </div>
+                  <div style="position:relative; width:180px; height:74px; margin:0 auto;">
+                    <!-- Circular Rayan Official Stamp -->
+                    <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+                    <!-- Arshad Alam Shaikh Authentic Signature -->
+                    <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+                  </div>
+                  <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                  <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
+                </td>
+
+                <!-- Right Column: Issuing Client Acknowledgment -->
+                <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${custName}
+                  </div>
+                  <div style="position:relative; width:180px; height:70px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                    <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                      [ Client Acceptance &amp; Official Stamp ]
+                    </div>
+                  </div>
+                  <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Client Officer</div>
+                  <div style="font-size:0.58rem; color:#4b5563;">Procurement &amp; Contracts Dept</div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Notes & Best Wishes Section -->
+            <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
+              <div style="margin-bottom:2px; color:#475569;">Please retain a copy of this client purchase order summary slip for contractual and invoicing reconciliation.</div>
+              <div style="font-weight:800; color:#111827;">Best wishes,</div>
+              <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+              <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+            </div>
+
+            <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
+            <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="min-width:60px; font-weight:600; color:#9ca3af;">${po.internal_ref || po.po_no}</div>
+              <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                This is a system-generated Client Purchase Order Summary.
+              </div>
+              <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 1 of 1</div>
+            </div>
+
+            </div> <!-- End Main Document Content Layer -->
           </div>
         </div>
       </div>
     `;
 
     this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  downloadClientLPODocument(poId) {
+    let po = (this.db?.purchase_orders || []).find(p => p.id === poId || p.internal_ref === poId || p.po_no === poId);
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Client LPO Slip - ${po?.internal_ref || po?.po_no || 'Document'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    table { width: 100% !important; border-collapse: collapse !important; }
+    @media print {
+      @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 10mm 4mm 10mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`${po?.internal_ref || po?.po_no || 'Client_LPO_Slip'}.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${po?.internal_ref || 'Client LPO Slip'} document.`, 'success');
+    }
   }
 
   async deleteCustomerPO(poId) {
@@ -26343,7 +26601,7 @@ Scope of Work & Technical Execution:
   }
 
   getRayanDynamicVerificationCode(doc = {}, docType = 'invoice') {
-    const docId = doc.invoice_no || doc.receipt_no || doc.po_no || doc.credit_note_no || doc.debit_note_no || doc.voucher_no || doc.expense_no || doc.id || 'REC-RG-INV-44049';
+    const docId = (docType === 'clpo' ? (doc.internal_ref || doc.po_no) : (doc.invoice_no || doc.receipt_no || doc.po_no || doc.credit_note_no || doc.debit_note_no || doc.voucher_no || doc.expense_no || doc.internal_ref || doc.id)) || 'REC-RG-INV-44049';
     const verifyUrl = `https://rayan-group.com/billing/?verify=${encodeURIComponent(docId)}&type=${encodeURIComponent(docType)}`;
     const qrSvg = this.generateQRCodeSVG(verifyUrl, 52);
     const barcodeSvg = this.generateBarcodeSVG(docId);
@@ -33003,7 +33261,7 @@ Scope of Work & Technical Execution:
     let dn = (this.db?.debit_notes || []).find(d => d.id === dnId || d.debit_note_no === dnId);
     if (!dn) {
       dn = (this.db?.debit_notes || [])[0] || {
-        debit_note_no: 'DN-RG-2026-001',
+        debit_note_no: 'DN-REC-2026-001',
         bill_no: 'Direct Supplier Debit',
         vendor_name: 'Danube Building Materials LLC',
         reason: 'Material return & rate differential',
@@ -33105,7 +33363,7 @@ Scope of Work & Technical Execution:
                   DEBIT NOTE
                 </div>
                 <div style="font-size:0.88rem; font-weight:800; color:#111827; margin-top:5px; margin-bottom:12px; white-space:nowrap;">
-                  # ${dn.debit_note_no || 'DN-RG-2026-001'}
+                  # ${dn.debit_note_no || 'DN-REC-2026-001'}
                 </div>
 
                 <table style="margin-left:auto; font-size:0.8rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">

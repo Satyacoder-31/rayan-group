@@ -80,6 +80,14 @@ async function deploy() {
                   liveJson.data.employees.push(emp);
                 }
               });
+
+              if (Array.isArray(liveJson.data.debit_notes)) {
+                liveJson.data.debit_notes.forEach(dn => {
+                  if (dn && dn.debit_note_no && dn.debit_note_no.startsWith('DN-RG-')) {
+                    dn.debit_note_no = dn.debit_note_no.replace('DN-RG-', 'DN-REC-');
+                  }
+                });
+              }
             } catch (e) {}
           }
           fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');

@@ -1249,6 +1249,26 @@
   ],
   "vendors": [
     {
+      "id": "vend-mwkgotjt",
+      "code": "VEN-REC-44026",
+      "name": "MR. MOBIN VILLA WORK",
+      "company_id": "rayan-corp-uae",
+      "status": "Active",
+      "category": "Main Contractor",
+      "contact_person": "",
+      "email": "mobin@gmail.com",
+      "phone": "+971508212692",
+      "country": "UAE",
+      "gstin": "",
+      "trn": "",
+      "pan": "",
+      "bank_name": "",
+      "account_no": "",
+      "ifsc_code": "",
+      "created_at": "2026-11-17 09:00:01",
+      "updated_at": "2026-11-17 09:00:01"
+    },
+    {
       "id": "vend-mwhjzf3x",
       "code": "VEN-REC-44025",
       "name": "M/S SOLID MARBLE INDUSTRIES LLC",
@@ -10267,6 +10287,52 @@
   ],
   "purchase_bills": [
     {
+      "id": "bill-1794906065608",
+      "bill_no": "BILL-REC-1015",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "currency_symbol": "AED ",
+      "vendor_id": "vend-mwkgotjt",
+      "vendor_name": "MR. MOBIN VILLA WORK",
+      "vendor_tax_regime": "trn",
+      "vendor_gstin": "",
+      "vendor_trn": "",
+      "vendor_invoice_no": "Direct Expenses",
+      "po_id": "po-cust-1794906065607",
+      "po_no": "MOBIN1111",
+      "po_number": "MOBIN1111",
+      "po_reference": "MOBIN1111",
+      "project_id": "prj-mw4m1wc8",
+      "project_name": "Project # Al Lisaili Villa Dubai",
+      "bill_date": "2026-01-14",
+      "due_date": "2026-08-01",
+      "payment_terms": 0,
+      "taxable_subtotal": 31451.15,
+      "tax_total": 0,
+      "grand_total": "31451.15",
+      "amount_paid": 0,
+      "balance_due": 31451.15,
+      "approval_status": "approved",
+      "status": "unpaid",
+      "line_items": [
+        {
+          "name": "All project materials and employee salary payments have been paid by Rayan Engineering through the company account.",
+          "qty": 1,
+          "uom": "LSUM",
+          "unit_price": 31451.15,
+          "taxable_amount": 31451.15,
+          "gst_rate": 0,
+          "vat_rate": 0,
+          "tax_amount": 0,
+          "total_amount": 31451.15
+        }
+      ],
+      "notes": "",
+      "amount_debited": 0,
+      "created_at": "2026-11-17 09:01:06",
+      "updated_at": "2026-11-17 09:01:06"
+    },
+    {
       "id": "bill-1794891555182",
       "bill_no": "BILL-REC-1014",
       "company_id": "rayan-corp-uae",
@@ -14239,7 +14305,7 @@
   "debit_notes": [
     {
       "id": "dn-1794834582577",
-      "debit_note_no": "DN-RG-2026-101",
+      "debit_note_no": "DN-REC-2026-101",
       "company_id": "rayan-corp-uae",
       "currency": "AED",
       "currency_symbol": "AED ",
@@ -14253,6 +14319,29 @@
   ],
   "expenses": [],
   "purchase_orders": [
+    {
+      "id": "po-cust-1794906065607",
+      "po_no": "MOBIN1111",
+      "company_id": "rayan-corp-uae",
+      "currency": "AED",
+      "vendor_id": "vend-mwkgotjt",
+      "vendor_name": "MR. MOBIN VILLA WORK",
+      "supplier_name": "MR. MOBIN VILLA WORK",
+      "supplier_trn": "",
+      "project_id": "prj-mw4m1wc8",
+      "project_name": "Project # Al Lisaili Villa Dubai",
+      "date": "2026-01-14",
+      "subtotal": 31451.15,
+      "tax_total": 0,
+      "total_value": 31451.15,
+      "grand_total": 31451.15,
+      "status": "approved",
+      "approved_by": "Arshad Alam Shaikh",
+      "type": "customer_po",
+      "po_type": "customer_lpo",
+      "direction": "inward",
+      "customer_name": "MR. MOBIN VILLA WORK"
+    },
     {
       "id": "po-cust-1794891555181",
       "po_no": "PODSUB-2025/1826/R1",
@@ -16900,6 +16989,30 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": "aud-1a1e8bd0dd7",
+      "timestamp": "2026-11-17T09:01:06+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1015",
+      "details": "Created purchase bill for MR. MOBIN VILLA WORK",
+      "ip_address": "5.195.130.127"
+    },
+    {
+      "id": "aud-1a1e8bc0f08",
+      "timestamp": "2026-11-17T09:00:01+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "create",
+      "entity": "vendor",
+      "entity_id": "MR. MOBIN VILLA WORK",
+      "details": "Added supplier/subcontractor MR. MOBIN VILLA WORK",
+      "ip_address": "5.195.130.127"
+    },
     {
       "id": "aud-1a1e7dfa3b3",
       "timestamp": "2026-11-17T04:59:15+00:00",
