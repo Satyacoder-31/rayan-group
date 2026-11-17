@@ -938,7 +938,12 @@ class FinanceApp {
     if (!bill) return 0;
     const billId = bill.id;
     const billNo = bill.bill_no;
-    const grand = Math.round((Number(bill.grand_total) || 0) * 100) / 100;
+    let grand = Math.round((Number(bill.grand_total) || 0) * 100) / 100;
+    if (grand <= 0 && Array.isArray(bill.line_items) && bill.line_items.length > 0) {
+      grand = bill.line_items.reduce((sum, item) => sum + (Number(item.total_amount) || Number(item.taxable_amount) || ((Number(item.qty) || 1) * (Number(item.unit_price) || 0))), 0);
+      bill.grand_total = grand.toFixed(2);
+      bill.taxable_subtotal = grand;
+    }
 
     let paid = 0;
     const payments = this.db?.vendor_payments || [];
@@ -2237,7 +2242,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v147';
+    const CURRENT_DB_VERSION = 'v2026_clean_v148';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);

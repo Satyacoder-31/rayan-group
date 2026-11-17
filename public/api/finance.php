@@ -2293,6 +2293,18 @@ function recalculateAllFinanceBalances(&$data) {
         foreach ($data['purchase_bills'] as &$b) {
             $bId = $b['id'] ?? '';
             $bNo = $b['bill_no'] ?? '';
+            if (empty($b['grand_total']) || floatval($b['grand_total']) <= 0) {
+                if (!empty($b['line_items']) && is_array($b['line_items'])) {
+                    $calcTotal = 0.0;
+                    foreach ($b['line_items'] as $li) {
+                        $calcTotal += floatval($li['total_amount'] ?? $li['taxable_amount'] ?? (($li['qty'] ?? 1) * ($li['unit_price'] ?? 0)));
+                    }
+                    if ($calcTotal > 0) {
+                        $b['grand_total'] = number_format($calcTotal, 2, '.', '');
+                        $b['taxable_subtotal'] = $calcTotal;
+                    }
+                }
+            }
             $grand = round(floatval($b['grand_total'] ?? 0), 2);
 
             $paid = 0.0;

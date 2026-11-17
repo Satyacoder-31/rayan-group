@@ -10409,9 +10409,9 @@
       "payment_terms": 0,
       "taxable_subtotal": 1,
       "tax_total": 0,
-      "grand_total": "0.00",
+      "grand_total": "1.00",
       "amount_paid": 0,
-      "balance_due": 0,
+      "balance_due": 1,
       "approval_status": "approved",
       "status": "unpaid",
       "line_items": [
@@ -10429,8 +10429,8 @@
       ],
       "notes": "",
       "amount_debited": 0,
-      "created_at": "2026-11-17 16:23:26",
-      "updated_at": "2026-11-17 16:23:26"
+      "created_at": "2026-11-17 16:33:35",
+      "updated_at": "2026-11-17 16:33:35"
     },
     {
       "id": "bill-1794907943528",
@@ -10455,9 +10455,9 @@
       "payment_terms": 30,
       "taxable_subtotal": 1,
       "tax_total": 0,
-      "grand_total": "0.00",
+      "grand_total": "1.00",
       "amount_paid": 0,
-      "balance_due": 0,
+      "balance_due": 1,
       "approval_status": "approved",
       "status": "unpaid",
       "line_items": [
@@ -10475,8 +10475,8 @@
       ],
       "notes": "",
       "amount_debited": 0,
-      "created_at": "2026-11-17 16:23:26",
-      "updated_at": "2026-11-17 16:23:26"
+      "created_at": "2026-11-17 16:33:34",
+      "updated_at": "2026-11-17 16:33:34"
     },
     {
       "id": "bill-1794907665037",
@@ -17602,6 +17602,54 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": "aud-1a1ea5b4f5b",
+      "timestamp": "2026-11-17T16:33:35+00:00",
+      "actor_name": "Super Administrator",
+      "actor_role": "admin",
+      "actor_email": "admin@rayan-group.com",
+      "action": "update",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1023",
+      "details": "Updated purchase bill BILL-REC-1023",
+      "ip_address": "2409:40c1:10f4:1dd9:fdf7:7622:9a46:1a17"
+    },
+    {
+      "id": "aud-1a1ea5b4d2e",
+      "timestamp": "2026-11-17T16:33:34+00:00",
+      "actor_name": "Super Administrator",
+      "actor_role": "admin",
+      "actor_email": "admin@rayan-group.com",
+      "action": "update",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1022",
+      "details": "Updated purchase bill BILL-REC-1022",
+      "ip_address": "2409:40c1:10f4:1dd9:fdf7:7622:9a46:1a17"
+    },
+    {
+      "id": "aud-1a1ea56ba4c",
+      "timestamp": "2026-11-17T16:28:34+00:00",
+      "actor_name": "Super Administrator",
+      "actor_role": "admin",
+      "actor_email": "admin@rayan-group.com",
+      "action": "update",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1023",
+      "details": "Updated purchase bill BILL-REC-1023",
+      "ip_address": "2409:40c1:10f4:1dd9:fdf7:7622:9a46:1a17"
+    },
+    {
+      "id": "aud-1a1ea56b78a",
+      "timestamp": "2026-11-17T16:28:34+00:00",
+      "actor_name": "Super Administrator",
+      "actor_role": "admin",
+      "actor_email": "admin@rayan-group.com",
+      "action": "update",
+      "entity": "bill",
+      "entity_id": "BILL-REC-1022",
+      "details": "Updated purchase bill BILL-REC-1022",
+      "ip_address": "2409:40c1:10f4:1dd9:fdf7:7622:9a46:1a17"
+    },
     {
       "id": "aud-1a1ea5206fb",
       "timestamp": "2026-11-17T16:23:26+00:00",
