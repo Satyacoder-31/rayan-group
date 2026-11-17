@@ -2283,11 +2283,14 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
                   Please keep a copy of this Work Completion Certificate for your records
                 </div>
 
-                <!-- Best Wishes & Contacts -->
-                <div style="font-size:0.65rem; line-height:1.45; color:#475569; margin-bottom:0.75rem;">
-                  <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                  <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                  <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+                <!-- Best Wishes & Contacts (Matching Sales Invoice Format) -->
+                <div style="font-size:0.75rem; line-height:1.45; color:#4b5563; margin-bottom:0.75rem;">
+                  <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+                  <div style="font-weight:700; color:#111827; margin-bottom:2px;">RAYAN Group Team</div>
+                  <div>Abu Dhabi, U.A.E</div>
+                  <div>Hotline : +971 2 565 4497</div>
+                  <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:underline;">info@rayan-group.com</a></div>
+                  <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
                 </div>
 
                 <!-- Clean Fixed System Generated Footer Below the Line -->

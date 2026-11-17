@@ -90,7 +90,9 @@ async function deploy() {
               }
             } catch (e) {}
           }
-          fs.writeFileSync(dataSrc, JSON.stringify(liveJson.data, null, 2), 'utf8');
+          let liveStr = JSON.stringify(liveJson.data, null, 2);
+          liveStr = liveStr.replace(/"LSUM"/g, '"LS"').replace(/"Lsum"/g, '"LS"');
+          fs.writeFileSync(dataSrc, liveStr, 'utf8');
           console.log(`✓ Preserved live database snapshot from production (${liveJson.data.invoices.length} invoices, ${liveJson.data.customer_receipts?.length || 0} receipts)`);
         }
       }

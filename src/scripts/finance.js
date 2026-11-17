@@ -2191,7 +2191,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v145';
+    const CURRENT_DB_VERSION = 'v2026_clean_v146';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -11192,13 +11192,16 @@ class FinanceApp {
               </tr>
             </table>
 
-            <!-- Notes & Best Wishes Section -->
-            <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
-              <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
-              <div style="margin-bottom:2px; color:#475569;">Please retain a copy of this client purchase order summary slip for contractual and invoicing reconciliation.</div>
-              <div style="font-weight:800; color:#111827;">Best wishes,</div>
-              <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-              <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+            <!-- Notes & Best Wishes Section (Matching Sales Invoice Format) -->
+            <div style="margin-top:0.75rem; font-size:0.75rem; color:#4b5563; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="font-weight:700; color:#111827; font-size:0.80rem; margin-bottom:2px;">Notes</div>
+              <div style="color:#4b5563; margin-bottom:4px;">Please keep a copy of this client purchase order summary slip for your records</div>
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">RAYAN Group Team</div>
+              <div>Abu Dhabi, U.A.E</div>
+              <div>Hotline : +971 2 565 4497</div>
+              <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:underline;">info@rayan-group.com</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
             </div>
 
             <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
@@ -17520,7 +17523,7 @@ class FinanceApp {
                             ${item.description && item.description !== item.name ? `<div style="font-size:0.70rem; color:#6b7280; font-weight:400; margin-top:1px;">${item.description}</div>` : ''}
                           </td>
                           <td style="border:1px solid #111827; padding:4px 4px; text-align:center; font-weight:600;">
-                            ${itemQty} ${item.uom || 'LSUM'}
+                            ${itemQty} ${((item.unit || item.uom || 'LS') === 'LSUM' || (item.unit || item.uom) === 'Lsum' || (item.unit || item.uom) === 'Lump Sum') ? 'LS' : (item.unit || item.uom || 'LS')}
                           </td>
                           <td style="border:1px solid #111827; padding:4px 4px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;">
                             ${itemRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -17584,18 +17587,20 @@ class FinanceApp {
                 </table>
               </div>
 
-              <!-- Compliance & Authorization Note -->
-              <div style="margin-top:0.6rem; font-size:0.72rem; color:#4b5563; line-height:1.4; border-left:3px solid #0099e6; padding-left:8px;">
-                <div style="font-weight:700; color:#111827; font-size:0.76rem; margin-bottom:1px;">Procurement Verification &amp; Tax Compliance</div>
-                <div>This approved purchase bill has been validated against corporate purchase specifications and is certified for vendor settlement in accordance with UAE VAT Federal Decree-Law No. (8) of 2017.</div>
+              <!-- Notes Section Below Items (Matching Sales Invoice Format) -->
+              <div style="margin-top:0.75rem; font-size:0.8rem; color:#4b5563; line-height:1.4;">
+                <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
+                <div style="color:#4b5563;">Please keep a copy of this purchase bill for your records</div>
               </div>
 
-              <!-- Contact & Company Details -->
-              <div style="margin-top:0.6rem; font-size:0.74rem; color:#4b5563; line-height:1.4;">
-                <div style="color:#111827; margin-bottom:1px;">Best wishes</div>
-                <div style="font-weight:700; color:#111827; margin-bottom:1px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <!-- Contact & Company Details Below Notes (Matching Sales Invoice Format) -->
+              <div style="margin-top:0.6rem; font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
                 <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
-                <div>Hotline : ${compPhone} | <a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a> | <a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+                <div>Hotline : ${compPhone}</div>
+                <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
               </div>
 
               <!-- System Generated Notice & Page Number Footer -->
@@ -21983,13 +21988,16 @@ class FinanceApp {
                 </tr>
               </table>
 
-              <!-- Notes & Best Wishes Section -->
-              <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
-                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
-                <div style="margin-bottom:2px; color:#475569;">Please review this statement of account and notify us immediately of any discrepancies within 7 days of receipt.</div>
-                <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              <!-- Notes & Best Wishes Section (Matching Sales Invoice Format) -->
+              <div style="margin-top:0.75rem; font-size:0.75rem; color:#4b5563; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="font-weight:700; color:#111827; font-size:0.80rem; margin-bottom:2px;">Notes</div>
+                <div style="color:#4b5563; margin-bottom:4px;">Please review this statement of account and notify us immediately of any discrepancies within 7 days of receipt</div>
+                <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">RAYAN Group Team</div>
+                <div>Abu Dhabi, U.A.E</div>
+                <div>Hotline : +971 2 565 4497</div>
+                <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:underline;">info@rayan-group.com</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
               </div>
 
               <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
@@ -25596,13 +25604,16 @@ Scope of Work & Technical Execution:
                 </tr>
               </table>
 
-              <!-- Notes & Best Wishes Section -->
-              <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
-                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
-                <div style="margin-bottom:2px; color:#475569;">This wire remittance advice serves as official electronic proof of settlement. Please credit the beneficiary account accordingly.</div>
-                <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              <!-- Notes & Best Wishes Section (Matching Sales Invoice Format) -->
+              <div style="margin-top:0.75rem; font-size:0.75rem; color:#4b5563; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="font-weight:700; color:#111827; font-size:0.80rem; margin-bottom:2px;">Notes</div>
+                <div style="color:#4b5563; margin-bottom:4px;">This wire remittance advice serves as official electronic proof of settlement. Please credit the beneficiary account accordingly.</div>
+                <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">RAYAN Group Team</div>
+                <div>Abu Dhabi, U.A.E</div>
+                <div>Hotline : +971 2 565 4497</div>
+                <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:underline;">info@rayan-group.com</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
               </div>
 
               <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
@@ -29601,12 +29612,15 @@ Scope of Work & Technical Execution:
             </div>
 <div style="margin-top:auto; padding-top:0.75rem;">
 <!-- Page 2 Bottom Notes & Best Wishes ("Keep this as well in last pages") -->
-            <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
-              <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
-              <div style="margin-bottom:2px; color:#475569;">Please keep a copy of this purchase order for your records.</div>
-              <div style="font-weight:800; color:#111827;">Best wishes,</div>
-              <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-              <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;•&nbsp; Hotline : +971 2 565 4497 &nbsp;•&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;•&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+            <div style="margin-top:0.75rem; font-size:0.75rem; color:#4b5563; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="font-weight:700; color:#111827; font-size:0.80rem; margin-bottom:2px;">Notes</div>
+              <div style="color:#4b5563; margin-bottom:4px;">Please keep a copy of this purchase order for your records</div>
+              <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+              <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
+              <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
+              <div>Hotline : ${compPhone}</div>
+              <div><a href="mailto:${compEmail}" style="color:#0284c7; text-decoration:underline;">${compEmail}</a></div>
+              <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
             </div>
 
             <!-- Page 2 Clean Fixed System-Generated Footer Below the Line (Spaced) -->
