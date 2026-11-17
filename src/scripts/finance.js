@@ -172,6 +172,30 @@ class FinanceApp {
       return;
     }
 
+    // Check Bank Wire Remittance Advice
+    if (docType === 'wire' || docType === 'bank_wire' || upper.startsWith('WIRE-') || upper.startsWith('UTR-')) {
+      const trn = (this.db?.bank_transfers || []).find(t => t.id === cleanId || t.reference_no === cleanId) ||
+        (this.db?.bank_transfers || [])[0] || { reference_no: cleanId };
+      this.printBankWireAdvice(trn.id || cleanId);
+      return;
+    }
+
+    // Check Petty Cash Voucher
+    if (docType === 'cash_voucher' || docType === 'petty_cash' || upper.startsWith('CV-')) {
+      const cv = (this.db?.cash_vouchers || []).find(v => v.id === cleanId || v.voucher_no === cleanId) ||
+        (this.db?.cash_vouchers || [])[0] || { voucher_no: cleanId };
+      this.printCashVoucher(cv.id || cleanId);
+      return;
+    }
+
+    // Check Vendor Statement of Account
+    if (docType === 'vendor_soa' || docType === 'vend_soa' || upper.startsWith('SOA-VEN-') || upper.startsWith('VEN-')) {
+      const vend = (this.db?.vendors || []).find(v => v.id === cleanId || v.code === cleanId || (v.name && v.name.toLowerCase() === cleanId.toLowerCase())) ||
+        (this.db?.vendors || [])[0] || { code: cleanId };
+      this.openVendorProfile(vend.id || cleanId);
+      return;
+    }
+
     // Check Undertaking Letter
     if (docType === 'undertaking' || docType === 'undertaking_letter' || upper.startsWith('ULT-') || upper.includes('ULT-11006') || upper.includes('UNDER_TAKING')) {
       const ult = (this.db?.undertaking_letters || []).find(u => u.id === cleanId || u.ref_no === cleanId) ||
@@ -2145,7 +2169,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v133';
+    const CURRENT_DB_VERSION = 'v2026_clean_v134';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -21388,92 +21412,320 @@ class FinanceApp {
 
   // 7. VENDOR PROFILE & STATEMENT
   openVendorProfile(vendId) {
-    const vend = this.db?.vendors?.find(v => v.id === vendId || v.code === vendId);
-    if (!vend) return;
+    return this.openVendorSOADocument(vendId);
+  }
 
-    const bills = (this.db?.purchase_bills || []).filter(b => (b.vendor_id === vend.id || (vend.name && b.vendor_name && b.vendor_name.toLowerCase() === vend.name.toLowerCase())) && b.status !== 'void');
-    const payments = (this.db?.vendor_payments || []).filter(p => p.vendor_id === vend.id || (vend.name && p.vendor_name && p.vendor_name.toLowerCase() === vend.name.toLowerCase()));
+  downloadVendorSOADocument(vendId) {
+    const vend = this.db?.vendors?.find(v => v.id === vendId || v.code === vendId || (v.name && v.name.toLowerCase() === (vendId || '').toLowerCase()));
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Vendor Statement of Account - ${vend?.name || 'Vendor_SOA'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    table { width: 100% !important; border-collapse: collapse !important; }
+    @media print {
+      @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 10mm 4mm 10mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`Vendor_SOA_${(vend?.code || vend?.name || 'Statement').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`, fullDoc, 'text/html');
+    }
+  }
+
+  openVendorSOADocument(vendId) {
+    const vend = this.db?.vendors?.find(v => v.id === vendId || v.code === vendId || (v.name && v.name.toLowerCase() === (vendId || '').toLowerCase()));
+    if (!vend) {
+      this.showNotification('Vendor account not found.', 'error');
+      return;
+    }
+
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = isIndia ? 'INR' : 'AED';
+    const currSym = isIndia ? '₹' : 'AED ';
+
+    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId) ||
+      (defaultSeedData.companies || []).find(c => c.id === this.activeCompanyId) ||
+      (this.db?.companies || [])[0] || {};
+    const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compPhone = comp.phone || '+971 2 565 4497';
+    const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
+    const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Office 09, Plot 42, Mussafah M-40, Abu Dhabi, UAE');
+
+    const vNorm = (vend.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isDocForThisVend = (doc) => {
+      if (!doc) return false;
+      const dNorm = (doc.vendor_name || doc.supplier_name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (dNorm && vNorm) {
+        return dNorm === vNorm || dNorm.includes(vNorm) || vNorm.includes(dNorm);
+      }
+      return (doc.vendor_id && (doc.vendor_id === vend.id || doc.vendor_id === vend.code));
+    };
+
+    const bills = (this.db?.purchase_bills || [])
+      .filter(b => b.status !== 'void' && isDocForThisVend(b))
+      .sort((a, b) => (b.bill_date || '').localeCompare(a.bill_date || ''));
+
+    const payments = (this.db?.vendor_payments || [])
+      .filter(p => p.status !== 'void' && isDocForThisVend(p))
+      .sort((a, b) => (b.payment_date || '').localeCompare(a.payment_date || ''));
 
     const totalBilled = bills.reduce((s, b) => s + (Number(b.grand_total) || 0), 0);
-    const totalPaid = bills.reduce((s, b) => s + (Number(b.amount_paid) || 0), 0);
+    const totalPaid = bills.reduce((s, b) => s + (Number(b.amount_paid) || 0), 0) +
+      payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
     const totalPayable = bills.reduce((s, b) => s + (Number(b.balance_due) || 0), 0);
 
+    const formattedToday = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const soaRef = `SOA-${vend.code || 'VEN'}-${new Date().getFullYear()}-${Math.floor(Date.now() / 1000).toString().slice(-4)}`;
+
     const modalHtml = `
-      <div class="fin-modal-backdrop open" id="modal-vend-profile">
-        <div class="fin-modal-dialog" style="max-width:880px;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title">Vendor Profile: ${vend.name}</h3>
-            <div style="display:flex; gap:0.5rem; align-items:center;">
-              <button type="button" class="fin-btn-quick" style="border-color:#f59e0b; color:#f59e0b;" onclick="window.finApp.closeModal('modal-vend-profile'); window.finApp.openEditVendorModal('${vend.id}')">✏️ Edit Vendor</button>
-              <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Vendor Statement</button>
-              <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-vend-profile')">&times;</button>
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>📋</span>
+              <span>Vendor Statement of Account (كشف حساب المورد) — ${vend.name}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Vendor PO</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openVendorProfile('${vend.id}')">Vendor SOA</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
-          <div class="fin-modal-body">
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; margin-bottom:1.5rem;">
-              <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:1rem;">
-                <span style="font-size:0.72rem; color:#94a3b8; display:block;">Total Purchases:</span>
-                <strong style="font-size:1.25rem; color:#f8fafc;">${this.formatCurrency(totalBilled)}</strong>
-              </div>
-              <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:1rem;">
-                <span style="font-size:0.72rem; color:#94a3b8; display:block;">Total Disbursed:</span>
-                <strong style="font-size:1.25rem; color:#10b981;">${this.formatCurrency(totalPaid)}</strong>
-              </div>
-              <div style="background:rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.3); border-radius:8px; padding:1rem;">
-                <span style="font-size:0.72rem; color:#94a3b8; display:block;">Outstanding Payables:</span>
-                <strong style="font-size:1.25rem; color:#fb923c;">${this.formatCurrency(totalPayable)}</strong>
-              </div>
-            </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditVendorModal('${vend.id}')">
+              <span>✏️</span> Edit Vendor
+            </button>
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadVendorSOADocument('${vend.id}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
+              <span>✕</span> Close
+            </button>
+          </div>
+        </div>
 
-            <!-- Bank & Corporate Details -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; background:rgba(0,0,0,0.25); border-radius:8px; padding:1.25rem; margin-bottom:1.5rem; font-size:0.82rem;">
-              <div>
-                <strong>Registered Address:</strong><br>
-                <span style="color:#cbd5e1;">${vend.address || '—'}</span><br>
-                ${vend.trn ? `<strong>TRN:</strong> <code>${vend.trn}</code> • ` : ''}${vend.gstin ? `<strong>GSTIN:</strong> <code>${vend.gstin}</code> • ` : ''}<strong>${vend.pan ? 'PAN / License:' : 'Trade License:'}</strong> <code>${vend.pan || vend.trade_license || '—'}</code>
-              </div>
-              <div>
-                <strong>Bank Account (Restricted View):</strong><br>
-                Bank: <strong>${vend.bank_name || 'Abu Dhabi Commercial Bank (ADCB)'}</strong><br>
-                A/C: <code>${vend.account_no || '••••••••••••'}</code>${vend.ifsc_code ? ` • IFSC: <code>${vend.ifsc_code}</code>` : (vend.iban ? ` • IBAN: <code>${vend.iban}</code>` : '')}<br>
-                Payment Terms: ${vend.payment_terms || 30} Days
-              </div>
-            </div>
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
 
-            <h4 style="font-family:var(--fin-font-heading); font-size:1rem; color:#f8fafc; margin-bottom:0.75rem;">Purchase Bills History</h4>
-            <div class="fin-table-responsive">
-              <table class="fin-data-table">
-                <thead>
-                  <tr>
-                    <th>Bill #</th>
-                    <th>Supplier Inv #</th>
-                    <th>Date</th>
-                    <th>Due Date</th>
-                    <th>Total</th>
-                    <th>Paid</th>
-                    <th>Balance Due</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${bills.map(b => `
+            <!-- Center Watermark -->
+            ${this.getRayanWatermark()}
+
+            <div style="position:relative; z-index:1;">
+              <!-- 3-Column Header Grid -->
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:0.75rem; gap:0.75rem; width:100%;">
+                <!-- Column 1: Logo & Company & QR -->
+                <div style="justify-self:start; max-width:100%;">
+                  <div style="margin-bottom:0.35rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.74rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:1px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.68rem; color:#4b5563; line-height:1.3; margin-bottom:2px;">
+                    ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}
+                  </div>
+                  ${this.getRayanDynamicVerificationCode({ code: vend.code || vend.id, id: vend.id }, 'vendor_soa')}
+                </div>
+
+                <!-- Column 2: Exact Dead-Center Bilingual Title -->
+                <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
+                  <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">كشف حساب المورد</div>
+                  <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">VENDOR STATEMENT OF ACCOUNT</div>
+                  <div style="font-size:0.62rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">CORPORATE SUPPLIER &amp; SUBCONTRACTOR LEDGER</div>
+                </div>
+
+                <!-- Column 3: Metadata -->
+                <div style="text-align:right; justify-self:end;">
+                  <div style="font-size:0.92rem; font-weight:800; color:#0284c7; font-family:monospace; margin-bottom:2px;">
+                    ${soaRef}
+                  </div>
+                  <div style="font-size:0.80rem; font-weight:700; color:#111827; font-family:monospace; margin-bottom:4px;">
+                    Vendor Code: ${vend.code || vend.id}
+                  </div>
+                  <div style="margin-bottom:5px;">
+                    <span style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.3); padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.68rem; letter-spacing:0.04em;">
+                      ACTIVE SUPPLIER
+                    </span>
+                  </div>
+                  <table style="margin-left:auto; font-size:0.74rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
                     <tr>
-                      <td><strong>${b.bill_no}</strong></td>
-                      <td>${b.vendor_invoice_no}</td>
-                      <td>${this.formatDate(b.bill_date)}</td>
-                      <td>${this.formatDate(b.due_date)}</td>
-                      <td>${this.formatCurrency(b.grand_total)}</td>
-                      <td style="color:#10b981;">${this.formatCurrency(b.amount_paid || 0)}</td>
-                      <td><strong style="color:${b.balance_due > 0 ? '#fb923c' : '#10b981'};">${this.formatCurrency(b.balance_due)}</strong></td>
-                      <td><span class="fin-badge fin-badge-${b.status}">${b.status}</span></td>
+                      <td style="padding:1px 6px; color:#6b7280;">Statement Date :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedToday}</td>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
+                    <tr>
+                      <td style="padding:1px 6px; color:#6b7280;">Currency :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#0284c7;">${curr} (${isIndia ? 'INR' : 'UAE Dirham'})</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
 
-            <div class="rayan-computer-generated-notice" style="margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.08); color:#94a3b8;">
-              This is a Computer Generated Statement of Account
+              <!-- 2-Column Info Grid Cards -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <!-- Box 1: Vendor Details -->
+                <div style="border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#0284c7; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                    VENDOR / SUBCONTRACTOR (بيانات المورد / المقاول)
+                  </div>
+                  <div style="font-size:0.78rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                    ${vend.name}
+                  </div>
+                  <div style="color:#4b5563;"><strong>Address:</strong> ${vend.address || 'United Arab Emirates'}</div>
+                  ${vend.trn ? `<div style="color:#4b5563;"><strong>TRN:</strong> <code style="font-weight:700; color:#111827;">${vend.trn}</code></div>` : ''}
+                  ${vend.pan || vend.trade_license ? `<div style="color:#4b5563;"><strong>${vend.pan ? 'PAN / Tax ID' : 'Trade License'}:</strong> <code>${vend.pan || vend.trade_license}</code></div>` : ''}
+                  <div style="color:#4b5563;"><strong>Category:</strong> ${vend.category || 'General Procurement'}</div>
+                </div>
+
+                <!-- Box 2: Banking & Terms -->
+                <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                    BANKING &amp; SETTLEMENT DETAILS (بيانات السداد والبنك)
+                  </div>
+                  <div style="color:#4b5563;"><strong>Designated Bank:</strong> <strong style="color:#111827;">${vend.bank_name || 'Abu Dhabi Commercial Bank (ADCB)'}</strong></div>
+                  <div style="color:#4b5563;"><strong>Account / IBAN:</strong> <code style="font-weight:700; color:#0284c7;">${vend.iban || vend.account_no || '••••••••••••'}</code></div>
+                  <div style="color:#4b5563;"><strong>Payment Terms:</strong> ${vend.payment_terms || 30} Days from Invoice Receipt</div>
+                  <div style="color:#4b5563;"><strong>Contact:</strong> ${vend.contact_person || vend.contact || 'Corporate Accounts'} ${vend.phone ? `&bull; ${vend.phone}` : ''}</div>
+                  <div style="color:#059669; font-weight:700;"><strong>Account Status:</strong> Verified &amp; Reconciled Supplier Account</div>
+                </div>
+              </div>
+
+              <!-- KPI Metrics -->
+              <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:0.75rem;">
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; padding:0.5rem 0.75rem;">
+                  <div style="font-size:0.64rem; font-weight:700; color:#475569; text-transform:uppercase;">Total Purchases (Billed)</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:#0f172a; margin-top:2px;">${this.formatCurrency(totalBilled)}</div>
+                </div>
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-top:3px solid #16a34a; border-radius:4px; padding:0.5rem 0.75rem;">
+                  <div style="font-size:0.64rem; font-weight:700; color:#15803d; text-transform:uppercase;">Total Payments Disbursed</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:#16a34a; margin-top:2px;">${this.formatCurrency(totalPaid)}</div>
+                </div>
+                <div style="background:#fff7ed; border:1px solid #fdba74; border-top:3px solid #ea580c; border-radius:4px; padding:0.5rem 0.75rem;">
+                  <div style="font-size:0.64rem; font-weight:700; color:#c2410c; text-transform:uppercase;">Outstanding Payable Balance</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:${totalPayable > 0 ? '#ea580c' : '#16a34a'}; margin-top:2px;">${this.formatCurrency(totalPayable)}</div>
+                </div>
+              </div>
+
+              <!-- Purchase Bills Table -->
+              <div style="margin-bottom:0.65rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+                <div style="background:#0f172a; color:#ffffff; padding:6px 10px; font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.03em;">
+                  Purchase Bills &amp; Invoices Ledger (سجل فواتير المشتريات)
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:0.70rem; text-align:left;">
+                  <thead>
+                    <tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1; font-size:0.65rem; text-transform:uppercase;">
+                      <th style="padding:5px 8px; width:12%;">Bill Date</th>
+                      <th style="padding:5px 8px; width:16%;">Bill #</th>
+                      <th style="padding:5px 8px; width:16%;">Supplier Inv #</th>
+                      <th style="padding:5px 8px; width:22%;">Linked Project / Description</th>
+                      <th style="padding:5px 8px; text-align:right; width:11%;">Total (${curr})</th>
+                      <th style="padding:5px 8px; text-align:right; width:11%;">Paid (${curr})</th>
+                      <th style="padding:5px 8px; text-align:right; width:12%;">Balance Due</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${bills.length === 0 ? `
+                      <tr><td colspan="7" style="padding:1rem; text-align:center; color:#64748b;">No purchase bills recorded for this vendor.</td></tr>
+                    ` : bills.map(b => `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:5px 8px; color:#64748b; white-space:nowrap;">${this.formatDate(b.bill_date)}</td>
+                        <td style="padding:5px 8px; font-weight:700; color:#0284c7; white-space:nowrap;">${b.bill_no}</td>
+                        <td style="padding:5px 8px; color:#111827; font-family:monospace; font-weight:600;">${b.vendor_invoice_no || '—'}</td>
+                        <td style="padding:5px 8px; color:#475569;">${b.project_name || b.narration || b.notes || 'Procurement Services'}</td>
+                        <td style="padding:5px 8px; text-align:right; font-weight:600; color:#111827;">${Number(b.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 8px; text-align:right; font-weight:700; color:#16a34a;">${Number(b.amount_paid || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:5px 8px; text-align:right; font-weight:800; color:${(b.balance_due || 0) > 0 ? '#ea580c' : '#16a34a'};">${Number(b.balance_due || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#f8fafc; font-weight:800; border-top:2px solid #0f172a; font-size:0.72rem;">
+                      <td colspan="4" style="padding:6px 8px; text-align:right; text-transform:uppercase;">Ledger Total:</td>
+                      <td style="padding:6px 8px; text-align:right; color:#111827;">${totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:6px 8px; text-align:right; color:#16a34a;">${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style="padding:6px 8px; text-align:right; color:${totalPayable > 0 ? '#ea580c' : '#16a34a'}; font-size:0.76rem;">${totalPayable.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Authorised Signatures Section (2 Columns) -->
+              <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <colgroup>
+                  <col style="width:50%;">
+                  <col style="width:50%;">
+                </colgroup>
+                <tr>
+                  <!-- Left Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      ${compName}
+                    </div>
+                    <div style="position:relative; width:180px; height:74px; margin:0 auto;">
+                      <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+                      <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                    <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh</div>
+                  </td>
+
+                  <!-- Right Column: Vendor Acknowledgment -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      ${vend.name}
+                    </div>
+                    <div style="position:relative; width:180px; height:70px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                      <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                        [ Supplier Acceptance &amp; Official Stamp ]
+                      </div>
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Representative</div>
+                    <div style="font-size:0.58rem; color:#4b5563;">Finance &amp; Accounts Department</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Notes & Best Wishes Section -->
+              <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
+                <div style="margin-bottom:2px; color:#475569;">Please review this statement of account and notify us immediately of any discrepancies within 7 days of receipt.</div>
+                <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              </div>
+
+              <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
+              <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="min-width:60px; font-weight:600; color:#9ca3af;">${vend.code || 'VENDOR'}</div>
+                <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                  This is a system-generated Vendor Statement of Account.
+                </div>
+                <div style="min-width:60px; text-align:right; font-size:0.65rem; color:#9ca3af;">Page 1 of 1</div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -24835,56 +25087,297 @@ Scope of Work & Technical Execution:
   }
 
   printBankWireAdvice(transferId) {
-    const trn = (this.db?.bank_transfers || []).find(t => t.id === transferId);
-    if (!trn) return;
-    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+    const trn = (this.db?.bank_transfers || []).find(t => t.id === transferId || t.reference_no === transferId);
+    if (!trn) {
+      this.showNotification('Bank wire record not found.', 'error');
+      return;
+    }
 
-    const adviceHtml = `
-      <div class="fin-modal-backdrop open" id="modal-wire-advice">
-        <div class="fin-modal-dialog" style="max-width:680px; background:#ffffff; color:#0f172a; padding:2rem;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0284c7; padding-bottom:1rem; margin-bottom:1.5rem;">
-            <div>
-              <h2 style="margin:0; font-size:1.4rem; color:#0369a1; font-weight:800;">${comp ? comp.name : 'RAYAN GROUP'}</h2>
-              <div style="font-size:0.8rem; color:#64748b;">CORPORATE TREASURY &amp; WIRE REMITTANCE ADVICE</div>
-            </div>
-            <div style="text-align:right;">
-              <span style="display:inline-block; padding:3px 10px; background:#e0f2fe; color:#0369a1; font-weight:700; border-radius:4px; font-size:0.75rem;">${trn.status || 'CLEARED'}</span>
-              <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">Date: ${this.formatDate(trn.date)}</div>
-            </div>
-          </div>
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = trn.currency || (isIndia ? 'INR' : 'AED');
+    const comp = (this.db?.companies || []).find(c => c.id === (trn.company_id || this.activeCompanyId)) ||
+      (defaultSeedData.companies || []).find(c => c.id === (trn.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1.2rem; margin-bottom:1.5rem;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.85rem;">
-              <div><strong>UTR / Wire Reference:</strong> <span style="font-family:monospace; color:#0284c7; font-weight:700;">${trn.reference_no}</span></div>
-              <div><strong>Transaction Type:</strong> ${trn.type_label || trn.type}</div>
-              <div><strong>Originating Bank:</strong> ${trn.source_bank}</div>
-              <div><strong>Counterparty / Beneficiary:</strong> ${trn.counterparty}</div>
-            </div>
-            <div style="margin-top:1.2rem; padding-top:1rem; border-top:1px dashed #cbd5e1; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:0.9rem; font-weight:700;">Remitted Settlement Amount:</span>
-              <span style="font-size:1.4rem; font-weight:800; color:#0369a1;">${this.formatCurrency(trn.amount)}</span>
-            </div>
-          </div>
+    const formattedDate = trn.date ? this.formatDate(trn.date) : (trn.transfer_date ? this.formatDate(trn.transfer_date) : this.formatDate(new Date()));
+    const amountVal = Number(trn.amount || 0);
+    const formattedAmount = this.formatCurrency(amountVal);
+    const amountInWords = this.formatAmountInWords(amountVal, curr);
 
-          ${trn.purpose ? `<div style="font-size:0.82rem; color:#475569; margin-bottom:1.5rem;"><strong>Remittance Purpose:</strong> ${trn.purpose}</div>` : ''}
+    const bankAcc = (this.db?.bank_accounts || []).find(b => b.id === trn.source_account_id || b.account_name === trn.source_bank || b.bank_name === trn.source_bank);
+    const srcIban = bankAcc?.iban || bankAcc?.account_number || 'AE920030012697347820001';
+    const srcSwift = bankAcc?.swift || 'ADCBAEAA';
 
-          <!-- System Generated Notice & Page Number Footer -->
-          <div style="margin-top:auto; padding-top:2.5rem;">
-            <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-              <span style="min-width:24px;"></span>
-              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system-generated wire advice and does not require a signature or stamp.</span>
-              <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>🏛️</span>
+              <span>Bank Wire Remittance Advice (إشعار تحويل مصرفي) — ${trn.reference_no}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.printBankWireAdvice('${trn.id}')">Wire Advice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditBankTransferModal('${trn.id}')">
+              <span>✏️</span> Edit Wire
+            </button>
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadBankWireAdvice('${trn.id}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
+              <span>✕</span> Close
+            </button>
+          </div>
+        </div>
 
-          <div style="margin-top:2rem; display:flex; justify-content:flex-end; gap:0.75rem;" class="no-print">
-            <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-wire-advice')">Close</button>
-            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Wire Advice</button>
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
+
+            <!-- Watermark -->
+            ${this.getRayanWatermark()}
+
+            <div style="position:relative; z-index:1;">
+              <!-- 3-Column Header Grid -->
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:0.75rem; gap:0.75rem; width:100%;">
+                <!-- Left: Logo & Company & QR -->
+                <div style="justify-self:start; max-width:100%;">
+                  <div style="margin-bottom:0.35rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.74rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:1px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.68rem; color:#4b5563; line-height:1.3; margin-bottom:2px;">
+                    ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}
+                  </div>
+                  ${this.getRayanDynamicVerificationCode(trn, 'wire')}
+                </div>
+
+                <!-- Center: Exact Dead-Center Bilingual Title -->
+                <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
+                  <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">إشعار تحويل مصرفي</div>
+                  <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">BANK WIRE REMITTANCE ADVICE</div>
+                  <div style="font-size:0.62rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL TREASURY SETTLEMENT CLEARANCE</div>
+                </div>
+
+                <!-- Right: Metadata -->
+                <div style="text-align:right; justify-self:end;">
+                  <div style="font-size:0.92rem; font-weight:800; color:#0284c7; font-family:monospace; margin-bottom:2px;">
+                    ${trn.reference_no}
+                  </div>
+                  <div style="font-size:0.80rem; font-weight:700; color:#111827; font-family:monospace; margin-bottom:4px;">
+                    Channel: SWIFT / UAEFTS
+                  </div>
+                  <div style="margin-bottom:5px;">
+                    <span style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.3); padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.68rem; letter-spacing:0.04em;">
+                      ${(trn.status || 'CLEARED').toUpperCase()}
+                    </span>
+                  </div>
+                  <table style="margin-left:auto; font-size:0.74rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
+                    <tr>
+                      <td style="padding:1px 6px; color:#6b7280;">Value Date :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 6px; color:#6b7280;">Currency :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#0284c7;">${curr} (${isIndia ? 'INR' : 'UAE Dirham'})</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 2-Column Info Grid Cards -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <!-- Box 1: Originating Corporate Bank -->
+                <div style="border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#0284c7; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                    ORIGINATING CORPORATE BANK (بيانات البنك المحول)
+                  </div>
+                  <div style="font-size:0.78rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                    ${trn.source_bank || 'Abu Dhabi Commercial Bank (ADCB)'}
+                  </div>
+                  <div style="color:#4b5563;"><strong>Account / IBAN:</strong> <code style="font-weight:700; color:#0284c7;">${srcIban}</code></div>
+                  <div style="color:#4b5563;"><strong>SWIFT / BIC:</strong> <code>${srcSwift}</code></div>
+                  <div style="color:#4b5563;"><strong>Remitting Entity:</strong> ${compName}</div>
+                  <div style="color:#059669; font-weight:700;"><strong>Clearance Status:</strong> Funds Fully Settled &amp; Reconciled</div>
+                </div>
+
+                <!-- Box 2: Counterparty / Beneficiary -->
+                <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                    COUNTERPARTY / BENEFICIARY (بيانات المستفيد)
+                  </div>
+                  <div style="font-size:0.78rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                    ${trn.counterparty || 'Corporate Client / Supplier'}
+                  </div>
+                  <div style="color:#4b5563;"><strong>Receiving Bank:</strong> ${trn.destination_bank || 'Designated Beneficiary Bank'}</div>
+                  <div style="color:#4b5563;"><strong>Transaction Type:</strong> ${trn.type_label || trn.type || 'Inward / Outward Electronic Wire'}</div>
+                  <div style="color:#4b5563;"><strong>Bank UTR / Reference:</strong> <span style="font-family:monospace; font-weight:700; color:#111827;">${trn.reference_no}</span></div>
+                  <div style="color:#4b5563;"><strong>Purpose:</strong> ${trn.purpose || 'Commercial Contractual Invoice Settlement'}</div>
+                </div>
+              </div>
+
+              <!-- Transaction Line Items Table -->
+              <div style="margin-bottom:0.65rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.70rem; text-align:left;">
+                  <thead>
+                    <tr style="background:#0f172a; color:#ffffff; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.03em;">
+                      <th style="padding:6px 8px; width:30px; text-align:center;">#</th>
+                      <th style="padding:6px 10px;">Remittance Narration &amp; Transaction Details</th>
+                      <th style="padding:6px 10px; text-align:center; width:120px;">UTR / Wire Ref</th>
+                      <th style="padding:6px 10px; text-align:center; width:100px;">Settlement Date</th>
+                      <th style="padding:6px 10px; text-align:right; width:130px;">Remitted Value (${curr})</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom:1px solid #e2e8f0; background:#ffffff;">
+                      <td style="padding:8px; text-align:center; font-weight:700; color:#64748b;">1</td>
+                      <td style="padding:8px 10px;">
+                        <div style="font-weight:700; color:#111827; font-size:0.75rem;">${trn.type_label || 'Corporate Electronic Funds Transfer Clearance'}</div>
+                        <div style="font-size:0.64rem; color:#64748b; margin-top:2px;">Beneficiary: ${trn.counterparty} &bull; Route: ${trn.source_bank} &rarr; ${trn.destination_bank || 'Beneficiary Bank'}</div>
+                        ${trn.purpose ? `<div style="font-size:0.64rem; color:#0284c7; margin-top:2px;">Narration: ${trn.purpose}</div>` : ''}
+                      </td>
+                      <td style="padding:8px 10px; text-align:center; font-family:monospace; font-weight:700; color:#0284c7;">
+                        ${trn.reference_no}
+                      </td>
+                      <td style="padding:8px 10px; text-align:center; color:#475569;">
+                        ${formattedDate}
+                      </td>
+                      <td style="padding:8px 10px; text-align:right; font-weight:800; color:#111827; font-size:0.80rem;">
+                        ${formattedAmount}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Financial Summary & Realization Bar -->
+              <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <!-- Left: Words -->
+                <div style="border:1px solid #e2e8f0; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.68rem;">
+                  <div style="font-weight:700; color:#111827; margin-bottom:2px;">Remitted Amount in Words:</div>
+                  <div style="color:#0284c7; font-weight:700; font-size:0.70rem; margin-bottom:6px;">${amountInWords}</div>
+                  <div style="padding-top:4px; border-top:1px dashed #cbd5e1; font-size:0.66rem; color:#64748b;">
+                    Official electronic funds transfer confirmation generated from Rayan Group corporate treasury system.
+                  </div>
+                </div>
+
+                <!-- Right: Total Value Card -->
+                <div style="border:1px solid #0f172a; border-radius:4px; padding:8px 12px; background:#0f172a; color:#ffffff; display:flex; flex-direction:column; justify-content:center; text-align:right;">
+                  <div style="font-size:0.65rem; text-transform:uppercase; color:#94a3b8; font-weight:700; letter-spacing:0.04em;">TOTAL SETTLEMENT VALUE</div>
+                  <div style="font-size:1.35rem; font-weight:800; color:#38bdf8; font-family:'Outfit', sans-serif; margin-top:2px;">${formattedAmount}</div>
+                  <div style="font-size:0.62rem; color:#94a3b8; margin-top:2px;">Clearance Status: Cleared &amp; Matched with Bank Statement</div>
+                </div>
+              </div>
+
+              <!-- Authorised Signatures Section (2 Columns) -->
+              <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <colgroup>
+                  <col style="width:50%;">
+                  <col style="width:50%;">
+                </colgroup>
+                <tr>
+                  <!-- Left Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      ${compName}
+                    </div>
+                    <div style="position:relative; width:180px; height:74px; margin:0 auto;">
+                      <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+                      <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                    <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh &bull; Corporate Treasury</div>
+                  </td>
+
+                  <!-- Right Column: Interbank Settlement Verification -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      INTERBANK SETTLEMENT AUDIT
+                    </div>
+                    <div style="position:relative; width:180px; height:70px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                      <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                        <div>[ Electronic Funds Clearance ]</div>
+                        <div style="font-size:0.52rem; color:#059669; margin-top:2px;">Verified by ADCB &amp; Central Bank UAEFTS</div>
+                      </div>
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Banking Operations Desk</div>
+                    <div style="font-size:0.58rem; color:#4b5563;">Automated Remittance Validation</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Notes & Best Wishes Section -->
+              <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
+                <div style="margin-bottom:2px; color:#475569;">This wire remittance advice serves as official electronic proof of settlement. Please credit the beneficiary account accordingly.</div>
+                <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              </div>
+
+              <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
+              <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="min-width:60px; font-weight:600; color:#9ca3af;">${trn.reference_no}</div>
+                <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                  This is a system-generated wire advice and does not require a signature or stamp.
+                </div>
+                <div style="min-width:60px; text-align:right; font-size:0.65rem; color:#9ca3af;">Page 1 of 1</div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
     `;
-    this.getModalContainer().innerHTML = adviceHtml;
+
+    this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  downloadBankWireAdvice(transferId) {
+    const trn = (this.db?.bank_transfers || []).find(t => t.id === transferId || t.reference_no === transferId);
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Bank Wire Advice - ${trn?.reference_no || 'Document'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    table { width: 100% !important; border-collapse: collapse !important; }
+    @media print {
+      @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 10mm 4mm 10mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`Bank_Wire_${(trn?.reference_no || 'Advice').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`, fullDoc, 'text/html');
+    }
   }
 
   // 3. ADD / EDIT CASH VAULT REGISTER MODAL
@@ -25580,58 +26073,287 @@ Scope of Work & Technical Execution:
   }
 
   printCashVoucher(voucherId) {
-    const v = (this.db?.cash_vouchers || []).find(x => x.id === voucherId);
-    if (!v) return;
-    const comp = (this.db?.companies || []).find(c => c.id === this.activeCompanyId);
+    const v = (this.db?.cash_vouchers || []).find(x => x.id === voucherId || x.voucher_no === voucherId);
+    if (!v) {
+      this.showNotification('Petty cash voucher not found.', 'error');
+      return;
+    }
 
-    const voucherHtml = `
-      <div class="fin-modal-backdrop open" id="modal-voucher-print">
-        <div class="fin-modal-dialog" style="max-width:640px; background:#ffffff; color:#0f172a; padding:2rem;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #059669; padding-bottom:1rem; margin-bottom:1.5rem;">
-            <div>
-              <h2 style="margin:0; font-size:1.3rem; color:#047857; font-weight:800;">${comp ? comp.name : 'RAYAN GROUP'}</h2>
-              <div style="font-size:0.8rem; color:#64748b; font-weight:600;">PETTY CASH DISBURSAL VOUCHER</div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-family:monospace; font-size:1rem; font-weight:800; color:#047857;">${v.voucher_no}</div>
-              <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Date: ${this.formatDate(v.date)}</div>
-            </div>
-          </div>
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = v.currency || (isIndia ? 'INR' : 'AED');
+    const comp = (this.db?.companies || []).find(c => c.id === (v.company_id || this.activeCompanyId)) ||
+      (defaultSeedData.companies || []).find(c => c.id === (v.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
-          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:1.2rem; margin-bottom:1.5rem;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.85rem;">
-              <div><strong>Paid To (Payee):</strong> ${v.payee}</div>
-              <div><strong>Register Vault:</strong> ${v.register_name}</div>
-              <div><strong>Expense Category:</strong> ${v.category || 'General'}</div>
-              <div><strong>Vault Custodian:</strong> ${v.custodian || 'Site Admin'}</div>
-            </div>
-            <div style="margin-top:1.2rem; padding-top:1rem; border-top:1px dashed #86efac; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:0.9rem; font-weight:700;">Amount Disbursed:</span>
-              <span style="font-size:1.4rem; font-weight:800; color:#047857;">${this.formatCurrency(v.amount)}</span>
-            </div>
-          </div>
+    const formattedDate = v.date ? this.formatDate(v.date) : (v.voucher_date ? this.formatDate(v.voucher_date) : this.formatDate(new Date()));
+    const amountVal = Number(v.amount || 0);
+    const formattedAmount = this.formatCurrency(amountVal);
+    const amountInWords = this.formatAmountInWords(amountVal, curr);
 
-          <div style="font-size:0.85rem; color:#334155; margin-bottom:2rem; padding:0.75rem; background:#f8fafc; border-radius:6px;">
-            <strong>Expense Description:</strong> ${v.purpose}
-          </div>
-
-          <!-- System Generated Notice & Page Number Footer -->
-          <div style="margin-top:auto; padding-top:2.5rem;">
-            <div style="border-top:1px solid #d1d5db; padding-top:0.65rem; display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:#4b5563;">
-              <span style="min-width:24px;"></span>
-              <span style="flex:1; text-align:center; font-weight:500; letter-spacing:0.01em;">This is a system-generated petty cash voucher and does not require a signature or stamp.</span>
-              <span style="font-size:0.72rem; color:#9ca3af; min-width:24px; text-align:right;">1</span>
+    const modalHtml = `
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <div class="fin-doc-toolbar">
+          <div class="fin-doc-toolbar-left">
+            <div class="fin-doc-title-badge">
+              <span>💵</span>
+              <span>Petty Cash Voucher (سند صرف نقدية) — ${v.voucher_no}</span>
+            </div>
+            <div class="fin-doc-type-pills">
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openReceiptPrintModal()">Receipt Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
+              <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.printCashVoucher('${v.id}')">Cash Voucher</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA (All)</button>
             </div>
           </div>
+          <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
+            </button>
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadCashVoucher('${v.id}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
+              <span>✕</span> Close
+            </button>
+          </div>
+        </div>
 
-          <div style="margin-top:2rem; display:flex; justify-content:flex-end; gap:0.75rem;" class="no-print">
-            <button type="button" class="fin-btn-quick" style="color:#0f172a; border-color:#cbd5e1;" onclick="window.finApp.closeModal('modal-voucher-print')">Close</button>
-            <button type="button" class="fin-btn-quick primary" onclick="window.finApp.printDocument()">🖨️ Print Petty Cash Voucher</button>
+        <div class="fin-doc-viewport">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
+
+            <!-- Watermark -->
+            ${this.getRayanWatermark()}
+
+            <div style="position:relative; z-index:1;">
+              <!-- 3-Column Header Grid -->
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:0.75rem; gap:0.75rem; width:100%;">
+                <!-- Left: Logo & Company & QR -->
+                <div style="justify-self:start; max-width:100%;">
+                  <div style="margin-bottom:0.35rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.74rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:1px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.68rem; color:#4b5563; line-height:1.3; margin-bottom:2px;">
+                    ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}
+                  </div>
+                  ${this.getRayanDynamicVerificationCode(v, 'cash_voucher')}
+                </div>
+
+                <!-- Center: Exact Dead-Center Bilingual Title -->
+                <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
+                  <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#059669; line-height:1.15;">سند صرف نقدية</div>
+                  <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">PETTY CASH VOUCHER</div>
+                  <div style="font-size:0.62rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">SITE IMPREST FUND DISBURSAL &amp; EXPENSE RECEIPT</div>
+                </div>
+
+                <!-- Right: Metadata -->
+                <div style="text-align:right; justify-self:end;">
+                  <div style="font-size:0.92rem; font-weight:800; color:#059669; font-family:monospace; margin-bottom:2px;">
+                    ${v.voucher_no}
+                  </div>
+                  <div style="font-size:0.80rem; font-weight:700; color:#111827; font-family:monospace; margin-bottom:4px;">
+                    Vault: ${v.register_name || 'Main Cash Vault'}
+                  </div>
+                  <div style="margin-bottom:5px;">
+                    <span style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.3); padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.68rem; letter-spacing:0.04em;">
+                      ${(v.status || 'APPROVED').toUpperCase()}
+                    </span>
+                  </div>
+                  <table style="margin-left:auto; font-size:0.74rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
+                    <tr>
+                      <td style="padding:1px 6px; color:#6b7280;">Voucher Date :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;">${formattedDate}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 6px; color:#6b7280;">Payment Mode :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#059669;">Cash In Hand</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 2-Column Info Grid Cards -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <!-- Box 1: Beneficiary / Payee Details -->
+                <div style="border:1px solid #cbd5e1; border-top:3px solid #059669; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#059669; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                    BENEFICIARY / PAYEE DETAILS (بيانات المستلم / المصروف له)
+                  </div>
+                  <div style="font-size:0.78rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                    ${v.payee || 'Authorized Payee / Staff'}
+                  </div>
+                  <div style="color:#4b5563;"><strong>Expense Category:</strong> ${v.category || 'General Site & Operational Expenses'}</div>
+                  <div style="color:#4b5563;"><strong>Disbursement Type:</strong> ${v.type === 'inflow' ? 'Customer Cash Receipt / Fund Inflow' : 'Imprest Cash Disbursal / Outflow'}</div>
+                  <div style="color:#4b5563;"><strong>Purpose Narration:</strong> ${v.purpose || 'Site operational and petty cash requirements'}</div>
+                </div>
+
+                <!-- Box 2: Vault & Custodian Details -->
+                <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.70rem; line-height:1.4;">
+                  <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:3px; letter-spacing:0.02em;">
+                    CASH VAULT &amp; CUSTODIAN (بيانات الخزينة والمشرف)
+                  </div>
+                  <div style="font-size:0.78rem; font-weight:800; color:#111827; margin-bottom:2px;">
+                    ${v.register_name || 'Site Petty Cash Vault'}
+                  </div>
+                  <div style="color:#4b5563;"><strong>Vault Custodian:</strong> <strong style="color:#111827;">${v.custodian || 'Arshad Alam Shaikh'}</strong></div>
+                  <div style="color:#4b5563;"><strong>Vault Location:</strong> Abu Dhabi, United Arab Emirates</div>
+                  <div style="color:#059669; font-weight:700;"><strong>Compliance Status:</strong> Verified &amp; Balanced Imprest Ledger</div>
+                </div>
+              </div>
+
+              <!-- Line Items / Voucher Breakdown Table -->
+              <div style="margin-bottom:0.65rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.70rem; text-align:left;">
+                  <thead>
+                    <tr style="background:#0f172a; color:#ffffff; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.03em;">
+                      <th style="padding:6px 8px; width:30px; text-align:center;">#</th>
+                      <th style="padding:6px 10px;">Expense Description / Narration</th>
+                      <th style="padding:6px 10px; text-align:center; width:150px;">Category / Account</th>
+                      <th style="padding:6px 10px; text-align:center; width:100px;">Voucher Date</th>
+                      <th style="padding:6px 10px; text-align:right; width:130px;">Amount Disbursed (${curr})</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom:1px solid #e2e8f0; background:#ffffff;">
+                      <td style="padding:8px; text-align:center; font-weight:700; color:#64748b;">1</td>
+                      <td style="padding:8px 10px;">
+                        <div style="font-weight:700; color:#111827; font-size:0.75rem;">${v.purpose || v.category || 'Petty Cash Disbursal for Operational Needs'}</div>
+                        <div style="font-size:0.64rem; color:#64748b; margin-top:2px;">Paid To: ${v.payee} &bull; Register: ${v.register_name}</div>
+                      </td>
+                      <td style="padding:8px 10px; text-align:center; color:#475569;">
+                        ${v.category || 'General'}
+                      </td>
+                      <td style="padding:8px 10px; text-align:center; color:#475569;">
+                        ${formattedDate}
+                      </td>
+                      <td style="padding:8px 10px; text-align:right; font-weight:800; color:#111827; font-size:0.80rem;">
+                        ${formattedAmount}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Financial Summary & Realization Bar -->
+              <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <!-- Left: Words -->
+                <div style="border:1px solid #e2e8f0; border-radius:4px; padding:7px 10px; background:#f8fafc; font-size:0.68rem;">
+                  <div style="font-weight:700; color:#111827; margin-bottom:2px;">Disbursed Amount in Words:</div>
+                  <div style="color:#059669; font-weight:700; font-size:0.70rem; margin-bottom:6px;">${amountInWords}</div>
+                  <div style="padding-top:4px; border-top:1px dashed #cbd5e1; font-size:0.66rem; color:#64748b;">
+                    Official cash voucher recorded under the controlled imprest fund protocol of Rayan Group.
+                  </div>
+                </div>
+
+                <!-- Right: Total Value Card -->
+                <div style="border:1px solid #0f172a; border-radius:4px; padding:8px 12px; background:#0f172a; color:#ffffff; display:flex; flex-direction:column; justify-content:center; text-align:right;">
+                  <div style="font-size:0.65rem; text-transform:uppercase; color:#94a3b8; font-weight:700; letter-spacing:0.04em;">TOTAL DISBURSED AMOUNT</div>
+                  <div style="font-size:1.35rem; font-weight:800; color:#34d399; font-family:'Outfit', sans-serif; margin-top:2px;">${formattedAmount}</div>
+                  <div style="font-size:0.62rem; color:#94a3b8; margin-top:2px;">Vault Imprest Account: Balanced &amp; Reconciled</div>
+                </div>
+              </div>
+
+              <!-- Dual Signatures Section (2 Columns) -->
+              <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <colgroup>
+                  <col style="width:50%;">
+                  <col style="width:50%;">
+                </colgroup>
+                <tr>
+                  <!-- Left Column: Vault Custodian -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      VAULT CUSTODIAN / DISBURSING OFFICER
+                    </div>
+                    <div style="position:relative; width:180px; height:70px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                      <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                        <div>[ Imprest Custodian Signature ]</div>
+                        <div style="font-size:0.52rem; color:#059669; margin-top:2px;">Vault Register: ${v.register_name}</div>
+                      </div>
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Vault Custodian</div>
+                    <div style="font-size:0.58rem; color:#4b5563;">${v.custodian || 'Site Administrator'}</div>
+                  </td>
+
+                  <!-- Right Column: Rayan Engineering Signatory with authentic stamp and signature -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      ${compName}
+                    </div>
+                    <div style="position:relative; width:180px; height:74px; margin:0 auto;">
+                      <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+                      <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;">Authorised Signatory</div>
+                    <div style="font-size:0.58rem; color:#4b5563;">Arshad Alam Shaikh &bull; Managing Director</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Notes & Best Wishes Section -->
+              <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
+                <div style="margin-bottom:2px; color:#475569;">Please retain this voucher with supporting purchase invoices or bills for monthly petty cash imprest reconciliation.</div>
+                <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              </div>
+
+              <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
+              <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="min-width:60px; font-weight:600; color:#9ca3af;">${v.voucher_no}</div>
+                <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                  This is a system-generated petty cash voucher and does not require a signature or stamp.
+                </div>
+                <div style="min-width:60px; text-align:right; font-size:0.65rem; color:#9ca3af;">Page 1 of 1</div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
     `;
-    this.getModalContainer().innerHTML = voucherHtml;
+
+    this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
+  }
+
+  downloadCashVoucher(voucherId) {
+    const v = (this.db?.cash_vouchers || []).find(x => x.id === voucherId || x.voucher_no === voucherId);
+    const paperHtml = document.querySelector('#fin-doc-print-modal .fin-document-paper')?.outerHTML;
+    if (paperHtml) {
+      const fullDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Petty Cash Voucher - ${v?.voucher_no || 'Document'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f1f5f9; padding: 2rem; display: flex; justify-content: center; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .fin-document-paper { max-width: 820px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 4px; box-sizing: border-box; }
+    table { width: 100% !important; border-collapse: collapse !important; }
+    @media print {
+      @page { size: A4 portrait; margin: 5mm 8mm 5mm 8mm; }
+      body { background: #fff; padding: 0; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 6mm 10mm 4mm 10mm !important; }
+    }
+  </style>
+</head>
+<body>
+  ${paperHtml}
+</body>
+</html>`;
+      this.downloadFile(`Cash_Voucher_${(v?.voucher_no || 'Voucher').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`, fullDoc, 'text/html');
+    }
   }
 
   // 5. RECORD CHEQUE MODAL
@@ -26601,7 +27323,7 @@ Scope of Work & Technical Execution:
   }
 
   getRayanDynamicVerificationCode(doc = {}, docType = 'invoice') {
-    const docId = (docType === 'clpo' ? (doc.internal_ref || doc.po_no) : (doc.invoice_no || doc.receipt_no || doc.po_no || doc.credit_note_no || doc.debit_note_no || doc.voucher_no || doc.expense_no || doc.internal_ref || doc.id)) || 'REC-RG-INV-44049';
+    const docId = (docType === 'clpo' ? (doc.internal_ref || doc.po_no) : (doc.reference_no || doc.voucher_no || doc.code || doc.invoice_no || doc.receipt_no || doc.po_no || doc.bill_no || doc.credit_note_no || doc.debit_note_no || doc.expense_no || doc.internal_ref || doc.id)) || 'REC-RG-INV-44049';
     const verifyUrl = `https://rayan-group.com/billing/?verify=${encodeURIComponent(docId)}&type=${encodeURIComponent(docType)}`;
     const qrSvg = this.generateQRCodeSVG(verifyUrl, 52);
     const barcodeSvg = this.generateBarcodeSVG(docId);

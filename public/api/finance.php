@@ -8206,25 +8206,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'vendor_name' => $bill['vendor_name'] ?? '',
                             'supplier_name' => $bill['vendor_name'] ?? '',
                             'supplier_trn' => $bill['vendor_trn'] ?? '',
-                            'project_id' => $bill['project_id'] ?? null,
-                            'project_name' => $bill['project_name'] ?? '',
-                            'date' => $bill['bill_date'] ?? date('Y-m-d'),
-                            'subtotal' => floatval($bill['taxable_subtotal'] ?? 0),
-                            'tax_total' => floatval($bill['tax_total'] ?? 0),
-                            'total_value' => floatval($bill['grand_total'] ?? 0),
-                            'grand_total' => floatval($bill['grand_total'] ?? 0),
-                            'status' => 'approved',
-                            'approved_by' => $body['user_name'] ?? 'System Sign-off'
-                        ];
-                        array_unshift($db['purchase_orders'], $newPo);
-                    }
-                }
-
-                $addAuditLog('create', 'bill', $bill['bill_no'] ?? '', 'Created purchase bill for ' . ($bill['vendor_name'] ?? ''));
-                $response['bill'] = $bill;
-
-                if ($pdo) {
-                    try {
                         $stmtPB = $pdo->prepare("REPLACE INTO finance_purchase_bills (id, bill_no, vendor_invoice_no, company_id, vendor_id, vendor_name, project_id, project_name, po_id, bill_date, due_date, grand_total, amount_paid, balance_due, currency, status, approval_status, data_json, updated_at) VALUES (:id, :bill_no, :vendor_invoice_no, :company_id, :vendor_id, :vendor_name, :project_id, :project_name, :po_id, :bill_date, :due_date, :grand_total, :amount_paid, :balance_due, :currency, :status, :approval_status, :data_json, NOW())");
                         $stmtPB->execute([
                             ':id' => $bill['id'],
