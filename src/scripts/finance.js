@@ -1,6 +1,7 @@
 import defaultSeedData from '../../data/finance-data.json';
 import { registerDocumentModules } from './finance-documents.js';
 import { registerPayrollModules } from './finance-payroll.js';
+import QRCode from 'qrcode';
 
 /**
  * RAYAN GROUP — ENTERPRISE ACCOUNTS, BILLING & FINANCIAL MANAGEMENT SYSTEM
@@ -2139,7 +2140,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v130';
+    const CURRENT_DB_VERSION = 'v2026_clean_v131';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -26319,23 +26320,45 @@ Scope of Work & Technical Execution:
     return `<svg viewBox="0 0 ${x + 2} 18" class="doc-barcode-svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">${rects}</svg>`;
   }
 
+  generateQRCodeSVG(text, size = 52) {
+    try {
+      if (typeof QRCode !== 'undefined' && QRCode && typeof QRCode.create === 'function') {
+        const qr = QRCode.create(text, { errorCorrectionLevel: 'M' });
+        const modSize = qr.modules.size;
+        let path = '';
+        for (let r = 0; r < modSize; r++) {
+          for (let c = 0; c < modSize; c++) {
+            if (qr.modules.get(r, c)) {
+              path += `M${c + 1} ${r + 1}h1v1h-1z `;
+            }
+          }
+        }
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${modSize + 2} ${modSize + 2}" shape-rendering="crispEdges" class="doc-qr-code-svg" style="width:${size}px !important; height:${size}px !important; min-width:${size}px !important; min-height:${size}px !important; max-width:${size}px !important; max-height:${size}px !important; flex-shrink:0 !important; border-radius:4px; border:1px solid #cbd5e1; background:#ffffff; display:block; box-sizing:border-box;"><rect width="100%" height="100%" fill="#ffffff"/><path d="${path.trim()}" fill="#0f172a"/></svg>`;
+      }
+    } catch (e) {
+      console.warn('QRCode.create error, falling back to online QR API:', e);
+    }
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&data=${encodeURIComponent(text)}`;
+    return `<img src="${qrApiUrl}" alt="Scan QR Code to Verify" class="doc-qr-code-img" style="width:${size}px !important; height:${size}px !important; min-width:${size}px !important; min-height:${size}px !important; max-width:${size}px !important; max-height:${size}px !important; flex-shrink:0 !important; object-fit:contain; border-radius:4px; border:1px solid #cbd5e1; background:#ffffff; display:block; box-sizing:border-box;" loading="eager">`;
+  }
+
   getRayanDynamicVerificationCode(doc = {}, docType = 'invoice') {
     const docId = doc.invoice_no || doc.receipt_no || doc.po_no || doc.credit_note_no || doc.debit_note_no || doc.voucher_no || doc.expense_no || doc.id || 'REC-RG-INV-44049';
     const verifyUrl = `https://rayan-group.com/billing/?verify=${encodeURIComponent(docId)}&type=${encodeURIComponent(docType)}`;
-    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&data=${encodeURIComponent(verifyUrl)}`;
+    const qrSvg = this.generateQRCodeSVG(verifyUrl, 52);
     const barcodeSvg = this.generateBarcodeSVG(docId);
     const docTypeLabel = docType.replace(/_/g, ' ');
 
     return `
-      <div class="doc-qr-barcode-block" style="display:inline-flex; flex-direction:column; align-items:flex-start; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; margin-top:8px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-        <div class="doc-qr-inner-flex" style="display:flex; align-items:center; gap:9px;">
-          <a href="${verifyUrl}" target="_blank" title="Scan or Click to Verify Online" class="doc-qr-link" style="display:block; text-decoration:none; line-height:0;">
-            <img src="${qrApiUrl}" alt="Scan QR Code to Verify" class="doc-qr-code-img" style="width:58px; height:58px; object-fit:contain; border-radius:4px; border:1px solid #cbd5e1; background:#ffffff; display:block;" loading="eager" onerror="this.src='/assets/docs/rayan-barcode-trn.jpg'">
+      <div class="doc-qr-barcode-block" style="display:inline-flex; flex-direction:column; align-items:flex-start; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; margin-top:6px; box-shadow:0 1px 3px rgba(0,0,0,0.04); flex-shrink:0; box-sizing:border-box;">
+        <div class="doc-qr-inner-flex" style="display:flex; align-items:center; gap:8px; flex-wrap:nowrap;">
+          <a href="${verifyUrl}" target="_blank" title="Scan or Click to Verify Online" class="doc-qr-link" style="display:block; text-decoration:none; line-height:0; flex-shrink:0; flex:0 0 52px; width:52px; height:52px; min-width:52px; min-height:52px;">
+            ${qrSvg}
           </a>
-          <div class="doc-barcode-meta" style="display:flex; flex-direction:column; align-items:center; gap:1px;">
+          <div class="doc-barcode-meta" style="display:flex; flex-direction:column; align-items:center; gap:1px; flex-shrink:0;">
             ${barcodeSvg}
             <div class="doc-barcode-num" style="font-size:7.5px; font-weight:800; color:#0f172a; letter-spacing:0.04em; line-height:1.2;">${docId}</div>
-            <div class="doc-qr-scan-hint" style="font-size:6.5px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; display:flex; align-items:center; gap:3px; margin-top:1px;">
+            <div class="doc-qr-scan-hint" style="font-size:6.5px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.04em; display:flex; align-items:center; gap:3px; margin-top:1px; white-space:nowrap;">
               <span>📷</span>
               <span>Scan to verify ${docTypeLabel}</span>
             </div>
@@ -27904,38 +27927,37 @@ Scope of Work & Technical Execution:
           <!-- PAGE 1 OF PURCHASE ORDER -->
           <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
 
-            <!-- Top Cyan Gradient Banner -->
-            <div style="height:5px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-7mm -11mm 8px -11mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
-
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
 
             <!-- Main Document Content Layer -->
             <div style="position:relative; z-index:1;">
 
-            <!-- Header Section (Left: Logo & Company, Center: Bilingual Title, Right: PO Metadata) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.65rem; gap:0.75rem;">
-              <div style="max-width:38%; flex-shrink:1;">
+            <!-- Header Section (Left: Logo & Company & QR, Center: Exactly Centered Bilingual Title, Right: PO Metadata) -->
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:0.75rem; gap:0.75rem; width:100%;">
+              <!-- Column 1: Left (Logo, Company, TRN, Dynamic QR/Barcode block) -->
+              <div style="justify-self:start; max-width:100%;">
                 <div style="margin-bottom:0.35rem;">
                   <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
                 </div>
                 <div style="font-size:0.74rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:1px;">
                   ${compName}
                 </div>
-                <div style="font-size:0.68rem; color:#4b5563; line-height:1.3;">
+                <div style="font-size:0.68rem; color:#4b5563; line-height:1.3; margin-bottom:2px;">
                   ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(po, 'po')}
               </div>
 
-              <!-- Center Bilingual Title matching Official Rayan PDF -->
-              <div style="text-align:center; padding-top:2px; flex-shrink:0;">
-                <div style="font-family:'Amiri', serif; font-size:1.25rem; font-weight:700; color:#0284c7; line-height:1.1;">امر شراء</div>
-                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">PURCHASE ORDER</div>
-                <div style="font-size:0.62rem; color:#64748b; font-weight:600; margin-top:1px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROCUREMENT DOCUMENT</div>
+              <!-- Column 2: Exact Dead-Center Bilingual Title matching Official Rayan Layout -->
+              <div style="text-align:center; padding-top:2px; justify-self:center; min-width:190px;">
+                <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">امر شراء</div>
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.55rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">PURCHASE ORDER</div>
+                <div style="font-size:0.62rem; color:#64748b; font-weight:600; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROCUREMENT DOCUMENT</div>
               </div>
 
-              <div style="text-align:right; flex-shrink:0;">
+              <!-- Column 3: Right (PO Metadata) -->
+              <div style="text-align:right; justify-self:end;">
                 <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-bottom:4px; white-space:nowrap;">
                   <span># ${po.po_no || 'PO-REC-11012'}</span>
                   <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPONumber('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0 2px; vertical-align:middle;" title="Edit PO Number">✏️</button>
@@ -28164,9 +28186,6 @@ Scope of Work & Technical Execution:
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
           <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
-
-            <!-- Top Cyan Gradient Banner (Page 2) -->
-            <div style="height:5px; background:linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #0284c7 100%); margin:-7mm -11mm 8px -11mm; border-top-left-radius:4px; border-top-right-radius:4px;"></div>
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}

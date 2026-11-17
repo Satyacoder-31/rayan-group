@@ -3933,27 +3933,38 @@ body.fin-doc-open .fin-app-wrapper {
 
 /* Dynamic QR & Barcode Block */
 .doc-qr-barcode-block {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 4px 6px;
-  margin-top: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 5px 8px !important;
+  margin-top: 5px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
 }
 
 .doc-qr-inner-flex {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 .doc-qr-link {
-  display: block;
-  text-decoration: none;
-  line-height: 0;
+  display: block !important;
+  text-decoration: none !important;
+  line-height: 0 !important;
+  flex-shrink: 0 !important;
+  flex: 0 0 52px !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
   transition: transform 0.15s ease;
 }
 
@@ -3961,50 +3972,62 @@ body.fin-doc-open .fin-app-wrapper {
   transform: scale(1.04);
 }
 
-.doc-qr-code-img {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+.doc-qr-code-img,
+.doc-qr-code-svg {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  max-width: 52px !important;
+  max-height: 52px !important;
+  flex-shrink: 0 !important;
+  border-radius: 4px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  display: block !important;
+  box-sizing: border-box !important;
 }
 
 .doc-barcode-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 1px !important;
+  flex-shrink: 0 !important;
 }
 
 .doc-barcode-svg {
-  width: 105px;
-  height: 18px;
-  display: block;
+  width: 105px !important;
+  height: 18px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
 }
 
 .doc-barcode-num {
-  font-size: 7px;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: 0.04em;
-  font-family: inherit;
-  line-height: 1.2;
+  font-size: 7.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  letter-spacing: 0.04em !important;
+  font-family: inherit !important;
+  line-height: 1.2 !important;
+  flex-shrink: 0 !important;
 }
 
 .doc-qr-scan-hint {
-  font-size: 6.5px;
-  font-weight: 700;
-  color: #0284c7;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: rgba(2, 132, 199, 0.06);
-  padding: 1px 4px;
-  border-radius: 3px;
-  margin-top: 1px;
+  font-size: 6.5px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  margin-top: 1px !important;
+  background: rgba(2, 132, 199, 0.06) !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 /* Live Verified Scan Banner */
