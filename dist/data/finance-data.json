@@ -14822,7 +14822,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S SADECO DÉCOR LLC"
+      "customer_name": "M/S SADECO DÉCOR LLC",
+      "client_po_no": "SD/2026/09"
     },
     {
       "id": "po-cust-1794907665036",
@@ -14845,7 +14846,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S LUMINAR ENGINEERING AND DECOR LLC OPC"
+      "customer_name": "M/S LUMINAR ENGINEERING AND DECOR LLC OPC",
+      "client_po_no": "BD/2026/12"
     },
     {
       "id": "po-cust-1794907359313",
@@ -14868,7 +14870,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S SPECON DESING INTERIOR & EVENTS"
+      "customer_name": "M/S SPECON DESING INTERIOR & EVENTS",
+      "client_po_no": "WALD-2026-11"
     },
     {
       "id": "po-cust-1794906873322",
@@ -14891,7 +14894,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S TOP ROCK INTERIORS LLC"
+      "customer_name": "M/S TOP ROCK INTERIORS LLC",
+      "client_po_no": "PODSUB-2026/0841"
     },
     {
       "id": "po-cust-1794906783496",
@@ -14914,7 +14918,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S BROOK AND RIPPLES SWIMMING EQUIPMENT TRADING L.L.C"
+      "customer_name": "M/S BROOK AND RIPPLES SWIMMING EQUIPMENT TRADING L.L.C",
+      "client_po_no": "BR/SCA-001/JBN-1504/2026"
     },
     {
       "id": "po-cust-1794906395194",
@@ -14937,7 +14942,8 @@
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
-      "customer_name": "M/S HAYAT COMMUNICATIONS LLC"
+      "customer_name": "M/S HAYAT COMMUNICATIONS LLC",
+      "client_po_no": "AYAT-2026-14"
     },
     {
       "id": "po-cust-1794906065607",

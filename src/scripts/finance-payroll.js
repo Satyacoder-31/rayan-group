@@ -2280,13 +2280,55 @@ export function registerPayrollModules(FinanceApp) {
       slip = (this.db?.payroll || [])[0] || {};
     }
 
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const curr = slip.currency || (isIndia ? 'INR' : 'AED');
+    const comp = (this.db?.companies || []).find(c => c.id === (slip.company_id || this.activeCompanyId)) ||
+      (defaultSeedData.companies || []).find(c => c.id === (slip.company_id || this.activeCompanyId)) ||
+      (this.db?.companies || [])[0] || {};
+    const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+
+    const basicVal = Number(slip.basic_salary) || 9500;
+    const accVal = Number(slip.accommodation_allowance) || 5500;
+    const consVal = Number(slip.consolidated_allowance) || 0;
+    const otVal = Number(slip.normal_overtime) || 0;
+    const totEarnVal = Number(slip.total_earnings) || (basicVal + accVal + consVal + otVal);
+    const totDedVal = Number(slip.total_deductions) || 0;
+    const netVal = Number(slip.net_pay) || (totEarnVal - totDedVal);
+
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <style>
+          #fin-doc-print-modal [contenteditable="true"] {
+            transition: background 0.15s, outline 0.15s;
+            border-radius: 2px;
+            padding: 1px 3px;
+          }
+          #fin-doc-print-modal [contenteditable="true"]:hover {
+            background: rgba(56, 189, 248, 0.12) !important;
+            outline: 1px dashed #0284c7 !important;
+            cursor: text;
+          }
+          #fin-doc-print-modal [contenteditable="true"]:focus {
+            background: rgba(56, 189, 248, 0.22) !important;
+            outline: 1.5px solid #0284c7 !important;
+          }
+          @media print {
+            #fin-doc-print-modal [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+              padding: 0 !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+          }
+        </style>
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>📜</span>
-              <span>Employee Pay Slip — ${escapeHtml(slip.slip_no || 'PSJune 2026/EN12001')}</span>
+              <span>Employee Pay Slip (قسيمة راتب الموظف) — ${escapeHtml(slip.slip_no || 'PSJune 2026/EN12001')}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
@@ -2294,35 +2336,32 @@ export function registerPayrollModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openWorkCompletionPrintModal()">Completion Cert</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDeliveryNotePrintModal()">Delivery Note</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openUndertakingLetterPrintModal()">Undertaking Letter</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCustomLetterPrintModal()">Official Letter</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openPayslipPrintModal('${slip.id}')">Employee Pay Slip</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
-              🖨️ Print / Save as PDF
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off" style="color:#0284c7; border-color:rgba(2,132,199,0.4);">
+              <span>🔲</span> Toggle Stamp &amp; Sign
             </button>
-            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.downloadPayslipDocument('${slip.id}')">
-              📥 Download Document
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.closeDocPrintModal(); window.finApp.openPayslipModal('${slip.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+              <span>✏️</span> Edit Pay Slip (Form)
             </button>
-            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal(); window.finApp.openPayslipModal('${slip.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
-              ✏️ Edit Pay Slip
+            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+              <span>🖨️</span> Print / Save as PDF
             </button>
-            <button type="button" class="fin-btn-print-action fin-btn-print-ghost" onclick="window.finApp.closeDocPrintModal()">
-              ✕ Close
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadPayslipDocument('${slip.id}')">
+              <span>⬇️</span> Download Document
+            </button>
+            <button type="button" class="fin-btn-print-action fin-btn-print-close" onclick="window.finApp.closeDocPrintModal()">
+              <span>✕</span> Close
             </button>
           </div>
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#000000; padding:10mm 12mm 8mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
 
             <!-- Center Watermark -->
             ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
@@ -2330,230 +2369,314 @@ export function registerPayrollModules(FinanceApp) {
             <!-- Document Content Layer -->
             <div style="position:relative; z-index:1;">
 
-              <!-- Header with Official Brand Logo -->
-              <div style="text-align:center; margin-bottom:0.75rem;">
-                <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:56px; width:auto; display:inline-block; margin:0 auto;" onerror="this.src='/assets/logos/rayan-group.png'">
-                <div style="border-top:3px solid #009cb2; margin-top:8px; width:100%;"></div>
-              </div>
+              <!-- 3-Column Header Grid matching Official Rayan Layout -->
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:0.75rem; gap:0.75rem; width:100%;">
+                <!-- Column 1: Logo & Company & QR -->
+                <div style="justify-self:start; max-width:100%;">
+                  <div style="margin-bottom:0.35rem;">
+                    <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:40px; width:auto; display:block;">
+                  </div>
+                  <div style="font-size:0.74rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:1px;">
+                    ${compName}
+                  </div>
+                  <div style="font-size:0.68rem; color:#4b5563; line-height:1.3; margin-bottom:2px;">
+                    ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn}
+                  </div>
+                  ${this.getRayanDynamicVerificationCode ? this.getRayanDynamicVerificationCode(slip, 'payslip') : ''}
+                </div>
 
-              <!-- Top Printed Meta Row -->
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; font-size:0.8rem;">
-                <div>
-                  <span style="color:#0284c7; font-weight:700;">Printed Date:</span>
-                  <span style="color:#0f172a; font-weight:600; margin-left:6px;">${escapeHtml(slip.printed_date || '10-Jul-26')}</span>
+                <!-- Column 2: Exact Dead-Center Bilingual Title -->
+                <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
+                  <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">قسيمة راتب الموظف</div>
+                  <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">EMPLOYEE PAY SLIP</div>
+                  <div style="font-size:0.62rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">SALARY DISBURSEMENT STATEMENT — ${escapeHtml(slip.month_year || 'Jun-26')}</div>
                 </div>
-                <div style="color:#0f172a; font-weight:700; font-size:0.88rem;">
-                  ${escapeHtml(slip.slip_no || 'PSJune 2026/EN12001')}
-                </div>
-              </div>
 
-              <!-- Pay Slip Title & Month Banner -->
-              <div style="text-align:center; margin-bottom:1.15rem;">
-                <div style="color:#00838f; font-size:1.22rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;">
-                  EMPLOYEE PAY SLIP
-                </div>
-                <div style="color:#0f172a; font-size:1rem; font-weight:700; margin-top:2px;">
-                  ${escapeHtml(slip.month_year || 'Jun-26')}
+                <!-- Column 3: Metadata -->
+                <div style="text-align:right; justify-self:end;">
+                  <div style="font-size:0.92rem; font-weight:800; color:#0284c7; font-family:monospace; margin-bottom:2px;" contenteditable="true" spellcheck="false" title="Click to edit slip no">
+                    ${escapeHtml(slip.slip_no || 'PSJune 2026/EN12001')}
+                  </div>
+                  <div style="font-size:0.80rem; font-weight:700; color:#111827; margin-bottom:4px;">
+                    Period: <span contenteditable="true" spellcheck="false" title="Click to edit month">${escapeHtml(slip.month_year || 'Jun-26')}</span>
+                  </div>
+                  <div style="margin-bottom:5px;">
+                    <span style="background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.3); padding:2px 8px; border-radius:4px; font-weight:800; font-size:0.68rem; letter-spacing:0.04em;">
+                      DISBURSED
+                    </span>
+                  </div>
+                  <table style="margin-left:auto; font-size:0.74rem; color:#4b5563; border-collapse:collapse; text-align:right; white-space:nowrap;">
+                    <tr>
+                      <td style="padding:1px 6px; color:#6b7280;">Printed Date :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#111827;" contenteditable="true" spellcheck="false" title="Click to edit date">${escapeHtml(slip.printed_date || '10-Jul-26')}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:1px 6px; color:#6b7280;">Currency :</td>
+                      <td style="padding:1px 0 1px 6px; font-weight:700; color:#0284c7;" contenteditable="true" spellcheck="false" title="Click to edit currency">${escapeHtml(slip.currency || 'AED')}</td>
+                    </tr>
+                  </table>
                 </div>
               </div>
 
               <!-- TABLE 1: Employee Information -->
-              <table style="width:100%; border-collapse:collapse; border:1.5px solid #000000; margin-bottom:0.9rem; font-size:0.76rem;">
-                <thead>
-                  <tr>
-                    <th colspan="6" style="background:#137547; color:#ffffff; font-weight:700; text-align:center; padding:4px 6px; border:1px solid #000000; font-size:0.85rem; letter-spacing:0.02em;">
-                      Employee Information
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:17%; font-weight:500;">Employee No.</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:22%; font-weight:700;">${escapeHtml(slip.employee_no || 'EN12001')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:18%; font-weight:500;">Date Off Appt.</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:20%; font-weight:700;">${escapeHtml(slip.date_of_appointment || '7/Aug/2025')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:11%; font-weight:500;">Currency</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:12%; font-weight:700;">${escapeHtml(slip.currency || 'AED')}</td>
-                  </tr>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:500;">Employee Name</td>
-                    <td colspan="5" style="border:1px solid #000000; padding:4px 8px; font-weight:700; font-size:0.82rem;">${escapeHtml(slip.employee_name || 'Bakhteyar Alam')}</td>
-                  </tr>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:500;">Position</td>
-                    <td colspan="2" style="border:1px solid #000000; padding:4px 8px; font-weight:700;">${escapeHtml(slip.position || 'Operation Manager')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:500;">Department</td>
-                    <td colspan="2" style="border:1px solid #000000; padding:4px 8px; font-weight:700;">${escapeHtml(slip.department || 'Rayan Engineering')}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div style="margin-bottom:0.75rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+                <div style="background:#0f172a; color:#ffffff; padding:5px 8px; font-size:0.72rem; font-weight:800; text-align:center; text-transform:uppercase; letter-spacing:0.03em;">
+                  Employee Information (بيانات الموظف)
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:0.72rem; text-align:left;">
+                  <tbody>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; width:16%; font-weight:600; color:#475569; background:#f8fafc;">Employee No.</td>
+                      <td style="padding:4px 8px; width:20%; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.employee_no || 'EN12001')}</span></td>
+                      <td style="padding:4px 8px; width:16%; font-weight:600; color:#475569; background:#f8fafc;">Date Of Appt.</td>
+                      <td style="padding:4px 8px; width:20%; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.date_of_appointment || '2025-08-07')}</span></td>
+                      <td style="padding:4px 8px; width:12%; font-weight:600; color:#475569; background:#f8fafc;">Currency</td>
+                      <td style="padding:4px 8px; width:16%; font-weight:700; color:#0284c7;"><span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.currency || 'AED')}</span></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; font-weight:600; color:#475569; background:#f8fafc;">Employee Name</td>
+                      <td colspan="5" style="padding:4px 8px; font-weight:800; color:#111827; font-size:0.78rem;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit employee name">${escapeHtml(slip.employee_name || 'Bakhteyar Alam Mokhtar Ahmad')}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 8px; font-weight:600; color:#475569; background:#f8fafc;">Position</td>
+                      <td colspan="2" style="padding:4px 8px; font-weight:700; color:#111827;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit position">${escapeHtml(slip.position || 'Civil Engineer')}</span>
+                      </td>
+                      <td style="padding:4px 8px; font-weight:600; color:#475569; background:#f8fafc;">Department</td>
+                      <td colspan="2" style="padding:4px 8px; font-weight:700; color:#111827;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit department">${escapeHtml(slip.department || 'Rayan Engineering')}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
               <!-- TABLE 2: Salary Breakdown (Earnings vs Deductions) -->
-              <table style="width:100%; border-collapse:collapse; border:1.5px solid #000000; margin-bottom:0.9rem; font-size:0.76rem;">
-                <thead>
-                  <tr>
-                    <th colspan="4" style="background:#137547; color:#ffffff; font-weight:700; text-align:center; padding:4px 6px; border:1px solid #000000; font-size:0.85rem; letter-spacing:0.02em;">
-                      Salary Breakdown
-                    </th>
-                  </tr>
-                  <tr>
-                    <th colspan="2" style="border:1px solid #000000; padding:3px 6px; text-align:center; font-weight:700; width:50%; background:#f8fafc;">Earnings</th>
-                    <th colspan="2" style="border:1px solid #000000; padding:3px 6px; text-align:center; font-weight:700; width:50%; background:#f8fafc;">Deductions</th>
-                  </tr>
-                  <tr style="font-size:0.72rem; color:#475569;">
-                    <th style="border:1px solid #000000; padding:3px 8px; text-align:left; width:28%; font-weight:600;">Element Name</th>
-                    <th style="border:1px solid #000000; padding:3px 8px; text-align:right; width:22%; font-weight:600;">Amount</th>
-                    <th style="border:1px solid #000000; padding:3px 8px; text-align:left; width:28%; font-weight:600;">Element Name</th>
-                    <th style="border:1px solid #000000; padding:3px 8px; text-align:right; width:22%; font-weight:600;">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px;">Basic Salary</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:600;">${formatMoney(slip.basic_salary, slip.currency || 'AED')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px;">${slip.advance_deduction > 0 ? 'Salary Advance' : ''}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right;">${slip.advance_deduction > 0 ? formatMoney(slip.advance_deduction, slip.currency || 'AED') : ''}</td>
-                  </tr>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px;">Accommodation Allowance</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:600;">${formatMoney(slip.accommodation_allowance, slip.currency || 'AED')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px;">${slip.absence_deduction > 0 ? 'Absence / Leave' : ''}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right;">${slip.absence_deduction > 0 ? formatMoney(slip.absence_deduction, slip.currency || 'AED') : ''}</td>
-                  </tr>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px;">Consolidated Allowance</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:600;">${formatMoney(slip.consolidated_allowance, slip.currency || 'AED')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px;">${slip.loan_deduction > 0 ? 'Loan / Penalties' : ''}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right;">${slip.loan_deduction > 0 ? formatMoney(slip.loan_deduction, slip.currency || 'AED') : ''}</td>
-                  </tr>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px;">Normal Overtime</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:600;">${formatMoney(slip.normal_overtime, slip.currency || 'AED')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right;"></td>
-                  </tr>
-                  <tr style="font-weight:700; background:#fafafa;">
-                    <td style="border:1px solid #000000; padding:4px 8px;">Total Earnings</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right;">${formatMoney(slip.total_earnings, slip.currency || 'AED')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px;">Total Deductions</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; text-align:right;">${slip.total_deductions > 0 ? formatMoney(slip.total_deductions, slip.currency || 'AED') : ''}</td>
-                  </tr>
-                  <tr style="font-weight:800; font-size:0.86rem;">
-                    <td colspan="3" style="border:1px solid #000000; padding:6px 10px; color:#137547;">Net Pay</td>
-                    <td style="border:1px solid #000000; padding:6px 10px; text-align:right; background:#dcfce7; color:#14532d; font-size:0.92rem;">
-                      ${formatMoney(slip.net_pay, slip.currency || 'AED')}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div style="margin-bottom:0.75rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+                <div style="background:#0f172a; color:#ffffff; padding:5px 8px; font-size:0.72rem; font-weight:800; text-align:center; text-transform:uppercase; letter-spacing:0.03em;">
+                  Salary Breakdown (تفاصيل الراتب والبدلات والاستقطاعات)
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:0.72rem; text-align:left;">
+                  <thead>
+                    <tr style="background:#f8fafc; border-bottom:1px solid #cbd5e1; font-size:0.70rem; font-weight:700;">
+                      <th colspan="2" style="padding:4px 8px; text-align:center; width:50%; color:#0f172a; border-right:1px solid #cbd5e1;">EARNINGS (المستحقات)</th>
+                      <th colspan="2" style="padding:4px 8px; text-align:center; width:50%; color:#0f172a;">DEDUCTIONS (الاستقطاعات)</th>
+                    </tr>
+                    <tr style="background:#f1f5f9; border-bottom:1px solid #cbd5e1; font-size:0.68rem; color:#475569; text-transform:uppercase;">
+                      <th style="padding:3px 8px; width:28%;">Element Name</th>
+                      <th style="padding:3px 8px; text-align:right; width:22%; border-right:1px solid #cbd5e1;">Amount</th>
+                      <th style="padding:3px 8px; width:28%;">Element Name</th>
+                      <th style="padding:3px 8px; text-align:right; width:22%;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; color:#334155;">Basic Salary</td>
+                      <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827; border-right:1px solid #cbd5e1;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${formatMoney(slip.basic_salary || basicVal, curr)}</span>
+                      </td>
+                      <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">${slip.advance_deduction > 0 ? 'Salary Advance' : ''}</span></td>
+                      <td style="padding:4px 8px; text-align:right; color:#dc2626;"><span contenteditable="true" spellcheck="false">${slip.advance_deduction > 0 ? formatMoney(slip.advance_deduction, curr) : ''}</span></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; color:#334155;">Accommodation Allowance</td>
+                      <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827; border-right:1px solid #cbd5e1;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${formatMoney(slip.accommodation_allowance || accVal, curr)}</span>
+                      </td>
+                      <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">${slip.absence_deduction > 0 ? 'Absence / Leave' : ''}</span></td>
+                      <td style="padding:4px 8px; text-align:right; color:#dc2626;"><span contenteditable="true" spellcheck="false">${slip.absence_deduction > 0 ? formatMoney(slip.absence_deduction, curr) : ''}</span></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; color:#334155;">Consolidated Allowance</td>
+                      <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827; border-right:1px solid #cbd5e1;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${formatMoney(slip.consolidated_allowance || consVal, curr)}</span>
+                      </td>
+                      <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">${slip.loan_deduction > 0 ? 'Loan / Penalties' : ''}</span></td>
+                      <td style="padding:4px 8px; text-align:right; color:#dc2626;"><span contenteditable="true" spellcheck="false">${slip.loan_deduction > 0 ? formatMoney(slip.loan_deduction, curr) : ''}</span></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; color:#334155;">Normal Overtime</td>
+                      <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827; border-right:1px solid #cbd5e1;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${formatMoney(slip.normal_overtime || otVal, curr)}</span>
+                      </td>
+                      <td style="padding:4px 8px;"></td>
+                      <td style="padding:4px 8px; text-align:right;"></td>
+                    </tr>
+                    <tr style="font-weight:700; background:#f8fafc; border-bottom:1px solid #cbd5e1;">
+                      <td style="padding:4px 8px; color:#0f172a;">Total Earnings</td>
+                      <td style="padding:4px 8px; text-align:right; color:#0f172a; border-right:1px solid #cbd5e1;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${formatMoney(slip.total_earnings || totEarnVal, curr)}</span>
+                      </td>
+                      <td style="padding:4px 8px; color:#0f172a;">Total Deductions</td>
+                      <td style="padding:4px 8px; text-align:right; color:#dc2626;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${totDedVal > 0 ? formatMoney(totDedVal, curr) : ''}</span>
+                      </td>
+                    </tr>
+                    <tr style="font-weight:800; font-size:0.84rem; background:#ecfdf5;">
+                      <td colspan="3" style="padding:6px 10px; color:#15803d; border-right:1px solid #86efac; text-transform:uppercase;">
+                        Net Pay (صافي الراتب المستحق)
+                      </td>
+                      <td style="padding:6px 10px; text-align:right; color:#15803d; font-size:0.92rem; font-family:'Outfit', sans-serif;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit net pay">${formatMoney(slip.net_pay || netVal, curr)}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
               <!-- TABLE 3: Payment Details -->
-              <table style="width:100%; border-collapse:collapse; border:1.5px solid #000000; margin-bottom:0.9rem; font-size:0.76rem;">
-                <thead>
-                  <tr>
-                    <th colspan="4" style="background:#137547; color:#ffffff; font-weight:700; text-align:center; padding:4px 6px; border:1px solid #000000; font-size:0.85rem; letter-spacing:0.02em;">
-                      Payment Details
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:20%; font-weight:500;">Bank Name</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:35%; font-weight:700;">${escapeHtml(slip.bank_name || 'Emirates NBD Bank PJSC')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:20%; font-weight:500;">Swift/IFSC</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; width:25%; font-weight:700;">${escapeHtml(slip.swift || 'EBILAEADXXX')}</td>
-                  </tr>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:500;">IBAN No.</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:700; font-family:monospace;">${escapeHtml(slip.iban || 'AE860260001015934645101')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:500;">Account No.</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:700; font-family:monospace;">${escapeHtml(slip.account_no || 'AE860260001015934645101')}</td>
-                  </tr>
-                  <tr>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:500;">Pay Method</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:700;">${escapeHtml(slip.pay_method || 'AED RAYAN GROUP Host To Host')}</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:500;">Transferred amount</td>
-                    <td style="border:1px solid #000000; padding:4px 8px; font-weight:800; font-size:0.84rem; text-align:right;">
-                      ${formatMoney(slip.transferred_amount || slip.net_pay, slip.currency || 'AED')}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div style="margin-bottom:0.75rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+                <div style="background:#0f172a; color:#ffffff; padding:5px 8px; font-size:0.72rem; font-weight:800; text-align:center; text-transform:uppercase; letter-spacing:0.03em;">
+                  Payment Details (بيانات التحويل البنكي)
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:0.72rem; text-align:left;">
+                  <tbody>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; width:18%; font-weight:600; color:#475569; background:#f8fafc;">Bank Name</td>
+                      <td style="padding:4px 8px; width:34%; font-weight:700; color:#111827;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.bank_name || 'Emirates NBD Bank PJSC')}</span>
+                      </td>
+                      <td style="padding:4px 8px; width:18%; font-weight:600; color:#475569; background:#f8fafc;">Swift/IFSC</td>
+                      <td style="padding:4px 8px; width:30%; font-weight:700; color:#111827;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.swift || 'EBILAEADXXX')}</span>
+                      </td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="padding:4px 8px; font-weight:600; color:#475569; background:#f8fafc;">IBAN No.</td>
+                      <td style="padding:4px 8px; font-weight:700; color:#0284c7; font-family:monospace;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.iban || 'AE860260001015934645101')}</span>
+                      </td>
+                      <td style="padding:4px 8px; font-weight:600; color:#475569; background:#f8fafc;">Account No.</td>
+                      <td style="padding:4px 8px; font-weight:700; color:#111827; font-family:monospace;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.account_no || 'AE860260001015934645101')}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 8px; font-weight:600; color:#475569; background:#f8fafc;">Pay Method</td>
+                      <td style="padding:4px 8px; font-weight:700; color:#111827;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.pay_method || 'AED RAYAN GROUP Host To Host')}</span>
+                      </td>
+                      <td style="padding:4px 8px; font-weight:600; color:#475569; background:#f8fafc;">Transferred Amount</td>
+                      <td style="padding:4px 8px; font-weight:800; color:#15803d; font-size:0.80rem; text-align:right;">
+                        <span contenteditable="true" spellcheck="false" title="Click to edit">${formatMoney(slip.transferred_amount || netVal, curr)}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
               <!-- TABLE 4: Employee Break Down for the month -->
-              <table style="width:100%; border-collapse:collapse; border:1.5px solid #000000; margin-bottom:1.5rem; font-size:0.75rem;">
-                <thead>
-                  <tr>
-                    <th colspan="6" style="background:#137547; color:#ffffff; font-weight:700; text-align:center; padding:4px 6px; border:1px solid #000000; font-size:0.85rem; letter-spacing:0.02em;">
-                      Employee Break Down for the month of ${escapeHtml(slip.period_label || slip.month_year || 'June 2026')}
-                    </th>
-                  </tr>
-                  <tr style="background:#f8fafc; font-size:0.73rem;">
-                    <th style="border:1px solid #000000; padding:4px 8px; width:15%; text-align:left;">Date</th>
-                    <th style="border:1px solid #000000; padding:4px 8px; width:30%; text-align:left;">Element Name</th>
-                    <th style="border:1px solid #000000; padding:4px 8px; width:22%; text-align:left;">Element Type</th>
-                    <th style="border:1px solid #000000; padding:4px 8px; width:15%; text-align:left;">Remark</th>
-                    <th style="border:1px solid #000000; padding:4px 8px; width:6%; text-align:center;">Hrs</th>
-                    <th style="border:1px solid #000000; padding:4px 8px; width:12%; text-align:right;">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(slip.breakdown_items && slip.breakdown_items.length > 0) ? slip.breakdown_items.map(item => `
-                    <tr>
-                      <td style="border:1px solid #000000; padding:4px 8px;">${escapeHtml(item.date || '10/07/2026')}</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; font-weight:600;">${escapeHtml(item.element_name || '')}</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; color:#475569;">${escapeHtml(item.element_type || 'Standard Earnings')}</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; color:#64748b;">${escapeHtml(item.remark || '')}</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; text-align:center;">${escapeHtml(item.hrs || '')}</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:700;">${formatMoney(item.amount, slip.currency || 'AED')}</td>
+              <div style="margin-bottom:0.75rem; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden;">
+                <div style="background:#0f172a; color:#ffffff; padding:5px 8px; font-size:0.72rem; font-weight:800; text-align:center; text-transform:uppercase; letter-spacing:0.03em;">
+                  Employee Break Down for the month of ${escapeHtml(slip.period_label || slip.month_year || 'June 2026')}
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:0.72rem; text-align:left;">
+                  <thead>
+                    <tr style="background:#f1f5f9; color:#475569; font-size:0.68rem; text-transform:uppercase; border-bottom:1px solid #cbd5e1;">
+                      <th style="padding:4px 8px; width:15%;">Date</th>
+                      <th style="padding:4px 8px; width:30%;">Element Name</th>
+                      <th style="padding:4px 8px; width:22%;">Element Type</th>
+                      <th style="padding:4px 8px; width:15%;">Remark</th>
+                      <th style="padding:4px 8px; width:6%; text-align:center;">Hrs</th>
+                      <th style="padding:4px 8px; width:12%; text-align:right;">Amount</th>
                     </tr>
-                  `).join('') : `
-                    <tr>
-                      <td style="border:1px solid #000000; padding:4px 8px;">10/07/2026</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; font-weight:600;">Basic Salary</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; color:#475569;">Standard Earnings</td>
-                      <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                      <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                      <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:700;">${formatMoney(slip.basic_salary, slip.currency || 'AED')}</td>
-                    </tr>
-                    <tr>
-                      <td style="border:1px solid #000000; padding:4px 8px;">10/07/2026</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; font-weight:600;">Accommodation Allowance</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; color:#475569;">Standard Earnings</td>
-                      <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                      <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                      <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:700;">${formatMoney(slip.accommodation_allowance, slip.currency || 'AED')}</td>
-                    </tr>
-                    <tr>
-                      <td style="border:1px solid #000000; padding:4px 8px;">10/07/2026</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; font-weight:600;">Consolidated Allowance</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; color:#475569;">Standard Earnings</td>
-                      <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                      <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                      <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:700;">${formatMoney(slip.consolidated_allowance, slip.currency || 'AED')}</td>
-                    </tr>
-                    <tr>
-                      <td style="border:1px solid #000000; padding:4px 8px;">10/07/2026</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; font-weight:600;">Normal Overtime</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; color:#475569;">Standard Earnings</td>
-                      <td style="border:1px solid #000000; padding:4px 8px;"></td>
-                      <td style="border:1px solid #000000; padding:4px 8px; text-align:center;">${escapeHtml(slip.overtime_hrs || '10')}</td>
-                      <td style="border:1px solid #000000; padding:4px 8px; text-align:right; font-weight:700;">${formatMoney(slip.normal_overtime, slip.currency || 'AED')}</td>
-                    </tr>
-                  `}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${(slip.breakdown_items && slip.breakdown_items.length > 0) ? slip.breakdown_items.map(item => `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">${escapeHtml(item.date || '10/07/2026')}</span></td>
+                        <td style="padding:4px 8px; font-weight:600; color:#111827;"><span contenteditable="true" spellcheck="false">${escapeHtml(item.element_name || '')}</span></td>
+                        <td style="padding:4px 8px; color:#475569;"><span contenteditable="true" spellcheck="false">${escapeHtml(item.element_type || 'Standard Earnings')}</span></td>
+                        <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">${escapeHtml(item.remark || '')}</span></td>
+                        <td style="padding:4px 8px; text-align:center; color:#64748b;"><span contenteditable="true" spellcheck="false">${escapeHtml(item.hrs || '')}</span></td>
+                        <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false">${formatMoney(item.amount, curr)}</span></td>
+                      </tr>
+                    `).join('') : `
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">10/07/2026</span></td>
+                        <td style="padding:4px 8px; font-weight:600; color:#111827;"><span contenteditable="true" spellcheck="false">Basic Salary</span></td>
+                        <td style="padding:4px 8px; color:#475569;"><span contenteditable="true" spellcheck="false">Standard Earnings</span></td>
+                        <td style="padding:4px 8px;"><span contenteditable="true" spellcheck="false">Standard Basic Monthly</span></td>
+                        <td style="padding:4px 8px; text-align:center;"></td>
+                        <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false">${formatMoney(basicVal, curr)}</span></td>
+                      </tr>
+                      <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:4px 8px; color:#64748b;"><span contenteditable="true" spellcheck="false">10/07/2026</span></td>
+                        <td style="padding:4px 8px; font-weight:600; color:#111827;"><span contenteditable="true" spellcheck="false">Accommodation Allowance</span></td>
+                        <td style="padding:4px 8px; color:#475569;"><span contenteditable="true" spellcheck="false">Standard Earnings</span></td>
+                        <td style="padding:4px 8px;"><span contenteditable="true" spellcheck="false">Housing Allowance</span></td>
+                        <td style="padding:4px 8px; text-align:center;"></td>
+                        <td style="padding:4px 8px; text-align:right; font-weight:700; color:#111827;"><span contenteditable="true" spellcheck="false">${formatMoney(accVal, curr)}</span></td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
 
-              <!-- Project & Cost Allocation Note (if linked) -->
+              <!-- Cost Center Allocation Note -->
               ${slip.project_name ? `
-                <div style="font-size:0.7rem; color:#64748b; margin-top:-0.5rem; margin-bottom:1rem; font-style:italic;">
-                  Cost Center Allocation: ${escapeHtml(slip.project_name)} • Direct Project Profit/Loss Deduction
+                <div style="font-size:0.68rem; color:#64748b; margin-top:-0.35rem; margin-bottom:0.75rem; font-style:italic;" contenteditable="true" spellcheck="false">
+                  Cost Center Allocation: ${escapeHtml(slip.project_name)} &bull; Direct Project Profit/Loss Deduction
                 </div>
               ` : ''}
 
-              <!-- Bottom Contact Bar (matching sample) -->
-              <div style="background:#00a3c4; color:#ffffff; padding:6px 12px; text-align:center; font-size:0.74rem; font-weight:600; letter-spacing:0.02em; border-radius:2px; margin-top:1.5rem;">
-                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+              <!-- Dual Authorised Signatures Section (2 Columns) -->
+              <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.5rem; padding-top:0.35rem; border-top:1px solid #cbd5e1; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <colgroup>
+                  <col style="width:50%;">
+                  <col style="width:50%;">
+                </colgroup>
+                <tr>
+                  <!-- Left Column: Employee Acknowledgment -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      EMPLOYEE ACKNOWLEDGMENT (إقرار الموظف)
+                    </div>
+                    <div style="position:relative; width:180px; height:70px; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                      <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                        <div>[ Employee Acceptance &amp; Signature ]</div>
+                        <div style="font-size:0.52rem; color:#0284c7; margin-top:2px;">Received with thanks</div>
+                      </div>
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;" contenteditable="true" spellcheck="false" title="Click to edit">${escapeHtml(slip.employee_name || 'Employee Signature')}</div>
+                    <div style="font-size:0.58rem; color:#4b5563;">Date: ${escapeHtml(slip.printed_date || '10-Jul-26')}</div>
+                  </td>
+
+                  <!-- Right Column: Rayan Engineering Authorised Signatory with stamp & signature -->
+                  <td style="vertical-align:bottom; text-align:center; padding:0 12px;">
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      ${compName}
+                    </div>
+                    <div id="payslip-stamp-signature-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="this.style.opacity = this.style.opacity === '0' ? '1' : '0'" title="Click to show/hide stamp & signature">
+                      <img id="payslip-stamp" src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
+                      <img id="payslip-signature" src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
+                    </div>
+                    <div style="border-top:1.5px solid #111827; width:160px; margin:3px auto 3px auto;"></div>
+                    <div style="font-size:0.64rem; font-weight:800; color:#111827;" contenteditable="true" spellcheck="false" title="Click to edit title">Authorised Signatory</div>
+                    <div style="font-size:0.58rem; color:#4b5563;" contenteditable="true" spellcheck="false" title="Click to edit name">Arshad Alam Shaikh &bull; Managing Director</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Notes & Best Wishes Section -->
+              <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
+                <div style="margin-bottom:2px; color:#475569;" contenteditable="true" spellcheck="false">Please keep a copy of this pay slip for your confidential personal tax and employment records.</div>
+                <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              </div>
+
+              <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
+              <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+                <div style="min-width:60px; font-weight:600; color:#9ca3af;">${escapeHtml(slip.slip_no || 'PSJune 2026/EN12001')}</div>
+                <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                  This is a system-generated Employee Pay Slip and does not require a signature or stamp.
+                </div>
+                <div style="min-width:60px; text-align:right; font-size:0.65rem; color:#9ca3af;">Page 1 of 1</div>
               </div>
 
             </div>
@@ -2562,7 +2685,8 @@ export function registerPayrollModules(FinanceApp) {
       </div>
     `;
 
-    this.showCustomModal(modalHtml);
+    this.getModalContainer().innerHTML = modalHtml;
+    document.body.classList.add('fin-doc-open');
   };
 
   proto.downloadPayslipDocument = function (slipId) {
@@ -2725,6 +2849,25 @@ export function registerPayrollModules(FinanceApp) {
   // ==========================================================================
   // 8. EMPLOYMENT CERTIFICATES (شهادة عمل - BILINGUAL)
   // ==========================================================================
+  proto.toggleDocStampSign = function () {
+    const wrap = document.getElementById('payslip-stamp-signature-wrap') ||
+      document.getElementById('emp-cert-stamp-sign-wrap') ||
+      document.getElementById('loa-stamp-sign-wrap') ||
+      document.getElementById('fin-stamp-signature-wrap') ||
+      document.querySelector('.fin-stamp-sign-container');
+    if (wrap) {
+      if (wrap.style.display === 'none' || wrap.style.opacity === '0') {
+        wrap.style.display = '';
+        wrap.style.opacity = '1';
+        if (this.showToast) this.showToast('Stamp and signature enabled', 'info');
+      } else {
+        wrap.style.display = 'none';
+        wrap.style.opacity = '0';
+        if (this.showToast) this.showToast('Stamp and signature hidden for hand-signing', 'info');
+      }
+    }
+  };
+
   proto.getEmploymentCertificates = function () {
     this.ensurePayrollSeedData();
     return (this.db?.employment_certificates || []).filter(c => this.matchesActiveCompany(c.company_id));
@@ -2781,6 +2924,32 @@ export function registerPayrollModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <style>
+          #fin-doc-print-modal [contenteditable="true"] {
+            transition: background 0.15s, outline 0.15s;
+            border-radius: 2px;
+            padding: 1px 3px;
+          }
+          #fin-doc-print-modal [contenteditable="true"]:hover {
+            background: rgba(56, 189, 248, 0.12) !important;
+            outline: 1px dashed #0284c7 !important;
+            cursor: text;
+          }
+          #fin-doc-print-modal [contenteditable="true"]:focus {
+            background: rgba(56, 189, 248, 0.22) !important;
+            outline: 1.5px solid #0284c7 !important;
+          }
+          @media print {
+            #fin-doc-print-modal [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+              padding: 0 !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+          }
+        </style>
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -2793,16 +2962,17 @@ export function registerPayrollModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openEmploymentCertificatePrintModal('${cert.id}')">Emp Cert</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openLetterOfAssignmentPrintModal()">Assignment Letter</button>
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off" style="color:#0284c7; border-color:rgba(2,132,199,0.4);">
+              <span>🔲</span> Toggle Stamp &amp; Sign
+            </button>
             <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditEmploymentCertModal('${cert.id}')">
-              <span>✏️</span> Edit Certificate
+              <span>✏️</span> Edit Certificate (Form)
             </button>
             <button type="button" class="fin-btn-print-primary" onclick="window.print()">
               <span>🖨️</span> Print / Save as PDF
@@ -2826,8 +2996,8 @@ export function registerPayrollModules(FinanceApp) {
 
             <!-- Date & Reference Row -->
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; font-weight:700; color:#0f172a; margin-bottom:1.5rem;">
-              <div>Date: ${cert.date || 'August 13, 2025'}</div>
-              <div>Ref.: ${cert.ref_no || cert.cert_no || 'REC/HC/2025/11004'}</div>
+              <div>Date: <span contenteditable="true" spellcheck="false" title="Click to edit date">${cert.date || 'August 13, 2025'}</span></div>
+              <div>Ref.: <span contenteditable="true" spellcheck="false" title="Click to edit reference">${cert.ref_no || cert.cert_no || 'REC/HC/2025/11004'}</span></div>
             </div>
 
             <!-- Two-Column Bilingual Body Grid with Center Vertical Cyan Divider -->
@@ -2840,45 +3010,45 @@ export function registerPayrollModules(FinanceApp) {
               <tr>
                 <!-- Left Column (English) -->
                 <td style="vertical-align:top; padding-right:14px; font-size:0.80rem; line-height:1.55; color:#1e293b;">
-                  <h1 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin:0 0 0.85rem 0; font-family:'Outfit', sans-serif;">Employment Certificate</h1>
-                  <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:1rem;">Whom It May Concern</div>
+                  <h1 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin:0 0 0.85rem 0; font-family:'Outfit', sans-serif;" contenteditable="true" spellcheck="false">Employment Certificate</h1>
+                  <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:1rem;" contenteditable="true" spellcheck="false">Whom It May Concern</div>
                   
-                  <p style="margin:0 0 1rem 0; text-align:justify; color:#334155;">
+                  <p style="margin:0 0 1rem 0; text-align:justify; color:#334155;" contenteditable="true" spellcheck="false">
                     RAYAN Engineering and Contracting l.l.c- s.p.c, a subsidiary of RAYAN Group, certifies that the under mentioned employee is currently in the service of the company and receiving a monthly salary as below:
                   </p>
 
                   <div style="margin-bottom:0.9rem; line-height:1.6;">
-                    <div><strong>Name:</strong> ${cert.employee_name_en || 'Bakhteyar Alam Mokhtar Ahmad'}</div>
-                    <div><strong>Job Tile:</strong> ${cert.job_title_en || 'Civil Engineer'}</div>
-                    <div><strong>Date of Joining:</strong> ${cert.joining_date_en || '07/08/2025'}</div>
-                    <div><strong>Nationality:</strong> ${cert.nationality_en || 'India'}</div>
-                    <div><strong>Passport No.:</strong> ${cert.passport_no || 'S3552106'}</div>
-                    <div style="margin-top:2px;"><strong>Monthly Salary:</strong> (${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}) AE DIRHAM Only</div>
+                    <div><strong>Name:</strong> <span contenteditable="true" spellcheck="false">${cert.employee_name_en || 'Bakhteyar Alam Mokhtar Ahmad'}</span></div>
+                    <div><strong>Job Title:</strong> <span contenteditable="true" spellcheck="false">${cert.job_title_en || 'Civil Engineer'}</span></div>
+                    <div><strong>Date of Joining:</strong> <span contenteditable="true" spellcheck="false">${cert.joining_date_en || '07/08/2025'}</span></div>
+                    <div><strong>Nationality:</strong> <span contenteditable="true" spellcheck="false">${cert.nationality_en || 'India'}</span></div>
+                    <div><strong>Passport No.:</strong> <span contenteditable="true" spellcheck="false">${cert.passport_no || 'S3552106'}</span></div>
+                    <div style="margin-top:2px;"><strong>Monthly Salary:</strong> (<span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>) AE DIRHAM Only</div>
                   </div>
 
                   <!-- Salary Breakdown Table (English) -->
                   <table style="width:100%; max-width:280px; font-size:0.75rem; border-collapse:collapse; margin-bottom:1rem;">
                     <tr>
                       <td style="padding:1px 0; color:#475569;">BASIC SALARY</td>
-                      <td style="text-align:right; font-weight:600;">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</td>
+                      <td style="text-align:right; font-weight:600;"><span contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></td>
                     </tr>
                     <tr>
                       <td style="padding:1px 0; color:#475569;">ACCOMMODATION ALLOW.</td>
-                      <td style="text-align:right; font-weight:600;">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</td>
+                      <td style="text-align:right; font-weight:600;"><span contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></td>
                     </tr>
                     <tr style="border-top:1px solid #94a3b8; font-weight:800;">
                       <td style="padding:3px 0; color:#0f172a;">Total:</td>
-                      <td style="text-align:right; color:#0f172a;">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</td>
+                      <td style="text-align:right; color:#0f172a;"><span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></td>
                     </tr>
                   </table>
 
-                  <p style="font-size:0.75rem; line-height:1.45; color:#475569; margin:0 0 0.85rem 0;">
+                  <p style="font-size:0.75rem; line-height:1.45; color:#475569; margin:0 0 0.85rem 0;" contenteditable="true" spellcheck="false">
                     ${cert.purpose || 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.'}
                   </p>
 
                   <div style="font-size:0.75rem; color:#475569;">
                     For verification inquires, contact us at<br>
-                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;">${cert.verification_email || 'rayan@rayan-group.com'}</a>
+                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;"><span contenteditable="true" spellcheck="false">${cert.verification_email || 'rayan@rayan-group.com'}</span></a>
                   </div>
                 </td>
 
@@ -2889,93 +3059,85 @@ export function registerPayrollModules(FinanceApp) {
 
                 <!-- Right Column (Arabic, RTL) -->
                 <td style="vertical-align:top; padding-left:14px; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.86rem; line-height:1.65; color:#1e293b;">
-                  <h1 style="font-size:1.55rem; font-weight:800; color:#0f172a; margin:0 0 0.85rem 0; font-family:'Amiri', serif;">شـــــهــــــــــــــــــــادة عــــــــمــــــــــــــــــــل</h1>
-                  <div style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem;">لمن يهمه الامر</div>
+                  <h1 style="font-size:1.55rem; font-weight:800; color:#0f172a; margin:0 0 0.85rem 0; font-family:'Amiri', serif;" contenteditable="true" spellcheck="false">شـــــهــــــــــــــــــــادة عــــــــمــــــــــــــــــــل</h1>
+                  <div style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:1rem;" contenteditable="true" spellcheck="false">لمن يهمه الامر</div>
 
-                  <p style="margin:0 0 1rem 0; text-align:justify; color:#334155;">
+                  <p style="margin:0 0 1rem 0; text-align:justify; color:#334155;" contenteditable="true" spellcheck="false">
                     تشهد شركة ريان الهندسيه و للمقاولات - ذ م م - ش ش و إحدى شركات مجموعة رايان بأن الموظف المذكور أدناه يعمل لدينا، ولايزال على رأس عمله حتى تاريخه ويتقاضى راتب شهري كما يلي:
                   </p>
 
                   <div style="margin-bottom:0.9rem; line-height:1.65;">
-                    <div><strong>الاسم :</strong> ${cert.employee_name_ar || 'بختيار عالم مختار احمد'}</div>
-                    <div><strong>المسمى الوظيفي:</strong> ${cert.job_title_ar || 'مهندس مدني'}</div>
-                    <div><strong>تاريخ التعيين:</strong> ${cert.joining_date_ar || '2025-08-07'}</div>
-                    <div><strong>الجنسية:</strong> ${cert.nationality_ar || 'هندي'}</div>
-                    <div><strong>رقم الجواز:</strong> ${cert.passport_no || 'S3552106'}</div>
-                    <div style="margin-top:2px;"><strong>الراتب الشهري :</strong> (${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}) درهم فقط</div>
+                    <div><strong>الاسم :</strong> <span contenteditable="true" spellcheck="false">${cert.employee_name_ar || 'بختيار عالم مختار احمد'}</span></div>
+                    <div><strong>المسمى الوظيفي:</strong> <span contenteditable="true" spellcheck="false">${cert.job_title_ar || 'مهندس مدني'}</span></div>
+                    <div><strong>تاريخ التعيين:</strong> <span contenteditable="true" spellcheck="false">${cert.joining_date_ar || '2025-08-07'}</span></div>
+                    <div><strong>الجنسية:</strong> <span contenteditable="true" spellcheck="false">${cert.nationality_ar || 'هندي'}</span></div>
+                    <div><strong>رقم الجواز:</strong> <span contenteditable="true" spellcheck="false">${cert.passport_no || 'S3552106'}</span></div>
+                    <div style="margin-top:2px;"><strong>الراتب الشهري :</strong> (<span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>) درهم فقط</div>
                   </div>
 
                   <!-- Salary Breakdown Table (Arabic) -->
                   <table style="width:100%; max-width:280px; font-size:0.82rem; border-collapse:collapse; margin-bottom:1rem; direction:rtl; text-align:right; font-family:'Amiri', serif;">
                     <tr>
                       <td style="padding:1px 0; color:#475569;">راتب اساسي</td>
-                      <td style="text-align:left; font-weight:600;">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</td>
+                      <td style="text-align:left; font-weight:600;"><span contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></td>
                     </tr>
                     <tr>
                       <td style="padding:1px 0; color:#475569;">علاوة سكن</td>
-                      <td style="text-align:left; font-weight:600;">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</td>
+                      <td style="text-align:left; font-weight:600;"><span contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></td>
                     </tr>
                     <tr style="border-top:1px solid #94a3b8; font-weight:800;">
                       <td style="padding:3px 0; color:#0f172a;">الإجمالي:</td>
-                      <td style="text-align:left; color:#0f172a;">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</td>
+                      <td style="text-align:left; color:#0f172a;"><span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></td>
                     </tr>
                   </table>
 
-                  <p style="font-size:0.82rem; line-height:1.55; color:#475569; margin:0 0 0.85rem 0;">
+                  <p style="font-size:0.82rem; line-height:1.55; color:#475569; margin:0 0 0.85rem 0;" contenteditable="true" spellcheck="false">
                     ${cert.purpose_ar || 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.'}
                   </p>
 
                   <div style="font-size:0.82rem; color:#475569;">
                     لإلستفسارات، يمكنكم التواصل معنا عبر البريد اإللكتروني<br>
-                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;">${cert.verification_email || 'rayan@rayan-group.com'}</a>
+                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;"><span contenteditable="true" spellcheck="false">${cert.verification_email || 'rayan@rayan-group.com'}</span></a>
                   </div>
                 </td>
               </tr>
             </table>
 
             <!-- Center Signatory & Official People & Culture Stamp Box -->
-            <div style="text-align:center; margin:1.2rem auto 1.5rem auto; position:relative; width:280px;">
+            <div id="emp-cert-stamp-sign-wrap" class="fin-stamp-sign-container" style="text-align:center; margin:1.2rem auto 1.5rem auto; position:relative; width:280px; cursor:pointer;" onclick="this.style.opacity = this.style.opacity === '0' ? '1' : '0'" title="Click to show/hide stamp & signature">
               <!-- Official Round People & Culture Stamp -->
-              <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:10px; top:-22px; width:98px; height:98px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+              <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:10px; top:-22px; width:98px; height:98px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
               <!-- Arshad Alam Shaikh Signature -->
-              <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:6px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+              <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:6px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
               
               <div style="position:relative; z-index:3; padding-top:40px;">
-                <div style="font-family:'Amiri', serif; font-size:1.05rem; font-weight:700; color:#0f172a;">${cert.signatory_name_ar || 'ارشد عالم شيخ'}</div>
-                <div style="font-weight:800; font-size:0.88rem; color:#0f172a;">${cert.signatory_name || 'Arshad Alam Shaikh'}</div>
-                <div style="font-family:'Amiri', serif; font-size:0.80rem; font-weight:700; color:#0f172a;">${cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'}</div>
-                <div style="font-weight:700; font-size:0.75rem; color:#0f172a;">${cert.signatory_title || 'Chief Officer of People & Culture'}</div>
+                <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:1.05rem; font-weight:700; color:#0f172a; outline:none;" title="Click to edit name (Arabic)">${cert.signatory_name_ar || 'ارشد عالم شيخ'}</div>
+                <div contenteditable="true" spellcheck="false" style="font-weight:800; font-size:0.88rem; color:#0f172a; outline:none;" title="Click to edit name (English)">${cert.signatory_name || 'Arshad Alam Shaikh'}</div>
+                <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.80rem; font-weight:700; color:#0f172a; outline:none;" title="Click to edit title (Arabic)">${cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'}</div>
+                <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.75rem; color:#0f172a; outline:none;" title="Click to edit title (English)">${cert.signatory_title || 'Chief Officer of People & Culture'}</div>
               </div>
             </div>
 
             <!-- Group Includes 4 Logos Strip -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.6rem 0; font-size:0.72rem; color:#475569; border-top:1px solid #e2e8f0; padding-top:0.6rem;">
               <div style="font-weight:600;">* The Group Includes:</div>
-              <img src="/assets/docs/rayan-group-four-logos-strip.png" alt="Rayan Group Subsidiaries" style="height:24px; width:auto;">
+              <img src="/assets/docs/rayan-group-four-logos-strip.png" alt="Rayan Group Subsidiaries" style="height:24px; width:auto; max-width:320px; object-fit:contain;">
               <div style="font-family:'Amiri', serif; font-weight:700; direction:rtl;">*تشمل المجموعة</div>
             </div>
 
             <!-- Bilingual Notes Section -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; font-size:0.68rem; color:#64748b; line-height:1.45; margin-bottom:0.75rem;">
-              <div style="width:48%;">
+              <div style="width:48%;" contenteditable="true" spellcheck="false">
                 <strong>Note:</strong><br>
                 - Any amendment or change will revoke this certificate.<br>
                 - The validity of this certificate is one month from the date of issuance.<br>
                 - This is a system generated certificate with electronic signature &amp; company stamp.
               </div>
-              <div style="width:48%; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.74rem;">
+              <div style="width:48%; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.74rem;" contenteditable="true" spellcheck="false">
                 <strong>ملاحظة:</strong><br>
                 -أي شطب أو تعديل في هذه الشهادة يلغيها.<br>
                 -صلاحية الشهادة شهر واحد من تاريخ إصدارها .<br>
                 -اصدرت هذه الشهادة عبر النظام اإللكتروني مع التوقيع و ختم الشركة.
-              </div>
-            </div>
-
-            <!-- Bottom Corporate Address Footer -->
-            <div style="border-top:1px solid #e2e8f0; padding-top:5px; text-align:left;">
-              <div style="color:#0284c7; font-weight:800; font-size:0.85rem; font-family:'Plus Jakarta Sans', sans-serif;">Abu Dhabi, UAE</div>
-              <div style="font-size:0.70rem; color:#475569; font-family:'Plus Jakarta Sans', sans-serif;">
-                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | rayan@rayan-group.com | www.rayan-group.com
               </div>
             </div>
 
@@ -3373,6 +3535,9 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off" style="color:#0284c7; border-color:rgba(2,132,199,0.4);">
+              <span>🔲</span> Toggle Stamp &amp; Sign
+            </button>
             <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditLetterOfAssignmentModal('${loa.id}')">
               <span>✏️</span> Edit LOA Details
             </button>
@@ -3549,7 +3714,7 @@ export function registerPayrollModules(FinanceApp) {
                 <div style="font-family:'Amiri', serif; font-size:1rem; font-weight:700; color:#0f172a;">${loa.signatory_name_ar || 'ارشد عالم شيخ'}</div>
                 <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">${loa.signatory_name || 'Arshad Alam Shaikh'}</div>
                 <div style="font-family:'Amiri', serif; font-size:0.78rem; font-weight:700; color:#0f172a;">${loa.signatory_title_ar || 'الرئيس التنفيذي'}</div>
-                <div style="font-weight:700; font-size:0.75rem; color:#0f172a;">${loa.signatory_title || 'Chief Executive Officer'}</div>
+                <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.75rem; color:#0f172a; outline:none;" title="Click to edit title">${loa.signatory_title || 'Chief Executive Officer'}</div>
               </div>
 
               <!-- Right Column: Employee Acceptance -->
