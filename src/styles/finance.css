@@ -5461,3 +5461,50 @@ body.fin-doc-open .fin-app-wrapper {
   color: #38bdf8 !important;
 }
 
+
+
+/* Toggle Stamp & Signature Button and Container Styling */
+.fin-btn-toggle-stamp {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border: 1px solid #0284c7 !important;
+  font-weight: 700 !important;
+  font-size: 0.76rem !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  padding: 0.42rem 0.95rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.fin-btn-toggle-stamp:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px);
+}
+
+.fin-stamp-sign-container {
+  transition: opacity 0.22s ease;
+  position: relative;
+}
+
+.fin-stamp-sign-container:hover {
+  outline: 1.5px dashed #0284c7 !important;
+  outline-offset: 3px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+@media print {
+  .fin-stamp-sign-container:hover {
+    outline: none !important;
+  }
+  .stamp-hidden,
+  .fin-stamp-sign-container[style*="opacity: 0"],
+  .fin-stamp-sign-container[style*="opacity:0"] {
+    opacity: 0 !important;
+    display: none !important;
+  }
+}

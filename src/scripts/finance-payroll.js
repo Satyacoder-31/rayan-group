@@ -2342,7 +2342,7 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off" style="color:#0284c7; border-color:rgba(2,132,199,0.4);">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
               <span>🔲</span> Toggle Stamp &amp; Sign
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.closeDocPrintModal(); window.finApp.openPayslipModal('${slip.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
@@ -2650,7 +2650,7 @@ export function registerPayrollModules(FinanceApp) {
                     <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                       ${compName}
                     </div>
-                    <div id="payslip-stamp-signature-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="this.style.opacity = this.style.opacity === '0' ? '1' : '0'" title="Click to show/hide stamp & signature">
+                    <div id="payslip-stamp-signature-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide stamp & signature">
                       <img id="payslip-stamp" src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
                       <img id="payslip-signature" src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
                     </div>
@@ -2850,20 +2850,60 @@ export function registerPayrollModules(FinanceApp) {
   // 8. EMPLOYMENT CERTIFICATES (شهادة عمل - BILINGUAL)
   // ==========================================================================
   proto.toggleDocStampSign = function () {
-    const wrap = document.getElementById('payslip-stamp-signature-wrap') ||
-      document.getElementById('emp-cert-stamp-sign-wrap') ||
-      document.getElementById('loa-stamp-sign-wrap') ||
-      document.getElementById('fin-stamp-signature-wrap') ||
-      document.querySelector('.fin-stamp-sign-container');
-    if (wrap) {
-      if (wrap.style.display === 'none' || wrap.style.opacity === '0') {
-        wrap.style.display = '';
-        wrap.style.opacity = '1';
-        if (this.showToast) this.showToast('Stamp and signature enabled', 'info');
-      } else {
-        wrap.style.display = 'none';
-        wrap.style.opacity = '0';
-        if (this.showToast) this.showToast('Stamp and signature hidden for hand-signing', 'info');
+    const modal = document.getElementById('fin-doc-print-modal') || document;
+    const wrappers = modal.querySelectorAll(
+      '#po-stamp-signature-wrap, #payslip-stamp-signature-wrap, #emp-cert-stamp-sign-wrap, #loa-stamp-sign-wrap, #wcc-stamp-sign-wrap, #ult-stamp-sign-wrap, #dn-stamp-sign-wrap, #ltr-stamp-sign-wrap, #fin-stamp-signature-wrap, .fin-stamp-sign-container, .fin-stamp-signature-wrap'
+    );
+
+    let isCurrentlyHidden = false;
+    if (wrappers && wrappers.length > 0) {
+      wrappers.forEach(w => {
+        if (w.style.opacity === '0' || w.style.display === 'none' || w.classList.contains('stamp-hidden')) {
+          isCurrentlyHidden = true;
+        }
+      });
+      const newHidden = !isCurrentlyHidden;
+      wrappers.forEach(w => {
+        if (newHidden) {
+          w.style.opacity = '0';
+          w.classList.add('stamp-hidden');
+        } else {
+          w.style.opacity = '1';
+          w.style.display = '';
+          w.classList.remove('stamp-hidden');
+        }
+      });
+
+      const btn = modal.querySelector('.fin-btn-toggle-stamp, #btn-toggle-stamp-sign, button[onclick*="toggleDocStampSign"]');
+      if (btn) {
+        if (newHidden) {
+          btn.innerHTML = '<span>☑️</span> Show Stamp &amp; Sign';
+          btn.style.background = '#ef4444';
+          btn.style.borderColor = '#ef4444';
+          btn.style.color = '#ffffff';
+          btn.setAttribute('title', 'Click to restore Stamp & Signature');
+        } else {
+          btn.innerHTML = '<span>🔲</span> Toggle Stamp &amp; Sign';
+          btn.style.background = '#0284c7';
+          btn.style.borderColor = '#0284c7';
+          btn.style.color = '#ffffff';
+          btn.setAttribute('title', 'Click to hide Stamp & Signature (for manual signing)');
+        }
+      }
+
+      if (this.showToast) {
+        this.showToast(newHidden ? 'Stamp & signature hidden for manual hand-signing' : 'Stamp & signature visible', 'info');
+      }
+    } else {
+      const stampImgs = modal.querySelectorAll('img[src*="stamp"], img[src*="signature"]');
+      if (stampImgs && stampImgs.length > 0) {
+        let isHidden = (stampImgs[0].style.opacity === '0' || stampImgs[0].style.display === 'none');
+        stampImgs.forEach(img => {
+          img.style.opacity = isHidden ? '1' : '0';
+        });
+        if (this.showToast) {
+          this.showToast(isHidden ? 'Stamp & signature visible' : 'Stamp & signature hidden', 'info');
+        }
       }
     }
   };
@@ -2968,7 +3008,7 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off" style="color:#0284c7; border-color:rgba(2,132,199,0.4);">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
               <span>🔲</span> Toggle Stamp &amp; Sign
             </button>
             <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditEmploymentCertModal('${cert.id}')">
@@ -3104,13 +3144,14 @@ export function registerPayrollModules(FinanceApp) {
             </table>
 
             <!-- Center Signatory & Official People & Culture Stamp Box -->
-            <div id="emp-cert-stamp-sign-wrap" class="fin-stamp-sign-container" style="text-align:center; margin:1.2rem auto 1.5rem auto; position:relative; width:280px; cursor:pointer;" onclick="this.style.opacity = this.style.opacity === '0' ? '1' : '0'" title="Click to show/hide stamp & signature">
-              <!-- Official Round People & Culture Stamp -->
-              <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:10px; top:-22px; width:98px; height:98px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
-              <!-- Arshad Alam Shaikh Signature -->
-              <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:6px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
-              
-              <div style="position:relative; z-index:3; padding-top:40px;">
+            <div style="text-align:center; margin:1.2rem auto 1.5rem auto; position:relative; width:280px;">
+              <div id="emp-cert-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:280px; height:74px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
+                <!-- Official Round People & Culture Stamp -->
+                <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:10px; top:-22px; width:98px; height:98px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
+                <!-- Arshad Alam Shaikh Signature -->
+                <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:6px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
+              </div>
+              <div style="position:relative; z-index:3; padding-top:4px;">
                 <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:1.05rem; font-weight:700; color:#0f172a; outline:none;" title="Click to edit name (Arabic)">${cert.signatory_name_ar || 'ارشد عالم شيخ'}</div>
                 <div contenteditable="true" spellcheck="false" style="font-weight:800; font-size:0.88rem; color:#0f172a; outline:none;" title="Click to edit name (English)">${cert.signatory_name || 'Arshad Alam Shaikh'}</div>
                 <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.80rem; font-weight:700; color:#0f172a; outline:none;" title="Click to edit title (Arabic)">${cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'}</div>
@@ -3535,7 +3576,7 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-action" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off" style="color:#0284c7; border-color:rgba(2,132,199,0.4);">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
               <span>🔲</span> Toggle Stamp &amp; Sign
             </button>
             <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditLetterOfAssignmentModal('${loa.id}')">
@@ -3705,11 +3746,11 @@ export function registerPayrollModules(FinanceApp) {
               <!-- Left Column: For Rayan Group -->
               <div style="width:230px;">
                 <div style="font-weight:700; font-size:0.88rem; margin-bottom:2px;">For Rayan Group</div>
-                <div style="position:relative; width:220px; height:85px; margin:4px 0;">
+                <div id="loa-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:220px; height:85px; margin:4px 0; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
                   <!-- Rayan Group Round Stamp -->
-                  <img src="/assets/docs/rayan-group-round-stamp.png" alt="Rayan Group Stamp" style="position:absolute; left:0; top:-10px; width:88px; height:88px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
+                  <img src="/assets/docs/rayan-group-round-stamp.png" alt="Rayan Group Stamp" style="position:absolute; left:0; top:-10px; width:88px; height:88px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
                   <!-- Arshad Alam Shaikh Signature -->
-                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:12px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2;">
+                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:12px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
                 </div>
                 <div style="font-family:'Amiri', serif; font-size:1rem; font-weight:700; color:#0f172a;">${loa.signatory_name_ar || 'ارشد عالم شيخ'}</div>
                 <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">${loa.signatory_name || 'Arshad Alam Shaikh'}</div>

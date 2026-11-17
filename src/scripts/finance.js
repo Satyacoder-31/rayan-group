@@ -2169,7 +2169,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v136';
+    const CURRENT_DB_VERSION = 'v2026_clean_v137';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -10897,7 +10897,7 @@ class FinanceApp {
                   <div style="font-size:0.64rem; font-weight:800; color:#111827; text-transform:uppercase; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     ${compName}
                   </div>
-                  <div style="position:relative; width:180px; height:74px; margin:0 auto;">
+                  <div id="po-stamp-signature-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
                     <!-- Circular Rayan Official Stamp -->
                     <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1;">
                     <!-- Arshad Alam Shaikh Authentic Signature -->
@@ -27357,6 +27357,65 @@ Scope of Work & Technical Execution:
     `;
   }
 
+  toggleDocStampSign() {
+    const modal = document.getElementById('fin-doc-print-modal') || document;
+    const wrappers = modal.querySelectorAll(
+      '#po-stamp-signature-wrap, #payslip-stamp-signature-wrap, #emp-cert-stamp-sign-wrap, #loa-stamp-sign-wrap, #wcc-stamp-sign-wrap, #ult-stamp-sign-wrap, #dn-stamp-sign-wrap, #ltr-stamp-sign-wrap, #fin-stamp-signature-wrap, .fin-stamp-sign-container, .fin-stamp-signature-wrap'
+    );
+
+    let isCurrentlyHidden = false;
+    if (wrappers && wrappers.length > 0) {
+      wrappers.forEach(w => {
+        if (w.style.opacity === '0' || w.style.display === 'none' || w.classList.contains('stamp-hidden')) {
+          isCurrentlyHidden = true;
+        }
+      });
+      const newHidden = !isCurrentlyHidden;
+      wrappers.forEach(w => {
+        if (newHidden) {
+          w.style.opacity = '0';
+          w.classList.add('stamp-hidden');
+        } else {
+          w.style.opacity = '1';
+          w.style.display = '';
+          w.classList.remove('stamp-hidden');
+        }
+      });
+
+      const btn = modal.querySelector('.fin-btn-toggle-stamp, #btn-toggle-stamp-sign, button[onclick*="toggleDocStampSign"]');
+      if (btn) {
+        if (newHidden) {
+          btn.innerHTML = '<span>☑️</span> Show Stamp &amp; Sign';
+          btn.style.background = '#ef4444';
+          btn.style.borderColor = '#ef4444';
+          btn.style.color = '#ffffff';
+          btn.setAttribute('title', 'Click to restore Stamp & Signature');
+        } else {
+          btn.innerHTML = '<span>🔲</span> Toggle Stamp &amp; Sign';
+          btn.style.background = '#0284c7';
+          btn.style.borderColor = '#0284c7';
+          btn.style.color = '#ffffff';
+          btn.setAttribute('title', 'Click to hide Stamp & Signature (for manual signing)');
+        }
+      }
+
+      if (this.showToast) {
+        this.showToast(newHidden ? 'Stamp & signature hidden for manual hand-signing' : 'Stamp & signature visible', 'info');
+      }
+    } else {
+      const stampImgs = modal.querySelectorAll('img[src*="stamp"], img[src*="signature"]');
+      if (stampImgs && stampImgs.length > 0) {
+        let isHidden = (stampImgs[0].style.opacity === '0' || stampImgs[0].style.display === 'none');
+        stampImgs.forEach(img => {
+          img.style.opacity = isHidden ? '1' : '0';
+        });
+        if (this.showToast) {
+          this.showToast(isHidden ? 'Stamp & signature visible' : 'Stamp & signature hidden', 'info');
+        }
+      }
+    }
+  }
+
   getRayanStampImg() {
     return `<img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" class="rayan-real-stamp">`;
   }
@@ -28885,6 +28944,9 @@ Scope of Work & Technical Execution:
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
+              <span>🔲</span> Toggle Stamp &amp; Sign
+            </button>
             <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openPOTermsModal('${po.id || po.po_no}')">
               <span>📜</span> Edit 20 Terms
             </button>

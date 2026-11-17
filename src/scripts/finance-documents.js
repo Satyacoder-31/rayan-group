@@ -2074,6 +2074,9 @@ export function registerDocumentModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
+              <span>🔲</span> Toggle Stamp &amp; Sign
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
@@ -2232,12 +2235,12 @@ export function registerDocumentModules(FinanceApp) {
                       Authorized Signatory:
                     </div>
                   </div>
-                  <div style="display:flex; align-items:center; gap:15px; position:relative; min-height:60px; margin-top:5px;">
+                  <div id="wcc-stamp-sign-wrap" class="fin-stamp-sign-container" style="display:flex; align-items:center; gap:15px; position:relative; min-height:60px; margin-top:5px; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
                     ${cert.include_signature !== false ? `
-                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block; filter:contrast(1.2);">
+                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block; filter:contrast(1.2); transition:opacity 0.2s;">
                     ` : ''}
                     ${cert.include_stamp !== false ? `
-                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:75px; width:auto; display:block; filter:contrast(1.15);">
+                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:75px; width:auto; display:block; filter:contrast(1.15); transition:opacity 0.2s;">
                     ` : ''}
                   </div>
                 </div>
@@ -2326,6 +2329,9 @@ export function registerDocumentModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
+              <span>🔲</span> Toggle Stamp &amp; Sign
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
@@ -2535,6 +2541,9 @@ export function registerDocumentModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
+              <span>🔲</span> Toggle Stamp &amp; Sign
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
@@ -2629,12 +2638,12 @@ export function registerDocumentModules(FinanceApp) {
                     <div style="font-size:0.78rem; color:#475569; margin-top:2px;">RAYAN ENGINEERING &amp; CONTRACTING</div>
                     <div style="font-size:0.75rem; color:#64748b;">${dn.dispatched_by || 'Storekeeper / Logistics Officer'}</div>
                   </div>
-                  <div style="display:flex; align-items:center; gap:12px; min-height:55px;">
+                  <div id="dn-stamp-sign-wrap" class="fin-stamp-sign-container" style="display:flex; align-items:center; gap:12px; min-height:55px; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
                     ${dn.include_signature !== false ? `
-                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:48px; width:auto; display:block;">
+                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:48px; width:auto; display:block; transition:opacity 0.2s;">
                     ` : ''}
                     ${dn.include_stamp !== false ? `
-                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:65px; width:auto; display:block;">
+                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:65px; width:auto; display:block; transition:opacity 0.2s;">
                     ` : ''}
                   </div>
                 </div>
@@ -2731,6 +2740,9 @@ export function registerDocumentModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
+              <span>🔲</span> Toggle Stamp &amp; Sign
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-print-primary" onclick="window.finApp.printDocument()">
               🖨️ Print / Save as PDF
             </button>
@@ -2788,12 +2800,12 @@ export function registerDocumentModules(FinanceApp) {
                 <div style="font-weight:800; color:#1e3a8a; margin-top:2px;">${ltr.signatory_name || 'Eng. Bakhteyar Alam'}</div>
                 <div style="color:#475569; font-size:0.82rem;">${ltr.designation || 'Construction Manager'}</div>
 
-                <div style="display:flex; align-items:center; gap:20px; margin-top:10px;">
+                <div id="ltr-stamp-sign-wrap" class="fin-stamp-sign-container" style="display:flex; align-items:center; gap:20px; margin-top:10px; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
                   ${ltr.include_signature !== false ? `
-                    <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block;">
+                    <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block; transition:opacity 0.2s;">
                   ` : ''}
                   ${ltr.include_stamp !== false ? `
-                    <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:80px; width:auto; display:block;">
+                    <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:80px; width:auto; display:block; transition:opacity 0.2s;">
                   ` : ''}
                 </div>
               </div>
