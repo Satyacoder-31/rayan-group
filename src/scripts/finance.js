@@ -2169,7 +2169,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v139';
+    const CURRENT_DB_VERSION = 'v2026_clean_v140';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -29169,8 +29169,8 @@ Scope of Work & Technical Execution:
         return `
                       <tr style="border-bottom:1px solid #111827;">
                         <td style="border:1px solid #111827; padding:4px 3px; text-align:center; color:#111827; font-weight:600; vertical-align:middle !important;">${item.sr || idx + 1}</td>
-                        <td style="border:1px solid #111827; padding:4px 6px; color:#111827; word-break:break-word; line-height:1.35; white-space:pre-line; vertical-align:middle !important; font-size:0.65rem;">
-                          <div style="display:flex; justify-content:space-between; align-items:center; gap:4px;">
+                        <td style="border:1px solid #111827; padding:4px 6px; color:#111827; word-break:break-word; line-height:1.35; white-space:pre-line; vertical-align:top; font-size:0.65rem;">
+                          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px;">
                             <div style="flex:1;">${itemDesc}</div>
                             <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOLineItemScope('${po.id || po.po_no}', ${idx})" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.70rem; padding:0 2px; flex-shrink:0;" title="Edit Work Scope Details">✏️</button>
                           </div>
