@@ -2125,45 +2125,48 @@ export function registerDocumentModules(FinanceApp) {
 
               <div>
                 <!-- Top 3-Column Corporate Bilingual Header (No cyan strip) -->
-                <div style="display:grid; grid-template-columns:minmax(0, 1fr) auto minmax(0, 1.3fr); align-items:start; margin-bottom:1rem; gap:0.75rem; width:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:12px; width:100%; border-bottom:1.5px solid #0f172a; padding-bottom:6px;">
                   <!-- Column 1: Left (Logo, Company, TRN, Dynamic QR/Barcode) -->
-                  <div style="justify-self:start; max-width:100%;">
-                    <div style="margin-bottom:0.35rem;">
-                      <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:44px; width:auto; display:block;">
+                  <div style="flex:0 0 215px; max-width:220px; text-align:left;">
+                    <div style="margin-bottom:0.25rem;">
+                      <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:38px; width:auto; display:block;">
                     </div>
-                    <div style="font-size:0.75rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:2px;">
+                    <div style="font-size:0.72rem; font-weight:800; color:#0f172a; text-transform:uppercase; letter-spacing:0.01em; line-height:1.2; margin-bottom:2px;">
                       RAYAN ENGINEERING AND CONTRACTING LLC SPC
                     </div>
-                    <div style="font-size:0.70rem; color:#4b5563; line-height:1.3; margin-bottom:3px;">
+                    <div style="font-size:0.65rem; font-weight:700; color:#64748b; line-height:1.2; margin-bottom:2px;">
                       TRN: 100234567800003
                     </div>
                     ${this.getRayanDynamicVerificationCode ? this.getRayanDynamicVerificationCode(cert, 'wcc') : ''}
                   </div>
 
                   <!-- Column 2: Center Exact Bilingual Title -->
-                  <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
-                    <div style="font-family:'Amiri', serif; font-size:1.40rem; font-weight:700; color:#0284c7; line-height:1.15;">شهادة اتمام العمل</div>
-                    <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">WORK COMPLETION CERTIFICATE</div>
-                    <div style="font-size:0.62rem; color:#64748b; font-weight:600; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROJECT HANDOVER &amp; SIGN-OFF</div>
+                  <div style="flex:1 1 auto; text-align:center; padding-top:2px; min-width:180px;">
+                    <div style="font-family:'Amiri', serif; font-size:1.30rem; font-weight:700; color:#0284c7; line-height:1.15;">شهادة اتمام العمل</div>
+                    <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.20rem; font-weight:800; color:#0f172a; letter-spacing:0.02em; line-height:1.1;">WORK COMPLETION CERTIFICATE</div>
+                    <div style="font-size:0.60rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROJECT HANDOVER &amp; SIGN-OFF</div>
                   </div>
 
                   <!-- Column 3: Right (Metadata & Dates) -->
-                  <div style="text-align:right; justify-self:end;">
-                    <table style="font-size:0.70rem; border-collapse:collapse; margin-left:auto; white-space:nowrap;">
+                  <div style="flex:0 0 210px; max-width:215px; text-align:right;">
+                    <div style="font-size:0.86rem; font-weight:800; color:#dc2626; font-family:monospace; margin-bottom:3px; white-space:nowrap;" contenteditable="true" spellcheck="false" title="Click to edit cert no">
+                      # ${escapeHtml(cert.cert_no || cert.reference_no || 'REC-JOB COM-11021')}
+                    </div>
+                    <table style="font-size:0.66rem; border-collapse:collapse; margin-left:auto; white-space:nowrap;">
                       <tr>
-                        <td style="font-weight:700; color:#64748b; padding:1px 4px 1px 0; text-align:right; white-space:nowrap; font-size:0.68rem;">Date :</td>
-                        <td style="font-weight:800; color:#111827; text-align:left; padding:0 4px; white-space:nowrap; font-size:0.68rem;" contenteditable="true" spellcheck="false">${this.formatDate(cert.date)} ${cert.time || ''}</td>
-                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 4px; text-align:right; white-space:nowrap; font-size:0.70rem;">التاريخ:</td>
+                        <td style="font-weight:700; color:#64748b; padding:1px 3px 1px 0; text-align:right;">Date:</td>
+                        <td style="font-weight:700; color:#0f172a; text-align:right; padding:0 3px;" contenteditable="true" spellcheck="false">${this.formatDate(cert.date)} ${cert.time || ''}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 3px; text-align:right; font-size:0.72rem;">:التاريخ</td>
                       </tr>
                       <tr>
-                        <td style="font-weight:700; color:#64748b; padding:1px 4px 1px 0; text-align:right; white-space:nowrap; font-size:0.68rem;">Reference No :</td>
-                        <td style="font-weight:800; color:#dc2626; text-align:left; font-size:0.68rem; white-space:nowrap; padding:0 4px; letter-spacing:0.01em;" contenteditable="true" spellcheck="false">${cert.cert_no || cert.reference_no || 'REC-JOB COM-11021'}</td>
-                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 4px; text-align:right; white-space:nowrap; font-size:0.70rem;">الرقم المرجعي:</td>
+                        <td style="font-weight:700; color:#64748b; padding:1px 3px 1px 0; text-align:right;">Sub-Contract:</td>
+                        <td style="font-weight:800; color:#0f172a; text-align:right; padding:0 3px;" contenteditable="true" spellcheck="false">${escapeHtml(cert.subcontract_agreement || cert.po_no || 'PODSUB-2026/0810')}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 3px; text-align:right; font-size:0.72rem;">:العقد</td>
                       </tr>
                       <tr>
-                        <td style="font-weight:700; color:#64748b; padding:1px 4px 1px 0; text-align:right; line-height:1.15; white-space:nowrap; font-size:0.68rem;">Sub-Contract :</td>
-                        <td style="font-weight:800; color:#111827; text-align:left; font-size:0.68rem; white-space:nowrap; padding:0 4px;" contenteditable="true" spellcheck="false">${cert.subcontract_agreement || cert.po_no || 'PODSUB-2026/0810'}</td>
-                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 4px; text-align:right; white-space:nowrap; font-size:0.70rem;">طلب شراء محلي:</td>
+                        <td style="font-weight:700; color:#64748b; padding:1px 3px 1px 0; text-align:right;">Status:</td>
+                        <td style="font-weight:800; color:#15803d; text-align:right; padding:0 3px;">COMPLETED</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 3px; text-align:right; font-size:0.72rem;">:الحالة</td>
                       </tr>
                     </table>
                   </div>

@@ -2943,6 +2943,10 @@ export function registerPayrollModules(FinanceApp) {
             accommodation_allowance: Number(emp.accommodation_allowance) || 5500.00,
             total_salary: (Number(emp.basic_salary) || 9500) + (Number(emp.accommodation_allowance) || 5500),
             currency: emp.currency || 'AED',
+            salary_option: 'with_salary',
+            target_preset: 'general',
+            issued_to_en: 'Whom It May Concern',
+            issued_to_ar: 'لمن يهمه الأمر',
             purpose: 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.',
             purpose_ar: 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.',
             verification_email: 'rayan@rayan-group.com',
@@ -2973,6 +2977,10 @@ export function registerPayrollModules(FinanceApp) {
       accommodation_allowance: 5500,
       total_salary: 15000,
       currency: 'AED',
+      salary_option: 'with_salary',
+      target_preset: 'general',
+      issued_to_en: 'Whom It May Concern',
+      issued_to_ar: 'لمن يهمه الأمر',
       signatory_name: 'Arshad Alam Shaikh',
       signatory_name_ar: 'ارشد عالم شيخ',
       signatory_title: 'Chief Officer of People & Culture',
@@ -2981,6 +2989,10 @@ export function registerPayrollModules(FinanceApp) {
 
     cert.reference_no = cert.ref_no || cert.cert_no || 'REC/HC/2025/11004';
     cert.status = cert.status || 'OFFICIAL / VERIFIED';
+
+    const isWithoutSalary = (cert.salary_option === 'without_salary');
+    const issuedToEn = cert.issued_to_en || 'Whom It May Concern';
+    const issuedToAr = cert.issued_to_ar || 'لمن يهمه الأمر';
 
     const basicVal = Number(cert.basic_salary) || 9500;
     const accVal = Number(cert.accommodation_allowance) || 5500;
@@ -3061,6 +3073,10 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            <!-- 1-Click Toggle Salary Option -->
+            <button type="button" class="fin-btn-print-action" id="btn-toggle-cert-salary" onclick="window.finApp.toggleCertSalaryDisplay('${cert.id}')" style="background:${isWithoutSalary ? 'rgba(234,179,8,0.15)' : 'rgba(2,132,199,0.15)'}; color:${isWithoutSalary ? '#eab308' : '#38bdf8'}; border-color:${isWithoutSalary ? 'rgba(234,179,8,0.4)' : 'rgba(56,189,248,0.4)'}; font-weight:700;" title="Toggle With / Without Salary Breakdown">
+              <span>${isWithoutSalary ? '💵' : '📄'}</span> ${isWithoutSalary ? 'Show Salary' : 'Hide Salary (Service Only)'}
+            </button>
             <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
               <span>🔲</span> Toggle Stamp &amp; Sign
             </button>
@@ -3103,12 +3119,18 @@ export function registerPayrollModules(FinanceApp) {
                 ${this.getRayanDynamicVerificationCode ? this.getRayanDynamicVerificationCode(cert, 'emp_cert') : ''}
               </div>
 
-              <!-- Column 2: Center - Dead-Center Bilingual Certificate Title -->
+              <!-- Column 2: Center - Dead-Center Bilingual Certificate Title & Target Addressee -->
               <div style="text-align:center; padding-top:2px; justify-self:center; min-width:200px;">
                 <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">شهادة عمل</div>
                 <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.25rem; font-weight:800; color:#0f172a; letter-spacing:0.02em; line-height:1.1;">EMPLOYMENT CERTIFICATE</div>
-                <div style="font-size:0.60rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL STATEMENT OF EMPLOYMENT &amp; SALARY</div>
-                <div style="font-size:0.62rem; color:#0f172a; font-weight:700; margin-top:2px;">Whom It May Concern | لمن يهمه الأمر</div>
+                <div style="font-size:0.60rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">
+                  ${isWithoutSalary ? 'OFFICIAL CERTIFICATE OF EMPLOYMENT (SERVICE CONTINUITY)' : 'OFFICIAL STATEMENT OF EMPLOYMENT & SALARY'}
+                </div>
+                <div style="margin-top:3px;">
+                  <span style="font-size:0.72rem; color:#0284c7; font-weight:800; background:#f0f9ff; border:1px solid #bae6fd; border-radius:4px; padding:2px 8px; display:inline-block;" contenteditable="true" spellcheck="false" title="Click to edit addressee">
+                    ${escapeHtml(issuedToEn)} | <span style="font-family:'Amiri', serif; font-size:0.78rem;">${escapeHtml(issuedToAr)}</span>
+                  </span>
+                </div>
               </div>
 
               <!-- Column 3: Right - Reference, Status Badge, Date Table -->
@@ -3131,9 +3153,9 @@ export function registerPayrollModules(FinanceApp) {
                     <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:الصلاحية</td>
                   </tr>
                   <tr>
-                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Place:</td>
-                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;">Abu Dhabi, UAE</td>
-                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:المكان</td>
+                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Category:</td>
+                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;">${isWithoutSalary ? 'Service Record' : 'With Remuneration'}</td>
+                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:الفئة</td>
                   </tr>
                 </table>
               </div>
@@ -3154,6 +3176,11 @@ export function registerPayrollModules(FinanceApp) {
                 <div style="color:#334155;"><strong>Joining Date:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.joining_date_en || '07/08/2025')}</span></div>
                 <div style="color:#334155;"><strong>Nationality:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.nationality_en || 'India')}</span></div>
                 <div style="color:#334155;"><strong>Passport No:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(cert.passport_no || 'S3552106')}</span></div>
+                ${isWithoutSalary ? `
+                  <div style="color:#334155; margin-top:1px;"><strong>Employment Status:</strong> <span style="color:#15803d; font-weight:700;" contenteditable="true" spellcheck="false">Active / Currently On-Duty</span></div>
+                ` : `
+                  <div style="color:#334155; margin-top:1px;"><strong>Monthly Salary:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></div>
+                `}
               </div>
 
               <!-- Card 2: Arabic Particulars (RTL) -->
@@ -3169,6 +3196,11 @@ export function registerPayrollModules(FinanceApp) {
                 <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>تاريخ التعيين:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.joining_date_ar || '07-08-2025')}</span></div>
                 <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>الجنسية:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.nationality_ar || 'هندي')}</span></div>
                 <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>رقم الجواز:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(cert.passport_no || 'S3552106')}</span></div>
+                ${isWithoutSalary ? `
+                  <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الحالة الوظيفية:</strong> <span style="color:#15803d; font-weight:700;" contenteditable="true" spellcheck="false">على رأس عمله (نشط)</span></div>
+                ` : `
+                  <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الراتب الشهري:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></div>
+                `}
               </div>
             </div>
 
@@ -3176,61 +3208,72 @@ export function registerPayrollModules(FinanceApp) {
             <table style="width:100%; border-collapse:collapse; margin-bottom:6px; background:#ffffff; border:1px solid #e2e8f0; border-radius:4px;">
               <tr>
                 <td style="width:49%; vertical-align:top; padding:5px 8px; font-size:0.67rem; line-height:1.35; color:#334155; text-align:justify;" contenteditable="true" spellcheck="false">
-                  RAYAN Engineering and Contracting l.l.c- s.p.c, a subsidiary of RAYAN Group, certifies that the under mentioned employee is currently in the service of the company and receiving a monthly salary as detailed below. This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.
+                  ${isWithoutSalary ? `
+                    RAYAN Engineering and Contracting l.l.c- s.p.c, a subsidiary of RAYAN Group, certifies that the under mentioned employee is currently in the active service of the company as <strong>${escapeHtml(cert.job_title_en || 'Civil Engineer')}</strong> since <strong>${escapeHtml(cert.joining_date_en || '07/08/2025')}</strong>. This certificate is issued upon request of the employee to be presented to <strong>${escapeHtml(issuedToEn)}</strong>, with no financial liability on the part of the company.
+                  ` : `
+                    RAYAN Engineering and Contracting l.l.c- s.p.c, a subsidiary of RAYAN Group, certifies that the under mentioned employee is currently in the service of the company and receiving a monthly salary as detailed below. This certificate is issued upon request of the employee to be presented to <strong>${escapeHtml(issuedToEn)}</strong>, with no responsibility on the part of the company.
+                  `}
                 </td>
                 <td style="width:2%; vertical-align:stretch; padding:0; text-align:center;">
                   <div style="background:#0284c7; width:2px; height:100%; min-height:48px; margin:0 auto; border-radius:1px;"></div>
                 </td>
                 <td style="width:49%; vertical-align:top; padding:5px 8px; font-size:0.70rem; line-height:1.38; color:#334155; direction:rtl; text-align:justify; font-family:'Amiri', serif;" contenteditable="true" spellcheck="false">
-                  تشهد شركة ريان الهندسيه و للمقاولات - ذ م م - ش ش و إحدى شركات مجموعة رايان بأن الموظف المذكور يعمل لدينا، ولايزال على رأس عمله حتّى تاريخه ويتقاضى راتب شهري كما يلي. وقد أعطيت له هذه الشهادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.
+                  ${isWithoutSalary ? `
+                    تشهد شركة ريان الهندسيه و للمقاولات - ذ م م - ش ش و إحدى شركات مجموعة رايان بأن الموظف المذكور يعمل لدينا بمهنة <strong>${escapeHtml(cert.job_title_ar || 'مهندس مدني')}</strong> منذ تاريخ <strong>${escapeHtml(cert.joining_date_ar || '07-08-2025')}</strong> ولا يزال على رأس عمله حتى تاريخه. وقد أعطيت له هذه الشهادة بناء على طلبه لتقديمها إلى <strong>${escapeHtml(issuedToAr)}</strong>، دون تحمل الشركة أدنى مسؤولية مالية تجاه الغير.
+                  ` : `
+                    تشهد شركة ريان الهندسيه و للمقاولات - ذ م م - ش ش و إحدى شركات مجموعة رايان بأن الموظف المذكور يعمل لدينا، ولايزال على رأس عمله حتّى تاريخه ويتقاضى راتب شهري كما يلي. وقد أعطيت له هذه الشهادة بناء على طلبه لتقديمها إلى <strong>${escapeHtml(issuedToAr)}</strong>، دون تحمل الشركة أدنى مسؤولية تجاه الغير.
+                  `}
                 </td>
               </tr>
             </table>
 
-            <!-- Corporate Remuneration Table -->
-            <table style="width:100%; border-collapse:collapse; font-size:0.68rem; margin-bottom:6px; border:1px solid #cbd5e1;">
-              <thead>
-                <tr style="background:#0f172a; color:#ffffff; font-weight:700; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.03em;">
-                  <th style="padding:4px 6px; width:30px; text-align:center; border-right:1px solid #334155;">#</th>
-                  <th style="padding:4px 6px; text-align:left; border-right:1px solid #334155;">Salary Breakdown &amp; Allowances / تفاصيل الراتب والبدلات</th>
-                  <th style="padding:4px 6px; width:120px; text-align:center; border-right:1px solid #334155;">Frequency / الدورية</th>
-                  <th style="padding:4px 8px; width:140px; text-align:right;">Monthly Amount (${curr})</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="border-bottom:1px solid #e2e8f0;">
-                  <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">1</td>
-                  <td style="padding:3px 6px; border-right:1px solid #e2e8f0;">
-                    <div style="font-weight:700; color:#0f172a;">BASIC SALARY <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#475569;">(راتب اساسي)</span></div>
-                    <div style="font-size:0.60rem; color:#64748b;">Fixed primary contractual salary</div>
-                  </td>
-                  <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
-                  <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
-                <tr style="border-bottom:1px solid #e2e8f0; background:#f8fafc;">
-                  <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">2</td>
-                  <td style="padding:3px 6px; border-right:1px solid #e2e8f0;">
-                    <div style="font-weight:700; color:#0f172a;">ACCOMMODATION ALLOWANCE <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#475569;">(علاوة سكن)</span></div>
-                    <div style="font-size:0.60rem; color:#64748b;">Company provided accommodation allowance</div>
-                  </td>
-                  <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
-                  <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
-                <tr style="background:#e0f2fe; border-top:1.5px solid #0284c7; font-weight:800;">
-                  <td colspan="2" style="padding:4px 6px; color:#0369a1; border-right:1px solid #bae6fd;">
-                    <span>TOTAL GROSS MONTHLY SALARY : </span>
-                    <span style="font-family:'Amiri', serif; font-size:0.74rem;">(إجمالي الراتب الشهري)</span>
-                  </td>
-                  <td style="padding:4px 6px; text-align:center; color:#0369a1; border-right:1px solid #bae6fd;">AED DIRHAM</td>
-                  <td style="padding:4px 8px; text-align:right; color:#0369a1; font-size:0.80rem; font-family:monospace;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} ${curr}</td>
-                </tr>
-              </tbody>
-            </table>
+            <!-- Corporate Remuneration Section (Only shown when With Salary) -->
+            <div id="emp-cert-salary-section" style="display:${isWithoutSalary ? 'none' : 'block'};">
+              <!-- Corporate Remuneration Table -->
+              <table style="width:100%; border-collapse:collapse; font-size:0.68rem; margin-bottom:6px; border:1px solid #cbd5e1;">
+                <thead>
+                  <tr style="background:#0f172a; color:#ffffff; font-weight:700; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.03em;">
+                    <th style="padding:4px 6px; width:30px; text-align:center; border-right:1px solid #334155;">#</th>
+                    <th style="padding:4px 6px; text-align:left; border-right:1px solid #334155;">Salary Breakdown &amp; Allowances / تفاصيل الراتب والبدلات</th>
+                    <th style="padding:4px 6px; width:120px; text-align:center; border-right:1px solid #334155;">Frequency / الدورية</th>
+                    <th style="padding:4px 8px; width:140px; text-align:right;">Monthly Amount (${curr})</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">1</td>
+                    <td style="padding:3px 6px; border-right:1px solid #e2e8f0;">
+                      <div style="font-weight:700; color:#0f172a;">BASIC SALARY <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#475569;">(راتب اساسي)</span></div>
+                      <div style="font-size:0.60rem; color:#64748b;">Fixed primary contractual salary</div>
+                    </td>
+                    <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
+                    <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+                    <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">2</td>
+                    <td style="padding:3px 6px; border-right:1px solid #e2e8f0;">
+                      <div style="font-weight:700; color:#0f172a;">ACCOMMODATION ALLOWANCE <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#475569;">(علاوة سكن)</span></div>
+                      <div style="font-size:0.60rem; color:#64748b;">Company provided accommodation allowance</div>
+                    </td>
+                    <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
+                    <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  </tr>
+                  <tr style="background:#e0f2fe; border-top:1.5px solid #0284c7; font-weight:800;">
+                    <td colspan="2" style="padding:4px 6px; color:#0369a1; border-right:1px solid #bae6fd;">
+                      <span>TOTAL GROSS MONTHLY SALARY : </span>
+                      <span style="font-family:'Amiri', serif; font-size:0.74rem;">(إجمالي الراتب الشهري)</span>
+                    </td>
+                    <td style="padding:4px 6px; text-align:center; color:#0369a1; border-right:1px solid #bae6fd;">AED DIRHAM</td>
+                    <td style="padding:4px 8px; text-align:right; color:#0369a1; font-size:0.80rem; font-family:monospace;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} ${curr}</td>
+                  </tr>
+                </tbody>
+              </table>
 
-            <!-- Amount in words banner -->
-            <div style="border:1px solid #e2e8f0; background:#f8fafc; border-radius:4px; padding:3px 8px; font-size:0.64rem; color:#334155; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-              <div><strong>Total In Words:</strong> <span contenteditable="true" spellcheck="false">Fifteen Thousand AE Dirham Only.</span></div>
-              <div style="direction:rtl; font-family:'Amiri', serif; font-size:0.72rem;"><strong>المبلغ بالحروف:</strong> <span contenteditable="true" spellcheck="false">خمسة عشر ألف درهم إماراتي فقط لا غير.</span></div>
+              <!-- Amount in words banner -->
+              <div style="border:1px solid #e2e8f0; background:#f8fafc; border-radius:4px; padding:3px 8px; font-size:0.64rem; color:#334155; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>Total In Words:</strong> <span contenteditable="true" spellcheck="false">Fifteen Thousand AE Dirham Only.</span></div>
+                <div style="direction:rtl; font-family:'Amiri', serif; font-size:0.72rem;"><strong>المبلغ بالحروف:</strong> <span contenteditable="true" spellcheck="false">خمسة عشر ألف درهم إماراتي فقط لا غير.</span></div>
+              </div>
             </div>
 
             <!-- Signatory & Official People & Culture Stamp Box -->
@@ -3312,6 +3355,17 @@ export function registerPayrollModules(FinanceApp) {
     document.body.classList.add('fin-doc-open');
   };
 
+  proto.toggleCertSalaryDisplay = function (certId) {
+    let cert = (this.db?.employment_certificates || []).find(c => c.id === certId || c.ref_no === certId);
+    if (!cert) cert = (this.db?.employment_certificates || [])[0];
+    if (cert) {
+      cert.salary_option = (cert.salary_option === 'without_salary') ? 'with_salary' : 'without_salary';
+      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+      this.openEmploymentCertificatePrintModal(cert.id);
+      this.showNotification(cert.salary_option === 'without_salary' ? 'Switched to: Certificate WITHOUT Salary (Service Only)' : 'Switched to: Certificate WITH Salary Breakdown', 'info');
+    }
+  };
+
   proto.downloadEmploymentCertificateDocument = function (certId) {
     let cert = (this.db?.employment_certificates || []).find(c => c.id === certId || c.cert_no === certId || c.ref_no === certId) || (this.db?.employment_certificates || [])[0];
     if (!cert) return;
@@ -3350,15 +3404,19 @@ export function registerPayrollModules(FinanceApp) {
     const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
     const empOptions = employees.map(e => `<option value="${e.id}" ${cert.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')})</option>`).join('');
 
+    const isWithoutSalary = (cert.salary_option === 'without_salary');
+    const targetPreset = cert.target_preset || 'general';
+
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-emp-cert-edit" style="z-index:100030;">
-        <div class="fin-modal-dialog" style="max-width:720px; width:95%;">
+        <div class="fin-modal-dialog" style="max-width:760px; width:95%;">
           <div class="fin-modal-header">
             <h3 class="fin-modal-title"><span>🏛️</span> Edit Employment Certificate Details</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-emp-cert-edit')">&times;</button>
           </div>
           <form id="form-emp-cert-edit" onsubmit="event.preventDefault(); window.finApp.saveEmploymentCertForm(event);">
             <input type="hidden" name="id" value="${cert.id || ''}">
+            
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
               <div>
                 <label class="fin-field-label">Reference Number (Ref.:)</label>
@@ -3367,6 +3425,39 @@ export function registerPayrollModules(FinanceApp) {
               <div>
                 <label class="fin-field-label">Certificate Date</label>
                 <input type="text" class="fin-input" name="date" value="${escapeHtml(cert.date || 'August 13, 2025')}" required>
+              </div>
+            </div>
+
+            <!-- Salary Option & Addressee (Issued For) Controls -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; background:rgba(2,132,199,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:0.75rem 1rem;">
+              <div>
+                <label class="fin-field-label" style="color:#38bdf8; font-weight:700;">Certificate Type / نوع الشهادة</label>
+                <select class="fin-input" id="cert-salary-option" name="salary_option" onchange="window.finApp.onCertSalaryOptionChange(this.value)" style="border-color:#38bdf8; font-weight:700;">
+                  <option value="with_salary" ${!isWithoutSalary ? 'selected' : ''}>💵 With Salary Breakdown (شهادة مع تفاصيل الراتب)</option>
+                  <option value="without_salary" ${isWithoutSalary ? 'selected' : ''}>📄 Without Salary / Service Only (شهادة بدون راتب / استمرارية عمل)</option>
+                </select>
+              </div>
+              <div>
+                <label class="fin-field-label" style="color:#38bdf8; font-weight:700;">Target Addressee / Issued For (الجهة الموجه إليها)</label>
+                <select class="fin-input" id="cert-target-preset" name="target_preset" onchange="window.finApp.onCertTargetPresetChange(this.value)" style="border-color:#38bdf8; font-weight:700;">
+                  <option value="general" ${targetPreset === 'general' ? 'selected' : ''}>General / To Whom It May Concern (لمن يهمه الأمر)</option>
+                  <option value="bank" ${targetPreset === 'bank' ? 'selected' : ''}>🏦 For Bank / إلى البنك (Loan / Finance / Account Opening)</option>
+                  <option value="embassy" ${targetPreset === 'embassy' ? 'selected' : ''}>🏛️ For Embassy / إلى السفارة (Visa Application / Travel)</option>
+                  <option value="ministry" ${targetPreset === 'ministry' ? 'selected' : ''}>🏢 For Government / Ministry / Immigration (الجهات الحكومية)</option>
+                  <option value="custom" ${targetPreset === 'custom' ? 'selected' : ''}>✏️ Custom Specific Addressee (تخصيص جهة معينة)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Custom Addressee Line (Editable) -->
+            <div id="cert-custom-target-row" style="display:${(targetPreset === 'custom' || targetPreset === 'bank' || targetPreset === 'embassy' || targetPreset === 'ministry') ? 'grid' : 'none'}; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.65rem 0.85rem;">
+              <div>
+                <label class="fin-field-label">Issued For / Addressee Line (English)</label>
+                <input type="text" class="fin-input" id="cert-issued-to-en" name="issued_to_en" value="${escapeHtml(cert.issued_to_en || 'Whom It May Concern')}" placeholder="e.g. To: The Bank Manager / Embassy of Italy">
+              </div>
+              <div>
+                <label class="fin-field-label">Issued For / Addressee Line (Arabic - إلى الجهة)</label>
+                <input type="text" class="fin-input" id="cert-issued-to-ar" name="issued_to_ar" value="${escapeHtml(cert.issued_to_ar || 'لمن يهمه الأمر')}" style="direction:rtl;" placeholder="مثال: إلى: مدير البنك / سفارة إيطاليا">
               </div>
             </div>
 
@@ -3415,14 +3506,15 @@ export function registerPayrollModules(FinanceApp) {
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+            <!-- Salary Fields Block (Hidden when without salary is chosen) -->
+            <div id="cert-salary-fields-section" style="display:${isWithoutSalary ? 'none' : 'grid'}; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
               <div>
                 <label class="fin-field-label">Basic Salary (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="cert-basic-salary" name="basic_salary" value="${cert.basic_salary || 9500}" oninput="window.finApp.calcCertTotalSalary()" required>
+                <input type="number" step="0.01" class="fin-input" id="cert-basic-salary" name="basic_salary" value="${cert.basic_salary || 9500}" oninput="window.finApp.calcCertTotalSalary()">
               </div>
               <div>
                 <label class="fin-field-label">Accommodation (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="cert-acc-salary" name="accommodation_allowance" value="${cert.accommodation_allowance || 5500}" oninput="window.finApp.calcCertTotalSalary()" required>
+                <input type="number" step="0.01" class="fin-input" id="cert-acc-salary" name="accommodation_allowance" value="${cert.accommodation_allowance || 5500}" oninput="window.finApp.calcCertTotalSalary()">
               </div>
               <div>
                 <label class="fin-field-label">Total Monthly Salary (AED)</label>
@@ -3442,28 +3534,63 @@ export function registerPayrollModules(FinanceApp) {
     this.getModalContainer().innerHTML = modalHtml;
   };
 
+  proto.onCertSalaryOptionChange = function (val) {
+    const sec = document.getElementById('cert-salary-fields-section');
+    if (sec) sec.style.display = (val === 'without_salary') ? 'none' : 'grid';
+  };
+
+  proto.onCertTargetPresetChange = function (val) {
+    const row = document.getElementById('cert-custom-target-row');
+    const enInput = document.getElementById('cert-issued-to-en');
+    const arInput = document.getElementById('cert-issued-to-ar');
+    if (!row || !enInput || !arInput) return;
+
+    if (val === 'bank') {
+      row.style.display = 'grid';
+      enInput.value = 'To: The Bank Manager / Banking Operations & Credit Facilities Department';
+      arInput.value = 'إلى: مدير البنك / إدارة التسهيلات المصرفية والائتمان';
+    } else if (val === 'embassy') {
+      row.style.display = 'grid';
+      enInput.value = 'To: The Visa Section / Embassy & Consular Affairs';
+      arInput.value = 'إلى: قسم التأشيرات / السفارة والشؤون القنصلية';
+    } else if (val === 'ministry') {
+      row.style.display = 'grid';
+      enInput.value = 'To: General Directorate of Residency and Foreigners Affairs / Competent Authorities';
+      arInput.value = 'إلى: الإدارة العامة للإقامة وشؤون الأجانب / الجهات المختصة';
+    } else if (val === 'custom') {
+      row.style.display = 'grid';
+      if (!enInput.value || enInput.value.includes('Whom It May Concern')) enInput.value = 'To: ';
+      if (!arInput.value || arInput.value.includes('لمن يهمه الأمر')) arInput.value = 'إلى: ';
+    } else {
+      row.style.display = 'none';
+      enInput.value = 'Whom It May Concern';
+      arInput.value = 'لمن يهمه الأمر';
+    }
+  };
+
   proto.onCertEmployeeSelectChange = function (empId) {
     if (!empId) return;
     const emp = (this.db?.employees || []).find(e => e.id === empId);
     if (!emp) return;
-    const nameEn = document.getElementById('cert-emp-name-en');
-    const nameAr = document.getElementById('cert-emp-name-ar');
-    const titleEn = document.getElementById('cert-job-title-en');
-    const pass = document.getElementById('cert-passport-no');
-    const nat = document.getElementById('cert-nationality-en');
-    const join = document.getElementById('cert-joining-date-en');
-    const basic = document.getElementById('cert-basic-salary');
-    const acc = document.getElementById('cert-acc-salary');
 
-    if (nameEn) nameEn.value = emp.name || '';
-    if (nameAr && !nameAr.value) nameAr.value = emp.name_ar || emp.name || '';
-    if (titleEn) titleEn.value = emp.position || 'Civil Engineer';
-    if (pass) pass.value = emp.passport_no || 'S3552106';
-    if (nat) nat.value = emp.nationality || 'India';
-    if (join) join.value = emp.date_of_joining ? this.formatDate(emp.date_of_joining) : '07/08/2025';
-    if (basic) basic.value = emp.basic_salary || 9500;
-    if (acc) acc.value = emp.accommodation_allowance || 5500;
-    this.calcCertTotalSalary();
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val || '';
+    };
+
+    setVal('cert-emp-name-en', emp.name || '');
+    setVal('cert-emp-name-ar', emp.name_ar || emp.name || '');
+    setVal('cert-job-title-en', emp.position || '');
+    setVal('cert-job-title-ar', emp.position_ar || emp.position || '');
+    setVal('cert-passport-no', emp.passport_no || '');
+    setVal('cert-nationality-en', emp.nationality || 'India');
+    setVal('cert-joining-date-en', emp.date_of_joining ? this.formatDate(emp.date_of_joining) : '07/08/2025');
+
+    const basic = Number(emp.basic_salary) || 0;
+    const acc = Number(emp.accommodation_allowance) || 0;
+    setVal('cert-basic-salary', basic);
+    setVal('cert-acc-salary', acc);
+    setVal('cert-total-salary', basic + acc);
   };
 
   proto.calcCertTotalSalary = function () {
@@ -3484,6 +3611,10 @@ export function registerPayrollModules(FinanceApp) {
       ref_no: formData.get('ref_no'),
       company_id: this.activeCompanyId || 'rayan-corp-uae',
       date: formData.get('date'),
+      salary_option: formData.get('salary_option') || 'with_salary',
+      target_preset: formData.get('target_preset') || 'general',
+      issued_to_en: formData.get('issued_to_en') || 'Whom It May Concern',
+      issued_to_ar: formData.get('issued_to_ar') || 'لمن يهمه الأمر',
       employee_name_en: formData.get('employee_name_en'),
       employee_name_ar: formData.get('employee_name_ar'),
       job_title_en: formData.get('job_title_en'),
@@ -3515,7 +3646,7 @@ export function registerPayrollModules(FinanceApp) {
 
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
     this.closeModal('modal-emp-cert-edit');
-    this.showNotification(`Employment Certificate ${updated.ref_no} saved.`, 'success');
+    this.showNotification(`Employment Certificate ${updated.ref_no} saved (${updated.salary_option === 'without_salary' ? 'Without Salary' : 'With Salary'}).`, 'success');
     this.openEmploymentCertificatePrintModal(updated.id);
     await this.syncApi('save_employment_certificate', { certificate: updated });
   };
