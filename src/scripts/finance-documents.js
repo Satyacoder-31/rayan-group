@@ -2042,14 +2042,36 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
 
   // --- Work Completion Certificate Print Modal ---
-  proto.openWorkCompletionPrintModal = function (certId, isVerifiedScan = false) {
+  proto.openWorkCompletionPrintModal = function (certId) {
     let cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    if (!cert && this.db?.work_completion_certificates?.length) {
+      cert = this.db.work_completion_certificates[0];
+    }
     if (!cert) {
-      cert = (this.db?.work_completion_certificates || [])[0] || {};
+      this.ensureDocumentSeedData();
+      cert = this.db.work_completion_certificates[0];
     }
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <style>
+          #fin-doc-print-modal [contenteditable="true"]:hover {
+            background: rgba(56, 189, 248, 0.12) !important;
+            outline: 1px dashed #0284c7 !important;
+            cursor: text;
+          }
+          #fin-doc-print-modal [contenteditable="true"]:focus {
+            background: rgba(56, 189, 248, 0.22) !important;
+            outline: 1.5px solid #0284c7 !important;
+          }
+          @media print {
+            #fin-doc-print-modal [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+              padding: 0 !important;
+            }
+          }
+        </style>
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -2093,162 +2115,189 @@ export function registerDocumentModules(FinanceApp) {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:8mm 12mm 6mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:9mm 14mm 8mm 14mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden; min-height:297mm; display:flex; flex-direction:column; justify-content:space-between;">
 
-            <!-- Center Watermark -->
+            <!-- Center Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
 
-            <!-- Main Document Layer -->
-            <div style="position:relative; z-index:1;">
+            <!-- Main Document Layer (Flex container with space-between) -->
+            <div style="position:relative; z-index:1; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
 
-              <!-- Top Cyan Bar -->
-              <div style="background:#00a3c4; height:18px; margin:-8mm -12mm 15px -12mm; padding:2px 12px; display:flex; align-items:center;">
-                <span style="color:#ffffff; font-size:0.68rem; font-weight:800; letter-spacing:0.04em;">RAYAN ENGINEERING</span>
-              </div>
-
-              <!-- Header with Logo and Bilingual Title -->
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-                <div>
-                  <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:48px; width:auto; display:block;">
-                </div>
-                <div style="text-align:center; flex:1;">
-                  <div style="font-family:'Amiri', serif; font-size:1.45rem; font-weight:700; color:#111827; line-height:1.2;">
-                    شهادة اتمام العمل
+              <div>
+                <!-- Top 3-Column Corporate Bilingual Header (No cyan strip) -->
+                <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:start; margin-bottom:1rem; gap:1rem; width:100%;">
+                  <!-- Column 1: Left (Logo, Company, TRN, Dynamic QR/Barcode) -->
+                  <div style="justify-self:start; max-width:100%;">
+                    <div style="margin-bottom:0.35rem;">
+                      <img src="/assets/docs/rayan-doc-logo.png" alt="RAYAN ENGINEERING" style="height:44px; width:auto; display:block;">
+                    </div>
+                    <div style="font-size:0.75rem; font-weight:800; color:#111827; text-transform:uppercase; letter-spacing:0.01em; line-height:1.25; margin-bottom:2px;">
+                      RAYAN ENGINEERING AND CONTRACTING LLC SPC
+                    </div>
+                    <div style="font-size:0.70rem; color:#4b5563; line-height:1.3; margin-bottom:3px;">
+                      TRN: 100234567800003
+                    </div>
+                    ${this.getRayanDynamicVerificationCode ? this.getRayanDynamicVerificationCode(cert, 'wcc') : ''}
                   </div>
-                  <div style="font-family:'Outfit', sans-serif; font-size:1.2rem; font-weight:800; color:#111827; letter-spacing:0.04em; text-transform:uppercase;">
-                    WORK COMPLETION CERTIFICATE
+
+                  <!-- Column 2: Center Exact Bilingual Title -->
+                  <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
+                    <div style="font-family:'Amiri', serif; font-size:1.40rem; font-weight:700; color:#0284c7; line-height:1.15;">شهادة اتمام العمل</div>
+                    <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.45rem; font-weight:800; color:#111827; letter-spacing:0.02em; line-height:1.1;">WORK COMPLETION CERTIFICATE</div>
+                    <div style="font-size:0.62rem; color:#64748b; font-weight:600; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL PROJECT HANDOVER &amp; SIGN-OFF</div>
+                  </div>
+
+                  <!-- Column 3: Right (Metadata & Dates) -->
+                  <div style="text-align:right; justify-self:end;">
+                    <table style="font-size:0.75rem; border-collapse:collapse; margin-left:auto;">
+                      <tr>
+                        <td style="font-weight:700; color:#64748b; padding:1px 6px 1px 0; text-align:right;">Date :</td>
+                        <td style="font-weight:800; color:#111827; text-align:left;" contenteditable="true" spellcheck="false">${this.formatDate(cert.date)} ${cert.time || ''}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 6px; text-align:right;">التاريخ:</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:700; color:#64748b; padding:1px 6px 1px 0; text-align:right;">Reference No :</td>
+                        <td style="font-weight:800; color:#dc2626; text-align:left;" contenteditable="true" spellcheck="false">${cert.cert_no || cert.reference_no || 'REC-JOB COM-11021'}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 6px; text-align:right;">الرقم المرجعي:</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:700; color:#64748b; padding:1px 6px 1px 0; text-align:right; line-height:1.15;">Sub-Contract :</td>
+                        <td style="font-weight:800; color:#111827; text-align:left;" contenteditable="true" spellcheck="false">${cert.subcontract_agreement || cert.po_no || 'PODSUB-2026/0810'}</td>
+                        <td style="font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:1px 0 1px 6px; text-align:right;">طلب شراء محلي:</td>
+                      </tr>
+                    </table>
                   </div>
                 </div>
-                <div style="width:48px;"></div>
-              </div>
 
-              <!-- Metadata & Reference Table -->
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; border-top:1px solid #111827; border-bottom:1px solid #111827; padding:6px 0;">
-                <div style="width:45%;">
-                  <div style="font-weight:700; color:#111827; font-size:0.84rem;">To.</div>
-                  <div style="font-weight:800; color:#111827; font-size:0.88rem;">${cert.contact_person || cert.to_name || 'Mr. Mohamed Abuelgasim'}</div>
-                  <div style="font-weight:700; color:#374151; font-size:0.82rem;">${cert.client_name || cert.to_company || 'M/s IRON BEAM BUILDING CONTRACTING L.L.C'}</div>
+                <!-- Addressee / Client Section -->
+                <div style="margin-bottom:0.85rem; padding:6px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <div style="font-size:0.70rem; font-weight:700; color:#64748b;">To :</div>
+                    <div style="font-size:0.86rem; font-weight:800; color:#0f172a;" contenteditable="true" spellcheck="false">${cert.contact_person || cert.to_name || 'Project Manager'}</div>
+                    <div style="font-size:0.82rem; font-weight:700; color:#0284c7;" contenteditable="true" spellcheck="false">${cert.client_name || cert.to_company || 'M/S TOP ROCK INTERIORS LLC'}</div>
+                  </div>
+                  <div style="text-align:right; font-size:0.72rem; color:#64748b;">
+                    <div>Contract Execution Handover</div>
+                    <div style="font-weight:700; color:#10b981;">Final Work Completion</div>
+                  </div>
                 </div>
 
-                <div style="width:55%;">
-                  <table style="width:100%; font-size:0.78rem; border-collapse:collapse; text-align:right;">
-                    <tr>
-                      <td style="font-weight:700; text-align:left; color:#111827; width:22%;">Date :</td>
-                      <td style="font-weight:800; color:#111827; text-align:left; width:30%;">${this.formatDate(cert.date)}</td>
-                      <td style="font-weight:700; color:#111827; text-align:left; width:25%;">${cert.time || '6:27 PM'}</td>
-                      <td style="font-family:'Amiri', serif; font-weight:700; color:#111827; width:23%; font-size:0.82rem;">التاريخ:</td>
+                <!-- Project Information Bilingual Box (Rayan Corporate Styling) -->
+                <div style="border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                  <div style="background:#0f172a; color:#ffffff; padding:5px 12px; font-size:0.74rem; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Project Information &amp; Technical Scope</span>
+                    <span style="font-family:'Amiri', serif; font-weight:700; font-size:0.82rem;">معلومات المشروع و نطاق العمل</span>
+                  </div>
+                  <table style="width:100%; font-size:0.76rem; border-collapse:collapse; background:#ffffff;">
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="width:18%; font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Project # :</td>
+                      <td style="font-weight:700; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.project_name || 'The New Dubai Police Academy @ Alrowaiyah, Dubai Fit out Work'}</td>
+                      <td style="width:20%; text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">المشروع#</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Client Name :</td>
+                      <td style="font-weight:800; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.client_name || 'M/S TOP ROCK INTERIORS LLC'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">اسم كلينت</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Main Client :</td>
+                      <td style="font-weight:700; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.main_client || 'Dubai Police General HQ / Engineering Department'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">كلينت الرئيسي</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Contact Person :</td>
+                      <td style="font-weight:700; color:#111827; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.contact_person || 'Project Manager'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">اتصال شخص</td>
                     </tr>
                     <tr>
-                      <td style="font-weight:700; text-align:left; color:#111827;">Reference number :</td>
-                      <td colspan="2" style="font-weight:800; color:#dc2626; text-align:left;">${cert.cert_no || cert.reference_no}</td>
-                      <td style="font-family:'Amiri', serif; font-weight:700; color:#111827; font-size:0.82rem;">الرقم المرجعي</td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:700; text-align:left; color:#111827; line-height:1.2;">Sub-contract<br>Agreement</td>
-                      <td colspan="2" style="font-weight:800; color:#111827; text-align:left;">${cert.subcontract_agreement || cert.po_no || 'IB-037-136'}</td>
-                      <td style="font-family:'Amiri', serif; font-weight:700; color:#111827; font-size:0.82rem;">طلب شراء محلي</td>
+                      <td style="font-weight:700; color:#475569; padding:5px 10px; background:#f8fafc;">Email :</td>
+                      <td style="font-weight:700; color:#0284c7; padding:5px 10px;" contenteditable="true" spellcheck="false">${cert.email || 'procurementofficer@toprockinteriors.com'}</td>
+                      <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#64748b; padding:5px 10px;">بريد إلكتروني</td>
                     </tr>
                   </table>
                 </div>
-              </div>
 
-              <!-- Project Information Bilingual Box -->
-              <div style="border:1.5px solid #111827; padding:8px 12px; margin-bottom:1.2rem; background:#fbfcfe;">
-                <div style="font-size:0.84rem; font-weight:800; color:#111827; text-decoration:underline; margin-bottom:6px;">
-                  Project Information
+                <!-- Dear Sir & Certification Declarations -->
+                <div style="font-size:0.80rem; line-height:1.55; color:#111827; margin-bottom:1.1rem;" contenteditable="true" spellcheck="false">
+                  <div style="font-weight:700; margin-bottom:6px;">Dear Sir,</div>
+                  <div style="white-space:pre-line; margin-bottom:8px;">${cert.body_text || `With respect to the subjected agreement We, Rayan Engineering and Contracting LLC-SPC Confirm and Certify that all the works mentioned in the attached scope of work (PODSUB-2026/0810) Have been Satisfactorily Executed and Completed.
+(Wall Lining with Stud 50mm & Furring Channel Installation 567 Sqm)
+
+We wish to take this opportunity to request a work completion certificate.
+It would also be great if you detailed my accomplishment in this project to make it more powerful and we will be forever grateful for doing this
+
+I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete and to my satisfaction by Rayan Engineering and Contracting LLC-SPC as specified in the PO.`}</div>
                 </div>
-                <table style="width:100%; font-size:0.80rem; border-collapse:collapse;">
+
+                <!-- Two Signature Boxes Side-by-Side (Client & Rayan Engineering Official) -->
+                <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-top:0.6rem; border:1.5px solid #0f172a; border-radius:4px; overflow:hidden; page-break-inside:avoid !important; break-inside:avoid !important;">
+                  <colgroup>
+                    <col style="width:50%;">
+                    <col style="width:50%;">
+                  </colgroup>
                   <tr>
-                    <td style="width:18%; font-weight:700; color:#111827; padding:2px 0;">Project #</td>
-                    <td style="font-weight:700; color:#111827; padding:2px 0;">${cert.project_name || 'Al Foah Mall Alain'}</td>
-                    <td style="width:20%; text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">مشروع#</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:700; color:#111827; padding:2px 0;">Clint Name:</td>
-                    <td style="font-weight:800; color:#111827; padding:2px 0;">${cert.client_name || 'M/s IRON BEAM BUILDING CONTRACTING L.L.C'}</td>
-                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">اسم كلينت</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:700; color:#111827; padding:2px 0;">Main Clint:</td>
-                    <td style="font-weight:700; color:#111827; padding:2px 0;">${cert.main_client || 'M/s Emirates Driving Company'}</td>
-                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">كلينت الرئيسي</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:700; color:#111827; padding:2px 0;">Contact Person:</td>
-                    <td style="font-weight:700; color:#111827; padding:2px 0;">${cert.contact_person || 'Mr. Mohamed Abuelgasim'}</td>
-                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">اتصال شخص</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:700; color:#111827; padding:2px 0;">Email :</td>
-                    <td style="font-weight:700; color:#0284c7; padding:2px 0;">${cert.email || 'mohamed.a@ironbeam.ae'}</td>
-                    <td style="text-align:right; font-family:'Amiri', serif; font-weight:700; color:#111827; padding:2px 0;">بريد إلكتروني</td>
+                    <!-- Left: Client Signatory -->
+                    <td style="vertical-align:top; padding:10px 14px; border-right:1.5px solid #0f172a; background:#fcfdfe;">
+                      <div style="font-size:0.75rem; font-weight:800; color:#0f172a; margin-bottom:2px;" contenteditable="true" spellcheck="false">
+                        ${cert.client_name || 'M/S TOP ROCK INTERIORS LLC'}
+                      </div>
+                      <div style="font-size:0.68rem; font-weight:700; color:#64748b; margin-bottom:8px;">
+                        Authorized Signatory:
+                      </div>
+                      <div style="position:relative; width:180px; height:70px; margin:4px auto; display:flex; align-items:center; justify-content:center;">
+                        <div style="border:1.5px dashed #94a3b8; border-radius:4px; width:170px; height:54px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:0.58rem; font-weight:700; background:#f8fafc; white-space:nowrap; box-sizing:border-box;">
+                          [ Acceptance &amp; Official Stamp ]
+                        </div>
+                      </div>
+                      <div style="border-top:1.5px solid #111827; width:160px; margin:4px auto 3px auto;"></div>
+                      <div style="font-size:0.68rem; font-weight:800; color:#111827; text-align:center;" contenteditable="true" spellcheck="false">Client Representative</div>
+                      <div style="font-size:0.60rem; color:#64748b; text-align:center;">Signature &amp; Stamp</div>
+                    </td>
+
+                    <!-- Right: Rayan Engineering Signatory with Official Circular Stamp & Arshad Alam Shaikh Signature -->
+                    <td style="vertical-align:top; padding:10px 14px; background:#ffffff;">
+                      <div style="font-size:0.75rem; font-weight:800; color:#0f172a; margin-bottom:2px;" contenteditable="true" spellcheck="false">
+                        RAYAN ENGINEERING AND CONTRACTING LLC SPC
+                      </div>
+                      <div style="font-size:0.68rem; font-weight:700; color:#64748b; margin-bottom:4px;">
+                        Authorized Signatory:
+                      </div>
+                      <div id="wcc-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:180px; height:74px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
+                        <!-- Circular Rayan Official Stamp (Complete Full Round Stamp) -->
+                        <img src="/assets/docs/rayan-stamp-official.png" alt="Rayan Official Stamp" style="position:absolute; left:8px; top:-6px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
+                        <!-- Arshad Alam Shaikh Authentic Signature -->
+                        <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:30px; top:10px; width:125px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
+                      </div>
+                      <div style="border-top:1.5px solid #111827; width:160px; margin:4px auto 3px auto;"></div>
+                      <div style="font-size:0.68rem; font-weight:800; color:#111827; text-align:center;" contenteditable="true" spellcheck="false">Authorised Signatory</div>
+                      <div style="font-size:0.60rem; color:#64748b; text-align:center;" contenteditable="true" spellcheck="false">Arshad Alam Shaikh &bull; Managing Director</div>
+                    </td>
                   </tr>
                 </table>
               </div>
 
-              <!-- Dear Sir & Certification Declarations -->
-              <div style="font-size:0.84rem; line-height:1.55; color:#111827; margin-bottom:1.2rem;">
-                <div style="font-weight:700; margin-bottom:8px;">Dear Sir,</div>
-                <div style="white-space:pre-line; margin-bottom:10px;">
-                  ${cert.body_text}
-                </div>
-              </div>
-
-              <!-- Verification Notice -->
-              <div style="border-top:1px solid #111827; border-bottom:1px solid #111827; padding:4px 0; margin-bottom:1rem; font-size:0.76rem; font-weight:700; color:#111827;">
-                Please keep a copy of this Work Completion Certificate for your records
-              </div>
-
-              <!-- Best Wishes & Contacts -->
-              <div style="font-size:0.78rem; line-height:1.45; color:#374151; margin-bottom:1.5rem;">
-                <div style="color:#111827;">Best wishes</div>
-                <div style="font-weight:800; color:#111827;">RAYAN Group Team</div>
-                <div>Hotline : 025654497</div>
-                <div><a href="mailto:cc.info@rayan-group.com" style="color:#0284c7; text-decoration:none;">cc.info@rayan-group.com</a></div>
-                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
-              </div>
-
-              <!-- Two Signature Boxes Side-by-Side (Matching Uploaded PDF) -->
-              <div style="display:grid; grid-template-columns:1fr 1fr; border:1.5px solid #111827; min-height:130px; margin-bottom:1.5rem;">
-                <!-- Left: Client Signatory -->
-                <div style="border-right:1.5px solid #111827; padding:10px 12px; display:flex; flex-direction:column; justify-content:space-between;">
-                  <div>
-                    <div style="font-size:0.80rem; font-weight:800; color:#111827; margin-bottom:2px;">
-                      ${cert.client_name || 'M/s IRON BEAM BUILDING CONTRACTING L.L.C'}
-                    </div>
-                    <div style="font-size:0.78rem; font-weight:700; color:#374151;">
-                      Authorized Signatory:
-                    </div>
-                  </div>
-                  <div style="min-height:50px; display:flex; align-items:flex-end; color:#9ca3af; font-size:0.72rem; font-style:italic;">
-                    Signature &amp; Stamp
-                  </div>
+              <!-- Bottom Section Pushed Down to Page Bottom (Notes, Best Wishes, System Footer) -->
+              <div style="margin-top:auto; padding-top:0.75rem;">
+                <!-- Record Keeping Notice -->
+                <div style="border-top:1px solid #111827; border-bottom:1px solid #111827; padding:4px 0; margin-bottom:0.65rem; font-size:0.72rem; font-weight:700; color:#111827;">
+                  Please keep a copy of this Work Completion Certificate for your records
                 </div>
 
-                <!-- Right: Rayan Engineering Signatory with Stamp + Signature -->
-                <div style="padding:10px 12px; display:flex; flex-direction:column; justify-content:space-between; position:relative;">
-                  <div>
-                    <div style="font-size:0.80rem; font-weight:800; color:#111827; margin-bottom:2px;">
-                      RAYAN ENGINEERING AND CONTRACTING LLC-SPC
-                    </div>
-                    <div style="font-size:0.78rem; font-weight:700; color:#374151;">
-                      Authorized Signatory:
-                    </div>
-                  </div>
-                  <div id="wcc-stamp-sign-wrap" class="fin-stamp-sign-container" style="display:flex; align-items:center; gap:15px; position:relative; min-height:60px; margin-top:5px; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                    ${cert.include_signature !== false ? `
-                      <img src="/assets/docs/rayan-signature-construction.png" alt="Signature" style="height:55px; width:auto; display:block; filter:contrast(1.2); transition:opacity 0.2s;">
-                    ` : ''}
-                    ${cert.include_stamp !== false ? `
-                      <img src="/assets/docs/rayan-stamp-round.png" alt="Stamp" style="height:75px; width:auto; display:block; filter:contrast(1.15); transition:opacity 0.2s;">
-                    ` : ''}
-                  </div>
+                <!-- Best Wishes & Contacts -->
+                <div style="font-size:0.65rem; line-height:1.45; color:#475569; margin-bottom:0.75rem;">
+                  <div style="font-weight:800; color:#111827;">Best wishes,</div>
+                  <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
+                  <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
                 </div>
-              </div>
 
-              <!-- Solid Cyan Footer Strip -->
-              <div style="background:#00a3c4; color:#ffffff; padding:6px 10px; font-size:0.72rem; font-weight:700; text-align:center; margin:-6mm -12mm -6mm -12mm; letter-spacing:0.02em;">
-                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+                <!-- Clean Fixed System Generated Footer Below the Line -->
+                <div style="padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+                  <div style="min-width:60px; font-weight:600; color:#9ca3af;">${cert.cert_no || cert.reference_no || 'REC-JOB COM-11021'}</div>
+                  <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                    This is a system-generated Work Completion Certificate.
+                  </div>
+                  <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 1 of 1</div>
+                </div>
               </div>
 
             </div>
@@ -2388,10 +2437,13 @@ export function registerDocumentModules(FinanceApp) {
               </div>
             </div>
 
-            <!-- Page 1 Bottom Footer -->
-            <div style="position:relative; z-index:1; border-top:1px solid #e2e8f0; padding-top:0.75rem; margin-top:2rem; font-size:0.75rem; color:#64748b; line-height:1.4;">
-              <div style="color:#0284c7; font-weight:700; margin-bottom:1px;">Abu Dhabi, UAE</div>
-              <div>Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com</div>
+            <!-- Page 1 Bottom Footer Pushed to Bottom -->
+            <div style="position:relative; z-index:1; margin-top:auto; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="min-width:60px; font-weight:600; color:#9ca3af;">${ult.ref_no || 'REC-ULT-11001'}</div>
+              <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                This is an official Subcontractor Undertaking Letter.
+              </div>
+              <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 1 of 2</div>
             </div>
           </div>
 
@@ -2459,10 +2511,13 @@ export function registerDocumentModules(FinanceApp) {
               </div>
             </div>
 
-            <!-- Page 2 Bottom Footer -->
-            <div style="position:relative; z-index:1; border-top:1px solid #e2e8f0; padding-top:0.75rem; margin-top:2rem; font-size:0.75rem; color:#64748b; line-height:1.4;">
-              <div style="color:#0284c7; font-weight:700; margin-bottom:1px;">Abu Dhabi, UAE</div>
-              <div>Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com</div>
+            <!-- Page 2 Bottom Footer Pushed to Bottom -->
+            <div style="position:relative; z-index:1; margin-top:auto; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+              <div style="min-width:60px; font-weight:600; color:#9ca3af;">${ult.ref_no || 'REC-ULT-11001'}</div>
+              <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                This is an official Subcontractor Undertaking Letter.
+              </div>
+              <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 2 of 2</div>
             </div>
           </div>
         </div>
@@ -2662,9 +2717,13 @@ export function registerDocumentModules(FinanceApp) {
                 </div>
               </div>
 
-              <!-- Footer -->
-              <div style="text-align:center; font-size:0.72rem; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:0.4rem;">
-                Official Material Transfer &amp; Delivery Document • Rayan Engineering and Contracting LLC SPC • Abu Dhabi, UAE
+              <!-- Delivery Note Bottom Footer Pushed to Bottom -->
+              <div style="margin-top:auto; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif;">
+                <div style="min-width:60px; font-weight:600; color:#9ca3af;">${dn.dn_no || 'DN-REC-11001'}</div>
+                <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
+                  This is a system-generated Material Delivery Note.
+                </div>
+                <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 1 of 1</div>
               </div>
             </div>
           </div>

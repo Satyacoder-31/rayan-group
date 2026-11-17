@@ -2169,7 +2169,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v137';
+    const CURRENT_DB_VERSION = 'v2026_clean_v138';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -17112,7 +17112,9 @@ class FinanceApp {
             ${this.getRayanWatermark()}
 
             <!-- Main Document Content Layer -->
-            <div style="position:relative; z-index:1;">
+            <div style="position:relative; z-index:1; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+
+            <div>
 
               <!-- Header Section (Left: Logo & Company, Right: Title & Metadata) -->
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap:1rem;">
@@ -28967,7 +28969,7 @@ Scope of Work & Technical Execution:
 
         <div class="fin-doc-viewport">
           <!-- PAGE 1 OF PURCHASE ORDER -->
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:7mm 11mm 6mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:285mm; position:relative; overflow:hidden; font-size:11px; display:flex; flex-direction:column; justify-content:space-between;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -29217,8 +29219,10 @@ Scope of Work & Technical Execution:
               <div style="color:#374151;">${po.notes_to_supplier || po.notes || '1. Location / Site - The New Dubai Police Academy & al Rowaiyah, Dubai. Working hours shall be from 8:00 AM to 6:00 PM. 3. Lunch break is included within the working hours. 4. Supplier responsible for all Insurance, PPE, Tools, welfare, logistics, transportation, food, and any other requirements mentioned shall be fully provided by the supplier. 5. Supplier responsible for Health, Safety, Tools & Equipment for equipment and resources. 6. Supplier is responsible for Full Personal Protective Equipment (PPE). 7. Supplier responsible for all HSE documents and certifications (including operator and flagman competency) must be approved before commencement of work.'}</div>
             </div>
 
+            </div> <!-- End Page 1 Top Section -->
+
             <!-- Page 1 Clean System-Generated Footer Below the Line (Spaced) -->
-            <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+            <div style="margin-top:auto; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
               <div style="min-width:60px; font-weight:600; color:#9ca3af;">${po.po_no}</div>
               <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
                 This is a system-generated Purchase Order.
@@ -29230,7 +29234,7 @@ Scope of Work & Technical Execution:
           </div>
 
           <!-- PAGE 2 OF PURCHASE ORDER -->
-          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:7mm 11mm 5mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:auto; height:auto; position:relative; overflow:hidden; font-size:11px;">
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:7mm 11mm 6mm 11mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; page-break-inside:avoid !important; break-inside:avoid !important; flex-shrink:0; min-height:285mm; position:relative; overflow:hidden; font-size:11px; display:flex; flex-direction:column; justify-content:space-between;">
 
             <!-- Center Page Watermark (Rayan Engineering Symbol) -->
             ${this.getRayanWatermark()}
@@ -29322,7 +29326,9 @@ Scope of Work & Technical Execution:
               </tr>
             </table>
 
-            <!-- Page 2 Bottom Notes & Best Wishes ("Keep this as well in last pages") -->
+            </div>
+<div style="margin-top:auto; padding-top:0.75rem;">
+<!-- Page 2 Bottom Notes & Best Wishes ("Keep this as well in last pages") -->
             <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
               <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
               <div style="margin-bottom:2px; color:#475569;">Please keep a copy of this purchase order for your records.</div>
@@ -29340,7 +29346,8 @@ Scope of Work & Technical Execution:
               <div style="min-width:60px; text-align:right; font-weight:700; color:#9ca3af;">Page 2 of 2</div>
             </div>
 
-            </div> <!-- End Main Document Content Layer Page 2 -->
+            </div>
+</div> <!-- End Main Document Content Layer Page 2 -->
           </div>
         </div>
       </div>
