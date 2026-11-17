@@ -2166,10 +2166,32 @@ class FinanceApp {
     return str.trim().replace(/[.\s]+$/, '').replace(/^[.\s]+/, '').trim();
   }
 
+  normalizeUomLS(db) {
+    if (!db) return;
+    const fixUom = (item) => {
+      if (!item) return;
+      if (item.uom === 'LSUM' || item.uom === 'Lsum' || item.uom === 'Lump Sum') item.uom = 'LS';
+      if (item.unit === 'LSUM' || item.unit === 'Lsum' || item.unit === 'Lump Sum') item.unit = 'LS';
+    };
+    (db.invoices || []).forEach(inv => {
+      fixUom(inv);
+      (inv.line_items || inv.items || []).forEach(fixUom);
+    });
+    (db.purchase_orders || []).forEach(po => {
+      fixUom(po);
+      (po.line_items || po.items || []).forEach(fixUom);
+    });
+    (db.purchase_bills || []).forEach(b => {
+      fixUom(b);
+      (b.line_items || b.items || []).forEach(fixUom);
+    });
+    (db.items || db.catalog_items || []).forEach(fixUom);
+  }
+
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v143';
+    const CURRENT_DB_VERSION = 'v2026_clean_v145';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -10321,6 +10343,7 @@ class FinanceApp {
           </td>
           <td class="fin-cell-actions" style="text-align:right; white-space:nowrap;">
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openClientLPOSlipModal('${po.id}')" title="View / Print Summary Slip">Slip</button>
+            <button type="button" class="fin-btn-row-action" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);" onclick="window.finApp.openAddPOForSameProject('${po.id}')" title="Record another PO received for this same project">+ Add PO</button>
             <button type="button" class="fin-btn-row-action" onclick="window.finApp.openRecordClientLPOModal('${po.id}')" title="Edit Client LPO">Edit</button>
             <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteCustomerPO('${po.id}')" title="Delete Client LPO">Delete</button>
           </td>
@@ -10366,8 +10389,11 @@ class FinanceApp {
               <a href="${src}" download="${fileName}" class="fin-btn-quick" style="border-color:#10b981; color:#10b981; font-size:0.78rem; padding:0.35rem 0.75rem; text-decoration:none;" title="Download PDF document">
                 📥 Download
               </a>
-              <button type="button" class="fin-btn-quick" style="border-color:#a855f7; color:#c084fc; font-size:0.78rem; padding:0.35rem 0.75rem;" onclick="window.finApp.openAttachLPOModal('${po.id}')" title="Replace PDF attachment">
-                🔄 Replace
+              <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; font-weight:700; font-size:0.78rem; padding:0.35rem 0.75rem; background:rgba(56,189,248,0.12);" onclick="window.finApp.openAddPOForSameProject('${po.id}')" title="Client issued another PO for this project? Click to record it">
+                ➕ Record Another PO for this Project
+              </button>
+              <button type="button" class="fin-btn-quick" style="border-color:#a855f7; color:#c084fc; font-size:0.78rem; padding:0.35rem 0.75rem;" onclick="window.finApp.openAttachLPOModal('${po.id}')" title="Attach an additional document or replace file">
+                📎 Attach Additional File
               </button>
               <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-view-lpo')">&times;</button>
             </div>
@@ -10427,7 +10453,10 @@ class FinanceApp {
           </div>
           <div class="fin-modal-body" style="padding:1.25rem;">
             <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.15rem; font-size:0.82rem; color:#cbd5e1;">
-              Attach the actual original LPO (PDF or scanned image) received from <strong style="color:#ffffff;">${po.customer_name || po.vendor_name || 'Client'}</strong>.
+              Attach the original LPO document (PDF or scanned image) for order <strong style="color:#38bdf8;">${po.po_no}</strong> (${po.project_name || 'Project'}).
+              <div style="margin-top:0.45rem; padding-top:0.45rem; border-top:1px solid rgba(255,255,255,0.08); font-size:0.74rem; color:#94a3b8;">
+                💡 <strong>More than 1 PO received for this project?</strong> If the client issued a separate PO with its own number &amp; amount, click <a href="javascript:void(0)" onclick="window.finApp.closeModal('modal-attach-lpo'); window.finApp.openAddPOForSameProject('${po.id}');" style="color:#38bdf8; font-weight:700; text-decoration:underline;">+ Record Another PO for this Project</a> to track both POs individually.
+              </div>
             </div>
 
             <div class="fin-file-dropzone" id="quick-attach-dropzone" style="border:2px dashed rgba(56,189,248,0.5); border-radius:10px; padding:2rem 1.5rem; text-align:center; background:rgba(15,23,42,0.6); cursor:pointer; transition:all 0.2s;">
@@ -10537,18 +10566,44 @@ class FinanceApp {
     }
   }
 
-  openRecordClientLPOModal(editPoId = null) {
+  
+  openAddPOForSameProject(sourcePoId) {
+    const sourcePo = (this.db?.purchase_orders || []).find(p => p.id === sourcePoId || p.po_no === sourcePoId || p.internal_ref === sourcePoId);
+    if (!sourcePo) {
+      alert('Source purchase order not found.');
+      return;
+    }
+    const custId = sourcePo.customer_id;
+    const custName = sourcePo.customer_name || sourcePo.vendor_name || sourcePo.supplier_name || '';
+    const prjId = sourcePo.project_id || '';
+    const prjName = sourcePo.project_name || '';
+
+    this.openRecordClientLPOModal(null, {
+      customer_id: custId,
+      customer_name: custName,
+      project_id: prjId,
+      project_name: prjName,
+      source_po_no: sourcePo.po_no
+    });
+  }
+
+  openRecordClientLPOModal(editPoId = null, prefill = null) {
     const isEdit = !!editPoId;
     const po = isEdit ? (this.db?.purchase_orders || []).find(p => p.id === editPoId || p.po_no === editPoId) : null;
     const customers = (this.db?.customers || []).filter(c => !c.company_id || this.matchesActiveCompany(c.company_id));
     const projects = (this.db?.projects || []).filter(p => !p.company_id || this.matchesActiveCompany(p.company_id));
+
+    const targetCustId = po ? po.customer_id : (prefill ? prefill.customer_id : '');
+    const targetCustName = po ? (po.customer_name || po.vendor_name || '') : (prefill ? prefill.customer_name : '');
+    const targetPrjId = po ? po.project_id : (prefill ? prefill.project_id : '');
+    const targetPrjName = po ? po.project_name : (prefill ? prefill.project_name : '');
 
     const defaultDate = po ? (po.date || po.po_date || '') : new Date().toISOString().split('T')[0];
     const defaultDelivery = po ? (po.expected_delivery || defaultDate) : defaultDate;
     const defaultAmount = po ? (po.grand_total || po.total_value || 0) : 0;
     const defaultPoNo = po ? po.po_no : '';
     const defaultRefNo = po ? (po.internal_ref || po.ref_no || po.rec_ref || '') : this.getNextCustomerLPONumber();
-    const defaultNotes = po ? (po.notes || (po.line_items && po.line_items[0]?.name) || '') : '';
+    const defaultNotes = po ? (po.notes || (po.line_items && po.line_items[0]?.name) || '') : (prefill?.source_po_no ? `Additional PO scope against project: ${targetPrjName} (Ref previous PO: ${prefill.source_po_no})` : '');
     const hasPdf = !!(po && (po.pdf_data || po.pdf_url));
 
     const modalHtml = `
@@ -10556,18 +10611,27 @@ class FinanceApp {
         <div class="fin-modal-dialog" style="max-width:740px; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:12px;">
           <div class="fin-modal-header" style="background:#0b111e; border-bottom:1px solid rgba(255,255,255,0.1); padding:0.9rem 1.35rem;">
             <h3 class="fin-modal-title" style="margin:0; font-size:1.1rem; color:#f8fafc;">
-              ${isEdit ? '✏️ Edit Client Purchase Order (LPO)' : '📑 Record Client Purchase Order (Inward LPO)'}
+              ${isEdit ? '✏️ Edit Client Purchase Order (LPO)' : (prefill ? '➕ Record Additional Client PO for Project' : '📑 Record Client Purchase Order (Inward LPO)')}
             </h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-record-client-lpo')">&times;</button>
           </div>
           <div class="fin-modal-body" style="padding:1.35rem; max-height:80vh; overflow-y:auto;">
             <form id="record-client-lpo-form">
+              ${prefill ? `
+                <div style="background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.35); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.15rem; display:flex; align-items:center; gap:0.6rem;">
+                  <span style="font-size:1.3rem;">🔗</span>
+                  <div style="font-size:0.80rem; color:#cbd5e1;">
+                    <strong style="color:#38bdf8;">Recording Additional PO for Project:</strong> ${targetPrjName || 'Same Project'}<br>
+                    <span style="font-size:0.74rem; color:#94a3b8;">Client and Project have been automatically pre-selected. Enter the new PO number, its contract amount, and attach its PDF.</span>
+                  </div>
+                </div>
+              ` : ''}
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
                   <label class="fin-form-label">Client / Customer <span style="color:#ef4444;">*</span></label>
                   <select id="clpo-cust" class="fin-form-select" required>
                     <option value="" disabled ${!po ? 'selected' : ''}>Select Client / Debtor (AED)</option>
-                    ${customers.map(c => `<option value="${c.id}" ${po && (po.customer_id === c.id || (po.customer_name && po.customer_name === c.name)) ? 'selected' : ''}>${c.name}</option>`).join('')}
+                    ${customers.map(c => `<option value="${c.id}" ${(targetCustId === c.id || (targetCustName && targetCustName === c.name)) ? 'selected' : ''}>${c.name}</option>`).join('')}
                     <option value="custom" ${po && !customers.some(c => c.id === po.customer_id) ? 'selected' : ''}>+ Other / Custom Client...</option>
                   </select>
                 </div>
@@ -10592,7 +10656,7 @@ class FinanceApp {
                   <label class="fin-form-label">Project Association <span style="color:#ef4444;">*</span></label>
                   <select id="clpo-prj" class="fin-form-select" required>
                     <option value="" disabled ${!po ? 'selected' : ''}>Select Project</option>
-                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}" ${po && (po.project_id === p.id || po.project_name === p.name) ? 'selected' : ''}>${p.name}</option>`).join('')}
+                    ${projects.map(p => `<option value="${p.id}" data-name="${p.name}" ${(targetPrjId === p.id || targetPrjName === p.name) ? 'selected' : ''}>${p.name}</option>`).join('')}
                     <option value="custom" ${po && !projects.some(p => p.id === po.project_id) ? 'selected' : ''}>+ General / Other Project...</option>
                   </select>
                 </div>
@@ -10818,7 +10882,7 @@ class FinanceApp {
             {
               name: notesVal || `Scope of Work as per Client LPO ${poNoVal}`,
               qty: 1,
-              uom: 'LSUM',
+              uom: 'LS',
               unit_price: amountVal,
               taxable_amount: amountVal,
               vat_rate: 5,
@@ -15260,7 +15324,7 @@ class FinanceApp {
               <option value="Rmt" ${uom === 'Rmt' || uom === 'RMT' ? 'selected' : ''}>Rmt</option>
               <option value="Pcs" ${uom === 'Pcs' || uom === 'PCS' ? 'selected' : ''}>Pcs</option>
               <option value="Nos" ${uom === 'Nos' || uom === 'NOS' ? 'selected' : ''}>Nos</option>
-              <option value="Lsum" ${uom === 'Lsum' || uom === 'LSUM' ? 'selected' : ''}>Lsum</option>
+              <option value="LS" ${uom === 'LS' || uom === 'Lsum' || uom === 'LSUM' ? 'selected' : ''}>LS</option>
               <option value="%" ${uom === '%' || uom === 'Pct' || uom === 'PCT' ? 'selected' : ''}>%</option>
               <option value="Job" ${uom === 'Job' || uom === 'JOB' ? 'selected' : ''}>Job</option>
               <option value="Cum" ${uom === 'Cum' || uom === 'CUM' ? 'selected' : ''}>Cum</option>
@@ -15355,7 +15419,7 @@ class FinanceApp {
         if (editUnitIcon) {
           editUnitIcon.onclick = () => {
             const select = tr.querySelector('.row-uom');
-            const custom = prompt('Enter custom Unit Code (e.g. %, Sqm, Lsum, Nos):', select?.value || '%');
+            const custom = prompt('Enter custom Unit Code (e.g. %, Sqm, LS, Nos):', select?.value || '%');
             if (custom && custom.trim()) {
               const val = custom.trim();
               if (select) {
@@ -15545,13 +15609,13 @@ class FinanceApp {
 
         if (!existingItems.length) {
           existingItems.push(
-            { name: 'PROGRESSIVE PAYMENT - CIVIL & INTERIOR FIT-OUT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' },
-            { name: 'ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' }
+            { name: 'PROGRESSIVE PAYMENT - CIVIL & INTERIOR FIT-OUT', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LS' },
+            { name: 'ADVANCE PAYMENT AGAINST PURCHASE ORDER', qty: 1, rate: 1000, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LS' }
           );
         }
 
         while (existingItems.length < 4) {
-          existingItems.push({ name: '', qty: 1, rate: 0, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LSUM' });
+          existingItems.push({ name: '', qty: 1, rate: 0, taxRate: currentRegime === 'trn' ? 5 : 18, hsn: '9954', uom: 'LS' });
         }
 
         const currLabel = currentCurrency === 'AED' ? 'AED' : '₹';
@@ -15720,7 +15784,7 @@ class FinanceApp {
         updateBilledModalCalculations();
 
         document.getElementById('billed-modal-add-btn').onclick = () => {
-          renderBilledModalRow({ name: '', qty: 1, rate: 0, taxRate: isTrn ? 5 : 18, hsn: '9954', uom: 'LSUM' }, billedTbody.children.length);
+          renderBilledModalRow({ name: '', qty: 1, rate: 0, taxRate: isTrn ? 5 : 18, hsn: '9954', uom: 'LS' }, billedTbody.children.length);
           reindexBilledModalRows();
           const lastRow = billedTbody.lastElementChild;
           lastRow?.querySelector('.billed-name-input')?.focus();
@@ -17257,7 +17321,7 @@ class FinanceApp {
       {
         name: bill.notes || 'Procurement of Engineering Materials & Structural Items',
         qty: 1,
-        uom: 'LSUM',
+        uom: 'LS',
         unit_price: taxableSubtotal,
         taxable_amount: taxableSubtotal,
         vat_rate: isIndia ? 18 : 5,
@@ -19115,7 +19179,7 @@ class FinanceApp {
               {
                 name: document.getElementById('bill-item-desc')?.value || 'Procurement Material / Application',
                 qty: 1,
-                uom: 'LSUM',
+                uom: 'LS',
                 unit_price: taxable,
                 taxable_amount: taxable,
                 tax_amount: tax,
@@ -19166,7 +19230,7 @@ class FinanceApp {
             {
               name: document.getElementById('bill-item-desc').value,
               qty: 1,
-              uom: 'LSUM',
+              uom: 'LS',
               unit_price: taxable,
               taxable_amount: taxable,
               gst_rate: isIndia ? rate : 0,
@@ -22243,7 +22307,7 @@ class FinanceApp {
               description: `Opening receivable balance brought forward under ${arAccount}`,
               hsn_sac_code: '9954',
               qty: 1,
-              uom: 'LSUM',
+              uom: 'LS',
               unit_price: openingBal,
               invoice_amount: openingBal,
               taxable_amount: openingBal,
@@ -22834,7 +22898,7 @@ class FinanceApp {
                     <option value="LM">LM (Linear Meter)</option>
                     <option value="MT">MT (Metric Ton)</option>
                     <option value="CUM">CUM (Cubic Meter)</option>
-                    <option value="LSUM">LSUM (Lump Sum)</option>
+                    <option value="LS">LS (Lump Sum)</option>
                     <option value="%">% (Percentage)</option>
                     <option value="HRS">HRS (Hours)</option>
                     <option value="UNITS">UNITS</option>
@@ -27895,7 +27959,7 @@ Scope of Work & Technical Execution:
         name: inv.item_description || inv.item_name || inv.description || (inv.notes && !inv.notes.toLowerCase().includes('keep a copy') ? inv.notes : null) || inv.project_name || 'Contract Commercial Fitout Services',
         description: inv.notes || '',
         qty: 1,
-        uom: inv.uom || 'LSUM',
+        uom: inv.uom || 'LS',
         unit_price: taxableSubtotal || grandTotal,
         taxable_amount: taxableSubtotal || grandTotal,
         vat_rate: isIndia ? 18 : 5,
@@ -28106,7 +28170,8 @@ Scope of Work & Technical Execution:
       const vatRate = Number(item.vat_rate !== undefined ? item.vat_rate : (item.tax_rate !== undefined ? item.tax_rate : (isIndia ? 18 : 5)));
       const vatAmt = Number(item.vat_amount !== undefined ? item.vat_amount : (invAmt * (vatRate / 100)));
       const totalAmt = Number((item.total_amount !== undefined && item.total_amount !== null && !isNaN(Number(item.total_amount))) ? item.total_amount : (invAmt + vatAmt));
-      const uom = item.unit || item.uom || 'Sqm';
+      let uom = item.unit || item.uom || 'Sqm';
+      if (uom === 'LSUM' || uom === 'Lsum' || uom === 'Lump Sum') uom = 'LS';
       const itemName = item.name || item.description || 'Turnkey Work Item';
 
       return `
@@ -29852,8 +29917,8 @@ Scope of Work & Technical Execution:
         name: inv.item_name || inv.item_description || inv.description || 'General Contracting Services',
         description: inv.item_name || inv.item_description || inv.description || 'General Contracting Services',
         qty: 1,
-        uom: 'LSUM',
-        unit: 'LSUM',
+        uom: 'LS',
+        unit: 'LS',
         unit_price: Number(inv.taxable_subtotal) || 1000,
         rate: Number(inv.taxable_subtotal) || 1000,
         wd_pct: 100,
@@ -30108,7 +30173,7 @@ Scope of Work & Technical Execution:
               <option value="Sqm" ${rowUom === 'Sqm' || rowUom === 'SQM' ? 'selected' : ''}>Sqm</option>
               <option value="Sqft" ${rowUom === 'Sqft' || rowUom === 'SQFT' ? 'selected' : ''}>Sqft</option>
               <option value="LM" ${rowUom === 'LM' || rowUom === 'Lm' || rowUom === 'lm' ? 'selected' : ''}>LM</option>
-              <option value="LSUM" ${rowUom === 'LSUM' ? 'selected' : ''}>LSUM</option>
+              <option value="LS" ${rowUom === 'LS' || rowUom === 'LSUM' || rowUom === 'Lsum' ? 'selected' : ''}>LS</option>
               <option value="%" ${rowUom === '%' ? 'selected' : ''}>%</option>
               <option value="MT" ${rowUom === 'MT' ? 'selected' : ''}>MT</option>
               <option value="CUM" ${rowUom === 'CUM' ? 'selected' : ''}>CUM</option>
@@ -30538,7 +30603,7 @@ Scope of Work & Technical Execution:
       {
         name: 'Procurement Supplies',
         qty: 1,
-        uom: 'LSUM',
+        uom: 'LS',
         unit_price: Number(bill.taxable_subtotal) || 1000,
         taxable_amount: Number(bill.taxable_subtotal) || 1000
       }
@@ -31087,7 +31152,7 @@ Scope of Work & Technical Execution:
               {
                 name: document.getElementById('edit-bill-desc')?.value.trim() || 'Procurement Material / Application',
                 qty: 1,
-                uom: 'LSUM',
+                uom: 'LS',
                 unit_price: taxable,
                 taxable_amount: taxable,
                 tax_amount: tax,
@@ -31112,7 +31177,7 @@ Scope of Work & Technical Execution:
         {
           name: document.getElementById('edit-bill-desc').value.trim(),
           qty: 1,
-          uom: 'LSUM',
+          uom: 'LS',
           unit_price: taxable,
           taxable_amount: taxable,
           vat_rate: isIndia ? 0 : rate,

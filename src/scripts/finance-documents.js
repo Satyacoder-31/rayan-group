@@ -1223,7 +1223,7 @@ export function registerDocumentModules(FinanceApp) {
     }
 
     const items = dn.items && dn.items.length ? dn.items : [
-      { srl: 1, description: 'Materials / Subcontracting Procurement Items', unit: 'LSUM', qty_ordered: 1, qty_delivered: 1, remarks: 'Good Condition' }
+      { srl: 1, description: 'Materials / Subcontracting Procurement Items', unit: 'LS', qty_ordered: 1, qty_delivered: 1, remarks: 'Good Condition' }
     ];
 
     const modalHtml = `
@@ -2567,7 +2567,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
     }
 
     const items = dn.items && dn.items.length ? dn.items : [
-      { srl: 1, description: 'Material Items as per approved delivery order', unit: 'LSUM', qty_ordered: 1, qty_delivered: 1, remarks: 'Verified Sound' }
+      { srl: 1, description: 'Material Items as per approved delivery order', unit: 'LS', qty_ordered: 1, qty_delivered: 1, remarks: 'Verified Sound' }
     ];
 
     const modalHtml = `
