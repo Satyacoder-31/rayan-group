@@ -2979,6 +2979,9 @@ export function registerPayrollModules(FinanceApp) {
       signatory_title_ar: 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'
     };
 
+    cert.reference_no = cert.ref_no || cert.cert_no || 'REC/HC/2025/11004';
+    cert.status = cert.status || 'OFFICIAL / VERIFIED';
+
     const basicVal = Number(cert.basic_salary) || 9500;
     const accVal = Number(cert.accommodation_allowance) || 5500;
     const totalVal = basicVal + accVal;
@@ -3023,7 +3026,7 @@ export function registerPayrollModules(FinanceApp) {
               box-shadow: none !important;
               margin: 0 auto !important;
               padding: 4mm 8mm 3mm 8mm !important;
-              max-height: 285mm !important;
+              max-height: 282mm !important;
               height: auto !important;
               page-break-inside: avoid !important;
               break-inside: avoid !important;
@@ -3044,7 +3047,7 @@ export function registerPayrollModules(FinanceApp) {
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>🏛️</span>
-              <span>Rayan Engineering Official Employment Certificate (شهادة عمل)</span>
+              <span>Official Employment Certificate (شهادة عمل) — ${escapeHtml(cert.ref_no || cert.cert_no || 'REC/HC/2025/11004')}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
@@ -3077,159 +3080,227 @@ export function registerPayrollModules(FinanceApp) {
         </div>
 
         <div class="fin-doc-viewport">
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:6mm 12mm 5mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; box-sizing:border-box; width:100%; max-width:800px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden; page-break-inside:avoid !important; break-inside:avoid !important; max-height:282mm;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:5mm 10mm 4mm 10mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden; page-break-inside:avoid !important; break-inside:avoid !important; max-height:282mm;">
 
-            <!-- Header Logo (Rayan Engineering Centered) -->
-            <div style="text-align:center; margin-bottom:0.65rem;">
-              <img src="/assets/docs/rayan-engineering-header-logo.png" alt="Rayan Engineering" style="height:38px; width:auto; display:inline-block;">
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
+
+            <!-- Top 3-Column Corporate Header -->
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:flex-start; gap:12px; border-bottom:1.5px solid #0f172a; padding-bottom:6px; margin-bottom:6px;">
+              <!-- Column 1: Left - Rayan Logo, Legal Name, TRN, Dynamic QR/Barcode Verification Block -->
+              <div style="text-align:left; justify-self:start;">
+                <div style="margin-bottom:2px;">
+                  <img src="/assets/docs/rayan-doc-logo.png" alt="Rayan Engineering" style="height:36px; width:auto; display:block;">
+                </div>
+                <div style="font-size:0.72rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; letter-spacing:0.01em;">
+                  RAYAN ENGINEERING AND CONTRACTING LLC SPC
+                </div>
+                <div style="font-size:0.65rem; font-weight:700; color:#64748b; line-height:1.2; margin-top:1px;">
+                  TRN: 100234567800003
+                </div>
+                <div style="font-size:0.60rem; color:#64748b; line-height:1.2;">
+                  Abu Dhabi, UAE | Tel: +971 2 565 4497
+                </div>
+                ${this.getRayanDynamicVerificationCode ? this.getRayanDynamicVerificationCode(cert, 'emp_cert') : ''}
+              </div>
+
+              <!-- Column 2: Center - Dead-Center Bilingual Certificate Title -->
+              <div style="text-align:center; padding-top:2px; justify-self:center; min-width:200px;">
+                <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">شهادة عمل</div>
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.25rem; font-weight:800; color:#0f172a; letter-spacing:0.02em; line-height:1.1;">EMPLOYMENT CERTIFICATE</div>
+                <div style="font-size:0.60rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL STATEMENT OF EMPLOYMENT &amp; SALARY</div>
+                <div style="font-size:0.62rem; color:#0f172a; font-weight:700; margin-top:2px;">Whom It May Concern | لمن يهمه الأمر</div>
+              </div>
+
+              <!-- Column 3: Right - Reference, Status Badge, Date Table -->
+              <div style="text-align:right; justify-self:end;">
+                <div style="font-size:0.88rem; font-weight:800; color:#0284c7; font-family:monospace; margin-bottom:2px;" contenteditable="true" spellcheck="false" title="Click to edit cert no">
+                  # ${escapeHtml(cert.ref_no || cert.cert_no || 'REC/HC/2025/11004')}
+                </div>
+                <div style="display:inline-block; font-size:0.58rem; font-weight:800; color:#15803d; background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.3); border-radius:3px; padding:1px 5px; text-transform:uppercase; margin-bottom:3px;">
+                  ${escapeHtml(cert.status || 'OFFICIAL / VERIFIED')}
+                </div>
+                <table style="margin-left:auto; font-size:0.66rem; color:#475569; border-collapse:collapse;">
+                  <tr>
+                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Date:</td>
+                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;" contenteditable="true" spellcheck="false">${escapeHtml(cert.date || 'August 13, 2025')}</td>
+                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:التاريخ</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Validity:</td>
+                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;">30 Days Net</td>
+                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:الصلاحية</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Place:</td>
+                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;">Abu Dhabi, UAE</td>
+                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:المكان</td>
+                  </tr>
+                </table>
+              </div>
             </div>
 
-            <!-- Date & Reference Row -->
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.80rem; font-weight:700; color:#0f172a; margin-bottom:0.75rem;">
-              <div>Date: <span contenteditable="true" spellcheck="false" title="Click to edit date">${cert.date || 'August 13, 2025'}</span></div>
-              <div>Ref.: <span contenteditable="true" spellcheck="false" title="Click to edit reference">${cert.ref_no || cert.cert_no || 'REC/HC/2025/11004'}</span></div>
+            <!-- 2-Column Corporate Info Cards -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:6px;">
+              <!-- Card 1: English Particulars -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; background:#f8fafc; padding:5px 8px; font-size:0.68rem; line-height:1.35;">
+                <div style="font-weight:800; font-size:0.68rem; color:#0284c7; text-transform:uppercase; margin-bottom:3px; display:flex; justify-content:space-between;">
+                  <span>EMPLOYEE PARTICULARS</span>
+                  <span style="font-size:0.60rem; color:#64748b;">CIVIL / ENGINEERING</span>
+                </div>
+                <div style="color:#0f172a; font-weight:800; font-size:0.76rem; margin-bottom:2px;" contenteditable="true" spellcheck="false">
+                  ${escapeHtml(cert.employee_name_en || 'Bakhteyar Alam Mokhtar Ahmad')}
+                </div>
+                <div style="color:#334155;"><strong>Job Title:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.job_title_en || 'Civil Engineer')}</span></div>
+                <div style="color:#334155;"><strong>Joining Date:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.joining_date_en || '07/08/2025')}</span></div>
+                <div style="color:#334155;"><strong>Nationality:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.nationality_en || 'India')}</span></div>
+                <div style="color:#334155;"><strong>Passport No:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(cert.passport_no || 'S3552106')}</span></div>
+              </div>
+
+              <!-- Card 2: Arabic Particulars (RTL) -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; background:#f8fafc; padding:5px 8px; font-size:0.68rem; line-height:1.35; direction:rtl; text-align:right;">
+                <div style="font-weight:800; font-size:0.68rem; color:#0f172a; text-transform:uppercase; margin-bottom:3px; display:flex; justify-content:space-between; font-family:'Amiri', serif;">
+                  <span>تفاصيل الموظف والوظيفة</span>
+                  <span style="font-size:0.60rem; color:#64748b;">الهندسة المدنية</span>
+                </div>
+                <div style="color:#0f172a; font-weight:800; font-size:0.80rem; margin-bottom:2px; font-family:'Amiri', serif;" contenteditable="true" spellcheck="false">
+                  ${escapeHtml(cert.employee_name_ar || 'بختيار عالم مختار احمد')}
+                </div>
+                <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>المسمى الوظيفي:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.job_title_ar || 'مهندس مدني')}</span></div>
+                <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>تاريخ التعيين:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.joining_date_ar || '07-08-2025')}</span></div>
+                <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>الجنسية:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.nationality_ar || 'هندي')}</span></div>
+                <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>رقم الجواز:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(cert.passport_no || 'S3552106')}</span></div>
+              </div>
             </div>
 
-            <!-- Two-Column Bilingual Body Grid with Center Vertical Cyan Divider -->
-            <table style="width:100%; border-collapse:collapse; margin-bottom:0.65rem;">
-              <colgroup>
-                <col style="width:49%;">
-                <col style="width:2%;">
-                <col style="width:49%;">
-              </colgroup>
+            <!-- Official Bilingual Certification Statement -->
+            <table style="width:100%; border-collapse:collapse; margin-bottom:6px; background:#ffffff; border:1px solid #e2e8f0; border-radius:4px;">
               <tr>
-                <!-- Left Column (English) -->
-                <td style="vertical-align:top; padding-right:12px; font-size:0.74rem; line-height:1.42; color:#1e293b;">
-                  <h1 style="font-size:1.18rem; font-weight:800; color:#0f172a; margin:0 0 0.35rem 0; font-family:'Outfit', sans-serif;" contenteditable="true" spellcheck="false">Employment Certificate</h1>
-                  <div style="font-size:0.82rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;" contenteditable="true" spellcheck="false">Whom It May Concern</div>
-                  
-                  <p style="margin:0 0 0.55rem 0; text-align:justify; color:#334155; line-height:1.4;" contenteditable="true" spellcheck="false">
-                    RAYAN Engineering and Contracting l.l.c- s.p.c, a subsidiary of RAYAN Group, certifies that the under mentioned employee is currently in the service of the company and receiving a monthly salary as below:
-                  </p>
-
-                  <div style="margin-bottom:0.55rem; line-height:1.45;">
-                    <div><strong>Name:</strong> <span contenteditable="true" spellcheck="false">${cert.employee_name_en || 'Bakhteyar Alam Mokhtar Ahmad'}</span></div>
-                    <div><strong>Job Title:</strong> <span contenteditable="true" spellcheck="false">${cert.job_title_en || 'Civil Engineer'}</span></div>
-                    <div><strong>Date of Joining:</strong> <span contenteditable="true" spellcheck="false">${cert.joining_date_en || '07/08/2025'}</span></div>
-                    <div><strong>Nationality:</strong> <span contenteditable="true" spellcheck="false">${cert.nationality_en || 'India'}</span></div>
-                    <div><strong>Passport No.:</strong> <span contenteditable="true" spellcheck="false">${cert.passport_no || 'S3552106'}</span></div>
-                    <div style="margin-top:2px;"><strong>Monthly Salary:</strong> (<span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>) AE DIRHAM Only</div>
-                  </div>
-
-                  <!-- Salary Breakdown Table (English) -->
-                  <table style="width:100%; max-width:270px; font-size:0.72rem; border-collapse:collapse; margin-bottom:0.55rem;">
-                    <tr>
-                      <td style="padding:1px 0; color:#475569;">BASIC SALARY</td>
-                      <td style="text-align:right; font-weight:600;"><span contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></td>
-                    </tr>
-                    <tr>
-                      <td style="padding:1px 0; color:#475569;">ACCOMMODATION ALLOW.</td>
-                      <td style="text-align:right; font-weight:600;"><span contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></td>
-                    </tr>
-                    <tr style="border-top:1px solid #94a3b8; font-weight:800;">
-                      <td style="padding:2px 0; color:#0f172a;">Total:</td>
-                      <td style="text-align:right; color:#0f172a;"><span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></td>
-                    </tr>
-                  </table>
-
-                  <p style="font-size:0.71rem; line-height:1.35; color:#475569; margin:0 0 0.45rem 0;" contenteditable="true" spellcheck="false">
-                    ${cert.purpose || 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.'}
-                  </p>
-
-                  <div style="font-size:0.71rem; color:#475569; line-height:1.3;">
-                    For verification inquires, contact us at<br>
-                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;"><span contenteditable="true" spellcheck="false">${cert.verification_email || 'rayan@rayan-group.com'}</span></a>
-                  </div>
+                <td style="width:49%; vertical-align:top; padding:5px 8px; font-size:0.67rem; line-height:1.35; color:#334155; text-align:justify;" contenteditable="true" spellcheck="false">
+                  RAYAN Engineering and Contracting l.l.c- s.p.c, a subsidiary of RAYAN Group, certifies that the under mentioned employee is currently in the service of the company and receiving a monthly salary as detailed below. This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.
                 </td>
-
-                <!-- Center Vertical Line -->
-                <td style="vertical-align:stretch; padding:0; text-align:center;">
-                  <div style="background:#0284c7; width:2px; height:100%; min-height:230px; margin:0 auto; border-radius:1px;"></div>
+                <td style="width:2%; vertical-align:stretch; padding:0; text-align:center;">
+                  <div style="background:#0284c7; width:2px; height:100%; min-height:48px; margin:0 auto; border-radius:1px;"></div>
                 </td>
-
-                <!-- Right Column (Arabic, RTL) -->
-                <td style="vertical-align:top; padding-left:12px; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.78rem; line-height:1.45; color:#1e293b;">
-                  <h1 style="font-size:1.30rem; font-weight:800; color:#0f172a; margin:0 0 0.35rem 0; font-family:'Amiri', serif;" contenteditable="true" spellcheck="false">شـــــهــــــــــــــــــــادة عــــــــمــــــــــــــــــــل</h1>
-                  <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:0.5rem;" contenteditable="true" spellcheck="false">لمن يهمه الامر</div>
-
-                  <p style="margin:0 0 0.55rem 0; text-align:justify; color:#334155; line-height:1.45;" contenteditable="true" spellcheck="false">
-                    تشهد شركة ريان الهندسيه و للمقاولات - ذ م م - ش ش و إحدى شركات مجموعة رايان بأن الموظف المذكور أدناه يعمل لدينا، ولايزال على رأس عمله حتّى تاريخه ويتقاضى راتب شهري كما يلي:
-                  </p>
-
-                  <div style="margin-bottom:0.55rem; line-height:1.45;">
-                    <div><strong>الاسم :</strong> <span contenteditable="true" spellcheck="false">${cert.employee_name_ar || 'بختيار عالم مختار احمد'}</span></div>
-                    <div><strong>المسمى الوظيفي:</strong> <span contenteditable="true" spellcheck="false">${cert.job_title_ar || 'مهندس مدني'}</span></div>
-                    <div><strong>تاريخ التعيين:</strong> <span contenteditable="true" spellcheck="false">${cert.joining_date_ar || '07-08-2025'}</span></div>
-                    <div><strong>الجنسية:</strong> <span contenteditable="true" spellcheck="false">${cert.nationality_ar || 'هندي'}</span></div>
-                    <div><strong>رقم الجواز:</strong> <span contenteditable="true" spellcheck="false">${cert.passport_no || 'S3552106'}</span></div>
-                    <div style="margin-top:2px;"><strong>الراتب الشهري :</strong> (<span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>) درهم فقط</div>
-                  </div>
-
-                  <!-- Salary Breakdown Table (Arabic) -->
-                  <table style="width:100%; max-width:270px; font-size:0.74rem; border-collapse:collapse; margin-bottom:0.55rem; margin-right:0; margin-left:auto;">
-                    <tr>
-                      <td style="padding:1px 0; color:#475569;">راتب اساسي</td>
-                      <td style="text-align:left; font-weight:600;"><span contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></td>
-                    </tr>
-                    <tr>
-                      <td style="padding:1px 0; color:#475569;">علاوة سكن</td>
-                      <td style="text-align:left; font-weight:600;"><span contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></td>
-                    </tr>
-                    <tr style="border-top:1px solid #94a3b8; font-weight:800;">
-                      <td style="padding:2px 0; color:#0f172a;">الإجمالي:</td>
-                      <td style="text-align:left; color:#0f172a;"><span contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></td>
-                    </tr>
-                  </table>
-
-                  <p style="font-size:0.74rem; line-height:1.4; color:#475569; margin:0 0 0.45rem 0;" contenteditable="true" spellcheck="false">
-                    ${cert.purpose_ar || 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.'}
-                  </p>
-
-                  <div style="font-size:0.74rem; color:#475569; line-height:1.3;">
-                    لإلستفسارات، يمكنكم التواصل معنا عبر البريد اإللكتروني<br>
-                    <a href="mailto:${cert.verification_email || 'rayan@rayan-group.com'}" style="color:#0284c7; font-weight:600; text-decoration:none;"><span contenteditable="true" spellcheck="false">${cert.verification_email || 'rayan@rayan-group.com'}</span></a>
-                  </div>
+                <td style="width:49%; vertical-align:top; padding:5px 8px; font-size:0.70rem; line-height:1.38; color:#334155; direction:rtl; text-align:justify; font-family:'Amiri', serif;" contenteditable="true" spellcheck="false">
+                  تشهد شركة ريان الهندسيه و للمقاولات - ذ م م - ش ش و إحدى شركات مجموعة رايان بأن الموظف المذكور يعمل لدينا، ولايزال على رأس عمله حتّى تاريخه ويتقاضى راتب شهري كما يلي. وقد أعطيت له هذه الشهادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.
                 </td>
               </tr>
             </table>
 
-            <!-- Center Signatory & Official People & Culture Stamp Box -->
-            <div style="text-align:center; margin:0.45rem auto 0.55rem auto; position:relative; width:270px;">
-              <div id="emp-cert-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:270px; height:66px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                <!-- Official Round People & Culture Stamp -->
-                <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:12px; top:-16px; width:86px; height:86px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
-                <!-- Arshad Alam Shaikh Signature -->
-                <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:22px; top:4px; width:115px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
+            <!-- Corporate Remuneration Table -->
+            <table style="width:100%; border-collapse:collapse; font-size:0.68rem; margin-bottom:6px; border:1px solid #cbd5e1;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff; font-weight:700; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.03em;">
+                  <th style="padding:4px 6px; width:30px; text-align:center; border-right:1px solid #334155;">#</th>
+                  <th style="padding:4px 6px; text-align:left; border-right:1px solid #334155;">Salary Breakdown &amp; Allowances / تفاصيل الراتب والبدلات</th>
+                  <th style="padding:4px 6px; width:120px; text-align:center; border-right:1px solid #334155;">Frequency / الدورية</th>
+                  <th style="padding:4px 8px; width:140px; text-align:right;">Monthly Amount (${curr})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">1</td>
+                  <td style="padding:3px 6px; border-right:1px solid #e2e8f0;">
+                    <div style="font-weight:700; color:#0f172a;">BASIC SALARY <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#475569;">(راتب اساسي)</span></div>
+                    <div style="font-size:0.60rem; color:#64748b;">Fixed primary contractual salary</div>
+                  </td>
+                  <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
+                  <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${basicVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+                  <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">2</td>
+                  <td style="padding:3px 6px; border-right:1px solid #e2e8f0;">
+                    <div style="font-weight:700; color:#0f172a;">ACCOMMODATION ALLOWANCE <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#475569;">(علاوة سكن)</span></div>
+                    <div style="font-size:0.60rem; color:#64748b;">Company provided accommodation allowance</div>
+                  </td>
+                  <td style="padding:3px 6px; text-align:center; color:#475569; border-right:1px solid #e2e8f0;">Monthly / شهري</td>
+                  <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${accVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr style="background:#e0f2fe; border-top:1.5px solid #0284c7; font-weight:800;">
+                  <td colspan="2" style="padding:4px 6px; color:#0369a1; border-right:1px solid #bae6fd;">
+                    <span>TOTAL GROSS MONTHLY SALARY : </span>
+                    <span style="font-family:'Amiri', serif; font-size:0.74rem;">(إجمالي الراتب الشهري)</span>
+                  </td>
+                  <td style="padding:4px 6px; text-align:center; color:#0369a1; border-right:1px solid #bae6fd;">AED DIRHAM</td>
+                  <td style="padding:4px 8px; text-align:right; color:#0369a1; font-size:0.80rem; font-family:monospace;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} ${curr}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Amount in words banner -->
+            <div style="border:1px solid #e2e8f0; background:#f8fafc; border-radius:4px; padding:3px 8px; font-size:0.64rem; color:#334155; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+              <div><strong>Total In Words:</strong> <span contenteditable="true" spellcheck="false">Fifteen Thousand AE Dirham Only.</span></div>
+              <div style="direction:rtl; font-family:'Amiri', serif; font-size:0.72rem;"><strong>المبلغ بالحروف:</strong> <span contenteditable="true" spellcheck="false">خمسة عشر ألف درهم إماراتي فقط لا غير.</span></div>
+            </div>
+
+            <!-- Signatory & Official People & Culture Stamp Box -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:4px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">
+              <!-- Left Side: Inquiries and Verification info -->
+              <div style="font-size:0.62rem; color:#475569; line-height:1.3; max-width:55%;">
+                <div style="font-weight:700; color:#0f172a; margin-bottom:1px;">Official Verification Inquiries:</div>
+                <div>For verification inquires, contact us at <a href="mailto:info@rayan-group.com" style="color:#0284c7; font-weight:700; text-decoration:none;">info@rayan-group.com</a> | <a href="mailto:rayan@rayan-group.com" style="color:#0284c7; font-weight:700; text-decoration:none;">rayan@rayan-group.com</a></div>
+                <div>Tel: +971 2 565 4497 | Abu Dhabi, United Arab Emirates</div>
               </div>
-              <div style="position:relative; z-index:3; padding-top:2px;">
-                <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.92rem; font-weight:700; color:#0f172a; outline:none; line-height:1.2;" title="Click to edit name (Arabic)">${cert.signatory_name_ar || 'ارشد عالم شيخ'}</div>
-                <div contenteditable="true" spellcheck="false" style="font-weight:800; font-size:0.80rem; color:#0f172a; outline:none; line-height:1.2;" title="Click to edit name (English)">${cert.signatory_name || 'Arshad Alam Shaikh'}</div>
-                <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.72rem; font-weight:700; color:#0f172a; outline:none; line-height:1.2;" title="Click to edit title (Arabic)">${cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'}</div>
-                <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.68rem; color:#0f172a; outline:none; line-height:1.2;" title="Click to edit title (English)">${cert.signatory_title || 'Chief Officer of People & Culture'}</div>
+
+              <!-- Right Side: Official Signatory & People and Culture Stamp -->
+              <div style="text-align:center; min-width:240px; position:relative;">
+                <div id="emp-cert-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:240px; height:58px; margin:0 auto; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
+                  <!-- Round People & Culture Stamp -->
+                  <img src="/assets/docs/rayan-people-culture-stamp.png" alt="Rayan Group People & Culture Stamp" style="position:absolute; right:10px; top:-14px; width:76px; height:76px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
+                  <!-- Arshad Alam Shaikh Signature -->
+                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:16px; top:4px; width:100px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
+                </div>
+                <div style="position:relative; z-index:3;">
+                  <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.86rem; font-weight:700; color:#0f172a; line-height:1.15;" title="Click to edit name (Arabic)">${cert.signatory_name_ar || 'ارشد عالم شيخ'}</div>
+                  <div contenteditable="true" spellcheck="false" style="font-weight:800; font-size:0.75rem; color:#0f172a; line-height:1.15;" title="Click to edit name (English)">${cert.signatory_name || 'Arshad Alam Shaikh'}</div>
+                  <div contenteditable="true" spellcheck="false" style="font-family:'Amiri', serif; font-size:0.68rem; font-weight:700; color:#475569; line-height:1.15;" title="Click to edit title (Arabic)">${cert.signatory_title_ar || 'الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية'}</div>
+                  <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.62rem; color:#475569; line-height:1.15;" title="Click to edit title (English)">${cert.signatory_title || 'Chief Officer of People & Culture'}</div>
+                </div>
               </div>
             </div>
 
             <!-- Group Includes 4 Logos Strip -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin:0.35rem 0 0.25rem 0; font-size:0.66rem; color:#475569; border-top:1px solid #e2e8f0; padding-top:0.35rem;">
-              <div style="font-weight:600;">* The Group Includes:</div>
-              <img src="/assets/docs/rayan-group-four-logos-strip.png" alt="Rayan Group Subsidiaries" style="height:20px; width:auto; max-width:300px; object-fit:contain;">
-              <div style="font-family:'Amiri', serif; font-weight:700; direction:rtl;">*تشمل المجموعة</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:0.60rem; color:#64748b; border-bottom:1px solid #e2e8f0; padding-bottom:3px;">
+              <div style="font-weight:700; color:#475569;">* The Group Includes:</div>
+              <img src="/assets/docs/rayan-group-four-logos-strip.png" alt="Rayan Group Subsidiaries" style="height:18px; width:auto; max-width:280px; object-fit:contain;">
+              <div style="font-family:'Amiri', serif; font-weight:700; direction:rtl; font-size:0.68rem; color:#475569;">*تشمل المجموعة</div>
             </div>
 
-            <!-- Bilingual Notes Section -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; font-size:0.62rem; color:#64748b; line-height:1.32; margin-bottom:0.15rem;">
-              <div style="width:48%;" contenteditable="true" spellcheck="false">
-                <strong>Note:</strong><br>
-                - Any amendment or change will revoke this certificate.<br>
-                - The validity of this certificate is one month from the date of issuance.<br>
-                - This is a system generated certificate with electronic signature &amp; company stamp.
+            <!-- Bottom Section: Bilingual Notes (Left) & Standard Corporate Best Wishes (Right) -->
+            <div style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:12px; align-items:flex-start; margin-bottom:4px;">
+              <!-- Left: Bilingual Official Notes -->
+              <div style="font-size:0.58rem; color:#64748b; line-height:1.3;">
+                <div style="font-weight:700; color:#0f172a; margin-bottom:1px;">Important Certification Notes / ملاحظات هامة:</div>
+                <div style="display:flex; justify-content:space-between; gap:8px;">
+                  <div style="width:50%;" contenteditable="true" spellcheck="false">
+                    • Any amendment or erasure revokes this certificate.<br>
+                    • Validity: 30 days from the date of issuance.<br>
+                    • Official electronic certificate with system verification.
+                  </div>
+                  <div style="width:50%; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.64rem;" contenteditable="true" spellcheck="false">
+                    • أي شطب أو تعديل في هذه الشهادة يلغيها.<br>
+                    • صلاحية الشهادة 30 يوماً من تاريخ إصدارها.<br>
+                    • أصدرت هذه الشهادة عبر النظام مع رمز التحقق الإلكتروني.
+                  </div>
+                </div>
               </div>
-              <div style="width:48%; direction:rtl; text-align:right; font-family:'Amiri', serif; font-size:0.68rem; line-height:1.32;" contenteditable="true" spellcheck="false">
-                <strong>ملاحظة:</strong><br>
-                -أي شطب أو تعديل في هذه الشهادة يلغيها.<br>
-                -صلاحية الشهادة شهر واحد من تاريخ إصدارها .<br>
-                -اصدرت هذه الشهادة عبر النظام اإللكتروني مع التوقيع و ختم الشركة.
+
+              <!-- Right: Standard Corporate Best Wishes (matching Sales Invoice) -->
+              <div style="font-size:0.60rem; color:#475569; line-height:1.3; text-align:right;">
+                <div style="font-weight:700; color:#0f172a;">Best wishes</div>
+                <div style="font-weight:800; color:#0f172a;">RAYAN Group Team</div>
+                <div style="color:#64748b;">Abu Dhabi, U.A.E</div>
+                <div style="color:#64748b;">Hotline : +971 2 565 4497</div>
+                <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
               </div>
+            </div>
+
+            <!-- Fixed 1px System-Generated Footer Line -->
+            <div style="border-top:1px solid #e2e8f0; padding-top:2px; display:flex; justify-content:space-between; align-items:center; font-size:0.56rem; color:#94a3b8;">
+              <div># ${escapeHtml(cert.ref_no || cert.cert_no || 'REC/HC/2025/11004')}</div>
+              <div>This is an official system-generated certificate and does not require a physical signature when verified online.</div>
+              <div>Page 1 of 1</div>
             </div>
 
           </div>
@@ -3599,18 +3670,75 @@ export function registerPayrollModules(FinanceApp) {
     }
     if (!loa) loa = loas[0] || (this.db?.letters_of_assignment || [])[0];
 
+    loa.reference_no = loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047';
+
     const basicVal = Number(loa.basic_salary) || 1100;
     const foodVal = Number(loa.food_allowance) || 200;
     const otVal = Number(loa.overtime_amount) || 200;
     const grandTotalVal = basicVal + foodVal + otVal;
+    const curr = loa.currency || 'AED';
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+        <style>
+          #fin-doc-print-modal [contenteditable="true"] {
+            transition: background 0.15s, outline 0.15s;
+            border-radius: 2px;
+            padding: 1px 3px;
+          }
+          #fin-doc-print-modal [contenteditable="true"]:hover {
+            background: rgba(56, 189, 248, 0.12) !important;
+            outline: 1px dashed #0284c7 !important;
+            cursor: text;
+          }
+          #fin-doc-print-modal [contenteditable="true"]:focus {
+            background: rgba(56, 189, 248, 0.22) !important;
+            outline: 1.5px solid #0284c7 !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 6mm 8mm !important;
+          }
+          @media print {
+            html, body {
+              background: #ffffff !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            .fin-doc-viewport {
+              padding: 0 !important;
+              margin: 0 !important;
+              overflow: visible !important;
+            }
+            .fin-document-paper {
+              box-shadow: none !important;
+              margin: 0 auto !important;
+              padding: 6mm 10mm 5mm 10mm !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .fin-doc-page-2 {
+              page-break-before: always !important;
+              break-before: page !important;
+              margin-top: 0 !important;
+            }
+            #fin-doc-print-modal [contenteditable="true"] {
+              outline: none !important;
+              background: transparent !important;
+              padding: 0 !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+          }
+        </style>
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>📜</span>
-              <span>Rayan Group Official Letter of Assignment (خطاب التكليف والتعيين - 2 Pages)</span>
+              <span>Official Letter of Assignment (خطاب التكليف والتعيين — 2 Pages) — ${escapeHtml(loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047')}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
@@ -3618,9 +3746,7 @@ export function registerPayrollModules(FinanceApp) {
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPaymentPrintModal()">Payment Voucher</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openBillPrintModal()">Purchase Bill</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPOPrintModal()">Purchase Order</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openCreditNotePrintModal()">Credit Note</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openDebitNotePrintModal()">Debit Note</button>
-              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openConsolidatedCustomerSOA()">Master SOA</button>
+              <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openPayslipPrintModal()">Employee Pay Slip</button>
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openEmploymentCertificatePrintModal()">Emp Cert</button>
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openLetterOfAssignmentPrintModal('${loa.id}')">Assignment Letter</button>
             </div>
@@ -3646,196 +3772,290 @@ export function registerPayrollModules(FinanceApp) {
 
         <div class="fin-doc-viewport">
           <!-- PAGE 1 OF LETTER OF ASSIGNMENT -->
-          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:10mm 15mm 8mm 15mm; font-family:'Times New Roman', Times, serif; font-size:12.5px; line-height:1.42; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+          <div class="fin-document-paper" style="background:#ffffff; color:#0f172a; padding:6mm 12mm 5mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11.5px; line-height:1.38; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
             
-            ${this.getRayanWatermark()}
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
 
-            <!-- Top Header Logo (Rayan Group Centered) -->
-            <div style="text-align:center; margin-bottom:1.25rem;">
-              <img src="/assets/docs/rayan-group-header-logo.png" alt="Rayan Group" style="height:54px; width:auto; display:inline-block;">
-            </div>
-
-            <!-- Ref and Date Line -->
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; font-weight:700; color:#000000; margin-bottom:1.2rem;">
-              <div>REF: ${loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047'}</div>
-              <div>Date: ${loa.date || '26/08/2026'}</div>
-            </div>
-
-            <div style="font-size:0.85rem; color:#000000; margin-bottom:0.75rem;">Private and confidential</div>
-
-            <!-- Document Title -->
-            <div style="text-align:center; font-size:1.15rem; font-weight:800; text-decoration:underline; letter-spacing:0.04em; margin:0.85rem 0 1.25rem 0;">
-              LETTER OF ASSIGNMENT
-            </div>
-
-            <!-- Employee Recipient Block -->
-            <div style="font-size:0.85rem; line-height:1.45; color:#000000; margin-bottom:1.1rem;">
-              <div><strong>${loa.employee_name || 'Md Ashraf Ali'}</strong></div>
-              <div><strong>Passport No. ${loa.passport_no || 'C6976631'}</strong></div>
-              <div>Nationality. ${loa.nationality || 'India'}</div>
-            </div>
-
-            <!-- Salutation -->
-            <div style="font-size:0.85rem; line-height:1.45; color:#000000; margin-bottom:0.9rem;">
-              <div><strong>Dear Mr. ${loa.employee_name || 'Md Ashraf Ali'}</strong></div>
-              <div><strong>Congratulations!!</strong></div>
-            </div>
-
-            <!-- Offer Paragraph -->
-            <p style="font-size:0.82rem; line-height:1.42; color:#000000; margin:0 0 0.85rem 0; text-align:justify;">
-              We are pleased to offer you employment in the position of <strong>${loa.position || 'General Mason/Tiles Mason'}</strong> with us here at <strong>Rayan Group</strong> based on the interview, discussions you had with us, and your application submitted to us. All Visa Formalities and your commencement of work at <strong>Rayan Engineering and Contracting L.L.C-S.P.C</strong> Please find below the details of the terms and conditions of our agreement:
-            </p>
-
-            <div style="font-size:0.82rem; line-height:1.42; color:#000000; margin-bottom:0.65rem;">
-              <div><strong>Reporting Manager:</strong> ${loa.reporting_manager || 'You will report to the Site Supervisor or his designated nominee.'}</div>
-              <div><strong>Working hours:</strong> ${loa.working_hours || '08 hours a day and 6 days a week.'}</div>
-            </div>
-
-            <!-- Remuneration Details -->
-            <div style="font-size:0.82rem; color:#000000; margin-bottom:0.65rem;">
-              <div style="font-weight:700; text-decoration:underline; margin-bottom:2px;">Remuneration per Month.</div>
-              <table style="width:100%; max-width:680px; font-size:12px; border-collapse:collapse; margin-bottom:4px;">
-                <tr>
-                  <td style="width:260px; padding:1px 0;">Basic salary</td>
-                  <td>: AED. ${basicVal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td style="padding:1px 0;">Food allowance</td>
-                  <td>: AED. ${foodVal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td style="padding:1px 0;">Approximate Over Time(${loa.overtime_hours || '2-3 HRS.Per/Day'})</td>
-                  <td>: AED. ${otVal.toFixed(2)} <span style="font-size:10.5px;">(Overtime will be as per work requirement and approved by Management)</span></td>
-                </tr>
-                <tr style="font-weight:800; border-top:1px solid #64748b;">
-                  <td style="padding:3px 0;">GRAND TOTAL</td>
-                  <td style="padding:3px 0;">: AED. ${grandTotalVal}/-</td>
-                </tr>
-              </table>
-            </div>
-
-            <!-- Articles 1 through 10 (Page 1) -->
-            <div style="font-size:11.8px; line-height:1.38; color:#000000; text-align:justify;">
-              <div style="margin-bottom:3px;"><strong>1. Accommodation allowance:</strong> Shared Accommodation (Provision or allowance) will be provided by the company.</div>
-              <div style="margin-bottom:3px;"><strong>2. Transportation:</strong> Shared Transportation to and from the site is under company scope.</div>
-              <div style="margin-bottom:3px;"><strong>3. Vacation and Earned leave:</strong> You are entitled to 60 calendar annual leave after completion of 2 years of service, in accordance with UAE Labor Law. Leave can be availed only on the due approval</div>
-              <div style="margin-bottom:3px;"><strong>4. Contract:</strong> Contract shall be two years’ term of employment. Employer acknowledges and agrees that Employee shall be the Corporation may terminate an “At Will” Employee and that Employee’s employment at any time, with or without cause.</div>
-              <div style="margin-bottom:3px;"><strong>5. Air Ticket:</strong> You are entitled to Economy Class return air ticket from the UAE to the nearest international airport in your home country every two years. This will become effective only upon completion of two years of service.</div>
-              <div style="margin-bottom:3px;"><strong>6. Medical and Insurance:</strong> You will be covered under Group Life. Personal Accident and Medical Insurance Schemes of the Company as per UAE Law and Company policy.</div>
-              <div style="margin-bottom:3px;"><strong>7. Probation:</strong> The first 6 months of employment will be probationary. During this period if the performance of the employee is not found satisfactory, the company may terminate the employee without any notice period.</div>
-              <div style="margin-bottom:3px;"><strong>8. Termination of Employment:</strong> This agreement can be terminated by either serving the other with Three-month prior notice in writing.</div>
-              <div style="margin-bottom:3px;"><strong>9. Protection against religious discrimination:</strong> It is illegal to discriminate against any individual based on their religion in all activities of the company i.e., Recruitment, Training, Promotions, Increments, and Termination. Equal opportunity is mandated for all irrespective of their religious background. This policy prohibits unlawful harassment of any kind, including jokes, slurs, offensive gestures, and bullying based on religion.</div>
-              <div><strong>10. Confidentiality:</strong></div>
-              <div style="padding-left:14px;">
-                a) By accepting this Letter of Assignment, you acknowledge and agree that you will not, during the course of your employment or thereafter, except with the consent of the employer, as required by law or in the performance of your duties, use or disclose confidential information.<br>
-                b) Relating the business of the employer, including but not limited to client lists, trade secrets, client details, and pricing structures.<br>
-                c) Upon termination of this Agreement of upon the written request of the employer, the employee will return all copies of confidential information to the employer and, in the case of the employer requests the destruction of Confidential Information, will provide written certification of the destruction.
-              </div>
-            </div>
-
-            <!-- Page 1 Footer -->
-            <div style="margin-top:0.85rem; border-top:1px solid #cbd5e1; padding-top:4px;">
-              <div style="color:#0284c7; font-weight:800; font-size:0.85rem; font-family:'Plus Jakarta Sans', sans-serif;">Abu Dhabi, UAE</div>
-              <div style="font-size:0.72rem; color:#475569; font-family:'Plus Jakarta Sans', sans-serif;">
-                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
-              </div>
-            </div>
-
-          </div>
-
-          <!-- PAGE 2 OF LETTER OF ASSIGNMENT -->
-          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#0f172a; padding:10mm 15mm 8mm 15mm; font-family:'Times New Roman', Times, serif; font-size:12.5px; line-height:1.42; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
-            
-            ${this.getRayanWatermark()}
-
-            <!-- Top Header Logo (Rayan Group Centered) -->
-            <div style="text-align:center; margin-bottom:1.25rem;">
-              <img src="/assets/docs/rayan-group-header-logo.png" alt="Rayan Group" style="height:54px; width:auto; display:inline-block;">
-            </div>
-
-            <!-- Ref and Date Line -->
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; font-weight:700; color:#000000; margin-bottom:1.2rem;">
-              <div>REF: ${loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047'}</div>
-              <div>Date: ${loa.date || '26/08/2026'}</div>
-            </div>
-
-            <!-- Articles Continuation (Page 2) -->
-            <div style="font-size:11.8px; line-height:1.38; color:#000000; text-align:justify;">
-              <div style="padding-left:14px; margin-bottom:6px;">
-                d) <strong>Company protects its employees from discrimination based on religion.</strong> It is illegal for an employee to discriminate against individuals because of their religion in hiring, firing, and other terms and conditions of employment such as promotions, increments, and other job opportunities. Any employee who is found guilty of violating this clause will face immediate termination.
-              </div>
-
-              <div style="margin-bottom:6px;">
-                <strong>11. Employment Terms &amp; Conditions:</strong><br>
-                All the terms and conditions of employment are governed by the UAE Labor Law and are subject to change as per the Company Policy, which might change from time to time, based on the business requirements.
-              </div>
-
-              <div style="margin-bottom:8px;">
-                <strong>12. Entire agreement</strong><br>
-                a) The employment is subject to visa approval from the ministries in the UAE.<br>
-                b) The offer is valid subject to client approval, medical fitness and CICPA Approval.<br>
-                c) The remuneration will be paid after the work permit is approved and physical joining at work.<br>
-                d) The terms and conditions referred to in this Agreement constitute all the terms and conditions of your employment and replace any prior understanding or agreement between you and the employer.<br>
-                e) The terms and conditions referred to in this Agreement may only be varied by a written agreement signed by both you and the employer.<br>
-                f) During employment with the Company, the employee shall be subject to and must abide by rules and regulations stipulated by the company.<br>
-                g) This information and any changes made therein should be treated as personal and confidential. Should the employee have any queries, he is advised to contact his reporting manager or the HR department.<br>
-                h) <strong>Work Assignments and Locations.</strong> Company may assign or re-assign Employee anywhere in maintains facilities or conducts operations including but not limited to Employee being transferred “onshore” or “offshore”. Employee acknowledges and agrees that Employee may be temporarily or permanently assigned to various affiliates of employer. Therefore, Employee further acknowledges and agrees that he may be temporarily or permanently assigned to work under the control and supervision of such affiliate of Employer.
-              </div>
-            </div>
-
-            <!-- Closing Statement -->
-            <div style="font-size:12px; line-height:1.45; color:#000000; margin:0.85rem 0;">
-              <div>We are delighted to send you this offer to be approved and signed by you to start the job Latest by <strong>${loa.joining_deadline || '15-09-2026'}</strong>. Looking forward to seeing you on board.</div>
-              <div style="margin-top:6px;">Please provide your signature on one copy of this letter of acceptance of these terms and conditions which shall constitute an agreement between us.</div>
-              <div style="margin-top:6px;">We look forward to establishing a professional working relationship with you and welcome to our team.</div>
-              <div style="margin-top:6px;">Your Sincerely,</div>
-            </div>
-
-            <!-- Signatures Section: Left Employer (Stamp + Sign), Right Employee Acceptance -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:1.1rem; page-break-inside:avoid !important; break-inside:avoid !important;">
-              <!-- Left Column: For Rayan Group -->
-              <div style="width:230px;">
-                <div style="font-weight:700; font-size:0.88rem; margin-bottom:2px;">For Rayan Group</div>
-                <div id="loa-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:220px; height:85px; margin:4px 0; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
-                  <!-- Rayan Group Round Stamp -->
-                  <img src="/assets/docs/rayan-group-round-stamp.png" alt="Rayan Group Stamp" style="position:absolute; left:0; top:-10px; width:88px; height:88px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
-                  <!-- Arshad Alam Shaikh Signature -->
-                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:25px; top:12px; width:130px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
+            <!-- Top 3-Column Corporate Header -->
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:flex-start; gap:12px; border-bottom:1.5px solid #0f172a; padding-bottom:6px; margin-bottom:8px;">
+              <!-- Column 1: Left - Rayan Group Logo, Entity Name, TRN, Dynamic QR/Barcode Verification Block -->
+              <div style="text-align:left; justify-self:start;">
+                <div style="margin-bottom:2px;">
+                  <img src="/assets/docs/rayan-group-header-logo.png" alt="Rayan Group" style="height:36px; width:auto; display:block;">
                 </div>
-                <div style="font-family:'Amiri', serif; font-size:1rem; font-weight:700; color:#0f172a;">${loa.signatory_name_ar || 'ارشد عالم شيخ'}</div>
-                <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">${loa.signatory_name || 'Arshad Alam Shaikh'}</div>
-                <div style="font-family:'Amiri', serif; font-size:0.78rem; font-weight:700; color:#0f172a;">${loa.signatory_title_ar || 'الرئيس التنفيذي'}</div>
-                <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.75rem; color:#0f172a; outline:none;" title="Click to edit title">${loa.signatory_title || 'Chief Executive Officer'}</div>
+                <div style="font-size:0.72rem; font-weight:800; color:#0f172a; line-height:1.2; text-transform:uppercase; letter-spacing:0.01em;">
+                  RAYAN ENGINEERING AND CONTRACTING LLC SPC
+                </div>
+                <div style="font-size:0.65rem; font-weight:700; color:#64748b; line-height:1.2; margin-top:1px;">
+                  TRN: 100234567800003
+                </div>
+                <div style="font-size:0.60rem; color:#64748b; line-height:1.2;">
+                  Abu Dhabi, UAE | Tel: +971 2 565 4497
+                </div>
+                ${this.getRayanDynamicVerificationCode ? this.getRayanDynamicVerificationCode(loa, 'loa') : ''}
               </div>
 
-              <!-- Right Column: Employee Acceptance -->
-              <div style="width:380px; font-size:11.5px; line-height:1.45; color:#000000;">
-                <div>I, <strong>${loa.employee_name || 'Md Ashraf Ali'}</strong>, have read and understood this letter and accept.</div>
-                <div style="margin-top:3px;">The offer of employment from Rayan Group, Abu Dhabi on the terms and conditions set out in the Letter. I accept them of my own free choice and will.</div>
-                
-                <table style="width:100%; font-size:11.5px; margin-top:1.1rem; border-collapse:collapse;">
+              <!-- Column 2: Center - Dead-Center Bilingual Document Title -->
+              <div style="text-align:center; padding-top:2px; justify-self:center; min-width:210px;">
+                <div style="font-family:'Amiri', serif; font-size:1.35rem; font-weight:700; color:#0284c7; line-height:1.15;">خطاب التكليف والتعيين</div>
+                <div style="font-family:'Outfit', -apple-system, sans-serif; font-size:1.25rem; font-weight:800; color:#0f172a; letter-spacing:0.02em; line-height:1.1;">LETTER OF ASSIGNMENT</div>
+                <div style="font-size:0.60rem; color:#64748b; font-weight:700; margin-top:2px; letter-spacing:0.04em; text-transform:uppercase;">OFFICIAL EMPLOYMENT CONTRACT &amp; TERMS</div>
+              </div>
+
+              <!-- Column 3: Right - Reference, Status Badge, Date Table -->
+              <div style="text-align:right; justify-self:end;">
+                <div style="font-size:0.88rem; font-weight:800; color:#0284c7; font-family:monospace; margin-bottom:2px;" contenteditable="true" spellcheck="false" title="Click to edit ref no">
+                  # ${escapeHtml(loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047')}
+                </div>
+                <div style="display:inline-block; font-size:0.58rem; font-weight:800; color:#b45309; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); border-radius:3px; padding:1px 5px; text-transform:uppercase; margin-bottom:3px;">
+                  CONFIDENTIAL / سري وشخصي
+                </div>
+                <table style="margin-left:auto; font-size:0.66rem; color:#475569; border-collapse:collapse;">
                   <tr>
-                    <td style="width:170px; padding:4px 0;">Name:</td>
-                    <td><strong>${loa.employee_name || 'Md Ashraf Ali'}</strong></td>
+                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Date:</td>
+                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;" contenteditable="true" spellcheck="false">${escapeHtml(loa.date || '26/08/2026')}</td>
+                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:التاريخ</td>
                   </tr>
                   <tr>
-                    <td style="padding:4px 0;">Date of Joining:</td>
-                    <td style="border-bottom:1px solid #475569; width:180px;">&nbsp;</td>
+                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Joining:</td>
+                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;" contenteditable="true" spellcheck="false">${escapeHtml(loa.joining_deadline || '15-09-2026')}</td>
+                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:الالتحاق</td>
                   </tr>
                   <tr>
-                    <td style="padding:4px 0;">Date of signing this contract:</td>
-                    <td style="border-bottom:1px solid #475569; width:180px;">&nbsp;</td>
+                    <td style="padding:1px 3px 1px 0; font-weight:600; text-align:right;">Contract:</td>
+                    <td style="padding:1px 0; font-weight:700; color:#0f172a; text-align:right;">2 Years Term</td>
+                    <td style="padding:1px 0 1px 3px; font-family:'Amiri', serif; font-size:0.72rem; text-align:right;">:المدة</td>
                   </tr>
                 </table>
               </div>
             </div>
 
-            <!-- Page 2 Footer -->
-            <div style="margin-top:1.5rem; border-top:1px solid #cbd5e1; padding-top:4px;">
-              <div style="color:#0284c7; font-weight:800; font-size:0.85rem; font-family:'Plus Jakarta Sans', sans-serif;">Abu Dhabi, UAE</div>
-              <div style="font-size:0.72rem; color:#475569; font-family:'Plus Jakarta Sans', sans-serif;">
-                Tel: +971-25654497 | Abu Dhabi, United Arab Emirates | info@rayan-group.com | www.rayan-group.com
+            <!-- 2-Column Corporate Info Cards -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+              <!-- Card 1: Candidate Particulars -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; background:#f8fafc; padding:5px 8px; font-size:0.68rem; line-height:1.35;">
+                <div style="font-weight:800; font-size:0.68rem; color:#0284c7; text-transform:uppercase; margin-bottom:3px; display:flex; justify-content:space-between;">
+                  <span>CANDIDATE PARTICULARS</span>
+                  <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#64748b;">بيانات المرشح</span>
+                </div>
+                <div style="color:#0f172a; font-weight:800; font-size:0.78rem; margin-bottom:2px;" contenteditable="true" spellcheck="false">
+                  ${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}
+                </div>
+                <div style="color:#334155;"><strong>Passport No:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(loa.passport_no || 'C6976631')}</span></div>
+                <div style="color:#334155;"><strong>Nationality:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(loa.nationality || 'India')}</span></div>
               </div>
+
+              <!-- Card 2: Assignment Details -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; background:#f8fafc; padding:5px 8px; font-size:0.68rem; line-height:1.35;">
+                <div style="font-weight:800; font-size:0.68rem; color:#0f172a; text-transform:uppercase; margin-bottom:3px; display:flex; justify-content:space-between;">
+                  <span>ASSIGNMENT DETAILS</span>
+                  <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#64748b;">تفاصيل التكليف والوظيفة</span>
+                </div>
+                <div style="color:#0f172a; font-weight:800; font-size:0.78rem; margin-bottom:2px;" contenteditable="true" spellcheck="false">
+                  ${escapeHtml(loa.position || 'General Mason / Tiles Mason')}
+                </div>
+                <div style="color:#334155;"><strong>Reporting Manager:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(loa.reporting_manager || 'Site Supervisor or his designated nominee')}</span></div>
+                <div style="color:#334155;"><strong>Working Hours:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(loa.working_hours || '08 hours a day and 6 days a week')}</span></div>
+              </div>
+            </div>
+
+            <!-- Congratulations & Offer Introduction -->
+            <div style="border:1px solid #e2e8f0; background:#ffffff; border-radius:4px; padding:6px 10px; font-size:0.68rem; line-height:1.4; color:#334155; margin-bottom:8px; text-align:justify;">
+              <div style="font-weight:800; color:#0f172a; margin-bottom:2px;">
+                Dear Mr. <span contenteditable="true" spellcheck="false">${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}</span> — Congratulations!
+              </div>
+              <p style="margin:0;" contenteditable="true" spellcheck="false">
+                We are pleased to offer you employment in the position of <strong>${escapeHtml(loa.position || 'General Mason/Tiles Mason')}</strong> with us here at <strong>Rayan Group</strong> based on the interview and discussions held with you. All visa formalities and your commencement of work will be under <strong>Rayan Engineering and Contracting L.L.C-S.P.C</strong>. Please find below the detailed terms and conditions of our assignment agreement:
+              </p>
+            </div>
+
+            <!-- Remuneration Table -->
+            <table style="width:100%; border-collapse:collapse; font-size:0.68rem; margin-bottom:8px; border:1px solid #cbd5e1;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff; font-weight:700; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.03em;">
+                  <th style="padding:4px 6px; width:30px; text-align:center; border-right:1px solid #334155;">#</th>
+                  <th style="padding:4px 8px; text-align:left; border-right:1px solid #334155;">Remuneration Component / بند الراتب والبدلات</th>
+                  <th style="padding:4px 8px; text-align:left; border-right:1px solid #334155;">Terms &amp; Frequency / الشروط والضوابط</th>
+                  <th style="padding:4px 8px; width:140px; text-align:right;">Monthly Amount (${curr})</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">1</td>
+                  <td style="padding:3px 8px; border-right:1px solid #e2e8f0; font-weight:700; color:#0f172a;">Basic Salary (الراتب الأساسي)</td>
+                  <td style="padding:3px 8px; border-right:1px solid #e2e8f0; color:#475569;">Fixed monthly base contractual remuneration</td>
+                  <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${basicVal.toFixed(2)}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+                  <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">2</td>
+                  <td style="padding:3px 8px; border-right:1px solid #e2e8f0; font-weight:700; color:#0f172a;">Food Allowance (بدل طعام)</td>
+                  <td style="padding:3px 8px; border-right:1px solid #e2e8f0; color:#475569;">Monthly food provision allowance</td>
+                  <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${foodVal.toFixed(2)}</td>
+                </tr>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:3px 6px; text-align:center; color:#64748b; font-weight:700; border-right:1px solid #e2e8f0;">3</td>
+                  <td style="padding:3px 8px; border-right:1px solid #e2e8f0; font-weight:700; color:#0f172a;">Approximate Over Time (${escapeHtml(loa.overtime_hours || '2-3 HRS.Per/Day')})</td>
+                  <td style="padding:3px 8px; border-right:1px solid #e2e8f0; color:#475569;">Overtime as per site requirement &amp; management approval</td>
+                  <td style="padding:3px 8px; text-align:right; font-weight:700; color:#0f172a; font-family:monospace;" contenteditable="true" spellcheck="false">${otVal.toFixed(2)}</td>
+                </tr>
+                <tr style="background:#e0f2fe; border-top:1.5px solid #0284c7; font-weight:800;">
+                  <td colspan="2" style="padding:4px 8px; color:#0369a1; border-right:1px solid #bae6fd;">
+                    GRAND TOTAL MONTHLY REMUNERATION (إجمالي الراتب الشهري)
+                  </td>
+                  <td style="padding:4px 8px; color:#0369a1; border-right:1px solid #bae6fd; font-size:0.64rem;">Monthly Package</td>
+                  <td style="padding:4px 8px; text-align:right; color:#0369a1; font-size:0.82rem; font-family:monospace;" contenteditable="true" spellcheck="false">${grandTotalVal.toFixed(2)} ${curr}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Articles 1 through 10 (Page 1) -->
+            <div style="font-size:0.67rem; line-height:1.36; color:#334155; text-align:justify;">
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">1. Accommodation allowance:</strong> Shared Accommodation (Provision or allowance) will be provided by the company.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">2. Transportation:</strong> Shared Transportation to and from the site is under company scope.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">3. Vacation and Earned leave:</strong> You are entitled to 60 calendar annual leave after completion of 2 years of service, in accordance with UAE Labor Law. Leave can be availed only on due approval.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">4. Contract:</strong> Contract shall be two years' term of employment. The employer acknowledges and agrees that the Corporation may terminate an "At Will" employment at any time, with or without cause as stipulated by law.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">5. Air Ticket:</strong> You are entitled to Economy Class return air ticket from the UAE to the nearest international airport in your home country every two years upon completion of two years of service.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">6. Medical and Insurance:</strong> You will be covered under Group Life, Personal Accident and Medical Insurance Schemes of the Company as per UAE Law and Company policy.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">7. Probation:</strong> The first 6 months of employment will be probationary. During this period if performance is not found satisfactory, the company may terminate employment without notice period.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">8. Termination of Employment:</strong> This agreement can be terminated by either party serving the other with Three-month prior notice in writing.</div>
+              <div style="margin-bottom:3px;"><strong style="color:#0f172a;">9. Protection against religious discrimination:</strong> It is strictly illegal to discriminate against any individual based on religion in all company activities. Equal opportunity is mandated for all.</div>
+              <div><strong style="color:#0f172a;">10. Confidentiality:</strong></div>
+              <div style="padding-left:10px; color:#475569;">
+                a) You agree not to disclose confidential information of the employer during or after employment.<br>
+                b) Includes client lists, trade secrets, project drawings, client details, and pricing structures.<br>
+                c) Upon termination, employee will return all confidential materials and provide written certification of destruction.
+              </div>
+            </div>
+
+            <!-- Page 1 Footer Line -->
+            <div style="margin-top:8px; border-top:1px solid #cbd5e1; padding-top:3px; display:flex; justify-content:space-between; align-items:center; font-size:0.56rem; color:#94a3b8;">
+              <div># ${escapeHtml(loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047')}</div>
+              <div>This is an official system-generated Letter of Assignment.</div>
+              <div>Page 1 of 2</div>
+            </div>
+
+          </div>
+
+          <!-- PAGE 2 OF LETTER OF ASSIGNMENT -->
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#0f172a; padding:6mm 12mm 5mm 12mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size:11.5px; line-height:1.38; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; overflow:hidden;">
+            
+            ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
+
+            <!-- Top Header matching PO Page 2 and Corporate Documents -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid #0f172a; padding-bottom:5px; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <img src="/assets/docs/rayan-group-header-logo.png" alt="Rayan Group" style="height:28px; width:auto;">
+                <div>
+                  <div style="font-size:0.70rem; font-weight:800; color:#0f172a; text-transform:uppercase;">RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
+                  <div style="font-size:0.60rem; color:#64748b;">LETTER OF ASSIGNMENT — TERMS &amp; CONDITIONS (CONTINUATION)</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.75rem; font-weight:800; color:#0284c7; font-family:monospace;"># ${escapeHtml(loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047')}</div>
+                <div style="font-size:0.60rem; color:#64748b;">Page 2 of 2 | Date: ${escapeHtml(loa.date || '26/08/2026')}</div>
+              </div>
+            </div>
+
+            <!-- Articles Continuation (Page 2) -->
+            <div style="font-size:0.67rem; line-height:1.36; color:#334155; text-align:justify;">
+              <div style="padding-left:10px; margin-bottom:5px; color:#475569;">
+                d) <strong style="color:#0f172a;">Company protects its employees from discrimination based on religion.</strong> It is illegal for any employee to discriminate against individuals because of religion in hiring, firing, promotions, increments, or other job opportunities. Any violation will face immediate termination.
+              </div>
+
+              <div style="margin-bottom:5px;">
+                <strong style="color:#0f172a;">11. Employment Terms &amp; Conditions:</strong><br>
+                All terms and conditions of employment are governed strictly by the UAE Labor Law and are subject to change as per Company Policy based on statutory and business requirements.
+              </div>
+
+              <div style="margin-bottom:6px;">
+                <strong style="color:#0f172a;">12. Entire Agreement:</strong><br>
+                a) Employment is subject to visa approval from competent ministries in the UAE.<br>
+                b) The offer is valid subject to client approval, medical fitness certification and CICPA security pass approval.<br>
+                c) Remuneration commences upon work permit approval and physical reporting/joining at assigned site.<br>
+                d) Terms and conditions herein replace any prior verbal or written understanding between parties.<br>
+                e) Any variation to this agreement must be executed in writing signed by authorized management.<br>
+                f) During employment, employee shall strictly abide by HSE guidelines, site rules and group regulations.<br>
+                g) All assignment terms must be treated as personal and confidential.<br>
+                h) <strong style="color:#0f172a;">Work Assignments and Locations:</strong> The company reserves the right to assign or re-assign employee to any project facility ("onshore" or "offshore") across UAE or affiliated group entities.
+              </div>
+            </div>
+
+            <!-- Delighted Offer Statement -->
+            <div style="border:1px solid #e2e8f0; background:#f8fafc; border-radius:4px; padding:6px 10px; font-size:0.68rem; line-height:1.38; color:#334155; margin-bottom:8px;">
+              <div>We are delighted to extend this offer. Please sign and return one copy of this letter latest by <strong style="color:#0f172a;">${escapeHtml(loa.joining_deadline || '15-09-2026')}</strong>.</div>
+              <div style="margin-top:2px;">We look forward to establishing a fruitful working relationship and welcome you to the Rayan Group team.</div>
+            </div>
+
+            <!-- Signatures Section: Left Employer (Stamp + Sign), Right Candidate Acceptance -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:flex-start; margin-bottom:6px; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <!-- Left Column: For Rayan Group -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0284c7; border-radius:4px; padding:6px 10px; background:#ffffff;">
+                <div style="font-weight:800; font-size:0.70rem; color:#0284c7; text-transform:uppercase; margin-bottom:2px;">For RAYAN GROUP (جهة التعيين)</div>
+                <div style="font-size:0.60rem; color:#64748b; margin-bottom:2px;">Authorized Corporate Management</div>
+                
+                <div id="loa-stamp-sign-wrap" class="fin-stamp-sign-container" style="position:relative; width:220px; height:62px; margin:2px 0; cursor:pointer;" onclick="window.finApp.toggleDocStampSign()" title="Click to show/hide official stamp & signature">
+                  <!-- Rayan Group Round Stamp -->
+                  <img src="/assets/docs/rayan-group-round-stamp.png" alt="Rayan Group Stamp" style="position:absolute; left:0; top:-12px; width:78px; height:78px; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:1; transition:opacity 0.2s;">
+                  <!-- Arshad Alam Shaikh Signature -->
+                  <img src="/assets/docs/rayan-signature-official.png" alt="Arshad Alam Shaikh Signature" style="position:absolute; left:22px; top:6px; width:110px; height:auto; mix-blend-mode:multiply; opacity:0.95; pointer-events:none; z-index:2; transition:opacity 0.2s;">
+                </div>
+                
+                <div style="position:relative; z-index:3;">
+                  <div style="font-family:'Amiri', serif; font-size:0.86rem; font-weight:700; color:#0f172a; line-height:1.15;">${loa.signatory_name_ar || 'ارشد عالم شيخ'}</div>
+                  <div style="font-weight:800; font-size:0.75rem; color:#0f172a; line-height:1.15;">${loa.signatory_name || 'Arshad Alam Shaikh'}</div>
+                  <div style="font-family:'Amiri', serif; font-size:0.68rem; font-weight:700; color:#475569; line-height:1.15;">${loa.signatory_title_ar || 'الرئيس التنفيذي'}</div>
+                  <div contenteditable="true" spellcheck="false" style="font-weight:700; font-size:0.62rem; color:#475569; line-height:1.15;" title="Click to edit title">${loa.signatory_title || 'Chief Executive Officer'}</div>
+                </div>
+              </div>
+
+              <!-- Right Column: Candidate Acceptance -->
+              <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; padding:6px 10px; background:#ffffff; font-size:0.66rem; line-height:1.35;">
+                <div style="font-weight:800; font-size:0.70rem; color:#0f172a; text-transform:uppercase; margin-bottom:2px;">CANDIDATE ACCEPTANCE (إقرار وقبول المرشح)</div>
+                <div style="color:#334155; margin-bottom:4px;">
+                  I, <strong style="color:#0f172a;">${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}</strong>, accept the offer of employment on the terms and conditions stated in this letter of my own free choice.
+                </div>
+                
+                <table style="width:100%; font-size:0.64rem; border-collapse:collapse; margin-top:4px;">
+                  <tr>
+                    <td style="width:110px; padding:3px 0; color:#64748b; font-weight:600;">Candidate Name:</td>
+                    <td style="font-weight:800; color:#0f172a;">${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:3px 0; color:#64748b; font-weight:600;">Date of Joining:</td>
+                    <td style="border-bottom:1px solid #94a3b8; height:18px;">&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:3px 0; color:#64748b; font-weight:600;">Candidate Signature:</td>
+                    <td style="border-bottom:1px solid #94a3b8; height:18px;">&nbsp;</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Standard Corporate Notes & Best Wishes Block (matching Sales Invoice) -->
+            <div style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:12px; align-items:flex-start; margin-bottom:4px; border-top:1px solid #e2e8f0; padding-top:4px;">
+              <!-- Left: Notes -->
+              <div style="font-size:0.60rem; color:#64748b; line-height:1.3;">
+                <div style="font-weight:700; color:#0f172a; margin-bottom:1px;">Notes</div>
+                <div style="color:#475569;">Please return a signed copy of this Letter of Assignment for official visa processing, security pass clearance, and HR records.</div>
+              </div>
+
+              <!-- Right: Corporate Best Wishes -->
+              <div style="font-size:0.60rem; color:#475569; line-height:1.3; text-align:right;">
+                <div style="font-weight:700; color:#0f172a;">Best wishes</div>
+                <div style="font-weight:800; color:#0f172a;">RAYAN Group Team</div>
+                <div style="color:#64748b;">Abu Dhabi, U.A.E</div>
+                <div style="color:#64748b;">Hotline : +971 2 565 4497</div>
+                <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+              </div>
+            </div>
+
+            <!-- Page 2 Footer Line -->
+            <div style="border-top:1px solid #e2e8f0; padding-top:2px; display:flex; justify-content:space-between; align-items:center; font-size:0.56rem; color:#94a3b8;">
+              <div># ${escapeHtml(loa.ref_no || loa.loa_no || 'RG/HC/LOA/2026/11047')}</div>
+              <div>This is an official system-generated Letter of Assignment.</div>
+              <div>Page 2 of 2</div>
             </div>
 
           </div>
@@ -3863,7 +4083,7 @@ export function registerPayrollModules(FinanceApp) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; padding: 20px; background: #f1f5f9; display: flex; flex-direction: column; align-items: center; font-family: 'Times New Roman', Times, serif; }
+    body { margin: 0; padding: 20px; background: #f1f5f9; display: flex; flex-direction: column; align-items: center; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
     .fin-document-paper { box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
     @media print {
       body { background: transparent !important; padding: 0 !important; }
