@@ -51,8 +51,13 @@ async function deploy() {
               const localBills = (localData.purchase_bills || []);
               if (!Array.isArray(liveJson.data.purchase_bills)) liveJson.data.purchase_bills = [];
               localBills.forEach(b => {
-                if (!liveJson.data.purchase_bills.some(p => p.id === b.id || p.bill_no === b.bill_no)) {
+                const existing = liveJson.data.purchase_bills.find(p => p.id === b.id || p.bill_no === b.bill_no);
+                if (!existing) {
                   liveJson.data.purchase_bills.push(b);
+                } else {
+                  if (b.vendor_trn && !existing.vendor_trn) existing.vendor_trn = b.vendor_trn;
+                  if (b.po_reference && existing.po_reference !== b.po_reference) existing.po_reference = b.po_reference;
+                  if (b.po_no && existing.po_no !== b.po_no) existing.po_no = b.po_no;
                 }
               });
               liveJson.data.purchase_bills.sort((a,b) => (b.bill_no || '').localeCompare(a.bill_no || ''));

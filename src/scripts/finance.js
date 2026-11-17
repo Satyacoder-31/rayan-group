@@ -394,23 +394,69 @@ class FinanceApp {
       'employees', 'payroll'
     ];
 
-    const getUniqueKey = (item) => {
+    const getUniqueKey = (item, colKey) => {
       if (!item || typeof item !== 'object') return null;
-      if (item.po_no) return `po-${item.po_no.trim().toLowerCase()}`;
-      if (item.invoice_no) return `inv-${item.invoice_no.trim().toLowerCase()}`;
-      if (item.bill_no) return `bill-${item.bill_no.trim().toLowerCase()}`;
-      if (item.receipt_no) return `rec-${item.receipt_no.trim().toLowerCase()}`;
-      if (item.voucher_no) return `vouch-${item.voucher_no.trim().toLowerCase()}`;
-      if (item.payment_no) return `pay-${item.payment_no.trim().toLowerCase()}`;
-      if (item.expense_no) return `exp-${item.expense_no.trim().toLowerCase()}`;
-      if (item.credit_note_no) return `cn-${item.credit_note_no.trim().toLowerCase()}`;
-      if (item.debit_note_no) return `dn-${item.debit_note_no.trim().toLowerCase()}`;
-      if (item.cheque_no) return `chq-${item.cheque_no.trim().toLowerCase()}`;
-      if (item.cert_no) return `wcc-${item.cert_no.trim().toLowerCase()}`;
-      if (item.dn_no) return `dn-${item.dn_no.trim().toLowerCase()}`;
-      if (item.ref_no) return `ref-${item.ref_no.trim().toLowerCase()}`;
-      if (item.slip_no) return `ps-${item.slip_no.trim().toLowerCase()}`;
-      if (item.employee_no) return `emp-${item.employee_no.trim().toLowerCase()}`;
+      if (colKey === 'purchase_orders') {
+        if (item.po_no) return `po-${item.po_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'invoices') {
+        if (item.invoice_no) return `inv-${item.invoice_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'purchase_bills') {
+        if (item.id) return `bill-${item.id}`;
+        if (item.bill_no) return `bill-${item.bill_no.trim().toLowerCase()}`;
+        return null;
+      }
+      if (colKey === 'customer_receipts') {
+        if (item.receipt_no) return `rec-${item.receipt_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'vendor_payments') {
+        if (item.payment_no) return `pay-${item.payment_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'expenses') {
+        if (item.expense_no) return `exp-${item.expense_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'credit_notes') {
+        if (item.credit_note_no) return `cn-${item.credit_note_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'debit_notes') {
+        if (item.debit_note_no) return `dn-${item.debit_note_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'cheques') {
+        if (item.cheque_no) return `chq-${item.cheque_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'work_completion_certificates') {
+        if (item.cert_no) return `wcc-${item.cert_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'delivery_notes') {
+        if (item.dn_no) return `dn-${item.dn_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'undertaking_letters' || colKey === 'custom_letters') {
+        if (item.ref_no) return `ref-${item.ref_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'payroll') {
+        if (item.slip_no) return `ps-${item.slip_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'employees') {
+        if (item.employee_no) return `emp-${item.employee_no.trim().toLowerCase()}`;
+        return item.id;
+      }
+      if (colKey === 'cash_vouchers') {
+        if (item.voucher_no) return `vouch-${item.voucher_no.trim().toLowerCase()}`;
+        return item.id;
+      }
       return item.id || item.reference_no || item.account_number || item.iban || item.code || (item.name ? `named-${item.name.trim().toLowerCase()}` : null);
     };
 
@@ -580,7 +626,7 @@ class FinanceApp {
       const map = new Map();
       incomingArr.forEach(item => {
         if (item && !isBlacklisted(item)) {
-          const uniqueKey = getUniqueKey(item) || `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+          const uniqueKey = getUniqueKey(item, key) || `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
           if (!item.id) item.id = uniqueKey;
           map.set(uniqueKey, item);
         }
@@ -589,7 +635,7 @@ class FinanceApp {
       // Enrich existing items with detailed line_items from seed if missing, but NEVER resurrect deleted or edited items!
       seedArr.forEach(item => {
         if (item && !isBlacklisted(item)) {
-          const uniqueKey = getUniqueKey(item);
+          const uniqueKey = getUniqueKey(item, key);
           if (uniqueKey) {
             const existing = map.get(uniqueKey);
             if (existing && (!existing.line_items || !existing.line_items.length)) {
@@ -2191,7 +2237,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v146';
+    const CURRENT_DB_VERSION = 'v2026_clean_v147';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
@@ -26587,9 +26633,14 @@ Scope of Work & Technical Execution:
               <div style="margin-top:0.75rem; font-size:0.58rem; color:#475569; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
                 <div style="font-weight:700; color:#111827; margin-bottom:1px;">Notes:</div>
                 <div style="margin-bottom:2px; color:#475569;">Please retain this voucher with supporting purchase invoices or bills for monthly petty cash imprest reconciliation.</div>
-                <div style="font-weight:800; color:#111827;">Best wishes,</div>
-                <div style="font-weight:700; color:#0284c7;">RAYAN Group Team</div>
-                <div style="color:#64748b;">Abu Dhabi, U.A.E &nbsp;&bull;&nbsp; Hotline : +971 2 565 4497 &nbsp;&bull;&nbsp; <a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:none;">info@rayan-group.com</a> &nbsp;&bull;&nbsp; <a href="http://rayan-group.com" target="_blank" style="color:#0284c7; text-decoration:none;">http://rayan-group.com</a></div>
+                <div style="margin-top:0.6rem; font-size:0.8rem; color:#4b5563; line-height:1.45;">
+                <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
+                <div style="font-weight:700; color:#111827; margin-bottom:2px;">RAYAN Group Team</div>
+                <div>Abu Dhabi, U.A.E</div>
+                <div>Hotline : +971 2 565 4497</div>
+                <div><a href="mailto:info@rayan-group.com" style="color:#0284c7; text-decoration:underline;">info@rayan-group.com</a></div>
+                <div><a href="http://rayan-group.com" style="color:#0284c7; text-decoration:underline;">http://rayan-group.com</a></div>
+              </div>
               </div>
 
               <!-- Clean Fixed System-Generated Footer Below the Line (Spaced) -->
@@ -29610,11 +29661,14 @@ Scope of Work & Technical Execution:
             </table>
 
             </div>
-<div style="margin-top:auto; padding-top:0.75rem;">
-<!-- Page 2 Bottom Notes & Best Wishes ("Keep this as well in last pages") -->
-            <div style="margin-top:0.75rem; font-size:0.75rem; color:#4b5563; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
-              <div style="font-weight:700; color:#111827; font-size:0.80rem; margin-bottom:2px;">Notes</div>
-              <div style="color:#4b5563; margin-bottom:4px;">Please keep a copy of this purchase order for your records</div>
+<div style="margin-top:auto; padding-top:1rem;">
+<!-- Page 2 Bottom Notes & Best Wishes (Matching Sales Invoice Format) -->
+            <div style="font-size:0.8rem; color:#4b5563; line-height:1.4; page-break-inside:avoid !important; break-inside:avoid !important;">
+              <div style="font-weight:700; color:#111827; font-size:0.84rem; margin-bottom:2px;">Notes</div>
+              <div style="color:#4b5563;">Please keep a copy of this purchase order for your records</div>
+            </div>
+
+            <div style="margin-top:0.6rem; font-size:0.8rem; color:#4b5563; line-height:1.45; page-break-inside:avoid !important; break-inside:avoid !important;">
               <div style="color:#111827; margin-bottom:2px;">Best wishes</div>
               <div style="font-weight:700; color:#111827; margin-bottom:2px;">${isIndia ? 'Ashaz Engineering Team' : 'RAYAN Group Team'}</div>
               <div>${isIndia ? 'Mumbai, Maharashtra, India' : 'Abu Dhabi, U.A.E'}</div>
@@ -29624,7 +29678,7 @@ Scope of Work & Technical Execution:
             </div>
 
             <!-- Page 2 Clean Fixed System-Generated Footer Below the Line (Spaced) -->
-            <div style="margin-top:1.15rem; padding-top:0.55rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
+            <div style="margin-top:1.25rem; padding-top:0.65rem; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#64748b; font-family:'Plus Jakarta Sans', -apple-system, sans-serif; page-break-inside:avoid !important; break-inside:avoid !important;">
               <div style="min-width:60px; font-weight:600; color:#9ca3af;">${po.po_no}</div>
               <div style="flex:1; text-align:center; letter-spacing:0.01em; font-weight:500;">
                 This is a system-generated Purchase Order.
