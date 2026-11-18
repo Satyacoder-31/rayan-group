@@ -96,30 +96,77 @@ export function registerPayrollModules(FinanceApp) {
   // Helper to ensure initial default employee & payslip if empty
   proto.ensurePayrollSeedData = function () {
     if (!this.db) return;
+
+    const protectedEmpIds = new Set(['emp-mwlpkkbr', 'emp-en12001', 'emp-rg11047']);
+    const isEmpIdDeleted = (id) => id && id.startsWith('emp-') && !protectedEmpIds.has(id);
+
     const storedDel = (function () {
       try {
-        return typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
+        const raw = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
+        return Array.isArray(raw) ? raw.filter(isEmpIdDeleted) : [];
       } catch (e) { return []; }
     })();
-    const deleted = Array.from(new Set([...(Array.isArray(this.db.deleted_employee_ids) ? this.db.deleted_employee_ids : []), ...storedDel]));
+
+    if (typeof localStorage !== 'undefined') {
+      try { localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(storedDel)); } catch (e) {}
+    }
+
+    const deleted = Array.from(new Set([
+      ...(Array.isArray(this.db.deleted_employee_ids) ? this.db.deleted_employee_ids.filter(isEmpIdDeleted) : []),
+      ...storedDel
+    ]));
     this.db.deleted_employee_ids = deleted;
 
     if (!Array.isArray(this.db.employees)) {
       this.db.employees = [];
     }
 
-    // Filter out any deleted employee IDs that might have slipped into employees
+    // Filter out only deleted internal IDs (never filter by human employee number)
     if (deleted.length > 0) {
-      this.db.employees = this.db.employees.filter(e => !deleted.includes(e.id) && !deleted.includes(e.employee_no));
+      this.db.employees = this.db.employees.filter(e => !deleted.includes(e.id));
     }
 
-    // Only seed initial default employees if this.db.employees is empty AND they haven't been deleted
-    if (this.db.employees.length === 0 && !this.db.employees_initialized && !deleted.includes('emp-en12001') && !deleted.includes('EN12001')) {
+    // Only seed initial default employees if this.db.employees is empty
+    if (this.db.employees.length === 0 && !this.db.employees_initialized) {
       this.db.employees_initialized = true;
       this.db.employees = [
         {
-          id: 'emp-en12001',
+          id: 'emp-mwlpkkbr',
           employee_no: 'EN12001',
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          name: 'Nadeem Akhtar Nazmul Hoda',
+          name_ar: 'نديم اختر نظم هدي',
+          position: 'Civil Engineer',
+          position_ar: 'مهندس مدني',
+          department: 'Rayan Engineering',
+          date_of_joining: '2023-04-14',
+          date_of_appointment: '2023-04-14',
+          currency: 'AED',
+          phone: '+971 555411543',
+          email: 'nadeem.hmsit@gmail.com',
+          emirates_id: '784-1998-3368120-0',
+          passport_no: 'U3566719',
+          nationality: 'India',
+          nationality_ar: 'هندي',
+          visa_status: 'Employment Visa (Rayan Engineering)',
+          basic_salary: 5000.00,
+          accommodation_allowance: 5000.00,
+          consolidated_allowance: 0.00,
+          other_allowance: 0.00,
+          bank_name: 'Emirates NBD Bank PJSC',
+          swift: 'EBILAEADXXX',
+          iban: '',
+          account_no: '',
+          default_pay_method: 'AED RAYAN GROUP Host To Host',
+          project_id: '',
+          project_name: 'Corporate / General Overhead',
+          status: 'Active',
+          created_at: '2023-04-14T09:00:00Z',
+          updated_at: '2026-11-18T05:56:24.423Z'
+        },
+        {
+          id: 'emp-en12001',
+          employee_no: 'EN12004',
           company_id: this.activeCompanyId || 'rayan-corp-uae',
           name: 'Bakhteyar Alam Mokhtar Ahmad',
           name_ar: 'بختيار عالم مختار احمد',
@@ -146,9 +193,10 @@ export function registerPayrollModules(FinanceApp) {
           account_no: 'AE860260001015934645101',
           default_pay_method: 'AED RAYAN GROUP Host To Host',
           project_id: 'prj-toprock-police-01',
-          project_name: 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+          project_name: 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
           status: 'Active',
-          created_at: '2025-08-07T09:00:00Z'
+          created_at: '2025-08-07T09:00:00Z',
+          updated_at: '2026-11-18T05:50:52.305Z'
         },
         {
           id: 'emp-rg11047',
@@ -177,8 +225,21 @@ export function registerPayrollModules(FinanceApp) {
       ];
     } else {
       this.db.employees_initialized = true;
-      // If Bakhteyar is already present, enhance fields
-      let bakht = this.db.employees.find(e => e.id === 'emp-en12001' || (e.name && e.name.toLowerCase().includes('bakhteyar')) || e.employee_no === 'EN12001');
+
+      // Ensure Nadeem Akhtar Nazmul Hoda is properly recognized and kept
+      let nadeem = this.db.employees.find(e => e.id === 'emp-mwlpkkbr' || (e.name && e.name.toLowerCase().includes('nadeem')));
+      if (nadeem) {
+        nadeem.employee_no = nadeem.employee_no || 'EN12001';
+        nadeem.name = nadeem.name || 'Nadeem Akhtar Nazmul Hoda';
+        nadeem.name_ar = nadeem.name_ar || 'نديم اختر نظم هدي';
+        nadeem.position = nadeem.position || 'Civil Engineer';
+        nadeem.position_ar = nadeem.position_ar || 'مهندس مدني';
+        nadeem.passport_no = nadeem.passport_no || 'U3566719';
+        nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
+      }
+
+      // Ensure Bakhteyar is recognized and kept WITHOUT clobbering EN12004 or Nadeem
+      let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || (e.id === 'emp-en12001' && (!e.name || !e.name.toLowerCase().includes('nadeem'))));
       if (bakht) {
         bakht.passport_no = bakht.passport_no || 'S3552106';
         if (!bakht.name || !bakht.name.includes('Mokhtar')) bakht.name = 'Bakhteyar Alam Mokhtar Ahmad';
@@ -186,9 +247,13 @@ export function registerPayrollModules(FinanceApp) {
         if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
         if (!bakht.position) bakht.position = 'Civil Engineer';
         if (!bakht.company_id) bakht.company_id = this.activeCompanyId || 'rayan-corp-uae';
+        // If employee_no is not set or collided with Nadeem, use EN12004
+        if (!bakht.employee_no || bakht.employee_no === 'EN12001') {
+          bakht.employee_no = 'EN12004';
+        }
       }
 
-      // If Ashraf is already present, enhance fields
+      // If Ashraf is present, enrich fields
       let ashraf = this.db.employees.find(e => e.id === 'emp-rg11047' || (e.name && e.name.toLowerCase().includes('ashraf')) || e.employee_no === 'RG11647' || e.employee_no === 'RG11047');
       if (ashraf) {
         if (!ashraf.name_ar) ashraf.name_ar = 'محمد اشرف علي';
@@ -196,6 +261,7 @@ export function registerPayrollModules(FinanceApp) {
         if (!ashraf.company_id) ashraf.company_id = this.activeCompanyId || 'rayan-corp-uae';
       }
     }
+
     if (!Array.isArray(this.db.employment_certificates) || this.db.employment_certificates.length === 0) {
       this.db.employment_certificates = [
         {
@@ -344,6 +410,8 @@ export function registerPayrollModules(FinanceApp) {
   // 2. EMPLOYEES DIRECTORY TAB VIEW
   // ==========================================================================
   proto.renderEmployeesTab = function (root) {
+    if (!root) root = document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container');
+    if (!root) return;
     this.ensurePayrollSeedData();
     const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
 
@@ -438,7 +506,7 @@ export function registerPayrollModules(FinanceApp) {
           <option value="on leave">On Leave</option>
           <option value="resigned">Resigned / Former</option>
         </select>
-        <button type="button" class="fin-btn-secondary" onclick="window.finApp.renderEmployeesTab(document.getElementById('fin-view-container'))">
+        <button type="button" class="fin-btn-secondary" onclick="window.finApp.renderEmployeesTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')))">
           🔄 Refresh
         </button>
       </div>
@@ -603,6 +671,8 @@ export function registerPayrollModules(FinanceApp) {
   // 3. PAYROLL & MONTHLY PAYSLIPS TAB VIEW
   // ==========================================================================
   proto.renderPayrollTab = function (root) {
+    if (!root) root = document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container');
+    if (!root) return;
     this.ensurePayrollSeedData();
     const payroll = (this.db?.payroll || []).filter(p => this.matchesActiveCompany(p.company_id));
     const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
@@ -719,7 +789,7 @@ export function registerPayrollModules(FinanceApp) {
           ${projects.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.code || '')} - ${escapeHtml(p.name)}</option>`).join('')}
         </select>
 
-        <button type="button" class="fin-btn-secondary" onclick="window.finApp.renderPayrollTab(document.getElementById('fin-view-container'))">
+        <button type="button" class="fin-btn-secondary" onclick="window.finApp.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')))">
           🔄 Refresh
         </button>
       </div>
@@ -1164,7 +1234,9 @@ export function registerPayrollModules(FinanceApp) {
     const form = e.target;
     const formData = new FormData(form);
 
-    const empId = formData.get('id') || `emp-${Date.now().toString(36)}`;
+    const rawId = formData.get('id');
+    const isEdit = Boolean(rawId && rawId.trim());
+    const empId = isEdit ? rawId.trim() : (formData.get('employee_no') ? 'emp-' + formData.get('employee_no').trim().toLowerCase() : ('emp-' + Date.now().toString(36)));
     const prjId = formData.get('project_id') || '';
     const prj = (this.db?.projects || []).find(p => p.id === prjId);
 
@@ -1203,11 +1275,32 @@ export function registerPayrollModules(FinanceApp) {
       this.db.employees = [];
     }
 
-    const idx = this.db.employees.findIndex(em => em.id === empId || em.employee_no === empObj.employee_no);
-    if (idx >= 0) {
-      this.db.employees[idx] = { ...this.db.employees[idx], ...empObj };
+    // Undelete if previously marked deleted
+    if (Array.isArray(this.db.deleted_employee_ids)) {
+      this.db.deleted_employee_ids = this.db.deleted_employee_ids.filter(id => id !== empId);
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]');
+        const updatedStored = stored.filter(id => id !== empId && id !== empObj.employee_no);
+        localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(updatedStored));
+      }
+    } catch (e) {}
+
+    if (isEdit) {
+      const idx = this.db.employees.findIndex(em => em.id === empId);
+      if (idx >= 0) {
+        this.db.employees[idx] = { ...this.db.employees[idx], ...empObj };
+      } else {
+        this.db.employees.unshift(empObj);
+      }
     } else {
-      this.db.employees.unshift(empObj);
+      const existingIdx = this.db.employees.findIndex(em => em.employee_no === empObj.employee_no);
+      if (existingIdx >= 0 && this.db.employees[existingIdx].name.toLowerCase() === empObj.name.toLowerCase()) {
+        this.db.employees[existingIdx] = { ...this.db.employees[existingIdx], ...empObj };
+      } else {
+        this.db.employees.unshift(empObj);
+      }
     }
 
     // Sync matching Employment Certificate(s) and Letter of Assignment(s)
@@ -1240,17 +1333,29 @@ export function registerPayrollModules(FinanceApp) {
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
     this.closeEmployeeModal();
-    this.showToast ? this.showToast('Employee profile saved successfully!', 'success') : alert('Employee profile saved successfully!');
+    if (typeof this.showNotification === 'function') {
+      this.showNotification('Employee profile saved successfully!', 'success');
+    } else if (typeof this.showToast === 'function') {
+      this.showToast('Employee profile saved successfully!', 'success');
+    }
 
     // Sync with backend API
     try {
-      await this.syncApi('save_employee', { employee: empObj });
+      if (typeof this.syncApi === 'function') {
+        await this.syncApi('save_employee', { employee: empObj });
+      }
     } catch (err) {
       console.warn('Employee backend sync warning:', err);
     }
 
-    if (this.activeTab === 'employees') {
-      this.renderEmployeesTab(document.getElementById('fin-view-container'));
+    // Re-render active tab immediately
+    if (typeof this.renderActiveTab === 'function') {
+      this.renderActiveTab();
+    } else {
+      const root = document.getElementById('fin-tab-content-root') || (document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container'));
+      if (root && typeof this.renderEmployeesTab === 'function') {
+        this.renderEmployeesTab(root);
+      }
     }
   };
 
@@ -1266,24 +1371,20 @@ export function registerPayrollModules(FinanceApp) {
     if (!Array.isArray(this.db.deleted_employee_ids)) {
       this.db.deleted_employee_ids = [];
     }
+    // Track unique internal record ID only
     if (!this.db.deleted_employee_ids.includes(emp.id)) {
       this.db.deleted_employee_ids.push(emp.id);
     }
-    if (emp.employee_no && !this.db.deleted_employee_ids.includes(emp.employee_no)) {
-      this.db.deleted_employee_ids.push(emp.employee_no);
-    }
 
-    // Persist to standalone localStorage key as well
     try {
       if (typeof localStorage !== 'undefined') {
         const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]');
         if (!stored.includes(emp.id)) stored.push(emp.id);
-        if (emp.employee_no && !stored.includes(emp.employee_no)) stored.push(emp.employee_no);
         localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(stored));
       }
     } catch (e) {}
 
-    this.db.employees = (this.db.employees || []).filter(e => e.id !== emp.id && e.employee_no !== emp.employee_no);
+    this.db.employees = (this.db.employees || []).filter(e => e.id !== emp.id);
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
     // Sync deletion with backend
@@ -1309,17 +1410,16 @@ export function registerPayrollModules(FinanceApp) {
       tbody.innerHTML = this.renderEmployeeRowsHtml(activeEmps);
     }
 
-    const container = document.getElementById('fin-view-container');
-    if (container && this.activeTab === 'employees') {
-      this.renderEmployeesTab(container);
-    } else if (typeof this.renderActiveTab === 'function') {
+    if (typeof this.renderActiveTab === 'function') {
       this.renderActiveTab();
+    } else {
+      const root = document.getElementById('fin-tab-content-root') || (document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container'));
+      if (root && typeof this.renderEmployeesTab === 'function') {
+        this.renderEmployeesTab(root);
+      }
     }
   };
 
-  // ==========================================================================
-  // 5. EMPLOYEE MONTH-WISE SALARY & PAYMENT HISTORY MODAL (1-Month, 3-Month, etc.)
-  // ==========================================================================
   proto.openEmployeeSalaryHistoryModal = function (empId, periodFilter = '3m') {
     this.ensurePayrollSeedData();
     this.lastEmployeeHistoryFilter = periodFilter;
@@ -2151,9 +2251,9 @@ export function registerPayrollModules(FinanceApp) {
 
     // Refresh views if open
     if (this.activeTab === 'payroll') {
-      this.renderPayrollTab(document.getElementById('fin-view-container'));
+      this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
     } else if (this.activeTab === 'employees') {
-      this.renderEmployeesTab(document.getElementById('fin-view-container'));
+      this.renderEmployeesTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
     }
   };
 
@@ -2208,7 +2308,7 @@ export function registerPayrollModules(FinanceApp) {
     this.normalizeAllBalances();
     this.showToast ? this.showToast('Pay slip deleted', 'info') : null;
     if (this.activeTab === 'payroll') {
-      this.renderPayrollTab(document.getElementById('fin-view-container'));
+      this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
     }
   };
 
@@ -2370,7 +2470,7 @@ export function registerPayrollModules(FinanceApp) {
     }
 
     if (this.activeTab === 'payroll') {
-      this.renderPayrollTab(document.getElementById('fin-view-container'));
+      this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
     }
   };
 

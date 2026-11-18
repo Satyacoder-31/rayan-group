@@ -1,50 +1,58 @@
 const fs = require('fs');
+const path = require('path');
+const https = require('https');
 
-async function testFullFlow() {
-  const res = await fetch('https://rayan-group.com/api/finance.php?action=get_state');
-  const state = await res.json();
-  const db = state.data || state;
+https.get('https://rayan-group.com/api/finance.php', (res) => {
+  let body = '';
+  res.on('data', c => body += c);
+  res.on('end', () => {
+    const apiData = JSON.parse(body).data;
+    console.log('API employees count:', apiData.employees.length);
+    apiData.employees.forEach(e => console.log('  API emp:', e.id, e.employee_no, e.name));
 
-  class MockApp {
-    constructor(db) { this.db = db; this.activeCompanyId = 'rayan-corp-uae'; this.activeCurrency = 'AED'; }
-    matchesActiveCompany(cid) { return !cid || cid === this.activeCompanyId; }
-    formatCompanyName(n) { return n; }
-    recalculateInvoiceBalance(inv) {}
-    recalculateBillBalance(b) {}
-    matchInvoiceRef(i, no, id) {
-      if (!i) return false;
-      const curNo = (i.invoice_no || '').toLowerCase().trim();
-      const curId = (i.id || '').toLowerCase().trim();
-      if (no && (curNo === no.toLowerCase().trim() || curId === no.toLowerCase().trim())) return true;
-      if (id && (curId === id.toLowerCase().trim() || curNo === id.toLowerCase().trim())) return true;
-      return false;
-    }
-  }
-  const app = new MockApp(db);
-  const content = fs.readFileSync('src/scripts/finance.js', 'utf8');
+    const financeJs = fs.readFileSync('src/scripts/finance.js', 'utf8');
+    const defaultSeedData = require(path.resolve('data/finance-data.json'));
 
-  // Load normalizeAllBalances (lines 831 to 1605)
-  const normLines = content.split('\n').slice(830, 1605).join('\n');
-  eval('MockApp.prototype.normalizeAllBalances = ' + normLines.replace(/normalizeAllBalances\(\)\s*\{/, 'function() {'));
+    const app = {
+      db: JSON.parse(JSON.stringify(defaultSeedData)),
+      activeCompanyId: 'rayan-corp-uae',
+      isUaeEntity(id) {
+        return id === 'rayan-corp-uae' || id === 'rayan-group' || id === 'rayan-properties-uae';
+      },
+      matchesActiveCompany(itemCompanyId) {
+        if (this.activeCompanyId === 'rayan-group') return this.isUaeEntity(itemCompanyId);
+        if (this.activeCompanyId === 'rayan-corp-uae') return (itemCompanyId === 'rayan-corp-uae' || itemCompanyId === 'rayan-group' || !itemCompanyId);
+        return itemCompanyId === this.activeCompanyId;
+      }
+    };
 
-  // Load getProjectLedgerData (lines 9239 to 9461)
-  const ledgerLines = content.split('\n').slice(9238, 9460).join('\n');
-  eval('MockApp.prototype.getProjectLedgerData = ' + ledgerLines.replace(/getProjectLedgerData\(projectId\)\s*\{/, 'function(projectId) {'));
+    const s = financeJs.indexOf('mergeWithSeedData(sourceData) {');
+    const e = financeJs.indexOf('\n  sanitizeInvoices()', s);
+    const bodyStr = financeJs.substring(s + 31, e).trim();
+    // remove trailing }
+    const cleanBody = bodyStr.replace(/}\s*$/, '');
+    const mergeFn = new Function('defaultSeedData', 'sourceData', cleanBody);
 
-  app.normalizeAllBalances();
+    const merged = mergeFn(defaultSeedData, apiData);
+    console.log('\n--- After mergeWithSeedData ---');
+    console.log('Merged employees count:', merged.employees?.length);
+    (merged.employees || []).forEach(e => console.log('  Merged emp:', e.id, e.employee_no, e.name));
 
-  const ledger = app.getProjectLedgerData('prj-mw3rnn9m');
-  console.log('\n=============================================');
-  console.log('FINAL BROWSER SIMULATION ON LIVE DATA:');
-  console.log('Customer Collections: AED', ledger.collected);
-  console.log('Pending Client Due:   AED', ledger.pendingDue);
-  console.log('Total Costs:          AED', ledger.totalCost);
-  console.log('Net Profit:           AED', ledger.netProfit, '(' + ledger.profitMargin + '%)');
-  console.log('Cash Flow Position:   AED', ledger.cashPosition);
-  console.log('Invoiced:             AED', ledger.invoiced);
-  console.log('Credited:             AED', ledger.credited);
-  console.log('Net Invoiced:         AED', ledger.netInvoiced);
-  console.log('=============================================\n');
-}
+    const payrollJs = fs.readFileSync('src/scripts/finance-payroll.js', 'utf8');
+    const seedStart = payrollJs.indexOf('proto.ensurePayrollSeedData = function () {');
+    const seedEnd = payrollJs.indexOf('\n  // ==========================================================================\n  // 2. EMPLOYEE & WORKER PROFILES TAB', seedStart);
+    const ensureBody = payrollJs.substring(seedStart + 43, seedEnd).trim().replace(/};\s*$/, '');
+    const ensureFn = new Function(ensureBody);
 
-testFullFlow();
+    app.db = merged;
+    ensureFn.call(app);
+
+    console.log('\n--- After ensurePayrollSeedData ---');
+    console.log('Final employees count:', app.db.employees?.length);
+    app.db.employees.forEach(e => console.log('  Final emp:', e.id, e.employee_no, e.name));
+
+    const activeEmps = app.db.employees.filter(e => app.matchesActiveCompany(e.company_id));
+    console.log('\n--- Active company employees for rayan-corp-uae ---');
+    activeEmps.forEach(e => console.log('  Active emp:', e.id, e.employee_no, e.name));
+  });
+});

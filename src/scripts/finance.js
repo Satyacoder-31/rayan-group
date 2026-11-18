@@ -75,7 +75,9 @@ class FinanceApp {
     this.fetchRemoteDatabase().then((updated) => {
       if (updated && this.currentUser && !document.body.classList.contains('fin-doc-open')) {
         this.renderHeaderStatus();
-        this.renderMainContent();
+        if (typeof this.renderActiveTab === 'function') {
+          this.renderActiveTab();
+        }
       }
     });
   }
@@ -721,18 +723,22 @@ class FinanceApp {
       merged.settings = { ...merged.settings, ...sourceData.settings };
     }
 
+    const protectedEmpIds = new Set(['emp-mwlpkkbr', 'emp-en12001', 'emp-rg11047']);
+    const isEmpIdDeleted = (id) => id && id.startsWith('emp-') && !protectedEmpIds.has(id);
+
     if (Array.isArray(sourceData.deleted_employee_ids)) {
-      merged.deleted_employee_ids = sourceData.deleted_employee_ids;
+      merged.deleted_employee_ids = sourceData.deleted_employee_ids.filter(isEmpIdDeleted);
     }
     const storedDel = (function () {
       try {
-        return typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
+        const raw = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
+        return Array.isArray(raw) ? raw.filter(isEmpIdDeleted) : [];
       } catch (e) { return []; }
     })();
     const allDeletedEmps = Array.from(new Set([...(merged.deleted_employee_ids || []), ...storedDel]));
     merged.deleted_employee_ids = allDeletedEmps;
     if (allDeletedEmps.length > 0 && Array.isArray(merged.employees)) {
-      merged.employees = merged.employees.filter(e => !allDeletedEmps.includes(e.id) && !allDeletedEmps.includes(e.employee_no));
+      merged.employees = merged.employees.filter(e => !allDeletedEmps.includes(e.id));
     }
 
     return merged;
@@ -2265,7 +2271,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v155';
+    const CURRENT_DB_VERSION = 'v2026_clean_v157';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
