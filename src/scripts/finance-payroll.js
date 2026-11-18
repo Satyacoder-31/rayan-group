@@ -1647,6 +1647,7 @@ export function registerPayrollModules(FinanceApp) {
 
     const sourceType = slip?.payout_source_type || 'bank';
     const defaultStatus = slip?.status || 'Paid';
+    const paymentDate = slip?.payment_date || new Date().toISOString().split('T')[0];
 
     // Bank accounts options
     const bankOpts = (bankAccounts.length > 0 ? bankAccounts : [
@@ -2445,7 +2446,7 @@ export function registerPayrollModules(FinanceApp) {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const curr = slip.currency || (isIndia ? 'INR' : 'AED');
     const comp = (this.db?.companies || []).find(c => c.id === (slip.company_id || this.activeCompanyId)) ||
-      (defaultSeedData.companies || []).find(c => c.id === (slip.company_id || this.activeCompanyId)) ||
+      (this.companies || []).find(c => c.id === (slip.company_id || this.activeCompanyId)) ||
       (this.db?.companies || [])[0] || {};
     const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');

@@ -17603,6 +17603,18 @@
   ],
   "audit_logs": [
     {
+      "id": "aud-1a1ed3549f3",
+      "timestamp": "2026-11-18T05:50:54+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "employee",
+      "entity_id": "EN12004",
+      "details": "Saved employee Bakhteyar Alam Mokhtar Ahmad",
+      "ip_address": "5.195.113.16"
+    },
+    {
       "id": "aud-1a1eac3b788",
       "timestamp": "2026-11-17T18:27:37+00:00",
       "actor_name": "Arshad Alam Shaikh",
@@ -22487,12 +22499,12 @@
     },
     {
       "id": "emp-en12001",
-      "employee_no": "EN12001",
+      "employee_no": "EN12004",
       "company_id": "rayan-corp-uae",
       "name": "Bakhteyar Alam Mokhtar Ahmad",
       "position": "Civil Engineer",
       "department": "Rayan Engineering",
-      "date_of_joining": "07/08/2025",
+      "date_of_joining": "2025-08-07",
       "date_of_appointment": "2025-08-07",
       "currency": "AED",
       "phone": "+971 50 123 4567",
@@ -22510,7 +22522,7 @@
       "account_no": "AE860260001015934645101",
       "default_pay_method": "AED RAYAN GROUP Host To Host",
       "project_id": "prj-toprock-police-01",
-      "project_name": "The New Dubai Police Academy @ Al Rowaiyah, Dubai",
+      "project_name": "Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai",
       "status": "Active",
       "created_at": "2025-08-07T09:00:00Z",
       "name_ar": "بختيار عالم مختار احمد",
@@ -22518,7 +22530,7 @@
       "nationality": "India",
       "nationality_ar": "هندي",
       "designation": "Civil Engineer",
-      "updated_at": "2026-11-17T18:27:35.904Z"
+      "updated_at": "2026-11-18T05:50:52.305Z"
     }
   ],
   "payroll": [
