@@ -97,22 +97,15 @@ export function registerPayrollModules(FinanceApp) {
   proto.ensurePayrollSeedData = function () {
     if (!this.db) return;
 
-    const protectedEmpIds = new Set(['emp-mwlpkkbr', 'emp-en12001', 'emp-rg11047']);
-    const isEmpIdDeleted = (id) => id && id.startsWith('emp-') && !protectedEmpIds.has(id);
-
     const storedDel = (function () {
       try {
         const raw = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
-        return Array.isArray(raw) ? raw.filter(isEmpIdDeleted) : [];
+        return Array.isArray(raw) ? raw : [];
       } catch (e) { return []; }
     })();
 
-    if (typeof localStorage !== 'undefined') {
-      try { localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(storedDel)); } catch (e) {}
-    }
-
     const deleted = Array.from(new Set([
-      ...(Array.isArray(this.db.deleted_employee_ids) ? this.db.deleted_employee_ids.filter(isEmpIdDeleted) : []),
+      ...(Array.isArray(this.db.deleted_employee_ids) ? this.db.deleted_employee_ids : []),
       ...storedDel
     ]));
     this.db.deleted_employee_ids = deleted;
@@ -121,13 +114,19 @@ export function registerPayrollModules(FinanceApp) {
       this.db.employees = [];
     }
 
-    // Filter out only deleted internal IDs (never filter by human employee number)
+    // Always purge dummy/sample employee Md Ashraf Ali
+    this.db.employees = this.db.employees.filter(e => e && e.id !== 'emp-rg11047' && !(e.name && e.name.toLowerCase().includes('ashraf')));
+    if (Array.isArray(this.db.letters_of_assignment)) {
+      this.db.letters_of_assignment = this.db.letters_of_assignment.filter(l => l && l.employee_id !== 'emp-rg11047' && !(l.employee_name && l.employee_name.toLowerCase().includes('ashraf')));
+    }
+
+    // Filter out only user-deleted internal IDs
     if (deleted.length > 0) {
       this.db.employees = this.db.employees.filter(e => !deleted.includes(e.id));
     }
 
-    // Only seed initial default employees if this.db.employees is empty
-    if (this.db.employees.length === 0 && !this.db.employees_initialized) {
+    // If directory is empty, seed the authoritative real employees
+    if (this.db.employees.length === 0 && !this.db.employees_initialized && !deleted.includes('emp-mwlpkkbr') && !deleted.includes('emp-en12001')) {
       this.db.employees_initialized = true;
       this.db.employees = [
         {
@@ -197,36 +196,12 @@ export function registerPayrollModules(FinanceApp) {
           status: 'Active',
           created_at: '2025-08-07T09:00:00Z',
           updated_at: '2026-11-18T05:50:52.305Z'
-        },
-        {
-          id: 'emp-rg11047',
-          employee_no: 'RG11047',
-          company_id: this.activeCompanyId || 'rayan-corp-uae',
-          name: 'Md Ashraf Ali',
-          name_ar: 'محمد اشرف علي',
-          position: 'General Mason/Tiles Mason',
-          position_ar: 'بناء عام / بلاط',
-          department: 'Rayan Engineering',
-          date_of_joining: '2026-09-15',
-          date_of_appointment: '2026-08-26',
-          currency: 'AED',
-          nationality: 'India',
-          nationality_ar: 'هندي',
-          passport_no: 'C6976631',
-          visa_status: 'Employment Visa (Rayan Engineering)',
-          basic_salary: 1100.00,
-          accommodation_allowance: 0.00,
-          consolidated_allowance: 200.00,
-          other_allowance: 200.00,
-          bank_name: 'Cash / On-Hand',
-          status: 'Active',
-          created_at: '2026-08-26T09:00:00Z'
         }
       ];
     } else {
       this.db.employees_initialized = true;
 
-      // Ensure Nadeem Akhtar Nazmul Hoda is properly recognized and kept
+      // Ensure Nadeem Akhtar Nazmul Hoda is recognized as EN12001
       let nadeem = this.db.employees.find(e => e.id === 'emp-mwlpkkbr' || (e.name && e.name.toLowerCase().includes('nadeem')));
       if (nadeem) {
         nadeem.employee_no = nadeem.employee_no || 'EN12001';
@@ -235,30 +210,25 @@ export function registerPayrollModules(FinanceApp) {
         nadeem.position = nadeem.position || 'Civil Engineer';
         nadeem.position_ar = nadeem.position_ar || 'مهندس مدني';
         nadeem.passport_no = nadeem.passport_no || 'U3566719';
+        nadeem.emirates_id = nadeem.emirates_id || '784-1998-3368120-0';
+        nadeem.phone = nadeem.phone || '+971 555411543';
+        nadeem.email = nadeem.email || 'nadeem.hmsit@gmail.com';
         nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
       }
 
-      // Ensure Bakhteyar is recognized and kept WITHOUT clobbering EN12004 or Nadeem
+      // Ensure Bakhteyar Alam Mokhtar Ahmad is recognized as EN12004
       let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || (e.id === 'emp-en12001' && (!e.name || !e.name.toLowerCase().includes('nadeem'))));
       if (bakht) {
+        bakht.employee_no = 'EN12004';
         bakht.passport_no = bakht.passport_no || 'S3552106';
+        bakht.emirates_id = bakht.emirates_id || '784-1988-1234567-1';
+        bakht.phone = bakht.phone || '+971 50 123 4567';
+        bakht.email = bakht.email || 'bakhteyar@rayan-group.com';
         if (!bakht.name || !bakht.name.includes('Mokhtar')) bakht.name = 'Bakhteyar Alam Mokhtar Ahmad';
         if (!bakht.name_ar) bakht.name_ar = 'بختيار عالم مختار احمد';
         if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
         if (!bakht.position) bakht.position = 'Civil Engineer';
         if (!bakht.company_id) bakht.company_id = this.activeCompanyId || 'rayan-corp-uae';
-        // If employee_no is not set or collided with Nadeem, use EN12004
-        if (!bakht.employee_no || bakht.employee_no === 'EN12001') {
-          bakht.employee_no = 'EN12004';
-        }
-      }
-
-      // If Ashraf is present, enrich fields
-      let ashraf = this.db.employees.find(e => e.id === 'emp-rg11047' || (e.name && e.name.toLowerCase().includes('ashraf')) || e.employee_no === 'RG11647' || e.employee_no === 'RG11047');
-      if (ashraf) {
-        if (!ashraf.name_ar) ashraf.name_ar = 'محمد اشرف علي';
-        if (!ashraf.position_ar) ashraf.position_ar = 'بناء عام / بلاط';
-        if (!ashraf.company_id) ashraf.company_id = this.activeCompanyId || 'rayan-corp-uae';
       }
     }
 
@@ -300,16 +270,16 @@ export function registerPayrollModules(FinanceApp) {
     if (!Array.isArray(this.db.letters_of_assignment) || this.db.letters_of_assignment.length === 0) {
       this.db.letters_of_assignment = [
         {
-          id: 'loa-rg-hc-2026-11047',
-          loa_no: 'RG/HC/LOA/2026/11047',
-          ref_no: 'RG/HC/LOA/2026/11047',
+          id: 'loa-rg-hc-2026-12004',
+          loa_no: 'RG/HC/LOA/2026/12004',
+          ref_no: 'RG/HC/LOA/2026/12004',
           company_id: this.activeCompanyId || 'rayan-corp-uae',
-          date: '26/08/2026',
-          employee_id: 'emp-rg11047',
-          employee_name: 'Md Ashraf Ali',
-          passport_no: 'C6976631',
+          date: '07/08/2025',
+          employee_id: 'emp-en12001',
+          employee_name: 'Bakhteyar Alam Mokhtar Ahmad',
+          passport_no: 'S3552106',
           nationality: 'India',
-          position: 'General Mason/Tiles Mason',
+          position: 'Civil Engineer',
           reporting_manager: 'Site Supervisor or his designated nominee',
           working_hours: '08 hours a day and 6 days a week',
           currency: 'AED',
@@ -992,19 +962,23 @@ export function registerPayrollModules(FinanceApp) {
     const isEdit = Boolean(emp);
     const projects = (this.db?.projects || []).filter(p => this.matchesActiveCompany(p.company_id));
 
+    const basicSalary = emp ? Number(emp.basic_salary || 0) : '';
+    const accAllowance = emp ? Number(emp.accommodation_allowance || 0) : '';
+    const otherAllowance = emp ? Number(emp.other_allowance || 0) : '';
+
     const html = `
       <div class="fin-modal-backdrop open" id="fin-emp-modal-backdrop">
-        <div class="fin-modal-dialog" style="max-width:880px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+        <div class="fin-modal-dialog" style="max-width:820px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
           <!-- Executive Header -->
-          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:0.85rem;">
-              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 4px 12px rgba(56,189,248,0.15);">👥</div>
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem;">👤</div>
               <div>
-                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
-                  ${isEdit ? '✏️ Edit Employee Profile' : '👥 Add New Employee / Worker'}
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; font-weight:800; color:#f8fafc;">
+                  ${isEdit ? '✏️ Edit Employee Record' : '👤 Add New Employee Record'}
                 </h3>
-                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">
-                  Workforce Coordinates, Designation, Compensation Breakdown &amp; Disbursement • بيانات الموظف والراتب
+                <p style="margin:2px 0 0; font-size:0.75rem; color:#94a3b8;">
+                  Employee details, identification documents, contact info &amp; monthly compensation
                 </p>
               </div>
             </div>
@@ -1015,167 +989,118 @@ export function registerPayrollModules(FinanceApp) {
           <form id="fin-emp-form" class="fin-modal-body" onsubmit="window.finApp.saveEmployeeForm(event)" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" name="id" value="${emp?.id || ''}">
 
-            <!-- Card 1: Identification & Designation (Bilingual) -->
-            <div class="fin-form-section-card">
-              <div class="fin-form-section-header">
-                <div class="fin-form-section-title">
-                  <span>👤</span>
-                  <span>Basic Identification &amp; Role</span>
+            <!-- Card 1: Employee Role & Identification -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
+              <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#38bdf8; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
+                <span>👤</span>
+                <span>Employee Identification</span>
+              </div>
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Employee ID / No. <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="employee_no" class="fin-form-input" required value="${escapeHtml(emp?.employee_no || '')}" placeholder="e.g. EN12001" style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Full Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="name" class="fin-form-input" required value="${escapeHtml(emp?.name || '')}" placeholder="e.g. Nadeem Akhtar Nazmul Hoda" style="font-weight:600;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Designation / Job Title <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="position" class="fin-form-input" required value="${escapeHtml(emp?.position || '')}" placeholder="e.g. Civil Engineer">
                 </div>
               </div>
-              <div class="fin-form-grid-3" style="margin-bottom:1.15rem;">
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Employee No. <span style="color:#ef4444;">*</span></label>
-                  <input type="text" name="employee_no" class="fin-form-input" required value="${escapeHtml(emp?.employee_no || `EN${Math.floor(12000 + Math.random() * 900)}`)}" placeholder="e.g. EN12001" style="font-family:monospace; font-weight:700; color:#38bdf8;">
-                </div>
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Department</label>
                   <input type="text" name="department" class="fin-form-input" value="${escapeHtml(emp?.department || 'Rayan Engineering')}" placeholder="e.g. Rayan Engineering">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Date of Joining / Appointment</label>
-                  <input type="date" name="date_of_joining" class="fin-form-input" value="${emp?.date_of_joining || emp?.date_of_appointment || new Date().toISOString().split('T')[0]}">
-                </div>
-              </div>
-
-              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Full Name (English) <span class="fin-field-badge-en">🇺🇸 EN</span> <span style="color:#ef4444;">*</span></label>
-                  <input type="text" name="name" class="fin-form-input" required value="${escapeHtml(emp?.name || '')}" placeholder="e.g. Bakhteyar Alam Mokhtar Ahmad">
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>اسم الموظف (باللغة العربية)</span>
-                    <span class="fin-field-badge-ar">🇦🇪 AR</span>
-                  </label>
-                  <input type="text" name="name_ar" class="fin-form-input fin-input-ar" value="${escapeHtml(emp?.name_ar || '')}" placeholder="مثال: بختيار عالم مختار احمد">
-                </div>
-              </div>
-
-              <div class="fin-form-grid-2">
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Position / Designation (English) <span class="fin-field-badge-en">🇺🇸 EN</span> <span style="color:#ef4444;">*</span></label>
-                  <input type="text" name="position" class="fin-form-input" required value="${escapeHtml(emp?.position || emp?.designation || '')}" placeholder="e.g. Civil Engineer">
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>المسمى الوظيفي (باللغة العربية)</span>
-                    <span class="fin-field-badge-ar">🇦🇪 AR</span>
-                  </label>
-                  <input type="text" name="position_ar" class="fin-form-input fin-input-ar" value="${escapeHtml(emp?.position_ar || '')}" placeholder="مثال: مهندس مدني">
+                  <label class="fin-field-label">Date of Joining</label>
+                  <input type="date" name="date_of_joining" class="fin-form-input" value="${emp?.date_of_joining || new Date().toISOString().split('T')[0]}">
                 </div>
               </div>
             </div>
 
-            <!-- Card 2: Contact Details & Identity Documents -->
-            <div class="fin-form-section-card">
-              <div class="fin-form-section-header">
-                <div class="fin-form-section-title">
-                  <span>📞</span>
-                  <span>Contact Coordinates &amp; Legal Documents</span>
-                </div>
+            <!-- Card 2: Legal Documents & Contact Coordinates -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
+              <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#10b981; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
+                <span>🪪</span>
+                <span>Legal Identity &amp; Contact Details</span>
               </div>
-              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Phone Contact</label>
-                  <input type="text" name="phone" class="fin-form-input" value="${escapeHtml(emp?.phone || '')}" placeholder="+971 50 ---">
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Email Address</label>
-                  <input type="email" name="email" class="fin-form-input" value="${escapeHtml(emp?.email || '')}" placeholder="name@rayan-group.com">
-                </div>
-              </div>
-              <div class="fin-form-grid-3">
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Emirates ID (EID)</label>
-                  <input type="text" name="emirates_id" class="fin-form-input" value="${escapeHtml(emp?.emirates_id || '')}" placeholder="784-1988-1234567-1" style="font-family:monospace;">
+                  <input type="text" name="emirates_id" class="fin-form-input" value="${escapeHtml(emp?.emirates_id || '')}" placeholder="784-1998-3368120-0" style="font-family:monospace; font-weight:600;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Passport No.</label>
-                  <input type="text" name="passport_no" class="fin-form-input" value="${escapeHtml(emp?.passport_no || '')}" placeholder="e.g. S3552106" style="font-family:monospace; font-weight:700;">
+                  <input type="text" name="passport_no" class="fin-form-input" value="${escapeHtml(emp?.passport_no || '')}" placeholder="e.g. U3566719" style="font-family:monospace; font-weight:700;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Nationality</label>
                   <input type="text" name="nationality" class="fin-form-input" value="${escapeHtml(emp?.nationality || 'India')}" placeholder="e.g. India">
                 </div>
               </div>
-            </div>
-
-            <!-- Card 3: Standard Monthly Salary Elements -->
-            <div class="fin-form-section-card">
-              <div class="fin-form-section-header">
-                <div class="fin-form-section-title" style="color:#10b981;">
-                  <span>💵</span>
-                  <span>Standard Monthly Salary Elements (${emp?.currency || 'AED'})</span>
-                </div>
-              </div>
-              <div class="fin-form-grid-4" style="margin-bottom:1.15rem;">
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Basic Salary *</label>
-                  <input type="number" step="0.01" name="basic_salary" id="fin-emp-basic" class="fin-form-input" required value="${emp?.basic_salary ?? 9500}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                  <label class="fin-field-label">Contact / Phone Number</label>
+                  <input type="text" name="phone" class="fin-form-input" value="${escapeHtml(emp?.phone || '')}" placeholder="+971 55 541 1543">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Accommodation Allowance</label>
-                  <input type="number" step="0.01" name="accommodation_allowance" id="fin-emp-acc" class="fin-form-input" value="${emp?.accommodation_allowance ?? 12500}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                  <label class="fin-field-label">Email Address</label>
+                  <input type="email" name="email" class="fin-form-input" value="${escapeHtml(emp?.email || '')}" placeholder="name@domain.com">
                 </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Consolidated Allowance</label>
-                  <input type="number" step="0.01" name="consolidated_allowance" id="fin-emp-cons" class="fin-form-input" value="${emp?.consolidated_allowance ?? 8000}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Other Allowance</label>
-                  <input type="number" step="0.01" name="other_allowance" id="fin-emp-oth" class="fin-form-input" value="${emp?.other_allowance ?? 0}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
-                </div>
-              </div>
-
-              <!-- Gross Salary Banner -->
-              <div style="background:linear-gradient(90deg, rgba(16,185,129,0.12) 0%, rgba(56,189,248,0.08) 100%); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:0.85rem 1.25rem; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:0.82rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Standard Monthly Gross Salary:</span>
-                <strong id="fin-emp-gross-preview" style="font-size:1.25rem; font-weight:800; color:#10b981;">AED 30,000.00</strong>
               </div>
             </div>
 
-            <!-- Card 4: Banking Coordinates & Project Allocation -->
-            <div class="fin-form-section-card">
-              <div class="fin-form-section-header">
-                <div class="fin-form-section-title" style="color:#f59e0b;">
-                  <span>🏦</span>
-                  <span>Banking Coordinates &amp; Project Allocation</span>
+            <!-- Card 3: Monthly Compensation Elements -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
+              <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#f59e0b; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
+                <span>💵</span>
+                <span>Monthly Compensation (AED)</span>
+              </div>
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Basic Salary (AED) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" step="0.01" name="basic_salary" id="fin-emp-basic" class="fin-form-input" required value="${basicSalary}" placeholder="e.g. 5000" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Accommodation Allowance (AED)</label>
+                  <input type="number" step="0.01" name="accommodation_allowance" id="fin-emp-acc" class="fin-form-input" value="${accAllowance}" placeholder="e.g. 5000" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Other Allowance (AED)</label>
+                  <input type="number" step="0.01" name="other_allowance" id="fin-emp-oth" class="fin-form-input" value="${otherAllowance}" placeholder="0.00" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
                 </div>
               </div>
-              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+
+              <!-- Live Calculated Total Monthly Salary -->
+              <div style="background:linear-gradient(90deg, rgba(16,185,129,0.15) 0%, rgba(56,189,248,0.1) 100%); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:0.85rem 1.25rem; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.82rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Total Monthly Standard Salary:</span>
+                <strong id="fin-emp-gross-preview" style="font-size:1.25rem; font-weight:800; color:#10b981;">AED 0.00</strong>
+              </div>
+            </div>
+
+            <!-- Card 4: Banking Coordinates, Project & Status -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
+              <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#c084fc; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
+                <span>🏦</span>
+                <span>Bank Details, Allocation &amp; Status</span>
+              </div>
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Bank Name</label>
-                  <input type="text" name="bank_name" class="fin-form-input" value="${escapeHtml(emp?.bank_name || 'Emirates NBD Bank PJSC')}" placeholder="e.g. Emirates NBD Bank PJSC">
+                  <input type="text" name="bank_name" class="fin-form-input" value="${escapeHtml(emp?.bank_name || '')}" placeholder="e.g. Emirates NBD Bank PJSC / Cash">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Swift / IFSC Code</label>
-                  <input type="text" name="swift" class="fin-form-input" value="${escapeHtml(emp?.swift || 'EBILAEADXXX')}" placeholder="e.g. EBILAEADXXX" style="font-family:monospace;">
-                </div>
-              </div>
-              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">IBAN Number</label>
-                  <input type="text" name="iban" class="fin-form-input" value="${escapeHtml(emp?.iban || '')}" placeholder="AE860260001015934645101" style="font-family:monospace; font-weight:700;">
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Account Number</label>
-                  <input type="text" name="account_no" class="fin-form-input" value="${escapeHtml(emp?.account_no || '')}" placeholder="AE860260001015934645101" style="font-family:monospace;">
+                  <label class="fin-field-label">IBAN / Account Number</label>
+                  <input type="text" name="iban" class="fin-form-input" value="${escapeHtml(emp?.iban || emp?.account_no || '')}" placeholder="AE86..." style="font-family:monospace; font-weight:600;">
                 </div>
               </div>
-              <div class="fin-form-grid-3">
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Default Pay Method</label>
-                  <select name="default_pay_method" class="fin-form-select">
-                    <option value="AED RAYAN GROUP Host To Host" ${emp?.default_pay_method?.includes('Host To Host') ? 'selected' : ''}>AED RAYAN GROUP Host To Host</option>
-                    <option value="Bank Transfer / Wire" ${emp?.default_pay_method?.includes('Bank Transfer') ? 'selected' : ''}>Bank Transfer / Wire</option>
-                    <option value="RAYAN E-Wallets / Cash" ${emp?.default_pay_method?.includes('Wallets') || emp?.default_pay_method?.includes('Cash') ? 'selected' : ''}>RAYAN E-Wallets / Cash</option>
-                    <option value="Cheque" ${emp?.default_pay_method === 'Cheque' ? 'selected' : ''}>Cheque</option>
-                  </select>
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Primary Project Allocation</label>
-                  <select name="project_id" class="fin-form-select" id="fin-emp-proj-select">
+                  <label class="fin-field-label">Project Allocation</label>
+                  <select name="project_id" class="fin-form-select">
                     <option value="">Corporate / General Overhead</option>
                     ${projects.map(p => `
                       <option value="${escapeHtml(p.id)}" ${emp?.project_id === p.id ? 'selected' : ''}>
@@ -1196,10 +1121,25 @@ export function registerPayrollModules(FinanceApp) {
               </div>
             </div>
 
+            <!-- Optional Bilingual Support for Official Letters -->
+            <details style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:0.75rem 1rem;">
+              <summary style="cursor:pointer; color:#94a3b8; font-size:0.8rem; font-weight:600;">Optional: Arabic Name &amp; Designation (for Arabic Employment Certificates)</summary>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:0.75rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="text-align:right;">اسم الموظف (عربي)</label>
+                  <input type="text" name="name_ar" class="fin-form-input fin-input-ar" value="${escapeHtml(emp?.name_ar || '')}" placeholder="نديم اختر نظم هدي" dir="rtl">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="text-align:right;">المسمى الوظيفي (عربي)</label>
+                  <input type="text" name="position_ar" class="fin-form-input fin-input-ar" value="${escapeHtml(emp?.position_ar || '')}" placeholder="مهندس مدني" dir="rtl">
+                </div>
+              </div>
+            </details>
+
             <!-- Footer Actions -->
-            <div class="fin-modal-footer" style="padding:1.15rem 0 0 0; background:transparent; border-top:1px solid rgba(255,255,255,0.08); margin-top:0.5rem;">
+            <div class="fin-modal-footer" style="padding:1.15rem 0 0 0; background:transparent; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:flex-end; gap:0.75rem; margin-top:0.5rem;">
               <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeEmployeeModal()">Cancel</button>
-              <button type="submit" class="fin-btn-primary">
+              <button type="submit" class="fin-btn-primary" style="background:#10b981; border-color:#10b981;">
                 ${isEdit ? '💾 Update Employee Profile' : '✓ Save Employee to Directory'}
               </button>
             </div>
@@ -1215,9 +1155,8 @@ export function registerPayrollModules(FinanceApp) {
   proto.calcEmpGrossSalary = function () {
     const basic = parseFloat(document.getElementById('fin-emp-basic')?.value) || 0;
     const acc = parseFloat(document.getElementById('fin-emp-acc')?.value) || 0;
-    const cons = parseFloat(document.getElementById('fin-emp-cons')?.value) || 0;
     const oth = parseFloat(document.getElementById('fin-emp-oth')?.value) || 0;
-    const total = basic + acc + cons + oth;
+    const total = basic + acc + oth;
 
     const el = document.getElementById('fin-emp-gross-preview');
     if (el) {
@@ -1240,6 +1179,10 @@ export function registerPayrollModules(FinanceApp) {
     const prjId = formData.get('project_id') || '';
     const prj = (this.db?.projects || []).find(p => p.id === prjId);
 
+    const basicSalary = parseFloat(formData.get('basic_salary')) || 0;
+    const accAllowance = parseFloat(formData.get('accommodation_allowance')) || 0;
+    const otherAllowance = parseFloat(formData.get('other_allowance')) || 0;
+
     const empObj = {
       id: empId,
       employee_no: formData.get('employee_no') || '',
@@ -1256,15 +1199,15 @@ export function registerPayrollModules(FinanceApp) {
       phone: formData.get('phone') || '',
       email: formData.get('email') || '',
       emirates_id: formData.get('emirates_id') || '',
-      basic_salary: parseFloat(formData.get('basic_salary')) || 0,
-      accommodation_allowance: parseFloat(formData.get('accommodation_allowance')) || 0,
-      consolidated_allowance: parseFloat(formData.get('consolidated_allowance')) || 0,
-      other_allowance: parseFloat(formData.get('other_allowance')) || 0,
+      basic_salary: basicSalary,
+      accommodation_allowance: accAllowance,
+      consolidated_allowance: 0,
+      other_allowance: otherAllowance,
       bank_name: formData.get('bank_name') || '',
-      swift: formData.get('swift') || '',
+      swift: 'EBILAEADXXX',
       iban: formData.get('iban') || '',
-      account_no: formData.get('account_no') || '',
-      default_pay_method: formData.get('default_pay_method') || 'AED RAYAN GROUP Host To Host',
+      account_no: formData.get('iban') || '',
+      default_pay_method: formData.get('bank_name')?.toLowerCase().includes('cash') ? 'RAYAN E-Wallets / Cash' : 'AED RAYAN GROUP Host To Host',
       project_id: prjId,
       project_name: prj ? prj.name : 'Corporate / General Overhead',
       status: formData.get('status') || 'Active',
@@ -1282,7 +1225,7 @@ export function registerPayrollModules(FinanceApp) {
     try {
       if (typeof localStorage !== 'undefined') {
         const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]');
-        const updatedStored = stored.filter(id => id !== empId && id !== empObj.employee_no);
+        const updatedStored = stored.filter(id => id !== empId);
         localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(updatedStored));
       }
     } catch (e) {}
@@ -1296,7 +1239,7 @@ export function registerPayrollModules(FinanceApp) {
       }
     } else {
       const existingIdx = this.db.employees.findIndex(em => em.employee_no === empObj.employee_no);
-      if (existingIdx >= 0 && this.db.employees[existingIdx].name.toLowerCase() === empObj.name.toLowerCase()) {
+      if (existingIdx >= 0) {
         this.db.employees[existingIdx] = { ...this.db.employees[existingIdx], ...empObj };
       } else {
         this.db.employees.unshift(empObj);
@@ -1314,18 +1257,6 @@ export function registerPayrollModules(FinanceApp) {
           c.basic_salary = empObj.basic_salary;
           c.accommodation_allowance = empObj.accommodation_allowance;
           c.total_salary = empObj.basic_salary + empObj.accommodation_allowance;
-        }
-      });
-    }
-
-    if (Array.isArray(this.db.letters_of_assignment)) {
-      this.db.letters_of_assignment.forEach(l => {
-        if ((l.employee_id && l.employee_id === empObj.id) || 
-            (l.employee_name && empObj.name && (l.employee_name.toLowerCase() === empObj.name.toLowerCase() || l.employee_name.toLowerCase().includes(empObj.name.toLowerCase()))) ||
-            (l.passport_no && empObj.passport_no && l.passport_no === empObj.passport_no)) {
-          l.employee_name = empObj.name;
-          l.position = empObj.position;
-          l.basic_salary = empObj.basic_salary;
         }
       });
     }
@@ -1352,7 +1283,7 @@ export function registerPayrollModules(FinanceApp) {
     if (typeof this.renderActiveTab === 'function') {
       this.renderActiveTab();
     } else {
-      const root = document.getElementById('fin-tab-content-root') || (document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container'));
+      const root = document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container');
       if (root && typeof this.renderEmployeesTab === 'function') {
         this.renderEmployeesTab(root);
       }
@@ -4422,7 +4353,7 @@ export function registerPayrollModules(FinanceApp) {
                   <span style="font-family:'Amiri', serif; font-size:0.72rem; color:#64748b;">بيانات المرشح</span>
                 </div>
                 <div style="color:#0f172a; font-weight:800; font-size:0.78rem; margin-bottom:2px;" contenteditable="true" spellcheck="false">
-                  ${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}
+                  ${escapeHtml(loa.employee_name || 'Employee Name')}
                 </div>
                 <div style="color:#334155;"><strong>Passport No:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(loa.passport_no || 'C6976631')}</span></div>
                 <div style="color:#334155;"><strong>Nationality:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(loa.nationality || 'India')}</span></div>
@@ -4445,7 +4376,7 @@ export function registerPayrollModules(FinanceApp) {
             <!-- Congratulations & Offer Introduction -->
             <div style="border:1px solid #e2e8f0; background:#ffffff; border-radius:4px; padding:6px 10px; font-size:0.68rem; line-height:1.4; color:#334155; margin-bottom:8px; text-align:justify;">
               <div style="font-weight:800; color:#0f172a; margin-bottom:2px;">
-                Dear Mr. <span contenteditable="true" spellcheck="false">${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}</span> — Congratulations!
+                Dear Mr. <span contenteditable="true" spellcheck="false">${escapeHtml(loa.employee_name || 'Employee Name')}</span> — Congratulations!
               </div>
               <p style="margin:0;" contenteditable="true" spellcheck="false">
                 We are pleased to offer you employment in the position of <strong>${escapeHtml(loa.position || 'General Mason/Tiles Mason')}</strong> with us here at <strong>Rayan Group</strong> based on the interview and discussions held with you. All visa formalities and your commencement of work will be under <strong>Rayan Engineering and Contracting L.L.C-S.P.C</strong>. Please find below the detailed terms and conditions of our assignment agreement:
@@ -4595,13 +4526,13 @@ export function registerPayrollModules(FinanceApp) {
               <div style="border:1px solid #cbd5e1; border-top:3px solid #0f172a; border-radius:4px; padding:6px 10px; background:#ffffff; font-size:0.66rem; line-height:1.35;">
                 <div style="font-weight:800; font-size:0.70rem; color:#0f172a; text-transform:uppercase; margin-bottom:2px;">CANDIDATE ACCEPTANCE (إقرار وقبول المرشح)</div>
                 <div style="color:#334155; margin-bottom:4px;">
-                  I, <strong style="color:#0f172a;">${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}</strong>, accept the offer of employment on the terms and conditions stated in this letter of my own free choice.
+                  I, <strong style="color:#0f172a;">${escapeHtml(loa.employee_name || 'Employee Name')}</strong>, accept the offer of employment on the terms and conditions stated in this letter of my own free choice.
                 </div>
                 
                 <table style="width:100%; font-size:0.64rem; border-collapse:collapse; margin-top:4px;">
                   <tr>
                     <td style="width:110px; padding:3px 0; color:#64748b; font-weight:600;">Candidate Name:</td>
-                    <td style="font-weight:800; color:#0f172a;">${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}</td>
+                    <td style="font-weight:800; color:#0f172a;">${escapeHtml(loa.employee_name || 'Employee Name')}</td>
                   </tr>
                   <tr>
                     <td style="padding:3px 0; color:#64748b; font-weight:600;">Date of Joining:</td>
@@ -4756,7 +4687,7 @@ export function registerPayrollModules(FinanceApp) {
               <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Employee Full Name <span style="color:#ef4444;">*</span></label>
-                  <input type="text" class="fin-form-input" id="loa-emp-name" name="employee_name" value="${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}" required placeholder="e.g. Md Ashraf Ali">
+                  <input type="text" class="fin-form-input" id="loa-emp-name" name="employee_name" value="${escapeHtml(loa.employee_name || 'Employee Name')}" required placeholder="e.g. Md Ashraf Ali">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Passport No. <span style="color:#ef4444;">*</span></label>

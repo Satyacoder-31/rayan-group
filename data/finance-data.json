@@ -22600,27 +22600,6 @@
       "nationality_ar": "هندي",
       "designation": "Civil Engineer",
       "updated_at": "2026-11-18T05:50:52.305Z"
-    },
-    {
-      "id": "emp-rg11047",
-      "employee_no": "RG11047",
-      "company_id": "rayan-corp-uae",
-      "name": "Md Ashraf Ali",
-      "position": "General Mason/Tiles Mason",
-      "department": "Rayan Engineering",
-      "date_of_joining": "2026-09-15",
-      "date_of_appointment": "2026-08-26",
-      "currency": "AED",
-      "nationality": "India",
-      "passport_no": "C6976631",
-      "visa_status": "Employment Visa (Rayan Engineering)",
-      "basic_salary": 1100,
-      "accommodation_allowance": 0,
-      "consolidated_allowance": 200,
-      "other_allowance": 200,
-      "bank_name": "Cash / On-Hand",
-      "status": "Active",
-      "created_at": "2026-08-26T09:00:00Z"
     }
   ],
   "payroll": [

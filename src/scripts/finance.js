@@ -741,6 +741,14 @@ class FinanceApp {
       merged.employees = merged.employees.filter(e => !allDeletedEmps.includes(e.id));
     }
 
+    // Purge sample employee Md Ashraf Ali
+    if (Array.isArray(merged.employees)) {
+      merged.employees = merged.employees.filter(e => e && e.id !== 'emp-rg11047' && !(e.name && e.name.toLowerCase().includes('ashraf')));
+    }
+    if (Array.isArray(merged.letters_of_assignment)) {
+      merged.letters_of_assignment = merged.letters_of_assignment.filter(l => l && l.employee_id !== 'emp-rg11047' && !(l.employee_name && l.employee_name.toLowerCase().includes('ashraf')));
+    }
+
     return merged;
   }
 
@@ -2271,9 +2279,10 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v157';
+    const CURRENT_DB_VERSION = 'v2026_clean_v159';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
+      localStorage.removeItem('rayan_fin_deleted_employee_ids');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
     }
 
@@ -2287,7 +2296,15 @@ class FinanceApp {
     } else {
       this.db = this.mergeWithSeedData(this.db);
     }
-    if (this.db.customer_receipts) {
+
+    // Always purge dummy/sample employee Md Ashraf Ali
+    if (this.db && Array.isArray(this.db.employees)) {
+      this.db.employees = this.db.employees.filter(e => e && e.id !== 'emp-rg11047' && !(e.name && e.name.toLowerCase().includes('ashraf')));
+    }
+    if (this.db && Array.isArray(this.db.letters_of_assignment)) {
+      this.db.letters_of_assignment = this.db.letters_of_assignment.filter(l => l && l.employee_id !== 'emp-rg11047' && !(l.employee_name && l.employee_name.toLowerCase().includes('ashraf')));
+    }
+if (this.db.customer_receipts) {
       this.db.customer_receipts = this.db.customer_receipts.filter(r => {
         const id = (r.id || '').toLowerCase();
         const no = (r.receipt_no || '').toLowerCase();
