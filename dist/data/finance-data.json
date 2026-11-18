@@ -17603,6 +17603,30 @@
   ],
   "audit_logs": [
     {
+      "id": "aud-1a1eac3b788",
+      "timestamp": "2026-11-17T18:27:37+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "employee",
+      "entity_id": "EN12001",
+      "details": "Saved employee Bakhteyar Alam Mokhtar Ahmad",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
+      "id": "aud-1a1eac3b568",
+      "timestamp": "2026-11-17T18:27:36+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "employment_certificate",
+      "entity_id": "REC/HC/2025/11004",
+      "details": "Saved employment certificate REC/HC/2025/11004",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
+    {
       "id": "aud-1a1ea5b4f5b",
       "timestamp": "2026-11-17T16:33:35+00:00",
       "actor_name": "Super Administrator",
@@ -22465,10 +22489,10 @@
       "id": "emp-en12001",
       "employee_no": "EN12001",
       "company_id": "rayan-corp-uae",
-      "name": "Bakhteyar Alam",
-      "position": "Operation Manager",
+      "name": "Bakhteyar Alam Mokhtar Ahmad",
+      "position": "Civil Engineer",
       "department": "Rayan Engineering",
-      "date_of_joining": "2025-08-07",
+      "date_of_joining": "07/08/2025",
       "date_of_appointment": "2025-08-07",
       "currency": "AED",
       "phone": "+971 50 123 4567",
@@ -22477,8 +22501,8 @@
       "passport_no": "S3552106",
       "visa_status": "Employment Visa (Rayan Engineering)",
       "basic_salary": 9500,
-      "accommodation_allowance": 12500,
-      "consolidated_allowance": 8000,
+      "accommodation_allowance": 5500,
+      "consolidated_allowance": 0,
       "other_allowance": 0,
       "bank_name": "Emirates NBD Bank PJSC",
       "swift": "EBILAEADXXX",
@@ -22488,7 +22512,13 @@
       "project_id": "prj-toprock-police-01",
       "project_name": "The New Dubai Police Academy @ Al Rowaiyah, Dubai",
       "status": "Active",
-      "created_at": "2025-08-07T09:00:00Z"
+      "created_at": "2025-08-07T09:00:00Z",
+      "name_ar": "بختيار عالم مختار احمد",
+      "position_ar": "مهندس مدني",
+      "nationality": "India",
+      "nationality_ar": "هندي",
+      "designation": "Civil Engineer",
+      "updated_at": "2026-11-17T18:27:35.904Z"
     }
   ],
   "payroll": [
@@ -22584,7 +22614,7 @@
       "job_title_en": "Civil Engineer",
       "job_title_ar": "مهندس مدني",
       "joining_date_en": "07/08/2025",
-      "joining_date_ar": "2025-08-07",
+      "joining_date_ar": "07/08/2025",
       "nationality_en": "India",
       "nationality_ar": "هندي",
       "passport_no": "S3552106",
@@ -22600,7 +22630,12 @@
       "signatory_title": "Chief Officer of People & Culture",
       "signatory_title_ar": "الرئيس التنفيذي لقطاع الموارد البشرية و الثقافة المؤسسية",
       "status": "Issued",
-      "created_at": "2025-08-13T10:00:00Z"
+      "created_at": "2025-08-13T10:00:00Z",
+      "salary_option": "without_salary",
+      "target_preset": "general",
+      "issued_to_en": "Whom It May Concern",
+      "issued_to_ar": "لمن يهمه الأمر",
+      "updated_at": "2026-11-17T18:27:35.904Z"
     }
   ],
   "letters_of_assignment": [

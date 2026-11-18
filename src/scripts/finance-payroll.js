@@ -962,155 +962,210 @@ export function registerPayrollModules(FinanceApp) {
 
     const html = `
       <div class="fin-modal-backdrop open" id="fin-emp-modal-backdrop">
-        <div class="fin-modal" style="max-width:760px; width:95%; max-height:90vh; overflow-y:auto; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
-          <div class="fin-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div>
-              <h3 class="fin-modal-title" style="margin:0; font-size:1.15rem; color:#f8fafc;">
-                ${isEdit ? '✏️ Edit Employee Profile' : '👥 Add New Employee / Worker'}
-              </h3>
-              <p style="margin:4px 0 0 0; font-size:0.75rem; color:#94a3b8;">
-                Worker coordinates, department, compensation breakdown &amp; bank disbursement details
-              </p>
+        <div class="fin-modal-dialog" style="max-width:880px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <!-- Executive Header -->
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 4px 12px rgba(56,189,248,0.15);">👥</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  ${isEdit ? '✏️ Edit Employee Profile' : '👥 Add New Employee / Worker'}
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">
+                  Workforce Coordinates, Designation, Compensation Breakdown &amp; Disbursement • بيانات الموظف والراتب
+                </p>
+              </div>
             </div>
-            <button type="button" class="fin-btn-ghost" onclick="window.finApp.closeEmployeeModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeEmployeeModal()" title="Close">&times;</button>
           </div>
 
-          <form id="fin-emp-form" onsubmit="window.finApp.saveEmployeeForm(event)" style="padding:1.5rem;">
+          <!-- Form Body -->
+          <form id="fin-emp-form" class="fin-modal-body" onsubmit="window.finApp.saveEmployeeForm(event)" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" name="id" value="${emp?.id || ''}">
 
-            <!-- Section 1: Identification & Designation -->
-            <div style="font-size:0.78rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;">
-              1. Basic Information &amp; Position
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 2fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Employee No. *</label>
-                <input type="text" name="employee_no" class="fin-form-input" required value="${escapeHtml(emp?.employee_no || `EN${Math.floor(12000 + Math.random() * 900)}`)}" placeholder="e.g. EN12001">
+            <!-- Card 1: Identification & Designation (Bilingual) -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>👤</span>
+                  <span>Basic Identification &amp; Role</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-form-label">Full Name *</label>
-                <input type="text" name="name" class="fin-form-input" required value="${escapeHtml(emp?.name || '')}" placeholder="e.g. Bakhteyar Alam">
+              <div class="fin-form-grid-3" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Employee No. <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="employee_no" class="fin-form-input" required value="${escapeHtml(emp?.employee_no || `EN${Math.floor(12000 + Math.random() * 900)}`)}" placeholder="e.g. EN12001" style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Department</label>
+                  <input type="text" name="department" class="fin-form-input" value="${escapeHtml(emp?.department || 'Rayan Engineering')}" placeholder="e.g. Rayan Engineering">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Date of Joining / Appointment</label>
+                  <input type="date" name="date_of_joining" class="fin-form-input" value="${emp?.date_of_joining || emp?.date_of_appointment || new Date().toISOString().split('T')[0]}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Full Name (English) <span class="fin-field-badge-en">🇺🇸 EN</span> <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="name" class="fin-form-input" required value="${escapeHtml(emp?.name || '')}" placeholder="e.g. Bakhteyar Alam Mokhtar Ahmad">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>اسم الموظف (باللغة العربية)</span>
+                    <span class="fin-field-badge-ar">🇦🇪 AR</span>
+                  </label>
+                  <input type="text" name="name_ar" class="fin-form-input fin-input-ar" value="${escapeHtml(emp?.name_ar || '')}" placeholder="مثال: بختيار عالم مختار احمد">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Position / Designation (English) <span class="fin-field-badge-en">🇺🇸 EN</span> <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="position" class="fin-form-input" required value="${escapeHtml(emp?.position || emp?.designation || '')}" placeholder="e.g. Civil Engineer">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>المسمى الوظيفي (باللغة العربية)</span>
+                    <span class="fin-field-badge-ar">🇦🇪 AR</span>
+                  </label>
+                  <input type="text" name="position_ar" class="fin-form-input fin-input-ar" value="${escapeHtml(emp?.position_ar || '')}" placeholder="مثال: مهندس مدني">
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Position / Designation *</label>
-                <input type="text" name="position" class="fin-form-input" required value="${escapeHtml(emp?.position || emp?.designation || '')}" placeholder="e.g. Operation Manager">
+            <!-- Card 2: Contact Details & Identity Documents -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📞</span>
+                  <span>Contact Coordinates &amp; Legal Documents</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-form-label">Department</label>
-                <input type="text" name="department" class="fin-form-input" value="${escapeHtml(emp?.department || 'Rayan Engineering')}" placeholder="e.g. Rayan Engineering">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Phone Contact</label>
+                  <input type="text" name="phone" class="fin-form-input" value="${escapeHtml(emp?.phone || '')}" placeholder="+971 50 ---">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Email Address</label>
+                  <input type="email" name="email" class="fin-form-input" value="${escapeHtml(emp?.email || '')}" placeholder="name@rayan-group.com">
+                </div>
               </div>
-              <div>
-                <label class="fin-form-label">Date of Appointment / Joining</label>
-                <input type="date" name="date_of_joining" class="fin-form-input" value="${emp?.date_of_joining || emp?.date_of_appointment || new Date().toISOString().split('T')[0]}">
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
-              <div>
-                <label class="fin-form-label">Phone Contact</label>
-                <input type="text" name="phone" class="fin-form-input" value="${escapeHtml(emp?.phone || '')}" placeholder="+971 50 ---">
-              </div>
-              <div>
-                <label class="fin-form-label">Email Address</label>
-                <input type="email" name="email" class="fin-form-input" value="${escapeHtml(emp?.email || '')}" placeholder="name@rayan-group.com">
-              </div>
-              <div>
-                <label class="fin-form-label">Emirates ID (EID)</label>
-                <input type="text" name="emirates_id" class="fin-form-input" value="${escapeHtml(emp?.emirates_id || '')}" placeholder="784-1988-1234567-1">
-              </div>
-            </div>
-
-            <!-- Section 2: Standard Salary Structure -->
-            <div style="font-size:0.78rem; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
-              2. Standard Monthly Salary Elements (${emp?.currency || 'AED'})
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
-              <div>
-                <label class="fin-form-label">Basic Salary *</label>
-                <input type="number" step="0.01" name="basic_salary" id="fin-emp-basic" class="fin-form-input" required value="${emp?.basic_salary ?? 9500}" oninput="window.finApp.calcEmpGrossSalary()">
-              </div>
-              <div>
-                <label class="fin-form-label">Accommodation Allowance</label>
-                <input type="number" step="0.01" name="accommodation_allowance" id="fin-emp-acc" class="fin-form-input" value="${emp?.accommodation_allowance ?? 12500}" oninput="window.finApp.calcEmpGrossSalary()">
-              </div>
-              <div>
-                <label class="fin-form-label">Consolidated Allowance</label>
-                <input type="number" step="0.01" name="consolidated_allowance" id="fin-emp-cons" class="fin-form-input" value="${emp?.consolidated_allowance ?? 8000}" oninput="window.finApp.calcEmpGrossSalary()">
-              </div>
-              <div>
-                <label class="fin-form-label">Other Allowance</label>
-                <input type="number" step="0.01" name="other_allowance" id="fin-emp-oth" class="fin-form-input" value="${emp?.other_allowance ?? 0}" oninput="window.finApp.calcEmpGrossSalary()">
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Emirates ID (EID)</label>
+                  <input type="text" name="emirates_id" class="fin-form-input" value="${escapeHtml(emp?.emirates_id || '')}" placeholder="784-1988-1234567-1" style="font-family:monospace;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Passport No.</label>
+                  <input type="text" name="passport_no" class="fin-form-input" value="${escapeHtml(emp?.passport_no || '')}" placeholder="e.g. S3552106" style="font-family:monospace; font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Nationality</label>
+                  <input type="text" name="nationality" class="fin-form-input" value="${escapeHtml(emp?.nationality || 'India')}" placeholder="e.g. India">
+                </div>
               </div>
             </div>
 
-            <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:0.6rem 1rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-              <span style="font-size:0.8rem; color:#94a3b8; font-weight:600;">Standard Monthly Gross Salary:</span>
-              <strong id="fin-emp-gross-preview" style="font-size:1.05rem; color:#10b981;">AED 30,000.00</strong>
+            <!-- Card 3: Standard Monthly Salary Elements -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title" style="color:#10b981;">
+                  <span>💵</span>
+                  <span>Standard Monthly Salary Elements (${emp?.currency || 'AED'})</span>
+                </div>
+              </div>
+              <div class="fin-form-grid-4" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Basic Salary *</label>
+                  <input type="number" step="0.01" name="basic_salary" id="fin-emp-basic" class="fin-form-input" required value="${emp?.basic_salary ?? 9500}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Accommodation Allowance</label>
+                  <input type="number" step="0.01" name="accommodation_allowance" id="fin-emp-acc" class="fin-form-input" value="${emp?.accommodation_allowance ?? 12500}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Consolidated Allowance</label>
+                  <input type="number" step="0.01" name="consolidated_allowance" id="fin-emp-cons" class="fin-form-input" value="${emp?.consolidated_allowance ?? 8000}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Other Allowance</label>
+                  <input type="number" step="0.01" name="other_allowance" id="fin-emp-oth" class="fin-form-input" value="${emp?.other_allowance ?? 0}" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                </div>
+              </div>
+
+              <!-- Gross Salary Banner -->
+              <div style="background:linear-gradient(90deg, rgba(16,185,129,0.12) 0%, rgba(56,189,248,0.08) 100%); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:0.85rem 1.25rem; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.82rem; color:#cbd5e1; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Standard Monthly Gross Salary:</span>
+                <strong id="fin-emp-gross-preview" style="font-size:1.25rem; font-weight:800; color:#10b981;">AED 30,000.00</strong>
+              </div>
             </div>
 
-            <!-- Section 3: Banking & Payout Credentials -->
-            <div style="font-size:0.78rem; font-weight:700; color:#f59e0b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
-              3. Banking &amp; Payout Disbursement Coordinates
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Bank Name</label>
-                <input type="text" name="bank_name" class="fin-form-input" value="${escapeHtml(emp?.bank_name || 'Emirates NBD Bank PJSC')}" placeholder="e.g. Emirates NBD Bank PJSC">
+            <!-- Card 4: Banking Coordinates & Project Allocation -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title" style="color:#f59e0b;">
+                  <span>🏦</span>
+                  <span>Banking Coordinates &amp; Project Allocation</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-form-label">Swift / IFSC Code</label>
-                <input type="text" name="swift" class="fin-form-input" value="${escapeHtml(emp?.swift || 'EBILAEADXXX')}" placeholder="e.g. EBILAEADXXX">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Bank Name</label>
+                  <input type="text" name="bank_name" class="fin-form-input" value="${escapeHtml(emp?.bank_name || 'Emirates NBD Bank PJSC')}" placeholder="e.g. Emirates NBD Bank PJSC">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Swift / IFSC Code</label>
+                  <input type="text" name="swift" class="fin-form-input" value="${escapeHtml(emp?.swift || 'EBILAEADXXX')}" placeholder="e.g. EBILAEADXXX" style="font-family:monospace;">
+                </div>
               </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">IBAN Number</label>
-                <input type="text" name="iban" class="fin-form-input" value="${escapeHtml(emp?.iban || '')}" placeholder="AE860260001015934645101">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">IBAN Number</label>
+                  <input type="text" name="iban" class="fin-form-input" value="${escapeHtml(emp?.iban || '')}" placeholder="AE860260001015934645101" style="font-family:monospace; font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Account Number</label>
+                  <input type="text" name="account_no" class="fin-form-input" value="${escapeHtml(emp?.account_no || '')}" placeholder="AE860260001015934645101" style="font-family:monospace;">
+                </div>
               </div>
-              <div>
-                <label class="fin-form-label">Account Number</label>
-                <input type="text" name="account_no" class="fin-form-input" value="${escapeHtml(emp?.account_no || '')}" placeholder="AE860260001015934645101">
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
-              <div>
-                <label class="fin-form-label">Default Pay Method</label>
-                <select name="default_pay_method" class="fin-form-select">
-                  <option value="AED RAYAN GROUP Host To Host" ${emp?.default_pay_method?.includes('Host To Host') ? 'selected' : ''}>AED RAYAN GROUP Host To Host</option>
-                  <option value="Bank Transfer / Wire" ${emp?.default_pay_method?.includes('Bank Transfer') ? 'selected' : ''}>Bank Transfer / Wire</option>
-                  <option value="RAYAN E-Wallets / Cash" ${emp?.default_pay_method?.includes('Wallets') || emp?.default_pay_method?.includes('Cash') ? 'selected' : ''}>RAYAN E-Wallets / Cash</option>
-                  <option value="Cheque" ${emp?.default_pay_method === 'Cheque' ? 'selected' : ''}>Cheque</option>
-                </select>
-              </div>
-              <div>
-                <label class="fin-form-label">Primary Project Allocation</label>
-                <select name="project_id" class="fin-form-select" id="fin-emp-proj-select">
-                  <option value="">Corporate / General Overhead</option>
-                  ${projects.map(p => `
-                    <option value="${escapeHtml(p.id)}" ${emp?.project_id === p.id ? 'selected' : ''}>
-                      ${escapeHtml(p.code || '')} - ${escapeHtml(p.name)}
-                    </option>
-                  `).join('')}
-                </select>
-              </div>
-              <div>
-                <label class="fin-form-label">Employment Status</label>
-                <select name="status" class="fin-form-select">
-                  <option value="Active" ${emp?.status === 'Active' || !emp ? 'selected' : ''}>Active</option>
-                  <option value="On Leave" ${emp?.status === 'On Leave' ? 'selected' : ''}>On Leave</option>
-                  <option value="Resigned" ${emp?.status === 'Resigned' ? 'selected' : ''}>Resigned</option>
-                  <option value="Terminated" ${emp?.status === 'Terminated' ? 'selected' : ''}>Terminated</option>
-                </select>
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Default Pay Method</label>
+                  <select name="default_pay_method" class="fin-form-select">
+                    <option value="AED RAYAN GROUP Host To Host" ${emp?.default_pay_method?.includes('Host To Host') ? 'selected' : ''}>AED RAYAN GROUP Host To Host</option>
+                    <option value="Bank Transfer / Wire" ${emp?.default_pay_method?.includes('Bank Transfer') ? 'selected' : ''}>Bank Transfer / Wire</option>
+                    <option value="RAYAN E-Wallets / Cash" ${emp?.default_pay_method?.includes('Wallets') || emp?.default_pay_method?.includes('Cash') ? 'selected' : ''}>RAYAN E-Wallets / Cash</option>
+                    <option value="Cheque" ${emp?.default_pay_method === 'Cheque' ? 'selected' : ''}>Cheque</option>
+                  </select>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Primary Project Allocation</label>
+                  <select name="project_id" class="fin-form-select" id="fin-emp-proj-select">
+                    <option value="">Corporate / General Overhead</option>
+                    ${projects.map(p => `
+                      <option value="${escapeHtml(p.id)}" ${emp?.project_id === p.id ? 'selected' : ''}>
+                        ${escapeHtml(p.code || '')} - ${escapeHtml(p.name)}
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Employment Status</label>
+                  <select name="status" class="fin-form-select">
+                    <option value="Active" ${emp?.status === 'Active' || !emp ? 'selected' : ''}>Active</option>
+                    <option value="On Leave" ${emp?.status === 'On Leave' ? 'selected' : ''}>On Leave</option>
+                    <option value="Resigned" ${emp?.status === 'Resigned' ? 'selected' : ''}>Resigned</option>
+                    <option value="Terminated" ${emp?.status === 'Terminated' ? 'selected' : ''}>Terminated</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             <!-- Footer Actions -->
-            <div style="display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1.25rem;">
+            <div class="fin-modal-footer" style="padding:1.15rem 0 0 0; background:transparent; border-top:1px solid rgba(255,255,255,0.08); margin-top:0.5rem;">
               <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeEmployeeModal()">Cancel</button>
               <button type="submit" class="fin-btn-primary">
                 ${isEdit ? '💾 Update Employee Profile' : '✓ Save Employee to Directory'}
@@ -1158,6 +1213,10 @@ export function registerPayrollModules(FinanceApp) {
       name: formData.get('name') || '',
       position: formData.get('position') || '',
       department: formData.get('department') || 'Rayan Engineering',
+      name_ar: formData.get('name_ar') || '',
+      position_ar: formData.get('position_ar') || '',
+      passport_no: formData.get('passport_no') || '',
+      nationality: formData.get('nationality') || 'India',
       date_of_joining: formData.get('date_of_joining') || '',
       date_of_appointment: formData.get('date_of_joining') || '',
       phone: formData.get('phone') || '',
@@ -1406,21 +1465,21 @@ export function registerPayrollModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="fin-emp-history-modal-backdrop">
-        <div class="fin-modal" style="max-width:880px; width:95%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
-          <!-- Header -->
-          <div class="fin-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div>
-              <div style="display:flex; align-items:center; gap:0.6rem;">
-                <span style="font-size:1.4rem;">📊</span>
-                <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; color:#f8fafc;">
+        <div class="fin-modal-dialog" style="max-width:920px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <!-- Executive Header -->
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 4px 12px rgba(56,189,248,0.15);">📊</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
                   Month-Wise Salary &amp; Payment History
                 </h3>
+                <p style="margin:2px 0 0 0; font-size:0.78rem; color:#94a3b8;">
+                  Track monthly compensation records, settlements, and bank / RAYAN E-Wallets deductions
+                </p>
               </div>
-              <p style="margin:4px 0 0 0; font-size:0.78rem; color:#94a3b8;">
-                Track monthly compensation records, settlements, and bank / RAYAN E-Wallets deductions
-              </p>
             </div>
-            <button type="button" class="fin-btn-ghost" onclick="window.finApp.closeEmployeeSalaryHistoryModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeEmployeeSalaryHistoryModal()" title="Close">&times;</button>
           </div>
 
           <div style="padding:1.5rem;">
@@ -1601,32 +1660,39 @@ export function registerPayrollModules(FinanceApp) {
 
     const html = `
       <div class="fin-modal-backdrop open" id="fin-record-payment-modal-backdrop">
-        <div class="fin-modal" style="max-width:880px; width:95%; max-height:92vh; overflow-y:auto; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
-          <!-- Header -->
-          <div class="fin-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div>
-              <div style="display:flex; align-items:center; gap:0.6rem;">
-                <span style="font-size:1.3rem;">💳</span>
-                <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; color:#f8fafc;">
+        <div class="fin-modal-dialog" style="max-width:920px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <!-- Executive Header -->
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.3) 100%); border:1px solid rgba(16,185,129,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 4px 12px rgba(16,185,129,0.15);">💳</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
                   ${isEdit ? '✏️ Edit Month-Wise Salary Payment' : '💳 Record Month-Wise Salary Payment'}
                 </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">
+                  Calculate Net Pay &amp; Directly Deduct from Bank Account or RAYAN E-Wallets • تسجيل مسير الرواتب
+                </p>
               </div>
-              <p style="margin:4px 0 0 0; font-size:0.75rem; color:#94a3b8;">
-                Enter monthly salary elements, calculate net pay &amp; immediately deduct balance from Bank Account or RAYAN E-Wallets
-              </p>
             </div>
-            <button type="button" class="fin-btn-ghost" onclick="window.finApp.closeRecordEmployeePaymentModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeRecordEmployeePaymentModal()" title="Close">&times;</button>
           </div>
 
-          <form id="fin-record-payment-form" onsubmit="window.finApp.saveRecordEmployeePaymentForm(event)" style="padding:1.5rem;">
+          <!-- Body Form -->
+          <form id="fin-record-payment-form" class="fin-modal-body" onsubmit="window.finApp.saveRecordEmployeePaymentForm(event)" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" name="id" value="${slip?.id || ''}">
 
-            <!-- Section 1: Employee & Target Month -->
-            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.1rem; margin-bottom:1.25rem;">
-              <div style="display:grid; grid-template-columns:1.5fr 1.2fr 1fr; gap:1rem;">
-                <div>
-                  <label class="fin-form-label">Registered Employee *</label>
-                  <select name="employee_id" id="fin-rec-emp-select" class="fin-form-select" required onchange="window.finApp.onRecordEmpChange(this.value)">
+            <!-- Card 1: Registered Employee & Target Period -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📋</span>
+                  <span>Registered Employee &amp; Target Payroll Period</span>
+                </div>
+              </div>
+              <div class="fin-form-grid-3" style="align-items:flex-start;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Registered Employee <span style="color:#ef4444;">*</span></label>
+                  <select name="employee_id" id="fin-rec-emp-select" class="fin-form-select" required onchange="window.finApp.onRecordEmpChange(this.value)" style="border-color:rgba(56,189,248,0.35); background:#0f172a;">
                     ${employees.map(e => `
                       <option value="${escapeHtml(e.id)}" ${(targetEmp?.id === e.id) ? 'selected' : ''}>
                         ${escapeHtml(e.employee_no)} — ${escapeHtml(e.name)} (${escapeHtml(e.position || 'Staff')})
@@ -1635,10 +1701,10 @@ export function registerPayrollModules(FinanceApp) {
                   </select>
                 </div>
 
-                <div>
-                  <label class="fin-form-label">Select Month / Period *</label>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Payroll Period Month <span style="color:#ef4444;">*</span></label>
                   <div style="display:flex; gap:0.5rem;">
-                    <select name="month_period_select" id="fin-rec-month-select" class="fin-form-select" onchange="window.finApp.onRecordMonthSelectChange(this.value)">
+                    <select name="month_period_select" id="fin-rec-month-select" class="fin-form-select" onchange="window.finApp.onRecordMonthSelectChange(this.value)" style="background:#0f172a;">
                       ${PAYROLL_PERIODS.map(p => `
                         <option value="${escapeHtml(p.full)}" ${(targetMonth === p.full || targetMonth === p.short || targetMonth === p.key) ? 'selected' : ''}>
                           ${escapeHtml(p.full)} (${escapeHtml(p.short)})
@@ -1656,140 +1722,134 @@ export function registerPayrollModules(FinanceApp) {
                   </div>
                 </div>
 
-                <div>
-                  <label class="fin-form-label">Pay Slip # Ref</label>
-                  <input type="text" name="slip_no" id="fin-rec-slip-no" class="fin-form-input" required value="${escapeHtml(slipNo)}" placeholder="PSJune2026/EN12001">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Pay Slip Reference # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" name="slip_no" id="fin-rec-slip-no" class="fin-form-input" required value="${escapeHtml(slipNo)}" placeholder="PSJune2026/EN12001" style="font-family:monospace; font-weight:700; color:#38bdf8;">
                 </div>
               </div>
             </div>
 
-            <!-- Section 2: Salary Earnings Breakdown -->
-            <div style="font-size:0.78rem; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem;">
-              1. Monthly Earnings &amp; Allowances (AED)
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Basic Salary *</label>
-                <input type="number" step="0.01" name="basic_salary" id="fin-rec-basic" class="fin-form-input" required value="${basicSalary}" oninput="window.finApp.calcRecordPaymentTotals()">
+            <!-- Card 2: Monthly Earnings & Allowances (AED) -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title" style="color:#10b981;">
+                  <span>💵</span>
+                  <span>1. Monthly Earnings &amp; Allowances (AED)</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-form-label">Accommodation</label>
-                <input type="number" step="0.01" name="accommodation_allowance" id="fin-rec-acc" class="fin-form-input" value="${accAllowance}" oninput="window.finApp.calcRecordPaymentTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">Consolidated</label>
-                <input type="number" step="0.01" name="consolidated_allowance" id="fin-rec-cons" class="fin-form-input" value="${consAllowance}" oninput="window.finApp.calcRecordPaymentTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">Overtime (AED)</label>
-                <input type="number" step="0.01" name="normal_overtime" id="fin-rec-ot" class="fin-form-input" value="${otAmount}" oninput="window.finApp.calcRecordPaymentTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">OT Hours</label>
-                <input type="text" name="overtime_hrs" id="fin-rec-ot-hrs" class="fin-form-input" value="${escapeHtml(otHrs)}" placeholder="e.g. 10.0">
+              <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:0.75rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Basic Salary *</label>
+                  <input type="number" step="0.01" name="basic_salary" id="fin-rec-basic" class="fin-form-input" required value="${basicSalary}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Accommodation</label>
+                  <input type="number" step="0.01" name="accommodation_allowance" id="fin-rec-acc" class="fin-form-input" value="${accAllowance}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Consolidated</label>
+                  <input type="number" step="0.01" name="consolidated_allowance" id="fin-rec-cons" class="fin-form-input" value="${consAllowance}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Overtime (AED)</label>
+                  <input type="number" step="0.01" name="normal_overtime" id="fin-rec-ot" class="fin-form-input" value="${otAmount}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">OT Hours</label>
+                  <input type="text" name="overtime_hrs" id="fin-rec-ot-hrs" class="fin-form-input" value="${escapeHtml(otHrs)}" placeholder="e.g. 10.0">
+                </div>
               </div>
             </div>
 
-            <!-- Section 3: Deductions Breakdown -->
-            <div style="font-size:0.78rem; font-weight:700; color:#ef4444; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
-              2. Deductions (AED)
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Salary Advance Deductions</label>
-                <input type="number" step="0.01" name="advance_deduction" id="fin-rec-adv" class="fin-form-input" value="${advDed}" oninput="window.finApp.calcRecordPaymentTotals()">
+            <!-- Card 3: Deductions Breakdown (AED) -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title" style="color:#ef4444;">
+                  <span>📉</span>
+                  <span>2. Deductions &amp; Recoveries (AED)</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-form-label">Absences / Unpaid Leaves</label>
-                <input type="number" step="0.01" name="absence_deduction" id="fin-rec-abs" class="fin-form-input" value="${absDed}" oninput="window.finApp.calcRecordPaymentTotals()">
-              </div>
-              <div>
-                <label class="fin-form-label">Loan / Other Deductions</label>
-                <input type="number" step="0.01" name="loan_deduction" id="fin-rec-loan" class="fin-form-input" value="${loanDed}" oninput="window.finApp.calcRecordPaymentTotals()">
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Salary Advance Deductions</label>
+                  <input type="number" step="0.01" name="advance_deduction" id="fin-rec-adv" class="fin-form-input" value="${advDed}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700; color:#ef4444;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Absences / Unpaid Leaves</label>
+                  <input type="number" step="0.01" name="absence_deduction" id="fin-rec-abs" class="fin-form-input" value="${absDed}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700; color:#ef4444;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Loan / Other Deductions</label>
+                  <input type="number" step="0.01" name="loan_deduction" id="fin-rec-loan" class="fin-form-input" value="${loanDed}" oninput="window.finApp.calcRecordPaymentTotals()" style="font-weight:700; color:#ef4444;">
+                </div>
               </div>
             </div>
 
             <!-- Live Calculation Summary Card -->
-            <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:1rem 1.25rem; display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:1rem; align-items:center; margin-bottom:1.25rem;">
+            <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:1.15rem 1.4rem; display:grid; grid-template-columns:1fr 1fr 1.35fr; gap:1.25rem; align-items:center;">
               <div>
-                <span style="font-size:0.74rem; color:#94a3b8; display:block;">Gross Monthly Earnings:</span>
-                <strong id="fin-rec-tot-earn" style="font-size:1.15rem; color:#38bdf8;">AED 30,000.00</strong>
+                <span style="font-size:0.74rem; color:#94a3b8; display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Gross Monthly Earnings:</span>
+                <strong id="fin-rec-tot-earn" style="font-size:1.25rem; color:#38bdf8;">AED 30,000.00</strong>
               </div>
               <div>
-                <span style="font-size:0.74rem; color:#94a3b8; display:block;">Total Deductions:</span>
-                <strong id="fin-rec-tot-ded" style="font-size:1.15rem; color:#ef4444;">AED 0.00</strong>
+                <span style="font-size:0.74rem; color:#94a3b8; display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.04em;">Total Deductions:</span>
+                <strong id="fin-rec-tot-ded" style="font-size:1.25rem; color:#ef4444;">AED 0.00</strong>
               </div>
-              <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.6rem 1rem;">
-                <span style="font-size:0.75rem; color:#10b981; font-weight:700; display:block;">Net Salary Payable / Deducted:</span>
-                <strong id="fin-rec-net-pay" style="font-size:1.35rem; color:#10b981;">AED 30,000.00</strong>
+              <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:0.75rem 1.15rem;">
+                <span style="font-size:0.75rem; color:#10b981; font-weight:800; display:block; text-transform:uppercase; letter-spacing:0.04em;">Net Salary Payable / Deducted:</span>
+                <strong id="fin-rec-net-pay" style="font-size:1.45rem; font-weight:900; color:#10b981;">AED 30,000.00</strong>
               </div>
             </div>
 
-            <!-- Section 4: Deduction Source (Bank Account vs RAYAN E-Wallets) -->
-            <div style="font-size:0.78rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem;">
-              3. Payout Source &amp; Direct Account Deduction
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1.3fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-form-label">Deduct Balance From *</label>
-                <select name="payout_source_type" id="fin-rec-source-type" class="fin-form-select" required onchange="window.finApp.onRecordSourceTypeChange(this.value)">
-                  <option value="bank" ${sourceType === 'bank' ? 'selected' : ''}>🏦 Bank Account (Wire Transfer)</option>
-                  <option value="cash" ${sourceType === 'cash' ? 'selected' : ''}>💵 RAYAN E-Wallets / Cash in Hand</option>
-                </select>
+            <!-- Card 4: Payout Source & Direct Account Deduction -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title" style="color:#38bdf8;">
+                  <span>🏦</span>
+                  <span>3. Payout Source &amp; Direct Account Deduction</span>
+                </div>
               </div>
-
-              <div>
-                <label class="fin-form-label">Specific Account / Register *</label>
-                <select name="payout_source_id" id="fin-rec-source-id" class="fin-form-select" required>
-                  ${sourceType === 'cash' ? cashOpts : bankOpts}
-                </select>
+              <div class="fin-form-grid-3" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Deduct Balance From <span style="color:#ef4444;">*</span></label>
+                  <select name="payout_source_type" id="fin-rec-source-type" class="fin-form-select" required onchange="window.finApp.onRecordSourceTypeChange(this.value)">
+                    <option value="bank" ${sourceType === 'bank' ? 'selected' : ''}>🏦 Bank Account (Wire Transfer)</option>
+                    <option value="cash" ${sourceType === 'cash' ? 'selected' : ''}>💵 RAYAN E-Wallets / Cash in Hand</option>
+                  </select>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Specific Account / Register <span style="color:#ef4444;">*</span></label>
+                  <select name="payout_source_id" id="fin-rec-source-id" class="fin-form-select" required>
+                    ${sourceType === 'cash' ? cashOpts : bankOpts}
+                  </select>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Payment Status <span style="color:#ef4444;">*</span></label>
+                  <select name="status" id="fin-rec-status" class="fin-form-select">
+                    <option value="Paid" ${slip?.status === 'Paid' || !slip ? 'selected' : ''}>Paid (Deduct Balance Now)</option>
+                    <option value="Draft" ${slip?.status === 'Draft' ? 'selected' : ''}>Draft (Preview Only)</option>
+                    <option value="Pending" ${slip?.status === 'Pending' ? 'selected' : ''}>Pending Approval</option>
+                  </select>
+                </div>
               </div>
-
-              <div>
-                <label class="fin-form-label">Payment Status *</label>
-                <select name="status" id="fin-rec-status" class="fin-form-select">
-                  <option value="Paid" ${defaultStatus === 'Paid' ? 'selected' : ''}>✓ Paid (Deduct Immediately)</option>
-                  <option value="Pending" ${defaultStatus === 'Pending' ? 'selected' : ''}>⏳ Pending (Pay Later)</option>
-                  <option value="Draft" ${defaultStatus === 'Draft' ? 'selected' : ''}>📝 Draft</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:1rem; margin-bottom:1.25rem;">
-              <div>
-                <label class="fin-form-label">Payment / Disbursement Date</label>
-                <input type="date" name="payment_date" class="fin-form-input" required value="${slip?.payment_date || new Date().toISOString().split('T')[0]}">
-              </div>
-
-              <div>
-                <label class="fin-form-label">Transaction / Cheque Ref #</label>
-                <input type="text" name="payout_reference" class="fin-form-input" value="${escapeHtml(slip?.payout_reference || `TXN-PAYROLL-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${targetEmp?.employee_no || 'EN'}`)}">
-              </div>
-
-              <div>
-                <label class="fin-form-label">Project Labor Cost Center (P&amp;L Deduction)</label>
-                <select name="project_id" class="fin-form-select" id="fin-rec-proj-select">
-                  <option value="">Corporate / General Overhead (No Project)</option>
-                  ${projects.map(p => `
-                    <option value="${escapeHtml(p.id)}" ${(slip?.project_id === p.id || (!slip && targetEmp?.project_id === p.id)) ? 'selected' : ''}>
-                      ${escapeHtml(p.code || '')} - ${escapeHtml(p.name)}
-                    </option>
-                  `).join('')}
-                </select>
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Disbursement Date</label>
+                  <input type="date" name="payment_date" class="fin-form-input" required value="${paymentDate}">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Transaction / Cheque Reference</label>
+                  <input type="text" name="reference_notes" class="fin-form-input" value="${escapeHtml(slip?.reference_notes || `SAL-${targetMonth.replace(/\s+/g, '')}-${targetEmp?.employee_no || 'EMP'}`)}" placeholder="e.g. TXN-100234">
+                </div>
               </div>
             </div>
 
-            <!-- Footer Buttons -->
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:1.25rem;">
-              <div style="font-size:0.75rem; color:#94a3b8;">
-                Selecting <strong>"Paid"</strong> will automatically deduct the net salary from the chosen Bank Account or RAYAN E-Wallets and record the ledger voucher.
-              </div>
-              <div style="display:flex; gap:0.75rem;">
-                <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeRecordEmployeePaymentModal()">Cancel</button>
-                <button type="submit" class="fin-btn-primary" style="background:#10b981; border-color:#10b981; padding:8px 16px; font-weight:700;">
-                  ✓ Confirm &amp; Save Payment
-                </button>
-              </div>
+            <!-- Footer Actions -->
+            <div class="fin-modal-footer" style="padding:1.15rem 0 0 0; background:transparent; border-top:1px solid rgba(255,255,255,0.08); margin-top:0.5rem;">
+              <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeRecordEmployeePaymentModal()">Cancel</button>
+              <button type="submit" class="fin-btn-primary" style="background:linear-gradient(135deg, #059669 0%, #10b981 100%); border-color:#34d399;">
+                ${isEdit ? '💾 Update Salary Record' : '✓ Record Salary &amp; Deduct Balance'}
+              </button>
             </div>
           </form>
         </div>
@@ -2148,17 +2208,16 @@ export function registerPayrollModules(FinanceApp) {
 
     const html = `
       <div class="fin-modal-backdrop open" id="fin-disburse-modal-backdrop">
-        <div class="fin-modal" style="max-width:540px; width:95%; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
-          <div class="fin-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div>
-              <h3 class="fin-modal-title" style="margin:0; font-size:1.1rem; color:#f8fafc;">
-                💳 Disburse Salary Payout
-              </h3>
-              <p style="margin:3px 0 0 0; font-size:0.75rem; color:#94a3b8;">
-                Deduct net wages directly from Bank Account or RAYAN E-Wallets
-              </p>
+        <div class="fin-modal-dialog" style="max-width:580px; width:95%; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.3) 100%); border:1px solid rgba(16,185,129,0.35); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">💳</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; font-weight:800; color:#f8fafc;">Disburse Salary Payout</h3>
+                <p style="margin:2px 0 0 0; font-size:0.75rem; color:#94a3b8;">Deduct net wages directly from Bank Account or RAYAN E-Wallets</p>
+              </div>
             </div>
-            <button type="button" class="fin-btn-ghost" onclick="window.finApp.closeDisburseModal()" style="font-size:1.2rem; cursor:pointer;">✕</button>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeDisburseModal()" title="Close">&times;</button>
           </div>
 
           <form id="fin-disburse-form" onsubmit="window.finApp.processDisburseSalary(event, '${slip.id}')" style="padding:1.5rem;">
@@ -3512,120 +3571,181 @@ export function registerPayrollModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-emp-cert-edit" style="z-index:100030;">
-        <div class="fin-modal-dialog" style="max-width:760px; width:95%;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title"><span>🏛️</span> Edit Employment Certificate Details</h3>
-            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-emp-cert-edit')">&times;</button>
+        <div class="fin-modal-dialog" style="max-width:880px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <!-- Executive Header -->
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 4px 12px rgba(56,189,248,0.15);">🏛️</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  Edit Employment Certificate Details
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">
+                  Workforce Verification &amp; Salary Authentication • شهادة عمل وتفاصيل الراتب
+                </p>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-emp-cert-edit')" title="Close">&times;</button>
           </div>
-          <form id="form-emp-cert-edit" onsubmit="event.preventDefault(); window.finApp.saveEmploymentCertForm(event);">
+
+          <!-- Body Form -->
+          <form id="form-emp-cert-edit" class="fin-modal-body" onsubmit="event.preventDefault(); window.finApp.saveEmploymentCertForm(event);" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" name="id" value="${cert.id || ''}">
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Reference Number (Ref.:)</label>
-                <input type="text" class="fin-input" name="ref_no" value="${escapeHtml(cert.ref_no || 'REC/HC/2025/11004')}" required>
-              </div>
-              <div>
-                <label class="fin-field-label">Certificate Date</label>
-                <input type="text" class="fin-input" name="date" value="${escapeHtml(cert.date || 'August 13, 2025')}" required>
-              </div>
-            </div>
 
-            <!-- Salary Option & Addressee (Issued For) Controls -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; background:rgba(2,132,199,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:0.75rem 1rem;">
-              <div>
-                <label class="fin-field-label" style="color:#38bdf8; font-weight:700;">Certificate Type / نوع الشهادة</label>
-                <select class="fin-input" id="cert-salary-option" name="salary_option" onchange="window.finApp.onCertSalaryOptionChange(this.value)" style="border-color:#38bdf8; font-weight:700;">
-                  <option value="with_salary" ${!isWithoutSalary ? 'selected' : ''}>💵 With Salary Breakdown (شهادة مع تفاصيل الراتب)</option>
-                  <option value="without_salary" ${isWithoutSalary ? 'selected' : ''}>📄 Without Salary / Service Only (شهادة بدون راتب / استمرارية عمل)</option>
+            <!-- Card 1: Certificate Reference & Fast Auto-Fill -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📋</span>
+                  <span>Certificate Reference &amp; Fast Auto-Fill</span>
+                </div>
+              </div>
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Reference Number (Ref.:) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" name="ref_no" value="${escapeHtml(cert.ref_no || 'REC/HC/2025/11004')}" required style="font-weight:700; color:#38bdf8; font-family:monospace;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Certificate Date <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" name="date" value="${escapeHtml(cert.date || 'August 13, 2025')}" required>
+                </div>
+              </div>
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>Auto-Fill From Registered Workforce</span>
+                  <span style="font-size:0.72rem; color:#38bdf8; text-transform:none; font-weight:normal;">⚡ Instantly loads name, trade, passport &amp; compensation</span>
+                </label>
+                <select class="fin-form-select" id="edit-cert-emp-select" onchange="window.finApp.onCertEmployeeSelectChange(this.value)" style="border-color:rgba(56,189,248,0.35); background:#0f172a;">
+                  <option value="">-- Choose Registered Employee to auto-populate fields --</option>
+                  ${empOptions}
                 </select>
               </div>
-              <div>
-                <label class="fin-field-label" style="color:#38bdf8; font-weight:700;">Target Addressee / Issued For (الجهة الموجه إليها)</label>
-                <select class="fin-input" id="cert-target-preset" name="target_preset" onchange="window.finApp.onCertTargetPresetChange(this.value)" style="border-color:#38bdf8; font-weight:700;">
-                  <option value="general" ${targetPreset === 'general' ? 'selected' : ''}>General / To Whom It May Concern (لمن يهمه الأمر)</option>
-                  <option value="bank" ${targetPreset === 'bank' ? 'selected' : ''}>🏦 For Bank / إلى البنك (Loan / Finance / Account Opening)</option>
-                  <option value="embassy" ${targetPreset === 'embassy' ? 'selected' : ''}>🏛️ For Embassy / إلى السفارة (Visa Application / Travel)</option>
-                  <option value="ministry" ${targetPreset === 'ministry' ? 'selected' : ''}>🏢 For Government / Ministry / Immigration (الجهات الحكومية)</option>
-                  <option value="custom" ${targetPreset === 'custom' ? 'selected' : ''}>✏️ Custom Specific Addressee (تخصيص جهة معينة)</option>
-                </select>
+            </div>
+
+            <!-- Card 2: Certificate Mode & Target Addressee -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>⚙️</span>
+                  <span>Certificate Mode &amp; Target Addressee (الجهة الموجه إليها)</span>
+                </div>
+              </div>
+              <div class="fin-form-grid-2" style="margin-bottom:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="color:#38bdf8;">Certificate Type / نوع الشهادة</label>
+                  <select class="fin-form-select" id="cert-salary-option" name="salary_option" onchange="window.finApp.onCertSalaryOptionChange(this.value)" style="border-color:#0284c7; font-weight:700; background:#0f172a;">
+                    <option value="with_salary" ${!isWithoutSalary ? 'selected' : ''}>💵 With Salary Breakdown (شهادة مع تفاصيل الراتب)</option>
+                    <option value="without_salary" ${isWithoutSalary ? 'selected' : ''}>📄 Without Salary / Service Only (شهادة بدون راتب / استمرارية عمل)</option>
+                  </select>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="color:#38bdf8;">Addressee Preset / الجهة الموجه إليها</label>
+                  <select class="fin-form-select" id="cert-target-preset" name="target_preset" onchange="window.finApp.onCertTargetPresetChange(this.value)" style="border-color:#0284c7; font-weight:700; background:#0f172a;">
+                    <option value="general" ${targetPreset === 'general' ? 'selected' : ''}>General / To Whom It May Concern (لمن يهمه الأمر)</option>
+                    <option value="bank" ${targetPreset === 'bank' ? 'selected' : ''}>🏦 For Bank / إلى البنك (Loan / Finance / Account Opening)</option>
+                    <option value="embassy" ${targetPreset === 'embassy' ? 'selected' : ''}>🏛️ For Embassy / إلى السفارة (Visa Application / Travel)</option>
+                    <option value="ministry" ${targetPreset === 'ministry' ? 'selected' : ''}>🏢 For Government / Ministry / Immigration (الجهات الحكومية)</option>
+                    <option value="custom" ${targetPreset === 'custom' ? 'selected' : ''}>✏️ Custom Specific Addressee (تخصيص جهة معينة)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Dynamic Custom Addressee Line -->
+              <div id="cert-custom-target-row" style="display:${(targetPreset === 'custom' || targetPreset === 'bank' || targetPreset === 'embassy' || targetPreset === 'ministry') ? 'grid' : 'none'}; grid-template-columns:1fr 1fr; gap:1rem; background:rgba(2,132,199,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:10px; padding:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">
+                    Addressee Header Line (English) <span class="fin-field-badge-en">🇺🇸 EN</span>
+                  </label>
+                  <input type="text" class="fin-form-input" id="cert-issued-to-en" name="issued_to_en" value="${escapeHtml(cert.issued_to_en || 'Whom It May Concern')}" placeholder="e.g. To: The Bank Manager / Embassy of Italy">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>إلى الجهة / المخاطب (باللغة العربية)</span>
+                    <span class="fin-field-badge-ar">🇦🇪 AR</span>
+                  </label>
+                  <input type="text" class="fin-form-input fin-input-ar" id="cert-issued-to-ar" name="issued_to_ar" value="${escapeHtml(cert.issued_to_ar || 'لمن يهمه الأمر')}" placeholder="مثال: إلى: مدير البنك / سفارة إيطاليا">
+                </div>
               </div>
             </div>
 
-            <!-- Custom Addressee Line (Editable) -->
-            <div id="cert-custom-target-row" style="display:${(targetPreset === 'custom' || targetPreset === 'bank' || targetPreset === 'embassy' || targetPreset === 'ministry') ? 'grid' : 'none'}; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.65rem 0.85rem;">
-              <div>
-                <label class="fin-field-label">Issued For / Addressee Line (English)</label>
-                <input type="text" class="fin-input" id="cert-issued-to-en" name="issued_to_en" value="${escapeHtml(cert.issued_to_en || 'Whom It May Concern')}" placeholder="e.g. To: The Bank Manager / Embassy of Italy">
+            <!-- Card 3: Employee Particulars & Designation (Bilingual) -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>👤</span>
+                  <span>Employee Particulars &amp; Bilingual Designation</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-field-label">Issued For / Addressee Line (Arabic - إلى الجهة)</label>
-                <input type="text" class="fin-input" id="cert-issued-to-ar" name="issued_to_ar" value="${escapeHtml(cert.issued_to_ar || 'لمن يهمه الأمر')}" style="direction:rtl;" placeholder="مثال: إلى: مدير البنك / سفارة إيطاليا">
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Employee Name (English) <span class="fin-field-badge-en">🇺🇸 EN</span> <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="cert-emp-name-en" name="employee_name_en" value="${escapeHtml(cert.employee_name_en || '')}" required placeholder="e.g. Bakhteyar Alam Mokhtar Ahmad">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>اسم الموظف (باللغة العربية)</span>
+                    <span class="fin-field-badge-ar">🇦🇪 AR</span>
+                  </label>
+                  <input type="text" class="fin-form-input fin-input-ar" id="cert-emp-name-ar" name="employee_name_ar" value="${escapeHtml(cert.employee_name_ar || '')}" required placeholder="مثال: بختيار عالم مختار احمد">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Job Title / Designation (English) <span class="fin-field-badge-en">🇺🇸 EN</span> <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="cert-job-title-en" name="job_title_en" value="${escapeHtml(cert.job_title_en || '')}" required placeholder="e.g. Civil Engineer">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>المسمى الوظيفي (باللغة العربية)</span>
+                    <span class="fin-field-badge-ar">🇦🇪 AR</span>
+                  </label>
+                  <input type="text" class="fin-form-input fin-input-ar" id="cert-job-title-ar" name="job_title_ar" value="${escapeHtml(cert.job_title_ar || '')}" required placeholder="مثال: مهندس مدني">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-3">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Passport No. <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="cert-passport-no" name="passport_no" value="${escapeHtml(cert.passport_no || 'S3552106')}" required placeholder="e.g. S3552106" style="font-family:monospace; font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Nationality (EN / AR) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="cert-nationality-en" name="nationality_en" value="${escapeHtml(cert.nationality_en || 'India')}" required placeholder="e.g. India / هندي">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Joining Date (EN / AR) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="cert-joining-date-en" name="joining_date_en" value="${escapeHtml(cert.joining_date_en || '07/08/2025')}" required placeholder="DD/MM/YYYY">
+                </div>
               </div>
             </div>
 
-            <div style="margin-bottom:1rem;">
-              <label class="fin-field-label">Select Employee (Auto-fill)</label>
-              <select class="fin-input" id="edit-cert-emp-select" onchange="window.finApp.onCertEmployeeSelectChange(this.value)">
-                <option value="">-- Choose Employee to load details --</option>
-                ${empOptions}
-              </select>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Employee Name (English)</label>
-                <input type="text" class="fin-input" id="cert-emp-name-en" name="employee_name_en" value="${escapeHtml(cert.employee_name_en || '')}" required>
+            <!-- Card 4: Standard Monthly Compensation (AED) -->
+            <div class="fin-form-section-card" id="cert-salary-fields-section" style="display:${isWithoutSalary ? 'none' : 'block'};">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title" style="color:#10b981;">
+                  <span>💵</span>
+                  <span>Standard Monthly Compensation (AED)</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-field-label">Employee Name (Arabic - الاسم)</label>
-                <input type="text" class="fin-input" id="cert-emp-name-ar" name="employee_name_ar" value="${escapeHtml(cert.employee_name_ar || '')}" style="direction:rtl;" required>
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Job Title (English)</label>
-                <input type="text" class="fin-input" id="cert-job-title-en" name="job_title_en" value="${escapeHtml(cert.job_title_en || '')}" required>
-              </div>
-              <div>
-                <label class="fin-field-label">Job Title (Arabic - المسمى الوظيفي)</label>
-                <input type="text" class="fin-input" id="cert-job-title-ar" name="job_title_ar" value="${escapeHtml(cert.job_title_ar || '')}" style="direction:rtl;" required>
+              <div class="fin-form-grid-3" style="align-items:flex-end;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Basic Salary (AED)</label>
+                  <input type="number" step="0.01" class="fin-form-input" id="cert-basic-salary" name="basic_salary" value="${cert.basic_salary || 9500}" oninput="window.finApp.calcCertTotalSalary()" style="font-weight:700; color:#f8fafc;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Accommodation Allowance (AED)</label>
+                  <input type="number" step="0.01" class="fin-form-input" id="cert-acc-salary" name="accommodation_allowance" value="${cert.accommodation_allowance || 5500}" oninput="window.finApp.calcCertTotalSalary()" style="font-weight:700; color:#f8fafc;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="color:#10b981; font-weight:800;">Total Monthly Salary (AED)</label>
+                  <input type="number" step="0.01" class="fin-form-input" id="cert-total-salary" name="total_salary" value="${cert.total_salary || 15000}" readonly style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.4); font-weight:800; font-size:1.05rem; color:#10b981;">
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Passport No.</label>
-                <input type="text" class="fin-input" id="cert-passport-no" name="passport_no" value="${escapeHtml(cert.passport_no || 'S3552106')}" required>
-              </div>
-              <div>
-                <label class="fin-field-label">Nationality (EN / AR)</label>
-                <input type="text" class="fin-input" id="cert-nationality-en" name="nationality_en" value="${escapeHtml(cert.nationality_en || 'India')}" required>
-              </div>
-              <div>
-                <label class="fin-field-label">Joining Date (EN / AR)</label>
-                <input type="text" class="fin-input" id="cert-joining-date-en" name="joining_date_en" value="${escapeHtml(cert.joining_date_en || '07/08/2025')}" required>
-              </div>
-            </div>
-
-            <!-- Salary Fields Block (Hidden when without salary is chosen) -->
-            <div id="cert-salary-fields-section" style="display:${isWithoutSalary ? 'none' : 'grid'}; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
-              <div>
-                <label class="fin-field-label">Basic Salary (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="cert-basic-salary" name="basic_salary" value="${cert.basic_salary || 9500}" oninput="window.finApp.calcCertTotalSalary()">
-              </div>
-              <div>
-                <label class="fin-field-label">Accommodation (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="cert-acc-salary" name="accommodation_allowance" value="${cert.accommodation_allowance || 5500}" oninput="window.finApp.calcCertTotalSalary()">
-              </div>
-              <div>
-                <label class="fin-field-label">Total Monthly Salary (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="cert-total-salary" name="total_salary" value="${cert.total_salary || 15000}" readonly style="background:#0f172a; font-weight:700; color:#10b981;">
-              </div>
-            </div>
-
-            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+            <!-- Footer Actions -->
+            <div class="fin-modal-footer" style="padding:1.15rem 0 0 0; background:transparent; border-top:1px solid rgba(255,255,255,0.08); margin-top:0.5rem;">
               <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeModal('modal-emp-cert-edit')">Cancel</button>
               <button type="submit" class="fin-btn-primary">💾 Save Certificate &amp; Preview</button>
             </div>
@@ -4405,90 +4525,141 @@ export function registerPayrollModules(FinanceApp) {
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-loa-edit" style="z-index:100030;">
-        <div class="fin-modal-dialog" style="max-width:720px; width:95%;">
-          <div class="fin-modal-header">
-            <h3 class="fin-modal-title"><span>📜</span> Edit Letter of Assignment Details</h3>
-            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-loa-edit')">&times;</button>
+        <div class="fin-modal-dialog" style="max-width:880px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <!-- Executive Header -->
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.85) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.85rem;">
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(129,140,248,0.3) 100%); border:1px solid rgba(129,140,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 4px 12px rgba(99,102,241,0.15);">📜</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.25rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  Edit Letter of Assignment Details
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">
+                  Deployment Terms, Trade Designation &amp; Remuneration Structure • خطاب التكليف والتعيين
+                </p>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-loa-edit')" title="Close">&times;</button>
           </div>
-          <form id="form-loa-edit" onsubmit="event.preventDefault(); window.finApp.saveLetterOfAssignmentForm(event);">
+
+          <!-- Body Form -->
+          <form id="form-loa-edit" class="fin-modal-body" onsubmit="event.preventDefault(); window.finApp.saveLetterOfAssignmentForm(event);" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" name="id" value="${loa.id || ''}">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Reference Number (REF:)</label>
-                <input type="text" class="fin-input" name="ref_no" value="${escapeHtml(loa.ref_no || 'RG/HC/LOA/2026/11047')}" required>
+
+            <!-- Card 1: Assignment Reference & Fast Auto-Fill -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📋</span>
+                  <span>Assignment Reference &amp; Auto-Fill</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-field-label">Date</label>
-                <input type="text" class="fin-input" name="date" value="${escapeHtml(loa.date || '26/08/2026')}" required>
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Reference Number (REF:) <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" name="ref_no" value="${escapeHtml(loa.ref_no || 'RG/HC/LOA/2026/11047')}" required style="font-weight:700; color:#38bdf8; font-family:monospace;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Assignment Date <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" name="date" value="${escapeHtml(loa.date || '26/08/2026')}" required>
+                </div>
+              </div>
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>Auto-Fill Candidate Details</span>
+                  <span style="font-size:0.72rem; color:#38bdf8; text-transform:none; font-weight:normal;">⚡ Syncs trade, passport, nationality &amp; wages</span>
+                </label>
+                <select class="fin-form-select" id="edit-loa-emp-select" onchange="window.finApp.onLoaEmployeeSelectChange(this.value)" style="border-color:rgba(56,189,248,0.35); background:#0f172a;">
+                  <option value="">-- Choose Registered Employee to auto-populate fields --</option>
+                  ${empOptions}
+                </select>
               </div>
             </div>
 
-            <div style="margin-bottom:1rem;">
-              <label class="fin-field-label">Select Employee (Auto-fill)</label>
-              <select class="fin-input" id="edit-loa-emp-select" onchange="window.finApp.onLoaEmployeeSelectChange(this.value)">
-                <option value="">-- Choose Employee to load details --</option>
-                ${empOptions}
-              </select>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Employee Name</label>
-                <input type="text" class="fin-input" id="loa-emp-name" name="employee_name" value="${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}" required>
+            <!-- Card 2: Candidate Identification & Trade Designation -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>👤</span>
+                  <span>Candidate Identification &amp; Trade</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-field-label">Passport No.</label>
-                <input type="text" class="fin-input" id="loa-passport-no" name="passport_no" value="${escapeHtml(loa.passport_no || 'C6976631')}" required>
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Employee Full Name <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="loa-emp-name" name="employee_name" value="${escapeHtml(loa.employee_name || 'Md Ashraf Ali')}" required placeholder="e.g. Md Ashraf Ali">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Passport No. <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="loa-passport-no" name="passport_no" value="${escapeHtml(loa.passport_no || 'C6976631')}" required placeholder="e.g. C6976631" style="font-family:monospace; font-weight:700;">
+                </div>
               </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Position / Trade</label>
-                <input type="text" class="fin-input" id="loa-position" name="position" value="${escapeHtml(loa.position || 'General Mason/Tiles Mason')}" required>
-              </div>
-              <div>
-                <label class="fin-field-label">Nationality</label>
-                <input type="text" class="fin-input" id="loa-nationality" name="nationality" value="${escapeHtml(loa.nationality || 'India')}" required>
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Reporting Manager</label>
-                <input type="text" class="fin-input" name="reporting_manager" value="${escapeHtml(loa.reporting_manager || 'Site Supervisor or his designated nominee')}" required>
-              </div>
-              <div>
-                <label class="fin-field-label">Working Hours</label>
-                <input type="text" class="fin-input" name="working_hours" value="${escapeHtml(loa.working_hours || '08 hours a day and 6 days a week')}" required>
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Position / Trade Designation <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="loa-position" name="position" value="${escapeHtml(loa.position || 'General Mason/Tiles Mason')}" required placeholder="e.g. General Mason/Tiles Mason">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Nationality <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" id="loa-nationality" name="nationality" value="${escapeHtml(loa.nationality || 'India')}" required placeholder="e.g. India">
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
-              <div>
-                <label class="fin-field-label">Basic Salary (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="loa-basic-salary" name="basic_salary" value="${loa.basic_salary || 1100}" oninput="window.finApp.calcLoaGrandTotal()" required>
+            <!-- Card 3: Assignment Terms & Deployment Schedule -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>🛠️</span>
+                  <span>Deployment Terms &amp; Reporting Schedule</span>
+                </div>
               </div>
-              <div>
-                <label class="fin-field-label">Food Allowance (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="loa-food-salary" name="food_allowance" value="${loa.food_allowance || 200}" oninput="window.finApp.calcLoaGrandTotal()" required>
+              <div class="fin-form-grid-2" style="margin-bottom:1.15rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Reporting Manager / Site Supervisor <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" name="reporting_manager" value="${escapeHtml(loa.reporting_manager || 'Site Supervisor or his designated nominee')}" required>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Working Hours Standard <span style="color:#ef4444;">*</span></label>
+                  <input type="text" class="fin-form-input" name="working_hours" value="${escapeHtml(loa.working_hours || '08 hours a day and 6 days a week')}" required>
+                </div>
               </div>
-              <div>
-                <label class="fin-field-label">Overtime (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="loa-ot-salary" name="overtime_amount" value="${loa.overtime_amount || 200}" oninput="window.finApp.calcLoaGrandTotal()" required>
-              </div>
-              <div>
-                <label class="fin-field-label">GRAND TOTAL (AED)</label>
-                <input type="number" step="0.01" class="fin-input" id="loa-grand-total" name="grand_total" value="${loa.grand_total || 1500}" readonly style="background:#0f172a; font-weight:700; color:#10b981;">
+              <div class="fin-form-group" style="margin-bottom:0;">
+                <label class="fin-field-label">Joining Deadline Date <span style="color:#ef4444;">*</span></label>
+                <input type="text" class="fin-form-input" name="joining_deadline" value="${escapeHtml(loa.joining_deadline || '15-09-2026')}" required placeholder="DD-MM-YYYY">
               </div>
             </div>
 
-            <div style="margin-bottom:1.25rem;">
-              <label class="fin-field-label">Joining Deadline Date</label>
-              <input type="text" class="fin-input" name="joining_deadline" value="${escapeHtml(loa.joining_deadline || '15-09-2026')}" required>
+            <!-- Card 4: Wage & Allowance Breakdown (AED) -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title" style="color:#10b981;">
+                  <span>💵</span>
+                  <span>Monthly Remuneration &amp; Allowance Breakdown (AED)</span>
+                </div>
+              </div>
+              <div class="fin-form-grid-4" style="align-items:flex-end;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Basic Salary (AED) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" step="0.01" class="fin-form-input" id="loa-basic-salary" name="basic_salary" value="${loa.basic_salary || 1100}" oninput="window.finApp.calcLoaGrandTotal()" required style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Food Allowance (AED) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" step="0.01" class="fin-form-input" id="loa-food-salary" name="food_allowance" value="${loa.food_allowance || 200}" oninput="window.finApp.calcLoaGrandTotal()" required style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Overtime Amount (AED) <span style="color:#ef4444;">*</span></label>
+                  <input type="number" step="0.01" class="fin-form-input" id="loa-ot-salary" name="overtime_amount" value="${loa.overtime_amount || 200}" oninput="window.finApp.calcLoaGrandTotal()" required style="font-weight:700;">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label" style="color:#10b981; font-weight:800;">GRAND TOTAL (AED)</label>
+                  <input type="number" step="0.01" class="fin-form-input" id="loa-grand-total" name="grand_total" value="${loa.grand_total || 1500}" readonly style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.4); font-weight:800; font-size:1.05rem; color:#10b981;">
+                </div>
+              </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+            <!-- Footer Actions -->
+            <div class="fin-modal-footer" style="padding:1.15rem 0 0 0; background:transparent; border-top:1px solid rgba(255,255,255,0.08); margin-top:0.5rem;">
               <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeModal('modal-loa-edit')">Cancel</button>
               <button type="submit" class="fin-btn-primary">💾 Save LOA &amp; Preview</button>
             </div>
