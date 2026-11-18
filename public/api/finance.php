@@ -2517,6 +2517,36 @@ function recalculateAllFinanceBalances(&$data) {
         }
         unset($cih);
     }
+
+    // Synchronize corporate bank accounts (ADCB): Total inward non-cash receipts minus outward disbursements / withdrawals
+    if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+        $bankInward = 0.0;
+        if (!empty($data['customer_receipts']) && is_array($data['customer_receipts'])) {
+            foreach ($data['customer_receipts'] as $r) {
+                if (($r['company_id'] ?? 'rayan-corp-uae') === 'rayan-corp-uae') {
+                    $m = strtolower($r['payment_mode'] ?? '');
+                    if ($m !== 'cash') {
+                        $bankInward += floatval($r['amount_received'] ?? 0);
+                    }
+                }
+            }
+        }
+        $bankOutward = 0.0;
+        if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+            foreach ($data['bank_transfers'] as $t) {
+                if (($t['company_id'] ?? 'rayan-corp-uae') === 'rayan-corp-uae' && ($t['type'] ?? '') !== 'inward') {
+                    $bankOutward += floatval($t['amount'] ?? 0);
+                }
+            }
+        }
+        $netAdcb = max(0.0, round($bankInward - $bankOutward, 2));
+        foreach ($data['bank_accounts'] as &$ba) {
+            if (($ba['id'] ?? '') === 'bank-adcb-uae') {
+                $ba['balance'] = number_format($netAdcb, 2, '.', '');
+            }
+        }
+        unset($ba);
+    }
 }
 
 
@@ -3731,17 +3761,13 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
         }
     }
 
-    // In-memory data sanitization:
+    // In-memory data sanitization (preserve genuine bank-to-cash withdrawals and e-wallet vouchers):
     if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
         $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($t) {
             $id = $t['id'] ?? '';
             $ref = $t['reference_no'] ?? '';
-            $type = $t['type'] ?? '';
-            $purp = $t['purpose'] ?? '';
             $party = $t['counterparty'] ?? '';
-            if ($type === 'bank_to_cash') return false;
-            if (strpos($id, 'wire-wdl-') === 0 || strpos($ref, 'wire-wdl-') === 0 || strpos($id, 'wire-pv-') === 0 || strpos($ref, 'wire-pv-') === 0) return false;
-            if (stripos($purp, 'replenish rayan e-wallets') !== false || stripos($purp, 'cash withdrawal') !== false) return false;
+            if (strpos($id, 'wire-pv-') === 0 || strpos($ref, 'wire-pv-') === 0) return false;
             if (stripos($party, 'GENERAL EXPENSES') !== false) return false;
             if ($id === 'wire-rcp-mobin-villa-44003' || $ref === 'PHUB604192801' || stripos($party, 'MOBIN') !== false) return false;
             return true;
@@ -3754,10 +3780,8 @@ function reconcileV93ClearCashInHandAndFakeLoops(&$data, $pdo) {
             $id = $v['id'] ?? '';
             $payee = $v['payee'] ?? '';
             $purp = $v['purpose'] ?? '';
-            if (strpos($no, 'CV-WDL-') === 0 || strpos($no, 'CV-PV-') === 0) return false;
-            if (strpos($id, 'cv-wdl-') === 0 || strpos($id, 'cv-pv-') === 0) return false;
+            if (strpos($no, 'CV-PV-') === 0 || strpos($id, 'cv-pv-') === 0) return false;
             if (stripos($payee, 'GENERAL EXPENSES') !== false || stripos($purp, 'general expenses') !== false) return false;
-            if (stripos($purp, 'replenish rayan e-wallets') !== false || stripos($purp, 'cash withdrawal') !== false) return false;
             return true;
         }));
         foreach ($data['cash_vouchers'] as &$cv) {
@@ -4206,6 +4230,161 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
         } catch (Exception $e) {
             error_log('Migration v82 error: ' . $e->getMessage());
         }
+    }
+}
+
+function reconcileV134BankToWalletTransfer(&$data, $pdo) {
+    $wireId = 'wire-wdl-1794998511450';
+    $voucherId = 'cv-wdl-1794998511450';
+    $refNo = 'ATM-ADCB-47231';
+    $voucherNo = 'CV-WDL-47231';
+    $amt = 47231.00;
+    $date = '2026-11-18';
+
+    $wireObj = [
+        'id' => $wireId,
+        'voucher_id' => $voucherId,
+        'company_id' => 'rayan-corp-uae',
+        'reference_no' => $refNo,
+        'date' => $date,
+        'transfer_date' => $date,
+        'counterparty' => 'RAYAN E-Wallets (Cash Vault)',
+        'source_account_id' => 'bank-adcb-uae',
+        'source_bank' => 'Abu Dhabi Commercial Bank (ADCB) (AED)',
+        'destination_account_id' => 'cash-mw5esv3w',
+        'destination_vault' => 'RAYAN E-Wallets',
+        'type' => 'bank_to_cash',
+        'type_label' => 'Bank Withdrawal to E-Wallet',
+        'amount' => $amt,
+        'currency' => 'AED',
+        'purpose' => 'Corporate bank cash withdrawal to replenish RAYAN E-Wallets for project disbursements & expenses',
+        'status' => 'Cleared',
+        'created_at' => date('c')
+    ];
+
+    $voucherObj = [
+        'id' => $voucherId,
+        'wire_id' => $wireId,
+        'company_id' => 'rayan-corp-uae',
+        'voucher_no' => $voucherNo,
+        'date' => $date,
+        'register_id' => 'cash-mw5esv3w',
+        'register_name' => 'RAYAN E-Wallets',
+        'type' => 'inflow',
+        'category' => 'Bank Cash Withdrawal / E-Wallet Replenishment',
+        'purpose' => 'Cash withdrawal from Abu Dhabi Commercial Bank (ADCB) to replenish RAYAN E-Wallets: Corporate bank cash withdrawal to replenish RAYAN E-Wallets for project disbursements & expenses',
+        'payee' => 'Abu Dhabi Commercial Bank (ADCB)',
+        'custodian' => 'Arshad Alam Shaikh',
+        'amount' => $amt,
+        'currency' => 'AED',
+        'reference_no' => $refNo,
+        'status' => 'Approved',
+        'created_at' => date('c')
+    ];
+
+    if ($pdo) {
+        try {
+            // Clean up any test records
+            $pdo->exec("DELETE FROM finance_bank_transfers WHERE reference_no = 'TEST-CHECK-01' OR id = 'wire-wdl-1794998954388'");
+            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE reference_no = 'TEST-CHECK-01' OR id = 'cv-wire-wdl-1794998954388'");
+
+            $stmtBt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+            $stmtBt->execute([
+                ':id' => $wireObj['id'],
+                ':company_id' => $wireObj['company_id'],
+                ':reference_no' => $wireObj['reference_no'],
+                ':transfer_date' => $wireObj['date'],
+                ':counterparty' => $wireObj['counterparty'],
+                ':source_account_id' => $wireObj['source_account_id'],
+                ':source_bank' => $wireObj['source_bank'],
+                ':type' => $wireObj['type'],
+                ':amount' => $wireObj['amount'],
+                ':currency' => $wireObj['currency'],
+                ':purpose' => $wireObj['purpose'],
+                ':status' => $wireObj['status'],
+                ':data_json' => json_encode($wireObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            ]);
+
+            $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+            $stmtCv->execute([
+                ':id' => $voucherObj['id'],
+                ':company_id' => $voucherObj['company_id'],
+                ':voucher_no' => $voucherObj['voucher_no'],
+                ':voucher_date' => $voucherObj['date'],
+                ':register_name' => $voucherObj['register_name'],
+                ':custodian' => $voucherObj['custodian'],
+                ':payee' => $voucherObj['payee'],
+                ':purpose' => $voucherObj['purpose'],
+                ':category' => $voucherObj['category'],
+                ':amount' => $voucherObj['amount'],
+                ':currency' => $voucherObj['currency'],
+                ':type' => $voucherObj['type'],
+                ':status' => $voucherObj['status'],
+                ':data_json' => json_encode($voucherObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            ]);
+
+            $pdo->exec("UPDATE finance_bank_accounts SET balance = 1347473.60, data_json = JSON_SET(data_json, '$.balance', '1347473.60') WHERE id = 'bank-adcb-uae'");
+            $pdo->exec("UPDATE finance_cash_in_hand SET balance = 81231.00, last_replenished = '{$date}', data_json = JSON_SET(data_json, '$.balance', 81231.00, '$.last_replenished', '{$date}') WHERE id = 'cash-mw5esv3w'");
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('bank_to_wallet_transfer_47231_v134', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log("Migration v134 error: " . $e->getMessage());
+        }
+    }
+
+    // In-memory sync
+    if (!isset($data['bank_transfers']) || !is_array($data['bank_transfers'])) $data['bank_transfers'] = [];
+    if (!isset($data['cash_vouchers']) || !is_array($data['cash_vouchers'])) $data['cash_vouchers'] = [];
+
+    // Filter out TEST-CHECK-01 if present
+    $data['bank_transfers'] = array_values(array_filter($data['bank_transfers'], function($t) {
+        return ($t['reference_no'] ?? '') !== 'TEST-CHECK-01' && ($t['id'] ?? '') !== 'wire-wdl-1794998954388';
+    }));
+    $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($v) {
+        return ($v['reference_no'] ?? '') !== 'TEST-CHECK-01' && ($v['id'] ?? '') !== 'cv-wire-wdl-1794998954388';
+    }));
+
+    $hasWire = false;
+    foreach ($data['bank_transfers'] as &$t) {
+        if (($t['id'] ?? '') === $wireId || ($t['reference_no'] ?? '') === $refNo) {
+            $t = array_merge($t, $wireObj);
+            $hasWire = true;
+            break;
+        }
+    }
+    unset($t);
+    if (!$hasWire) {
+        array_unshift($data['bank_transfers'], $wireObj);
+    }
+
+    $hasCv = false;
+    foreach ($data['cash_vouchers'] as &$v) {
+        if (($v['id'] ?? '') === $voucherId || ($v['voucher_no'] ?? '') === $voucherNo) {
+            $v = array_merge($v, $voucherObj);
+            $hasCv = true;
+            break;
+        }
+    }
+    unset($v);
+    if (!$hasCv) {
+        array_unshift($data['cash_vouchers'], $voucherObj);
+    }
+
+    if (!empty($data['bank_accounts']) && is_array($data['bank_accounts'])) {
+        foreach ($data['bank_accounts'] as &$ba) {
+            if (($ba['id'] ?? '') === 'bank-adcb-uae') {
+                $ba['balance'] = '1347473.60';
+            }
+        }
+        unset($ba);
+    }
+    if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
+        foreach ($data['cash_in_hand'] as &$cih) {
+            if (($cih['id'] ?? '') === 'cash-mw5esv3w') {
+                $cih['balance'] = 81231.00;
+                $cih['last_replenished'] = $date;
+            }
+        }
+        unset($cih);
     }
 }
 
@@ -6006,6 +6185,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         }
                         unset($dn);
                     }
+                    reconcileV134BankToWalletTransfer($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -6030,6 +6210,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV93ClearCashInHandAndFakeLoops($data, $pdo);
                 reconcileV81HMVillaFinancials($data, $pdo);
                 reconcileV82EmployeesAndPayroll($data, $pdo);
+                reconcileV134BankToWalletTransfer($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
@@ -9744,7 +9925,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'transfer' => $wireObj,
                 'voucher' => $voucherObj,
                 'source_bank' => $sourceBank,
-                'dest_vault' => $destVault
+                'dest_vault' => $destVault,
+                'data' => $db
             ]);
             exit;
 

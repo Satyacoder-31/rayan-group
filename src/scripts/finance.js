@@ -1619,31 +1619,27 @@ class FinanceApp {
       }
     }
 
-    // Purge synthetic cash vouchers and fake general expenses loop
+    // Purge synthetic fake general expenses loop (preserve genuine bank withdrawals and vouchers)
     if (Array.isArray(this.db.cash_vouchers)) {
       this.db.cash_vouchers = this.db.cash_vouchers.filter(v => {
         const no = (v.voucher_no || '').toUpperCase();
         const id = (v.id || '').toLowerCase();
         const purp = (v.purpose || '').toLowerCase();
         const payee = (v.payee || '').toLowerCase();
-        if (no.startsWith('CV-WDL-') || no.startsWith('CV-PV-')) return false;
-        if (id.startsWith('cv-wdl-') || id.startsWith('cv-pv-')) return false;
+        if (no.startsWith('CV-PV-') || id.startsWith('cv-pv-')) return false;
         if (payee.includes('general expenses') || purp.includes('general expenses')) return false;
-        if (purp.includes('replenish rayan e-wallets') || purp.includes('cash withdrawal')) return false;
         return true;
       });
     }
 
-    // Purge synthetic bank-to-cash withdrawal transfers and fake outward vendor wires
+    // Purge fake outward vendor wires (preserve genuine bank-to-cash withdrawals)
     if (Array.isArray(this.db.bank_transfers)) {
       this.db.bank_transfers = this.db.bank_transfers.filter(t => {
         const id = (t.id || '').toLowerCase();
         const ref = (t.reference_no || '').toLowerCase();
-        const purp = (t.purpose || '').toLowerCase();
         const party = (t.counterparty || '').toLowerCase();
-        if (t.type === 'bank_to_cash') return false;
-        if (id.startsWith('wire-wdl-') || ref.startsWith('wire-wdl-') || id.startsWith('wire-pv-') || ref.startsWith('wire-pv-')) return false;
-        if (purp.includes('replenish rayan e-wallets') || purp.includes('cash withdrawal') || party.includes('general expenses')) return false;
+        if (id.startsWith('wire-pv-') || ref.startsWith('wire-pv-')) return false;
+        if (party.includes('general expenses')) return false;
         return true;
       });
     }
@@ -2200,11 +2196,11 @@ class FinanceApp {
         });
         let bankOut = 0;
         (this.db.bank_transfers || []).forEach(t => {
-          if ((t.company_id || 'rayan-corp-uae') === 'rayan-corp-uae' && t.type === 'outward') {
+          if ((t.company_id || 'rayan-corp-uae') === 'rayan-corp-uae' && (t.type === 'outward' || t.type === 'bank_to_cash' || t.type !== 'inward')) {
             bankOut += (Number(t.amount) || 0);
           }
         });
-        const calcBal = Math.round((bankIn - bankOut) * 100) / 100;
+        const calcBal = Math.max(0, Math.round((bankIn - bankOut) * 100) / 100);
         adcb.balance = calcBal.toFixed(2);
       }
     }
@@ -2279,7 +2275,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v159';
+    const CURRENT_DB_VERSION = 'v2026_clean_v160';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -25060,7 +25056,12 @@ Scope of Work & Technical Execution:
 
           try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
 
-          await this.syncApi('transfer_bank_to_wallet', payload);
+          const res = await this.syncApi('transfer_bank_to_wallet', payload);
+          if (res && res.data) {
+            this.db = this.mergeWithSeedData(res.data);
+          }
+          this.normalizeAllBalances();
+          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
           this.closeModal('modal-bank-transfer');
           this.activeTab = 'bank_accounts';
           this.renderActiveTab();
@@ -25412,9 +25413,9 @@ Scope of Work & Technical Execution:
         const res = await this.syncApi('transfer_bank_to_wallet', payload);
         if (res && res.data) {
           this.db = this.mergeWithSeedData(res.data);
-          this.normalizeAllBalances();
-          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
         }
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
         this.closeModal('modal-bank-to-wallet');
         this.renderActiveTab();
         this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${sBank.bank_name} to ${dVault.register_name}!`, 'success');

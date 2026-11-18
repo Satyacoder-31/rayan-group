@@ -93,6 +93,40 @@ async function deploy() {
                   }
                 });
               }
+
+              const localTransfers = (localData.bank_transfers || []);
+              if (!Array.isArray(liveJson.data.bank_transfers)) liveJson.data.bank_transfers = [];
+              localTransfers.forEach(t => {
+                if (!liveJson.data.bank_transfers.some(p => p.id === t.id || (t.reference_no && p.reference_no === t.reference_no))) {
+                  liveJson.data.bank_transfers.unshift(t);
+                }
+              });
+
+              const localVouchers = (localData.cash_vouchers || []);
+              if (!Array.isArray(liveJson.data.cash_vouchers)) liveJson.data.cash_vouchers = [];
+              localVouchers.forEach(v => {
+                if (!liveJson.data.cash_vouchers.some(p => p.id === v.id || (v.voucher_no && p.voucher_no === v.voucher_no))) {
+                  liveJson.data.cash_vouchers.unshift(v);
+                }
+              });
+
+              if (Array.isArray(liveJson.data.bank_accounts)) {
+                const adcb = liveJson.data.bank_accounts.find(b => b.id === 'bank-adcb-uae');
+                if (adcb && localData.bank_accounts) {
+                  const locAdcb = localData.bank_accounts.find(b => b.id === 'bank-adcb-uae');
+                  if (locAdcb) adcb.balance = locAdcb.balance;
+                }
+              }
+              if (Array.isArray(liveJson.data.cash_in_hand)) {
+                const wallet = liveJson.data.cash_in_hand.find(c => c.id === 'cash-mw5esv3w');
+                if (wallet && localData.cash_in_hand) {
+                  const locWallet = localData.cash_in_hand.find(c => c.id === 'cash-mw5esv3w');
+                  if (locWallet) {
+                    wallet.balance = locWallet.balance;
+                    wallet.last_replenished = locWallet.last_replenished;
+                  }
+                }
+              }
             } catch (e) {}
           }
           let liveStr = JSON.stringify(liveJson.data, null, 2);
