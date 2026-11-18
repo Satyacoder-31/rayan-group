@@ -96,7 +96,26 @@ export function registerPayrollModules(FinanceApp) {
   // Helper to ensure initial default employee & payslip if empty
   proto.ensurePayrollSeedData = function () {
     if (!this.db) return;
-    if (!Array.isArray(this.db.employees) || this.db.employees.length === 0) {
+    const storedDel = (function () {
+      try {
+        return typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
+      } catch (e) { return []; }
+    })();
+    const deleted = Array.from(new Set([...(Array.isArray(this.db.deleted_employee_ids) ? this.db.deleted_employee_ids : []), ...storedDel]));
+    this.db.deleted_employee_ids = deleted;
+
+    if (!Array.isArray(this.db.employees)) {
+      this.db.employees = [];
+    }
+
+    // Filter out any deleted employee IDs that might have slipped into employees
+    if (deleted.length > 0) {
+      this.db.employees = this.db.employees.filter(e => !deleted.includes(e.id) && !deleted.includes(e.employee_no));
+    }
+
+    // Only seed initial default employees if this.db.employees is empty AND they haven't been deleted
+    if (this.db.employees.length === 0 && !this.db.employees_initialized && !deleted.includes('emp-en12001') && !deleted.includes('EN12001')) {
+      this.db.employees_initialized = true;
       this.db.employees = [
         {
           id: 'emp-en12001',
@@ -157,6 +176,8 @@ export function registerPayrollModules(FinanceApp) {
         }
       ];
     } else {
+      this.db.employees_initialized = true;
+      // If Bakhteyar is already present, enhance fields
       let bakht = this.db.employees.find(e => e.id === 'emp-en12001' || (e.name && e.name.toLowerCase().includes('bakhteyar')) || e.employee_no === 'EN12001');
       if (bakht) {
         bakht.passport_no = bakht.passport_no || 'S3552106';
@@ -165,75 +186,16 @@ export function registerPayrollModules(FinanceApp) {
         if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
         if (!bakht.position) bakht.position = 'Civil Engineer';
         if (!bakht.company_id) bakht.company_id = this.activeCompanyId || 'rayan-corp-uae';
-      } else {
-        this.db.employees.unshift({
-          id: 'emp-en12001',
-          employee_no: 'EN12001',
-          company_id: this.activeCompanyId || 'rayan-corp-uae',
-          name: 'Bakhteyar Alam Mokhtar Ahmad',
-          name_ar: 'بختيار عالم مختار احمد',
-          position: 'Civil Engineer',
-          position_ar: 'مهندس مدني',
-          department: 'Rayan Engineering',
-          date_of_joining: '2025-08-07',
-          date_of_appointment: '2025-08-07',
-          currency: 'AED',
-          phone: '+971 50 123 4567',
-          email: 'bakhteyar@rayan-group.com',
-          emirates_id: '784-1988-1234567-1',
-          passport_no: 'S3552106',
-          nationality: 'India',
-          nationality_ar: 'هندي',
-          visa_status: 'Employment Visa (Rayan Engineering)',
-          basic_salary: 9500.00,
-          accommodation_allowance: 5500.00,
-          consolidated_allowance: 0.00,
-          other_allowance: 0.00,
-          bank_name: 'Emirates NBD Bank PJSC',
-          swift: 'EBILAEADXXX',
-          iban: 'AE860260001015934645101',
-          account_no: 'AE860260001015934645101',
-          default_pay_method: 'AED RAYAN GROUP Host To Host',
-          project_id: 'prj-toprock-police-01',
-          project_name: 'The New Dubai Police Academy @ Al Rowaiyah, Dubai',
-          status: 'Active',
-          created_at: '2025-08-07T09:00:00Z'
-        });
       }
 
+      // If Ashraf is already present, enhance fields
       let ashraf = this.db.employees.find(e => e.id === 'emp-rg11047' || (e.name && e.name.toLowerCase().includes('ashraf')) || e.employee_no === 'RG11647' || e.employee_no === 'RG11047');
       if (ashraf) {
         if (!ashraf.name_ar) ashraf.name_ar = 'محمد اشرف علي';
         if (!ashraf.position_ar) ashraf.position_ar = 'بناء عام / بلاط';
         if (!ashraf.company_id) ashraf.company_id = this.activeCompanyId || 'rayan-corp-uae';
-      } else {
-        this.db.employees.push({
-          id: 'emp-rg11047',
-          employee_no: 'RG11647',
-          company_id: this.activeCompanyId || 'rayan-corp-uae',
-          name: 'Md Ashraf Ali',
-          name_ar: 'محمد اشرف علي',
-          position: 'General Mason/Tiles Mason',
-          position_ar: 'بناء عام / بلاط',
-          department: 'Rayan Engineering',
-          date_of_joining: '2026-09-15',
-          date_of_appointment: '2026-08-26',
-          currency: 'AED',
-          nationality: 'India',
-          nationality_ar: 'هندي',
-          passport_no: 'C6976631',
-          visa_status: 'Employment Visa (Rayan Engineering)',
-          basic_salary: 1100.00,
-          accommodation_allowance: 0.00,
-          consolidated_allowance: 200.00,
-          other_allowance: 200.00,
-          bank_name: 'Cash / On-Hand',
-          status: 'Active',
-          created_at: '2026-08-26T09:00:00Z'
-        });
       }
     }
-
     if (!Array.isArray(this.db.employment_certificates) || this.db.employment_certificates.length === 0) {
       this.db.employment_certificates = [
         {
@@ -586,7 +548,7 @@ export function registerPayrollModules(FinanceApp) {
               <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:4px 9px; font-size:0.75rem; font-weight:600;" onclick="window.finApp.openEmployeeSalaryHistoryModal('${emp.id}', '3m')" title="View 1-Month, 3-Month & 6-Month Salary History">
                 📊 History (1-3 Mo)
               </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 8px; font-size:0.75rem;" onclick="window.finApp.openPayslipModal(null, '${emp.id}')" title="Create Monthly Pay Slip">
+              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 8px; font-size:0.75rem; cursor:pointer;" onclick="window.finApp.openPayslipPrintModal('${emp.id}')" title="Print / View Official Pay Slip">
                 📜 Pay Slip
               </button>
               <button type="button" class="fin-btn-row-action" style="background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.35); padding:4px 8px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openEmploymentCertificatePrintModal('${emp.id}')" title="Issue / Print Bilingual Employment Certificate">
@@ -954,7 +916,7 @@ export function registerPayrollModules(FinanceApp) {
   proto.openEmployeeModal = function (empId = null) {
     let emp = null;
     if (empId) {
-      emp = (this.db?.employees || []).find(e => e.id === empId);
+      emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
     }
 
     const isEdit = Boolean(emp);
@@ -1189,7 +1151,7 @@ export function registerPayrollModules(FinanceApp) {
 
     const el = document.getElementById('fin-emp-gross-preview');
     if (el) {
-      el.textContent = this.formatCurrency(total);
+      el.textContent = (typeof this.formatCurrency === 'function') ? this.formatCurrency(total) : formatMoney(total);
     }
   };
 
@@ -1293,24 +1255,65 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   proto.deleteEmployee = async function (empId) {
-    const emp = (this.db?.employees || []).find(e => e.id === empId);
+    const emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
     if (!emp) return;
 
-    if (!confirm(`Are you sure you want to delete employee "${emp.name}" (${emp.employee_no})?`)) {
-      return;
+    const confirmed = (typeof window !== 'undefined' && typeof window.confirm === 'function')
+      ? window.confirm(`Are you sure you want to delete employee "${emp.name}" (${emp.employee_no || ''})?`)
+      : true;
+    if (!confirmed) return;
+
+    if (!Array.isArray(this.db.deleted_employee_ids)) {
+      this.db.deleted_employee_ids = [];
+    }
+    if (!this.db.deleted_employee_ids.includes(emp.id)) {
+      this.db.deleted_employee_ids.push(emp.id);
+    }
+    if (emp.employee_no && !this.db.deleted_employee_ids.includes(emp.employee_no)) {
+      this.db.deleted_employee_ids.push(emp.employee_no);
     }
 
-    this.db.employees = this.db.employees.filter(e => e.id !== empId);
+    // Persist to standalone localStorage key as well
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]');
+        if (!stored.includes(emp.id)) stored.push(emp.id);
+        if (emp.employee_no && !stored.includes(emp.employee_no)) stored.push(emp.employee_no);
+        localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(stored));
+      }
+    } catch (e) {}
+
+    this.db.employees = (this.db.employees || []).filter(e => e.id !== emp.id && e.employee_no !== emp.employee_no);
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
     // Sync deletion with backend
     try {
-      await this.syncWithBackend('delete_employee', { id: empId });
-    } catch (err) {}
+      if (typeof this.syncApi === 'function') {
+        await this.syncApi('delete_employee', { id: emp.id, employee_no: emp.employee_no });
+      } else if (typeof this.syncWithBackend === 'function') {
+        await this.syncWithBackend('delete_employee', { id: emp.id, employee_no: emp.employee_no });
+      }
+    } catch (err) {
+      console.warn('Backend delete_employee sync error:', err);
+    }
 
-    this.showToast ? this.showToast('Employee profile deleted', 'info') : null;
-    if (this.activeTab === 'employees') {
-      this.renderEmployeesTab(document.getElementById('fin-view-container'));
+    if (typeof this.showNotification === 'function') {
+      this.showNotification(`Employee "${emp.name}" deleted successfully.`, 'info');
+    } else if (typeof this.showToast === 'function') {
+      this.showToast(`Employee "${emp.name}" deleted successfully.`, 'info');
+    }
+
+    const tbody = document.getElementById('fin-emp-tbody');
+    if (tbody && typeof this.renderEmployeeRowsHtml === 'function') {
+      const activeEmps = (this.db.employees || []).filter(e => typeof this.matchesActiveCompany === 'function' ? this.matchesActiveCompany(e.company_id) : true);
+      tbody.innerHTML = this.renderEmployeeRowsHtml(activeEmps);
+    }
+
+    const container = document.getElementById('fin-view-container');
+    if (container && this.activeTab === 'employees') {
+      this.renderEmployeesTab(container);
+    } else if (typeof this.renderActiveTab === 'function') {
+      this.renderActiveTab();
     }
   };
 
@@ -1320,7 +1323,7 @@ export function registerPayrollModules(FinanceApp) {
   proto.openEmployeeSalaryHistoryModal = function (empId, periodFilter = '3m') {
     this.ensurePayrollSeedData();
     this.lastEmployeeHistoryFilter = periodFilter;
-    const emp = (this.db?.employees || []).find(e => e.id === empId);
+    const emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
     if (!emp) {
       this.showToast ? this.showToast('Employee not found', 'error') : alert('Employee not found');
       return;
@@ -1623,9 +1626,9 @@ export function registerPayrollModules(FinanceApp) {
     // Determine target employee
     let targetEmp = null;
     if (slip?.employee_id) {
-      targetEmp = employees.find(e => e.id === slip.employee_id);
+      targetEmp = employees.find(e => e.id === slip.employee_id || e.employee_no === slip.employee_id);
     } else if (empId) {
-      targetEmp = employees.find(e => e.id === empId);
+      targetEmp = employees.find(e => e.id === empId || e.employee_no === empId || (e.name && e.name.toLowerCase() === (empId || '').toLowerCase()));
     } else if (employees.length > 0) {
       targetEmp = employees[0];
     }
@@ -2158,7 +2161,19 @@ export function registerPayrollModules(FinanceApp) {
   // 7. PAYSLIP MODAL (CREATE / EDIT) - Delegates to Record Payment Modal
   // ==========================================================================
   proto.openPayslipModal = function (slipId = null, preselectedEmpId = null) {
-    this.openRecordEmployeePaymentModal(preselectedEmpId, null, slipId);
+    if (!slipId && preselectedEmpId) {
+      this.openRecordEmployeePaymentModal(preselectedEmpId, null, null);
+    } else if (slipId && !preselectedEmpId) {
+      // Check if slipId is actually an empId
+      const emp = (this.db?.employees || []).find(e => e.id === slipId || e.employee_no === slipId);
+      if (emp) {
+        this.openRecordEmployeePaymentModal(emp.id, null, null);
+      } else {
+        this.openRecordEmployeePaymentModal(null, null, slipId);
+      }
+    } else {
+      this.openRecordEmployeePaymentModal(preselectedEmpId, null, slipId);
+    }
   };
   proto.closePayslipModal = function () {
     this.closeRecordEmployeePaymentModal();
@@ -2436,11 +2451,64 @@ export function registerPayrollModules(FinanceApp) {
   // ==========================================================================
   // 7. EXACT REPLICA PRINT PREVIEW & PDF EXPORT MODAL
   // ==========================================================================
-  proto.openPayslipPrintModal = function (slipId = null) {
+  proto.openPayslipPrintModal = function (slipOrEmpId = null) {
     this.ensurePayrollSeedData();
-    let slip = (this.db?.payroll || []).find(p => p.id === slipId || p.slip_no === slipId);
+    let slip = null;
+    const allSlips = this.db?.payroll || [];
+
+    if (slipOrEmpId) {
+      slip = allSlips.find(p => p.id === slipOrEmpId || p.slip_no === slipOrEmpId || p.employee_id === slipOrEmpId || (p.employee_no && p.employee_no === slipOrEmpId));
+      if (!slip) {
+        const emp = (this.db?.employees || []).find(e => e.id === slipOrEmpId || e.employee_no === slipOrEmpId || e.name === slipOrEmpId);
+        if (emp) {
+          // Look for existing slip for this employee
+          slip = allSlips.find(p => p.employee_id === emp.id || (emp.employee_no && p.employee_no === emp.employee_no));
+          if (!slip) {
+            // Build official dynamic slip for this employee based on their profile
+            const basic = Number(emp.basic_salary) || 9500;
+            const acc = Number(emp.accommodation_allowance) || 0;
+            const cons = Number(emp.consolidated_allowance) || 0;
+            const oth = Number(emp.other_allowance) || 0;
+            const totEarn = basic + acc + cons + oth;
+            slip = {
+              id: `ps-${emp.id}-${Date.now().toString(36)}`,
+              slip_no: `PSJune 2026/${emp.employee_no || 'EN12001'}`,
+              company_id: emp.company_id || this.activeCompanyId || 'rayan-corp-uae',
+              employee_id: emp.id,
+              employee_name: emp.name,
+              employee_no: emp.employee_no,
+              position: emp.position,
+              department: emp.department || 'Rayan Engineering',
+              date_of_joining: emp.date_of_joining,
+              month_year: 'June 2026',
+              period_label: 'June 2026',
+              currency: emp.currency || 'AED',
+              basic_salary: basic,
+              accommodation_allowance: acc,
+              consolidated_allowance: cons,
+              normal_overtime: oth,
+              overtime_hrs: '0.0',
+              total_earnings: totEarn,
+              advance_deduction: 0,
+              absence_deduction: 0,
+              loan_deduction: 0,
+              total_deductions: 0,
+              net_pay: totEarn,
+              payout_source_type: (emp.bank_name && !emp.bank_name.toLowerCase().includes('cash')) ? 'bank' : 'cash',
+              bank_name: emp.bank_name || 'Emirates NBD Bank PJSC',
+              account_no: emp.account_no || emp.iban || 'Cash In Hand',
+              status: 'Paid',
+              payment_date: '2026-06-30'
+            };
+            if (!Array.isArray(this.db.payroll)) this.db.payroll = [];
+            this.db.payroll.push(slip);
+            try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
+          }
+        }
+      }
+    }
     if (!slip) {
-      slip = (this.db?.payroll || [])[0] || {};
+      slip = allSlips[0] || {};
     }
 
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';

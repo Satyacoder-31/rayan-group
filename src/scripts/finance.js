@@ -721,6 +721,20 @@ class FinanceApp {
       merged.settings = { ...merged.settings, ...sourceData.settings };
     }
 
+    if (Array.isArray(sourceData.deleted_employee_ids)) {
+      merged.deleted_employee_ids = sourceData.deleted_employee_ids;
+    }
+    const storedDel = (function () {
+      try {
+        return typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]') : [];
+      } catch (e) { return []; }
+    })();
+    const allDeletedEmps = Array.from(new Set([...(merged.deleted_employee_ids || []), ...storedDel]));
+    merged.deleted_employee_ids = allDeletedEmps;
+    if (allDeletedEmps.length > 0 && Array.isArray(merged.employees)) {
+      merged.employees = merged.employees.filter(e => !allDeletedEmps.includes(e.id) && !allDeletedEmps.includes(e.employee_no));
+    }
+
     return merged;
   }
 
@@ -2251,7 +2265,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v154';
+    const CURRENT_DB_VERSION = 'v2026_clean_v155';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
