@@ -2275,7 +2275,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v160';
+    const CURRENT_DB_VERSION = 'v2026_clean_v161';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -28588,6 +28588,12 @@ Scope of Work & Technical Execution:
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
     const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
 
+    const cust = (this.db?.customers || []).find(c => c.id === rec.customer_id || (c.name && rec.customer_name && c.name.toLowerCase() === rec.customer_name.toLowerCase())) || {};
+    const customerAddress = rec.customer_address || linkedInv?.customer_address || cust.billing_address || cust.address || '';
+    const customerTrn = rec.customer_trn || linkedInv?.customer_trn || cust.trn || cust.tax_id || '';
+    const customerContact = rec.contact_person || linkedInv?.contact_person || cust.contact_person || '';
+    const isBalanceSettlement = linkedInv && (Number(linkedInv.grand_total) - amountVal > 0.01);
+
     let receiptLineItems = (isTopRock44035 && (!linkedInv?.line_items || linkedInv.line_items.length < 4)) ? [
       { name: 'Wall Lining with Stud 50mm For Academy Building (PODSUB-2026/0810)', qty: 273.1, unit: 'Sqm', rate: 56, wd_pct: 50, amount: 7646.80 },
       { name: 'Wall Lining with Furing Channel For Academy Building (PODSUB-2026/0810)', qty: 293.9, unit: 'Sqm', rate: 51, wd_pct: 50, amount: 7494.45 },
@@ -28620,10 +28626,6 @@ Scope of Work & Technical Execution:
       if (allocRows.length > 1 || (allocRows.length === 1 && unalloc > 0.01)) {
         receiptLineItems = allocRows;
       }
-    }
-
-    if (!receiptLineItems && linkedInv && linkedInv.line_items && linkedInv.line_items.length > 1) {
-      receiptLineItems = linkedInv.line_items;
     }
 
     const modalHtml = `
@@ -28723,11 +28725,11 @@ Scope of Work & Technical Execution:
               <div style="font-size:1rem; font-weight:800; color:#111827; margin-bottom:3px; text-transform:uppercase;">
                 ${rec.customer_name || 'Client Name'}
               </div>
-              ${rec.contact_person ? `<div style="color:#4b5563;">Attn: ${rec.contact_person}</div>` : ''}
-              ${rec.customer_address ? `<div style="color:#4b5563;">${rec.customer_address}</div>` : ''}
-              ${rec.customer_trn ? `<div style="color:#4b5563;">TRN: ${rec.customer_trn}</div>` : ''}
+              ${customerContact ? `<div style="color:#4b5563;">Attn: ${customerContact}</div>` : ''}
+              ${customerAddress ? `<div style="color:#4b5563;">${customerAddress}</div>` : ''}
+              ${customerTrn ? `<div style="color:#4b5563;">TRN: ${customerTrn}</div>` : ''}
               <div style="font-size:0.85rem; font-weight:800; color:#111827; margin-top:10px; text-transform:uppercase;">
-                Project : ${rec.project_name || 'CIVIL CONTRACTING & SPECIALIZED WORKS'}
+                Project : ${rec.project_name || linkedInv?.project_name || 'CIVIL CONTRACTING & SPECIALIZED WORKS'}
               </div>
             </div>
 
@@ -28765,7 +28767,7 @@ Scope of Work & Technical Execution:
                 </thead>
                 <tbody>
                   ${receiptLineItems && receiptLineItems.length > 1 ? receiptLineItems.map((item, idx) => {
-      const itemAmt = Number(item.amount || item.total_amount || item.invoice_amount || 0);
+      const itemAmt = Number(item.amount || item.amount_allocated || item.total_amount || item.invoice_amount || 0);
       return `
                       <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                         <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700; color:#111827;">${idx + 1}</td>
@@ -28775,7 +28777,7 @@ Scope of Work & Technical Execution:
                         </td>
                         <td style="border:1px solid #111827; padding:6px 8px; text-align:center; color:#111827; font-weight:600;">
                           ${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}
-                          ${rec.reference_no ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no}</div>` : ''}
+                          ${(rec.reference_no || rec.cheque_no) ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no || rec.cheque_no}</div>` : ''}
                         </td>
                         <td style="border:1px solid #111827; padding:6px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
@@ -28784,14 +28786,14 @@ Scope of Work & Technical Execution:
                     <tr style="border-bottom:1px solid #111827; background:#ffffff;">
                       <td style="border:1px solid #111827; padding:6px 4px; text-align:center; font-weight:700; color:#111827;">1</td>
                       <td style="border:1px solid #111827; padding:6px 8px; text-align:left; font-weight:700; color:#111827; word-break:break-word;">
-                        ${rec.notes || (rec.ref_invoice_no ? `Settlement towards Tax Invoice #${rec.ref_invoice_no}` : 'Payment Settlement')}
+                        ${rec.notes || (rec.ref_invoice_no ? `Settlement towards Tax Invoice #${rec.ref_invoice_no}${isBalanceSettlement ? ' (Balance Settlement)' : ''}` : 'Payment Settlement')}
                         <div style="font-size:0.72rem; font-weight:500; color:#6b7280; margin-top:2px;">
-                          ${rec.project_name ? `Project: ${rec.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
+                          ${(rec.project_name || linkedInv?.project_name) ? `Project: ${rec.project_name || linkedInv?.project_name} • ` : ''}Invoice Ref: ${rec.ref_invoice_no || 'Advance Payment'}
                         </div>
                       </td>
                       <td style="border:1px solid #111827; padding:6px 8px; text-align:center; color:#111827; font-weight:600;">
                         ${(rec.payment_mode === 'Corporate RTGS' || rec.payment_mode === 'RTGS') ? 'Online' : (rec.payment_mode || 'Bank Transfer')}
-                        ${rec.reference_no ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no}</div>` : ''}
+                        ${(rec.reference_no || rec.cheque_no) ? `<div style="font-size:0.7rem; color:#6b7280;">Ref: ${rec.reference_no || rec.cheque_no}</div>` : ''}
                       </td>
                       <td style="border:1px solid #111827; padding:6px 8px; text-align:right; color:#111827; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;">${curr} ${amountVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>

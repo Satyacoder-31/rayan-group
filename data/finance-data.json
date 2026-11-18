@@ -17687,6 +17687,18 @@
   ],
   "audit_logs": [
     {
+      "id": "aud-1a1ee574fe9",
+      "timestamp": "2026-11-18T11:07:41+00:00",
+      "actor_name": "Authorized Personnel",
+      "actor_role": "finance",
+      "actor_email": "system@rayangroup.com",
+      "action": "delete",
+      "entity": "bank_transfer",
+      "entity_id": "wire-wdl-1795000061241",
+      "details": "Deleted wire transfer wire-wdl-1795000061241",
+      "ip_address": "59.95.33.195"
+    },
+    {
       "id": "aud-1a1ee46535f",
       "timestamp": "2026-11-18T10:49:08+00:00",
       "actor_name": "Arshad Alam Shaikh",
@@ -20440,7 +20452,7 @@
       "status": "Active",
       "ifsc_code": "",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-18 10:49:14"
+      "updated_at": "2026-11-18 11:07:41"
     },
     {
       "id": "bank-sbi-corp",
@@ -20486,7 +20498,7 @@
       "last_replenished": "2026-11-18",
       "is_primary": true,
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-18 10:49:14"
+      "updated_at": "2026-11-18 11:07:41"
     },
     {
       "id": "cash-dubai-reg",
@@ -21091,7 +21103,7 @@
       "reference_no": "ATM-ADCB-47231",
       "date": "2026-11-18",
       "transfer_date": "2026-11-18",
-      "counterparty": "RAYAN E-Wallets (Cash Vault)",
+      "counterparty": "M/S RAYAN E-Wallets (Cash Vault)",
       "source_account_id": "bank-adcb-uae",
       "source_bank": "Abu Dhabi Commercial Bank (ADCB) (AED)",
       "destination_account_id": "cash-mw5esv3w",
@@ -21102,7 +21114,7 @@
       "currency": "AED",
       "purpose": "Corporate bank cash withdrawal to replenish RAYAN E-Wallets for project disbursements & expenses",
       "status": "Cleared",
-      "created_at": "2026-11-18T11:04:12.874Z"
+      "created_at": "2026-11-18T11:37:25+00:00"
     },
     {
       "id": "wire-rcp-rec-mwf5ck4a",
@@ -22359,7 +22371,7 @@
       "currency": "AED",
       "reference_no": "ATM-ADCB-47231",
       "status": "Approved",
-      "created_at": "2026-11-18T11:04:12.889Z"
+      "created_at": "2026-11-18T11:37:25+00:00"
     },
     {
       "id": "cv-rcp-rec-mwhezslg",
