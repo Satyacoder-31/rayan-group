@@ -1753,6 +1753,51 @@ class FinanceApp {
         }
       });
 
+      // Ensure all vendor payments disbursed via cash / petty cash / e-wallet are in cash_vouchers
+      (this.db.vendor_payments || []).forEach(vp => {
+        const mode = (vp.payment_mode || '').toLowerCase();
+        if (mode.includes('cash') || mode.includes('petty') || mode.includes('wallet')) {
+          const pId = vp.id;
+          const pNo = vp.voucher_no;
+          const cvNo = `CV-${pNo}`;
+          const targetRegId = vp.source_vault_id || rayanWallet.id;
+          const targetRegName = vp.source_vault_name || rayanWallet.register_name;
+          const amt = Number(vp.amount_paid) || 0;
+          if (amt <= 0) return;
+
+          let cv = this.db.cash_vouchers.find(v => v.payment_id === pId || v.voucher_no === cvNo);
+          if (cv) {
+            cv.payment_id = pId;
+            cv.register_id = targetRegId;
+            cv.register_name = targetRegName;
+            cv.amount = amt;
+            cv.type = 'outflow';
+            cv.date = vp.payment_date || cv.date;
+            cv.payee = vp.vendor_name || cv.payee;
+          } else {
+            this.db.cash_vouchers.unshift({
+              id: `cv-pay-${pId}`,
+              payment_id: pId,
+              voucher_no: cvNo,
+              company_id: vp.company_id || 'rayan-corp-uae',
+              register_id: targetRegId,
+              register_name: targetRegName,
+              custodian: 'Arshad Alam Shaikh',
+              date: vp.payment_date || new Date().toISOString().split('T')[0],
+              voucher_date: vp.payment_date || new Date().toISOString().split('T')[0],
+              type: 'outflow',
+              category: 'Supplier Disbursement',
+              purpose: vp.notes || `Disbursement to ${vp.vendor_name || 'Vendor'} under ${pNo}`,
+              payee: vp.vendor_name || 'Vendor',
+              amount: amt,
+              currency: vp.currency || 'AED',
+              status: 'Approved',
+              created_at: vp.created_at || new Date().toISOString()
+            });
+          }
+        }
+      });
+
       // Calculate live balances based on vouchers
       const vaultsMap = {};
       this.db.cash_in_hand.forEach(v => {
@@ -2275,7 +2320,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v162';
+    const CURRENT_DB_VERSION = 'v2026_clean_v163';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');

@@ -2489,6 +2489,63 @@ function recalculateAllFinanceBalances(&$data) {
         unset($trn);
     }
 
+    // Ensure all vendor payment disbursements from petty cash / e-wallets are recorded in cash_vouchers
+    if (!empty($data['vendor_payments']) && is_array($data['vendor_payments'])) {
+        if (!isset($data['cash_vouchers']) || !is_array($data['cash_vouchers'])) {
+            $data['cash_vouchers'] = [];
+        }
+        foreach ($data['vendor_payments'] as $vp) {
+            $pMode = $vp['payment_mode'] ?? '';
+            if (stripos($pMode, 'cash') !== false || stripos($pMode, 'petty') !== false || stripos($pMode, 'wallet') !== false) {
+                $pId = $vp['id'] ?? '';
+                $pNo = $vp['voucher_no'] ?? '';
+                $cvNo = 'CV-' . $pNo;
+                $targetRegId = $vp['source_vault_id'] ?? 'cash-mw5esv3w';
+                $targetRegName = $vp['source_vault_name'] ?? 'RAYAN E-Wallets';
+                $pAmt = floatval($vp['amount_paid'] ?? 0);
+                if ($pAmt <= 0) continue;
+
+                $foundCv = false;
+                foreach ($data['cash_vouchers'] as &$existingCv) {
+                    if (($existingCv['payment_id'] ?? '') === $pId || ($existingCv['voucher_no'] ?? '') === $cvNo) {
+                        $foundCv = true;
+                        $existingCv['payment_id'] = $pId;
+                        $existingCv['register_id'] = $targetRegId;
+                        $existingCv['register_name'] = $targetRegName;
+                        $existingCv['amount'] = $pAmt;
+                        $existingCv['type'] = 'outflow';
+                        $existingCv['payee'] = $vp['vendor_name'] ?? $existingCv['payee'];
+                        $existingCv['date'] = $vp['payment_date'] ?? $existingCv['date'];
+                        break;
+                    }
+                }
+                unset($existingCv);
+
+                if (!$foundCv) {
+                    array_unshift($data['cash_vouchers'], [
+                        'id' => 'cv-pay-' . $pId,
+                        'payment_id' => $pId,
+                        'voucher_no' => $cvNo,
+                        'company_id' => $vp['company_id'] ?? 'rayan-corp-uae',
+                        'register_id' => $targetRegId,
+                        'register_name' => $targetRegName,
+                        'custodian' => 'Arshad Alam Shaikh',
+                        'date' => $vp['payment_date'] ?? date('Y-m-d'),
+                        'voucher_date' => $vp['payment_date'] ?? date('Y-m-d'),
+                        'type' => 'outflow',
+                        'category' => 'Supplier Disbursement',
+                        'purpose' => $vp['notes'] ?: ('Settlement for ' . ($vp['vendor_name'] ?? 'Vendor') . ' under ' . $pNo),
+                        'payee' => $vp['vendor_name'] ?? 'Vendor',
+                        'amount' => $pAmt,
+                        'currency' => $vp['currency'] ?? 'AED',
+                        'status' => 'Approved',
+                        'created_at' => $vp['created_at'] ?? date('Y-m-d\TH:i:s\Z')
+                    ]);
+                }
+            }
+        }
+    }
+
     // Synchronize and balance all cash vaults directly from live cash vouchers
     if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
         $vaultMap = [];
@@ -3190,12 +3247,12 @@ function reconcileAllPaymentRecordsPhp(&$data, $pdo) {
         $data['cash_vouchers'] = array_values(array_filter($data['cash_vouchers'], function($cv) {
             $id = $cv['id'] ?? '';
             $vNo = $cv['voucher_no'] ?? '';
-            return $id !== 'cv-pay-pay-1794147893176' && $vNo !== 'CV-PV-REC-44006' && $vNo !== 'CV-PV-REC-44001';
+            return $id !== 'cv-pay-pay-1794147893176' && $vNo !== 'CV-PV-REC-44006';
         }));
     }
     if ($pdo) {
         try {
-            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id = 'cv-pay-pay-1794147893176' OR voucher_no = 'CV-PV-REC-44006' OR voucher_no = 'CV-PV-REC-44001'");
+            $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id = 'cv-pay-pay-1794147893176' OR voucher_no = 'CV-PV-REC-44006'");
             $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('reconcile_all_payment_records_v75', 'completed', NOW())");
         } catch (Exception $e) {}
     }
@@ -4377,14 +4434,92 @@ function reconcileV134BankToWalletTransfer(&$data, $pdo) {
         }
         unset($ba);
     }
-    if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
-        foreach ($data['cash_in_hand'] as &$cih) {
-            if (($cih['id'] ?? '') === 'cash-mw5esv3w') {
-                $cih['balance'] = 81231.00;
-                $cih['last_replenished'] = $date;
+}
+
+function reconcileV135WalletPaymentDisbursement(&$data, $pdo) {
+    if (!$data || !is_array($data)) return;
+
+    $payId = 'pay-1795018071771';
+    $vNo = 'CV-PV-REC-44001';
+    $amt = 47231.00;
+    $date = '2023-05-11';
+
+    $voucherObj = [
+        'id' => 'cv-pay-1795018071771',
+        'payment_id' => $payId,
+        'company_id' => 'rayan-corp-uae',
+        'voucher_no' => $vNo,
+        'date' => $date,
+        'voucher_date' => $date,
+        'register_id' => 'cash-mw5esv3w',
+        'register_name' => 'RAYAN E-Wallets',
+        'type' => 'outflow',
+        'category' => 'Supplier Disbursement',
+        'purpose' => 'Disbursement against Direct Expenses (BILL-REC-1001) under PV-REC-44001',
+        'payee' => 'M/S HI PROFILE GENERAL MAINTENANCE LLC',
+        'custodian' => 'Arshad Alam Shaikh',
+        'amount' => $amt,
+        'currency' => 'AED',
+        'reference_no' => 'Cash / Bank Transfer',
+        'status' => 'Approved',
+        'created_at' => '2026-11-18 10:49:08'
+    ];
+
+    if ($pdo) {
+        try {
+            // Ensure columns exist in finance_cash_vouchers
+            $cols = $pdo->query("SHOW COLUMNS FROM finance_cash_vouchers")->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('register_id', $cols)) {
+                $pdo->exec("ALTER TABLE finance_cash_vouchers ADD COLUMN register_id VARCHAR(64) NULL AFTER company_id");
             }
+            if (!in_array('payment_id', $cols)) {
+                $pdo->exec("ALTER TABLE finance_cash_vouchers ADD COLUMN payment_id VARCHAR(64) NULL AFTER company_id");
+            }
+            if (!in_array('receipt_id', $cols)) {
+                $pdo->exec("ALTER TABLE finance_cash_vouchers ADD COLUMN receipt_id VARCHAR(64) NULL AFTER company_id");
+            }
+
+            $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, register_id, payment_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :register_id, :payment_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+            $stmtCv->execute([
+                ':id' => $voucherObj['id'],
+                ':company_id' => $voucherObj['company_id'],
+                ':register_id' => $voucherObj['register_id'],
+                ':payment_id' => $voucherObj['payment_id'],
+                ':voucher_no' => $voucherObj['voucher_no'],
+                ':voucher_date' => $voucherObj['date'],
+                ':register_name' => $voucherObj['register_name'],
+                ':custodian' => $voucherObj['custodian'],
+                ':payee' => $voucherObj['payee'],
+                ':purpose' => $voucherObj['purpose'],
+                ':category' => $voucherObj['category'],
+                ':amount' => $voucherObj['amount'],
+                ':currency' => $voucherObj['currency'],
+                ':type' => $voucherObj['type'],
+                ':status' => $voucherObj['status'],
+                ':data_json' => json_encode($voucherObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            ]);
+
+            $pdo->exec("UPDATE finance_cash_in_hand SET balance = 34000.00, data_json = JSON_SET(data_json, '$.balance', 34000.00) WHERE id = 'cash-mw5esv3w'");
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('wallet_payment_out_47231_v135', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log("Migration v135 error: " . $e->getMessage());
         }
-        unset($cih);
+    }
+
+    if (!isset($data['cash_vouchers']) || !is_array($data['cash_vouchers'])) {
+        $data['cash_vouchers'] = [];
+    }
+    $hasV = false;
+    foreach ($data['cash_vouchers'] as &$cv) {
+        if (($cv['id'] ?? '') === $voucherObj['id'] || ($cv['voucher_no'] ?? '') === $voucherObj['voucher_no'] || ($cv['payment_id'] ?? '') === $payId) {
+            $cv = array_merge($cv, $voucherObj);
+            $hasV = true;
+            break;
+        }
+    }
+    unset($cv);
+    if (!$hasV) {
+        array_unshift($data['cash_vouchers'], $voucherObj);
     }
 }
 
@@ -6186,6 +6321,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         unset($dn);
                     }
                     reconcileV134BankToWalletTransfer($data, $pdo);
+                reconcileV135WalletPaymentDisbursement($data, $pdo);
+                    reconcileV135WalletPaymentDisbursement($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -6211,6 +6348,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV81HMVillaFinancials($data, $pdo);
                 reconcileV82EmployeesAndPayroll($data, $pdo);
                 reconcileV134BankToWalletTransfer($data, $pdo);
+                reconcileV135WalletPaymentDisbursement($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
@@ -6897,22 +7035,25 @@ function syncToRelationalTables($pdo, &$data) {
 
         // 17. Cash Vouchers
         if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
-            $stmt = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+            $stmt = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, register_id, payment_id, receipt_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :register_id, :payment_id, :receipt_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
             foreach ($data['cash_vouchers'] as $cv) {
                 if (empty($cv['voucher_no'])) continue;
                 $stmt->execute([
                     ':id' => $cv['id'] ?? ('cv-' . rand(1000, 9999)),
                     ':company_id' => $cv['company_id'] ?? 'rayan-corp-uae',
+                    ':register_id' => $cv['register_id'] ?? 'cash-mw5esv3w',
+                    ':payment_id' => $cv['payment_id'] ?? '',
+                    ':receipt_id' => $cv['receipt_id'] ?? '',
                     ':voucher_no' => $cv['voucher_no'],
-                    ':voucher_date' => !empty($cv['date']) ? $cv['date'] : date('Y-m-d'),
-                    ':register_name' => $cv['register_name'] ?? '',
-                    ':custodian' => $cv['custodian'] ?? '',
+                    ':voucher_date' => !empty($cv['date']) ? $cv['date'] : (!empty($cv['voucher_date']) ? $cv['voucher_date'] : date('Y-m-d')),
+                    ':register_name' => $cv['register_name'] ?? 'RAYAN E-Wallets',
+                    ':custodian' => $cv['custodian'] ?? 'Arshad Alam Shaikh',
                     ':payee' => $cv['payee'] ?? '',
                     ':purpose' => $cv['purpose'] ?? '',
-                    ':category' => $cv['category'] ?? '',
+                    ':category' => $cv['category'] ?? 'Supplier Disbursement',
                     ':amount' => floatval($cv['amount'] ?? 0),
                     ':currency' => $cv['currency'] ?? 'AED',
-                    ':type' => $cv['type'] ?? '',
+                    ':type' => $cv['type'] ?? 'outflow',
                     ':status' => $cv['status'] ?? 'approved',
                     ':data_json' => json_encode($cv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
@@ -8155,6 +8296,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 recalculateAllFinanceBalances($db);
+
+                if ($pdo) {
+                    try {
+                        if (!empty($db['cash_vouchers'])) {
+                            $stmtCvUp = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, register_id, payment_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :register_id, :payment_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+                            foreach ($db['cash_vouchers'] as $cv) {
+                                if (($cv['payment_id'] ?? '') === ($pay['id'] ?? '') || ($cv['voucher_no'] ?? '') === ('CV-' . ($pay['voucher_no'] ?? ''))) {
+                                    $stmtCvUp->execute([
+                                        ':id' => $cv['id'],
+                                        ':company_id' => $cv['company_id'] ?? 'rayan-corp-uae',
+                                        ':register_id' => $cv['register_id'] ?? 'cash-mw5esv3w',
+                                        ':payment_id' => $cv['payment_id'] ?? ($pay['id'] ?? ''),
+                                        ':voucher_no' => $cv['voucher_no'],
+                                        ':voucher_date' => $cv['date'] ?? date('Y-m-d'),
+                                        ':register_name' => $cv['register_name'] ?? 'RAYAN E-Wallets',
+                                        ':custodian' => $cv['custodian'] ?? 'Arshad Alam Shaikh',
+                                        ':payee' => $cv['payee'] ?? '',
+                                        ':purpose' => $cv['purpose'] ?? '',
+                                        ':category' => $cv['category'] ?? 'Supplier Disbursement',
+                                        ':amount' => floatval($cv['amount'] ?? 0),
+                                        ':currency' => $cv['currency'] ?? 'AED',
+                                        ':type' => $cv['type'] ?? 'outflow',
+                                        ':status' => $cv['status'] ?? 'Approved',
+                                        ':data_json' => json_encode($cv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                                    ]);
+                                    break;
+                                }
+                            }
+                        }
+                        if (!empty($db['cash_in_hand'])) {
+                            foreach ($db['cash_in_hand'] as $vh) {
+                                $vBal = floatval($vh['balance'] ?? 0);
+                                $vId = $vh['id'] ?? '';
+                                if ($vId) {
+                                    $pdo->exec("UPDATE finance_cash_in_hand SET balance = {$vBal}, data_json = JSON_SET(data_json, '$.balance', {$vBal}) WHERE id = '" . addslashes($vId) . "'");
+                                }
+                            }
+                        }
+                    } catch (Exception $e) {}
+                }
+
                 $addAuditLog('update', 'payment', $pay['voucher_no'] ?? '', 'Updated vendor payment voucher ' . ($pay['voucher_no'] ?? ''));
             }
             break;
@@ -9124,24 +9306,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Insert cash voucher if payment was from cash / wallet
                     if (isset($cvObj)) {
                         try {
-                            $stmtInsCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, voucher_no, company_id, register_id, custodian, voucher_date, type, category, purpose, payee, amount, currency, status, data_json, updated_at) VALUES (:id, :vno, :cid, :rid, :cust, :vdate, :type, :cat, :purp, :payee, :amt, :curr, :status, :json, NOW())");
+                            $stmtInsCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, payment_id, company_id, register_id, register_name, voucher_no, voucher_date, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :pid, :cid, :rid, :rname, :vno, :vdate, :cust, :payee, :purp, :cat, :amt, :curr, :type, :status, :json, NOW())");
                             $stmtInsCv->execute([
                                 ':id' => $cvObj['id'],
-                                ':vno' => $cvObj['voucher_no'],
+                                ':pid' => $cvObj['payment_id'],
                                 ':cid' => $cvObj['company_id'],
                                 ':rid' => $cvObj['register_id'],
-                                ':cust' => $cvObj['custodian'],
+                                ':rname' => $cvObj['register_name'],
+                                ':vno' => $cvObj['voucher_no'],
                                 ':vdate' => $cvObj['date'],
-                                ':type' => $cvObj['type'],
-                                ':cat' => $cvObj['category'],
-                                ':purp' => $cvObj['purpose'],
+                                ':cust' => $cvObj['custodian'],
                                 ':payee' => $cvObj['payee'],
+                                ':purp' => $cvObj['purpose'],
+                                ':cat' => $cvObj['category'],
                                 ':amt' => $cvObj['amount'],
                                 ':curr' => $cvObj['currency'],
+                                ':type' => $cvObj['type'],
                                 ':status' => $cvObj['status'],
                                 ':json' => json_encode($cvObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                             ]);
                         } catch (Exception $e) {}
+
+                        try {
+                            $vBal = 0.0;
+                            foreach ($db['cash_in_hand'] as $vh) {
+                                if (($vh['id'] ?? '') === $cvObj['register_id']) {
+                                    $vBal = floatval($vh['balance'] ?? 0);
+                                    break;
+                                }
+                            }
+                            $pdo->exec("UPDATE finance_cash_in_hand SET balance = {$vBal}, data_json = JSON_SET(data_json, '$.balance', {$vBal}) WHERE id = '" . addslashes($cvObj['register_id']) . "'");
+                        } catch (Exception $eV) {}
                     }
                 }
 
