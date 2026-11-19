@@ -15,6 +15,8 @@ class FinanceApp {
     if (!Array.isArray(this.db.employees)) this.db.employees = [];
     if (!Array.isArray(this.db.payroll)) this.db.payroll = [];
     this.currentUser = null;
+    this.defaultPageTitle = 'Corporate Financial Portal & Accounts Desk _ Rayan Group';
+    this.activeDocumentMeta = null;
     this.activeCompanyId = 'rayan-corp-uae';
     this.activePeriod = 'all';
     this.activeCurrency = 'AED';
@@ -2404,7 +2406,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v166';
+    const CURRENT_DB_VERSION = 'v2026_clean_v167';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -11186,8 +11188,9 @@ if (this.db.customer_receipts) {
     invoicedAmt = Math.round(invoicedAmt * 100) / 100;
     const unbilledBal = Math.max(0, Math.round((totalVal - invoicedAmt) * 100) / 100);
 
+    const lpoDocNo = po.internal_ref || po.po_no || 'Client-LPO';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(lpoDocNo)}" data-doc-type="Client LPO">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -11218,7 +11221,7 @@ if (this.db.customer_receipts) {
             <button type="button" class="fin-btn-print-action" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);" onclick="window.finApp.closeDocPrintModal(); window.finApp.openRecordClientLPOModal('${po.id}')">
               <span>✏️</span> Edit LPO
             </button>
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadClientLPODocument('${po.id || po.po_no}')">
@@ -11444,6 +11447,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(lpoDocNo, 'Client LPO', po.client_name);
   }
 
   downloadClientLPODocument(poId) {
@@ -11455,7 +11459,7 @@ if (this.db.customer_receipts) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1024, initial-scale=1">
-  <title>Client LPO Slip - ${po?.internal_ref || po?.po_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(po?.internal_ref || po?.po_no || 'Client-LPO'))} - Client LPO</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -11473,7 +11477,8 @@ if (this.db.customer_receipts) {
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${po?.internal_ref || po?.po_no || 'Client_LPO_Slip'}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(po?.internal_ref || po?.po_no || 'Client-LPO');
+      this.downloadFile(`${cleanDocNo} - Client LPO.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${po?.internal_ref || 'Client LPO Slip'} document.`, 'success');
     }
   }
@@ -13430,6 +13435,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle('VAT-Return-201', 'FTA VAT Return');
   }
 
   // --------------------------------------------------------------------------
@@ -14139,6 +14145,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle('CT-Assessment', 'Corporate Tax Computation');
   }
 
 
@@ -17637,13 +17644,14 @@ if (this.db.customer_receipts) {
       }
     ];
 
+    const billDocNo = bill.bill_no || 'BILL-REC-1001';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(billDocNo)}" data-doc-type="Purchase Bill">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>📑</span>
-              <span>Official Purchase Bill — ${bill.bill_no || 'BILL-REC-1001'}</span>
+              <span>Official Purchase Bill — ${billDocNo}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
@@ -17923,6 +17931,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(billDocNo, 'Purchase Bill', bill.vendor_name);
   }
 
   downloadPurchaseBillDocument(billId) {
@@ -17937,7 +17946,7 @@ if (this.db.customer_receipts) {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Purchase Bill - ${bill?.bill_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(bill?.bill_no || 'Purchase-Bill'))} - Purchase Bill</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body { margin: 0; padding: 20px; background: #f1f5f9; display: flex; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -17948,7 +17957,8 @@ if (this.db.customer_receipts) {
   ${htmlContent}
 </body>
 </html>`;
-    this.downloadFile(`${bill?.bill_no || 'Purchase_Bill'}.html`, fullDoc, 'text/html');
+    const cleanDocNo = this.sanitizeFilename(bill?.bill_no || 'Purchase-Bill');
+    this.downloadFile(`${cleanDocNo} - Purchase Bill.html`, fullDoc, 'text/html');
     this.showNotification(`Purchase Bill ${bill?.bill_no || ''} downloaded successfully.`, 'success');
   }
 
@@ -20664,6 +20674,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle('Consolidated-Client-SOA', 'Statement of Account', 'All Customers');
   }
 
   // 6B. EXPORT CONSOLIDATED SOA TO CSV / EXCEL
@@ -20778,7 +20789,7 @@ if (this.db.customer_receipts) {
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`Rayan_Group_Consolidated_Client_SOA_${new Date().toISOString().slice(0, 10)}.html`, fullDoc, 'text/html');
+      this.downloadFile('Consolidated Client - Statement of Account.html', fullDoc, 'text/html');
       this.showNotification('Master Statement of Account document downloaded successfully.', 'success');
     }
   }
@@ -21072,6 +21083,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(cust.code || cust.id || 'Customer-SOA', 'Statement of Account', cust.name);
   }
 
   // 6E. DEDICATED PROJECT STATEMENT OF ACCOUNT (PROJECT SOA)
@@ -21596,6 +21608,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(prj.code || prj.id || 'Project-SOA', 'Statement of Account', prj.name);
   }
 
   // 6F. EXPORT INDIVIDUAL PROJECT SOA AS CSV
@@ -22026,7 +22039,9 @@ if (this.db.customer_receipts) {
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`Vendor_SOA_${(vend?.code || vend?.name || 'Statement').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(vend?.code || vend?.id || 'Vendor-SOA');
+    this.downloadFile(`${cleanDocNo} - Vendor Statement.html`, fullDoc, 'text/html');
+    this.showNotification(`Downloaded ${cleanDocNo} - Vendor Statement.`, 'success');
     }
   }
 
@@ -22098,7 +22113,7 @@ if (this.db.customer_receipts) {
             <button type="button" class="fin-btn-print-action" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditVendorModal('${vend.id}')">
               <span>✏️</span> Edit Vendor
             </button>
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadVendorSOADocument('${vend.id}')">
@@ -22321,6 +22336,7 @@ if (this.db.customer_receipts) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(vend.code || vend.id || 'Vendor-SOA', 'Statement of Account', vend.name);
   }
 
   // 8. ADD CUSTOMER MODAL
@@ -24699,7 +24715,109 @@ Scope of Work & Technical Execution:
     }
   }
 
-  closeDocPrintModal() {
+    sanitizeFilename(name) {
+    if (!name) return 'Document';
+    return String(name).replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, ' ').trim();
+  }
+
+  setActiveDocumentTitle(docNo, docType, partyName = '') {
+    if (!this.defaultPageTitle) {
+      this.defaultPageTitle = document.title || 'Corporate Financial Portal & Accounts Desk _ Rayan Group';
+    }
+    const cleanNo = this.sanitizeFilename(docNo);
+    const cleanType = String(docType || 'Document').trim();
+    const newTitle = cleanNo ? `${cleanNo} - ${cleanType}` : cleanType;
+    this.activeDocumentMeta = {
+      docNo: cleanNo,
+      docType: cleanType,
+      partyName: partyName ? String(partyName).trim() : '',
+      title: newTitle
+    };
+    try {
+      document.title = newTitle;
+    } catch (e) { }
+  }
+
+  restoreDocumentTitle() {
+    this.activeDocumentMeta = null;
+    const defaultTitle = this.defaultPageTitle || 'Corporate Financial Portal & Accounts Desk _ Rayan Group';
+    try {
+      document.title = defaultTitle;
+    } catch (e) { }
+  }
+
+  detectAndSetActiveDocumentTitle() {
+    const modal = document.getElementById('fin-doc-print-modal') || document.querySelector('.fin-doc-modal-backdrop');
+    if (!modal) return;
+    
+    const attrNo = modal.getAttribute('data-doc-no');
+    const attrType = modal.getAttribute('data-doc-type');
+    if (attrNo && attrType) {
+      this.setActiveDocumentTitle(attrNo, attrType);
+      return;
+    }
+
+    const badge = modal.querySelector('.fin-doc-title-badge');
+    const badgeText = badge ? badge.textContent.replace(/\s+/g, ' ').trim() : '';
+    const paper = modal.querySelector('.fin-document-paper');
+    const paperText = paper ? paper.innerText || paper.textContent || '' : '';
+
+    let docType = attrType || 'Document';
+    let docNo = attrNo || '';
+
+    if (!docNo) {
+      const patterns = [
+        /(?:Invoice\s*(?:No|#)|رقم\s*الفاتورة)\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Receipt\s*Voucher\s*(?:No|#)|رقم\s*سند\s*القبض)\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Payment\s*Voucher\s*(?:No|#)|رقم\s*سند\s*الصرف)\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Purchase\s*Order\s*(?:No|#)|رقم\s*أمر\s*الشراء|PO\s*(?:No|#))\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Bill\s*(?:No|#)|Vendor\s*Bill)\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Credit\s*Note\s*(?:No|#))\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Debit\s*Note\s*(?:No|#))\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Certificate\s*Ref|Cert\s*(?:No|#))\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Delivery\s*Note\s*(?:No|#)|DN\s*(?:No|#))\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Undertaking\s*Ref|Letter\s*Ref|Ref\s*(?:No|#))\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /(?:Pay\s*Slip\s*(?:No|#)|Slip\s*(?:No|#))\s*[:#\-]?\s*([A-Za-z0-9\/\-_]+)/i,
+        /\b(REC-(?:RV|RG-INV|JOB-COM|UND|LTR|DN|CV)[\w/-]+)\b/i,
+        /\b(PV-REC-\d+|BILL-REC-\d+|PO-[\w/-]+|PODSUB-[\w/-]+|CN-REC-\d+|DN-REC-\d+)\b/i
+      ];
+      for (const pat of patterns) {
+        const m = (badgeText + ' ' + paperText).match(pat);
+        if (m && m[1]) {
+          docNo = m[1].trim();
+          break;
+        }
+      }
+    }
+
+    if (!docType || docType === 'Document') {
+      const lower = (badgeText + ' ' + paperText).toLowerCase();
+      if (lower.includes('tax invoice') || lower.includes('فاتورة ضريبية')) docType = 'Tax Invoice';
+      else if (lower.includes('receipt voucher') || lower.includes('سند قبض')) docType = 'Receipt Voucher';
+      else if (lower.includes('payment voucher') || lower.includes('سند صرف')) docType = 'Payment Voucher';
+      else if (lower.includes('purchase bill') || lower.includes('فاتورة شراء')) docType = 'Purchase Bill';
+      else if (lower.includes('purchase order') || lower.includes('امر شراء') || lower.includes('أمر شراء')) docType = 'Purchase Order';
+      else if (lower.includes('client lpo')) docType = 'Client LPO';
+      else if (lower.includes('credit note')) docType = 'Credit Note';
+      else if (lower.includes('debit note')) docType = 'Debit Note';
+      else if (lower.includes('expense')) docType = 'Expense Voucher';
+      else if (lower.includes('work completion') || lower.includes('شهادة إنجاز')) docType = 'Work Completion Certificate';
+      else if (lower.includes('undertaking') || lower.includes('تعهد')) docType = 'Undertaking Letter';
+      else if (lower.includes('delivery note')) docType = 'Delivery Note';
+      else if (lower.includes('pay slip') || lower.includes('payslip')) docType = 'Employee Pay Slip';
+      else if (lower.includes('employment certificate')) docType = 'Salary & Employment Certificate';
+      else if (lower.includes('assignment') || lower.includes('تكليف')) docType = 'Letter of Assignment';
+      else if (lower.includes('bank wire')) docType = 'Bank Wire Advice';
+      else if (lower.includes('cash voucher')) docType = 'Cash Voucher';
+      else if (lower.includes('statement of account')) docType = 'Statement of Account';
+    }
+
+    if (docNo || docType !== 'Document') {
+      this.setActiveDocumentTitle(docNo, docType);
+    }
+  }
+
+closeDocPrintModal() {
     const el = document.getElementById('fin-doc-print-modal');
     if (el) el.remove();
     const container = document.getElementById('fin-modal-container');
@@ -25703,7 +25821,7 @@ Scope of Work & Technical Execution:
     const srcSwift = bankAcc?.swift || 'ADCBAEAA';
 
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(wireDocNo)}" data-doc-type="Bank Wire Advice">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -25722,7 +25840,7 @@ Scope of Work & Technical Execution:
             <button type="button" class="fin-btn-print-action" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);" onclick="window.finApp.closeDocPrintModal(); window.finApp.openEditBankTransferModal('${trn.id}')">
               <span>✏️</span> Edit Wire
             </button>
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadBankWireAdvice('${trn.id}')">
@@ -25942,6 +26060,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(wireDocNo, 'Bank Wire Advice', trn.counterparty_name);
   }
 
   downloadBankWireAdvice(transferId) {
@@ -25953,7 +26072,7 @@ Scope of Work & Technical Execution:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1024, initial-scale=1">
-  <title>Bank Wire Advice - ${trn?.reference_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(trn?.reference_no || 'Bank-Wire'))} - Bank Wire Advice</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -25971,7 +26090,9 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`Bank_Wire_${(trn?.reference_no || 'Advice').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(trn?.reference_no || 'Bank-Wire');
+      this.downloadFile(`${cleanDocNo} - Bank Wire Advice.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${cleanDocNo} - Bank Wire Advice.`, 'success');
     }
   }
 
@@ -26688,7 +26809,7 @@ Scope of Work & Technical Execution:
     const amountInWords = this.formatAmountInWords(amountVal, curr);
 
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(cashDocNo)}" data-doc-type="Cash Voucher">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -26704,7 +26825,7 @@ Scope of Work & Technical Execution:
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadCashVoucher('${v.id}')">
@@ -26923,6 +27044,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(cashDocNo, 'Cash Voucher', v.counterparty_name || v.payee);
   }
 
   downloadCashVoucher(voucherId) {
@@ -26934,7 +27056,7 @@ Scope of Work & Technical Execution:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1024, initial-scale=1">
-  <title>Petty Cash Voucher - ${v?.voucher_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(v?.voucher_no || 'Cash-Voucher'))} - Cash Voucher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -26952,7 +27074,9 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`Cash_Voucher_${(v?.voucher_no || 'Voucher').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(v?.voucher_no || 'Cash-Voucher');
+      this.downloadFile(`${cleanDocNo} - Cash Voucher.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${cleanDocNo} - Cash Voucher.`, 'success');
     }
   }
 
@@ -28295,13 +28419,14 @@ Scope of Work & Technical Execution:
       }
     ]);
 
+    const invoiceDocNo = inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : 'REC-RG-INV-44049');
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(invoiceDocNo)}" data-doc-type="Tax Invoice">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>📄</span>
-              <span>Official Tax Invoice — ${inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : 'REC-RG-INV-44049')}</span>
+              <span>Official Tax Invoice — ${invoiceDocNo}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn active" onclick="window.finApp.openInvoicePrintModal('${inv.id || ''}')">Tax Invoice</button>
@@ -28572,6 +28697,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(invoiceDocNo, 'Tax Invoice', inv.customer_name);
   }
 
   downloadInvoiceDocument(invoiceId) {
@@ -28583,7 +28709,7 @@ Scope of Work & Technical Execution:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1024, initial-scale=1">
-  <title>Tax Invoice - ${inv?.invoice_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(inv?.invoice_no || 'Tax-Invoice'))} - Tax Invoice</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -28605,7 +28731,9 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${inv?.invoice_no || 'Tax_Invoice'}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(inv?.invoice_no || 'Tax-Invoice');
+      this.downloadFile(`${cleanDocNo} - Tax Invoice.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${cleanDocNo} - Tax Invoice.`, 'success');
       this.showNotification(`Downloaded ${inv?.invoice_no || 'Tax Invoice'} document.`, 'success');
     }
   }
@@ -28749,8 +28877,9 @@ Scope of Work & Technical Execution:
       }
     }
 
+    const receiptDocNo = rec.receipt_no || rec.voucher_no || 'REC-RV-44071';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(receiptDocNo)}" data-doc-type="Receipt Voucher">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -28970,6 +29099,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(receiptDocNo, 'Receipt Voucher', rec.customer_name);
   }
 
   downloadReceiptDocument(receiptId) {
@@ -28980,7 +29110,7 @@ Scope of Work & Technical Execution:
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Receipt Voucher - ${rec?.receipt_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(rec?.receipt_no || 'Receipt-Voucher'))} - Receipt Voucher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -28997,7 +29127,8 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${rec?.receipt_no || 'Receipt_Voucher'}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(rec?.receipt_no || 'Receipt-Voucher');
+      this.downloadFile(`${cleanDocNo} - Receipt Voucher.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${rec?.receipt_no || 'Receipt Voucher'} document.`, 'success');
     }
   }
@@ -29524,8 +29655,9 @@ Scope of Work & Technical Execution:
       `;
     };
 
+    const poDocNo = po.po_no || po.po_number || 'PO-REC-2026-01';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(poDocNo)}" data-doc-type="Purchase Order">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -29556,7 +29688,7 @@ Scope of Work & Technical Execution:
             <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditPOModal('${po.id || po.po_no}')">
               <span>✏️</span> Edit PO Details
             </button>
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadPODocument('${po.id || po.po_no}')">
@@ -29959,6 +30091,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(poDocNo, 'Purchase Order', po.vendor_name);
   }
 
   downloadPODocument(poId) {
@@ -29970,7 +30103,7 @@ Scope of Work & Technical Execution:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1024, initial-scale=1">
-  <title>Purchase Order - ${po?.po_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(po?.po_no || 'Purchase-Order'))} - Purchase Order</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -29989,7 +30122,8 @@ Scope of Work & Technical Execution:
   ${viewportHtml}
 </body>
 </html>`;
-      this.downloadFile(`${po?.po_no || 'Purchase_Order'}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(po?.po_no || 'Purchase-Order');
+      this.downloadFile(`${cleanDocNo} - Purchase Order.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${po?.po_no || 'Purchase Order'} document.`, 'success');
     }
   }
@@ -31998,8 +32132,9 @@ Scope of Work & Technical Execution:
     const amountInWords = this.formatAmountInWords(exp.amount_in_words || totalVal, curr);
     if (exp.amount_in_words) exp.amount_in_words = amountInWords;
 
+    const expDocNo = exp.voucher_no || exp.expense_no || exp.id || 'EXP-44001';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(expDocNo)}" data-doc-type="Expense Voucher">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -32201,6 +32336,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(expDocNo, 'Expense Voucher', exp.payee_name || exp.payee);
   }
 
   downloadExpenseVoucherDocument(expenseId) {
@@ -32212,7 +32348,7 @@ Scope of Work & Technical Execution:
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Expense Receipt Voucher - ${exp.expense_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename(exp.voucher_no || exp.expense_no || 'Expense-Voucher'))} - Expense Voucher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -32229,7 +32365,8 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${exp.expense_no}_Receipt.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(exp.voucher_no || exp.expense_no || 'Expense-Voucher');
+      this.downloadFile(`${cleanDocNo} - Expense Voucher.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${exp.expense_no} Document.`, 'success');
     }
   }
@@ -32368,8 +32505,9 @@ Scope of Work & Technical Execution:
     const allocations = Array.isArray(pay.allocations) ? pay.allocations : [];
     const hasAllocations = allocations.length > 0;
 
+    const paymentDocNo = pay.voucher_no || 'PV-REC-44001';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(paymentDocNo)}" data-doc-type="Payment Voucher">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -32590,6 +32728,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(paymentDocNo, 'Payment Voucher', pay.vendor_name);
   }
 
   downloadPaymentVoucherDocument(paymentId) {
@@ -32601,7 +32740,7 @@ Scope of Work & Technical Execution:
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Payment Voucher - ${pay.voucher_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename(pay.voucher_no || 'Payment-Voucher'))} - Payment Voucher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -32618,7 +32757,8 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${pay.voucher_no}_Payment_Voucher.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(pay.voucher_no || 'Payment-Voucher');
+      this.downloadFile(`${cleanDocNo} - Payment Voucher.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${pay.voucher_no} Payment Voucher.`, 'success');
     }
   }
@@ -34380,7 +34520,7 @@ Scope of Work & Technical Execution:
     const linkedInvDate = linkedInvoice?.invoice_date ? formatDateDisplay(linkedInvoice.invoice_date) : '';
 
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(cnDocNo)}" data-doc-type="Credit Note">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -34612,6 +34752,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(cnDocNo, 'Credit Note', cn.customer_name);
   }
 
   downloadCreditNoteDocument(cnId) {
@@ -34624,7 +34765,7 @@ Scope of Work & Technical Execution:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1024, initial-scale=1">
-  <title>Tax Credit Note - ${cn?.credit_note_no || 'Document'}</title>
+  <title>${escapeHtml(this.sanitizeFilename(cn?.credit_note_no || 'Credit-Note'))} - Credit Note</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -34646,7 +34787,8 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${cn?.credit_note_no || 'Tax_Credit_Note'}.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(cn?.credit_note_no || 'Credit-Note');
+      this.downloadFile(`${cleanDocNo} - Credit Note.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${cn?.credit_note_no || 'Tax Credit Note'} document.`, 'success');
     }
   }
@@ -34695,7 +34837,7 @@ Scope of Work & Technical Execution:
     const vendorObj = (this.db?.vendors || []).find(v => v.name === dn.vendor_name || (dn.vendor_name && v.name && v.name.toLowerCase().includes(dn.vendor_name.toLowerCase())));
 
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(dnDocNo)}" data-doc-type="Debit Note">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -34890,6 +35032,7 @@ Scope of Work & Technical Execution:
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    this.setActiveDocumentTitle(dnDocNo, 'Debit Note', dn.vendor_name);
   }
 
   downloadDebitNoteDocument(dnId) {
@@ -34901,7 +35044,7 @@ Scope of Work & Technical Execution:
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Debit Note - ${dn.debit_note_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename(dn.debit_note_no || 'Debit-Note'))} - Debit Note</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -34918,7 +35061,8 @@ Scope of Work & Technical Execution:
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${dn.debit_note_no}_Debit_Note.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename(dn.debit_note_no || 'Debit-Note');
+      this.downloadFile(`${cleanDocNo} - Debit Note.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${dn.debit_note_no} Debit Note.`, 'success');
     }
   }

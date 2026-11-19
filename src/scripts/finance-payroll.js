@@ -2558,8 +2558,9 @@ export function registerPayrollModules(FinanceApp) {
     const totDedVal = Number(slip.total_deductions) || 0;
     const netVal = Number(slip.net_pay) || (totEarnVal - totDedVal);
 
+    const slipDocNo = slip.slip_no || slip.emp_id || 'Pay-Slip';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(slipDocNo)}" data-doc-type="Employee Pay Slip">
         <style>
           #fin-doc-print-modal [contenteditable="true"] {
             transition: background 0.15s, outline 0.15s;
@@ -2610,7 +2611,7 @@ export function registerPayrollModules(FinanceApp) {
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.closeDocPrintModal(); window.finApp.openPayslipModal('${slip.id}')" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">
               <span>✏️</span> Edit Pay Slip (Form)
             </button>
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadPayslipDocument('${slip.id}')">
@@ -2949,11 +2950,13 @@ export function registerPayrollModules(FinanceApp) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(slipDocNo, 'Employee Pay Slip', slip.employee_name);
   };
 
   proto.downloadPayslipDocument = function (slipId) {
     const slip = (this.db?.payroll || []).find(p => p.id === slipId) || (this.db?.payroll || [])[0];
-    const filename = `PAYSLIP_${(slip?.slip_no || 'slip').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`;
+    const cleanDocNo = this.sanitizeFilename ? this.sanitizeFilename(slip?.slip_no || slip?.emp_id || 'Pay-Slip') : (slip?.slip_no || 'Pay-Slip').replace(/[/\\?%*:|"<>]/g, '-');
+    const filename = `${cleanDocNo} - Employee Pay Slip.html`;
     const paper = document.querySelector('.fin-document-paper');
     if (!paper) {
       window.print();
@@ -2964,7 +2967,7 @@ export function registerPayrollModules(FinanceApp) {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${escapeHtml(slip?.slip_no || 'Employee Pay Slip')}</title>
+        <title>${escapeHtml(this.sanitizeFilename ? this.sanitizeFilename(slip?.slip_no || 'Pay-Slip') : (slip?.slip_no || 'Pay-Slip'))} - Employee Pay Slip</title>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
         <style>
           body { margin:0; padding:20px; background:#f1f5f9; font-family:'Plus Jakarta Sans', sans-serif; }
@@ -3261,8 +3264,9 @@ export function registerPayrollModules(FinanceApp) {
     const totalVal = basicVal + accVal;
     const curr = cert.currency || 'AED';
 
+    const certDocNo = cert.ref_no || cert.cert_no || 'CERT-EMP';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(certDocNo)}" data-doc-type="Salary & Employment Certificate">
         <style>
           #fin-doc-print-modal [contenteditable="true"] {
             transition: background 0.15s, outline 0.15s;
@@ -3345,7 +3349,7 @@ export function registerPayrollModules(FinanceApp) {
             <button type="button" class="fin-btn-print-action" style="background:#0284c7; color:#ffffff; border-color:#0284c7; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditEmploymentCertModal('${cert.id}')">
               <span>✏️</span> Edit Certificate (Form)
             </button>
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadEmploymentCertificateDocument('${cert.id}')">
@@ -3615,6 +3619,7 @@ export function registerPayrollModules(FinanceApp) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(certDocNo, 'Salary & Employment Certificate', cert.employee_name);
   };
 
   proto.toggleCertSalaryDisplay = function (certId) {
@@ -3637,7 +3642,7 @@ export function registerPayrollModules(FinanceApp) {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Employment Certificate - ${cert.ref_no || cert.cert_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename ? this.sanitizeFilename(cert.ref_no || cert.cert_no) : (cert.ref_no || cert.cert_no))} - Salary & Employment Certificate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -3653,7 +3658,8 @@ export function registerPayrollModules(FinanceApp) {
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${(cert.ref_no || cert.cert_no).replace(/[^a-zA-Z0-9_-]/g, '_')}_Employment_Certificate.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename ? this.sanitizeFilename(cert.ref_no || cert.cert_no) : (cert.ref_no || cert.cert_no).replace(/[/\\?%*:|"<>]/g, '-');
+      this.downloadFile(`${cleanDocNo} - Salary & Employment Certificate.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded Employment Certificate ${cert.ref_no}.`, 'success');
     }
   };
@@ -4192,8 +4198,9 @@ export function registerPayrollModules(FinanceApp) {
     const grandTotalVal = basicVal + foodVal + otVal;
     const curr = loa.currency || 'AED';
 
+    const loaDocNo = loa.ref_no || loa.loa_no || 'LOA';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(loaDocNo)}" data-doc-type="Letter of Assignment">
         <style>
           #fin-doc-print-modal [contenteditable="true"] {
             transition: background 0.15s, outline 0.15s;
@@ -4272,7 +4279,7 @@ export function registerPayrollModules(FinanceApp) {
             <button type="button" class="fin-btn-print-action" style="background:#6366f1; color:#ffffff; border-color:#6366f1; font-weight:700; font-size:0.75rem;" onclick="window.finApp.openEditLetterOfAssignmentModal('${loa.id}')">
               <span>✏️</span> Edit LOA Details
             </button>
-            <button type="button" class="fin-btn-print-primary" onclick="window.print()">
+            <button type="button" class="fin-btn-print-primary" onclick="window.finApp ? window.finApp.printDocument() : window.print()">
               <span>🖨️</span> Print / Save as PDF
             </button>
             <button type="button" class="fin-btn-print-action" onclick="window.finApp.downloadLetterOfAssignmentDocument('${loa.id}')">
@@ -4579,6 +4586,7 @@ export function registerPayrollModules(FinanceApp) {
 
     this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(loaDocNo, 'Letter of Assignment', loa.employee_name);
   };
 
   proto.downloadLetterOfAssignmentDocument = function (loaId) {
@@ -4593,7 +4601,7 @@ export function registerPayrollModules(FinanceApp) {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Letter of Assignment - ${loa.ref_no || loa.loa_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename ? this.sanitizeFilename(loa.ref_no || loa.loa_no) : (loa.ref_no || loa.loa_no))} - Letter of Assignment</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -4610,7 +4618,8 @@ export function registerPayrollModules(FinanceApp) {
   ${pagesHtml}
 </body>
 </html>`;
-      this.downloadFile(`${(loa.ref_no || loa.loa_no).replace(/[^a-zA-Z0-9_-]/g, '_')}_Letter_Of_Assignment.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename ? this.sanitizeFilename(loa.ref_no || loa.loa_no) : (loa.ref_no || loa.loa_no).replace(/[/\\?%*:|"<>]/g, '-');
+      this.downloadFile(`${cleanDocNo} - Letter of Assignment.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded Letter of Assignment ${loa.ref_no}.`, 'success');
     }
   };

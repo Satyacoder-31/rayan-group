@@ -2139,7 +2139,7 @@ export function registerDocumentModules(FinanceApp) {
     }
 
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(cert.cert_no)}" data-doc-type="Work Completion Certificate">
         <style>
           #fin-doc-print-modal [contenteditable="true"]:hover {
             background: rgba(56, 189, 248, 0.12) !important;
@@ -2409,6 +2409,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(cert.cert_no, 'Work Completion Certificate', cert.client_name);
   };
 
   proto.downloadWorkCompletionDocument = function (certId) {
@@ -2420,7 +2421,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Work Completion Certificate - ${cert.cert_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename ? this.sanitizeFilename(cert.cert_no) : cert.cert_no)} - Work Completion Certificate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -2437,7 +2438,8 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${cert.cert_no}_Work_Completion.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename ? this.sanitizeFilename(cert.cert_no) : cert.cert_no.replace(/[/\\?%*:|"<>]/g, '-');
+      this.downloadFile(`${cleanDocNo} - Work Completion Certificate.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${cert.cert_no} Work Completion Certificate.`, 'success');
     }
   };
@@ -2775,13 +2777,14 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       { srl: 1, name: 'BHAGWAN DEEN MOLEY', emirates_id: '784-1983-8618357-2', nationality: 'Indian', profession: 'RG/JUMA ALROKN' }
     ];
 
+    const ultDocNo = ult.ref_no || 'REC-RG-ULT-11006';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(ultDocNo)}" data-doc-type="Undertaking Letter">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>🛡️</span>
-              <span>Subcontractor Undertaking Letter (2 Pages) — ${ult.ref_no || 'REC-RG-ULT-11006'}</span>
+              <span>Subcontractor Undertaking Letter (2 Pages) — ${ultDocNo}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
@@ -2949,6 +2952,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(ultDocNo, 'Undertaking Letter', ult.contractor);
   };
 
   proto.downloadUndertakingLetterDocument = function (letterId) {
@@ -2960,7 +2964,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Subcontractor Undertaking Letter - ${ult.ref_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename ? this.sanitizeFilename(ult.ref_no) : ult.ref_no)} - Undertaking Letter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -2977,7 +2981,8 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
   ${Array.from(pages).map(p => p.outerHTML).join('\n')}
 </body>
 </html>`;
-      this.downloadFile(`${ult.ref_no}_Undertaking_Letter.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename ? this.sanitizeFilename(ult.ref_no) : ult.ref_no.replace(/[/\\?%*:|"<>]/g, '-');
+      this.downloadFile(`${cleanDocNo} - Undertaking Letter.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${ult.ref_no} Undertaking Letter.`, 'success');
     }
   };
@@ -2994,7 +2999,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
     ];
 
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(dnDocNo)}" data-doc-type="Delivery Note">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -3156,6 +3161,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(dnDocNo, 'Delivery Note', dn.client_name);
   };
 
   proto.downloadDeliveryNoteDocument = function (dnId) {
@@ -3167,7 +3173,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Delivery Note - ${dn.dn_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename ? this.sanitizeFilename(dn.dn_no) : dn.dn_no)} - Delivery Note</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -3184,7 +3190,8 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${dn.dn_no}_Delivery_Note.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename ? this.sanitizeFilename(dn.dn_no) : dn.dn_no.replace(/[/\\?%*:|"<>]/g, '-');
+      this.downloadFile(`${cleanDocNo} - Delivery Note.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${dn.dn_no} Delivery Note.`, 'success');
     }
   };
@@ -3196,13 +3203,14 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       ltr = (this.db?.custom_letters || [])[0] || {};
     }
 
+    const ltrDocNo = ltr.ref_no || 'REC-LTR-2026-101';
     const modalHtml = `
-      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal">
+      <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(ltrDocNo)}" data-doc-type="Official Letter">
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
               <span>✉️</span>
-              <span>Official Letter — ${ltr.ref_no || 'REC-LTR-2026-101'}</span>
+              <span>Official Letter — ${ltrDocNo}</span>
             </div>
             <div class="fin-doc-type-pills">
               <button type="button" class="fin-doc-pill-btn" onclick="window.finApp.openInvoicePrintModal()">Tax Invoice</button>
@@ -3305,6 +3313,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 
     document.getElementById('fin-modal-container').innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
+    if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(ltrDocNo, 'Official Letter', ltr.recipient_name);
   };
 
   proto.downloadCustomLetterDocument = function (letterId) {
@@ -3316,7 +3325,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Letter - ${ltr.ref_no}</title>
+  <title>${escapeHtml(this.sanitizeFilename ? this.sanitizeFilename(ltr.ref_no) : ltr.ref_no)} - Official Letter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -3333,7 +3342,8 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
   ${paperHtml}
 </body>
 </html>`;
-      this.downloadFile(`${ltr.ref_no}_Official_Letter.html`, fullDoc, 'text/html');
+      const cleanDocNo = this.sanitizeFilename ? this.sanitizeFilename(ltr.ref_no) : ltr.ref_no.replace(/[/\\?%*:|"<>]/g, '-');
+      this.downloadFile(`${cleanDocNo} - Official Letter.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${ltr.ref_no} Letter.`, 'success');
     }
   };
