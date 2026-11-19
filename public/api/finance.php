@@ -4665,6 +4665,75 @@ function reconcileV137Fix3AedBankCashDiscrepancy(&$data, $pdo) {
     }
 }
 
+function reconcileV138FixChequeInHandMissingForRec44071(&$data, $pdo) {
+    if (!$data || !is_array($data)) return;
+
+    $chq71Data = [
+        'id' => 'chq-rcp-rec-mwm010bx',
+        'receipt_id' => 'rec-mwm010bx',
+        'company_id' => 'rayan-corp-uae',
+        'type' => 'inward',
+        'cheque_no' => '019284',
+        'bank_name' => 'Abu Dhabi Commercial Bank (ADCB)',
+        'branch' => 'Dubai',
+        'party_name' => 'M/S TOP ROCK INTERIORS LLC',
+        'date' => '2026-11-16',
+        'cheque_date' => '2026-11-16',
+        'amount' => 17784.14,
+        'currency' => 'AED',
+        'status' => 'In Hand',
+        'notes' => 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015',
+        'created_at' => '2026-11-18T10:49:08+00:00',
+        'bank_account_id' => 'bank-adcb-uae'
+    ];
+
+    if (!isset($data['cheques']) || !is_array($data['cheques'])) {
+        $data['cheques'] = [];
+    }
+
+    // Ensure c70 status is 'In Hand'
+    foreach ($data['cheques'] as &$cq) {
+        if (($cq['id'] ?? '') === 'chq-rcp-rec-mwlzza9m' || ($cq['receipt_id'] ?? '') === 'rec-mwlzza9m') {
+            $cq['status'] = 'In Hand';
+            $cq['amount'] = 3705.78;
+            $cq['notes'] = 'Customer Receipt REC-RV-44070 against REC-RG-INV-44025';
+        }
+    }
+    unset($cq);
+
+    // Ensure c71 is present in $data['cheques']
+    $found71 = false;
+    foreach ($data['cheques'] as &$cq) {
+        if (($cq['id'] ?? '') === 'chq-rcp-rec-mwm010bx' || ($cq['receipt_id'] ?? '') === 'rec-mwm010bx') {
+            $found71 = true;
+            $cq['status'] = 'In Hand';
+            $cq['amount'] = 17784.14;
+            $cq['notes'] = 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015';
+            break;
+        }
+    }
+    unset($cq);
+
+    if (!$found71) {
+        array_unshift($data['cheques'], $chq71Data);
+    }
+
+    // Persist to MySQL
+    if ($pdo) {
+        try {
+            $chq71Json = json_encode($chq71Data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $stmt = $pdo->prepare("REPLACE INTO finance_cheques (id, company_id, type, cheque_no, bank_name, party_name, amount, currency, cheque_date, status, notes, data_json, created_at, updated_at) VALUES ('chq-rcp-rec-mwm010bx', 'rayan-corp-uae', 'inward', '019284', 'Abu Dhabi Commercial Bank (ADCB)', 'M/S TOP ROCK INTERIORS LLC', 17784.14, 'AED', '2026-11-16', 'In Hand', 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015', :data_json, '2026-11-18 10:49:08', NOW())");
+            $stmt->execute([':data_json' => $chq71Json]);
+
+            $pdo->exec("UPDATE finance_cheques SET status = 'In Hand', notes = 'Customer Receipt REC-RV-44070 against REC-RG-INV-44025', data_json = JSON_SET(data_json, '$.status', 'In Hand', '$.notes', 'Customer Receipt REC-RV-44070 against REC-RG-INV-44025') WHERE id = 'chq-rcp-rec-mwlzza9m'");
+
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('fix_cheque_in_hand_rec44071_v138', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log('Migration v138 error: ' . $e->getMessage());
+        }
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -6466,6 +6535,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV135WalletPaymentDisbursement($data, $pdo);
                     reconcileV136CustomerPOSerialResequence($data, $pdo);
                     reconcileV137Fix3AedBankCashDiscrepancy($data, $pdo);
+                    reconcileV138FixChequeInHandMissingForRec44071($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -6493,7 +6563,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV134BankToWalletTransfer($data, $pdo);
                 reconcileV135WalletPaymentDisbursement($data, $pdo);
                 reconcileV136CustomerPOSerialResequence($data, $pdo);
-                    reconcileV137Fix3AedBankCashDiscrepancy($data, $pdo);
+                reconcileV137Fix3AedBankCashDiscrepancy($data, $pdo);
+                reconcileV138FixChequeInHandMissingForRec44071($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
@@ -6531,7 +6602,7 @@ function syncFromRelationalTables($pdo, &$data) {
             ['table' => 'finance_debit_notes', 'key' => 'debit_notes', 'id_fields' => ['id', 'debit_note_no'], 'order' => 'id DESC'],
             ['table' => 'finance_bank_accounts', 'key' => 'bank_accounts', 'id_fields' => ['id', 'account_number', 'account_name'], 'order' => 'account_name ASC'],
             ['table' => 'finance_cash_in_hand', 'key' => 'cash_in_hand', 'id_fields' => ['id', 'register_name'], 'order' => 'register_name ASC'],
-            ['table' => 'finance_cheques', 'key' => 'cheques', 'id_fields' => ['id', 'cheque_no'], 'order' => 'cheque_date DESC'],
+            ['table' => 'finance_cheques', 'key' => 'cheques', 'id_fields' => ['id'], 'order' => 'cheque_date DESC'],
             ['table' => 'finance_bank_transfers', 'key' => 'bank_transfers', 'id_fields' => ['id', 'reference_no'], 'order' => 'transfer_date DESC'],
             ['table' => 'finance_cash_vouchers', 'key' => 'cash_vouchers', 'id_fields' => ['id', 'voucher_no'], 'order' => 'voucher_date DESC'],
             ['table' => 'finance_loan_accounts', 'key' => 'loan_accounts', 'id_fields' => ['id', 'facility_name'], 'order' => 'facility_name ASC'],
@@ -8257,13 +8328,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $rcpRefVal = $rcp['reference_no'] ?? ($rcp['cheque_no'] ?? '');
                         if (!empty($rcpRefVal) || !empty($rcpIdVal)) {
                             try {
-                                $stmtUpChq = $pdo->prepare("UPDATE finance_cheques SET amount = :amt, party_name = :pname, data_json = JSON_SET(data_json, '$.amount', :amtStr, '$.party_name', :pname) WHERE receipt_id = :rid OR cheque_no = :cno");
+                                $stmtUpChq = $pdo->prepare("UPDATE finance_cheques SET amount = :amt, party_name = :pname, data_json = JSON_SET(data_json, '$.amount', :amtStr, '$.party_name', :pname) WHERE receipt_id = :rid OR id = CONCAT('chq-rcp-', :rid)");
                                 $stmtUpChq->execute([
                                     ':amt' => $rcpAmtVal,
                                     ':amtStr' => (string)$rcpAmtVal,
                                     ':pname' => $rcp['customer_name'] ?? '',
-                                    ':rid' => $rcpIdVal,
-                                    ':cno' => $rcpRefVal
+                                    ':rid' => $rcpIdVal
                                 ]);
                                 $stmtUpWire = $pdo->prepare("UPDATE finance_bank_transfers SET amount = :amt, counterparty = :party, data_json = JSON_SET(data_json, '$.amount', :amtStr, '$.counterparty', :party) WHERE receipt_id = :rid OR reference_no = :ref1 OR reference_no = :ref2");
                                 $stmtUpWire->execute([
@@ -8278,7 +8348,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         if (!empty($db['cheques']) && is_array($db['cheques'])) {
                             foreach ($db['cheques'] as &$cqItem) {
-                                if (($cqItem['receipt_id'] ?? '') === $rcpIdVal || (!empty($rcpRefVal) && ($cqItem['cheque_no'] ?? '') === $rcpRefVal)) {
+                                if (($cqItem['receipt_id'] ?? '') === $rcpIdVal || ($cqItem['id'] ?? '') === ('chq-rcp-' . $rcpIdVal)) {
                                     $cqItem['amount'] = (string)$rcpAmtVal;
                                     $cqItem['party_name'] = $rcp['customer_name'] ?? $cqItem['party_name'];
                                 }
@@ -9075,7 +9145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $chqExists = false;
                     foreach ($db['cheques'] as $cq) {
-                        if (($cq['receipt_id'] ?? '') === ($rcp['id'] ?? '') || (!empty($rcp['cheque_no']) && ($cq['cheque_no'] ?? '') === $rcp['cheque_no'])) {
+                        if (($cq['receipt_id'] ?? '') === ($rcp['id'] ?? '') || ($cq['id'] ?? '') === ('chq-rcp-' . ($rcp['id'] ?? ''))) {
                             $chqExists = true;
                             break;
                         }
@@ -9093,7 +9163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'date' => $rcp['cheque_date'] ?? $rcp['receipt_date'] ?? date('Y-m-d'),
                             'amount' => $amtReceived,
                             'currency' => $rcpCurr,
-                            'status' => $isCleared ? 'Cleared' : ($chqStatus ?: 'Pending Clearance'),
+                            'status' => $isCleared ? 'Cleared' : ($chqStatus ?: 'In Hand'),
                             'notes' => $rcp['notes'] ?? ('Customer Receipt ' . ($rcp['receipt_no'] ?? '') . (!empty($rcp['ref_invoice_no']) ? ' against ' . $rcp['ref_invoice_no'] : '')),
                             'created_at' => date('c')
                         ]);

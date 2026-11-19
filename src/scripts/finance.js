@@ -2173,31 +2173,65 @@ class FinanceApp {
 
     // Reconcile all customer receipts having payment_mode === 'Cheque' into inward cheques
     (this.db.customer_receipts || []).forEach(r => {
-      if ((r.payment_mode || '').toLowerCase() === 'cheque' && r.cheque_no) {
-        const chqNo = r.cheque_no.trim();
-        const existing = this.db.cheques.find(c => (c.cheque_no && c.cheque_no.trim() === chqNo) || c.receipt_id === r.id);
+      if ((r.payment_mode || '').toLowerCase() === 'cheque' && (r.cheque_no || r.id)) {
+        const chqNo = (r.cheque_no || r.reference_no || `CHQ-${r.receipt_no}`).trim();
+        const existing = this.db.cheques.find(c => c.receipt_id === r.id || c.id === `chq-rcp-${r.id}` || (c.cheque_no && c.cheque_no.trim() === chqNo && !c.receipt_id));
         if (!existing) {
+          const chqStatus = (r.cheque_status && !r.cheque_status.toLowerCase().includes('clear')) ? 'In Hand' : (r.cheque_status || 'In Hand');
           this.db.cheques.push({
-            id: `chq-${r.id || 'gen-' + chqNo}`,
+            id: `chq-rcp-${r.id || 'gen-' + chqNo}`,
             receipt_id: r.id,
             company_id: r.company_id || 'rayan-corp-uae',
             type: 'inward',
             cheque_no: chqNo,
             bank_name: r.bank_name || 'Abu Dhabi Commercial Bank (ADCB)',
-            branch: r.bank_branch || 'Abu Dhabi',
+            branch: r.bank_branch || 'Dubai',
             party_name: r.customer_name || 'Corporate Client',
-            date: r.cheque_date || r.receipt_date || '2026-11-01',
-            cheque_date: r.cheque_date || r.receipt_date || '2026-11-01',
-            amount: String(r.amount_received || 0),
+            date: r.cheque_date || r.receipt_date || '2026-11-16',
+            cheque_date: r.cheque_date || r.receipt_date || '2026-11-16',
+            amount: Number(r.amount_received || 0),
             currency: r.currency || 'AED',
-            status: 'Cleared',
-            notes: `Customer Cheque Clearance against ${r.receipt_no}`,
+            status: chqStatus,
+            notes: `Customer Receipt ${r.receipt_no}${r.ref_invoice_no ? ' against ' + r.ref_invoice_no : ''}`,
             bank_account_id: 'bank-adcb-uae',
             bank_account_name: 'Abu Dhabi Commercial Bank (ADCB)'
           });
         }
       }
     });
+
+    // Ensure In Hand cheques 019284 for REC-RV-44070 and REC-RV-44071 both exist and have status 'In Hand'
+    const chq70 = this.db.cheques.find(c => c.id === 'chq-rcp-rec-mwlzza9m' || c.receipt_id === 'rec-mwlzza9m');
+    if (chq70) {
+      chq70.status = 'In Hand';
+      chq70.amount = 3705.78;
+      chq70.notes = 'Customer Receipt REC-RV-44070 against REC-RG-INV-44025';
+    }
+    const chq71 = this.db.cheques.find(c => c.id === 'chq-rcp-rec-mwm010bx' || c.receipt_id === 'rec-mwm010bx');
+    if (chq71) {
+      chq71.status = 'In Hand';
+      chq71.amount = 17784.14;
+      chq71.notes = 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015';
+    } else {
+      this.db.cheques.push({
+        id: 'chq-rcp-rec-mwm010bx',
+        receipt_id: 'rec-mwm010bx',
+        company_id: 'rayan-corp-uae',
+        type: 'inward',
+        cheque_no: '019284',
+        bank_name: 'Abu Dhabi Commercial Bank (ADCB)',
+        branch: 'Dubai',
+        party_name: 'M/S TOP ROCK INTERIORS LLC',
+        date: '2026-11-16',
+        cheque_date: '2026-11-16',
+        amount: 17784.14,
+        currency: 'AED',
+        status: 'In Hand',
+        notes: 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015',
+        created_at: '2026-11-18T10:49:08+00:00',
+        bank_account_id: 'bank-adcb-uae'
+      });
+    }
 
     if (Array.isArray(this.db.bank_transfers)) {
       // Remove phantom / duplicate transfers
@@ -2370,7 +2404,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v165';
+    const CURRENT_DB_VERSION = 'v2026_clean_v166';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -3056,7 +3090,7 @@ if (this.db.customer_receipts) {
     if (action === 'record_cheque' && payload.cheque) {
       if (!this.db.cheques) this.db.cheques = [];
       const chq = payload.cheque;
-      const idx = this.db.cheques.findIndex(c => c.id === chq.id || c.cheque_no === chq.cheque_no);
+      const idx = this.db.cheques.findIndex(c => c.id === chq.id);
       if (idx >= 0) this.db.cheques[idx] = chq;
       else this.db.cheques.unshift(chq);
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
@@ -3292,25 +3326,16 @@ if (this.db.customer_receipts) {
       const chqStatus = receipt.cheque_status || 'Cleared';
       const isCleared = chqStatus.toLowerCase().includes('clear');
 
-      const chqNum = receipt.cheque_no;
-      let effectiveChqAmt = amt;
-      if (chqNum) {
-        const sharedReceipts = (db.customer_receipts || []).filter(r => r.cheque_no === chqNum);
-        if (sharedReceipts.length > 1) {
-          effectiveChqAmt = sharedReceipts.reduce((sum, r) => sum + (Number(r.amount_received) || 0), 0);
-        }
-      }
-
-      const existingChq = db.cheques.find(c => c.receipt_id === receipt.id || (receipt.cheque_no && c.cheque_no === receipt.cheque_no));
+      const existingChq = db.cheques.find(c => c.receipt_id === receipt.id || c.id === `chq-rcp-${receipt.id}` || (receipt.cheque_no && c.cheque_no === receipt.cheque_no && !c.receipt_id));
       if (existingChq) {
-        existingChq.amount = effectiveChqAmt;
+        existingChq.amount = amt;
         existingChq.party_name = this.formatCompanyName(receipt.customer_name) || existingChq.party_name;
         existingChq.date = receipt.cheque_date || receipt.receipt_date || existingChq.date;
         const chqRef = receipt.cheque_no || receipt.reference_no || `CHQ-${receipt.receipt_no}`;
         const finalRef = chqRef.startsWith('CHQ-') ? chqRef : `CHQ-${chqRef}`;
         const existingWire = db.bank_transfers.find(w => w.receipt_id === receipt.id || w.reference_no === finalRef || w.reference_no === chqRef);
         if (existingWire) {
-          existingWire.amount = effectiveChqAmt;
+          existingWire.amount = amt;
           existingWire.counterparty = this.formatCompanyName(receipt.customer_name);
         }
       } else {
@@ -3326,7 +3351,7 @@ if (this.db.customer_receipts) {
           date: receipt.cheque_date || receipt.receipt_date || new Date().toISOString().split('T')[0],
           amount: amt,
           currency: currency,
-          status: isCleared ? 'Cleared' : (chqStatus || 'Pending Clearance'),
+          status: isCleared ? 'Cleared' : (chqStatus || 'In Hand'),
           notes: receipt.notes || `Customer Receipt ${receipt.receipt_no}${receipt.ref_invoice_no ? ' against ' + receipt.ref_invoice_no : ''}`,
           created_at: new Date().toISOString()
         });

@@ -152,6 +152,26 @@ async function deploy() {
                 }
               });
 
+              const localCheques = (localData.cheques || []);
+              if (!Array.isArray(liveJson.data.cheques)) liveJson.data.cheques = [];
+              localCheques.forEach(cq => {
+                if (!liveJson.data.cheques.some(p => p.id === cq.id || (p.receipt_id && p.receipt_id === cq.receipt_id))) {
+                  liveJson.data.cheques.unshift(cq);
+                }
+              });
+              liveJson.data.cheques.forEach(cq => {
+                if (cq.id === 'chq-rcp-rec-mwlzza9m' || cq.receipt_id === 'rec-mwlzza9m') {
+                  cq.status = 'In Hand';
+                  cq.amount = 3705.78;
+                  cq.notes = 'Customer Receipt REC-RV-44070 against REC-RG-INV-44025';
+                }
+                if (cq.id === 'chq-rcp-rec-mwm010bx' || cq.receipt_id === 'rec-mwm010bx') {
+                  cq.status = 'In Hand';
+                  cq.amount = 17784.14;
+                  cq.notes = 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015';
+                }
+              });
+
               if (Array.isArray(liveJson.data.bank_accounts)) {
                 const adcb = liveJson.data.bank_accounts.find(b => b.id === 'bank-adcb-uae');
                 if (adcb && localData.bank_accounts) {
