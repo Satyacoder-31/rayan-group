@@ -44,9 +44,33 @@ async function deploy() {
               localCustPos.forEach(cpo => {
                 const target = liveJson.data.purchase_orders.find(p => p.id === cpo.id || p.po_no === cpo.po_no);
                 if (target) {
-                  if (!target.internal_ref && cpo.internal_ref) target.internal_ref = cpo.internal_ref;
+                  target.internal_ref = cpo.internal_ref;
+                  target.ref_no = cpo.ref_no || cpo.internal_ref;
+                  target.rec_ref = cpo.rec_ref || cpo.internal_ref;
                   if (!target.client_po_no) target.client_po_no = cpo.client_po_no || cpo.po_no;
                 }
+              });
+
+              // Normalize all customer POs chronologically
+              const custPosToSeq = liveJson.data.purchase_orders.filter(p => p.type === 'customer_po' || p.po_type === 'customer_lpo' || (!p.type && (p.po_type === 'customer_lpo' || !p.supplier_id || p.customer_name || p.customer_id)));
+              custPosToSeq.sort((a, b) => {
+                const dA = a.date || a.po_date || '';
+                const dB = b.date || b.po_date || '';
+                if (dA !== dB) return dA.localeCompare(dB);
+                return String(a.id || '').localeCompare(String(b.id || ''));
+              });
+              let nextRecSeq = 44001;
+              let nextAshSeq = 44001;
+              custPosToSeq.forEach(p => {
+                const isInd = (p.company_id === 'ashaz-eng-in') || (p.currency === 'INR');
+                const prefix = isInd ? 'ASH-CLPO' : 'REC-CLPO';
+                const targetRef = isInd ? (prefix + '-' + nextAshSeq++) : (prefix + '-' + nextRecSeq++);
+                p.internal_ref = targetRef;
+                p.ref_no = targetRef;
+                p.rec_ref = targetRef;
+                if (!p.type) p.type = 'customer_po';
+                if (!p.po_type) p.po_type = 'customer_lpo';
+                if (!p.direction) p.direction = 'inward';
               });
               const localBills = (localData.purchase_bills || []);
               if (!Array.isArray(liveJson.data.purchase_bills)) liveJson.data.purchase_bills = [];

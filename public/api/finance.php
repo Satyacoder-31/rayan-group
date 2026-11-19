@@ -2604,6 +2604,43 @@ function recalculateAllFinanceBalances(&$data) {
         }
         unset($ba);
     }
+
+    // Customer Purchase Orders (Customer LPOs) chronological normalization to sequential REC-CLPO-44xxx
+    if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {
+        $custPoIndices = [];
+        foreach ($data['purchase_orders'] as $idx => $p) {
+            $pType = $p['type'] ?? '';
+            $poType = $p['po_type'] ?? '';
+            if ($pType === 'customer_po' || $poType === 'customer_lpo' || (empty($pType) && ($poType === 'customer_lpo' || empty($p['supplier_id']) || !empty($p['customer_name']) || !empty($p['customer_id'])))) {
+                $custPoIndices[] = $idx;
+            }
+        }
+        if (!empty($custPoIndices)) {
+            usort($custPoIndices, function($idxA, $idxB) use ($data) {
+                $a = $data['purchase_orders'][$idxA];
+                $b = $data['purchase_orders'][$idxB];
+                $dA = $a['date'] ?? ($a['po_date'] ?? '');
+                $dB = $b['date'] ?? ($b['po_date'] ?? '');
+                if ($dA !== $dB) return strcmp($dA, $dB);
+                return strcmp(strval($a['id'] ?? ''), strval($b['id'] ?? ''));
+            });
+            $nextRecSeq = 44001;
+            $nextAshSeq = 44001;
+            foreach ($custPoIndices as $idx) {
+                $p = &$data['purchase_orders'][$idx];
+                $isInd = (($p['company_id'] ?? '') === 'ashaz-eng-in') || (($p['currency'] ?? '') === 'INR');
+                $prefix = $isInd ? 'ASH-CLPO' : 'REC-CLPO';
+                $targetRef = $isInd ? ($prefix . '-' . $nextAshSeq++) : ($prefix . '-' . $nextRecSeq++);
+                $p['internal_ref'] = $targetRef;
+                $p['ref_no'] = $targetRef;
+                $p['rec_ref'] = $targetRef;
+                if (empty($p['type'])) $p['type'] = 'customer_po';
+                if (empty($p['po_type'])) $p['po_type'] = 'customer_lpo';
+                if (empty($p['direction'])) $p['direction'] = 'inward';
+            }
+            unset($p);
+        }
+    }
 }
 
 
@@ -4523,6 +4560,63 @@ function reconcileV135WalletPaymentDisbursement(&$data, $pdo) {
     }
 }
 
+function reconcileV136CustomerPOSerialResequence(&$data, $pdo) {
+    if (!$data || !is_array($data)) return;
+    if (empty($data['purchase_orders']) || !is_array($data['purchase_orders'])) return;
+
+    $custPoIndices = [];
+    foreach ($data['purchase_orders'] as $idx => $p) {
+        $pType = $p['type'] ?? '';
+        $poType = $p['po_type'] ?? '';
+        if ($pType === 'customer_po' || $poType === 'customer_lpo' || (empty($pType) && ($poType === 'customer_lpo' || empty($p['supplier_id']) || !empty($p['customer_name']) || !empty($p['customer_id'])))) {
+            $custPoIndices[] = $idx;
+        }
+    }
+    if (empty($custPoIndices)) return;
+
+    usort($custPoIndices, function($idxA, $idxB) use ($data) {
+        $a = $data['purchase_orders'][$idxA];
+        $b = $data['purchase_orders'][$idxB];
+        $dA = $a['date'] ?? ($a['po_date'] ?? '');
+        $dB = $b['date'] ?? ($b['po_date'] ?? '');
+        if ($dA !== $dB) return strcmp($dA, $dB);
+        return strcmp(strval($a['id'] ?? ''), strval($b['id'] ?? ''));
+    });
+
+    $nextRecSeq = 44001;
+    $nextAshSeq = 44001;
+    foreach ($custPoIndices as $idx) {
+        $p = &$data['purchase_orders'][$idx];
+        $isInd = (($p['company_id'] ?? '') === 'ashaz-eng-in') || (($p['currency'] ?? '') === 'INR');
+        $prefix = $isInd ? 'ASH-CLPO' : 'REC-CLPO';
+        $targetRef = $isInd ? ($prefix . '-' . $nextAshSeq++) : ($prefix . '-' . $nextRecSeq++);
+        $p['internal_ref'] = $targetRef;
+        $p['ref_no'] = $targetRef;
+        $p['rec_ref'] = $targetRef;
+        if (empty($p['type'])) $p['type'] = 'customer_po';
+        if (empty($p['po_type'])) $p['po_type'] = 'customer_lpo';
+        if (empty($p['direction'])) $p['direction'] = 'inward';
+    }
+    unset($p);
+
+    if ($pdo) {
+        try {
+            $stmtUp = $pdo->prepare("UPDATE finance_purchase_orders SET data_json = :data_json WHERE id = :id OR po_no = :po_no");
+            foreach ($custPoIndices as $idx) {
+                $po = $data['purchase_orders'][$idx];
+                $stmtUp->execute([
+                    ':id' => $po['id'] ?? '',
+                    ':po_no' => $po['po_no'] ?? '',
+                    ':data_json' => json_encode($po, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                ]);
+            }
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('customer_po_serial_reseq_v136', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log("Migration v136 error: " . $e->getMessage());
+        }
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -6321,8 +6415,8 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                         unset($dn);
                     }
                     reconcileV134BankToWalletTransfer($data, $pdo);
-                reconcileV135WalletPaymentDisbursement($data, $pdo);
                     reconcileV135WalletPaymentDisbursement($data, $pdo);
+                    reconcileV136CustomerPOSerialResequence($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -6349,6 +6443,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV82EmployeesAndPayroll($data, $pdo);
                 reconcileV134BankToWalletTransfer($data, $pdo);
                 reconcileV135WalletPaymentDisbursement($data, $pdo);
+                reconcileV136CustomerPOSerialResequence($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {

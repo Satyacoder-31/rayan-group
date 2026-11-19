@@ -1193,6 +1193,32 @@ class FinanceApp {
       });
     }
 
+    // 0b4. Normalize Customer Purchase Orders (Customer LPOs) to sequential REC-CLPO-44xxx sequence chronologically (ASH-CLPO-44xxx for India)
+    if (Array.isArray(this.db.purchase_orders) && this.db.purchase_orders.length > 0) {
+      const customerPOs = this.db.purchase_orders.filter(p => p && (p.type === 'customer_po' || p.po_type === 'customer_lpo' || (!p.type && (p.po_type === 'customer_lpo' || !p.supplier_id || p.customer_name || p.customer_id))));
+      if (customerPOs.length > 0) {
+        const sortedPOs = [...customerPOs].sort((a, b) => {
+          const dA = a.date || a.po_date || '';
+          const dB = b.date || b.po_date || '';
+          if (dA !== dB) return dA.localeCompare(dB);
+          return String(a.id || '').localeCompare(String(b.id || ''));
+        });
+
+        let nextRecSeq = 44001;
+        let nextAshSeq = 44001;
+        sortedPOs.forEach(po => {
+          const isInd = (po.company_id === 'ashaz-eng-in') || (po.currency === 'INR');
+          const prefix = isInd ? 'ASH-CLPO' : 'REC-CLPO';
+          const targetRef = isInd ? `${prefix}-${nextAshSeq++}` : `${prefix}-${nextRecSeq++}`;
+          po.internal_ref = targetRef;
+          po.ref_no = targetRef;
+          po.rec_ref = targetRef;
+          if (!po.type) po.type = 'customer_po';
+          if (!po.po_type) po.po_type = 'customer_lpo';
+        });
+      }
+    }
+
     (this.db.projects || []).forEach(prj => {
       if (CUST_ALIAS_MAP[prj.customer_id]) {
         prj.customer_id = CUST_ALIAS_MAP[prj.customer_id];
@@ -2320,7 +2346,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v163';
+    const CURRENT_DB_VERSION = 'v2026_clean_v164';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -4260,13 +4286,15 @@ if (this.db.customer_receipts) {
   }
 
   getNextCustomerLPONumber() {
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const prefix = isIndia ? 'ASH-CLPO' : 'REC-CLPO';
     const pos = (this.db?.purchase_orders || []).filter(p =>
-      this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type)
+      this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || p.po_type === 'customer_lpo' || !p.type)
     );
-    let maxSeq = 44022;
+    let maxSeq = 44000;
     pos.forEach(p => {
       const ref = p.internal_ref || p.ref_no || p.rec_ref || '';
-      const m = ref.match(/REC-CLPO-(\d+)/i) || ref.match(/(\d{5})/);
+      const m = ref.match(/(?:REC|ASH)-CLPO-(\d+)/i) || ref.match(/(\d{5})/);
       if (m) {
         const num = parseInt(m[1], 10);
         if (!isNaN(num) && num > maxSeq) {
@@ -4274,7 +4302,7 @@ if (this.db.customer_receipts) {
         }
       }
     });
-    return `REC-CLPO-${maxSeq + 1}`;
+    return `${prefix}-${maxSeq + 1}`;
   }
 
   formatCurrency(amount, withSymbol = true) {
@@ -4959,6 +4987,10 @@ if (this.db.customer_receipts) {
                   </svg>
                 </div>
                 <div class="fin-accordion-body">
+                  <div class="fin-nav-subitem ${this.activeTab === 'projects' ? 'active' : ''}" data-tab="projects">
+                    <span class="fin-subitem-text">Project Accounts</span>
+                    <button type="button" class="fin-subitem-plus" title="Add Project Account" data-action="new-project">+</button>
+                  </div>
                   <div class="fin-nav-subitem ${this.activeTab === 'work_completion' ? 'active' : ''}" data-tab="work_completion">
                     <span class="fin-subitem-text">Work Completion</span>
                     <button type="button" class="fin-subitem-plus" title="Add Work Completion Certificate" data-action="new-wcc">+</button>
@@ -4974,10 +5006,6 @@ if (this.db.customer_receipts) {
                   <div class="fin-nav-subitem ${this.activeTab === 'letters' ? 'active' : ''}" data-tab="letters">
                     <span class="fin-subitem-text">Official Letters (Editable)</span>
                     <button type="button" class="fin-subitem-plus" title="Create Official Letter" data-action="new-letter">+</button>
-                  </div>
-                  <div class="fin-nav-subitem ${this.activeTab === 'projects' ? 'active' : ''}" data-tab="projects">
-                    <span class="fin-subitem-text">Project Accounts</span>
-                    <button type="button" class="fin-subitem-plus" title="Add Project Account" data-action="new-project">+</button>
                   </div>
                   <div class="fin-nav-subitem ${this.activeTab === 'items' ? 'active' : ''}" data-tab="items">
                     <span class="fin-subitem-text">Items &amp; Inventory</span>
@@ -10152,16 +10180,7 @@ if (this.db.customer_receipts) {
   // --------------------------------------------------------------------------
   renderCustomerPOTab(root) {
     this.normalizeAllBalances();
-    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || !p.type));
-
-    // Ensure all existing customer POs have an internal_ref if missing
-    rawPos.forEach((p, idx) => {
-      if (!p.internal_ref) {
-        p.internal_ref = `REC-CLPO-${44001 + idx}`;
-        p.ref_no = p.internal_ref;
-        p.client_po_no = p.po_no;
-      }
-    });
+    const rawPos = (this.db?.purchase_orders || []).filter(p => this.matchesActiveCompany(p.company_id) && (p.type === 'customer_po' || p.po_type === 'customer_lpo' || !p.type));
 
     this.customerPoSort = this.customerPoSort || 'date-desc';
     this.customerPoAttachFilter = this.customerPoAttachFilter || 'all';
@@ -10203,9 +10222,17 @@ if (this.db.customer_receipts) {
     const sortList = (list, sortVal) => {
       const sorted = [...list];
       if (sortVal === 'date-desc') {
-        sorted.sort((a, b) => new Date(b.date || b.po_date || '2026-01-01') - new Date(a.date || a.po_date || '2026-01-01'));
+        sorted.sort((a, b) => {
+          const diff = new Date(b.date || b.po_date || '2026-01-01') - new Date(a.date || a.po_date || '2026-01-01');
+          if (diff !== 0) return diff;
+          return this.extractSerialNum(b.internal_ref || '') - this.extractSerialNum(a.internal_ref || '');
+        });
       } else if (sortVal === 'date-asc') {
-        sorted.sort((a, b) => new Date(a.date || a.po_date || '2026-01-01') - new Date(b.date || b.po_date || '2026-01-01'));
+        sorted.sort((a, b) => {
+          const diff = new Date(a.date || a.po_date || '2026-01-01') - new Date(b.date || b.po_date || '2026-01-01');
+          if (diff !== 0) return diff;
+          return this.extractSerialNum(a.internal_ref || '') - this.extractSerialNum(b.internal_ref || '');
+        });
       } else if (sortVal === 'ref-desc') {
         sorted.sort((a, b) => this.extractSerialNum(b.internal_ref || '') - this.extractSerialNum(a.internal_ref || ''));
       } else if (sortVal === 'ref-asc') {
