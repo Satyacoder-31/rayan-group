@@ -4617,6 +4617,54 @@ function reconcileV136CustomerPOSerialResequence(&$data, $pdo) {
     }
 }
 
+
+function reconcileV137Fix3AedBankCashDiscrepancy(&$data, $pdo) {
+    if (!$data || !is_array($data)) return;
+
+    // 1. Correct bank withdrawal wire-wdl-1795072247792 (ATM-ADCB-52574) from 5131.62 to 5134.62
+    if (!empty($data['bank_transfers']) && is_array($data['bank_transfers'])) {
+        foreach ($data['bank_transfers'] as &$bt) {
+            if (($bt['id'] ?? '') === 'wire-wdl-1795072247792' || ($bt['reference_no'] ?? '') === 'ATM-ADCB-52574') {
+                $bt['amount'] = '5134.62';
+            }
+            if (($bt['id'] ?? '') === 'wire-wdl-1795071090149' || ($bt['reference_no'] ?? '') === 'ATM-ADCB-42015') {
+                $bt['date'] = '2024-03-22';
+                $bt['transfer_date'] = '2024-03-22';
+            }
+        }
+        unset($bt);
+    }
+
+    // 2. Correct cash voucher cv-wdl-1795072247793 (CV-WDL-3421) from 5131.62 to 5134.62
+    if (!empty($data['cash_vouchers']) && is_array($data['cash_vouchers'])) {
+        foreach ($data['cash_vouchers'] as &$cv) {
+            if (($cv['id'] ?? '') === 'cv-wdl-1795072247793' || ($cv['wire_id'] ?? '') === 'wire-wdl-1795072247792' || ($cv['voucher_no'] ?? '') === 'CV-WDL-3421') {
+                $cv['amount'] = '5134.62';
+            }
+            if (($cv['id'] ?? '') === 'cv-wdl-1795071090150' || ($cv['wire_id'] ?? '') === 'wire-wdl-1795071090149' || ($cv['voucher_no'] ?? '') === 'CV-WDL-6934') {
+                $cv['date'] = '2024-03-22';
+                $cv['voucher_date'] = '2024-03-22';
+            }
+        }
+        unset($cv);
+    }
+
+    // 3. Update MySQL relational tables
+    if ($pdo) {
+        try {
+            $pdo->exec("UPDATE finance_bank_transfers SET amount = 5134.62, data_json = JSON_SET(data_json, '$.amount', '5134.62') WHERE id = 'wire-wdl-1795072247792' OR reference_no = 'ATM-ADCB-52574'");
+            $pdo->exec("UPDATE finance_bank_transfers SET transfer_date = '2024-03-22', data_json = JSON_SET(data_json, '$.date', '2024-03-22', '$.transfer_date', '2024-03-22') WHERE id = 'wire-wdl-1795071090149' OR reference_no = 'ATM-ADCB-42015'");
+
+            $pdo->exec("UPDATE finance_cash_vouchers SET amount = 5134.62, data_json = JSON_SET(data_json, '$.amount', '5134.62') WHERE id = 'cv-wdl-1795072247793' OR voucher_no = 'CV-WDL-3421' OR wire_id = 'wire-wdl-1795072247792'");
+            $pdo->exec("UPDATE finance_cash_vouchers SET voucher_date = '2024-03-22', data_json = JSON_SET(data_json, '$.date', '2024-03-22', '$.voucher_date', '2024-03-22') WHERE id = 'cv-wdl-1795071090150' OR voucher_no = 'CV-WDL-6934' OR wire_id = 'wire-wdl-1795071090149'");
+
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('fix_3aed_bank_cash_diff_v137', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log('Migration v137 error: ' . $e->getMessage());
+        }
+    }
+}
+
 function loadFinanceDb($pdo, $dataFile, $candidates) {
     // A. Check Hostinger MySQL Database first
     if ($pdo) {
@@ -6417,6 +6465,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV134BankToWalletTransfer($data, $pdo);
                     reconcileV135WalletPaymentDisbursement($data, $pdo);
                     reconcileV136CustomerPOSerialResequence($data, $pdo);
+                    reconcileV137Fix3AedBankCashDiscrepancy($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -6444,6 +6493,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV134BankToWalletTransfer($data, $pdo);
                 reconcileV135WalletPaymentDisbursement($data, $pdo);
                 reconcileV136CustomerPOSerialResequence($data, $pdo);
+                    reconcileV137Fix3AedBankCashDiscrepancy($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {

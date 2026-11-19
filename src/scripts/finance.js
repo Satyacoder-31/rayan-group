@@ -1219,6 +1219,30 @@ class FinanceApp {
       }
     }
 
+    // 0b5. Reconcile Top Rock ATM Bank withdrawal (5134.62 AED) with supplier disbursement (5134.62 AED)
+    if (Array.isArray(this.db.bank_transfers)) {
+      this.db.bank_transfers.forEach(bt => {
+        if (bt.id === 'wire-wdl-1795072247792' || bt.reference_no === 'ATM-ADCB-52574') {
+          bt.amount = '5134.62';
+        }
+        if (bt.id === 'wire-wdl-1795071090149' || bt.reference_no === 'ATM-ADCB-42015') {
+          bt.date = '2024-03-22';
+          bt.transfer_date = '2024-03-22';
+        }
+      });
+    }
+    if (Array.isArray(this.db.cash_vouchers)) {
+      this.db.cash_vouchers.forEach(cv => {
+        if (cv.id === 'cv-wdl-1795072247793' || cv.wire_id === 'wire-wdl-1795072247792' || cv.voucher_no === 'CV-WDL-3421') {
+          cv.amount = '5134.62';
+        }
+        if (cv.id === 'cv-wdl-1795071090150' || cv.wire_id === 'wire-wdl-1795071090149' || cv.voucher_no === 'CV-WDL-6934') {
+          cv.date = '2024-03-22';
+          cv.voucher_date = '2024-03-22';
+        }
+      });
+    }
+
     (this.db.projects || []).forEach(prj => {
       if (CUST_ALIAS_MAP[prj.customer_id]) {
         prj.customer_id = CUST_ALIAS_MAP[prj.customer_id];
@@ -2346,7 +2370,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v164';
+    const CURRENT_DB_VERSION = 'v2026_clean_v165';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');

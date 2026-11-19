@@ -125,12 +125,30 @@ async function deploy() {
                   liveJson.data.bank_transfers.unshift(t);
                 }
               });
+              liveJson.data.bank_transfers.forEach(bt => {
+                if (bt.id === 'wire-wdl-1795072247792' || bt.reference_no === 'ATM-ADCB-52574') {
+                  bt.amount = '5134.62';
+                }
+                if (bt.id === 'wire-wdl-1795071090149' || bt.reference_no === 'ATM-ADCB-42015') {
+                  bt.date = '2024-03-22';
+                  bt.transfer_date = '2024-03-22';
+                }
+              });
 
               const localVouchers = (localData.cash_vouchers || []);
               if (!Array.isArray(liveJson.data.cash_vouchers)) liveJson.data.cash_vouchers = [];
               localVouchers.forEach(v => {
                 if (!liveJson.data.cash_vouchers.some(p => p.id === v.id || (v.voucher_no && p.voucher_no === v.voucher_no))) {
                   liveJson.data.cash_vouchers.unshift(v);
+                }
+              });
+              liveJson.data.cash_vouchers.forEach(cv => {
+                if (cv.id === 'cv-wdl-1795072247793' || cv.wire_id === 'wire-wdl-1795072247792' || cv.voucher_no === 'CV-WDL-3421') {
+                  cv.amount = 5134.62;
+                }
+                if (cv.id === 'cv-wdl-1795071090150' || cv.wire_id === 'wire-wdl-1795071090149' || cv.voucher_no === 'CV-WDL-6934') {
+                  cv.date = '2024-03-22';
+                  cv.voucher_date = '2024-03-22';
                 }
               });
 
