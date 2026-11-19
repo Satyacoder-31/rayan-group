@@ -62,41 +62,78 @@ export function registerDocumentModules(FinanceApp) {
 
     return certs.map((c, idx) => {
       const isApp = (c.status || '').toLowerCase() === 'approved';
+      const hasSigned = Boolean(c.signed_document_url || c.signed_document_base64);
       return `
-        <tr>
-          <td style="text-align:center; font-weight:700; color:#94a3b8; white-space:nowrap; width:45px;">${idx + 1}</td>
-          <td style="white-space:nowrap !important; min-width:185px; font-weight:800; color:#38bdf8;" class="fin-inv-number-cell">
-            <div style="cursor:pointer;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="View Official Certificate">
-              ${c.cert_no || c.reference_no}
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.06); transition:background 0.15s ease;">
+          <td style="text-align:center; font-weight:700; color:#64748b; white-space:nowrap; width:45px; font-size:0.82rem;">${idx + 1}</td>
+          <td style="white-space:nowrap !important; min-width:185px;" class="fin-inv-number-cell">
+            <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="View Official Certificate">
+              <span style="font-size:1rem;">📜</span>
+              <span style="font-weight:800; color:#38bdf8; font-size:0.88rem; letter-spacing:0.01em;">${c.cert_no || c.reference_no}</span>
             </div>
-            ${c.subcontract_agreement ? `<div style="font-size:0.7rem; color:#94a3b8; font-weight:500;">Agr: ${c.subcontract_agreement}</div>` : ''}
+            ${c.subcontract_agreement ? `
+              <div style="margin-top:3px; display:inline-flex; align-items:center; gap:4px; font-size:0.70rem; color:#94a3b8; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px;">
+                <span style="color:#64748b; font-weight:600;">Agr:</span>
+                <span style="color:#cbd5e1; font-weight:700;">${c.subcontract_agreement}</span>
+              </div>
+            ` : ''}
           </td>
-          <td style="white-space:nowrap !important; color:#cbd5e1; font-size:0.82rem; min-width:125px;">
-            ${this.formatDate(c.date || c.created_at)}
-            ${c.time ? `<div style="font-size:0.7rem; color:#94a3b8;">${c.time}</div>` : ''}
+          <td style="white-space:nowrap !important; min-width:125px;">
+            <div style="font-weight:700; color:#f1f5f9; font-size:0.84rem;">${this.formatDate(c.date || c.created_at)}</div>
+            ${c.time ? `<div style="font-size:0.72rem; color:#94a3b8; margin-top:2px; font-weight:500;">🕒 ${c.time}</div>` : ''}
           </td>
-          <td style="white-space:nowrap; min-width:220px; font-weight:700; color:#f8fafc;">
-            <div class="fin-customer-cell">${c.client_name || 'Client'}</div>
-            ${c.contact_person ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">Attn: ${c.contact_person}</div>` : ''}
+          <td style="white-space:nowrap; min-width:220px;">
+            <div style="font-weight:800; color:#ffffff; font-size:0.88rem; letter-spacing:0.01em;">${c.client_name || 'Client'}</div>
+            ${c.contact_person ? `<div style="font-size:0.72rem; color:#38bdf8; font-weight:600; margin-top:2px;">👤 Attn: ${c.contact_person}</div>` : ''}
           </td>
-          <td style="white-space:nowrap; color:#cbd5e1; font-size:0.82rem; min-width:190px;">
+          <td style="white-space:nowrap; color:#e2e8f0; font-size:0.82rem; font-weight:600; min-width:190px;">
             ${c.main_client || '—'}
           </td>
-          <td style="white-space:nowrap; color:#f8fafc; font-weight:600; min-width:190px;">
-            ${c.project_name || 'Al Foah Mall Alain'}
+          <td style="white-space:nowrap; min-width:190px;">
+            <div style="color:#f8fafc; font-weight:700; font-size:0.84rem; display:flex; align-items:flex-start; gap:4px;">
+              <span style="color:#38bdf8; font-size:0.8rem; margin-top:1px;">📍</span>
+              <span>${c.project_name || 'Al Foah Mall Alain'}</span>
+            </div>
           </td>
-          <td style="color:#cbd5e1; font-size:0.8rem; min-width:220px;">
+          <td style="color:#cbd5e1; font-size:0.80rem; line-height:1.45; min-width:220px; max-width:320px; white-space:normal;">
             ${c.scope_description || 'Scope of works executed according to PO'}
           </td>
-          <td style="text-align:center; white-space:nowrap; min-width:110px;">
-            <span class="fin-badge ${isApp ? 'fin-badge-approved' : 'fin-badge-pending'}" style="font-size:0.72rem;">
-              ${c.status || 'Approved'}
-            </span>
+          <td style="text-align:center; white-space:nowrap; min-width:125px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+              <span style="background:rgba(16,185,129,0.16); border:1px solid rgba(16,185,129,0.45); color:#34d399; font-weight:700; font-size:0.74rem; padding:3px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:5px; letter-spacing:0.02em;">
+                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+                ${c.status || 'Approved'}
+              </span>
+              ${hasSigned ? `
+                <span style="background:rgba(56,189,248,0.14); border:1px solid rgba(56,189,248,0.38); color:#38bdf8; font-weight:700; font-size:0.68rem; padding:2px 7px; border-radius:10px; display:inline-flex; align-items:center; gap:3px;" title="Client signed & stamped certificate attached">
+                  📎 Client Signed
+                </span>
+              ` : `
+                <span style="color:#64748b; font-size:0.67rem; font-weight:500;">Pending Sign Copy</span>
+              `}
+            </div>
           </td>
-          <td style="text-align:right; white-space:nowrap !important; min-width:190px;">
-            <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="Print &amp; View Official Document">Print / View</button>
-            <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700;" onclick="window.finApp.openWorkCompletionModal('${c.id}')" title="Edit Certificate Details">Edit</button>
-            <button type="button" class="fin-btn-row-action" style="color:#ef4444;" onclick="window.finApp.deleteWorkCompletion('${c.id}')" title="Delete Certificate">Delete</button>
+          <td style="text-align:right; white-space:nowrap !important; min-width:275px;">
+            <div style="display:inline-flex; align-items:center; gap:6px; justify-content:flex-end;">
+              <button type="button" class="fin-btn-row-action" style="color:#00e5d2; font-weight:700; background:rgba(0,229,210,0.1); border:1px solid rgba(0,229,210,0.3); border-radius:6px; padding:4px 9px; font-size:0.74rem; display:inline-flex; align-items:center; gap:4px;" onclick="window.finApp.openWorkCompletionPrintModal('${c.id}')" title="Print &amp; View Official Document">
+                <span>🖨️</span><span>Print / View</span>
+              </button>
+              ${hasSigned ? `
+                <button type="button" class="fin-btn-row-action" style="color:#34d399; font-weight:700; background:rgba(16,185,129,0.16); border:1px solid rgba(16,185,129,0.45); border-radius:6px; padding:4px 9px; font-size:0.74rem; display:inline-flex; align-items:center; gap:4px;" onclick="window.finApp.openSignedWorkCompletionModal('${c.id}')" title="View or Download Signed Certificate from Client">
+                  <span>📎</span><span>Signed Copy</span>
+                </button>
+              ` : `
+                <button type="button" class="fin-btn-row-action" style="color:#38bdf8; font-weight:600; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:6px; padding:4px 9px; font-size:0.74rem; display:inline-flex; align-items:center; gap:4px;" onclick="window.finApp.openSignedWorkCompletionModal('${c.id}')" title="Attach Client-Signed Certificate (PDF / Image)">
+                  <span>📎</span><span>Attach Signed</span>
+                </button>
+              `}
+              <button type="button" class="fin-btn-row-action" style="color:#f59e0b; font-weight:700; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:6px; padding:4px 8px; font-size:0.74rem; display:inline-flex; align-items:center; gap:4px;" onclick="window.finApp.openWorkCompletionModal('${c.id}')" title="Edit Certificate Details">
+                <span>✏️</span><span>Edit</span>
+              </button>
+              <button type="button" class="fin-btn-row-action" style="color:#ef4444; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:6px; padding:4px 8px; font-size:0.74rem;" onclick="window.finApp.deleteWorkCompletion('${c.id}')" title="Delete Certificate">
+                <span>🗑️</span>
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -195,8 +232,8 @@ export function registerDocumentModules(FinanceApp) {
                   <th style="white-space:nowrap; min-width:190px;">MAIN CLIENT / CONTRACTOR</th>
                   <th style="white-space:nowrap; min-width:190px;">PROJECT &amp; LOCATION</th>
                   <th style="white-space:nowrap; min-width:220px;">SCOPE / MATERIAL SUMMARY</th>
-                  <th style="text-align:center; white-space:nowrap; min-width:110px;">STATUS</th>
-                  <th style="text-align:right; white-space:nowrap; min-width:190px;">ACTIONS</th>
+                  <th style="text-align:center; white-space:nowrap; min-width:125px;">STATUS</th>
+                  <th style="text-align:right; white-space:nowrap; min-width:275px;">ACTIONS</th>
                 </tr>
               </thead>
               <tbody id="wcc-table-tbody">
@@ -1132,6 +1169,43 @@ export function registerDocumentModules(FinanceApp) {
               </label>
             </div>
 
+            <!-- Card 7: Client-Signed Certificate Attachment -->
+            <div class="fin-form-section-card">
+              <div class="fin-form-section-header">
+                <div class="fin-form-section-title">
+                  <span>📎</span>
+                  <span>Client-Signed Certificate (Verified Attachment)</span>
+                </div>
+              </div>
+              <div style="font-size:0.80rem; color:#94a3b8; margin-bottom:0.75rem;">
+                Attach or review the stamped &amp; signed certificate received back from the client.
+              </div>
+              ${(cert.signed_document_url || cert.signed_document_base64) ? `
+                <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); border-radius:8px; padding:0.75rem 1rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="color:#10b981; font-size:1.1rem;">✓</span>
+                    <div>
+                      <div style="color:#34d399; font-weight:700; font-size:0.85rem;">${cert.signed_document_name || 'Signed Copy Attached'}</div>
+                      <div style="color:#94a3b8; font-size:0.72rem;">${cert.signed_document_size || ''} ${cert.signed_document_date ? '&bull; Attached ' + this.formatDate(cert.signed_document_date) : ''}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:0.5rem;">
+                    <a href="${cert.signed_document_url || cert.signed_document_base64}" target="_blank" class="fin-btn-quick" style="text-decoration:none; color:#38bdf8; border-color:rgba(56,189,248,0.4); padding:3px 8px; font-size:0.74rem;">👁️ View</a>
+                    <button type="button" class="fin-btn-quick" style="color:#38bdf8; border-color:rgba(56,189,248,0.4); padding:3px 8px; font-size:0.74rem;" onclick="window.finApp.openSignedWorkCompletionModal('${cert.id}')">🔄 Manage / Replace</button>
+                  </div>
+                </div>
+              ` : `
+                <div style="background:rgba(15,23,42,0.5); border:1px dashed rgba(56,189,248,0.3); border-radius:8px; padding:0.9rem 1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;">
+                  <div style="font-size:0.80rem; color:#cbd5e1;">
+                    No client-signed copy attached yet.
+                  </div>
+                  <button type="button" class="fin-btn-quick" style="color:#38bdf8; border-color:rgba(56,189,248,0.4); font-size:0.75rem;" onclick="window.finApp.openSignedWorkCompletionModal('${cert.id}')">
+                    <span>📎</span><span>Upload &amp; Attach Signed Copy</span>
+                  </button>
+                </div>
+              `}
+            </div>
+
             <div class="fin-modal-footer" style="padding:1.25rem 0 0 0; display:flex; justify-content:flex-end; gap:0.85rem; border-top:1px solid rgba(255,255,255,0.1); background:transparent;">
               <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-wcc-edit')">Cancel</button>
               <button type="submit" class="fin-btn-quick primary">💾 ${isEdit ? 'Save & Update Certificate' : 'Save & Issue Certificate'}</button>
@@ -1147,6 +1221,7 @@ export function registerDocumentModules(FinanceApp) {
       form.onsubmit = async (e) => {
         e.preventDefault();
         const updated = {
+          ...cert,
           id: document.getElementById('wcc-id').value,
           cert_no: document.getElementById('wcc-cert-no').value.trim(),
           reference_no: document.getElementById('wcc-cert-no').value.trim(),
@@ -2107,6 +2182,15 @@ export function registerDocumentModules(FinanceApp) {
             </div>
           </div>
           <div class="fin-doc-toolbar-right">
+            ${(cert.signed_document_url || cert.signed_document_base64) ? `
+              <button type="button" class="fin-btn-print-action" style="color:#34d399; border-color:rgba(16,185,129,0.5); background:rgba(16,185,129,0.15); font-weight:700;" onclick="window.finApp.openSignedWorkCompletionModal('${cert.id}')" title="View Client-Signed &amp; Stamped Certificate">
+                <span>📎</span><span>Client Signed Copy</span>
+              </button>
+            ` : `
+              <button type="button" class="fin-btn-print-action" style="color:#38bdf8; border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.1);" onclick="window.finApp.openSignedWorkCompletionModal('${cert.id}')" title="Attach Client-Signed Certificate">
+                <span>📎</span><span>Attach Signed Cert</span>
+              </button>
+            `}
             <button type="button" class="fin-btn-print-action fin-btn-toggle-stamp" id="btn-toggle-stamp-sign" onclick="window.finApp.toggleDocStampSign()" title="Toggle Stamp & Signature On / Off">
               <span>🔲</span> Toggle Stamp &amp; Sign
             </button>
@@ -2160,7 +2244,7 @@ export function registerDocumentModules(FinanceApp) {
 
                   <!-- Column 3: Right (Metadata & Dates) -->
                   <div style="flex:0 0 210px; max-width:215px; text-align:right;">
-                    <div style="font-size:0.86rem; font-weight:800; color:#dc2626; font-family:monospace; margin-bottom:3px; white-space:nowrap;" contenteditable="true" spellcheck="false" title="Click to edit cert no">
+                    <div style="font-size:0.86rem; font-weight:800; color:#0f172a; font-family:monospace; margin-bottom:3px; white-space:nowrap;" contenteditable="true" spellcheck="false" title="Click to edit cert no">
                       # ${escapeHtml(cert.cert_no || cert.reference_no || 'REC-JOB COM-11021')}
                     </div>
                     <table style="font-size:0.66rem; border-collapse:collapse; margin-left:auto; white-space:nowrap;">
@@ -2356,6 +2440,328 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       this.downloadFile(`${cert.cert_no}_Work_Completion.html`, fullDoc, 'text/html');
       this.showNotification(`Downloaded ${cert.cert_no} Work Completion Certificate.`, 'success');
     }
+  };
+
+  // --- Client-Signed Work Completion Certificate Attachment Modal ---
+  proto.openSignedWorkCompletionModal = function (certId) {
+    const cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    if (!cert) {
+      this.showNotification(`Work Completion Certificate "${certId}" could not be found.`, 'warning');
+      return;
+    }
+
+    const hasAttachment = Boolean(cert.signed_document_url || cert.signed_document_base64);
+    const fileSrc = cert.signed_document_url || cert.signed_document_base64 || '';
+    const isPdf = Boolean(fileSrc.toLowerCase().includes('.pdf') || (cert.signed_document_type || '').includes('pdf') || fileSrc.startsWith('data:application/pdf'));
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-wcc-signed-attachment">
+        <div class="fin-modal-dialog" style="max-width:760px; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.3); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.15); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.95) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(0,229,210,0.2) 100%); border:1px solid rgba(16,185,129,0.45); display:flex; align-items:center; justify-content:center; font-size:1.35rem;">📎</div>
+              <div>
+                <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; font-weight:800; color:#f8fafc; letter-spacing:-0.01em;">
+                  Client-Signed Work Completion Certificate
+                </h3>
+                <p style="margin:2px 0 0; font-size:0.78rem; color:#94a3b8;">
+                  ${cert.cert_no || cert.reference_no} &bull; ${cert.client_name || 'Client Handover'}
+                </p>
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-wcc-signed-attachment')" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; color:#cbd5e1; font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer;">&times;</button>
+          </div>
+
+          <div class="fin-modal-body" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
+            <!-- Certificate Summary Metadata -->
+            <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.9rem 1.2rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.75rem; font-size:0.8rem;">
+              <div>
+                <div style="color:#64748b; font-size:0.7rem; text-transform:uppercase; font-weight:700;">Certificate #</div>
+                <div style="color:#38bdf8; font-weight:800; font-family:monospace; font-size:0.9rem; margin-top:2px;">${cert.cert_no || cert.reference_no}</div>
+              </div>
+              <div>
+                <div style="color:#64748b; font-size:0.7rem; text-transform:uppercase; font-weight:700;">Client</div>
+                <div style="color:#f8fafc; font-weight:700; margin-top:2px;">${cert.client_name}</div>
+              </div>
+              <div>
+                <div style="color:#64748b; font-size:0.7rem; text-transform:uppercase; font-weight:700;">Sub-Contract / PO</div>
+                <div style="color:#cbd5e1; font-weight:600; margin-top:2px;">${cert.subcontract_agreement || cert.po_no || '—'}</div>
+              </div>
+              <div>
+                <div style="color:#64748b; font-size:0.7rem; text-transform:uppercase; font-weight:700;">Project</div>
+                <div style="color:#cbd5e1; font-weight:600; margin-top:2px;">${cert.project_name || '—'}</div>
+              </div>
+            </div>
+
+            ${hasAttachment ? `
+              <!-- Section A: Current Attached Document -->
+              <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:1.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:rgba(16,185,129,0.2); color:#10b981; font-weight:800; font-size:0.9rem;">✓</span>
+                    <div>
+                      <div style="font-weight:800; color:#34d399; font-size:0.95rem;">Client-Signed Certificate Attached</div>
+                      <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                        ${cert.signed_document_name || 'signed_work_completion_certificate.pdf'} 
+                        ${cert.signed_document_size ? `&bull; ${cert.signed_document_size}` : ''}
+                        ${cert.signed_document_date ? `&bull; Attached ${this.formatDate(cert.signed_document_date)}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                    <a href="${fileSrc}" target="_blank" rel="noopener noreferrer" class="fin-btn-quick" style="text-decoration:none; color:#38bdf8; border-color:rgba(56,189,248,0.4); padding:5px 10px; font-size:0.76rem; display:inline-flex; align-items:center; gap:4px;">
+                      <span>👁️</span><span>Open Full Screen</span>
+                    </a>
+                    <button type="button" class="fin-btn-quick" style="color:#00e5d2; border-color:rgba(0,229,210,0.4); padding:5px 10px; font-size:0.76rem;" onclick="window.finApp.downloadSignedWorkCompletion('${cert.id}')">
+                      <span>📥</span><span>Download</span>
+                    </button>
+                    <button type="button" class="fin-btn-quick" style="color:#f59e0b; border-color:rgba(245,158,11,0.4); padding:5px 10px; font-size:0.76rem;" onclick="document.getElementById('wcc-upload-box').style.display='block'; this.style.display='none';">
+                      <span>🔄</span><span>Replace File</span>
+                    </button>
+                    <button type="button" class="fin-btn-quick" style="color:#ef4444; border-color:rgba(239,68,68,0.4); padding:5px 10px; font-size:0.76rem;" onclick="window.finApp.removeSignedWorkCompletion('${cert.id}')">
+                      <span>🗑️</span><span>Remove</span>
+                    </button>
+                  </div>
+                </div>
+
+                ${cert.signed_document_notes ? `
+                  <div style="font-size:0.78rem; color:#cbd5e1; background:rgba(0,0,0,0.25); border-radius:6px; padding:6px 10px; margin-bottom:1rem; border-left:3px solid #10b981;">
+                    <strong style="color:#f8fafc;">Remarks:</strong> ${cert.signed_document_notes}
+                  </div>
+                ` : ''}
+
+                <!-- Live Document Viewer Area -->
+                <div style="background:#020617; border:1px solid rgba(255,255,255,0.1); border-radius:8px; overflow:hidden; min-height:280px; display:flex; align-items:center; justify-content:center;">
+                  ${isPdf ? `
+                    <iframe src="${fileSrc}" style="width:100%; height:420px; border:none; background:#ffffff;"></iframe>
+                  ` : `
+                    <div style="padding:1rem; width:100%; text-align:center;">
+                      <img src="${fileSrc}" alt="Client Signed Certificate" style="max-width:100%; max-height:420px; object-fit:contain; border-radius:6px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+                    </div>
+                  `}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Section B: Upload / Replace Dropzone -->
+            <div id="wcc-upload-box" style="display:${hasAttachment ? 'none' : 'block'}; background:rgba(15,23,42,0.6); border:1.5px dashed rgba(56,189,248,0.4); border-radius:12px; padding:1.5rem; text-align:center; transition:all 0.2s ease;">
+              <input type="file" id="wcc-signed-file-input" accept=".pdf,image/png,image/jpeg,image/jpg" style="display:none;">
+              <div id="wcc-dropzone" style="cursor:pointer; padding:1.25rem 0;" onclick="document.getElementById('wcc-signed-file-input').click()">
+                <div style="font-size:2.4rem; margin-bottom:0.5rem;">📄</div>
+                <div style="font-size:1rem; font-weight:700; color:#f8fafc;">
+                  Click to Browse or Drag &amp; Drop Client-Signed Certificate
+                </div>
+                <div style="font-size:0.78rem; color:#94a3b8; margin-top:0.35rem;">
+                  Accepts PDF files, Scanned Documents, or Images (JPG, PNG) &bull; Up to 25 MB
+                </div>
+              </div>
+
+              <!-- Selected File Status Badge -->
+              <div id="wcc-selected-file-info" style="display:none; margin-top:1rem; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.35); border-radius:8px; padding:0.75rem 1rem; text-align:left;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="font-size:1.2rem;">📎</span>
+                    <div>
+                      <div id="wcc-selected-file-name" style="font-weight:700; color:#f8fafc; font-size:0.86rem;"></div>
+                      <div id="wcc-selected-file-size" style="font-size:0.72rem; color:#94a3b8;"></div>
+                    </div>
+                  </div>
+                  <button type="button" onclick="window.finApp.clearSelectedWccFile()" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;" title="Remove selection">&times;</button>
+                </div>
+              </div>
+
+              <!-- Optional Notes -->
+              <div style="margin-top:1rem; text-align:left;">
+                <label style="font-size:0.75rem; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">
+                  Signatory Remarks / Handover Notes (Optional)
+                </label>
+                <input type="text" id="wcc-signed-notes" class="fin-form-input" placeholder="e.g. Received signed &amp; stamped original by Mr. Kuberan on 19 Nov 2026" style="width:100%; box-sizing:border-box;">
+              </div>
+            </div>
+          </div>
+
+          <div class="fin-modal-footer" style="padding:1.15rem 1.75rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.1); background:rgba(15,23,42,0.9);">
+            <div style="font-size:0.75rem; color:#94a3b8;">
+              ${hasAttachment ? 'Signed copy is verified and linked to this certificate record.' : 'Attach the client-signed copy for compliance and audits.'}
+            </div>
+            <div style="display:flex; gap:0.75rem;">
+              <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-wcc-signed-attachment')">Close</button>
+              <button type="button" id="btn-save-wcc-signed" class="fin-btn-quick primary" style="background:#10b981; border-color:#10b981; color:#fff;" onclick="window.finApp.saveSignedWorkCompletion('${cert.id}')">
+                💾 Save &amp; Attach Signed Document
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.showCustomModal(modalHtml);
+
+    const fileInput = document.getElementById('wcc-signed-file-input');
+    const dropzone = document.getElementById('wcc-dropzone');
+    const infoBox = document.getElementById('wcc-selected-file-info');
+    const nameEl = document.getElementById('wcc-selected-file-name');
+    const sizeEl = document.getElementById('wcc-selected-file-size');
+
+    this._pendingWccFile = null;
+
+    if (fileInput) {
+      fileInput.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          this._pendingWccFile = file;
+          if (nameEl) nameEl.textContent = file.name;
+          if (sizeEl) sizeEl.textContent = (file.size / 1024).toFixed(1) + ' KB';
+          if (infoBox) infoBox.style.display = 'block';
+        }
+      };
+    }
+
+    if (dropzone) {
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.style.background = 'rgba(56,189,248,0.1)';
+      };
+      dropzone.ondragleave = (e) => {
+        e.preventDefault();
+        dropzone.style.background = 'transparent';
+      };
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.style.background = 'transparent';
+        const file = e.dataTransfer?.files?.[0];
+        if (file) {
+          this._pendingWccFile = file;
+          if (nameEl) nameEl.textContent = file.name;
+          if (sizeEl) sizeEl.textContent = (file.size / 1024).toFixed(1) + ' KB';
+          if (infoBox) infoBox.style.display = 'block';
+        }
+      };
+    }
+  };
+
+  proto.saveSignedWorkCompletion = async function (certId) {
+    const cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    if (!cert) return;
+
+    const file = this._pendingWccFile;
+    const notesInput = document.getElementById('wcc-signed-notes');
+    const notesVal = notesInput?.value?.trim() || cert.signed_document_notes || '';
+
+    if (!file && !cert.signed_document_url && !cert.signed_document_base64) {
+      this.showNotification('Please select or drop a signed PDF or image file first.', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('btn-save-wcc-signed');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Uploading & Saving...';
+    }
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Data = reader.result;
+        const formattedSize = file.size > 1024 * 1024 
+          ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' 
+          : (file.size / 1024).toFixed(1) + ' KB';
+
+        const updated = {
+          ...cert,
+          signed_document_name: file.name,
+          signed_document_size: formattedSize,
+          signed_document_type: file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+          signed_document_date: new Date().toISOString(),
+          signed_document_notes: notesVal,
+          signed_document_base64: base64Data,
+          updated_at: new Date().toISOString()
+        };
+
+        const idx = (this.db.work_completion_certificates || []).findIndex(c => c.id === cert.id);
+        if (idx >= 0) {
+          this.db.work_completion_certificates[idx] = updated;
+        }
+
+        try {
+          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        } catch (e) {}
+
+        this.closeModal('modal-wcc-signed-attachment');
+        this.renderActiveTab();
+        this.showNotification(`Client-signed certificate attached successfully to ${cert.cert_no || cert.id}!`, 'success');
+
+        await this.syncApi('save_work_completion', { certificate: updated });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      cert.signed_document_notes = notesVal;
+      cert.updated_at = new Date().toISOString();
+      try {
+        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      } catch (e) {}
+      this.closeModal('modal-wcc-signed-attachment');
+      this.renderActiveTab();
+      this.showNotification(`Signed certificate notes updated for ${cert.cert_no || cert.id}.`, 'success');
+      await this.syncApi('save_work_completion', { certificate: cert });
+    }
+  };
+
+  proto.removeSignedWorkCompletion = async function (certId) {
+    const cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    if (!cert) return;
+
+    if (!confirm(`Are you sure you want to remove the signed certificate attachment from ${cert.cert_no || cert.id}?`)) {
+      return;
+    }
+
+    const updated = {
+      ...cert,
+      signed_document_url: null,
+      signed_document_name: null,
+      signed_document_size: null,
+      signed_document_date: null,
+      signed_document_notes: null,
+      signed_document_base64: null,
+      remove_signed_document: true,
+      updated_at: new Date().toISOString()
+    };
+
+    const idx = (this.db.work_completion_certificates || []).findIndex(c => c.id === cert.id);
+    if (idx >= 0) {
+      this.db.work_completion_certificates[idx] = updated;
+    }
+
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    } catch (e) {}
+
+    this.closeModal('modal-wcc-signed-attachment');
+    this.renderActiveTab();
+    this.showNotification(`Signed certificate attachment removed from ${cert.cert_no || cert.id}.`, 'info');
+
+    await this.syncApi('save_work_completion', { certificate: updated });
+  };
+
+  proto.downloadSignedWorkCompletion = function (certId) {
+    const cert = (this.db?.work_completion_certificates || []).find(c => c.id === certId || c.cert_no === certId);
+    if (!cert) return;
+    const fileSrc = cert.signed_document_url || cert.signed_document_base64;
+    if (!fileSrc) return;
+    const a = document.createElement('a');
+    a.href = fileSrc;
+    a.download = cert.signed_document_name || `Signed_${cert.cert_no || 'WCC'}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  proto.clearSelectedWccFile = function () {
+    this._pendingWccFile = null;
+    const infoBox = document.getElementById('wcc-selected-file-info');
+    if (infoBox) infoBox.style.display = 'none';
+    const fileInput = document.getElementById('wcc-signed-file-input');
+    if (fileInput) fileInput.value = '';
   };
 
   // --- Subcontractor Undertaking Letter Print Modal (2-Page Layout) ---

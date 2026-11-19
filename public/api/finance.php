@@ -10680,6 +10680,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($cert['id'])) {
                     $cert['id'] = 'wcc-' . round(microtime(true) * 1000);
                 }
+
+                // Check for client-signed document upload / attachment
+                if (!empty($cert['signed_document_base64']) && strpos($cert['signed_document_base64'], ';base64,') !== false) {
+                    try {
+                        $parts = explode(';base64,', $cert['signed_document_base64']);
+                        $mime = str_replace('data:', '', $parts[0]);
+                        $bin = base64_decode($parts[1]);
+                        $ext = 'pdf';
+                        if (stripos($mime, 'png') !== false) $ext = 'png';
+                        else if (stripos($mime, 'jpeg') !== false || stripos($mime, 'jpg') !== false) $ext = 'jpg';
+                        else if (stripos($cert['signed_document_name'] ?? '', '.png') !== false) $ext = 'png';
+                        else if (stripos($cert['signed_document_name'] ?? '', '.jpg') !== false || stripos($cert['signed_document_name'] ?? '', '.jpeg') !== false) $ext = 'jpg';
+
+                        $uploadDir = __DIR__ . '/../uploads/signed_certificates';
+                        if (!is_dir($uploadDir)) {
+                            @mkdir($uploadDir, 0755, true);
+                        }
+                        $cleanCertNo = preg_replace('/[^a-zA-Z0-9_-]/', '_', $cert['cert_no'] ?? $cert['id']);
+                        $fileName = 'signed_wcc_' . strtolower($cleanCertNo) . '_' . time() . '.' . $ext;
+                        $destPath = $uploadDir . '/' . $fileName;
+                        if (file_put_contents($destPath, $bin)) {
+                            $cert['signed_document_url'] = '/uploads/signed_certificates/' . $fileName;
+                            unset($cert['signed_document_base64']);
+                        }
+                    } catch (Exception $ex) {
+                        error_log("Error saving signed wcc attachment: " . $ex->getMessage());
+                    }
+                }
+
+                if (!empty($cert['remove_signed_document'])) {
+                    $cert['signed_document_url'] = null;
+                    $cert['signed_document_name'] = null;
+                    $cert['signed_document_size'] = null;
+                    $cert['signed_document_date'] = null;
+                    $cert['signed_document_notes'] = null;
+                    $cert['signed_document_base64'] = null;
+                    unset($cert['remove_signed_document']);
+                }
+
                 if (!isset($db['work_completion_certificates']) || !is_array($db['work_completion_certificates'])) {
                     $db['work_completion_certificates'] = [];
                 }
