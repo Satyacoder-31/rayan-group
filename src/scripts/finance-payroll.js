@@ -528,8 +528,9 @@ export function registerPayrollModules(FinanceApp) {
       const totalSalary = basic + acc + cons + oth;
 
       const isAct = (emp.status || 'Active').toLowerCase() === 'active';
-      const statusColor = isAct ? '#10b981' : '#f59e0b';
-      const statusBg = isAct ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)';
+      const isResigned = (emp.status || '').toLowerCase() === 'resigned' || (emp.status || '').toLowerCase() === 'terminated';
+      const statusColor = isAct ? '#10b981' : (isResigned ? '#ef4444' : '#f59e0b');
+      const statusBg = isAct ? 'rgba(16,185,129,0.12)' : (isResigned ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)');
 
       const initials = (emp.name || 'EM').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
       const hasPhoto = Boolean(emp.photo);
@@ -582,6 +583,11 @@ export function registerPayrollModules(FinanceApp) {
             <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.7rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusColor}40;">
               ${escapeHtml(emp.status || 'Active')}
             </span>
+            ${(isResigned && (emp.end_date || emp.resignation_date)) ? `
+              <div style="font-size:0.65rem; color:#f87171; margin-top:2px; font-family:monospace;" title="End date / Resignation date">
+                Left: ${escapeHtml(emp.end_date || emp.resignation_date)}
+              </div>
+            ` : ''}
           </td>
           <td style="text-align:right; padding:7px 10px; vertical-align:middle; white-space:nowrap;">
             <div style="display:inline-flex; gap:4px; align-items:center; flex-wrap:nowrap; justify-content:flex-end;">
@@ -622,7 +628,14 @@ export function registerPayrollModules(FinanceApp) {
         if (prj === 'corporate' && e.project_id) return false;
         if (prj !== 'corporate' && (e.project_id || '').toLowerCase() !== prj) return false;
       }
-      if (status && (e.status || 'active').toLowerCase() !== status) return false;
+      if (status) {
+        const empSt = (e.status || 'active').toLowerCase();
+        if (status === 'resigned') {
+          if (empSt !== 'resigned' && empSt !== 'terminated' && empSt !== 'former') return false;
+        } else if (empSt !== status) {
+          return false;
+        }
+      }
 
       return true;
     });
@@ -1124,7 +1137,7 @@ export function registerPayrollModules(FinanceApp) {
                   <input type="text" name="position" class="fin-form-input" required value="${escapeHtml(emp?.position || emp?.designation || '')}" placeholder="e.g. Civil Engineer">
                 </div>
               </div>
-              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Department</label>
                   <input type="text" name="department" class="fin-form-input" value="${escapeHtml(emp?.department || 'Rayan Engineering')}" placeholder="e.g. Rayan Engineering">
@@ -1132,6 +1145,10 @@ export function registerPayrollModules(FinanceApp) {
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Date of Joining</label>
                   <input type="date" name="date_of_joining" class="fin-form-input" value="${emp?.date_of_joining || new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">End Date / Exit Date <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(if resigned)</span></label>
+                  <input type="date" name="end_date_quick" id="fin-emp-end-date-quick" class="fin-form-input" value="${emp?.end_date || emp?.resignation_date || ''}" onchange="window.finApp.syncEmployeeEndDate(this.value)">
                 </div>
               </div>
             </div>
@@ -1287,12 +1304,35 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Employment Status</label>
-                  <select name="status" class="fin-form-select">
+                  <select name="status" id="fin-emp-status-select" class="fin-form-select" onchange="window.finApp.onEmployeeStatusChange(this.value)">
                     <option value="Active" ${emp?.status === 'Active' || !emp ? 'selected' : ''}>Active</option>
                     <option value="On Leave" ${emp?.status === 'On Leave' ? 'selected' : ''}>On Leave</option>
                     <option value="Resigned" ${emp?.status === 'Resigned' ? 'selected' : ''}>Resigned</option>
                     <option value="Terminated" ${emp?.status === 'Terminated' ? 'selected' : ''}>Terminated</option>
                   </select>
+                </div>
+              </div>
+
+              <!-- Resignation & Exit Details Panel (Prominently shown when Resigned or Terminated) -->
+              <div id="fin-emp-end-date-section" style="margin-top:1rem; padding:1.15rem; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:10px; display:${(emp?.status === 'Resigned' || emp?.status === 'Terminated' || emp?.end_date || emp?.resignation_date) ? 'block' : 'none'};">
+                <div style="font-size:0.84rem; font-weight:700; color:#f87171; margin-bottom:0.75rem; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span>📅</span>
+                    <span>Resignation &amp; Exit Record</span>
+                  </div>
+                  <span style="font-size:0.68rem; color:#fca5a5; font-weight:600; background:rgba(239,68,68,0.15); padding:2px 8px; border-radius:4px;">Resigned / Former Personnel</span>
+                </div>
+                <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                  <div class="fin-form-group" style="margin-bottom:0;">
+                    <label class="fin-field-label" style="color:#fca5a5;">End Date / Last Working Day <span style="color:#ef4444;">*</span></label>
+                    <input type="date" name="end_date" id="fin-emp-end-date" class="fin-form-input" value="${emp?.end_date || emp?.resignation_date || ''}" onchange="window.finApp.syncEmployeeEndDate(this.value)" style="border-color:rgba(239,68,68,0.45); font-weight:700;">
+                    <span style="font-size:0.68rem; color:#94a3b8;">Effective date of resignation / departure</span>
+                  </div>
+                  <div class="fin-form-group" style="margin-bottom:0;">
+                    <label class="fin-field-label">Reason for Leaving / Exit Remarks</label>
+                    <input type="text" name="end_reason" id="fin-emp-end-reason" class="fin-form-input" value="${escapeHtml(emp?.end_reason || emp?.resignation_reason || '')}" placeholder="e.g. Resigned - Relieved on notice">
+                    <span style="font-size:0.68rem; color:#94a3b8;">Optional exit remark / relieving status</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1340,6 +1380,35 @@ export function registerPayrollModules(FinanceApp) {
     }
   };
 
+  proto.onEmployeeStatusChange = function (val) {
+    const sec = document.getElementById('fin-emp-end-date-section');
+    const isExit = val === 'Resigned' || val === 'Terminated';
+    if (sec) {
+      sec.style.display = isExit ? 'block' : 'none';
+    }
+    if (isExit) {
+      const endInput = document.getElementById('fin-emp-end-date');
+      const quickInput = document.getElementById('fin-emp-end-date-quick');
+      if (endInput && !endInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        endInput.value = today;
+        if (quickInput) quickInput.value = today;
+      }
+    }
+  };
+
+  proto.syncEmployeeEndDate = function (val) {
+    const endInput = document.getElementById('fin-emp-end-date');
+    const quickInput = document.getElementById('fin-emp-end-date-quick');
+    if (endInput && endInput.value !== val) endInput.value = val;
+    if (quickInput && quickInput.value !== val) quickInput.value = val;
+    const statusSelect = document.getElementById('fin-emp-status-select');
+    if (val && statusSelect && statusSelect.value === 'Active') {
+      statusSelect.value = 'Resigned';
+      this.onEmployeeStatusChange('Resigned');
+    }
+  };
+
   proto.closeEmployeeModal = function () {
     this.closeCustomModal('fin-emp-modal-backdrop');
   };
@@ -1364,6 +1433,12 @@ export function registerPayrollModules(FinanceApp) {
     const basicSalary = parseFloat(formData.get('basic_salary')) || 0;
     const accAllowance = parseFloat(formData.get('accommodation_allowance')) || 0;
     const otherAllowance = parseFloat(formData.get('other_allowance')) || 0;
+    const endDate = (formData.get('end_date') || formData.get('end_date_quick') || '').trim();
+    const endReason = (formData.get('end_reason') || '').trim();
+    let empStatus = formData.get('status') || 'Active';
+    if (endDate && empStatus === 'Active') {
+      empStatus = 'Resigned';
+    }
 
     const empObj = {
       id: empId,
@@ -1379,6 +1454,11 @@ export function registerPayrollModules(FinanceApp) {
       nationality: (formData.get('nationality') || 'India').trim(),
       date_of_joining: formData.get('date_of_joining') || '',
       date_of_appointment: formData.get('date_of_joining') || '',
+      end_date: endDate,
+      resignation_date: endDate,
+      date_of_leaving: endDate,
+      end_reason: endReason,
+      resignation_reason: endReason,
       phone: (formData.get('phone') || '').trim(),
       email: (formData.get('email') || '').trim(),
       emirates_id: (formData.get('emirates_id') || '').trim(),
@@ -1403,7 +1483,7 @@ export function registerPayrollModules(FinanceApp) {
       default_pay_method: formData.get('bank_name')?.toLowerCase().includes('cash') ? 'RAYAN E-Wallets / Cash' : 'AED RAYAN GROUP Host To Host',
       project_id: prjId,
       project_name: prj ? prj.name : 'Corporate / General Overhead',
-      status: formData.get('status') || 'Active',
+      status: empStatus,
       updated_at: new Date().toISOString()
     };
 
@@ -1605,20 +1685,25 @@ export function registerPayrollModules(FinanceApp) {
     if (emp.date_of_joining) {
       const start = new Date(emp.date_of_joining);
       if (!isNaN(start.getTime())) {
-        const now = new Date();
-        let years = now.getFullYear() - start.getFullYear();
-        let months = now.getMonth() - start.getMonth();
+        const endDateObj = (emp.end_date || emp.resignation_date) ? new Date(emp.end_date || emp.resignation_date) : new Date();
+        const end = !isNaN(endDateObj.getTime()) ? endDateObj : new Date();
+        let years = end.getFullYear() - start.getFullYear();
+        let months = end.getMonth() - start.getMonth();
         if (months < 0) { years--; months += 12; }
         let parts = [];
         if (years > 0) parts.push(`${years} yr${years > 1 ? 's' : ''}`);
         parts.push(`${months} mo${months !== 1 ? 's' : ''}`);
-        tenureStr = parts.join(' ');
+        tenureStr = parts.join(' ') || '< 1 mo';
+        if (emp.end_date || emp.resignation_date) {
+          tenureStr += ` (Ended: ${emp.end_date || emp.resignation_date})`;
+        }
       }
     }
 
     const isAct = (emp.status || 'Active').toLowerCase() === 'active';
-    const statusColor = isAct ? '#10b981' : '#f59e0b';
-    const statusBg = isAct ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)';
+    const isResigned = (emp.status || '').toLowerCase() === 'resigned' || (emp.status || '').toLowerCase() === 'terminated';
+    const statusColor = isAct ? '#10b981' : (isResigned ? '#ef4444' : '#f59e0b');
+    const statusBg = isAct ? 'rgba(16,185,129,0.15)' : (isResigned ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)');
 
     const initials = (emp.name || 'EM').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
     const hasPhoto = Boolean(emp.photo);
@@ -1649,7 +1734,7 @@ export function registerPayrollModules(FinanceApp) {
                     ${escapeHtml(emp.employee_no || 'EN---')}
                   </span>
                   <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${statusBg}; color:${statusColor}; font-weight:800; border:1px solid ${statusColor}40;">
-                    ${escapeHtml(emp.status || 'Active')}
+                    ${escapeHtml(emp.status || 'Active')}${(isResigned && (emp.end_date || emp.resignation_date)) ? ` • Relieved: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
                   </span>
                   <span style="font-size:0.72rem; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);">
                     ${escapeHtml(emp.department || 'Rayan Engineering')}
@@ -1785,10 +1870,16 @@ export function registerPayrollModules(FinanceApp) {
                     </div>
                   </div>
                 </div>
-                <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:0.6rem; margin-top:0.75rem; font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between;">
+                <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:0.6rem; margin-top:0.75rem; font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
                   <span>Joined: <strong style="color:#cbd5e1;">${escapeHtml(emp.date_of_joining || '---')}</strong></span>
-                  <span>Tenure: <strong style="color:#10b981;">${tenureStr}</strong></span>
+                  ${(emp.end_date || emp.resignation_date) ? `<span>End Date: <strong style="color:#ef4444;">${escapeHtml(emp.end_date || emp.resignation_date)}</strong></span>` : ''}
+                  <span>Tenure: <strong style="color:${(emp.end_date || emp.resignation_date) ? '#f87171' : '#10b981'};">${tenureStr}</strong></span>
                 </div>
+                ${(emp.end_reason || emp.resignation_reason) ? `
+                  <div style="font-size:0.72rem; color:#f87171; margin-top:4px; font-weight:600;">
+                    Exit Remark: ${escapeHtml(emp.end_reason || emp.resignation_reason)}
+                  </div>
+                ` : ''}
               </div>
 
               <!-- Card B: Addresses & Contact Coordinates -->
@@ -4110,6 +4201,9 @@ export function registerPayrollModules(FinanceApp) {
             job_title_ar: emp.position_ar || 'مهندس مدني',
             joining_date_en: emp.date_of_joining ? this.formatDate(emp.date_of_joining) : '07/08/2025',
             joining_date_ar: emp.date_of_joining || '2025-08-07',
+            end_date_en: (emp.end_date || emp.resignation_date) ? this.formatDate(emp.end_date || emp.resignation_date) : '',
+            end_date_ar: emp.end_date || emp.resignation_date || '',
+            employment_status: emp.status || 'Active',
             nationality_en: emp.nationality || 'India',
             nationality_ar: emp.nationality_ar || 'هندي',
             passport_no: emp.passport_no || 'S3552106',
@@ -4349,10 +4443,13 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
                 <div style="color:#334155;"><strong>Job Title:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.job_title_en || 'Civil Engineer')}</span></div>
                 <div style="color:#334155;"><strong>Joining Date:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.joining_date_en || '07/08/2025')}</span></div>
+                ${cert.end_date_en ? `
+                  <div style="color:#334155;"><strong>End / Relieved Date:</strong> <span contenteditable="true" spellcheck="false" style="color:#ef4444; font-weight:700;">${escapeHtml(cert.end_date_en)}</span></div>
+                ` : ''}
                 <div style="color:#334155;"><strong>Nationality:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.nationality_en || 'India')}</span></div>
                 <div style="color:#334155;"><strong>Passport No:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(cert.passport_no || 'S3552106')}</span></div>
                 ${isWithoutSalary ? `
-                  <div style="color:#334155; margin-top:1px;"><strong>Employment Status:</strong> <span style="color:#15803d; font-weight:700;" contenteditable="true" spellcheck="false">Active / Currently On-Duty</span></div>
+                  <div style="color:#334155; margin-top:1px;"><strong>Employment Status:</strong> <span style="color:${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? '#ef4444' : '#15803d'}; font-weight:700;" contenteditable="true" spellcheck="false">${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? 'Resigned / Relieved' : 'Active / Currently On-Duty'}</span></div>
                 ` : `
                   <div style="color:#334155; margin-top:1px;"><strong>Monthly Salary:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} AED</span></div>
                 `}
@@ -4369,10 +4466,13 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
                 <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>المسمى الوظيفي:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.job_title_ar || 'مهندس مدني')}</span></div>
                 <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>تاريخ التعيين:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.joining_date_ar || '07-08-2025')}</span></div>
+                ${cert.end_date_ar ? `
+                  <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>تاريخ انتهاء الخدمة:</strong> <span contenteditable="true" spellcheck="false" style="color:#ef4444; font-weight:700;">${escapeHtml(cert.end_date_ar)}</span></div>
+                ` : ''}
                 <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>الجنسية:</strong> <span contenteditable="true" spellcheck="false">${escapeHtml(cert.nationality_ar || 'هندي')}</span></div>
                 <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem;"><strong>رقم الجواز:</strong> <span contenteditable="true" spellcheck="false" style="font-family:monospace; font-weight:700;">${escapeHtml(cert.passport_no || 'S3552106')}</span></div>
                 ${isWithoutSalary ? `
-                  <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الحالة الوظيفية:</strong> <span style="color:#15803d; font-weight:700;" contenteditable="true" spellcheck="false">على رأس عمله (نشط)</span></div>
+                  <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الحالة الوظيفية:</strong> <span style="color:${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? '#ef4444' : '#15803d'}; font-weight:700;" contenteditable="true" spellcheck="false">${((cert.employment_status || '').toLowerCase() === 'resigned' || (cert.employment_status || '').toLowerCase() === 'terminated') ? 'مستقيل / انتهت خدمته' : 'على رأس عمله (نشط)'}</span></div>
                 ` : `
                   <div style="color:#334155; font-family:'Amiri', serif; font-size:0.72rem; margin-top:1px;"><strong>الراتب الشهري:</strong> <span style="font-weight:700; color:#0f172a;" contenteditable="true" spellcheck="false">${totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} درهم</span></div>
                 `}
