@@ -15672,7 +15672,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2026-06-03",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "internal_ref": "REC-CLPO-44024",
       "ref_no": "REC-CLPO-44024",
       "rec_ref": "REC-CLPO-44024",
@@ -15701,7 +15701,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2026-01-26",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "internal_ref": "REC-CLPO-44016",
       "ref_no": "REC-CLPO-44016",
       "rec_ref": "REC-CLPO-44016",
@@ -15744,7 +15744,7 @@
       ],
       "po_date": "2026-03-10",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "internal_ref": "REC-CLPO-44018",
       "ref_no": "REC-CLPO-44018",
       "rec_ref": "REC-CLPO-44018",
@@ -15773,7 +15773,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2024-03-19",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -15806,7 +15806,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2025-05-01",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "internal_ref": "REC-CLPO-44011",
       "ref_no": "REC-CLPO-44011",
       "rec_ref": "REC-CLPO-44011",
@@ -15835,7 +15835,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2023-05-11",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:55",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17069,7 +17069,7 @@
       ],
       "po_date": "2024-05-25",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17117,7 +17117,7 @@
       ],
       "po_date": "2026-11-09",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17174,7 +17174,7 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "customer_id": "cust-sadeco",
       "customer_name": "M/S SADECO DÉCOR LLC",
       "type": "customer_po",
@@ -17232,7 +17232,7 @@
       "vat_total": 9726.6515,
       "po_date": "2026-11-01",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17290,7 +17290,7 @@
       "vat_total": 719.821,
       "po_date": "2026-06-07",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17348,7 +17348,7 @@
       "vat_total": 509.425,
       "po_date": "2026-06-22",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17406,7 +17406,7 @@
       "vat_total": 3406.8115,
       "po_date": "2026-03-19",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17453,7 +17453,7 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17510,7 +17510,7 @@
       ],
       "po_date": "2024-03-22",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17569,7 +17569,7 @@
       "vat_total": 6493.224,
       "po_date": "2024-10-12",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17616,7 +17616,7 @@
       ],
       "po_date": "2024-11-15",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17673,7 +17673,7 @@
       ],
       "po_date": "2023-07-06",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:55",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17730,7 +17730,7 @@
       ],
       "po_date": "2025-11-19",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17787,7 +17787,7 @@
       ],
       "po_date": "2026-06-06",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17846,7 +17846,7 @@
       "vat_total": 4524.963500000001,
       "po_date": "2026-06-19",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17902,7 +17902,7 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17959,7 +17959,7 @@
       ],
       "po_date": "2026-06-28",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18007,7 +18007,7 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18064,7 +18064,7 @@
       ],
       "po_date": "2026-10-04",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18116,7 +18116,7 @@
       "vat_total": 0,
       "po_date": "2026-10-26",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-20 05:58:56",
+      "updated_at": "2026-11-20 06:04:43",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -21462,7 +21462,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2023-05-13",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44001"
     },
     {
@@ -21483,7 +21483,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2023-08-31",
-      "updated_at": "2026-11-15 10:14:02",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44002"
     },
     {
@@ -21504,7 +21504,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2023-09-09",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44003"
     },
     {
@@ -21525,7 +21525,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-03-22",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44004"
     },
     {
@@ -21546,7 +21546,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-04-22",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44005"
     },
     {
@@ -21567,7 +21567,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-05-17",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44006"
     },
     {
@@ -21588,7 +21588,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-06-21",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44007"
     },
     {
@@ -21609,7 +21609,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-06-26",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44008"
     },
     {
@@ -21630,7 +21630,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2024-07-19",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44009"
     },
     {
@@ -21651,7 +21651,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-08-12",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44010"
     },
     {
@@ -21672,7 +21672,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-09-19",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44011"
     },
     {
@@ -21693,7 +21693,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-09-25",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44012"
     },
     {
@@ -21714,7 +21714,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-10-03",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44013"
     },
     {
@@ -21735,7 +21735,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-10-10",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44014"
     },
     {
@@ -21756,7 +21756,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-10-18",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44015"
     },
     {
@@ -21777,7 +21777,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-11-20",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44016"
     },
     {
@@ -21798,7 +21798,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2025-12-15",
-      "updated_at": "2026-11-15 10:14:02",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44017"
     },
     {
@@ -21819,7 +21819,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-06-30",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44018"
     },
     {
@@ -21840,7 +21840,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-07-06",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44019"
     },
     {
@@ -21861,7 +21861,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-09-11",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44020"
     },
     {
@@ -21882,7 +21882,7 @@
       "bank_account_id": "bank-adcb-uae",
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-09-16",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44021"
     },
     {
@@ -21901,7 +21901,7 @@
       "bank_account_name": "Abu Dhabi Commercial Bank (ADCB)",
       "cheque_date": "2026-10-26",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44022"
     },
     {
@@ -21918,7 +21918,7 @@
       "notes": "REC-RG-INV-44023",
       "cheque_date": "2026-11-12",
       "created_at": "2026-11-15 10:13:55",
-      "updated_at": "2026-11-15 10:13:55",
+      "updated_at": "2026-11-20 06:04:22",
       "reference_no": "REC-CQ-44023"
     },
     {
@@ -21973,8 +21973,8 @@
       "notes": "Customer Receipt REC-RV-44071 against REC-RG-INV-44015",
       "created_at": "2026-11-18 10:49:08",
       "bank_account_id": "bank-adcb-uae",
-      "updated_at": "2026-11-20 05:58:56",
-      "reference_no": "REC-CQ-44026"
+      "updated_at": "2026-11-20 06:04:43",
+      "reference_no": "REC-CQ-44024"
     }
   ],
   "loan_accounts": [
@@ -22461,7 +22461,7 @@
       "currency": "AED",
       "purpose": "Corporate bank cash withdrawal to replenish RAYAN E-Wallets for project disbursements & expenses",
       "status": "Cleared",
-      "created_at": "2026-11-20T06:03:42+00:00"
+      "created_at": "2026-11-20T06:07:07+00:00"
     },
     {
       "id": "wire-rcp-rec-mwf5ck4a",
@@ -24498,7 +24498,7 @@
       "currency": "AED",
       "reference_no": "ATM-ADCB-47231",
       "status": "Approved",
-      "created_at": "2026-11-20T06:03:42+00:00"
+      "created_at": "2026-11-20T06:07:07+00:00"
     },
     {
       "id": "cv-rcp-rec-mwhezslg",

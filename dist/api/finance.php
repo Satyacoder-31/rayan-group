@@ -4732,27 +4732,38 @@ function reconcileV138FixChequeInHandMissingForRec44071(&$data, $pdo) {
             error_log('Migration v138 error: ' . $e->getMessage());
         }
     }
+}
 
-    // Migration v169: Ensure all cheques have sequential Rayan Ref # (REC-CQ-44001+ / ASH-CQ-44001+)
-    $done169 = $pdo ? $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'cheque_reference_seq_v169'")->fetchColumn() : null;
-    if (!$done169 && $pdo) {
+function reconcileV139ChequeReferenceSequence(&$data, $pdo) {
+    if (!$data || !is_array($data) || empty($data['cheques']) || !is_array($data['cheques'])) return;
+
+    // Sort cheques chronologically
+    usort($data['cheques'], function($a, $b) {
+        $dA = $a['date'] ?? ($a['cheque_date'] ?? '');
+        $dB = $b['date'] ?? ($b['cheque_date'] ?? '');
+        if ($dA !== $dB) return strcmp($dA, $dB);
+        return strcmp(strval($a['id'] ?? ''), strval($b['id'] ?? ''));
+    });
+
+    $nextRec = 44001;
+    $nextAsh = 44001;
+    foreach ($data['cheques'] as &$cq) {
+        $isInd = (($cq['company_id'] ?? '') === 'ashaz-eng-in') || (($cq['currency'] ?? '') === 'INR');
+        $prefix = $isInd ? 'ASH-CQ' : 'REC-CQ';
+        $targetRef = $isInd ? ($prefix . '-' . $nextAsh++) : ($prefix . '-' . $nextRec++);
+        $cq['reference_no'] = $targetRef;
+    }
+    unset($cq);
+
+    if ($pdo) {
         try {
-            $chqRows = $pdo->query("SELECT id, cheque_no, cheque_date, company_id, currency, data_json FROM finance_cheques ORDER BY cheque_date ASC, id ASC")->fetchAll(PDO::FETCH_ASSOC);
-            if ($chqRows && count($chqRows) > 0) {
-                $nextRec = 44001;
-                $nextAsh = 44001;
-                $upStmt = $pdo->prepare("UPDATE finance_cheques SET data_json = JSON_SET(data_json, '$.reference_no', :ref) WHERE id = :id");
-                foreach ($chqRows as $cr) {
-                    $isInd = (($cr['company_id'] ?? '') === 'ashaz-eng-in') || (($cr['currency'] ?? '') === 'INR');
-                    $prefix = $isInd ? 'ASH-CQ' : 'REC-CQ';
-                    $targetRef = $isInd ? ($prefix . '-' . $nextAsh++) : ($prefix . '-' . $nextRec++);
-                    $upStmt->execute([':ref' => $targetRef, ':id' => $cr['id']]);
+            $upStmt = $pdo->prepare("UPDATE finance_cheques SET data_json = JSON_SET(data_json, '$.reference_no', :ref) WHERE id = :id OR cheque_no = :chq");
+            foreach ($data['cheques'] as $cq) {
+                if (!empty($cq['reference_no'])) {
+                    $upStmt->execute([':ref' => $cq['reference_no'], ':id' => $cq['id'] ?? '', ':chq' => $cq['cheque_no'] ?? '']);
                 }
             }
-            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('cheque_reference_seq_v169', 'completed', NOW())");
-        } catch (Exception $e) {
-            error_log('Migration v169 error: ' . $e->getMessage());
-        }
+        } catch (Exception $e) {}
     }
 }
 
@@ -6558,6 +6569,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                     reconcileV136CustomerPOSerialResequence($data, $pdo);
                     reconcileV137Fix3AedBankCashDiscrepancy($data, $pdo);
                     reconcileV138FixChequeInHandMissingForRec44071($data, $pdo);
+                    reconcileV139ChequeReferenceSequence($data, $pdo);
                     recalculateAllFinanceBalances($data);
                     return $data;
                 }
@@ -6587,6 +6599,7 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                 reconcileV136CustomerPOSerialResequence($data, $pdo);
                 reconcileV137Fix3AedBankCashDiscrepancy($data, $pdo);
                 reconcileV138FixChequeInHandMissingForRec44071($data, $pdo);
+                reconcileV139ChequeReferenceSequence($data, $pdo);
                 recalculateAllFinanceBalances($data);
                 // If MySQL was empty, seed it now with this data!
                 if ($pdo) {
