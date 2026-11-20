@@ -846,9 +846,7 @@ class FinanceApp {
 
     this.normalizeAllBalances();
 
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
   }
 
   findMatchingProject(query) {
@@ -2517,10 +2515,45 @@ class FinanceApp {
     (db.items || db.catalog_items || []).forEach(fixUom);
   }
 
+  saveDatabaseToCache() {
+    try {
+      const targetDb = this?.db || window.finApp?.db || window.financeApp?.db;
+      if (!targetDb || typeof targetDb !== 'object') return;
+      const cacheDb = {};
+      for (const key in targetDb) {
+        if (!Array.isArray(targetDb[key])) {
+          cacheDb[key] = targetDb[key];
+          continue;
+        }
+        cacheDb[key] = targetDb[key].map(item => {
+          if (!item || typeof item !== 'object') return item;
+          let hasHuge = false;
+          for (const f in item) {
+            if (typeof item[f] === 'string' && item[f].length > 10000 && item[f].startsWith('data:')) {
+              hasHuge = true;
+              break;
+            }
+          }
+          if (!hasHuge) return item;
+          const slim = { ...item };
+          for (const f in slim) {
+            if (typeof slim[f] === 'string' && slim[f].length > 10000 && slim[f].startsWith('data:')) {
+              slim[f] = '';
+            }
+          }
+          return slim;
+        });
+      }
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(cacheDb));
+    } catch (e) {
+      console.warn('Could not save database to localStorage cache:', e?.message || e);
+    }
+  }
+
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v181';
+    const CURRENT_DB_VERSION = 'v2026_clean_v183';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -2577,9 +2610,7 @@ class FinanceApp {
             this.sanitizeInvoices();
             this.sanitizeBankAccounts();
             this.normalizeAllBalances();
-            try {
-              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-            } catch (e) { }
+            this.saveDatabaseToCache();
             return true;
           }
         }
@@ -2618,9 +2649,7 @@ class FinanceApp {
           if (json.data && typeof json.data === 'object') {
             this.db = this.mergeWithSeedData(json.data);
             this.normalizeAllBalances();
-            try {
-              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-            } catch (e) { }
+            this.saveDatabaseToCache();
             return json;
           }
           if (json.success) {
@@ -2654,7 +2683,7 @@ class FinanceApp {
       } else {
         this.db.customers.unshift(newCust);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, customer: newCust };
     }
 
@@ -2672,7 +2701,7 @@ class FinanceApp {
       } else {
         this.db.vendors.unshift(newVend);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, vendor: newVend };
     }
 
@@ -2690,7 +2719,7 @@ class FinanceApp {
       } else {
         this.db.items.unshift(newItem);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, item: newItem };
     }
 
@@ -2709,7 +2738,7 @@ class FinanceApp {
       } else {
         this.db.projects.unshift(newPrj);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, project: newPrj };
     }
 
@@ -2726,7 +2755,7 @@ class FinanceApp {
       } else {
         this.db.invoices.unshift(payload.invoice);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
     }
 
@@ -2760,7 +2789,7 @@ class FinanceApp {
       // Route payment into Cash & Banks depending on mode (bank_accounts, bank_transfers, cheques, cash_vouchers)
       this.routeReceiptToCashAndBank(newRcp, this.db);
 
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, receipt: newRcp };
     }
 
@@ -2773,7 +2802,7 @@ class FinanceApp {
       } else {
         this.db.purchase_bills.unshift(newBill);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, bill: newBill };
     }
 
@@ -2787,7 +2816,7 @@ class FinanceApp {
         this.db.expenses.unshift(newExp);
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, expense: newExp };
     }
 
@@ -2812,7 +2841,7 @@ class FinanceApp {
         });
       }
       this.routeVendorPaymentToCashAndBank(newPay, this.db);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, payment: newPay };
     }
 
@@ -2825,7 +2854,7 @@ class FinanceApp {
       } else {
         this.db.purchase_orders.unshift(newPo);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, po: newPo };
     }
 
@@ -2839,7 +2868,7 @@ class FinanceApp {
         this.db.credit_notes.unshift(newCn);
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, credit_note: newCn };
     }
 
@@ -2853,7 +2882,7 @@ class FinanceApp {
         this.db.debit_notes.unshift(newDn);
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, debit_note: newDn };
     }
 
@@ -2866,7 +2895,7 @@ class FinanceApp {
       } else {
         this.db.projects.unshift(newP);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, project: newP };
     }
 
@@ -2878,7 +2907,7 @@ class FinanceApp {
         this.db.cash_vouchers[idx] = { ...this.db.cash_vouchers[idx], ...v };
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, voucher: v };
     }
 
@@ -2889,7 +2918,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.invoices[idx] = { ...this.db.invoices[idx], ...payload.invoice };
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
     }
 
@@ -2899,7 +2928,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.purchase_bills[idx] = { ...this.db.purchase_bills[idx], ...payload.bill };
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, bill: payload.bill };
     }
 
@@ -2910,7 +2939,7 @@ class FinanceApp {
         this.db.customer_receipts[idx] = { ...this.db.customer_receipts[idx], ...payload.receipt };
       }
       this.routeReceiptToCashAndBank(payload.receipt, this.db);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, receipt: payload.receipt };
     }
 
@@ -2920,7 +2949,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.expenses[idx] = { ...this.db.expenses[idx], ...payload.expense };
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, expense: payload.expense };
     }
 
@@ -2929,7 +2958,7 @@ class FinanceApp {
       if (this.db.expenses && expId) {
         this.db.expenses = this.db.expenses.filter(e => e.id !== expId && e.expense_no !== expId);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -2938,7 +2967,7 @@ class FinanceApp {
       if (this.db.purchase_bills && bId) {
         this.db.purchase_bills = this.db.purchase_bills.filter(b => b.id !== bId && b.bill_no !== bId);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -2947,7 +2976,7 @@ class FinanceApp {
       if (this.db.vendor_payments && pId) {
         this.db.vendor_payments = this.db.vendor_payments.filter(p => p.id !== pId && p.voucher_no !== pId);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -2956,7 +2985,7 @@ class FinanceApp {
       if (this.db.purchase_orders && pId) {
         this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== pId && p.po_no !== pId);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -2965,7 +2994,7 @@ class FinanceApp {
       if (this.db.projects && prjId) {
         this.db.projects = this.db.projects.filter(p => p.id !== prjId && p.code !== prjId);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -2975,7 +3004,7 @@ class FinanceApp {
         this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cnId && c.credit_note_no !== cnId);
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -2985,7 +3014,7 @@ class FinanceApp {
         this.db.debit_notes = this.db.debit_notes.filter(d => d.id !== dnId && d.debit_note_no !== dnId);
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -2994,7 +3023,7 @@ class FinanceApp {
       if (this.db.vendors && vId) {
         this.db.vendors = this.db.vendors.filter(v => v.id !== vId && v.code !== vId);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3004,7 +3033,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.vendors[idx] = { ...this.db.vendors[idx], ...payload.vendor };
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, vendor: payload.vendor };
     }
 
@@ -3014,7 +3043,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.vendor_payments[idx] = { ...this.db.vendor_payments[idx], ...payload.payment };
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, payment: payload.payment };
     }
 
@@ -3024,7 +3053,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.purchase_orders[idx] = { ...this.db.purchase_orders[idx], ...payload.po };
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, po: payload.po };
     }
 
@@ -3035,7 +3064,7 @@ class FinanceApp {
         this.db.credit_notes[idx] = { ...this.db.credit_notes[idx], ...payload.credit_note };
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, credit_note: payload.credit_note };
     }
 
@@ -3046,14 +3075,14 @@ class FinanceApp {
         this.db.debit_notes[idx] = { ...this.db.debit_notes[idx], ...payload.debit_note };
       }
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, debit_note: payload.debit_note };
     }
 
     if (action === 'create_document' && payload.document) {
       if (!this.db.documents) this.db.documents = [];
       this.db.documents.unshift(payload.document);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, document: payload.document };
     }
 
@@ -3063,7 +3092,7 @@ class FinanceApp {
       if (idx >= 0) {
         this.db.documents[idx] = { ...this.db.documents[idx], ...payload.document };
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, document: payload.document };
     }
 
@@ -3072,7 +3101,7 @@ class FinanceApp {
       if (this.db.documents && docId) {
         this.db.documents = this.db.documents.filter(d => d.id !== docId);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3083,7 +3112,7 @@ class FinanceApp {
       const idx = this.db.bank_accounts.findIndex(b => b.id === newB.id);
       if (idx >= 0) this.db.bank_accounts[idx] = newB;
       else this.db.bank_accounts.unshift(newB);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, bank: newB };
     }
 
@@ -3093,7 +3122,7 @@ class FinanceApp {
       const targetId = payload.id || b.id;
       const idx = this.db.bank_accounts.findIndex(x => x.id === targetId);
       if (idx >= 0) this.db.bank_accounts[idx] = { ...this.db.bank_accounts[idx], ...b };
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, bank: b };
     }
 
@@ -3101,7 +3130,7 @@ class FinanceApp {
       if (this.db.bank_accounts) {
         this.db.bank_accounts = this.db.bank_accounts.filter(b => b.id !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3118,7 +3147,7 @@ class FinanceApp {
           if (dest) dest.balance = (Number(dest.balance) || 0) + amt;
         }
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, transfer: trn };
     }
 
@@ -3126,7 +3155,7 @@ class FinanceApp {
       if (this.db.bank_transfers) {
         this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3136,7 +3165,7 @@ class FinanceApp {
       const idx = this.db.cash_in_hand.findIndex(r => r.id === reg.id);
       if (idx >= 0) this.db.cash_in_hand[idx] = reg;
       else this.db.cash_in_hand.unshift(reg);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, register: reg };
     }
 
@@ -3146,7 +3175,7 @@ class FinanceApp {
       const targetId = payload.id || reg.id;
       const idx = this.db.cash_in_hand.findIndex(r => r.id === targetId);
       if (idx >= 0) this.db.cash_in_hand[idx] = { ...this.db.cash_in_hand[idx], ...reg };
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, register: reg };
     }
 
@@ -3154,7 +3183,7 @@ class FinanceApp {
       if (this.db.cash_in_hand) {
         this.db.cash_in_hand = this.db.cash_in_hand.filter(r => r.id !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3174,14 +3203,12 @@ class FinanceApp {
           reg.last_replenished = cv.date || new Date().toISOString().split('T')[0];
         }
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, voucher: cv };
     }
 
     if (action === 'transfer_petty_cash') {
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) { }
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3192,7 +3219,7 @@ class FinanceApp {
       const idx = this.db.cash_vouchers.findIndex(v => v.id === targetId || v.voucher_no === targetId);
       if (idx >= 0) this.db.cash_vouchers[idx] = { ...this.db.cash_vouchers[idx], ...cv };
       this.normalizeAllBalances();
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, voucher: cv };
     }
 
@@ -3200,7 +3227,7 @@ class FinanceApp {
       if (this.db.cash_vouchers) {
         this.db.cash_vouchers = this.db.cash_vouchers.filter(v => v.id !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3210,7 +3237,7 @@ class FinanceApp {
       const idx = this.db.cheques.findIndex(c => c.id === chq.id);
       if (idx >= 0) this.db.cheques[idx] = chq;
       else this.db.cheques.unshift(chq);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, cheque: chq };
     }
 
@@ -3232,7 +3259,7 @@ class FinanceApp {
           }
         }
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3240,7 +3267,7 @@ class FinanceApp {
       if (this.db.cheques) {
         this.db.cheques = this.db.cheques.filter(c => c.id !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3250,7 +3277,7 @@ class FinanceApp {
       const idx = this.db.loan_accounts.findIndex(l => l.id === loan.id);
       if (idx >= 0) this.db.loan_accounts[idx] = loan;
       else this.db.loan_accounts.unshift(loan);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, loan };
     }
 
@@ -3260,7 +3287,7 @@ class FinanceApp {
       const targetId = payload.id || loan.id;
       const idx = this.db.loan_accounts.findIndex(l => l.id === targetId);
       if (idx >= 0) this.db.loan_accounts[idx] = { ...this.db.loan_accounts[idx], ...loan };
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, loan };
     }
 
@@ -3268,7 +3295,7 @@ class FinanceApp {
       if (this.db.loan_accounts) {
         this.db.loan_accounts = this.db.loan_accounts.filter(l => l.id !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3288,7 +3315,7 @@ class FinanceApp {
           lf.available_limit = Math.max(0, (Number(lf.sanctioned_limit) || 0) - (Number(lf.outstanding_balance) || 0));
         }
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, transaction: lt };
     }
 
@@ -3296,7 +3323,7 @@ class FinanceApp {
       if (this.db.loan_transactions) {
         this.db.loan_transactions = this.db.loan_transactions.filter(t => t.id !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3307,14 +3334,14 @@ class FinanceApp {
       const idx = this.db.work_completion_certificates.findIndex(x => x.id === item.id || (x.cert_no && item.cert_no && x.cert_no.toLowerCase() === item.cert_no.toLowerCase()));
       if (idx >= 0) this.db.work_completion_certificates[idx] = { ...this.db.work_completion_certificates[idx], ...item };
       else this.db.work_completion_certificates.unshift(item);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, certificate: item };
     }
     if (action === 'delete_work_completion' && payload.id) {
       if (this.db.work_completion_certificates) {
         this.db.work_completion_certificates = this.db.work_completion_certificates.filter(x => x.id !== payload.id && x.cert_no !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3324,14 +3351,14 @@ class FinanceApp {
       const idx = this.db.delivery_notes.findIndex(x => x.id === item.id || (x.dn_no && item.dn_no && x.dn_no.toLowerCase() === item.dn_no.toLowerCase()));
       if (idx >= 0) this.db.delivery_notes[idx] = { ...this.db.delivery_notes[idx], ...item };
       else this.db.delivery_notes.unshift(item);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, delivery_note: item };
     }
     if (action === 'delete_delivery_note' && payload.id) {
       if (this.db.delivery_notes) {
         this.db.delivery_notes = this.db.delivery_notes.filter(x => x.id !== payload.id && x.dn_no !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3341,14 +3368,14 @@ class FinanceApp {
       const idx = this.db.undertaking_letters.findIndex(x => x.id === item.id || (x.ref_no && item.ref_no && x.ref_no.toLowerCase() === item.ref_no.toLowerCase()));
       if (idx >= 0) this.db.undertaking_letters[idx] = { ...this.db.undertaking_letters[idx], ...item };
       else this.db.undertaking_letters.unshift(item);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, undertaking_letter: item };
     }
     if (action === 'delete_undertaking_letter' && payload.id) {
       if (this.db.undertaking_letters) {
         this.db.undertaking_letters = this.db.undertaking_letters.filter(x => x.id !== payload.id && x.ref_no !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
@@ -3358,18 +3385,18 @@ class FinanceApp {
       const idx = this.db.custom_letters.findIndex(x => x.id === item.id || (x.ref_no && item.ref_no && x.ref_no.toLowerCase() === item.ref_no.toLowerCase()));
       if (idx >= 0) this.db.custom_letters[idx] = { ...this.db.custom_letters[idx], ...item };
       else this.db.custom_letters.unshift(item);
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db, letter: item };
     }
     if (action === 'delete_custom_letter' && payload.id) {
       if (this.db.custom_letters) {
         this.db.custom_letters = this.db.custom_letters.filter(x => x.id !== payload.id && x.ref_no !== payload.id);
       }
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+      this.saveDatabaseToCache();
       return { success: true, localOnly: true, data: this.db };
     }
 
-    localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+    this.saveDatabaseToCache();
     return { success: true, localOnly: true, data: this.db, invoice: payload.invoice };
   }
 
@@ -3739,7 +3766,7 @@ class FinanceApp {
           );
           if (cust) {
             cust.place_of_supply = cleanPos;
-            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+            this.saveDatabaseToCache();
             this.syncApi('create_customer', { customer: cust }).catch(() => { });
           }
         }
@@ -3812,7 +3839,7 @@ class FinanceApp {
         cust.default_project_id = projectId || cust.default_project_id || null;
         cust.default_project_name = cleanPrjName;
         if (poReference) cust.last_po_reference = poReference;
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        this.saveDatabaseToCache();
         this.syncApi('create_customer', { customer: cust }).catch(() => { });
       }
     }
@@ -5682,6 +5709,7 @@ class FinanceApp {
 
     // Native Print Handlers
     window.addEventListener('beforeprint', () => {
+      try { if (this && typeof this.detectAndSetActiveDocumentTitle === 'function') this.detectAndSetActiveDocumentTitle(); } catch (e) { }
       const hasModal = document.getElementById('fin-doc-print-modal') || document.querySelector('.fin-modal-backdrop.open');
       if (hasModal) {
         document.body.classList.add('fin-doc-open');
@@ -11016,7 +11044,7 @@ class FinanceApp {
         po.direction = 'inward';
 
         await this.syncApi('update_po', { po });
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
 
         this.closeModal('modal-attach-lpo');
         this.showNotification(`✓ Client LPO document "${po.pdf_name}" attached successfully!`, 'success');
@@ -11359,7 +11387,7 @@ class FinanceApp {
         }
 
         await this.syncApi(isEdit ? 'update_po' : 'create_po', { po: poRecord });
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
 
         this.closeModal('modal-record-client-lpo');
         this.showNotification(`Client Purchase Order ${poRecord.po_no} saved successfully!`, 'success');
@@ -11726,7 +11754,7 @@ class FinanceApp {
       this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== poId && p.po_no !== poId);
     }
     await this.syncApi('delete_po', { po_id: poId, id: poId });
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+    this.saveDatabaseToCache();
     this.showNotification(`Client LPO ${po.po_no} deleted successfully.`, 'success');
     this.renderActiveTab();
   }
@@ -17733,9 +17761,7 @@ class FinanceApp {
       } else {
         this.db.invoices.unshift(newInvoice);
       }
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) { }
+      this.saveDatabaseToCache();
 
       // Sync to backend API
       try {
@@ -17750,9 +17776,7 @@ class FinanceApp {
           } else {
             this.db.invoices.unshift(newInvoice);
           }
-          try {
-            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-          } catch (e) { }
+          this.saveDatabaseToCache();
         }
       } catch (syncErr) {
         console.warn('Backend sync warning (fallback offline):', syncErr);
@@ -17797,9 +17821,7 @@ class FinanceApp {
     }
     inv.status = 'issued';
     inv.updated_at = new Date().toISOString();
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
     await this.syncApi('create_invoice', { invoice: inv });
     this.renderInvoicesTab(document.getElementById('fin-tab-content-root'));
     alert(`✓ Invoice ${inv.invoice_no} has been officially issued and posted.`);
@@ -19805,9 +19827,7 @@ class FinanceApp {
       } else {
         this.db.purchase_bills.unshift(localBill);
       }
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) { }
+      this.saveDatabaseToCache();
 
       const res = await this.syncApi('create_bill', payload);
       if (res && res.bill) {
@@ -19819,9 +19839,7 @@ class FinanceApp {
         }
       }
       this.normalizeAllBalances();
-      try {
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-      } catch (e) { }
+      this.saveDatabaseToCache();
 
       this.closeModal('modal-bill');
       this.switchTab('bills');
@@ -20202,9 +20220,7 @@ class FinanceApp {
 
         // 3. Normalize all balances & save to local cache
         this.normalizeAllBalances();
-        try {
-          localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-        } catch (err) { }
+        this.saveDatabaseToCache();
 
         // 4. Close modal and re-render UI immediately
         this.closeModal('modal-payment');
@@ -20220,9 +20236,7 @@ class FinanceApp {
           if (res.data) {
             this.db = this.mergeWithSeedData(res.data);
             this.normalizeAllBalances();
-            try {
-              localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-            } catch (err) { }
+            this.saveDatabaseToCache();
             this.renderActiveTab();
           }
           this.showNotification(`Payment voucher ${res.payment?.voucher_no || voucherNo} disbursed to ${vend?.name || 'vendor'} in ${currLabel}.`, 'success');
@@ -23217,7 +23231,7 @@ class FinanceApp {
           });
         }
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -23231,7 +23245,7 @@ class FinanceApp {
         // 2. Synchronize with backend API
         await this.syncApi('update_customer', { customer: updatedCust, old_id: oldId, old_code: oldCode, old_name: oldName });
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
 
         this.showNotification(`Customer "${updatedCust.name}" (${updatedCust.code}) updated successfully.`, 'success');
         this.closeModal('modal-edit-cust');
@@ -24051,7 +24065,7 @@ Scope of Work & Technical Execution:
       if (res && res.success) {
         if (this.db?.purchase_orders) {
           this.db.purchase_orders.unshift(payload.po);
-          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+          this.saveDatabaseToCache();
         }
         this.closeModal('modal-po');
         this.showNotification(`Purchase Order ${payload.po.po_no} issued successfully.`, 'success');
@@ -24206,7 +24220,7 @@ Scope of Work & Technical Execution:
       if (res && res.success) {
         this.recalculateInvoiceBalance(inv);
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
         alert(`Credit note ${res.credit_note?.credit_note_no || 'posted'} posted in ${currLabel}. Invoice balance updated.`);
         this.closeModal('modal-cn');
         this.switchTab(this.activeTab === 'notes' ? 'notes' : 'credit_notes');
@@ -24786,7 +24800,7 @@ Scope of Work & Technical Execution:
         const idx = this.db.projects.findIndex(p => p.id === payload.project.id || p.code === payload.project.code);
         if (idx >= 0) this.db.projects[idx] = { ...this.db.projects[idx], ...payload.project };
         else this.db.projects.unshift(payload.project);
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
@@ -24852,7 +24866,7 @@ Scope of Work & Technical Execution:
     if (this.db?.projects) {
       this.db.projects = this.db.projects.filter(p => p.id !== pId && p.code !== pCode && p.id !== projectId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.showNotification(`Project "${label}" deleted.`, 'info');
     if (this.activeTab === 'projects') {
@@ -24950,17 +24964,22 @@ Scope of Work & Technical Execution:
   }
 
   sanitizeFilename(name) {
-    if (!name) return 'Document';
-    return String(name).replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, ' ').trim();
+    if (!name) return '';
+    return String(name).replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, '_').trim();
   }
 
   setActiveDocumentTitle(docNo, docType, partyName = '') {
     if (!this.defaultPageTitle) {
-      this.defaultPageTitle = document.title || 'Corporate Financial Portal & Accounts Desk _ Rayan Group';
+      this.defaultPageTitle = 'Corporate Financial Portal & Accounts Desk | Rayan Group';
     }
     const cleanNo = this.sanitizeFilename(docNo);
-    const cleanType = String(docType || 'Document').trim();
-    const newTitle = cleanNo ? `${cleanNo} - ${cleanType}` : cleanType;
+    const cleanType = this.sanitizeFilename(docType || 'Document');
+    const cleanParty = partyName ? this.sanitizeFilename(partyName) : '';
+    let parts = [];
+    if (cleanNo) parts.push(cleanNo);
+    if (cleanType) parts.push(cleanType);
+    if (cleanParty) parts.push(cleanParty);
+    const newTitle = parts.length > 0 ? parts.join('_').replace(/[\s\t\n]+/g, '_') : 'Document';
     this.activeDocumentMeta = {
       docNo: cleanNo,
       docType: cleanType,
@@ -25052,6 +25071,7 @@ Scope of Work & Technical Execution:
   }
 
   closeDocPrintModal() {
+    this.restoreDocumentTitle();
     const el = document.getElementById('fin-doc-print-modal');
     if (el) el.remove();
     const container = document.getElementById('fin-modal-container');
@@ -25288,7 +25308,7 @@ Scope of Work & Technical Execution:
       } else {
         this.db.bank_accounts.unshift(bankData);
       }
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+      this.saveDatabaseToCache();
 
       await this.syncApi(b ? 'update_bank_account' : 'create_bank_account', {
         bank_account: bankData,
@@ -25309,7 +25329,7 @@ Scope of Work & Technical Execution:
     if (this.db?.bank_accounts) {
       this.db.bank_accounts = this.db.bank_accounts.filter(b => b.id !== bankId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification(`Bank account "${label}" removed.`, 'info');
 
@@ -25532,14 +25552,14 @@ Scope of Work & Technical Execution:
             created_at: new Date().toISOString()
           });
 
-          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+          this.saveDatabaseToCache();
 
           const res = await this.syncApi('transfer_bank_to_wallet', payload);
           if (res && res.data) {
             this.db = this.mergeWithSeedData(res.data);
           }
           this.normalizeAllBalances();
-          try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+          this.saveDatabaseToCache();
           this.closeModal('modal-bank-transfer');
           this.activeTab = 'bank_accounts';
           this.renderActiveTab();
@@ -25886,14 +25906,14 @@ Scope of Work & Technical Execution:
           created_at: new Date().toISOString()
         });
 
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
 
         const res = await this.syncApi('transfer_bank_to_wallet', payload);
         if (res && res.data) {
           this.db = this.mergeWithSeedData(res.data);
         }
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
         this.closeModal('modal-bank-to-wallet');
         this.renderActiveTab();
         this.showNotification(`Successfully transferred ${this.formatCurrency(amt)} from ${sBank.bank_name} to ${dVault.register_name}!`, 'success');
@@ -26142,14 +26162,14 @@ Scope of Work & Technical Execution:
           created_at: new Date().toISOString()
         });
 
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
 
         const res = await this.syncApi('transfer_cash_to_wallet', payload);
         if (res && res.data) {
           this.db = this.mergeWithSeedData(res.data);
         }
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
         this.closeModal('modal-customer-cash-to-wallet');
         this.renderActiveTab();
         this.showNotification(`Successfully allocated ${this.formatCurrency(amt)} customer cash into ${dVault.register_name}!`, 'success');
@@ -26449,14 +26469,14 @@ Scope of Work & Technical Execution:
           created_at: new Date().toISOString()
         });
 
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
 
         const res = await this.syncApi('deposit_cash_to_bank', payload);
         if (res && res.data) {
           this.db = this.mergeWithSeedData(res.data);
         }
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.saveDatabaseToCache();
         this.closeModal('modal-cash-to-bank');
         this.renderActiveTab();
         this.showNotification(`Successfully deposited ${this.formatCurrency(amt)} cash into ${dBank.bank_name}!`, 'success');
@@ -26568,7 +26588,7 @@ Scope of Work & Technical Execution:
       if (idx >= 0) this.db.bank_transfers[idx] = updatedTrn;
       else this.db.bank_transfers.unshift(updatedTrn);
 
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+      this.saveDatabaseToCache();
       this.closeModal('modal-edit-bank-transfer');
       this.renderActiveTab();
       this.showNotification(`Bank wire "${updatedTrn.reference_no}" updated successfully.`, 'success');
@@ -26589,7 +26609,7 @@ Scope of Work & Technical Execution:
     if (this.db?.bank_transfers) {
       this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== tId && t.id !== transferId && (tRef ? t.reference_no !== tRef : true));
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification(`Bank wire record "${label}" deleted successfully.`, 'info');
 
@@ -26992,7 +27012,7 @@ Scope of Work & Technical Execution:
     if (this.db?.cash_in_hand) {
       this.db.cash_in_hand = this.db.cash_in_hand.filter(r => r.id !== regId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification(`Cash register "${label}" removed.`, 'info');
 
@@ -27137,7 +27157,7 @@ Scope of Work & Technical Execution:
       this.db.cash_vouchers = this.db.cash_vouchers.filter(x => x.id !== vId && x.id !== voucherId && (vNo ? x.voucher_no !== vNo : true));
     }
     this.normalizeAllBalances();
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification(`Petty cash voucher "${label}" deleted successfully.`, 'info');
 
@@ -27571,7 +27591,7 @@ Scope of Work & Technical Execution:
         this.db.cash_vouchers[idx] = updatedVoucher;
       }
       this.normalizeAllBalances();
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      this.saveDatabaseToCache();
 
       try {
         await this.syncApi('update_cash_voucher', { id: v.id, voucher: updatedVoucher });
@@ -28031,7 +28051,7 @@ Scope of Work & Technical Execution:
       }
 
       this.normalizeAllBalances();
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+      this.saveDatabaseToCache();
 
       await this.syncApi('record_cheque', { cheque: chqData });
       this.closeModal('modal-cheque-entry');
@@ -28184,7 +28204,7 @@ Scope of Work & Technical Execution:
       }
 
       this.normalizeAllBalances();
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+      this.saveDatabaseToCache();
 
       await this.syncApi('deposit_cheque', {
         id: chequeId,
@@ -28351,7 +28371,7 @@ Scope of Work & Technical Execution:
       this.db.bank_transfers = this.db.bank_transfers.filter(t => t.id !== wireId && (!chqRef || t.reference_no !== chqRef));
     }
     this.normalizeAllBalances();
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+    this.saveDatabaseToCache();
 
     await this.syncApi('delete_cheque', { id: chequeId, cheque_id: chequeId });
     this.renderActiveTab();
@@ -28477,7 +28497,7 @@ Scope of Work & Technical Execution:
     if (this.db?.loan_transactions) {
       this.db.loan_transactions = this.db.loan_transactions.filter(t => t.facility_id !== loanId && t.loan_id !== loanId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification(`Credit facility "${label}" removed.`, 'info');
 
@@ -28597,7 +28617,7 @@ Scope of Work & Technical Execution:
     if (this.db?.loan_transactions) {
       this.db.loan_transactions = this.db.loan_transactions.filter(t => t.id !== transId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification('Transaction record deleted.', 'info');
 
@@ -31789,7 +31809,7 @@ Scope of Work & Technical Execution:
           if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
           return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
         });
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
@@ -31817,9 +31837,7 @@ Scope of Work & Technical Execution:
             if (oldInvNo && (item.invoice_no || '').toLowerCase() === oldInvNo.toLowerCase() && item.invoice_no !== newInvNo) return false;
             return index === self.findIndex(t => (t.id && t.id === item.id) || (t.invoice_no && t.invoice_no.toLowerCase() === (item.invoice_no || '').toLowerCase()));
           });
-          try {
-            localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-          } catch (e) { }
+          this.saveDatabaseToCache();
         }
         this.showNotification(`Invoice ${inv.invoice_no} updated successfully with ${updatedLineItems.length} items.`, 'success');
         this.closeModal('modal-edit-invoice');
@@ -32480,13 +32498,13 @@ Scope of Work & Technical Execution:
         const idx = this.db.purchase_bills.findIndex(b => b.id === bill.id || b.bill_no === bill.bill_no);
         if (idx >= 0) this.db.purchase_bills[idx] = bill;
         else this.db.purchase_bills.unshift(bill);
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
         await this.syncApi('update_bill', { bill });
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`Purchase Bill ${bill.bill_no} updated successfully.`, 'success');
         this.closeModal('modal-edit-bill');
         this.renderActiveTab();
@@ -32691,13 +32709,13 @@ Scope of Work & Technical Execution:
         const idx = this.db.customer_receipts.findIndex(r => r.id === rcp.id || r.receipt_no === oldRcpNo || r.receipt_no === rcp.receipt_no);
         if (idx >= 0) this.db.customer_receipts[idx] = rcp;
         else this.db.customer_receipts.push(rcp);
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        this.saveDatabaseToCache();
       }
 
       try {
         await this.syncApi('update_receipt', { receipt: rcp, old_receipt_no: oldRcpNo, saved_banks: this.db.saved_banks });
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`Payment-In voucher ${rcp.receipt_no} updated successfully.`, 'success');
         this.closeModal('modal-edit-receipt');
         this.renderActiveTab();
@@ -32879,13 +32897,13 @@ Scope of Work & Technical Execution:
         const idx = this.db.expenses.findIndex(x => x.id === exp.id || x.expense_no === exp.expense_no);
         if (idx >= 0) this.db.expenses[idx] = exp;
         else this.db.expenses.unshift(exp);
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
         await this.syncApi('update_expense', { expense: exp });
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`Expense ${exp.expense_no} updated successfully.`, 'success');
         this.closeModal('modal-edit-expense');
         this.renderActiveTab();
@@ -33217,7 +33235,7 @@ Scope of Work & Technical Execution:
       this.db.bank_transfers = this.db.bank_transfers.filter(bt => bt.expense_id !== eId && bt.expense_id !== expenseId);
     }
     this.normalizeAllBalances();
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification(`Expense record "${label}" deleted successfully.`, 'info');
 
@@ -33734,13 +33752,13 @@ Scope of Work & Technical Execution:
         const idx = this.db.vendor_payments.findIndex(p => p.id === pay.id || p.voucher_no === pay.voucher_no);
         if (idx >= 0) this.db.vendor_payments[idx] = pay;
         else this.db.vendor_payments.push(pay);
-        localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
+        this.saveDatabaseToCache();
       }
 
       try {
         await this.syncApi('update_payment', { payment: pay });
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`Payment voucher ${pay.voucher_no} updated successfully.`, 'success');
         this.closeModal('modal-edit-pay');
         this.renderActiveTab();
@@ -34025,13 +34043,13 @@ Scope of Work & Technical Execution:
         const idx = this.db.purchase_orders.findIndex(p => p.id === po.id || p.po_no === po.po_no);
         if (idx >= 0) this.db.purchase_orders[idx] = po;
         else this.db.purchase_orders.unshift(po);
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
         await this.syncApi('update_po', { po });
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.closeModal('modal-edit-po');
         this.showNotification(`Purchase Order ${po.po_no} updated successfully.`, 'success');
         if (document.getElementById('fin-doc-print-modal')) {
@@ -34125,7 +34143,7 @@ Scope of Work & Technical Execution:
     if (newNo && newNo.trim() && newNo.trim() !== po.po_no) {
       po.po_no = newNo.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`PO Number updated to ${po.po_no}.`, 'success');
         this.openPOPrintModal(po.id || po.po_no);
         this.renderActiveTab();
@@ -34140,7 +34158,7 @@ Scope of Work & Technical Execution:
     if (newRef !== null && newRef.trim() !== (po.quote_ref || '')) {
       po.quote_ref = newRef.trim() || 'Quotation —';
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification('Quotation Reference updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -34154,7 +34172,7 @@ Scope of Work & Technical Execution:
     if (newIRef !== null && newIRef.trim() !== (po.iref || '')) {
       po.iref = newIRef.trim() || '2026-KTS-SUB';
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification('Internal Ref updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -34168,7 +34186,7 @@ Scope of Work & Technical Execution:
     if (newType !== null && newType.trim() !== (po.po_type || '')) {
       po.po_type = newType.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification('PO Type updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -34184,7 +34202,7 @@ Scope of Work & Technical Execution:
     po.responsible_person = person.trim() || 'Mohammad Suhel';
     if (phone !== null) po.responsible_person_phone = phone.trim() || '+971 589827866';
     this.syncApi('update_po', { po }).then(() => {
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      this.saveDatabaseToCache();
       this.showNotification('Responsible Person updated.', 'success');
       this.openPOPrintModal(po.id || po.po_no);
     });
@@ -34197,7 +34215,7 @@ Scope of Work & Technical Execution:
     if (scope !== null && scope.trim() !== (po.scope_of_work || '')) {
       po.scope_of_work = scope.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification('Scope of Work banner updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -34257,7 +34275,7 @@ Scope of Work & Technical Execution:
       item.description = newScope;
       item.name = newScope.split('\n')[0] || newScope;
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification('Work scope details updated successfully.', 'success');
         closeModal();
         this.openPOPrintModal(po.id || po.po_no);
@@ -34274,7 +34292,7 @@ Scope of Work & Technical Execution:
     po.site_location = site.trim() || 'Al Foah Mall - Alain';
     if (hours !== null) po.working_hours = hours.trim() || '8:00 AM – 6:00 PM';
     this.syncApi('update_po', { po }).then(() => {
-      try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+      this.saveDatabaseToCache();
       this.showNotification('Site Location and Working Hours updated.', 'success');
       this.openPOPrintModal(po.id || po.po_no);
     });
@@ -34288,7 +34306,7 @@ Scope of Work & Technical Execution:
       po.notes_to_supplier = notes.trim();
       po.notes = notes.trim();
       this.syncApi('update_po', { po }).then(() => {
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification('Notes to Supplier updated.', 'success');
         this.openPOPrintModal(po.id || po.po_no);
       });
@@ -34364,7 +34382,7 @@ Scope of Work & Technical Execution:
         const idx = this.db.credit_notes.findIndex(c => c.id === cn.id || c.credit_note_no === cn.credit_note_no);
         if (idx >= 0) this.db.credit_notes[idx] = cn;
         else this.db.credit_notes.unshift(cn);
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
@@ -34374,7 +34392,7 @@ Scope of Work & Technical Execution:
           await this.syncApi('update_invoice', { invoice: linkedInv });
         }
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`Credit Note ${cn.credit_note_no} updated successfully.`, 'success');
         this.closeModal('modal-edit-cn');
         this.renderActiveTab();
@@ -34455,7 +34473,7 @@ Scope of Work & Technical Execution:
         const idx = this.db.debit_notes.findIndex(d => d.id === dn.id || d.debit_note_no === dn.debit_note_no);
         if (idx >= 0) this.db.debit_notes[idx] = dn;
         else this.db.debit_notes.unshift(dn);
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
@@ -34465,7 +34483,7 @@ Scope of Work & Technical Execution:
           await this.syncApi('update_bill', { bill: linkedBill });
         }
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`Debit Note ${dn.debit_note_no} updated successfully.`, 'success');
         this.closeModal('modal-edit-dn');
         this.renderActiveTab();
@@ -34542,12 +34560,12 @@ Scope of Work & Technical Execution:
         const idx = this.db.documents.findIndex(d => d.id === doc.id);
         if (idx >= 0) this.db.documents[idx] = doc;
         else this.db.documents.unshift(doc);
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       try {
         await this.syncApi('update_document', { document: doc });
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
         this.showNotification(`Document "${doc.name}" updated successfully.`, 'success');
         this.closeModal('modal-edit-doc');
         this.renderActiveTab();
@@ -34567,7 +34585,7 @@ Scope of Work & Technical Execution:
     if (this.db?.documents) {
       this.db.documents = this.db.documents.filter(d => d.id !== docId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+    this.saveDatabaseToCache();
     this.renderActiveTab();
     this.showNotification('Document removed from vault.', 'info');
 
@@ -34615,9 +34633,7 @@ Scope of Work & Technical Execution:
     }
 
     this.normalizeAllBalances();
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
 
     // 3. Immediately update UI
     this.renderActiveTab();
@@ -34654,9 +34670,7 @@ Scope of Work & Technical Execution:
       );
     }
 
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.closeModal('modal-edit-cust');
     this.closeModal('modal-cust-profile');
@@ -34687,9 +34701,7 @@ Scope of Work & Technical Execution:
     }
 
     this.normalizeAllBalances();
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
 
     // 3. Re-render UI immediately
     this.renderActiveTab();
@@ -34719,9 +34731,7 @@ Scope of Work & Technical Execution:
       this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id) && !idSet.has(cv.voucher_no));
     }
     this.normalizeAllBalances();
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.renderActiveTab();
     this.showNotification(`Payment voucher ${label} deleted successfully.`, 'info');
@@ -34798,9 +34808,7 @@ Scope of Work & Technical Execution:
       this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id));
     }
     this.normalizeAllBalances();
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.renderActiveTab();
     this.showNotification(`Successfully deleted ${count} payment voucher(s).`, 'success');
@@ -34842,9 +34850,7 @@ Scope of Work & Technical Execution:
       this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => !idSet.has(cv.payment_id));
     }
     this.normalizeAllBalances();
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.renderActiveTab();
     this.showNotification(`Successfully deleted all ${count} payment voucher(s).`, 'success');
@@ -34872,9 +34878,7 @@ Scope of Work & Technical Execution:
       this.db.cash_vouchers = this.db.cash_vouchers.filter(cv => cv.receipt_id !== rId && cv.receipt_id !== rNo);
     }
     this.normalizeAllBalances();
-    try {
-      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
-    } catch (e) { }
+    this.saveDatabaseToCache();
 
     // 2. Re-render UI immediately so there is zero delay
     this.renderActiveTab();
@@ -34909,7 +34913,7 @@ Scope of Work & Technical Execution:
     if (this.db?.purchase_orders) {
       this.db.purchase_orders = this.db.purchase_orders.filter(p => p.id !== pId && p.po_no !== pNo && p.id !== poId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.closeModal('modal-edit-po');
     this.closeModal('modal-po');
@@ -34932,7 +34936,7 @@ Scope of Work & Technical Execution:
       this.db.credit_notes = this.db.credit_notes.filter(c => c.id !== cId && c.credit_note_no !== cNo && c.id !== cnId);
     }
     this.normalizeAllBalances();
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.closeModal('modal-edit-credit-note');
     this.closeModal('modal-credit-note');
@@ -34954,7 +34958,7 @@ Scope of Work & Technical Execution:
     if (this.db?.debit_notes) {
       this.db.debit_notes = this.db.debit_notes.filter(d => d.id !== dId && d.debit_note_no !== dNo && d.id !== dnId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.closeModal('modal-edit-debit-note');
     this.closeModal('modal-debit-note');
@@ -34976,7 +34980,7 @@ Scope of Work & Technical Execution:
     if (this.db?.vendors) {
       this.db.vendors = this.db.vendors.filter(v => v.id !== vId && v.code !== vCode && v.id !== vendId);
     }
-    try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+    this.saveDatabaseToCache();
 
     this.closeModal('modal-edit-vendor');
     this.closeModal('modal-vendor');
@@ -35217,7 +35221,7 @@ Scope of Work & Technical Execution:
             }
           });
         }
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
       }
 
       const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -35231,7 +35235,7 @@ Scope of Work & Technical Execution:
         // 2. Sync to API
         await this.syncApi('update_vendor', { vendor: vend, old_id: oldId, old_code: oldCode, old_name: oldName });
         this.normalizeAllBalances();
-        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (e) { }
+        this.saveDatabaseToCache();
 
         this.showNotification(`Vendor "${vend.name}" (${vend.code}) updated successfully.`, 'success');
         this.closeModal('modal-edit-vend');
