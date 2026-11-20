@@ -4732,6 +4732,28 @@ function reconcileV138FixChequeInHandMissingForRec44071(&$data, $pdo) {
             error_log('Migration v138 error: ' . $e->getMessage());
         }
     }
+
+    // Migration v169: Ensure all cheques have sequential Rayan Ref # (REC-CQ-44001+ / ASH-CQ-44001+)
+    $done169 = $pdo ? $pdo->query("SELECT setting_val FROM finance_settings WHERE setting_key = 'cheque_reference_seq_v169'")->fetchColumn() : null;
+    if (!$done169 && $pdo) {
+        try {
+            $chqRows = $pdo->query("SELECT id, cheque_no, cheque_date, company_id, currency, data_json FROM finance_cheques ORDER BY cheque_date ASC, id ASC")->fetchAll(PDO::FETCH_ASSOC);
+            if ($chqRows && count($chqRows) > 0) {
+                $nextRec = 44001;
+                $nextAsh = 44001;
+                $upStmt = $pdo->prepare("UPDATE finance_cheques SET data_json = JSON_SET(data_json, '$.reference_no', :ref) WHERE id = :id");
+                foreach ($chqRows as $cr) {
+                    $isInd = (($cr['company_id'] ?? '') === 'ashaz-eng-in') || (($cr['currency'] ?? '') === 'INR');
+                    $prefix = $isInd ? 'ASH-CQ' : 'REC-CQ';
+                    $targetRef = $isInd ? ($prefix . '-' . $nextAsh++) : ($prefix . '-' . $nextRec++);
+                    $upStmt->execute([':ref' => $targetRef, ':id' => $cr['id']]);
+                }
+            }
+            $pdo->exec("REPLACE INTO finance_settings (setting_key, setting_val, updated_at) VALUES ('cheque_reference_seq_v169', 'completed', NOW())");
+        } catch (Exception $e) {
+            error_log('Migration v169 error: ' . $e->getMessage());
+        }
+    }
 }
 
 function loadFinanceDb($pdo, $dataFile, $candidates) {
@@ -10765,8 +10787,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($chq['id'])) $chq['id'] = 'chq-' . round(microtime(true) * 1000);
                 if (empty($chq['company_id'])) $chq['company_id'] = $body['company_id'] ?? 'rayan-corp-uae';
                 if (empty($chq['currency'])) $chq['currency'] = ($chq['company_id'] === 'ashaz-eng-in') ? 'INR' : 'AED';
+                if (empty($chq['reference_no'])) {
+                    $isInd = ($chq['company_id'] === 'ashaz-eng-in') || (($chq['currency'] ?? '') === 'INR');
+                    $prefix = $isInd ? 'ASH-CQ' : 'REC-CQ';
+                    $maxCqSeq = 44000;
+                    if (!empty($db['cheques']) && is_array($db['cheques'])) {
+                        foreach ($db['cheques'] as $existingCq) {
+                            if (preg_match('/(?:REC|ASH)-CQ-(\d+)/i', $existingCq['reference_no'] ?? '', $mCq)) {
+                                $maxCqSeq = max($maxCqSeq, intval($mCq[1]));
+                            }
+                        }
+                    }
+                    $chq['reference_no'] = $prefix . '-' . ($maxCqSeq + 1);
+                }
                 if (!isset($db['cheques']) || !is_array($db['cheques'])) $db['cheques'] = [];
                 array_unshift($db['cheques'], $chq);
+
+                if ($pdo) {
+                    try {
+                        $stmtChq = $pdo->prepare("REPLACE INTO finance_cheques (id, company_id, type, cheque_no, bank_name, party_name, amount, currency, cheque_date, status, notes, data_json, created_at, updated_at) VALUES (:id, :company_id, :type, :cheque_no, :bank_name, :party_name, :amount, :currency, :cheque_date, :status, :notes, :data_json, NOW(), NOW())");
+                        $stmtChq->execute([
+                            ':id' => $chq['id'],
+                            ':company_id' => $chq['company_id'],
+                            ':type' => $chq['type'] ?? 'inward',
+                            ':cheque_no' => $chq['cheque_no'] ?? '',
+                            ':bank_name' => $chq['bank_name'] ?? '',
+                            ':party_name' => $chq['party_name'] ?? '',
+                            ':amount' => floatval($chq['amount'] ?? 0),
+                            ':currency' => $chq['currency'] ?? 'AED',
+                            ':cheque_date' => !empty($chq['date']) ? $chq['date'] : date('Y-m-d'),
+                            ':status' => $chq['status'] ?? 'pending',
+                            ':notes' => $chq['notes'] ?? '',
+                            ':data_json' => json_encode($chq, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
+                }
 
                 $status = $chq['status'] ?? 'Post-Dated Cheque (PDC)';
                 if ($status === 'Cleared' || $status === 'Deposited') {
