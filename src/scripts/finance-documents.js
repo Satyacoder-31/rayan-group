@@ -23,13 +23,34 @@ export function registerDocumentModules(FinanceApp) {
   // ==========================================================================
   // CUSTOM MODAL CONTROLS (SHOW & CLOSE MODAL DIALOGS)
   // ==========================================================================
-  proto.showCustomModal = function (html) {
+  proto.getModalContainer = function () {
     let container = document.getElementById('fin-modal-container');
     if (!container) {
       container = document.createElement('div');
       container.id = 'fin-modal-container';
       document.body.appendChild(container);
     }
+    return container;
+  };
+
+  proto.ensureDocumentSeedData = function () {
+    if (!this.db) this.db = {};
+    if (!Array.isArray(this.db.work_completion_certificates)) {
+      this.db.work_completion_certificates = [];
+    }
+    if (!Array.isArray(this.db.delivery_notes)) {
+      this.db.delivery_notes = [];
+    }
+    if (!Array.isArray(this.db.undertaking_letters)) {
+      this.db.undertaking_letters = [];
+    }
+    if (!Array.isArray(this.db.custom_letters)) {
+      this.db.custom_letters = [];
+    }
+  };
+
+  proto.showCustomModal = function (html) {
+    const container = this.getModalContainer();
     container.innerHTML = html;
     document.body.classList.add('fin-doc-open');
   };
@@ -2407,7 +2428,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
     if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(cert.cert_no, 'Work Completion Certificate', cert.client_name);
   };
@@ -2950,7 +2971,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
     if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(ultDocNo, 'Undertaking Letter', ult.contractor);
   };
@@ -2993,6 +3014,8 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
     if (!dn) {
       dn = (this.db?.delivery_notes || [])[0] || {};
     }
+
+    const dnDocNo = dn.dn_no || 'DN-REC-1001';
 
     const items = dn.items && dn.items.length ? dn.items : [
       { srl: 1, description: 'Material Items as per approved delivery order', unit: 'LS', qty_ordered: 1, qty_delivered: 1, remarks: 'Verified Sound' }
@@ -3159,7 +3182,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
     if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(dnDocNo, 'Delivery Note', dn.client_name);
   };
@@ -3311,7 +3334,7 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
       </div>
     `;
 
-    document.getElementById('fin-modal-container').innerHTML = modalHtml;
+    this.getModalContainer().innerHTML = modalHtml;
     document.body.classList.add('fin-doc-open');
     if (this.setActiveDocumentTitle) this.setActiveDocumentTitle(ltrDocNo, 'Official Letter', ltr.recipient_name);
   };

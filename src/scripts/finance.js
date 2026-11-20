@@ -3,6 +3,20 @@ import { registerDocumentModules } from './finance-documents.js';
 import { registerPayrollModules } from './finance-payroll.js';
 import QRCode from 'qrcode';
 
+// Universal HTML Escape helper accessible across all print & document renderers
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+if (typeof window !== 'undefined') {
+  window.escapeHtml = escapeHtml;
+}
+
 /**
  * RAYAN GROUP — ENTERPRISE ACCOUNTS, BILLING & FINANCIAL MANAGEMENT SYSTEM
  * Inspired by Zolvit/VakilSearch Billing & GRC Dashboard functionality
@@ -2444,7 +2458,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v174';
+    const CURRENT_DB_VERSION = 'v2026_clean_v176';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -25000,6 +25014,11 @@ Scope of Work & Technical Execution:
   }
 
   printDocument() {
+    // Ensure document.title matches the active document number & type for accurate PDF naming
+    try {
+      this.detectAndSetActiveDocumentTitle();
+    } catch (e) { }
+
     // Immediately hide floating scrollbar and other interactive overlays
     const floatingBar = document.getElementById('fin-floating-scrollbar');
     if (floatingBar) {
@@ -35248,6 +35267,7 @@ Scope of Work & Technical Execution:
     const custAddress = customerObj.billing_address || customerObj.office_address || customerObj.address || linkedInvoice?.customer_address || '';
     const linkedInvNo = cn.invoice_no || linkedInvoice?.invoice_no || 'REC-RG-INV';
     const linkedInvDate = linkedInvoice?.invoice_date ? formatDateDisplay(linkedInvoice.invoice_date) : '';
+    const cnDocNo = cn.credit_note_no || 'CN-REC-1001';
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(cnDocNo)}" data-doc-type="Credit Note">
@@ -35565,6 +35585,7 @@ Scope of Work & Technical Execution:
     if (dn.amount_in_words) dn.amount_in_words = amountInWords;
 
     const vendorObj = (this.db?.vendors || []).find(v => v.name === dn.vendor_name || (dn.vendor_name && v.name && v.name.toLowerCase().includes(dn.vendor_name.toLowerCase())));
+    const dnDocNo = dn.debit_note_no || 'DN-REC-2026-001';
 
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(dnDocNo)}" data-doc-type="Debit Note">

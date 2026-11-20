@@ -531,21 +531,38 @@ export function registerPayrollModules(FinanceApp) {
       const statusColor = isAct ? '#10b981' : '#f59e0b';
       const statusBg = isAct ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)';
 
+      const initials = (emp.name || 'EM').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+      const hasPhoto = Boolean(emp.photo);
+      const photoHtml = hasPhoto
+        ? `<img src="${emp.photo}" alt="${escapeHtml(emp.name)}" style="width:38px; height:38px; border-radius:10px; object-fit:cover; border:1px solid rgba(56,189,248,0.4); flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.35);">`
+        : `<div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(99,102,241,0.25) 100%); border:1px solid rgba(56,189,248,0.3); display:flex; align-items:center; justify-content:center; font-weight:800; color:#38bdf8; font-size:0.85rem; flex-shrink:0;">${initials}</div>`;
+
       return `
         <tr data-emp-id="${escapeHtml(emp.id)}">
           <td style="color:#64748b; font-size:0.8rem;">${index + 1}</td>
           <td>
-            <strong style="color:#38bdf8; font-weight:700; font-family:monospace; font-size:0.9rem;">
-              ${escapeHtml(emp.employee_no || 'EN---')}
-            </strong>
+            <div style="cursor:pointer; display:inline-block;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="Click to view full dossier, address, emergency contact &amp; payouts ledger">
+              <strong style="color:#38bdf8; font-weight:700; font-family:monospace; font-size:0.9rem; text-decoration:underline; text-decoration-color:rgba(56,189,248,0.4);">
+                ${escapeHtml(emp.employee_no || 'EN---')}
+              </strong>
+            </div>
           </td>
           <td>
-            <div style="font-weight:700; color:#f8fafc; font-size:0.92rem;">${escapeHtml(emp.name || 'Unnamed')}</div>
-            <div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">
-              ${emp.phone ? `📞 ${escapeHtml(emp.phone)}` : ''} 
-              ${emp.email ? `• ✉️ ${escapeHtml(emp.email)}` : ''}
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="cursor:pointer;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="View Executive Profile Dossier">
+                ${photoHtml}
+              </div>
+              <div>
+                <div style="font-weight:700; color:#f8fafc; font-size:0.92rem; cursor:pointer;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="Click to view full employee profile dossier">
+                  ${escapeHtml(emp.name || 'Unnamed')}
+                </div>
+                <div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">
+                  ${emp.phone ? `📞 ${escapeHtml(emp.phone)}` : ''} 
+                  ${emp.email ? `• ✉️ ${escapeHtml(emp.email)}` : ''}
+                </div>
+                ${emp.emirates_id ? `<div style="font-size:0.68rem; color:#64748b; font-family:monospace;">EID: ${escapeHtml(emp.emirates_id)}</div>` : ''}
+              </div>
             </div>
-            ${emp.emirates_id ? `<div style="font-size:0.68rem; color:#64748b; font-family:monospace;">EID: ${escapeHtml(emp.emirates_id)}</div>` : ''}
           </td>
           <td>
             <div style="color:#e2e8f0; font-weight:600; font-size:0.85rem;">${escapeHtml(emp.position || emp.designation || 'Staff')}</div>
@@ -580,6 +597,9 @@ export function registerPayrollModules(FinanceApp) {
           </td>
           <td style="text-align:right;">
             <div style="display:inline-flex; gap:0.35rem; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+              <button type="button" class="fin-btn-row-action" style="background:linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.22)); color:#38bdf8; border:1px solid rgba(56,189,248,0.45); font-weight:700; padding:4px 10px; font-size:0.75rem; cursor:pointer;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="View Executive Profile Dossier, Address &amp; Payouts Ledger">
+                👤 Profile
+              </button>
               <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:4px 9px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')" title="Record Monthly Salary & Deduct Balance">
                 💳 Record Payment
               </button>
@@ -1559,7 +1579,22 @@ export function registerPayrollModules(FinanceApp) {
   // ==========================================================================
   proto.openEmployeeProfileModal = function (empId) {
     this.ensurePayrollSeedData();
-    const emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
+    let emp = null;
+    const employees = this.db?.employees || [];
+    if (empId) {
+      const searchKey = String(empId).trim().toLowerCase();
+      emp = employees.find(e => 
+        e.id === empId || 
+        e.employee_no === empId ||
+        String(e.id || '').toLowerCase() === searchKey ||
+        String(e.employee_no || '').toLowerCase() === searchKey ||
+        String(e.name || '').toLowerCase() === searchKey ||
+        String(e.name || '').toLowerCase().includes(searchKey)
+      );
+    }
+    if (!emp) {
+      emp = employees[0];
+    }
     if (!emp) {
       if (typeof this.showNotification === 'function') {
         this.showNotification('Employee record not found.', 'error');
