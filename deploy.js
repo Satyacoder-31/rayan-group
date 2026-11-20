@@ -105,8 +105,20 @@ async function deploy() {
               const localEmployees = (localData.employees || []);
               if (!Array.isArray(liveJson.data.employees)) liveJson.data.employees = [];
               localEmployees.forEach(emp => {
-                if (!liveJson.data.employees.some(p => p.id === emp.id || p.employee_no === emp.employee_no)) {
+                const target = liveJson.data.employees.find(p => p.id === emp.id || p.employee_no === emp.employee_no);
+                if (!target) {
                   liveJson.data.employees.push(emp);
+                } else {
+                  target.address = target.address || emp.address;
+                  target.local_address = target.local_address || emp.local_address || emp.address;
+                  target.permanent_address = target.permanent_address || emp.permanent_address;
+                  target.emergency_contact_name = target.emergency_contact_name || emp.emergency_contact_name;
+                  target.emergency_contact_relation = target.emergency_contact_relation || emp.emergency_contact_relation;
+                  target.emergency_contact_phone = target.emergency_contact_phone || emp.emergency_contact_phone;
+                  target.visa_status = target.visa_status || emp.visa_status;
+                  target.visa_expiry_date = target.visa_expiry_date || emp.visa_expiry_date;
+                  target.labor_card_no = target.labor_card_no || emp.labor_card_no;
+                  if (!target.photo && emp.photo) target.photo = emp.photo;
                 }
               });
 

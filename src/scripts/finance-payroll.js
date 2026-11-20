@@ -951,8 +951,75 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   // ==========================================================================
-  // 4. EMPLOYEE MODAL (ADD / EDIT)
+  // 4. EMPLOYEE MODAL (ADD / EDIT) & PHOTO AVATAR HANDLERS
   // ==========================================================================
+  proto.handleEmployeePhotoUpload = function (event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        // High quality scale down to max 320x320 for snappy payload & crisp display
+        const maxDim = 320;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        const valInput = document.getElementById('fin-emp-photo-val');
+        if (valInput) valInput.value = dataUrl;
+
+        const previewImg = document.getElementById('fin-emp-photo-preview-img');
+        const placeholder = document.getElementById('fin-emp-photo-placeholder');
+        const removeBtn = document.getElementById('fin-emp-photo-remove-btn');
+        if (previewImg) {
+          previewImg.src = dataUrl;
+          previewImg.style.display = 'block';
+        }
+        if (placeholder) placeholder.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'inline-flex';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  proto.removeEmployeePhoto = function () {
+    const valInput = document.getElementById('fin-emp-photo-val');
+    if (valInput) valInput.value = '';
+    const fileInput = document.getElementById('fin-emp-photo-input');
+    if (fileInput) fileInput.value = '';
+    const previewImg = document.getElementById('fin-emp-photo-preview-img');
+    const placeholder = document.getElementById('fin-emp-photo-placeholder');
+    const removeBtn = document.getElementById('fin-emp-photo-remove-btn');
+    if (previewImg) {
+      previewImg.src = '';
+      previewImg.style.display = 'none';
+    }
+    if (placeholder) placeholder.style.display = 'flex';
+    if (removeBtn) removeBtn.style.display = 'none';
+  };
+
   proto.openEmployeeModal = function (empId = null) {
     let emp = null;
     if (empId) {
@@ -962,23 +1029,39 @@ export function registerPayrollModules(FinanceApp) {
     const isEdit = Boolean(emp);
     const projects = (this.db?.projects || []).filter(p => this.matchesActiveCompany(p.company_id));
 
-    const basicSalary = emp ? Number(emp.basic_salary || 0) : '';
+    // Auto-calculate next sequential employee number if creating new
+    let defaultEmpNo = emp?.employee_no || '';
+    if (!defaultEmpNo) {
+      let maxNo = 12000;
+      (this.db?.employees || []).forEach(e => {
+        const m = (e.employee_no || '').match(/EN(\d+)/i);
+        if (m) {
+          const num = parseInt(m[1], 10);
+          if (num > maxNo) maxNo = num;
+        }
+      });
+      defaultEmpNo = 'EN' + (maxNo + 1);
+    }
+
+    const basicSalary = emp ? Number(emp.basic_salary || 0) : '0.00';
     const accAllowance = emp ? Number(emp.accommodation_allowance || 0) : '';
     const otherAllowance = emp ? Number(emp.other_allowance || 0) : '';
 
+    const hasPhoto = Boolean(emp?.photo);
+
     const html = `
       <div class="fin-modal-backdrop open" id="fin-emp-modal-backdrop">
-        <div class="fin-modal-dialog" style="max-width:820px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
+        <div class="fin-modal-dialog" style="max-width:860px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.25); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(0,153,230,0.12); display:flex; flex-direction:column; border-radius:16px; overflow:hidden;">
           <!-- Executive Header -->
           <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:0.85rem;">
-              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem;">👤</div>
+              <div style="width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(0,153,230,0.3) 100%); border:1px solid rgba(56,189,248,0.35); display:flex; align-items:center; justify-content:center; font-size:1.35rem; box-shadow:0 4px 12px rgba(56,189,248,0.15);">👤</div>
               <div>
                 <h3 class="fin-modal-title" style="margin:0; font-size:1.2rem; font-weight:800; color:#f8fafc;">
-                  ${isEdit ? '✏️ Edit Employee Record' : '👤 Add New Employee Record'}
+                  ${isEdit ? '✏️ Edit Employee Profile &amp; Records' : '👤 Register New Employee &amp; Worker'}
                 </h3>
                 <p style="margin:2px 0 0; font-size:0.75rem; color:#94a3b8;">
-                  Employee details, identification documents, contact info &amp; monthly compensation
+                  Personnel file, photo avatar, residential addresses, emergency contacts &amp; compensation
                 </p>
               </div>
             </div>
@@ -988,17 +1071,53 @@ export function registerPayrollModules(FinanceApp) {
           <!-- Form Body -->
           <form id="fin-emp-form" class="fin-modal-body" onsubmit="window.finApp.saveEmployeeForm(event)" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
             <input type="hidden" name="id" value="${emp?.id || ''}">
+            <input type="hidden" name="photo" id="fin-emp-photo-val" value="${escapeHtml(emp?.photo || '')}">
 
-            <!-- Card 1: Employee Role & Identification -->
-            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
-              <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#38bdf8; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
-                <span>👤</span>
-                <span>Employee Identification</span>
+            <!-- Card 1: Photo Avatar & Role Identification -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+              <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#38bdf8; font-size:0.88rem; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span>👤</span>
+                  <span>Employee Photo &amp; Primary Identification</span>
+                </div>
+                <span style="font-size:0.7rem; color:#94a3b8;">Required fields marked with <span style="color:#ef4444;">*</span></span>
               </div>
+
+              <!-- Photo Upload Strip -->
+              <div style="display:flex; align-items:center; gap:1.25rem; margin-bottom:1.25rem; background:rgba(0,0,0,0.25); border:1px dashed rgba(56,189,248,0.3); border-radius:12px; padding:1rem; flex-wrap:wrap;">
+                <div style="position:relative; width:88px; height:88px; border-radius:14px; overflow:hidden; background:#0f172a; border:2px solid rgba(56,189,248,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 14px rgba(0,0,0,0.4);">
+                  <img id="fin-emp-photo-preview-img" src="${emp?.photo || ''}" alt="Employee Photo" style="width:100%; height:100%; object-fit:cover; display:${hasPhoto ? 'block' : 'none'};">
+                  <div id="fin-emp-photo-placeholder" style="display:${hasPhoto ? 'none' : 'flex'}; flex-direction:column; align-items:center; justify-content:center; color:#64748b; font-weight:700; font-size:1.5rem;">
+                    <span>📷</span>
+                    <span style="font-size:0.62rem; color:#94a3b8; margin-top:2px; font-family:sans-serif;">No Photo</span>
+                  </div>
+                </div>
+
+                <div style="flex:1; min-width:220px;">
+                  <div style="font-weight:700; color:#f8fafc; font-size:0.9rem; margin-bottom:3px;">
+                    Employee Portrait Photo / Staff Avatar
+                  </div>
+                  <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:0.75rem; line-height:1.4;">
+                    Upload an official passport or portrait photograph. Displays in the directory, executive profile, ID badges, and official payslips.
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <input type="file" id="fin-emp-photo-input" accept="image/*" style="display:none;" onchange="window.finApp.handleEmployeePhotoUpload(event)">
+                    <button type="button" class="fin-btn-secondary" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); font-size:0.78rem; padding:6px 14px; font-weight:700; cursor:pointer;" onclick="document.getElementById('fin-emp-photo-input').click()">
+                      📷 Choose / Upload Photo
+                    </button>
+                    <button type="button" id="fin-emp-photo-remove-btn" class="fin-btn-secondary" style="background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.3); font-size:0.78rem; padding:6px 12px; cursor:pointer; display:${hasPhoto ? 'inline-flex' : 'none'};" onclick="window.finApp.removeEmployeePhoto()">
+                      ✖ Remove Photo
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Identification Inputs -->
               <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Employee ID / No. <span style="color:#ef4444;">*</span></label>
-                  <input type="text" name="employee_no" class="fin-form-input" required value="${escapeHtml(emp?.employee_no || '')}" placeholder="e.g. EN12001" style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                  <input type="text" name="employee_no" class="fin-form-input" required value="${escapeHtml(defaultEmpNo)}" placeholder="e.g. EN12005" style="font-family:monospace; font-weight:700; color:#38bdf8;">
+                  <span style="font-size:0.68rem; color:#64748b;">Auto-sequenced company ID</span>
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Full Name <span style="color:#ef4444;">*</span></label>
@@ -1006,7 +1125,7 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Designation / Job Title <span style="color:#ef4444;">*</span></label>
-                  <input type="text" name="position" class="fin-form-input" required value="${escapeHtml(emp?.position || '')}" placeholder="e.g. Civil Engineer">
+                  <input type="text" name="position" class="fin-form-input" required value="${escapeHtml(emp?.position || emp?.designation || '')}" placeholder="e.g. Civil Engineer">
                 </div>
               </div>
               <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
@@ -1021,11 +1140,11 @@ export function registerPayrollModules(FinanceApp) {
               </div>
             </div>
 
-            <!-- Card 2: Legal Documents & Contact Coordinates -->
-            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
+            <!-- Card 2: Legal Identity, Visas & Labor Details -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
               <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#10b981; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
                 <span>🪪</span>
-                <span>Legal Identity &amp; Contact Details</span>
+                <span>Legal Identity, Visas &amp; Labor Details</span>
               </div>
               <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
@@ -1041,7 +1160,35 @@ export function registerPayrollModules(FinanceApp) {
                   <input type="text" name="nationality" class="fin-form-input" value="${escapeHtml(emp?.nationality || 'India')}" placeholder="e.g. India">
                 </div>
               </div>
-              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Visa Status</label>
+                  <select name="visa_status" class="fin-form-select">
+                    <option value="Employment Visa (Rayan Engineering)" ${(emp?.visa_status || '').includes('Employment') || !emp?.visa_status ? 'selected' : ''}>Employment Visa (Rayan Engineering)</option>
+                    <option value="Residence Visa" ${(emp?.visa_status || '') === 'Residence Visa' ? 'selected' : ''}>Residence Visa</option>
+                    <option value="Investor / Partner Visa" ${(emp?.visa_status || '').includes('Investor') ? 'selected' : ''}>Investor / Partner Visa</option>
+                    <option value="Mission / Visit Visa" ${(emp?.visa_status || '').includes('Visit') ? 'selected' : ''}>Mission / Visit Visa</option>
+                    <option value="Under Processing" ${(emp?.visa_status || '').includes('Processing') ? 'selected' : ''}>Under Processing</option>
+                  </select>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Visa Expiry Date</label>
+                  <input type="date" name="visa_expiry_date" class="fin-form-input" value="${emp?.visa_expiry_date || ''}">
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Labor Card / Work Permit No.</label>
+                  <input type="text" name="labor_card_no" class="fin-form-input" value="${escapeHtml(emp?.labor_card_no || '')}" placeholder="e.g. 12345678" style="font-family:monospace;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Contact Coordinates & Residential Addresses -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+              <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#38bdf8; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
+                <span>📍</span>
+                <span>Contact Coordinates &amp; Residential Addresses (UAE &amp; Home Country)</span>
+              </div>
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Contact / Phone Number</label>
                   <input type="text" name="phone" class="fin-form-input" value="${escapeHtml(emp?.phone || '')}" placeholder="+971 55 541 1543">
@@ -1051,22 +1198,55 @@ export function registerPayrollModules(FinanceApp) {
                   <input type="email" name="email" class="fin-form-input" value="${escapeHtml(emp?.email || '')}" placeholder="name@domain.com">
                 </div>
               </div>
+
+              <!-- Complete Addresses -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">UAE Residential Address</label>
+                  <textarea name="address" rows="2" class="fin-form-input" style="resize:vertical; min-height:54px;" placeholder="Flat / Villa, Building, Street, Area/Sector, Emirate (e.g. Flat 302, Building 14, Musaffah M-14, Abu Dhabi, UAE)">${escapeHtml(emp?.address || emp?.local_address || '')}</textarea>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Permanent Home Country Address</label>
+                  <textarea name="permanent_address" rows="2" class="fin-form-input" style="resize:vertical; min-height:54px;" placeholder="Village / Town, District, State, Postal Code, Country (e.g. Siwan, Bihar, India)">${escapeHtml(emp?.permanent_address || '')}</textarea>
+                </div>
+              </div>
+
+              <!-- Emergency Contact Details -->
+              <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:0.85rem; margin-top:0.25rem;">
+                <div style="font-size:0.75rem; font-weight:700; color:#cbd5e1; margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.03em;">
+                  🚨 Emergency Contact Coordinates
+                </div>
+                <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.75rem;">
+                  <div class="fin-form-group" style="margin-bottom:0;">
+                    <label class="fin-field-label" style="font-size:0.72rem;">Contact Person Name</label>
+                    <input type="text" name="emergency_contact_name" class="fin-form-input" value="${escapeHtml(emp?.emergency_contact_name || '')}" placeholder="e.g. Mohammad Nazmul">
+                  </div>
+                  <div class="fin-form-group" style="margin-bottom:0;">
+                    <label class="fin-field-label" style="font-size:0.72rem;">Relationship</label>
+                    <input type="text" name="emergency_contact_relation" class="fin-form-input" value="${escapeHtml(emp?.emergency_contact_relation || '')}" placeholder="e.g. Father / Brother / Spouse">
+                  </div>
+                  <div class="fin-form-group" style="margin-bottom:0;">
+                    <label class="fin-field-label" style="font-size:0.72rem;">Emergency Phone</label>
+                    <input type="text" name="emergency_contact_phone" class="fin-form-input" value="${escapeHtml(emp?.emergency_contact_phone || '')}" placeholder="+91 98765 43210">
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <!-- Card 3: Monthly Compensation Elements -->
-            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
+            <!-- Card 4: Monthly Compensation Elements -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
               <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#f59e0b; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
                 <span>💵</span>
-                <span>Monthly Compensation (AED)</span>
+                <span>Monthly Compensation Structure (AED)</span>
               </div>
               <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Basic Salary (AED) <span style="color:#ef4444;">*</span></label>
-                  <input type="number" step="0.01" name="basic_salary" id="fin-emp-basic" class="fin-form-input" required value="${basicSalary}" placeholder="e.g. 5000" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                  <label class="fin-field-label">Basic Salary (AED)</label>
+                  <input type="number" step="0.01" name="basic_salary" id="fin-emp-basic" class="fin-form-input" value="${basicSalary}" placeholder="0.00" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Accommodation Allowance (AED)</label>
-                  <input type="number" step="0.01" name="accommodation_allowance" id="fin-emp-acc" class="fin-form-input" value="${accAllowance}" placeholder="e.g. 5000" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
+                  <input type="number" step="0.01" name="accommodation_allowance" id="fin-emp-acc" class="fin-form-input" value="${accAllowance}" placeholder="0.00" oninput="window.finApp.calcEmpGrossSalary()" style="font-weight:700;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Other Allowance (AED)</label>
@@ -1081,11 +1261,11 @@ export function registerPayrollModules(FinanceApp) {
               </div>
             </div>
 
-            <!-- Card 4: Banking Coordinates, Project & Status -->
-            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.15rem;">
+            <!-- Card 5: Banking Coordinates, Project & Status -->
+            <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
               <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#c084fc; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
                 <span>🏦</span>
-                <span>Bank Details, Allocation &amp; Status</span>
+                <span>Bank Details, Project Allocation &amp; Status</span>
               </div>
               <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
@@ -1139,7 +1319,7 @@ export function registerPayrollModules(FinanceApp) {
             <!-- Footer Actions -->
             <div class="fin-modal-footer" style="padding:1.15rem 0 0 0; background:transparent; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:flex-end; gap:0.75rem; margin-top:0.5rem;">
               <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeEmployeeModal()">Cancel</button>
-              <button type="submit" class="fin-btn-primary" style="background:#10b981; border-color:#10b981;">
+              <button type="submit" id="fin-emp-save-btn" class="fin-btn-primary" style="background:#10b981; border-color:#10b981; font-weight:700;">
                 ${isEdit ? '💾 Update Employee Profile' : '✓ Save Employee to Directory'}
               </button>
             </div>
@@ -1171,11 +1351,17 @@ export function registerPayrollModules(FinanceApp) {
   proto.saveEmployeeForm = async function (e) {
     e.preventDefault();
     const form = e.target;
-    const formData = new FormData(form);
+    const submitBtn = document.getElementById('fin-emp-save-btn') || form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>⏳</span> Saving Employee...';
+    }
 
+    const formData = new FormData(form);
     const rawId = formData.get('id');
     const isEdit = Boolean(rawId && rawId.trim());
-    const empId = isEdit ? rawId.trim() : (formData.get('employee_no') ? 'emp-' + formData.get('employee_no').trim().toLowerCase() : ('emp-' + Date.now().toString(36)));
+    const empNo = (formData.get('employee_no') || '').trim();
+    const empId = isEdit ? rawId.trim() : (empNo ? 'emp-' + empNo.toLowerCase() : ('emp-' + Date.now().toString(36)));
     const prjId = formData.get('project_id') || '';
     const prj = (this.db?.projects || []).find(p => p.id === prjId);
 
@@ -1185,28 +1371,39 @@ export function registerPayrollModules(FinanceApp) {
 
     const empObj = {
       id: empId,
-      employee_no: formData.get('employee_no') || '',
+      employee_no: empNo,
       company_id: this.activeCompanyId || 'rayan-corp-uae',
-      name: formData.get('name') || '',
-      position: formData.get('position') || '',
-      department: formData.get('department') || 'Rayan Engineering',
-      name_ar: formData.get('name_ar') || '',
-      position_ar: formData.get('position_ar') || '',
-      passport_no: formData.get('passport_no') || '',
-      nationality: formData.get('nationality') || 'India',
+      name: (formData.get('name') || '').trim(),
+      position: (formData.get('position') || '').trim(),
+      designation: (formData.get('position') || '').trim(),
+      department: (formData.get('department') || 'Rayan Engineering').trim(),
+      name_ar: (formData.get('name_ar') || '').trim(),
+      position_ar: (formData.get('position_ar') || '').trim(),
+      passport_no: (formData.get('passport_no') || '').trim(),
+      nationality: (formData.get('nationality') || 'India').trim(),
       date_of_joining: formData.get('date_of_joining') || '',
       date_of_appointment: formData.get('date_of_joining') || '',
-      phone: formData.get('phone') || '',
-      email: formData.get('email') || '',
-      emirates_id: formData.get('emirates_id') || '',
+      phone: (formData.get('phone') || '').trim(),
+      email: (formData.get('email') || '').trim(),
+      emirates_id: (formData.get('emirates_id') || '').trim(),
+      photo: formData.get('photo') || '',
+      address: (formData.get('address') || '').trim(),
+      local_address: (formData.get('address') || '').trim(),
+      permanent_address: (formData.get('permanent_address') || '').trim(),
+      emergency_contact_name: (formData.get('emergency_contact_name') || '').trim(),
+      emergency_contact_relation: (formData.get('emergency_contact_relation') || '').trim(),
+      emergency_contact_phone: (formData.get('emergency_contact_phone') || '').trim(),
+      visa_status: (formData.get('visa_status') || 'Employment Visa (Rayan Engineering)').trim(),
+      visa_expiry_date: formData.get('visa_expiry_date') || '',
+      labor_card_no: (formData.get('labor_card_no') || '').trim(),
       basic_salary: basicSalary,
       accommodation_allowance: accAllowance,
       consolidated_allowance: 0,
       other_allowance: otherAllowance,
-      bank_name: formData.get('bank_name') || '',
+      bank_name: (formData.get('bank_name') || '').trim(),
       swift: 'EBILAEADXXX',
-      iban: formData.get('iban') || '',
-      account_no: formData.get('iban') || '',
+      iban: (formData.get('iban') || '').trim(),
+      account_no: (formData.get('iban') || '').trim(),
       default_pay_method: formData.get('bank_name')?.toLowerCase().includes('cash') ? 'RAYAN E-Wallets / Cash' : 'AED RAYAN GROUP Host To Host',
       project_id: prjId,
       project_name: prj ? prj.name : 'Corporate / General Overhead',
@@ -1220,25 +1417,25 @@ export function registerPayrollModules(FinanceApp) {
 
     // Undelete if previously marked deleted
     if (Array.isArray(this.db.deleted_employee_ids)) {
-      this.db.deleted_employee_ids = this.db.deleted_employee_ids.filter(id => id !== empId);
+      this.db.deleted_employee_ids = this.db.deleted_employee_ids.filter(id => id !== empId && id !== empObj.employee_no);
     }
     try {
       if (typeof localStorage !== 'undefined') {
         const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]');
-        const updatedStored = stored.filter(id => id !== empId);
+        const updatedStored = stored.filter(id => id !== empId && id !== empObj.employee_no);
         localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(updatedStored));
       }
     } catch (e) {}
 
     if (isEdit) {
-      const idx = this.db.employees.findIndex(em => em.id === empId);
+      const idx = this.db.employees.findIndex(em => em.id === empId || em.employee_no === empObj.employee_no);
       if (idx >= 0) {
         this.db.employees[idx] = { ...this.db.employees[idx], ...empObj };
       } else {
         this.db.employees.unshift(empObj);
       }
     } else {
-      const existingIdx = this.db.employees.findIndex(em => em.employee_no === empObj.employee_no);
+      const existingIdx = this.db.employees.findIndex(em => em.employee_no === empObj.employee_no || em.id === empObj.id);
       if (existingIdx >= 0) {
         this.db.employees[existingIdx] = { ...this.db.employees[existingIdx], ...empObj };
       } else {
@@ -1246,7 +1443,7 @@ export function registerPayrollModules(FinanceApp) {
       }
     }
 
-    // Sync matching Employment Certificate(s) and Letter of Assignment(s)
+    // Cross-sync Employment Certificates and LOA
     if (Array.isArray(this.db.employment_certificates)) {
       this.db.employment_certificates.forEach(c => {
         if ((c.employee_id && c.employee_id === empObj.id) || 
@@ -1264,29 +1461,35 @@ export function registerPayrollModules(FinanceApp) {
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
     this.closeEmployeeModal();
+
     if (typeof this.showNotification === 'function') {
-      this.showNotification('Employee profile saved successfully!', 'success');
+      this.showNotification(`✓ Employee "${empObj.name}" (${empObj.employee_no}) saved successfully!`, 'success');
     } else if (typeof this.showToast === 'function') {
-      this.showToast('Employee profile saved successfully!', 'success');
+      this.showToast(`✓ Employee "${empObj.name}" saved successfully!`, 'success');
     }
 
     // Sync with backend API
     try {
       if (typeof this.syncApi === 'function') {
         await this.syncApi('save_employee', { employee: empObj });
+      } else if (typeof this.syncWithBackend === 'function') {
+        await this.syncWithBackend('save_employee', { employee: empObj });
       }
     } catch (err) {
       console.warn('Employee backend sync warning:', err);
     }
 
     // Re-render active tab immediately
-    if (typeof this.renderActiveTab === 'function') {
+    if (this.activeTab === 'employees') {
+      this.renderEmployeesTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
+    } else if (typeof this.renderActiveTab === 'function') {
       this.renderActiveTab();
-    } else {
-      const root = document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container');
-      if (root && typeof this.renderEmployeesTab === 'function') {
-        this.renderEmployeesTab(root);
-      }
+    }
+
+    // If Employee Profile was open, update it in-place
+    const profBackdrop = document.getElementById('fin-emp-profile-modal-backdrop');
+    if (profBackdrop) {
+      this.openEmployeeProfileModal(empObj.id);
     }
   };
 
@@ -1350,6 +1553,677 @@ export function registerPayrollModules(FinanceApp) {
       }
     }
   };
+
+  // ==========================================================================
+  // 5. EXECUTIVE EMPLOYEE PROFILE & DOSSIER (LIKE PROJECT ACCOUNTS)
+  // ==========================================================================
+  proto.openEmployeeProfileModal = function (empId) {
+    this.ensurePayrollSeedData();
+    const emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
+    if (!emp) {
+      if (typeof this.showNotification === 'function') {
+        this.showNotification('Employee record not found.', 'error');
+      } else if (typeof this.showToast === 'function') {
+        this.showToast('Employee record not found.', 'error');
+      }
+      return;
+    }
+
+    // Calculate all recorded salary payouts from payroll table
+    const allSlips = (this.db?.payroll || []).filter(p => {
+      return p.employee_id === emp.id || 
+             (emp.employee_no && p.employee_no === emp.employee_no) ||
+             (emp.name && p.employee_name && p.employee_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
+    });
+    allSlips.sort((a, b) => new Date(b.payment_date || b.created_at || '1970-01-01') - new Date(a.payment_date || a.created_at || '1970-01-01'));
+
+    const lifetimePaid = allSlips.filter(p => (p.status || '').toLowerCase() === 'paid')
+      .reduce((sum, p) => sum + (Number(p.net_pay) || Number(p.transferred_amount) || Number(p.total_earnings) || 0), 0);
+
+    const lifetimeDeductions = allSlips
+      .reduce((sum, p) => sum + (Number(p.total_deductions) || 0), 0);
+
+    const basic = Number(emp.basic_salary) || 0;
+    const acc = Number(emp.accommodation_allowance) || 0;
+    const cons = Number(emp.consolidated_allowance) || 0;
+    const oth = Number(emp.other_allowance) || 0;
+    const standardMonthly = basic + acc + cons + oth;
+
+    // Service Tenure calculation
+    let tenureStr = '---';
+    if (emp.date_of_joining) {
+      const start = new Date(emp.date_of_joining);
+      if (!isNaN(start.getTime())) {
+        const now = new Date();
+        let years = now.getFullYear() - start.getFullYear();
+        let months = now.getMonth() - start.getMonth();
+        if (months < 0) { years--; months += 12; }
+        let parts = [];
+        if (years > 0) parts.push(`${years} yr${years > 1 ? 's' : ''}`);
+        parts.push(`${months} mo${months !== 1 ? 's' : ''}`);
+        tenureStr = parts.join(' ');
+      }
+    }
+
+    const isAct = (emp.status || 'Active').toLowerCase() === 'active';
+    const statusColor = isAct ? '#10b981' : '#f59e0b';
+    const statusBg = isAct ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)';
+
+    const initials = (emp.name || 'EM').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    const hasPhoto = Boolean(emp.photo);
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="fin-emp-profile-modal-backdrop">
+        <div class="fin-modal-dialog" style="max-width:1080px; width:95%; max-height:92vh; background:#0d1527; border:1px solid rgba(56,189,248,0.3); box-shadow:0 25px 70px rgba(0,0,0,0.85), 0 0 50px rgba(0,153,230,0.15); display:flex; flex-direction:column; border-radius:18px; overflow:hidden;">
+          
+          <!-- Executive Profile Header (Like Project Accounts) -->
+          <div class="fin-modal-header" style="background:linear-gradient(180deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%); padding:1.25rem 1.75rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div style="display:flex; align-items:center; gap:1.15rem; min-width:280px;">
+              <!-- 84x84 Executive Avatar -->
+              <div style="position:relative; width:84px; height:84px; border-radius:16px; overflow:hidden; background:#0f172a; border:2px solid rgba(56,189,248,0.5); flex-shrink:0; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
+                ${hasPhoto ? `
+                  <img src="${emp.photo}" alt="${escapeHtml(emp.name)}" style="width:100%; height:100%; object-fit:cover;">
+                ` : `
+                  <div style="width:100%; height:100%; background:linear-gradient(135deg, rgba(56,189,248,0.25) 0%, rgba(0,153,230,0.35) 100%); display:flex; align-items:center; justify-content:center; font-size:1.85rem; font-weight:800; color:#38bdf8;">
+                    ${initials}
+                  </div>
+                `}
+                <span style="position:absolute; bottom:4px; right:4px; width:12px; height:12px; border-radius:50%; background:${statusColor}; border:2px solid #0f172a;"></span>
+              </div>
+
+              <!-- Name & Primary Titles -->
+              <div>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:4px;">
+                  <span style="font-family:monospace; font-size:0.85rem; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:6px; border:1px solid rgba(56,189,248,0.3);">
+                    ${escapeHtml(emp.employee_no || 'EN---')}
+                  </span>
+                  <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${statusBg}; color:${statusColor}; font-weight:800; border:1px solid ${statusColor}40;">
+                    ${escapeHtml(emp.status || 'Active')}
+                  </span>
+                  <span style="font-size:0.72rem; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);">
+                    ${escapeHtml(emp.department || 'Rayan Engineering')}
+                  </span>
+                </div>
+                <h2 style="margin:0; font-size:1.35rem; font-weight:800; color:#f8fafc; line-height:1.2; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <span>${escapeHtml(emp.name || 'Unnamed')}</span>
+                  ${emp.name_ar ? `<span style="font-family:'Amiri', serif; font-size:1.15rem; color:#94a3b8; font-weight:600;">(${escapeHtml(emp.name_ar)})</span>` : ''}
+                </h2>
+                <div style="font-size:0.82rem; color:#38bdf8; font-weight:600; margin-top:3px;">
+                  ${escapeHtml(emp.position || emp.designation || 'Staff')}
+                  ${emp.position_ar ? ` • <span style="font-family:'Amiri', serif; font-size:0.9rem; color:#cbd5e1;">${escapeHtml(emp.position_ar)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Header Quick Action Buttons -->
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Employee Profile">
+                ✏️ Edit Profile
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')" title="Record Monthly Payout">
+                💳 Record Payout
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); padding:6px 10px; font-size:0.78rem; cursor:pointer;" onclick="window.finApp.openPayslipPrintModal('${emp.id}')" title="Open Pay Slip">
+                📜 Pay Slip
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.35); padding:6px 10px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openEmploymentCertificatePrintModal('${emp.id}')" title="Employment Certificate">
+                🏛️ Emp Cert
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.35); padding:6px 10px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openLetterOfAssignmentPrintModal('${emp.id}')" title="Letter of Assignment">
+                📄 Assignment
+              </button>
+              <button type="button" class="fin-btn-row-action" style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.35); padding:6px 10px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="window.finApp.printEmployeeProfile('${emp.id}')" title="Print Complete Profile Dossier">
+                🖨️ Print Profile
+              </button>
+              <button type="button" class="fin-modal-close" onclick="window.finApp.closeEmployeeProfileModal()" title="Close">&times;</button>
+            </div>
+          </div>
+
+          <!-- Body Scroll Container -->
+          <div class="fin-modal-body" style="padding:1.5rem 1.75rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1.25rem;">
+            
+            <!-- 1. Executive Financial & Compensation Strip (6 KPIs Like Project Accounts) -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(155px, 1fr)); gap:0.85rem;">
+              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1rem;">
+                <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Monthly Basic</span>
+                <div style="font-size:1.35rem; font-weight:800; color:#f8fafc; margin-top:3px;">
+                  ${this.formatCurrency(basic)}
+                </div>
+                <div style="font-size:0.68rem; color:#64748b;">Base contractual salary</div>
+              </div>
+
+              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1rem;">
+                <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Allowances</span>
+                <div style="font-size:1.35rem; font-weight:800; color:#38bdf8; margin-top:3px;">
+                  ${this.formatCurrency(acc + oth)}
+                </div>
+                <div style="font-size:0.68rem; color:#64748b;">Acc: ${this.formatCurrency(acc)} ${oth > 0 ? `• Oth: ${this.formatCurrency(oth)}` : ''}</div>
+              </div>
+
+              <div style="background:linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(15,23,42,0.6) 100%); border:1px solid rgba(16,185,129,0.35); border-radius:12px; padding:1rem;">
+                <span style="font-size:0.7rem; color:#10b981; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Standard Gross Monthly</span>
+                <div style="font-size:1.45rem; font-weight:800; color:#10b981; margin-top:3px;">
+                  ${this.formatCurrency(standardMonthly)}
+                </div>
+                <div style="font-size:0.68rem; color:#94a3b8;">Total remuneration per cycle</div>
+              </div>
+
+              <div style="background:linear-gradient(135deg, rgba(56,189,248,0.12) 0%, rgba(15,23,42,0.6) 100%); border:1px solid rgba(56,189,248,0.35); border-radius:12px; padding:1rem;">
+                <span style="font-size:0.7rem; color:#38bdf8; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Lifetime Paid to Date</span>
+                <div style="font-size:1.45rem; font-weight:800; color:#38bdf8; margin-top:3px;">
+                  ${this.formatCurrency(lifetimePaid)}
+                </div>
+                <div style="font-size:0.68rem; color:#94a3b8;">${allSlips.length} payroll cycle(s) recorded</div>
+              </div>
+
+              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1rem;">
+                <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Lifetime Deductions</span>
+                <div style="font-size:1.35rem; font-weight:800; color:#f59e0b; margin-top:3px;">
+                  ${this.formatCurrency(lifetimeDeductions)}
+                </div>
+                <div style="font-size:0.68rem; color:#64748b;">Advances, loans &amp; leaves</div>
+              </div>
+
+              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1rem;">
+                <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Remittance Channel</span>
+                <div style="font-size:0.95rem; font-weight:800; color:#c084fc; margin-top:4px; word-break:break-word;">
+                  ${escapeHtml(emp.bank_name || 'Cash / RAYAN E-Wallets')}
+                </div>
+                <div style="font-size:0.68rem; color:#64748b; font-family:monospace; margin-top:2px;">
+                  ${emp.iban ? emp.iban.slice(-8) : 'Direct payout'}
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Detailed 3-Card Information Grid -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(310px, 1fr)); gap:1rem;">
+              
+              <!-- Card A: Legal Identity & Immigration -->
+              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="font-size:0.85rem; font-weight:700; color:#10b981; margin-bottom:0.85rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:6px;">
+                    <span>🪪</span>
+                    <span>Legal Identity &amp; Immigration</span>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.82rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Emirates ID (EID):</span>
+                      <strong style="color:#f8fafc; font-family:monospace; font-size:0.85rem;">${escapeHtml(emp.emirates_id || 'Not Provided')}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Passport Number:</span>
+                      <strong style="color:#38bdf8; font-family:monospace; font-weight:700;">${escapeHtml(emp.passport_no || '---')}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Nationality:</span>
+                      <strong style="color:#e2e8f0;">${escapeHtml(emp.nationality || 'India')}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Visa Status:</span>
+                      <span style="background:rgba(56,189,248,0.12); color:#38bdf8; padding:2px 7px; border-radius:4px; font-size:0.75rem; font-weight:600; border:1px solid rgba(56,189,248,0.3);">
+                        ${escapeHtml(emp.visa_status || 'Employment Visa')}
+                      </span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Visa Expiry Date:</span>
+                      <strong style="color:#cbd5e1;">${escapeHtml(emp.visa_expiry_date || 'Active / On-File')}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Labor Card / MoHRE No.:</span>
+                      <strong style="color:#cbd5e1; font-family:monospace;">${escapeHtml(emp.labor_card_no || '---')}</strong>
+                    </div>
+                  </div>
+                </div>
+                <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:0.6rem; margin-top:0.75rem; font-size:0.75rem; color:#94a3b8; display:flex; justify-content:space-between;">
+                  <span>Joined: <strong style="color:#cbd5e1;">${escapeHtml(emp.date_of_joining || '---')}</strong></span>
+                  <span>Tenure: <strong style="color:#10b981;">${tenureStr}</strong></span>
+                </div>
+              </div>
+
+              <!-- Card B: Addresses & Contact Coordinates -->
+              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="font-size:0.85rem; font-weight:700; color:#38bdf8; margin-bottom:0.85rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:6px;">
+                    <span>📍</span>
+                    <span>Addresses &amp; Contact Coordinates</span>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.82rem;">
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.72rem; margin-bottom:2px;">UAE Residential Address:</span>
+                      <strong style="color:#f8fafc; font-size:0.82rem; line-height:1.35; display:block;">
+                        ${escapeHtml(emp.address || emp.local_address || 'Musaffah M-14, Industrial Area, Abu Dhabi, UAE')}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.72rem; margin-bottom:2px;">Permanent Home Country Address:</span>
+                      <span style="color:#cbd5e1; font-size:0.8rem; line-height:1.35; display:block;">
+                        ${escapeHtml(emp.permanent_address || '---')}
+                      </span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                      <span style="color:#94a3b8;">Phone / Mobile:</span>
+                      <a href="tel:${escapeHtml(emp.phone || '')}" style="color:#38bdf8; font-weight:700; text-decoration:none;">${escapeHtml(emp.phone || '---')}</a>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Official Email:</span>
+                      <a href="mailto:${escapeHtml(emp.email || '')}" style="color:#cbd5e1; text-decoration:none;">${escapeHtml(emp.email || '---')}</a>
+                    </div>
+                  </div>
+                </div>
+                <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem;">
+                  <div style="font-size:0.7rem; color:#f59e0b; font-weight:700; text-transform:uppercase;">🚨 Emergency Contact:</div>
+                  <div style="font-size:0.78rem; color:#f8fafc; font-weight:600; margin-top:2px;">
+                    ${escapeHtml(emp.emergency_contact_name || 'Emergency contact on record')} ${emp.emergency_contact_relation ? `(${escapeHtml(emp.emergency_contact_relation)})` : ''}
+                  </div>
+                  <div style="font-size:0.72rem; color:#94a3b8; font-family:monospace; margin-top:1px;">
+                    ${escapeHtml(emp.emergency_contact_phone || emp.phone || '---')}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card C: Banking Coordinates & Project Allocation -->
+              <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="font-size:0.85rem; font-weight:700; color:#c084fc; margin-bottom:0.85rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:6px;">
+                    <span>🏦</span>
+                    <span>Banking &amp; Project Allocation</span>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.82rem;">
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.72rem; margin-bottom:2px;">Corporate Bank / Channel:</span>
+                      <strong style="color:#f8fafc; font-size:0.85rem;">${escapeHtml(emp.bank_name || 'Emirates NBD Bank PJSC / Cash')}</strong>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.72rem; margin-bottom:2px;">IBAN / Settlement Account:</span>
+                      <strong style="color:#38bdf8; font-family:monospace; font-size:0.82rem; word-break:break-all;">
+                        ${escapeHtml(emp.iban || emp.account_no || 'Direct via RAYAN E-Wallets / Cash')}
+                      </strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">SWIFT / BIC Code:</span>
+                      <strong style="color:#cbd5e1; font-family:monospace;">${escapeHtml(emp.swift || 'EBILAEADXXX')}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Default Pay Method:</span>
+                      <span style="font-size:0.75rem; color:#cbd5e1;">${escapeHtml(emp.default_pay_method || 'AED Host To Host / Wallets')}</span>
+                    </div>
+                    <div>
+                      <span style="color:#94a3b8; display:block; font-size:0.72rem; margin-bottom:2px;">Current Project Assignment:</span>
+                      <div style="background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; padding:5px 8px; font-weight:700; color:#38bdf8; font-size:0.78rem;">
+                        🏗️ ${escapeHtml(emp.project_name || 'Corporate / General Overhead')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:0.6rem; margin-top:0.75rem; font-size:0.74rem; color:#94a3b8;">
+                  Allocated project costs automatically routed to project P&amp;L
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 3. Complete Payouts & Salary History Ledger Table -->
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem;">
+                <div>
+                  <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:#f8fafc; display:flex; align-items:center; gap:8px;">
+                    <span>💼</span>
+                    <span>Official Salary Disbursements &amp; Payouts Ledger</span>
+                  </h3>
+                  <p style="margin:2px 0 0; font-size:0.75rem; color:#94a3b8;">
+                    Complete historical record of monthly compensation slips, deductions, and bank / RAYAN E-Wallets settlements
+                  </p>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span style="font-size:0.78rem; color:#94a3b8; font-weight:600;">${allSlips.length} Cycles</span>
+                  <button type="button" class="fin-btn-primary" style="background:#10b981; border-color:#10b981; font-size:0.78rem; padding:6px 12px; font-weight:700;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')">
+                    + Record Monthly Salary
+                  </button>
+                </div>
+              </div>
+
+              <!-- Payouts Table -->
+              <div class="fin-table-responsive" style="overflow-x:auto;">
+                <table class="fin-data-table" style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                  <thead>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.3); text-align:left;">
+                      <th style="padding:8px 10px; width:40px;">#</th>
+                      <th style="padding:8px 10px;">Cycle / Period</th>
+                      <th style="padding:8px 10px;">Pay Slip #</th>
+                      <th style="padding:8px 10px;">Payment Date</th>
+                      <th style="padding:8px 10px; text-align:right;">Basic Salary</th>
+                      <th style="padding:8px 10px; text-align:right;">Allowances</th>
+                      <th style="padding:8px 10px; text-align:right;">Deductions</th>
+                      <th style="padding:8px 10px; text-align:right;">Net Payout</th>
+                      <th style="padding:8px 10px;">Disbursement Channel</th>
+                      <th style="padding:8px 10px; text-align:center;">Status</th>
+                      <th style="padding:8px 10px; text-align:right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${allSlips.length === 0 ? `
+                      <tr>
+                        <td colspan="11" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+                          <div style="font-size:1.8rem; margin-bottom:0.4rem;">💳</div>
+                          <div style="font-weight:700; color:#cbd5e1; font-size:0.95rem;">No Salary Payments Recorded Yet</div>
+                          <div style="font-size:0.78rem; margin-top:3px; color:#64748b;">Click "+ Record Monthly Salary" above to create and disburse the first payroll slip.</div>
+                        </td>
+                      </tr>
+                    ` : allSlips.map((slip, idx) => {
+                      const sBasic = Number(slip.basic_salary) || 0;
+                      const sAcc = Number(slip.accommodation_allowance) || 0;
+                      const sCons = Number(slip.consolidated_allowance) || 0;
+                      const sOt = Number(slip.normal_overtime) || 0;
+                      const sAllow = sAcc + sCons + sOt;
+                      const sDed = Number(slip.total_deductions) || 0;
+                      const sNet = Number(slip.net_pay) || Number(slip.total_earnings) || 0;
+                      const isPaid = (slip.status || 'Paid').toLowerCase() === 'paid';
+                      const pStatusColor = isPaid ? '#10b981' : '#f59e0b';
+                      const pStatusBg = isPaid ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)';
+
+                      return `
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                          <td style="padding:8px 10px; color:#64748b; font-size:0.75rem;">${idx + 1}</td>
+                          <td style="padding:8px 10px; font-weight:700; color:#f8fafc;">
+                            ${escapeHtml(slip.period_label || slip.month_year || '---')}
+                          </td>
+                          <td style="padding:8px 10px;">
+                            <strong style="color:#38bdf8; font-family:monospace; font-size:0.8rem;">
+                              ${escapeHtml(slip.slip_no || '---')}
+                            </strong>
+                          </td>
+                          <td style="padding:8px 10px; color:#cbd5e1; font-size:0.78rem;">
+                            ${escapeHtml(slip.payment_date || slip.printed_date || '---')}
+                          </td>
+                          <td style="padding:8px 10px; text-align:right; color:#e2e8f0;">
+                            ${this.formatCurrency(sBasic)}
+                          </td>
+                          <td style="padding:8px 10px; text-align:right; color:#38bdf8;">
+                            ${this.formatCurrency(sAllow)}
+                          </td>
+                          <td style="padding:8px 10px; text-align:right; color:${sDed > 0 ? '#ef4444' : '#64748b'};">
+                            ${sDed > 0 ? '-' + this.formatCurrency(sDed) : 'AED 0.00'}
+                          </td>
+                          <td style="padding:8px 10px; text-align:right;">
+                            <strong style="color:#10b981; font-size:0.92rem; font-weight:800;">
+                              ${this.formatCurrency(sNet)}
+                            </strong>
+                          </td>
+                          <td style="padding:8px 10px;">
+                            <div style="font-size:0.78rem; color:#f1f5f9; font-weight:600;">
+                              ${escapeHtml(slip.payout_source_name || slip.pay_method || 'Bank Transfer')}
+                            </div>
+                            ${slip.payout_reference ? `<div style="font-size:0.68rem; color:#64748b; font-family:monospace;">Ref: ${escapeHtml(slip.payout_reference)}</div>` : ''}
+                          </td>
+                          <td style="padding:8px 10px; text-align:center;">
+                            <span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:700; color:${pStatusColor}; background:${pStatusBg}; border:1px solid ${pStatusColor}40;">
+                              ${escapeHtml(slip.status || 'Paid')}
+                            </span>
+                          </td>
+                          <td style="padding:8px 10px; text-align:right;">
+                            <div style="display:inline-flex; gap:4px; align-items:center; justify-content:flex-end;">
+                              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:3px 7px; font-size:0.72rem; cursor:pointer;" onclick="window.finApp.openPayslipPrintModal('${slip.id}')" title="Print Official Pay Slip">
+                                📜 Slip
+                              </button>
+                              ${!isPaid ? `
+                                <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:3px 7px; font-size:0.72rem; font-weight:700; cursor:pointer;" onclick="window.finApp.openDisburseSalaryModal('${slip.id}')" title="Disburse & Deduct">
+                                  💳 Pay
+                                </button>
+                              ` : ''}
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                  ${allSlips.length > 0 ? `
+                    <tfoot>
+                      <tr style="border-top:2px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); font-weight:800;">
+                        <td colspan="4" style="padding:10px; color:#f8fafc; font-size:0.82rem; text-transform:uppercase;">
+                          Grand Totals (${allSlips.length} Cycles):
+                        </td>
+                        <td style="padding:10px; text-align:right; color:#e2e8f0;">
+                          ${this.formatCurrency(allSlips.reduce((acc, s) => acc + (Number(s.basic_salary) || 0), 0))}
+                        </td>
+                        <td style="padding:10px; text-align:right; color:#38bdf8;">
+                          ${this.formatCurrency(allSlips.reduce((acc, s) => acc + (Number(s.accommodation_allowance) || 0) + (Number(s.consolidated_allowance) || 0) + (Number(s.normal_overtime) || 0), 0))}
+                        </td>
+                        <td style="padding:10px; text-align:right; color:#ef4444;">
+                          ${this.formatCurrency(lifetimeDeductions)}
+                        </td>
+                        <td style="padding:10px; text-align:right; color:#10b981; font-size:0.95rem;">
+                          ${this.formatCurrency(lifetimePaid)}
+                        </td>
+                        <td colspan="3" style="padding:10px; text-align:right; color:#94a3b8; font-size:0.75rem;">
+                          Audited Corporate Payouts Ledger
+                        </td>
+                      </tr>
+                    </tfoot>
+                  ` : ''}
+                </table>
+              </div>
+            </div>
+
+            <!-- Footer Action Bar -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem; flex-wrap:wrap; gap:0.75rem;">
+              <div style="font-size:0.75rem; color:#94a3b8;">
+                Employee record: <strong style="color:#f1f5f9;">${escapeHtml(emp.name)}</strong> (${escapeHtml(emp.employee_no)}) • Updated ${new Date().toLocaleDateString('en-GB')}
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="fin-btn-secondary" onclick="window.finApp.closeEmployeeProfileModal()">
+                  Close
+                </button>
+                <button type="button" class="fin-btn-primary" style="background:#10b981; border-color:#10b981; font-weight:700;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')">
+                  💳 Record Monthly Salary
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.showCustomModal(modalHtml);
+  };
+
+  proto.closeEmployeeProfileModal = function () {
+    this.closeCustomModal('fin-emp-profile-modal-backdrop');
+  };
+
+  proto.printEmployeeProfile = function (empId) {
+    const emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
+    if (!emp) return;
+
+    const allSlips = (this.db?.payroll || []).filter(p => {
+      return p.employee_id === emp.id || 
+             (emp.employee_no && p.employee_no === emp.employee_no) ||
+             (emp.name && p.employee_name && p.employee_name.toLowerCase().trim() === emp.name.toLowerCase().trim());
+    });
+    allSlips.sort((a, b) => new Date(b.payment_date || b.created_at || '1970-01-01') - new Date(a.payment_date || a.created_at || '1970-01-01'));
+
+    const basic = Number(emp.basic_salary) || 0;
+    const acc = Number(emp.accommodation_allowance) || 0;
+    const oth = Number(emp.other_allowance) || 0;
+    const totalStandard = basic + acc + oth;
+    const lifetimePaid = allSlips.filter(p => (p.status || '').toLowerCase() === 'paid')
+      .reduce((sum, p) => sum + (Number(p.net_pay) || Number(p.total_earnings) || 0), 0);
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to print the Employee Profile Dossier.');
+      return;
+    }
+
+    const printDocHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Employee Dossier - ${escapeHtml(emp.employee_no)} - ${escapeHtml(emp.name)}</title>
+        <style>
+          @page { size: A4 portrait; margin: 12mm 15mm; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; color: #111827; margin: 0; padding: 0; font-size: 10.5pt; background: #fff; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; }
+          .company-name { font-size: 13pt; font-weight: 800; color: #0f172a; text-transform: uppercase; }
+          .doc-title { font-size: 15pt; font-weight: 800; color: #0284c7; margin-top: 4px; }
+          .profile-card { display: flex; gap: 16px; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+          .avatar-box { width: 80px; height: 80px; border-radius: 8px; border: 1px solid #cbd5e1; overflow: hidden; background: #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 800; font-size: 20pt; color: #0284c7; }
+          .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+          .kpi-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; }
+          .kpi-label { font-size: 7.5pt; color: #64748b; font-weight: 700; text-transform: uppercase; }
+          .kpi-val { font-size: 12pt; font-weight: 800; color: #0f172a; margin-top: 2px; }
+          .section-title { font-size: 10.5pt; font-weight: 800; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin: 14px 0 8px 0; }
+          table.data-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 14px; }
+          table.data-table th, table.data-table td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+          table.data-table th { background: #f1f5f9; font-weight: 700; color: #334155; }
+          .text-right { text-align: right; }
+          .footer { font-size: 8pt; color: #64748b; text-align: center; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="company-name">RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
+            <div style="font-size: 8pt; color: #64748b;">Abu Dhabi, United Arab Emirates • TRN: 100234567800003</div>
+            <div class="doc-title">OFFICIAL EMPLOYEE PROFILE &amp; COMPENSATION DOSSIER</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 12pt; font-weight: 800; color: #0284c7; font-family: monospace;">${escapeHtml(emp.employee_no)}</div>
+            <div style="font-size: 8pt; color: #64748b;">Printed: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <div class="avatar-box">
+            ${emp.photo ? `<img src="${emp.photo}" style="width:100%; height:100%; object-fit:cover;">` : (emp.name || 'EM').slice(0, 2).toUpperCase()}
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 13pt; font-weight: 800; color: #0f172a;">${escapeHtml(emp.name)} ${emp.name_ar ? `(${escapeHtml(emp.name_ar)})` : ''}</div>
+            <div style="font-size: 9.5pt; font-weight: 700; color: #0284c7; margin: 2px 0;">${escapeHtml(emp.position || emp.designation || 'Staff')} • ${escapeHtml(emp.department || 'Rayan')}</div>
+            <div style="font-size: 8pt; color: #475569;">
+              Status: <strong>${escapeHtml(emp.status || 'Active')}</strong> • Joining Date: <strong>${escapeHtml(emp.date_of_joining || '---')}</strong> • Project: <strong>${escapeHtml(emp.project_name || 'Corporate Overhead')}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-box">
+            <div class="kpi-label">Basic Monthly</div>
+            <div class="kpi-val">${this.formatCurrency(basic)}</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Allowances Monthly</div>
+            <div class="kpi-val">${this.formatCurrency(acc + oth)}</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Total Standard Monthly</div>
+            <div class="kpi-val" style="color: #059669;">${this.formatCurrency(totalStandard)}</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Lifetime Salary Paid</div>
+            <div class="kpi-val" style="color: #0284c7;">${this.formatCurrency(lifetimePaid)}</div>
+          </div>
+        </div>
+
+        <div class="section-title">1. Legal Identity, Visas &amp; Bank Coordinates</div>
+        <table class="data-table">
+          <tr>
+            <th style="width:20%;">Emirates ID (EID)</th>
+            <td style="width:30%; font-family:monospace; font-weight:700;">${escapeHtml(emp.emirates_id || '---')}</td>
+            <th style="width:20%;">Passport No.</th>
+            <td style="width:30%; font-family:monospace; font-weight:700;">${escapeHtml(emp.passport_no || '---')} (${escapeHtml(emp.nationality || 'India')})</td>
+          </tr>
+          <tr>
+            <th>Visa Status</th>
+            <td>${escapeHtml(emp.visa_status || 'Employment Visa')}</td>
+            <th>Visa Expiry Date</th>
+            <td>${escapeHtml(emp.visa_expiry_date || '---')}</td>
+          </tr>
+          <tr>
+            <th>Labor Card No.</th>
+            <td style="font-family:monospace;">${escapeHtml(emp.labor_card_no || '---')}</td>
+            <th>Payment Channel</th>
+            <td>${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
+          </tr>
+          <tr>
+            <th>Bank Name</th>
+            <td>${escapeHtml(emp.bank_name || 'Cash / On-Hand')}</td>
+            <th>IBAN / Account</th>
+            <td style="font-family:monospace; font-weight:600;">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
+          </tr>
+        </table>
+
+        <div class="section-title">2. Residential Addresses &amp; Emergency Contacts</div>
+        <table class="data-table">
+          <tr>
+            <th style="width:25%;">UAE Residential Address</th>
+            <td style="width:75%;">${escapeHtml(emp.address || emp.local_address || '---')}</td>
+          </tr>
+          <tr>
+            <th>Permanent Home Country Address</th>
+            <td>${escapeHtml(emp.permanent_address || '---')}</td>
+          </tr>
+          <tr>
+            <th>Contact Phone &amp; Email</th>
+            <td>Phone: <strong>${escapeHtml(emp.phone || '---')}</strong> • Email: <strong>${escapeHtml(emp.email || '---')}</strong></td>
+          </tr>
+          <tr>
+            <th>Emergency Contact</th>
+            <td><strong>${escapeHtml(emp.emergency_contact_name || '---')}</strong> ${emp.emergency_contact_relation ? `(${escapeHtml(emp.emergency_contact_relation)})` : ''} • Phone: <strong>${escapeHtml(emp.emergency_contact_phone || '---')}</strong></td>
+          </tr>
+        </table>
+
+        <div class="section-title">3. Official Salary Disbursements &amp; Payouts History (${allSlips.length} Cycles)</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:30px;">#</th>
+              <th>Period / Month</th>
+              <th>Slip #</th>
+              <th>Payment Date</th>
+              <th class="text-right">Basic</th>
+              <th class="text-right">Allowances</th>
+              <th class="text-right">Deductions</th>
+              <th class="text-right">Net Paid</th>
+              <th>Disbursement Source</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${allSlips.length === 0 ? '<tr><td colspan="10" style="text-align:center; color:#64748b; padding:12px;">No salary disbursements recorded to date.</td></tr>' : allSlips.map((s, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td style="font-weight:700;">${escapeHtml(s.period_label || s.month_year || '---')}</td>
+                <td style="font-family:monospace; font-weight:600;">${escapeHtml(s.slip_no || '---')}</td>
+                <td>${escapeHtml(s.payment_date || '---')}</td>
+                <td class="text-right">${this.formatCurrency(s.basic_salary || 0)}</td>
+                <td class="text-right">${this.formatCurrency((Number(s.accommodation_allowance) || 0) + (Number(s.consolidated_allowance) || 0) + (Number(s.normal_overtime) || 0))}</td>
+                <td class="text-right" style="color:#ef4444;">${this.formatCurrency(s.total_deductions || 0)}</td>
+                <td class="text-right" style="font-weight:800; color:#059669;">${this.formatCurrency(s.net_pay || s.total_earnings || 0)}</td>
+                <td>${escapeHtml(s.payout_source_name || s.pay_method || 'Bank Transfer')}</td>
+                <td style="font-weight:700;">${escapeHtml(s.status || 'Paid')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          Confidential Personnel Record • RAYAN ENGINEERING AND CONTRACTING LLC SPC • Generated via Corporate Accounts Portal
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(printDocHtml);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 400);
+  };
+
 
   proto.openEmployeeSalaryHistoryModal = function (empId, periodFilter = '3m') {
     this.ensurePayrollSeedData();
@@ -1522,7 +2396,12 @@ export function registerPayrollModules(FinanceApp) {
               <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
                 <div>
                   <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <strong style="color:#f8fafc; font-size:1.1rem;">${escapeHtml(emp.name)}</strong>
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                      ${emp.photo ? `
+                        <img src="${emp.photo}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(56,189,248,0.4);">
+                      ` : ''}
+                      <strong style="color:#f8fafc; font-size:1.1rem;">${escapeHtml(emp.name)}</strong>
+                    </div>
                     <span style="font-family:monospace; font-size:0.8rem; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 7px; border-radius:6px; border:1px solid rgba(56,189,248,0.3);">
                       ${escapeHtml(emp.employee_no)}
                     </span>
@@ -2180,6 +3059,12 @@ export function registerPayrollModules(FinanceApp) {
       this.openEmployeeSalaryHistoryModal(empId, this.lastEmployeeHistoryFilter || '3m');
     }
 
+    // Refresh profile modal if it was open
+    const profileModal = document.getElementById('fin-emp-profile-modal-backdrop');
+    if (profileModal && empId) {
+      this.openEmployeeProfileModal(empId);
+    }
+
     // Refresh views if open
     if (this.activeTab === 'payroll') {
       this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
@@ -2686,6 +3571,18 @@ export function registerPayrollModules(FinanceApp) {
                 <div style="background:#0f172a; color:#ffffff; padding:5px 8px; font-size:0.72rem; font-weight:800; text-align:center; text-transform:uppercase; letter-spacing:0.03em;">
                   Employee Information (بيانات الموظف)
                 </div>
+                <div style="display:flex; align-items:stretch;">
+                  ${(function() {
+                    const matchedEmp = (allSlips && slip.employee_id) ? (window.finApp?.db?.employees || []).find(e => e.id === slip.employee_id || e.employee_no === slip.employee_no) : null;
+                    if (matchedEmp && matchedEmp.photo) {
+                      return `
+                        <div style="padding:6px; background:#f8fafc; border-right:1px solid #cbd5e1; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                          <img src="${matchedEmp.photo}" alt="Staff Photo" style="width:58px; height:68px; object-fit:cover; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.1);">
+                        </div>
+                      `;
+                    }
+                    return '';
+                  })()}
                 <table style="width:100%; border-collapse:collapse; font-size:0.72rem; text-align:left;">
                   <tbody>
                     <tr style="border-bottom:1px solid #e2e8f0;">
@@ -2714,6 +3611,7 @@ export function registerPayrollModules(FinanceApp) {
                     </tr>
                   </tbody>
                 </table>
+                </div>
               </div>
 
               <!-- TABLE 2: Salary Breakdown (Earnings vs Deductions) -->
