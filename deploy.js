@@ -164,6 +164,70 @@ async function deploy() {
                 }
               });
 
+              const localExpenses = (localData.expenses || []);
+              if (!Array.isArray(liveJson.data.expenses)) liveJson.data.expenses = [];
+              localExpenses.forEach(exp => {
+                if (!liveJson.data.expenses.some(p => p.id === exp.id || (exp.expense_no && p.expense_no === exp.expense_no))) {
+                  liveJson.data.expenses.unshift(exp);
+                }
+              });
+
+              // Ensure all petty cash expenses have their cash voucher created
+              liveJson.data.expenses.forEach(exp => {
+                const mode = (exp.payment_method || exp.payment_mode || '').toLowerCase();
+                if (mode.includes('cash') || mode.includes('petty') || mode.includes('wallet')) {
+                  const eId = exp.id;
+                  const eNo = exp.expense_no;
+                  const cvNo = `CV-${eNo || ('EXP-' + (eId ? eId.slice(-6) : ''))}`;
+                  const amt = Number(exp.total_amount ?? exp.amount) || 0;
+                  if (amt <= 0) return;
+                  if (!liveJson.data.cash_vouchers.some(v => v.expense_id === eId || v.expense_no === eNo || v.voucher_no === cvNo || v.id === `cv-exp-${eId}`)) {
+                    liveJson.data.cash_vouchers.unshift({
+                      id: `cv-exp-${eId || Date.now()}`,
+                      expense_id: eId,
+                      expense_no: eNo,
+                      voucher_no: cvNo,
+                      company_id: exp.company_id || 'rayan-corp-uae',
+                      register_id: 'cash-mw5esv3w',
+                      register_name: 'RAYAN E-Wallets',
+                      custodian: 'Arshad Alam Shaikh',
+                      date: exp.date || exp.expense_date || '2026-10-25',
+                      voucher_date: exp.date || exp.expense_date || '2026-10-25',
+                      type: 'outflow',
+                      category: 'Operating Expense / Disbursement',
+                      purpose: `Business Expense: ${exp.description || exp.category || 'Expense Claim'} (${eNo || ''})`,
+                      payee: exp.vendor_name || exp.description || 'Petty Cash Disbursement',
+                      amount: amt,
+                      currency: exp.currency || 'AED',
+                      status: 'Approved',
+                      linked_project_id: exp.project_id || '',
+                      linked_project_name: exp.project_name || '',
+                      receipt_filename: exp.receipt_filename || '',
+                      created_at: exp.created_at || new Date().toISOString()
+                    });
+                  }
+                }
+              });
+
+              // Recompute live balance of cash vaults based on all vouchers
+              if (Array.isArray(liveJson.data.cash_in_hand)) {
+                const vaultsMap = {};
+                liveJson.data.cash_in_hand.forEach(v => { vaultsMap[v.id] = 0; });
+                liveJson.data.cash_vouchers.forEach(cv => {
+                  const regId = cv.register_id;
+                  const amt = Number(cv.amount) || 0;
+                  if (vaultsMap[regId] !== undefined) {
+                    if (cv.type === 'inflow') vaultsMap[regId] += amt;
+                    else vaultsMap[regId] -= amt;
+                  }
+                });
+                liveJson.data.cash_in_hand.forEach(v => {
+                  if (v.id === 'cash-mw5esv3w') {
+                    v.balance = Math.round((vaultsMap[v.id] || 0) * 100) / 100;
+                  }
+                });
+              }
+
               const localCheques = (localData.cheques || []);
               if (!Array.isArray(liveJson.data.cheques)) liveJson.data.cheques = [];
               localCheques.forEach(cq => {

@@ -1864,6 +1864,68 @@ class FinanceApp {
         }
       });
 
+      // Ensure all operational expenses disbursed via petty cash / cash / e-wallet are in cash_vouchers
+      (this.db.expenses || []).forEach(exp => {
+        const mode = (exp.payment_method || exp.payment_mode || '').toLowerCase();
+        if (mode.includes('cash') || mode.includes('petty') || mode.includes('wallet')) {
+          const eId = exp.id;
+          const eNo = exp.expense_no;
+          const cvNo = `CV-${eNo || ('EXP-' + (eId ? eId.slice(-6) : ''))}`;
+          const amt = Number(exp.total_amount ?? exp.amount) || 0;
+          if (amt <= 0) return;
+
+          let targetRegId = (exp.currency === 'INR') ? 'cash-mumbai-hq' : rayanWallet.id;
+          let targetRegName = (exp.currency === 'INR') ? 'Mumbai Corporate HQ — Main Cash Vault' : rayanWallet.register_name;
+
+          if (exp.project_id && Array.isArray(this.db.cash_in_hand)) {
+            const prjReg = this.db.cash_in_hand.find(r => r.project_id === exp.project_id);
+            if (prjReg) {
+              targetRegId = prjReg.id;
+              targetRegName = prjReg.register_name;
+            }
+          }
+
+          let cv = (this.db.cash_vouchers || []).find(v => v.expense_id === eId || v.expense_no === eNo || v.voucher_no === cvNo || v.id === `cv-exp-${eId}`);
+          if (cv) {
+            cv.expense_id = eId;
+            cv.expense_no = eNo;
+            cv.register_id = targetRegId;
+            cv.register_name = targetRegName;
+            cv.amount = amt;
+            cv.type = 'outflow';
+            cv.date = exp.date || exp.expense_date || cv.date;
+            cv.voucher_date = cv.date;
+            cv.purpose = `Business Expense: ${exp.description || exp.category || 'Expense Claim'} (${eNo || ''})`;
+            cv.payee = exp.vendor_name || exp.description || 'Petty Cash Disbursement';
+            cv.category = 'Operating Expense / Disbursement';
+          } else {
+            this.db.cash_vouchers.unshift({
+              id: `cv-exp-${eId || Date.now()}`,
+              expense_id: eId,
+              expense_no: eNo,
+              voucher_no: cvNo,
+              company_id: exp.company_id || 'rayan-corp-uae',
+              register_id: targetRegId,
+              register_name: targetRegName,
+              custodian: 'Arshad Alam Shaikh',
+              date: exp.date || exp.expense_date || new Date().toISOString().split('T')[0],
+              voucher_date: exp.date || exp.expense_date || new Date().toISOString().split('T')[0],
+              type: 'outflow',
+              category: 'Operating Expense / Disbursement',
+              purpose: `Business Expense: ${exp.description || exp.category || 'Expense Claim'} (${eNo || ''})`,
+              payee: exp.vendor_name || exp.description || 'Petty Cash Disbursement',
+              amount: amt,
+              currency: exp.currency || 'AED',
+              status: 'Approved',
+              linked_project_id: exp.project_id || '',
+              linked_project_name: exp.project_name || '',
+              receipt_filename: exp.receipt_filename || '',
+              created_at: exp.created_at || new Date().toISOString()
+            });
+          }
+        }
+      });
+
       // Calculate live balances based on vouchers
       const vaultsMap = {};
       this.db.cash_in_hand.forEach(v => {
@@ -2458,7 +2520,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v180';
+    const CURRENT_DB_VERSION = 'v2026_clean_v181';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -2724,6 +2786,7 @@ class FinanceApp {
       } else {
         this.db.expenses.unshift(newExp);
       }
+      this.normalizeAllBalances();
       localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
       return { success: true, localOnly: true, data: this.db, expense: newExp };
     }
@@ -9483,6 +9546,7 @@ class FinanceApp {
       const sign = isInflow ? '+' : '-';
       const isTransfer = v.category === 'Inter-Vault Petty Cash Transfer';
       const isBankWdl = v.category === 'Bank Cash Withdrawal / E-Wallet Replenishment' || (v.category && v.category.includes('Replenishment') && (v.purpose || '').toLowerCase().includes('bank'));
+      const isExpense = v.category === 'Operating Expense / Disbursement' || (v.voucher_no && v.voucher_no.startsWith('CV-EXP-')) || !!v.expense_id;
       return `
         <tr>
           <td style="text-align:center; color:#94a3b8; font-weight:700;">${idx + 1}</td>
@@ -9494,6 +9558,7 @@ class FinanceApp {
             <div style="font-weight:600; color:#ffffff;">${v.purpose}</div>
             <div style="font-size:0.7rem; color:#94a3b8; display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
               ${v.category ? `<span>${v.category}</span>` : ''}
+              ${isExpense ? '<span style="font-size:0.68rem; color:#f472b6; background:rgba(244,114,182,0.15); padding:1px 6px; border-radius:3px; font-weight:700;">🧾 Business Expense</span>' : ''}
               ${isBankWdl ? '<span style="font-size:0.68rem; color:#00e5d2; background:rgba(0,229,210,0.15); padding:1px 6px; border-radius:3px; font-weight:700;">🏦 Bank Withdrawal</span>' : ''}
               ${isTransfer ? '<span style="font-size:0.68rem; color:#38bdf8; background:rgba(56,189,248,0.15); padding:1px 6px; border-radius:3px;">Site Project Transfer</span>' : ''}
               ${v.project_name ? `<span style="font-size:0.68rem; color:#a78bfa; background:rgba(167,139,250,0.15); padding:1px 6px; border-radius:3px;">${v.project_name}</span>` : ''}

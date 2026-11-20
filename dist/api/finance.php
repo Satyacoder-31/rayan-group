@@ -2546,6 +2546,96 @@ function recalculateAllFinanceBalances(&$data) {
         }
     }
 
+    // Ensure all operational expenses disbursed via petty cash / cash / e-wallet are in cash_vouchers
+    if (!empty($data['expenses']) && is_array($data['expenses'])) {
+        if (!isset($data['cash_vouchers']) || !is_array($data['cash_vouchers'])) {
+            $data['cash_vouchers'] = [];
+        }
+        $primaryVaultId = 'cash-mw5esv3w';
+        $primaryVaultName = 'RAYAN E-Wallets';
+        if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
+            foreach ($data['cash_in_hand'] as $r) {
+                if (!empty($r['is_primary']) || ($r['id'] ?? '') === 'cash-mw5esv3w' || stripos($r['register_name'] ?? '', 'e-wallet') !== false) {
+                    $primaryVaultId = $r['id'] ?? 'cash-mw5esv3w';
+                    $primaryVaultName = $r['register_name'] ?? 'RAYAN E-Wallets';
+                    break;
+                }
+            }
+        }
+        foreach ($data['expenses'] as $exp) {
+            $mode = strtolower(trim($exp['payment_method'] ?? $exp['payment_mode'] ?? ''));
+            if (strpos($mode, 'cash') !== false || strpos($mode, 'petty') !== false || strpos($mode, 'wallet') !== false) {
+                $eId = $exp['id'] ?? '';
+                $eNo = $exp['expense_no'] ?? '';
+                $cvNo = 'CV-' . ($eNo ?: ('EXP-' . substr($eId, -6)));
+                $amt = floatval($exp['total_amount'] ?? $exp['amount'] ?? 0);
+                if ($amt <= 0) continue;
+
+                $targetRegId = ($exp['currency'] ?? 'AED') === 'INR' ? 'cash-mumbai-hq' : $primaryVaultId;
+                $targetRegName = ($exp['currency'] ?? 'AED') === 'INR' ? 'Mumbai Corporate HQ — Main Cash Vault' : $primaryVaultName;
+
+                if (!empty($exp['project_id']) && !empty($data['cash_in_hand'])) {
+                    foreach ($data['cash_in_hand'] as $r) {
+                        if (($r['project_id'] ?? '') === $exp['project_id']) {
+                            $targetRegId = $r['id'];
+                            $targetRegName = $r['register_name'];
+                            break;
+                        }
+                    }
+                }
+
+                $foundCv = false;
+                foreach ($data['cash_vouchers'] as &$existingCv) {
+                    if (($existingCv['expense_id'] ?? '') === $eId || 
+                        ($existingCv['expense_no'] ?? '') === $eNo || 
+                        ($existingCv['voucher_no'] ?? '') === $cvNo ||
+                        ($existingCv['id'] ?? '') === ('cv-exp-' . $eId)) {
+                        $foundCv = true;
+                        $existingCv['expense_id'] = $eId;
+                        $existingCv['expense_no'] = $eNo;
+                        $existingCv['register_id'] = $targetRegId;
+                        $existingCv['register_name'] = $targetRegName;
+                        $existingCv['amount'] = $amt;
+                        $existingCv['type'] = 'outflow';
+                        $existingCv['date'] = $exp['date'] ?? $exp['expense_date'] ?? $existingCv['date'];
+                        $existingCv['voucher_date'] = $existingCv['date'];
+                        $existingCv['purpose'] = 'Business Expense: ' . ($exp['description'] ?: ($exp['category'] ?? 'Expense Claim')) . ' (' . $eNo . ')';
+                        $existingCv['payee'] = $exp['vendor_name'] ?? $exp['description'] ?? 'Petty Cash Disbursement';
+                        $existingCv['category'] = 'Operating Expense / Disbursement';
+                        break;
+                    }
+                }
+                unset($existingCv);
+
+                if (!$foundCv) {
+                    array_unshift($data['cash_vouchers'], [
+                        'id' => 'cv-exp-' . ($eId ?: round(microtime(true) * 1000)),
+                        'expense_id' => $eId,
+                        'expense_no' => $eNo,
+                        'voucher_no' => $cvNo,
+                        'company_id' => $exp['company_id'] ?? 'rayan-corp-uae',
+                        'register_id' => $targetRegId,
+                        'register_name' => $targetRegName,
+                        'custodian' => 'Arshad Alam Shaikh',
+                        'date' => $exp['date'] ?? $exp['expense_date'] ?? date('Y-m-d'),
+                        'voucher_date' => $exp['date'] ?? $exp['expense_date'] ?? date('Y-m-d'),
+                        'type' => 'outflow',
+                        'category' => 'Operating Expense / Disbursement',
+                        'purpose' => 'Business Expense: ' . ($exp['description'] ?: ($exp['category'] ?? 'Expense Claim')) . ' (' . $eNo . ')',
+                        'payee' => $exp['vendor_name'] ?? $exp['description'] ?? 'Petty Cash Disbursement',
+                        'amount' => $amt,
+                        'currency' => $exp['currency'] ?? 'AED',
+                        'status' => 'Approved',
+                        'linked_project_id' => $exp['project_id'] ?? '',
+                        'linked_project_name' => $exp['project_name'] ?? '',
+                        'receipt_filename' => $exp['receipt_filename'] ?? '',
+                        'created_at' => $exp['created_at'] ?? date('Y-m-d\TH:i:s\Z')
+                    ]);
+                }
+            }
+        }
+    }
+
     // Synchronize and balance all cash vaults directly from live cash vouchers
     if (!empty($data['cash_in_hand']) && is_array($data['cash_in_hand'])) {
         $vaultMap = [];
@@ -7882,6 +7972,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ]);
                     } catch (Exception $e) {}
                 }
+                recalculateAllFinanceBalances($db);
                 $addAuditLog('update', 'expense', $exp['expense_no'] ?? '', 'Updated expense claim ' . ($exp['expense_no'] ?? ''));
             }
             break;
@@ -8295,16 +8386,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'delete_expense':
             $expId = $body['expense_id'] ?? $body['id'] ?? '';
             if (!empty($expId) && isset($db['expenses'])) {
-                $db['expenses'] = array_values(array_filter($db['expenses'], function($item) use ($expId) {
-                    return ($item['id'] ?? '') !== $expId && ($item['expense_no'] ?? '') !== $expId;
+                $targetExp = null;
+                foreach ($db['expenses'] as $item) {
+                    if (($item['id'] ?? '') === $expId || ($item['expense_no'] ?? '') === $expId) {
+                        $targetExp = $item;
+                        break;
+                    }
+                }
+                $expNo = $targetExp['expense_no'] ?? $expId;
+                $eId = $targetExp['id'] ?? $expId;
+
+                $db['expenses'] = array_values(array_filter($db['expenses'], function($item) use ($eId, $expNo) {
+                    return ($item['id'] ?? '') !== $eId && ($item['expense_no'] ?? '') !== $expNo;
                 }));
+
+                // Remove linked cash voucher
+                if (!empty($db['cash_vouchers'])) {
+                    $db['cash_vouchers'] = array_values(array_filter($db['cash_vouchers'], function($v) use ($eId, $expNo) {
+                        return ($v['expense_id'] ?? '') !== $eId && 
+                               ($v['expense_no'] ?? '') !== $expNo && 
+                               ($v['id'] ?? '') !== ('cv-exp-' . $eId) &&
+                               strpos($v['voucher_no'] ?? '', $expNo) === false;
+                    }));
+                }
+
+                // Remove linked bank transfer
+                if (!empty($db['bank_transfers'])) {
+                    $db['bank_transfers'] = array_values(array_filter($db['bank_transfers'], function($t) use ($eId, $expNo) {
+                        return ($t['expense_id'] ?? '') !== $eId && 
+                               ($t['expense_no'] ?? '') !== $expNo &&
+                               ($t['id'] ?? '') !== ('wire-exp-' . $eId);
+                    }));
+                }
+
+                // Remove linked loan transaction
+                if (!empty($db['loan_transactions'])) {
+                    $db['loan_transactions'] = array_values(array_filter($db['loan_transactions'], function($lt) use ($expNo) {
+                        return ($lt['reference_no'] ?? '') !== $expNo;
+                    }));
+                }
+
+                recalculateAllFinanceBalances($db);
+
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM finance_expenses WHERE id = ? OR expense_no = ?");
-                        $stmt->execute([$expId, $expId]);
+                        $stmt->execute([$eId, $expNo]);
+                        $pdo->exec("DELETE FROM finance_cash_vouchers WHERE id = 'cv-exp-{$eId}' OR voucher_no LIKE '%{$expNo}%'");
                     } catch (Exception $e) {}
                 }
-                $addAuditLog('delete', 'expense', $expId, 'Deleted expense ' . $expId);
+                $addAuditLog('delete', 'expense', $expNo, 'Deleted expense ' . $expNo);
             }
             break;
 
@@ -8909,9 +9040,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 array_unshift($db['expenses'], $exp);
                 // Check if expense was paid from Director's Current Account (Personal Funds)
                 $expMode = $exp['payment_method'] ?? $exp['payment_mode'] ?? '';
+                $expAmt = floatval($exp['total_amount'] ?? $exp['amount'] ?? 0);
                 if (stripos($expMode, 'Director') !== false || stripos($expMode, 'Personal') !== false) {
                     $dirLoanId = 'loan-dir-current-act';
-                    $expAmt = floatval($exp['total_amount'] ?? $exp['amount'] ?? 0);
                     if ($expAmt > 0 && !empty($db['loan_accounts'])) {
                         foreach ($db['loan_accounts'] as &$lf) {
                             if (($lf['id'] ?? '') === $dirLoanId) {
@@ -8937,6 +9068,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'notes' => 'Business expense: ' . ($exp['description'] ?? 'Expense') . ' paid from personal funds'
                         ]);
                     }
+                } elseif (stripos($expMode, 'Cash') !== false || stripos($expMode, 'Petty') !== false || stripos($expMode, 'Wallet') !== false) {
+                    if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) {
+                        $db['cash_vouchers'] = [];
+                    }
+                    $cvId = 'cv-exp-' . ($exp['id'] ?? round(microtime(true) * 1000));
+                    $targetVaultId = ($exp['currency'] === 'INR') ? 'cash-mumbai-hq' : 'cash-mw5esv3w';
+                    $targetVaultName = ($exp['currency'] === 'INR') ? 'Mumbai Corporate HQ — Main Cash Vault' : 'RAYAN E-Wallets';
+                    $targetCustodian = 'Arshad Alam Shaikh';
+
+                    if (!empty($exp['project_id']) && !empty($db['cash_in_hand'])) {
+                        foreach ($db['cash_in_hand'] as $cih) {
+                            if (($cih['project_id'] ?? '') === $exp['project_id']) {
+                                $targetVaultId = $cih['id'];
+                                $targetVaultName = $cih['register_name'];
+                                $targetCustodian = $cih['custodian'] ?? 'Arshad Alam Shaikh';
+                                break;
+                            }
+                        }
+                    }
+
+                    $cvObj = [
+                        'id' => $cvId,
+                        'expense_id' => $exp['id'] ?? '',
+                        'expense_no' => $exp['expense_no'] ?? '',
+                        'voucher_no' => 'CV-' . ($exp['expense_no'] ?? ('EXP-' . rand(100, 999))),
+                        'company_id' => $exp['company_id'] ?? 'rayan-corp-uae',
+                        'register_id' => $targetVaultId,
+                        'register_name' => $targetVaultName,
+                        'custodian' => $targetCustodian,
+                        'date' => $exp['date'] ?? $exp['expense_date'] ?? date('Y-m-d'),
+                        'voucher_date' => $exp['date'] ?? $exp['expense_date'] ?? date('Y-m-d'),
+                        'type' => 'outflow',
+                        'category' => 'Operating Expense / Disbursement',
+                        'purpose' => 'Business Expense: ' . ($exp['description'] ?: ($exp['category'] ?? 'Expense Claim')) . ' (' . ($exp['expense_no'] ?? '') . ')',
+                        'payee' => $exp['vendor_name'] ?? $exp['description'] ?? 'Petty Cash Disbursement',
+                        'amount' => $expAmt,
+                        'currency' => $exp['currency'] ?? 'AED',
+                        'status' => 'Approved',
+                        'linked_project_id' => $exp['project_id'] ?? '',
+                        'linked_project_name' => $exp['project_name'] ?? '',
+                        'receipt_filename' => $exp['receipt_filename'] ?? '',
+                        'created_at' => date('Y-m-d\TH:i:s\Z')
+                    ];
+                    array_unshift($db['cash_vouchers'], $cvObj);
+                } elseif (stripos($expMode, 'Bank') !== false || stripos($expMode, 'Debit Card') !== false || stripos($expMode, 'Wire') !== false) {
+                    if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) {
+                        $db['bank_transfers'] = [];
+                    }
+                    $wireId = 'wire-exp-' . ($exp['id'] ?? round(microtime(true) * 1000));
+                    $wireObj = [
+                        'id' => $wireId,
+                        'expense_id' => $exp['id'] ?? '',
+                        'expense_no' => $exp['expense_no'] ?? '',
+                        'reference_no' => 'WIRE-EXP-' . ($exp['expense_no'] ?? rand(1000, 9999)),
+                        'company_id' => $exp['company_id'] ?? 'rayan-corp-uae',
+                        'transfer_date' => $exp['date'] ?? $exp['expense_date'] ?? date('Y-m-d'),
+                        'type' => 'outward',
+                        'party_type' => 'Operating Expense',
+                        'counterparty' => $exp['vendor_name'] ?: ($exp['category'] ?? 'Operating Expense'),
+                        'amount' => $expAmt,
+                        'currency' => $exp['currency'] ?? 'AED',
+                        'status' => 'Cleared',
+                        'purpose' => 'Business Expense: ' . ($exp['description'] ?: ($exp['category'] ?? 'Expense Claim')) . ' (' . ($exp['expense_no'] ?? '') . ')',
+                        'created_at' => date('Y-m-d\TH:i:s\Z')
+                    ];
+                    array_unshift($db['bank_transfers'], $wireObj);
+                }
+
+                recalculateAllFinanceBalances($db);
+
+                if ($pdo) {
+                    try {
+                        $stmtExp = $pdo->prepare("REPLACE INTO finance_expenses (id, expense_no, company_id, category, amount, currency, expense_date, payment_mode, vendor_name, description, status, data_json, updated_at) VALUES (:id, :expense_no, :company_id, :category, :amount, :currency, :expense_date, :payment_mode, :vendor_name, :description, :status, :data_json, NOW())");
+                        $stmtExp->execute([
+                            ':id' => $exp['id'],
+                            ':expense_no' => $exp['expense_no'],
+                            ':company_id' => $exp['company_id'],
+                            ':category' => $exp['category'] ?? '',
+                            ':amount' => $expAmt,
+                            ':currency' => $exp['currency'],
+                            ':expense_date' => $exp['date'] ?? date('Y-m-d'),
+                            ':payment_mode' => $expMode,
+                            ':vendor_name' => $exp['vendor_name'] ?? '',
+                            ':description' => $exp['description'] ?? '',
+                            ':status' => $exp['status'] ?? 'approved',
+                            ':data_json' => json_encode($exp, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                        ]);
+                    } catch (Exception $e) {}
                 }
                 $addAuditLog('create', 'expense', $exp['expense_no'] ?? '', 'Recorded operational expense of ' . ($exp['total_amount'] ?? 0));
             }
