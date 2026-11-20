@@ -487,15 +487,15 @@ export function registerPayrollModules(FinanceApp) {
           <table class="fin-data-table">
             <thead>
               <tr>
-                <th style="width:45px;">#</th>
-                <th style="width:110px;">Emp #</th>
-                <th>Employee Name &amp; Contact</th>
-                <th>Designation &amp; Dept</th>
-                <th>Primary Project Allocation</th>
-                <th style="text-align:right;">Monthly Standard Salary</th>
-                <th>Bank &amp; IBAN Coordinates</th>
-                <th style="width:90px; text-align:center;">Status</th>
-                <th style="width:340px; text-align:right;">Actions</th>
+                <th style="width:40px; text-align:center; padding:9px 8px;">#</th>
+                <th style="width:95px; padding:9px 10px;">Emp #</th>
+                <th style="padding:9px 10px;">Employee</th>
+                <th style="padding:9px 10px;">Designation &amp; Dept</th>
+                <th style="padding:9px 10px;">Project Allocation</th>
+                <th style="text-align:right; width:130px; padding:9px 10px;">Monthly Salary</th>
+                <th style="padding:9px 10px;">Payment Method</th>
+                <th style="width:85px; text-align:center; padding:9px 8px;">Status</th>
+                <th style="width:190px; text-align:right; padding:9px 10px;">Actions</th>
               </tr>
             </thead>
             <tbody id="fin-emp-tbody">
@@ -511,10 +511,10 @@ export function registerPayrollModules(FinanceApp) {
     if (!employees || employees.length === 0) {
       return `
         <tr>
-          <td colspan="9" style="text-align:center; padding:3rem 1rem; color:#94a3b8;">
-            <div style="font-size:2rem; margin-bottom:0.5rem;">👥</div>
-            <div style="font-weight:600; font-size:1rem; color:#cbd5e1;">No Employee Records Found</div>
-            <div style="font-size:0.8rem; margin-top:4px;">Click "+ Add New Employee" to register personnel into the directory.</div>
+          <td colspan="9" style="text-align:center; padding:2.5rem 1rem; color:#94a3b8;">
+            <div style="font-size:1.8rem; margin-bottom:0.4rem;">👥</div>
+            <div style="font-weight:600; font-size:0.95rem; color:#cbd5e1;">No Employee Records Found</div>
+            <div style="font-size:0.78rem; margin-top:3px;">Click "+ Add New Employee" to register personnel into the directory.</div>
           </td>
         </tr>
       `;
@@ -529,96 +529,72 @@ export function registerPayrollModules(FinanceApp) {
 
       const isAct = (emp.status || 'Active').toLowerCase() === 'active';
       const statusColor = isAct ? '#10b981' : '#f59e0b';
-      const statusBg = isAct ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)';
+      const statusBg = isAct ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)';
 
       const initials = (emp.name || 'EM').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
       const hasPhoto = Boolean(emp.photo);
       const photoHtml = hasPhoto
-        ? `<img src="${emp.photo}" alt="${escapeHtml(emp.name)}" style="width:38px; height:38px; border-radius:10px; object-fit:cover; border:1px solid rgba(56,189,248,0.4); flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.35);">`
-        : `<div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(99,102,241,0.25) 100%); border:1px solid rgba(56,189,248,0.3); display:flex; align-items:center; justify-content:center; font-weight:800; color:#38bdf8; font-size:0.85rem; flex-shrink:0;">${initials}</div>`;
+        ? `<img src="${emp.photo}" alt="${escapeHtml(emp.name)}" style="width:32px; height:32px; border-radius:8px; object-fit:cover; border:1px solid rgba(56,189,248,0.4); flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.35);">`
+        : `<div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(99,102,241,0.25) 100%); border:1px solid rgba(56,189,248,0.3); display:flex; align-items:center; justify-content:center; font-weight:800; color:#38bdf8; font-size:0.8rem; flex-shrink:0;">${initials}</div>`;
 
       return `
-        <tr data-emp-id="${escapeHtml(emp.id)}">
-          <td style="color:#64748b; font-size:0.8rem;">${index + 1}</td>
-          <td>
-            <div style="cursor:pointer; display:inline-block;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="Click to view full dossier, address, emergency contact &amp; payouts ledger">
-              <strong style="color:#38bdf8; font-weight:700; font-family:monospace; font-size:0.9rem; text-decoration:underline; text-decoration-color:rgba(56,189,248,0.4);">
+        <tr data-emp-id="${escapeHtml(emp.id)}" style="transition:background 0.15s ease;">
+          <td style="color:#64748b; font-size:0.78rem; text-align:center; padding:7px 8px; vertical-align:middle;">${index + 1}</td>
+          <td style="padding:7px 10px; vertical-align:middle; white-space:nowrap;">
+            <div style="cursor:pointer; display:inline-block;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="Click to view full dossier, documents &amp; payouts ledger">
+              <strong style="color:#38bdf8; font-weight:700; font-family:monospace; font-size:0.88rem; text-decoration:underline; text-decoration-color:rgba(56,189,248,0.4);">
                 ${escapeHtml(emp.employee_no || 'EN---')}
               </strong>
             </div>
           </td>
-          <td>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <div style="cursor:pointer;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="View Executive Profile Dossier">
-                ${photoHtml}
-              </div>
-              <div>
-                <div style="font-weight:700; color:#f8fafc; font-size:0.92rem; cursor:pointer;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="Click to view full employee profile dossier">
+          <td style="padding:7px 10px; vertical-align:middle;">
+            <div style="display:flex; align-items:center; gap:9px; cursor:pointer;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="Click to view full employee profile dossier">
+              ${photoHtml}
+              <div style="min-width:0;">
+                <div style="font-weight:700; color:#f8fafc; font-size:0.88rem; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                   ${escapeHtml(emp.name || 'Unnamed')}
                 </div>
-                <div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">
-                  ${emp.phone ? `📞 ${escapeHtml(emp.phone)}` : ''} 
-                  ${emp.email ? `• ✉️ ${escapeHtml(emp.email)}` : ''}
-                </div>
-                ${emp.emirates_id ? `<div style="font-size:0.68rem; color:#64748b; font-family:monospace;">EID: ${escapeHtml(emp.emirates_id)}</div>` : ''}
+                ${emp.phone ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:1px;">📞 ${escapeHtml(emp.phone)}</div>` : ''}
               </div>
             </div>
           </td>
-          <td>
-            <div style="color:#e2e8f0; font-weight:600; font-size:0.85rem;">${escapeHtml(emp.position || emp.designation || 'Staff')}</div>
-            <div style="font-size:0.72rem; color:#38bdf8;">${escapeHtml(emp.department || 'General')}</div>
+          <td style="padding:7px 10px; vertical-align:middle; white-space:nowrap;">
+            <div style="color:#e2e8f0; font-weight:600; font-size:0.83rem; line-height:1.2;">${escapeHtml(emp.position || emp.designation || 'Staff')}</div>
+            <div style="font-size:0.72rem; color:#38bdf8; margin-top:1px;">${escapeHtml(emp.department || 'Rayan Engineering')}</div>
           </td>
-          <td>
+          <td style="padding:7px 10px; vertical-align:middle; white-space:nowrap;">
             <div style="color:#cbd5e1; font-size:0.82rem; font-weight:500;">
-              ${escapeHtml(emp.project_name || 'Corporate / General Overhead')}
-            </div>
-            <div style="font-size:0.7rem; color:#64748b;">
-              Appt: ${escapeHtml(emp.date_of_joining || emp.date_of_appointment || '---')}
+              ${escapeHtml(emp.project_name || 'Corporate Overhead')}
             </div>
           </td>
-          <td style="text-align:right;">
-            <div style="font-weight:800; color:#10b981; font-size:0.92rem;">
+          <td style="text-align:right; padding:7px 10px; vertical-align:middle; white-space:nowrap;">
+            <div style="font-weight:800; color:#10b981; font-size:0.9rem;">
               ${this.formatCurrency(totalSalary, emp.currency || 'AED')}
             </div>
-            <div style="font-size:0.68rem; color:#64748b;">
-              Basic: ${this.formatCurrency(basic)} • Acc: ${this.formatCurrency(acc)}
-            </div>
           </td>
-          <td>
+          <td style="padding:7px 10px; vertical-align:middle; white-space:nowrap;">
             <div style="font-size:0.8rem; font-weight:600; color:#f1f5f9;">${escapeHtml(emp.bank_name || 'Cash / On-Hand')}</div>
             <div style="font-size:0.7rem; color:#94a3b8; font-family:monospace;">
-              ${emp.iban ? `IBAN: ${escapeHtml(emp.iban)}` : (emp.account_no ? `Acc: ${escapeHtml(emp.account_no)}` : 'Pay via Rayan E-Wallets / Cash')}
+              ${emp.iban ? `IBAN: •••• ${escapeHtml(emp.iban.slice(-4))}` : 'Rayan E-Wallets / Cash'}
             </div>
           </td>
-          <td style="text-align:center;">
-            <span style="display:inline-block; padding:3px 9px; border-radius:12px; font-size:0.72rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusColor}40;">
+          <td style="text-align:center; padding:7px 8px; vertical-align:middle; white-space:nowrap;">
+            <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.7rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusColor}40;">
               ${escapeHtml(emp.status || 'Active')}
             </span>
           </td>
-          <td style="text-align:right;">
-            <div style="display:inline-flex; gap:0.35rem; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
-              <button type="button" class="fin-btn-row-action" style="background:linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.22)); color:#38bdf8; border:1px solid rgba(56,189,248,0.45); font-weight:700; padding:4px 10px; font-size:0.75rem; cursor:pointer;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="View Executive Profile Dossier, Address &amp; Payouts Ledger">
+          <td style="text-align:right; padding:7px 10px; vertical-align:middle; white-space:nowrap;">
+            <div style="display:inline-flex; gap:4px; align-items:center; flex-wrap:nowrap; justify-content:flex-end;">
+              <button type="button" class="fin-btn-row-action" style="background:linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.22)); color:#38bdf8; border:1px solid rgba(56,189,248,0.45); font-weight:700; padding:4px 9px; font-size:0.74rem; border-radius:5px; cursor:pointer; white-space:nowrap;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="View Full Employee Dossier, Documents &amp; Ledger">
                 👤 Profile
               </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:4px 9px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')" title="Record Monthly Salary & Deduct Balance">
-                💳 Record Payment
+              <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:4px 9px; font-size:0.74rem; font-weight:700; border-radius:5px; cursor:pointer; white-space:nowrap;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')" title="Record Monthly Salary Payout">
+                💳 Pay
               </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35); padding:4px 9px; font-size:0.75rem; font-weight:600;" onclick="window.finApp.openEmployeeSalaryHistoryModal('${emp.id}', '3m')" title="View 1-Month, 3-Month & 6-Month Salary History">
-                📊 History (1-3 Mo)
-              </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 8px; font-size:0.75rem; cursor:pointer;" onclick="window.finApp.openPayslipPrintModal('${emp.id}')" title="Print / View Official Pay Slip">
-                📜 Pay Slip
-              </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.35); padding:4px 8px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openEmploymentCertificatePrintModal('${emp.id}')" title="Issue / Print Bilingual Employment Certificate">
-                🏛️ Emp Cert
-              </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.35); padding:4px 8px; font-size:0.75rem; font-weight:700;" onclick="window.finApp.openLetterOfAssignmentPrintModal('${emp.id}')" title="Issue / Print 2-Page Letter of Assignment">
-                📄 Assignment
-              </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 7px; font-size:0.75rem;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Profile">
+              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 7px; font-size:0.74rem; border-radius:5px; cursor:pointer;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Employee Profile">
                 ✏️
               </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:4px 7px; font-size:0.75rem;" onclick="window.finApp.deleteEmployee('${emp.id}')" title="Delete Employee">
+              <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:4px 7px; font-size:0.74rem; border-radius:5px; cursor:pointer;" onclick="window.finApp.deleteEmployee('${emp.id}')" title="Delete Employee">
                 🗑️
               </button>
             </div>
