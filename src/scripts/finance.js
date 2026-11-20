@@ -2444,7 +2444,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v170';
+    const CURRENT_DB_VERSION = 'v2026_clean_v172';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -2469,7 +2469,7 @@ class FinanceApp {
     if (this.db && Array.isArray(this.db.letters_of_assignment)) {
       this.db.letters_of_assignment = this.db.letters_of_assignment.filter(l => l && l.employee_id !== 'emp-rg11047' && !(l.employee_name && l.employee_name.toLowerCase().includes('ashraf')));
     }
-if (this.db.customer_receipts) {
+    if (this.db.customer_receipts) {
       this.db.customer_receipts = this.db.customer_receipts.filter(r => {
         const id = (r.id || '').toLowerCase();
         const no = (r.receipt_no || '').toLowerCase();
@@ -8086,10 +8086,18 @@ if (this.db.customer_receipts) {
               <div class="fin-metric-value" style="color:#38bdf8;">${this.formatCurrency(rcpOnline + rcpCheque)}</div>
               <span class="fin-metric-sub">Online Wires: ${this.formatCurrency(rcpOnline)} | Cleared Cheques: ${this.formatCurrency(rcpCheque)}</span>
             </div>
-            <div class="fin-metric-card">
-              <span class="fin-metric-label">Customer Cash in Hand</span>
-              <div class="fin-metric-value" style="color:#a855f7;">${this.formatCurrency(rcpCash)}</div>
-              <span class="fin-metric-sub">Payment-In (${this.formatCurrency(totalReceived)}) = Bank + Cash (REC-RV-44030 &amp; REC-RV-44032) ✓</span>
+            <div class="fin-metric-card" style="border-color:rgba(168,85,247,0.3);">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="fin-metric-label" style="color:#e9d5ff;">Customer Cash Inflow</span>
+                <span style="background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:700;">● Deposited in Wallet</span>
+              </div>
+              <div class="fin-metric-value" style="color:#c084fc;">${this.formatCurrency(rcpCash)}</div>
+              <span class="fin-metric-sub">Payment-In (${this.formatCurrency(totalReceived)}) = Bank + Cash (Deposited into RAYAN E-Wallets) ✓</span>
+              <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                <button type="button" class="fin-btn-card-action" style="padding:2px 6px; font-size:0.7rem; border-color:#00e5d2; color:#00e5d2;" onclick="window.finApp.openCustomerCashToWalletModal()">📥 Cash to Wallet</button>
+                <button type="button" class="fin-btn-card-action" style="padding:2px 6px; font-size:0.7rem; border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openCashToBankDepositModal()">🏦 Deposit to Bank</button>
+                <button type="button" class="fin-btn-card-action" style="padding:2px 6px; font-size:0.7rem; border-color:rgba(255,255,255,0.2); color:#cbd5e1;" onclick="window.finApp.navigate('cash_in_hand')">👁️ Rayan Wallet</button>
+              </div>
             </div>
             <div class="fin-metric-card">
               <span class="fin-metric-label">Unallocated Client Advances</span>
@@ -8988,6 +8996,10 @@ if (this.db.customer_receipts) {
       adcb.balance = totalTreasury.toFixed(2);
     }
 
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    let rayanWallet = registers.find(r => r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))) || registers[0];
+    const walletBalance = Number(rayanWallet?.balance) || 0;
+
     root.innerHTML = `
       <div class="fin-panel-card">
         <div class="fin-panel-header">
@@ -8999,10 +9011,16 @@ if (this.db.customer_receipts) {
           </div>
           <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
             <div style="padding:0.4rem 0.8rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; font-size:0.78rem; color:#38bdf8;">
-              Total Liquidity: <strong style="color:#ffffff;">${this.formatCurrency(totalTreasury)}</strong>
+              Total Liquidity: <strong style="color:#ffffff;">${this.formatCurrency(totalTreasury + walletBalance)}</strong> <span style="font-size:0.7rem; color:#94a3b8;">(Bank: ${this.formatCurrency(totalTreasury)} + Wallet: ${this.formatCurrency(walletBalance)})</span>
             </div>
             <button type="button" class="fin-btn-quick" style="border-color:#00e5d2; color:#00e5d2; background:rgba(0,229,210,0.12); font-weight:700;" onclick="window.finApp.openBankToWalletModal()">
               💸 Bank to Rayan Wallet
+            </button>
+            <button type="button" class="fin-btn-quick" style="border-color:#a855f7; color:#c084fc; background:rgba(168,85,247,0.12); font-weight:700;" onclick="window.finApp.openCustomerCashToWalletModal()" title="Transfer customer cash into Rayan Wallet">
+              📥 Cash to Rayan Wallet
+            </button>
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.12); font-weight:700;" onclick="window.finApp.openCashToBankDepositModal()" title="Deposit customer cash into ADCB Bank">
+              🏦 Deposit Cash to Bank
             </button>
             <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openBankTransferModal()">
               ⇄ Record Transfer / Wire
@@ -9033,10 +9051,28 @@ if (this.db.customer_receipts) {
             <div class="fin-metric-value" style="color:#38bdf8;">${this.formatCurrency(totalTreasury)}</div>
             <span class="fin-metric-sub">Audited Liquidity in Corporate Accounts</span>
           </div>
-          <div class="fin-metric-card">
-            <span class="fin-metric-label">Customer Cash in Hand</span>
-            <div class="fin-metric-value" style="color:#a855f7;">${this.formatCurrency(customerCashInHand)}</div>
-            <span class="fin-metric-sub">Payment-In (${this.formatCurrency(totalInward + customerCashInHand)}) = Bank + Cash (REC-RV-44030 &amp; REC-RV-44032) ✓</span>
+          <div class="fin-metric-card" style="display:flex; flex-direction:column; justify-content:space-between; border-color:rgba(168,85,247,0.3); background:radial-gradient(ellipse at top left, rgba(168,85,247,0.12), transparent 70%);">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <span class="fin-metric-label" style="color:#e9d5ff;">Customer Cash &amp; Rayan Wallet</span>
+                <span style="background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:700;">● Live E-Wallet Link</span>
+              </div>
+              <div class="fin-metric-value" style="color:#c084fc; margin-top:4px;">${this.formatCurrency(walletBalance)}</div>
+              <span class="fin-metric-sub" style="color:#94a3b8; display:block; margin-top:2px;">
+                Customer Inflow: <strong style="color:#ffffff;">${this.formatCurrency(customerCashInHand)}</strong> • Available in Wallet: <strong style="color:#34d399;">${this.formatCurrency(walletBalance)}</strong> ✓
+              </span>
+            </div>
+            <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+              <button type="button" class="fin-btn-card-action" style="padding:3px 8px; font-size:0.72rem; border-color:#00e5d2; color:#00e5d2; background:rgba(0,229,210,0.12); font-weight:700;" onclick="window.finApp.openCustomerCashToWalletModal()" title="Transfer or allocate customer cash into Rayan Wallet">
+                📥 Cash to Wallet
+              </button>
+              <button type="button" class="fin-btn-card-action" style="padding:3px 8px; font-size:0.72rem; border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.12); font-weight:700;" onclick="window.finApp.openCashToBankDepositModal()" title="Deposit customer cash directly into ADCB Bank">
+                🏦 Deposit to Bank
+              </button>
+              <button type="button" class="fin-btn-card-action" style="padding:3px 8px; font-size:0.72rem; border-color:rgba(255,255,255,0.25); color:#cbd5e1;" onclick="window.finApp.navigate('cash_in_hand')" title="View Rayan Wallet register &amp; vouchers">
+                👁️ Rayan Wallet
+              </button>
+            </div>
           </div>
         </div>
 
@@ -9244,7 +9280,13 @@ if (this.db.customer_receipts) {
             <button type="button" class="fin-btn-quick" style="border-color:#00e5d2; color:#00e5d2; background:rgba(0,229,210,0.12); font-weight:700;" onclick="window.finApp.openBankToWalletModal()">
               🏦 Withdraw from Bank
             </button>
-            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.12);" onclick="window.finApp.openTransferPettyCashModal()">
+            <button type="button" class="fin-btn-quick" style="border-color:#a855f7; color:#c084fc; background:rgba(168,85,247,0.12); font-weight:700;" onclick="window.finApp.openCustomerCashToWalletModal()" title="Transfer customer cash collections into Rayan Wallet">
+              📥 Customer Cash Inflow
+            </button>
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.12); font-weight:700;" onclick="window.finApp.openCashToBankDepositModal()" title="Deposit cash from wallet directly to ADCB bank">
+              🏦 Deposit to Bank
+            </button>
+            <button type="button" class="fin-btn-quick" style="border-color:#38bdf8; color:#38bdf8;" onclick="window.finApp.openTransferPettyCashModal()">
               💸 Transfer Petty Cash
             </button>
             <button type="button" class="fin-btn-quick" style="border-color:#34d399; color:#34d399;" onclick="window.finApp.openAddCashRegisterModal()">
@@ -9289,6 +9331,8 @@ if (this.db.customer_receipts) {
                 <div class="fin-bank-card-actions">
                   ${isPrimary ? `
                     <button type="button" class="fin-btn-card-action" style="border-color:#00e5d2; color:#00e5d2; font-weight:700; background:rgba(0,229,210,0.12);" onclick="window.finApp.openBankToWalletModal(null, '${r.id}')" title="Withdraw cash from Bank into RAYAN E-Wallets">🏦 Replenish from Bank</button>
+                    <button type="button" class="fin-btn-card-action" style="border-color:#a855f7; color:#c084fc; font-weight:700; background:rgba(168,85,247,0.12);" onclick="window.finApp.openCustomerCashToWalletModal('${r.id}')" title="Deposit customer cash into RAYAN E-Wallets">📥 Customer Cash</button>
+                    <button type="button" class="fin-btn-card-action" style="border-color:#38bdf8; color:#38bdf8; font-weight:700; background:rgba(56,189,248,0.12);" onclick="window.finApp.openCashToBankDepositModal('${r.id}')" title="Deposit physical cash from wallet into Corporate Bank (ADCB)">🏦 Deposit to Bank</button>
                     <button type="button" class="fin-btn-card-action primary" style="background:linear-gradient(135deg, #0284c7, #0ea5e9); color:#ffffff; font-weight:700; border:none;" onclick="window.finApp.openTransferPettyCashModal('${r.id}')" title="Disburse petty cash to project site registers">💸 Transfer to Project</button>
                     <button type="button" class="fin-btn-card-action" onclick="window.finApp.openAddCashRegisterModal('${r.id}')">✏️ Edit Vault</button>
                     <button type="button" class="fin-btn-card-action" onclick="window.finApp.openCashEntryModal('${r.id}')">+ Voucher</button>
@@ -10902,7 +10946,7 @@ if (this.db.customer_receipts) {
     }
   }
 
-  
+
   openAddPOForSameProject(sourcePoId) {
     const sourcePo = (this.db?.purchase_orders || []).find(p => p.id === sourcePoId || p.po_no === sourcePoId || p.internal_ref === sourcePoId);
     if (!sourcePo) {
@@ -22151,8 +22195,8 @@ if (this.db.customer_receipts) {
 </body>
 </html>`;
       const cleanDocNo = this.sanitizeFilename(vend?.code || vend?.id || 'Vendor-SOA');
-    this.downloadFile(`${cleanDocNo} - Vendor Statement.html`, fullDoc, 'text/html');
-    this.showNotification(`Downloaded ${cleanDocNo} - Vendor Statement.`, 'success');
+      this.downloadFile(`${cleanDocNo} - Vendor Statement.html`, fullDoc, 'text/html');
+      this.showNotification(`Downloaded ${cleanDocNo} - Vendor Statement.`, 'success');
     }
   }
 
@@ -24826,7 +24870,7 @@ Scope of Work & Technical Execution:
     }
   }
 
-    sanitizeFilename(name) {
+  sanitizeFilename(name) {
     if (!name) return 'Document';
     return String(name).replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, ' ').trim();
   }
@@ -24860,7 +24904,7 @@ Scope of Work & Technical Execution:
   detectAndSetActiveDocumentTitle() {
     const modal = document.getElementById('fin-doc-print-modal') || document.querySelector('.fin-doc-modal-backdrop');
     if (!modal) return;
-    
+
     const attrNo = modal.getAttribute('data-doc-no');
     const attrType = modal.getAttribute('data-doc-type');
     if (attrNo && attrType) {
@@ -24928,7 +24972,7 @@ Scope of Work & Technical Execution:
     }
   }
 
-closeDocPrintModal() {
+  closeDocPrintModal() {
     const el = document.getElementById('fin-doc-print-modal');
     if (el) el.remove();
     const container = document.getElementById('fin-modal-container');
@@ -25775,6 +25819,569 @@ closeDocPrintModal() {
           submitBtn.disabled = false;
           submitBtn.style.opacity = '1';
           submitBtn.innerHTML = 'Confirm Withdrawal to Rayan Wallet &rarr;';
+        }
+      }
+    };
+  }
+
+  // 2C. DEDICATED CUSTOMER CASH TO RAYAN WALLET MODAL
+  openCustomerCashToWalletModal(targetVaultId = null) {
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currency = isIndia ? 'INR' : 'AED';
+
+    if (registers.length === 0) {
+      alert('Please create a cash register (e.g. RAYAN E-Wallets) first.');
+      this.openAddCashRegisterModal();
+      return;
+    }
+
+    // Default destination vault: RAYAN E-Wallets
+    let defaultVault = targetVaultId ? registers.find(r => r.id === targetVaultId) : null;
+    if (!defaultVault) {
+      defaultVault = registers.find(r => r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))) || registers[0];
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const autoRef = `CV-CASH-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-customer-cash-to-wallet">
+        <div class="fin-modal-dialog" style="max-width:620px;">
+          <div class="fin-modal-header" style="border-bottom:1px solid rgba(168,85,247,0.25); padding-bottom:1rem;">
+            <div>
+              <h3 class="fin-modal-title" style="color:#c084fc; display:flex; align-items:center; gap:8px;">
+                <span>📥</span> Customer Cash to Rayan Wallet
+              </h3>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                Direct allocation / deposit of collected customer physical cash into RAYAN E-Wallets
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-customer-cash-to-wallet')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="customer-cash-to-wallet-form">
+              <!-- Visual Flow Indicator -->
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:0.75rem; align-items:center; background:rgba(15,23,42,0.6); border:1px solid rgba(168,85,247,0.2); border-radius:8px; padding:0.9rem; margin-bottom:1.25rem;">
+                <div style="text-align:center;">
+                  <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Source</div>
+                  <div style="font-size:0.85rem; color:#c084fc; font-weight:700; margin-top:2px;">Customer Cash in Hand</div>
+                  <div style="font-size:0.75rem; color:#a855f7; margin-top:2px;">Physical Collections</div>
+                </div>
+                <div style="font-size:1.4rem; color:#c084fc; font-weight:800;">&rarr;</div>
+                <div style="text-align:center;">
+                  <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Destination Vault</div>
+                  <div id="ccw-dst-name" style="font-size:0.85rem; color:#00e5d2; font-weight:700; margin-top:2px;">${defaultVault.register_name}</div>
+                  <div id="ccw-dst-bal" style="font-size:0.75rem; color:#34d399; margin-top:2px;">Bal: ${this.formatCurrency(defaultVault.balance)}</div>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Source Cash Holding</label>
+                  <input type="text" class="fin-form-input" readonly value="Customer Physical Cash Collections" style="background:rgba(168,85,247,0.08); color:#e9d5ff; font-weight:600;">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Destination Cash Register / E-Wallet <span style="color:#ef4444;">*</span></label>
+                  <select id="ccw-dest" class="fin-form-select" required>
+                    ${registers.map(r => `<option value="${r.id}" ${r.id === defaultVault.id ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Transfer / Deposit Amount (${currency}) <span style="color:#ef4444;">*</span></label>
+                <input type="number" id="ccw-amount" class="fin-form-input" required min="1" step="any" placeholder="e.g. 5000, 9000, 10000 or 34000" style="font-size:1.1rem; font-weight:700; color:#c084fc;">
+                <!-- Fast preset amount chips -->
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+                  <button type="button" class="fin-btn-card-action ccw-chip" data-amt="5000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(168,85,247,0.4); color:#c084fc;">+5,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action ccw-chip" data-amt="9000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(168,85,247,0.4); color:#c084fc;">+9,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action ccw-chip" data-amt="10000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(168,85,247,0.4); color:#c084fc;">+10,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action ccw-chip" data-amt="34000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(168,85,247,0.4); color:#c084fc;">+34,000 ${currency} (All)</button>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Transfer Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="ccw-date" class="fin-form-input" required value="${today}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Voucher / Receipt Ref # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ccw-ref" class="fin-form-input" required value="${autoRef}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Received By / Custodian <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ccw-custodian" class="fin-form-input" required value="${defaultVault.custodian || 'Arshad Alam Shaikh'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Clearance Status</label>
+                  <input type="text" class="fin-form-input" readonly value="Approved &amp; Added to E-Wallet" style="background:rgba(16,185,129,0.1); color:#34d399; font-weight:700; border-color:rgba(16,185,129,0.3);">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Purpose &amp; Allocation Notes <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ccw-purpose" class="fin-form-input" required value="Customer cash collection deposited into RAYAN E-Wallets for disbursements &amp; project expenses">
+              </div>
+
+              <!-- Projected Balances Preview -->
+              <div id="ccw-projection" style="display:none; background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.25); border-radius:6px; padding:0.75rem; font-size:0.75rem; margin-top:0.5rem;">
+                <div style="font-weight:700; color:#c084fc; margin-bottom:4px;">📊 Destination Wallet Impact Preview:</div>
+                <div style="color:#cbd5e1;">
+                  <span id="ccw-proj-vault">E-Wallet (${defaultVault.register_name}): <strong>${this.formatCurrency(defaultVault.balance)}</strong></span>
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-customer-cash-to-wallet')">Cancel</button>
+                <button type="submit" id="ccw-submit-btn" class="fin-btn-quick primary" style="background:linear-gradient(135deg, #7c3aed, #a855f7); color:#ffffff; font-weight:800; border:none;">
+                  Confirm Transfer to Rayan Wallet &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+
+    const dstEl = document.getElementById('ccw-dest');
+    const amtEl = document.getElementById('ccw-amount');
+    const projEl = document.getElementById('ccw-projection');
+    const projVaultEl = document.getElementById('ccw-proj-vault');
+    const dstNameEl = document.getElementById('ccw-dst-name');
+    const dstBalEl = document.getElementById('ccw-dst-bal');
+
+    const updateProjection = () => {
+      const dVault = registers.find(r => r.id === dstEl.value);
+      const val = parseFloat(amtEl.value) || 0;
+
+      if (dVault && dstNameEl) {
+        dstNameEl.textContent = dVault.register_name;
+        dstBalEl.textContent = `Bal: ${this.formatCurrency(dVault.balance)}`;
+      }
+
+      if (val > 0 && dVault) {
+        projEl.style.display = 'block';
+        const newVaultBal = (Number(dVault.balance) || 0) + val;
+        projVaultEl.innerHTML = `E-Wallet (${dVault.register_name}): <strong>${this.formatCurrency(dVault.balance)}</strong> &rarr; <span style="color:#34d399; font-weight:800;">${this.formatCurrency(newVaultBal)}</span> (+${this.formatCurrency(val)})`;
+      } else {
+        projEl.style.display = 'none';
+      }
+    };
+
+    dstEl.onchange = updateProjection;
+    amtEl.oninput = updateProjection;
+
+    // Amount chips click
+    document.querySelectorAll('.ccw-chip').forEach(btn => {
+      btn.onclick = () => {
+        amtEl.value = btn.getAttribute('data-amt');
+        updateProjection();
+        amtEl.focus();
+      };
+    });
+
+    document.getElementById('customer-cash-to-wallet-form').onsubmit = async (e) => {
+      e.preventDefault();
+      if (this._isSubmittingCcw) return;
+      const dVaultId = dstEl.value;
+      const amt = parseFloat(amtEl.value) || 0;
+
+      if (amt <= 0) {
+        alert('Please enter a valid transfer amount greater than 0.');
+        return;
+      }
+
+      const dVault = registers.find(r => r.id === dVaultId);
+      if (!dVault) {
+        alert('Destination cash vault could not be found.');
+        return;
+      }
+
+      const refNo = document.getElementById('ccw-ref').value.trim();
+      const tDate = document.getElementById('ccw-date').value;
+      const custodian = document.getElementById('ccw-custodian').value.trim();
+      const purpose = document.getElementById('ccw-purpose').value.trim();
+
+      const voucherId = `cv-cash-${Date.now()}`;
+      const payload = {
+        destination_vault_id: dVaultId,
+        amount: amt,
+        currency: currency,
+        date: tDate,
+        transfer_date: tDate,
+        voucher_id: voucherId,
+        voucher_no: refNo,
+        reference_no: refNo,
+        custodian: custodian,
+        purpose: purpose,
+        company_id: this.activeCompanyId || 'rayan-corp-uae'
+      };
+
+      const submitBtn = document.getElementById('ccw-submit-btn');
+      this._isSubmittingCcw = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.innerHTML = '⏳ Depositing Cash into Wallet...';
+      }
+
+      try {
+        // Optimistic local update
+        dVault.balance = (Number(dVault.balance) || 0) + amt;
+        dVault.last_replenished = tDate;
+
+        if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+        this.db.cash_vouchers.unshift({
+          id: voucherId,
+          company_id: payload.company_id,
+          voucher_no: refNo,
+          date: tDate,
+          voucher_date: tDate,
+          register_id: dVault.id,
+          register_name: dVault.register_name,
+          type: 'inflow',
+          category: 'Customer Cash Collection',
+          purpose: purpose,
+          payee: 'Customer Cash In Hand',
+          custodian: custodian,
+          amount: amt,
+          currency: payload.currency,
+          reference_no: refNo,
+          status: 'Approved',
+          created_at: new Date().toISOString()
+        });
+
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+
+        const res = await this.syncApi('transfer_cash_to_wallet', payload);
+        if (res && res.data) {
+          this.db = this.mergeWithSeedData(res.data);
+        }
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.closeModal('modal-customer-cash-to-wallet');
+        this.renderActiveTab();
+        this.showNotification(`Successfully allocated ${this.formatCurrency(amt)} customer cash into ${dVault.register_name}!`, 'success');
+      } finally {
+        this._isSubmittingCcw = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerHTML = 'Confirm Transfer to Rayan Wallet &rarr;';
+        }
+      }
+    };
+  }
+
+  // 2D. DEDICATED CASH TO BANK DEPOSIT MODAL
+  openCashToBankDepositModal(sourceVaultId = null, targetBankId = null) {
+    const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const registers = (this.db?.cash_in_hand || []).filter(r => (r.company_id || 'rayan-corp-uae') === this.activeCompanyId);
+    const isIndia = this.activeCompanyId === 'ashaz-eng-in';
+    const currency = isIndia ? 'INR' : 'AED';
+
+    if (banks.length === 0) {
+      alert('Please add a corporate bank account first.');
+      this.openAddBankAccountModal();
+      return;
+    }
+
+    let defaultBank = targetBankId ? banks.find(b => b.id === targetBankId) : null;
+    if (!defaultBank) {
+      defaultBank = banks.find(b => (b.bank_name || '').toLowerCase().includes('adcb')) || banks[0];
+    }
+
+    let defaultVault = sourceVaultId ? registers.find(r => r.id === sourceVaultId) : null;
+    if (!defaultVault) {
+      defaultVault = registers.find(r => r.id === 'cash-mw5esv3w' || r.is_primary || (r.register_name && r.register_name.toLowerCase().includes('wallet'))) || registers[0];
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const autoRef = `DEP-ADCB-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const modalHtml = `
+      <div class="fin-modal-backdrop open" id="modal-cash-to-bank">
+        <div class="fin-modal-dialog" style="max-width:620px;">
+          <div class="fin-modal-header" style="border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:1rem;">
+            <div>
+              <h3 class="fin-modal-title" style="color:#38bdf8; display:flex; align-items:center; gap:8px;">
+                <span>🏦</span> Customer Cash Deposit to Bank
+              </h3>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+                Physical cash / Rayan Wallet cash deposit directly into Corporate Bank Account (ADCB)
+              </div>
+            </div>
+            <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-cash-to-bank')">&times;</button>
+          </div>
+          <div class="fin-modal-body">
+            <form id="cash-to-bank-form">
+              <!-- Visual Flow Indicator -->
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:0.75rem; align-items:center; background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.2); border-radius:8px; padding:0.9rem; margin-bottom:1.25rem;">
+                <div style="text-align:center;">
+                  <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Source Cash Holding</div>
+                  <div id="ctb-src-name" style="font-size:0.85rem; color:#c084fc; font-weight:700; margin-top:2px;">${defaultVault ? defaultVault.register_name : 'Customer Cash in Hand'}</div>
+                  <div id="ctb-src-bal" style="font-size:0.75rem; color:#a855f7; margin-top:2px;">Bal: ${defaultVault ? this.formatCurrency(defaultVault.balance) : 'AED 34,000.00'}</div>
+                </div>
+                <div style="font-size:1.4rem; color:#38bdf8; font-weight:800;">&rarr;</div>
+                <div style="text-align:center;">
+                  <div style="font-size:0.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700;">Destination Bank</div>
+                  <div id="ctb-dst-name" style="font-size:0.85rem; color:#38bdf8; font-weight:700; margin-top:2px;">${defaultBank.bank_name}</div>
+                  <div id="ctb-dst-bal" style="font-size:0.75rem; color:#34d399; margin-top:2px;">Bal: ${this.formatCurrency(defaultBank.balance)}</div>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Source Cash Vault / Register <span style="color:#ef4444;">*</span></label>
+                  <select id="ctb-source" class="fin-form-select" required>
+                    ${registers.map(r => `<option value="${r.id}" ${defaultVault && r.id === defaultVault.id ? 'selected' : ''}>${r.register_name} (Bal: ${this.formatCurrency(r.balance)})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Destination Bank Account <span style="color:#ef4444;">*</span></label>
+                  <select id="ctb-dest" class="fin-form-select" required>
+                    ${banks.map(b => `<option value="${b.id}" ${b.id === defaultBank.id ? 'selected' : ''}>${b.bank_name} (Bal: ${this.formatCurrency(b.balance)})</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Deposit Amount (${currency}) <span style="color:#ef4444;">*</span></label>
+                <input type="number" id="ctb-amount" class="fin-form-input" required min="1" step="any" placeholder="e.g. 5000, 10000 or 34000" style="font-size:1.1rem; font-weight:700; color:#38bdf8;">
+                <!-- Fast preset amount chips -->
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+                  <button type="button" class="fin-btn-card-action ctb-chip" data-amt="5000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(56,189,248,0.4); color:#38bdf8;">+5,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action ctb-chip" data-amt="10000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(56,189,248,0.4); color:#38bdf8;">+10,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action ctb-chip" data-amt="20000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(56,189,248,0.4); color:#38bdf8;">+20,000 ${currency}</button>
+                  <button type="button" class="fin-btn-card-action ctb-chip" data-amt="34000" style="padding:2px 8px; font-size:0.72rem; border-color:rgba(56,189,248,0.4); color:#38bdf8;">+34,000 ${currency} (All)</button>
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Deposit Date <span style="color:#ef4444;">*</span></label>
+                  <input type="date" id="ctb-date" class="fin-form-input" required value="${today}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Bank CDM Slip / Reference # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ctb-ref" class="fin-form-input" required value="${autoRef}">
+                </div>
+              </div>
+
+              <div class="fin-form-grid-2">
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Deposited By / Authorized Signatory <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="ctb-custodian" class="fin-form-input" required value="${defaultBank.signatory || defaultVault?.custodian || 'Arshad Alam Shaikh'}">
+                </div>
+                <div class="fin-form-group">
+                  <label class="fin-form-label">Verification Status</label>
+                  <input type="text" class="fin-form-input" readonly value="Cleared &amp; Credited to Bank" style="background:rgba(16,185,129,0.1); color:#34d399; font-weight:700; border-color:rgba(16,185,129,0.3);">
+                </div>
+              </div>
+
+              <div class="fin-form-group">
+                <label class="fin-form-label">Deposit Notes &amp; Branch Narration <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ctb-purpose" class="fin-form-input" required value="Customer cash collection deposit into ADCB corporate account">
+              </div>
+
+              <!-- Projected Balances Preview -->
+              <div id="ctb-projection" style="display:none; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:6px; padding:0.75rem; font-size:0.75rem; margin-top:0.5rem;">
+                <div style="font-weight:700; color:#38bdf8; margin-bottom:4px;">📊 Balance Impact Preview:</div>
+                <div style="display:flex; justify-content:space-between; color:#cbd5e1; gap:10px; flex-wrap:wrap;">
+                  <span id="ctb-proj-vault">E-Wallet: <strong>${defaultVault ? this.formatCurrency(defaultVault.balance) : ''}</strong></span>
+                  <span id="ctb-proj-bank">Bank: <strong>${this.formatCurrency(defaultBank.balance)}</strong></span>
+                </div>
+              </div>
+
+              <div class="fin-modal-footer" style="padding:1rem 0 0; background:transparent;">
+                <button type="button" class="fin-btn-quick" onclick="window.finApp.closeModal('modal-cash-to-bank')">Cancel</button>
+                <button type="submit" id="ctb-submit-btn" class="fin-btn-quick primary" style="background:linear-gradient(135deg, #0284c7, #38bdf8); color:#ffffff; font-weight:800; border:none;">
+                  Confirm Cash Deposit to Bank &rarr;
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.getModalContainer().innerHTML = modalHtml;
+
+    const srcEl = document.getElementById('ctb-source');
+    const dstEl = document.getElementById('ctb-dest');
+    const amtEl = document.getElementById('ctb-amount');
+    const projEl = document.getElementById('ctb-projection');
+    const projVaultEl = document.getElementById('ctb-proj-vault');
+    const projBankEl = document.getElementById('ctb-proj-bank');
+    const srcNameEl = document.getElementById('ctb-src-name');
+    const srcBalEl = document.getElementById('ctb-src-bal');
+    const dstNameEl = document.getElementById('ctb-dst-name');
+    const dstBalEl = document.getElementById('ctb-dst-bal');
+
+    const updateProjection = () => {
+      const sVault = registers.find(r => r.id === srcEl.value);
+      const dBank = banks.find(b => b.id === dstEl.value);
+      const val = parseFloat(amtEl.value) || 0;
+
+      if (sVault && srcNameEl) {
+        srcNameEl.textContent = sVault.register_name;
+        srcBalEl.textContent = `Bal: ${this.formatCurrency(sVault.balance)}`;
+      }
+      if (dBank && dstNameEl) {
+        dstNameEl.textContent = dBank.bank_name;
+        dstBalEl.textContent = `Bal: ${this.formatCurrency(dBank.balance)}`;
+      }
+
+      if (val > 0 && sVault && dBank) {
+        projEl.style.display = 'block';
+        const newVaultBal = Math.max(0, (Number(sVault.balance) || 0) - val);
+        const newBankBal = (Number(dBank.balance) || 0) + val;
+        projVaultEl.innerHTML = `E-Wallet (${sVault.register_name}): <strong>${this.formatCurrency(sVault.balance)}</strong> &rarr; <span style="color:#fb923c;">${this.formatCurrency(newVaultBal)}</span>`;
+        projBankEl.innerHTML = `Bank (${dBank.bank_name}): <strong>${this.formatCurrency(dBank.balance)}</strong> &rarr; <span style="color:#34d399; font-weight:800;">${this.formatCurrency(newBankBal)}</span>`;
+      } else {
+        projEl.style.display = 'none';
+      }
+    };
+
+    srcEl.onchange = updateProjection;
+    dstEl.onchange = updateProjection;
+    amtEl.oninput = updateProjection;
+
+    // Amount chips click
+    document.querySelectorAll('.ctb-chip').forEach(btn => {
+      btn.onclick = () => {
+        amtEl.value = btn.getAttribute('data-amt');
+        updateProjection();
+        amtEl.focus();
+      };
+    });
+
+    document.getElementById('cash-to-bank-form').onsubmit = async (e) => {
+      e.preventDefault();
+      if (this._isSubmittingCtb) return;
+      const sVaultId = srcEl.value;
+      const dBankId = dstEl.value;
+      const amt = parseFloat(amtEl.value) || 0;
+
+      if (amt <= 0) {
+        alert('Please enter a valid deposit amount greater than 0.');
+        return;
+      }
+
+      const sVault = registers.find(r => r.id === sVaultId);
+      const dBank = banks.find(b => b.id === dBankId);
+      if (!dBank) {
+        alert('Destination bank account could not be found.');
+        return;
+      }
+
+      const refNo = document.getElementById('ctb-ref').value.trim();
+      const dDate = document.getElementById('ctb-date').value;
+      const custodian = document.getElementById('ctb-custodian').value.trim();
+      const purpose = document.getElementById('ctb-purpose').value.trim();
+
+      const wireId = `wire-dep-${Date.now()}`;
+      const voucherId = `cv-dep-${Date.now()}`;
+      const payload = {
+        source_vault_id: sVaultId,
+        target_bank_id: dBankId,
+        destination_account_id: dBankId,
+        amount: amt,
+        currency: dBank.currency || currency,
+        date: dDate,
+        deposit_date: dDate,
+        wire_id: wireId,
+        voucher_id: voucherId,
+        voucher_no: `CV-${refNo}`,
+        reference_no: refNo,
+        custodian: custodian,
+        deposited_by: custodian,
+        purpose: purpose,
+        company_id: this.activeCompanyId || 'rayan-corp-uae'
+      };
+
+      const submitBtn = document.getElementById('ctb-submit-btn');
+      this._isSubmittingCtb = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.innerHTML = '⏳ Processing Cash Deposit...';
+      }
+
+      try {
+        // Optimistic local update
+        dBank.balance = (Number(dBank.balance) || 0) + amt;
+        if (sVault) sVault.balance = Math.max(0, (Number(sVault.balance) || 0) - amt);
+
+        if (!this.db.bank_transfers) this.db.bank_transfers = [];
+        if (!this.db.cash_vouchers) this.db.cash_vouchers = [];
+
+        this.db.bank_transfers.unshift({
+          id: wireId,
+          voucher_id: voucherId,
+          company_id: payload.company_id,
+          reference_no: refNo,
+          date: dDate,
+          transfer_date: dDate,
+          counterparty: (sVault ? sVault.register_name : 'Customer Cash') + ' (Cash Deposit)',
+          source_account_id: (sVault ? sVault.id : 'CASH'),
+          source_bank: (sVault ? sVault.register_name : 'Customer Cash'),
+          destination_account_id: dBank.id,
+          destination_bank: `${dBank.bank_name} (${dBank.currency || currency})`,
+          type: 'inward',
+          type_label: 'Customer Cash Deposit into Bank',
+          amount: amt,
+          currency: payload.currency,
+          purpose: purpose,
+          status: 'Cleared',
+          created_at: new Date().toISOString()
+        });
+
+        this.db.cash_vouchers.unshift({
+          id: voucherId,
+          wire_id: wireId,
+          company_id: payload.company_id,
+          voucher_no: `CV-${refNo}`,
+          date: dDate,
+          voucher_date: dDate,
+          register_id: (sVault ? sVault.id : 'cash-mw5esv3w'),
+          register_name: (sVault ? sVault.register_name : 'RAYAN E-Wallets'),
+          type: 'outflow',
+          category: 'Cash Deposit to Bank',
+          purpose: `Deposit cash into ${dBank.bank_name}: ${purpose}`,
+          payee: dBank.bank_name,
+          custodian: custodian,
+          amount: amt,
+          currency: payload.currency,
+          reference_no: refNo,
+          status: 'Approved',
+          created_at: new Date().toISOString()
+        });
+
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+
+        const res = await this.syncApi('deposit_cash_to_bank', payload);
+        if (res && res.data) {
+          this.db = this.mergeWithSeedData(res.data);
+        }
+        this.normalizeAllBalances();
+        try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) { }
+        this.closeModal('modal-cash-to-bank');
+        this.renderActiveTab();
+        this.showNotification(`Successfully deposited ${this.formatCurrency(amt)} cash into ${dBank.bank_name}!`, 'success');
+      } finally {
+        this._isSubmittingCtb = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerHTML = 'Confirm Cash Deposit to Bank &rarr;';
         }
       }
     };

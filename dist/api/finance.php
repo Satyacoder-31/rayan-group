@@ -10375,6 +10375,302 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             exit;
 
+        case 'transfer_cash_to_wallet':
+            $destVaultId = $body['destination_vault_id'] ?? $body['target_vault_id'] ?? 'cash-mw5esv3w';
+            $amt = floatval($body['amount'] ?? 0);
+            $transferDate = !empty($body['date']) ? $body['date'] : (!empty($body['transfer_date']) ? $body['transfer_date'] : date('Y-m-d'));
+            $referenceNo = trim($body['reference_no'] ?? '');
+            $custodian = trim($body['custodian'] ?? 'Arshad Alam Shaikh');
+            $purpose = trim($body['purpose'] ?? 'Customer cash collection deposited into RAYAN E-Wallets');
+            $companyId = $body['company_id'] ?? 'rayan-corp-uae';
+            $currency = $body['currency'] ?? ($companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+
+            if ($amt <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Invalid transfer amount']);
+                exit;
+            }
+
+            if (!isset($db['cash_in_hand']) || !is_array($db['cash_in_hand'])) $db['cash_in_hand'] = [];
+            if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+
+            $destVault = null;
+            foreach ($db['cash_in_hand'] as &$cih) {
+                if (($cih['id'] ?? '') === $destVaultId || (empty($destVaultId) && ($cih['id'] ?? '') === 'cash-mw5esv3w')) {
+                    $destVault = &$cih;
+                    break;
+                }
+            }
+            unset($cih);
+
+            if (!$destVault) {
+                foreach ($db['cash_in_hand'] as &$cih) {
+                    if (($cih['company_id'] ?? '') === $companyId && (stripos($cih['register_name'] ?? '', 'wallet') !== false || !empty($cih['is_primary']))) {
+                        $destVault = &$cih;
+                        break;
+                    }
+                }
+                unset($cih);
+            }
+
+            if (!$destVault) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Destination cash vault not found']);
+                exit;
+            }
+
+            if (empty($referenceNo)) {
+                $referenceNo = 'CV-CASH-' . rand(10000, 99999);
+            }
+
+            $voucherId = !empty($body['voucher_id']) ? $body['voucher_id'] : ('cv-cash-' . round(microtime(true) * 1000));
+            $voucherNo = !empty($body['voucher_no']) ? $body['voucher_no'] : $referenceNo;
+
+            // Credit to cash vault
+            $destVault['balance'] = floatval($destVault['balance'] ?? 0) + $amt;
+            $destVault['last_replenished'] = $transferDate;
+
+            $voucherObj = [
+                'id' => $voucherId,
+                'company_id' => $companyId,
+                'voucher_no' => $voucherNo,
+                'date' => $transferDate,
+                'register_id' => $destVault['id'],
+                'register_name' => $destVault['register_name'],
+                'type' => 'inflow',
+                'category' => 'Customer Cash Collection',
+                'purpose' => $purpose,
+                'payee' => 'Customer Cash In Hand',
+                'custodian' => $custodian,
+                'amount' => $amt,
+                'currency' => $currency,
+                'reference_no' => $referenceNo,
+                'status' => 'Approved',
+                'created_at' => date('c')
+            ];
+
+            array_unshift($db['cash_vouchers'], $voucherObj);
+            recalculateAllFinanceBalances($db);
+
+            if ($pdo) {
+                try {
+                    $stmtCih = $pdo->prepare("UPDATE finance_cash_in_hand SET balance = :balance, last_replenished = :last_replenished, updated_at = NOW() WHERE id = :id");
+                    $stmtCih->execute([':balance' => floatval($destVault['balance']), ':last_replenished' => $transferDate, ':id' => $destVault['id']]);
+
+                    $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+                    $stmtCv->execute([
+                        ':id' => $voucherObj['id'],
+                        ':company_id' => $voucherObj['company_id'],
+                        ':voucher_no' => $voucherObj['voucher_no'],
+                        ':voucher_date' => $voucherObj['date'],
+                        ':register_name' => $voucherObj['register_name'],
+                        ':custodian' => $voucherObj['custodian'],
+                        ':payee' => $voucherObj['payee'],
+                        ':purpose' => $voucherObj['purpose'],
+                        ':category' => $voucherObj['category'],
+                        ':amount' => $voucherObj['amount'],
+                        ':currency' => $voucherObj['currency'],
+                        ':type' => $voucherObj['type'],
+                        ':status' => $voucherObj['status'],
+                        ':data_json' => json_encode($voucherObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
+                } catch (Exception $e) {
+                    error_log('transfer_cash_to_wallet error: ' . $e->getMessage());
+                }
+            }
+
+            saveFinanceDb($pdo, $dataFile, $db, $candidates);
+            $addAuditLog('create', 'cash_voucher', $voucherNo, 'Transferred ' . $currency . ' ' . number_format($amt, 2) . ' customer cash to ' . $destVault['register_name']);
+
+            echo json_encode([
+                'success' => true,
+                'voucher' => $voucherObj,
+                'dest_vault' => $destVault,
+                'data' => $db
+            ]);
+            exit;
+
+        case 'deposit_cash_to_bank':
+            $sourceVaultId = $body['source_vault_id'] ?? 'cash-mw5esv3w';
+            $targetBankId = $body['target_bank_id'] ?? $body['destination_account_id'] ?? 'bank-adcb-uae';
+            $amt = floatval($body['amount'] ?? 0);
+            $depositDate = !empty($body['date']) ? $body['date'] : (!empty($body['deposit_date']) ? $body['deposit_date'] : date('Y-m-d'));
+            $referenceNo = trim($body['reference_no'] ?? '');
+            $depositedBy = trim($body['custodian'] ?? ($body['deposited_by'] ?? 'Arshad Alam Shaikh'));
+            $purpose = trim($body['purpose'] ?? 'Customer physical cash deposit at ADCB counter');
+            $companyId = $body['company_id'] ?? 'rayan-corp-uae';
+            $currency = $body['currency'] ?? ($companyId === 'ashaz-eng-in' ? 'INR' : 'AED');
+
+            if ($amt <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Invalid deposit amount']);
+                exit;
+            }
+
+            if (!isset($db['bank_accounts']) || !is_array($db['bank_accounts'])) $db['bank_accounts'] = [];
+            if (!isset($db['cash_in_hand']) || !is_array($db['cash_in_hand'])) $db['cash_in_hand'] = [];
+            if (!isset($db['bank_transfers']) || !is_array($db['bank_transfers'])) $db['bank_transfers'] = [];
+            if (!isset($db['cash_vouchers']) || !is_array($db['cash_vouchers'])) $db['cash_vouchers'] = [];
+
+            // Find target bank
+            $targetBank = null;
+            foreach ($db['bank_accounts'] as &$ba) {
+                if (($ba['id'] ?? '') === $targetBankId || (empty($targetBankId) && ($ba['company_id'] ?? '') === $companyId)) {
+                    $targetBank = &$ba;
+                    break;
+                }
+            }
+            unset($ba);
+
+            if (!$targetBank) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Target bank account not found']);
+                exit;
+            }
+
+            // Find source vault
+            $sourceVault = null;
+            foreach ($db['cash_in_hand'] as &$cih) {
+                if (($cih['id'] ?? '') === $sourceVaultId || (empty($sourceVaultId) && ($cih['id'] ?? '') === 'cash-mw5esv3w')) {
+                    $sourceVault = &$cih;
+                    break;
+                }
+            }
+            unset($cih);
+
+            if (!$sourceVault) {
+                foreach ($db['cash_in_hand'] as &$cih) {
+                    if (($cih['company_id'] ?? '') === $companyId && (stripos($cih['register_name'] ?? '', 'wallet') !== false || !empty($cih['is_primary']))) {
+                        $sourceVault = &$cih;
+                        break;
+                    }
+                }
+                unset($cih);
+            }
+
+            if (empty($referenceNo)) {
+                $referenceNo = 'DEP-ADCB-' . rand(10000, 99999);
+            }
+
+            $wireId = !empty($body['wire_id']) ? $body['wire_id'] : ('wire-dep-' . round(microtime(true) * 1000));
+            $voucherId = !empty($body['voucher_id']) ? $body['voucher_id'] : ('cv-dep-' . round(microtime(true) * 1000));
+            $voucherNo = !empty($body['voucher_no']) ? $body['voucher_no'] : ('CV-DEP-' . rand(1000, 9999));
+
+            // Credit bank, debit cash
+            $targetBank['balance'] = floatval($targetBank['balance'] ?? 0) + $amt;
+            if ($sourceVault) {
+                $sourceVault['balance'] = floatval($sourceVault['balance'] ?? 0) - $amt;
+            }
+
+            // Inward bank wire
+            $wireObj = [
+                'id' => $wireId,
+                'voucher_id' => $voucherId,
+                'company_id' => $companyId,
+                'reference_no' => $referenceNo,
+                'date' => $depositDate,
+                'transfer_date' => $depositDate,
+                'counterparty' => ($sourceVault ? $sourceVault['register_name'] : 'Customer Cash') . ' (Cash Deposit)',
+                'source_account_id' => ($sourceVault ? $sourceVault['id'] : 'CASH'),
+                'source_bank' => ($sourceVault ? $sourceVault['register_name'] : 'Customer Cash'),
+                'destination_account_id' => $targetBank['id'],
+                'destination_bank' => $targetBank['bank_name'] . ' (' . ($targetBank['currency'] ?? $currency) . ')',
+                'type' => 'inward',
+                'type_label' => 'Customer Cash Deposit into Bank',
+                'amount' => $amt,
+                'currency' => $targetBank['currency'] ?? $currency,
+                'purpose' => $purpose,
+                'status' => 'Cleared',
+                'created_at' => date('c')
+            ];
+            array_unshift($db['bank_transfers'], $wireObj);
+
+            // Outflow cash voucher
+            $voucherObj = [
+                'id' => $voucherId,
+                'wire_id' => $wireId,
+                'company_id' => $companyId,
+                'voucher_no' => $voucherNo,
+                'date' => $depositDate,
+                'register_id' => ($sourceVault ? $sourceVault['id'] : 'cash-mw5esv3w'),
+                'register_name' => ($sourceVault ? $sourceVault['register_name'] : 'RAYAN E-Wallets'),
+                'type' => 'outflow',
+                'category' => 'Cash Deposit to Bank',
+                'purpose' => 'Deposit cash into ' . $targetBank['bank_name'] . ': ' . $purpose,
+                'payee' => $targetBank['bank_name'],
+                'custodian' => $depositedBy,
+                'amount' => $amt,
+                'currency' => $currency,
+                'reference_no' => $referenceNo,
+                'status' => 'Approved',
+                'created_at' => date('c')
+            ];
+            array_unshift($db['cash_vouchers'], $voucherObj);
+
+            recalculateAllFinanceBalances($db);
+
+            if ($pdo) {
+                try {
+                    $stmtBa = $pdo->prepare("UPDATE finance_bank_accounts SET balance = :balance, updated_at = NOW() WHERE id = :id");
+                    $stmtBa->execute([':balance' => floatval($targetBank['balance']), ':id' => $targetBank['id']]);
+
+                    if ($sourceVault) {
+                        $stmtCih = $pdo->prepare("UPDATE finance_cash_in_hand SET balance = :balance, updated_at = NOW() WHERE id = :id");
+                        $stmtCih->execute([':balance' => floatval($sourceVault['balance']), ':id' => $sourceVault['id']]);
+                    }
+
+                    $stmtBt = $pdo->prepare("REPLACE INTO finance_bank_transfers (id, company_id, reference_no, transfer_date, counterparty, source_account_id, source_bank, type, amount, currency, purpose, status, data_json, updated_at) VALUES (:id, :company_id, :reference_no, :transfer_date, :counterparty, :source_account_id, :source_bank, :type, :amount, :currency, :purpose, :status, :data_json, NOW())");
+                    $stmtBt->execute([
+                        ':id' => $wireObj['id'],
+                        ':company_id' => $wireObj['company_id'],
+                        ':reference_no' => $wireObj['reference_no'],
+                        ':transfer_date' => $wireObj['date'],
+                        ':counterparty' => $wireObj['counterparty'],
+                        ':source_account_id' => $wireObj['source_account_id'],
+                        ':source_bank' => $wireObj['source_bank'],
+                        ':type' => $wireObj['type'],
+                        ':amount' => $wireObj['amount'],
+                        ':currency' => $wireObj['currency'],
+                        ':purpose' => $wireObj['purpose'],
+                        ':status' => $wireObj['status'],
+                        ':data_json' => json_encode($wireObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
+
+                    $stmtCv = $pdo->prepare("REPLACE INTO finance_cash_vouchers (id, company_id, voucher_no, voucher_date, register_name, custodian, payee, purpose, category, amount, currency, type, status, data_json, updated_at) VALUES (:id, :company_id, :voucher_no, :voucher_date, :register_name, :custodian, :payee, :purpose, :category, :amount, :currency, :type, :status, :data_json, NOW())");
+                    $stmtCv->execute([
+                        ':id' => $voucherObj['id'],
+                        ':company_id' => $voucherObj['company_id'],
+                        ':voucher_no' => $voucherObj['voucher_no'],
+                        ':voucher_date' => $voucherObj['date'],
+                        ':register_name' => $voucherObj['register_name'],
+                        ':custodian' => $voucherObj['custodian'],
+                        ':payee' => $voucherObj['payee'],
+                        ':purpose' => $voucherObj['purpose'],
+                        ':category' => $voucherObj['category'],
+                        ':amount' => $voucherObj['amount'],
+                        ':currency' => $voucherObj['currency'],
+                        ':type' => $voucherObj['type'],
+                        ':status' => $voucherObj['status'],
+                        ':data_json' => json_encode($voucherObj, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ]);
+                } catch (Exception $e) {
+                    error_log('deposit_cash_to_bank error: ' . $e->getMessage());
+                }
+            }
+
+            saveFinanceDb($pdo, $dataFile, $db, $candidates);
+            $addAuditLog('create', 'bank_transfer', $referenceNo, 'Deposited ' . $currency . ' ' . number_format($amt, 2) . ' cash into ' . $targetBank['bank_name']);
+
+            echo json_encode([
+                'success' => true,
+                'transfer' => $wireObj,
+                'voucher' => $voucherObj,
+                'target_bank' => $targetBank,
+                'source_vault' => $sourceVault,
+                'data' => $db
+            ]);
+            exit;
+
         case 'update_bank_transfer':
             $trn = $body['transfer'] ?? $body['bank_transfer'] ?? [];
             $targetId = $body['id'] ?? $trn['id'] ?? '';
