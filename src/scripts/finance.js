@@ -2207,12 +2207,14 @@ class FinanceApp {
     if (chq70) {
       chq70.status = 'In Hand';
       chq70.amount = 3705.78;
+      chq70.reference_no = chq70.reference_no || 'REC-CQ-44025';
       chq70.notes = 'Customer Receipt REC-RV-44070 against REC-RG-INV-44025';
     }
     const chq71 = this.db.cheques.find(c => c.id === 'chq-rcp-rec-mwm010bx' || c.receipt_id === 'rec-mwm010bx');
     if (chq71) {
       chq71.status = 'In Hand';
       chq71.amount = 17784.14;
+      chq71.reference_no = chq71.reference_no || 'REC-CQ-44026';
       chq71.notes = 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015';
     } else {
       this.db.cheques.push({
@@ -2220,6 +2222,7 @@ class FinanceApp {
         receipt_id: 'rec-mwm010bx',
         company_id: 'rayan-corp-uae',
         type: 'inward',
+        reference_no: 'REC-CQ-44026',
         cheque_no: '019284',
         bank_name: 'Abu Dhabi Commercial Bank (ADCB)',
         branch: 'Dubai',
@@ -2234,6 +2237,41 @@ class FinanceApp {
         bank_account_id: 'bank-adcb-uae'
       });
     }
+
+    // Ensure all existing cheques have sequential Rayan Ref # (REC-CQ-44001+ / ASH-CQ-44001+)
+    const uaeCheques = (this.db.cheques || []).filter(c => (c.company_id || 'rayan-corp-uae') !== 'ashaz-eng-in' && c.currency !== 'INR');
+    uaeCheques.sort((a, b) => {
+      const dA = a.date || a.cheque_date || '';
+      const dB = b.date || b.cheque_date || '';
+      if (dA !== dB) return dA.localeCompare(dB);
+      return String(a.id || '').localeCompare(String(b.id || ''));
+    });
+    let seqRecCq = 44001;
+    uaeCheques.forEach(c => {
+      if (!c.reference_no) {
+        c.reference_no = `REC-CQ-${seqRecCq++}`;
+      } else {
+        const m = c.reference_no.match(/REC-CQ-(\d+)/i);
+        if (m) seqRecCq = Math.max(seqRecCq, parseInt(m[1], 10) + 1);
+      }
+    });
+
+    const indCheques = (this.db.cheques || []).filter(c => c.company_id === 'ashaz-eng-in' || c.currency === 'INR');
+    indCheques.sort((a, b) => {
+      const dA = a.date || a.cheque_date || '';
+      const dB = b.date || b.cheque_date || '';
+      if (dA !== dB) return dA.localeCompare(dB);
+      return String(a.id || '').localeCompare(String(b.id || ''));
+    });
+    let seqAshCq = 44001;
+    indCheques.forEach(c => {
+      if (!c.reference_no) {
+        c.reference_no = `ASH-CQ-${seqAshCq++}`;
+      } else {
+        const m = c.reference_no.match(/ASH-CQ-(\d+)/i);
+        if (m) seqAshCq = Math.max(seqAshCq, parseInt(m[1], 10) + 1);
+      }
+    });
 
     if (Array.isArray(this.db.bank_transfers)) {
       // Remove phantom / duplicate transfers
@@ -2406,7 +2444,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v167';
+    const CURRENT_DB_VERSION = 'v2026_clean_v168';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -4346,6 +4384,27 @@ if (this.db.customer_receipts) {
     pos.forEach(p => {
       const ref = p.internal_ref || p.ref_no || p.rec_ref || '';
       const m = ref.match(/(?:REC|ASH)-CLPO-(\d+)/i) || ref.match(/(\d{5})/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > maxSeq) {
+          maxSeq = num;
+        }
+      }
+    });
+    return `${prefix}-${maxSeq + 1}`;
+  }
+
+  getNextChequeRef(type = 'inward', companyId = null) {
+    const compId = companyId || this.activeCompanyId || 'rayan-corp-uae';
+    const isIndia = compId === 'ashaz-eng-in';
+    const prefix = isIndia ? 'ASH-CQ' : 'REC-CQ';
+    const cheques = (this.db?.cheques || []).filter(c =>
+      (c.company_id || 'rayan-corp-uae') === compId
+    );
+    let maxSeq = 44000;
+    cheques.forEach(c => {
+      const ref = c.reference_no || '';
+      const m = ref.match(/(?:REC|ASH)-CQ-(\d+)/i) || ref.match(/(\d{5})/);
       if (m) {
         const num = parseInt(m[1], 10);
         if (!isNaN(num) && num > maxSeq) {
@@ -6509,6 +6568,22 @@ if (this.db.customer_receipts) {
     const amountField = fields.amount || 'amount';
 
     return [...list].sort((a, b) => {
+      if (sortMode === 'ref-desc') {
+        const valA = a[fields.ref || 'reference_no'] || '';
+        const valB = b[fields.ref || 'reference_no'] || '';
+        const numA = this.extractSerialNum(valA);
+        const numB = this.extractSerialNum(valB);
+        if (numB !== numA) return numB - numA;
+        return String(valB).localeCompare(String(valA), undefined, { numeric: true });
+      }
+      if (sortMode === 'ref-asc') {
+        const valA = a[fields.ref || 'reference_no'] || '';
+        const valB = b[fields.ref || 'reference_no'] || '';
+        const numA = this.extractSerialNum(valA);
+        const numB = this.extractSerialNum(valB);
+        if (numA !== numB) return numA - numB;
+        return String(valA).localeCompare(String(valB), undefined, { numeric: true });
+      }
       if (sortMode === 'serial-desc') {
         const valA = a[numField] || a.id || '';
         const valB = b[numField] || b.id || '';
@@ -9404,10 +9479,11 @@ if (this.db.customer_receipts) {
     const totalInwardPending = inwardPending.reduce((s, c) => s + (Number(c.amount) || 0), 0);
     const totalOutwardAll = outward.reduce((s, c) => s + (Number(c.amount) || 0), 0);
 
-    this.inwardChqSort = this.inwardChqSort || 'serial-desc';
-    this.outwardChqSort = this.outwardChqSort || 'serial-desc';
+    this.inwardChqSort = this.inwardChqSort || 'ref-desc';
+    this.outwardChqSort = this.outwardChqSort || 'ref-desc';
 
     const sortedInitialInward = this.sortRecords(inward, this.inwardChqSort, {
+      ref: 'reference_no',
       num: 'cheque_no',
       date: 'date',
       name: 'party_name',
@@ -9415,6 +9491,7 @@ if (this.db.customer_receipts) {
     });
 
     const sortedInitialOutward = this.sortRecords(outward, this.outwardChqSort, {
+      ref: 'reference_no',
       num: 'cheque_no',
       date: 'date',
       name: 'party_name',
@@ -9479,8 +9556,10 @@ if (this.db.customer_receipts) {
               <option value="security">🛡️ Security Cheque</option>
             </select>
             <select id="inward-chq-sort" class="fin-select-pill" title="Order Inward Cheques">
-              <option value="serial-desc" ${this.inwardChqSort === 'serial-desc' ? 'selected' : ''}>🔢 Cheque # (High to Low)</option>
-              <option value="serial-asc" ${this.inwardChqSort === 'serial-asc' ? 'selected' : ''}>🔢 Cheque # (Low to High)</option>
+              <option value="ref-desc" ${this.inwardChqSort === 'ref-desc' ? 'selected' : ''}>🔢 Rayan Ref # (High to Low)</option>
+              <option value="ref-asc" ${this.inwardChqSort === 'ref-asc' ? 'selected' : ''}>🔢 Rayan Ref # (Low to High)</option>
+              <option value="serial-desc" ${this.inwardChqSort === 'serial-desc' ? 'selected' : ''}>Cheque # (High to Low)</option>
+              <option value="serial-asc" ${this.inwardChqSort === 'serial-asc' ? 'selected' : ''}>Cheque # (Low to High)</option>
               <option value="date-desc" ${this.inwardChqSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
               <option value="date-asc" ${this.inwardChqSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
               <option value="name-asc" ${this.inwardChqSort === 'name-asc' ? 'selected' : ''}>🔤 Customer (A to Z)</option>
@@ -9497,6 +9576,9 @@ if (this.db.customer_receipts) {
             <table class="fin-data-table">
               <thead>
                 <tr>
+                  <th id="th-inward-ref" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Rayan Ref #">
+                    Rayan Ref # <span id="inward-sort-icon-ref" style="color:#38bdf8; font-size:0.75rem;">${this.inwardChqSort === 'ref-asc' ? '▲' : (this.inwardChqSort === 'ref-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th id="th-inward-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Cheque #">
                     Cheque # <span id="inward-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.inwardChqSort === 'serial-asc' ? '▲' : (this.inwardChqSort === 'serial-desc' ? '▼' : '↕')}</span>
                   </th>
@@ -9519,7 +9601,7 @@ if (this.db.customer_receipts) {
               </tbody>
               <tfoot id="inward-cheques-tfoot" style="background:rgba(15,23,42,0.9); font-weight:700; border-top:2px solid rgba(56,189,248,0.35);">
                 <tr>
-                  <td colspan="4" style="padding:0.75rem 1rem; color:#f8fafc; font-size:0.85rem;">
+                  <td colspan="5" style="padding:0.75rem 1rem; color:#f8fafc; font-size:0.85rem;">
                     <span style="color:#38bdf8; font-weight:800; margin-right:0.4rem;">∑</span> Total Inward Cheques (<span id="inward-footer-count">${inward.length}</span> cheques):
                   </td>
                   <td style="text-align:right; padding:0.75rem 1rem; font-size:0.95rem; font-weight:800; color:#10b981;">
@@ -9559,8 +9641,10 @@ if (this.db.customer_receipts) {
               <button type="button" id="outward-chq-clear" style="display:none; position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.9rem; padding:0;" title="Clear search">✕</button>
             </div>
             <select id="outward-chq-sort" class="fin-select-pill" title="Order Outward Cheques">
-              <option value="serial-desc" ${this.outwardChqSort === 'serial-desc' ? 'selected' : ''}>🔢 Cheque # (High to Low)</option>
-              <option value="serial-asc" ${this.outwardChqSort === 'serial-asc' ? 'selected' : ''}>🔢 Cheque # (Low to High)</option>
+              <option value="ref-desc" ${this.outwardChqSort === 'ref-desc' ? 'selected' : ''}>🔢 Rayan Ref # (High to Low)</option>
+              <option value="ref-asc" ${this.outwardChqSort === 'ref-asc' ? 'selected' : ''}>🔢 Rayan Ref # (Low to High)</option>
+              <option value="serial-desc" ${this.outwardChqSort === 'serial-desc' ? 'selected' : ''}>Cheque # (High to Low)</option>
+              <option value="serial-asc" ${this.outwardChqSort === 'serial-asc' ? 'selected' : ''}>Cheque # (Low to High)</option>
               <option value="date-desc" ${this.outwardChqSort === 'date-desc' ? 'selected' : ''}>📅 Date (Newest First)</option>
               <option value="date-asc" ${this.outwardChqSort === 'date-asc' ? 'selected' : ''}>📅 Date (Oldest First)</option>
               <option value="name-asc" ${this.outwardChqSort === 'name-asc' ? 'selected' : ''}>🔤 Vendor (A to Z)</option>
@@ -9577,6 +9661,9 @@ if (this.db.customer_receipts) {
             <table class="fin-data-table">
               <thead>
                 <tr>
+                  <th id="th-outward-ref" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Rayan Ref #">
+                    Rayan Ref # <span id="outward-sort-icon-ref" style="color:#38bdf8; font-size:0.75rem;">${this.outwardChqSort === 'ref-asc' ? '▲' : (this.outwardChqSort === 'ref-desc' ? '▼' : '↕')}</span>
+                  </th>
                   <th id="th-outward-serial" style="white-space:nowrap; cursor:pointer; user-select:none;" title="Click to sort by Cheque #">
                     Cheque # <span id="outward-sort-icon-serial" style="color:#38bdf8; font-size:0.75rem;">${this.outwardChqSort === 'serial-asc' ? '▲' : (this.outwardChqSort === 'serial-desc' ? '▼' : '↕')}</span>
                   </th>
@@ -9599,7 +9686,7 @@ if (this.db.customer_receipts) {
               </tbody>
               <tfoot id="outward-cheques-tfoot" style="background:rgba(15,23,42,0.9); font-weight:700; border-top:2px solid rgba(251,146,60,0.35);">
                 <tr>
-                  <td colspan="4" style="padding:0.75rem 1rem; color:#f8fafc; font-size:0.85rem;">
+                  <td colspan="5" style="padding:0.75rem 1rem; color:#f8fafc; font-size:0.85rem;">
                     <span style="color:#fb923c; font-weight:800; margin-right:0.4rem;">∑</span> Total Outward Cheques (<span id="outward-footer-count">${outward.length}</span> cheques):
                   </td>
                   <td style="text-align:right; padding:0.75rem 1rem; font-size:0.95rem; font-weight:800; color:#fb923c;">
@@ -9623,6 +9710,7 @@ if (this.db.customer_receipts) {
     const inSort = document.getElementById('inward-chq-sort');
     const inCount = document.getElementById('inward-chq-count');
     const inTbody = document.getElementById('inward-cheques-tbody');
+    const thInRef = document.getElementById('th-inward-ref');
     const thInSerial = document.getElementById('th-inward-serial');
     const thInParty = document.getElementById('th-inward-party');
     const thInDate = document.getElementById('th-inward-date');
@@ -9631,7 +9719,7 @@ if (this.db.customer_receipts) {
     const updateInwardFilter = () => {
       const q = (inSearch?.value || '').toLowerCase().trim();
       const st = inFilter?.value || 'all';
-      const sMode = inSort ? inSort.value : (this.inwardChqSort || 'serial-desc');
+      const sMode = inSort ? inSort.value : (this.inwardChqSort || 'ref-desc');
       this.inwardChqSort = sMode;
       if (inClear) inClear.style.display = q ? 'block' : 'none';
 
@@ -9641,11 +9729,12 @@ if (this.db.customer_receipts) {
         if (st === 'cleared' && c.status !== 'Cleared') return false;
         if (st === 'security' && c.status !== 'Security Cheque') return false;
         if (!q) return true;
-        const haystack = [c.cheque_no, c.bank_name, c.party_name, c.notes, String(c.amount || ''), c.status].filter(Boolean).join(' ').toLowerCase();
+        const haystack = [c.reference_no, c.cheque_no, c.bank_name, c.party_name, c.notes, String(c.amount || ''), c.status].filter(Boolean).join(' ').toLowerCase();
         return haystack.includes(q);
       });
 
       const sorted = this.sortRecords(filtered, sMode, {
+        ref: 'reference_no',
         num: 'cheque_no',
         date: 'date',
         name: 'party_name',
@@ -9667,10 +9756,12 @@ if (this.db.customer_receipts) {
       if (ftBreakdown) ftBreakdown.textContent = `${filteredCleared} Cleared • ${filteredPending} Pending`;
 
       // Update header sort icons
+      const iconRef = document.getElementById('inward-sort-icon-ref');
       const iconSerial = document.getElementById('inward-sort-icon-serial');
       const iconParty = document.getElementById('inward-sort-icon-party');
       const iconDate = document.getElementById('inward-sort-icon-date');
       const iconAmount = document.getElementById('inward-sort-icon-amount');
+      if (iconRef) iconRef.textContent = sMode === 'ref-asc' ? '▲' : (sMode === 'ref-desc' ? '▼' : '↕');
       if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
       if (iconParty) iconParty.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
       if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
@@ -9681,6 +9772,13 @@ if (this.db.customer_receipts) {
     if (inFilter) inFilter.onchange = updateInwardFilter;
     if (inSort) inSort.onchange = updateInwardFilter;
 
+    if (thInRef) {
+      thInRef.onclick = () => {
+        this.inwardChqSort = (this.inwardChqSort === 'ref-desc') ? 'ref-asc' : 'ref-desc';
+        if (inSort) inSort.value = this.inwardChqSort;
+        updateInwardFilter();
+      };
+    }
     if (thInSerial) {
       thInSerial.onclick = () => {
         this.inwardChqSort = (this.inwardChqSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
@@ -9724,6 +9822,7 @@ if (this.db.customer_receipts) {
     const outSort = document.getElementById('outward-chq-sort');
     const outCount = document.getElementById('outward-chq-count');
     const outTbody = document.getElementById('outward-cheques-tbody');
+    const thOutRef = document.getElementById('th-outward-ref');
     const thOutSerial = document.getElementById('th-outward-serial');
     const thOutParty = document.getElementById('th-outward-party');
     const thOutDate = document.getElementById('th-outward-date');
@@ -9731,17 +9830,18 @@ if (this.db.customer_receipts) {
 
     const updateOutwardFilter = () => {
       const q = (outSearch?.value || '').toLowerCase().trim();
-      const sMode = outSort ? outSort.value : (this.outwardChqSort || 'serial-desc');
+      const sMode = outSort ? outSort.value : (this.outwardChqSort || 'ref-desc');
       this.outwardChqSort = sMode;
       if (outClear) outClear.style.display = q ? 'block' : 'none';
 
       const filtered = outward.filter(c => {
         if (!q) return true;
-        const haystack = [c.cheque_no, c.bank_name, c.party_name, c.notes, String(c.amount || ''), c.status].filter(Boolean).join(' ').toLowerCase();
+        const haystack = [c.reference_no, c.cheque_no, c.bank_name, c.party_name, c.notes, String(c.amount || ''), c.status].filter(Boolean).join(' ').toLowerCase();
         return haystack.includes(q);
       });
 
       const sorted = this.sortRecords(filtered, sMode, {
+        ref: 'reference_no',
         num: 'cheque_no',
         date: 'date',
         name: 'party_name',
@@ -9761,10 +9861,12 @@ if (this.db.customer_receipts) {
       if (ftOutBreakdown) ftOutBreakdown.textContent = `${sorted.length} Issued`;
 
       // Update header sort icons
+      const iconRef = document.getElementById('outward-sort-icon-ref');
       const iconSerial = document.getElementById('outward-sort-icon-serial');
       const iconParty = document.getElementById('outward-sort-icon-party');
       const iconDate = document.getElementById('outward-sort-icon-date');
       const iconAmount = document.getElementById('outward-sort-icon-amount');
+      if (iconRef) iconRef.textContent = sMode === 'ref-asc' ? '▲' : (sMode === 'ref-desc' ? '▼' : '↕');
       if (iconSerial) iconSerial.textContent = sMode === 'serial-asc' ? '▲' : (sMode === 'serial-desc' ? '▼' : '↕');
       if (iconParty) iconParty.textContent = sMode === 'name-asc' ? '▲' : (sMode === 'name-desc' ? '▼' : '↕');
       if (iconDate) iconDate.textContent = sMode === 'date-asc' ? '▲' : (sMode === 'date-desc' ? '▼' : '↕');
@@ -9774,6 +9876,13 @@ if (this.db.customer_receipts) {
     if (outSearch) outSearch.oninput = updateOutwardFilter;
     if (outSort) outSort.onchange = updateOutwardFilter;
 
+    if (thOutRef) {
+      thOutRef.onclick = () => {
+        this.outwardChqSort = (this.outwardChqSort === 'ref-desc') ? 'ref-asc' : 'ref-desc';
+        if (outSort) outSort.value = this.outwardChqSort;
+        updateOutwardFilter();
+      };
+    }
     if (thOutSerial) {
       thOutSerial.onclick = () => {
         this.outwardChqSort = (this.outwardChqSort === 'serial-desc') ? 'serial-asc' : 'serial-desc';
@@ -9814,14 +9923,15 @@ if (this.db.customer_receipts) {
 
   renderInwardChequeRows(inwardList, query = '') {
     if (!inwardList.length) {
-      return `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">
+      return `<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:#94a3b8;">
         ${query ? `No inward cheques found matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}".` : 'No inward cheques registered.'}
       </td></tr>`;
     }
 
     return inwardList.map(c => `
       <tr>
-        <td><strong style="color:#38bdf8; font-family:monospace;">${c.cheque_no}</strong></td>
+        <td><strong style="color:#38bdf8; font-family:monospace;">${c.reference_no || '—'}</strong></td>
+        <td><span style="font-family:monospace; color:#f8fafc; font-weight:600;">${c.cheque_no || '—'}</span></td>
         <td>
           <div style="font-weight:600; color:#f8fafc;">${c.bank_name || '—'}</div>
           ${(c.bank_account_name || c.status === 'Cleared' || c.status === 'Deposited') ? `
@@ -9854,14 +9964,15 @@ if (this.db.customer_receipts) {
 
   renderOutwardChequeRows(outwardList, query = '') {
     if (!outwardList.length) {
-      return `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:#94a3b8;">
+      return `<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:#94a3b8;">
         ${query ? `No outward cheques found matching "${query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}".` : 'No outward cheques issued.'}
       </td></tr>`;
     }
 
     return outwardList.map(c => `
       <tr>
-        <td><strong style="color:#fb923c; font-family:monospace;">${c.cheque_no}</strong></td>
+        <td><strong style="color:#fb923c; font-family:monospace;">${c.reference_no || '—'}</strong></td>
+        <td><span style="font-family:monospace; color:#f8fafc; font-weight:600;">${c.cheque_no || '—'}</span></td>
         <td>${c.bank_name || '—'}</td>
         <td>
           <div style="font-weight:600; color:#ffffff;">${this.formatCompanyName(c.party_name)}</div>
@@ -27084,6 +27195,7 @@ closeDocPrintModal() {
   openRecordChequeModal(type = 'inward') {
     const isIndia = this.activeCompanyId === 'ashaz-eng-in';
     const isInward = type === 'inward';
+    const autoRefNo = this.getNextChequeRef(type, this.activeCompanyId);
     const autoChqNo = Math.floor(100000 + Math.random() * 900000).toString();
     const banks = (this.db?.bank_accounts || []).filter(b => (b.company_id || 'rayan-corp-uae') === (this.activeCompanyId || 'rayan-corp-uae'));
     const targetBanks = banks.length > 0 ? banks : (this.db?.bank_accounts || []);
@@ -27100,13 +27212,17 @@ closeDocPrintModal() {
             <form id="cheque-entry-form">
               <div class="fin-form-grid-2">
                 <div class="fin-form-group">
+                  <label class="fin-form-label">Rayan Ref # <span style="color:#ef4444;">*</span></label>
+                  <input type="text" id="cq-ref-no" class="fin-form-input" required value="${autoRefNo}">
+                </div>
+                <div class="fin-form-group">
                   <label class="fin-form-label">Cheque Number <span style="color:#ef4444;">*</span></label>
                   <input type="text" id="cq-number" class="fin-form-input" required value="${autoChqNo}">
                 </div>
-                <div class="fin-form-group">
-                  <label class="fin-form-label">Cheque Date <span style="color:#ef4444;">*</span></label>
-                  <input type="date" id="cq-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
-                </div>
+              </div>
+              <div class="fin-form-group" style="margin-top:-0.3rem;">
+                <label class="fin-form-label">Cheque Date <span style="color:#ef4444;">*</span></label>
+                <input type="date" id="cq-date" class="fin-form-input" required value="${new Date().toISOString().split('T')[0]}">
               </div>
 
               <div class="fin-form-grid-2">
@@ -27173,10 +27289,12 @@ closeDocPrintModal() {
       const chqAmt = parseFloat(document.getElementById('cq-amount').value) || 0;
       const chqStatus = document.getElementById('cq-status').value;
 
+      const chqRefNo = (document.getElementById('cq-ref-no')?.value || autoRefNo).trim();
       const chqData = {
         id: `chq-${Date.now().toString(36)}`,
         company_id: this.activeCompanyId || 'rayan-corp-uae',
         type,
+        reference_no: chqRefNo,
         cheque_no: document.getElementById('cq-number').value.trim(),
         date: document.getElementById('cq-date').value,
         bank_name: document.getElementById('cq-bank').value.trim(),
@@ -27252,10 +27370,14 @@ closeDocPrintModal() {
           <div class="fin-modal-body">
             <!-- Cheque Summary Card -->
             <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:0.85rem 1rem; margin-bottom:1.15rem;">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.4rem; gap:1rem;">
+                <div>
+                  <span style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Rayan Ref #</span>
+                  <div style="font-size:1.1rem; font-weight:800; color:#38bdf8; font-family:monospace;">${chq.reference_no || '—'}</div>
+                </div>
                 <div>
                   <span style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Cheque Number</span>
-                  <div style="font-size:1.1rem; font-weight:800; color:#38bdf8; font-family:monospace;">#${chq.cheque_no}</div>
+                  <div style="font-size:1.1rem; font-weight:800; color:#f8fafc; font-family:monospace;">#${chq.cheque_no}</div>
                 </div>
                 <div style="text-align:right;">
                   <span style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Cheque Amount</span>
@@ -27468,7 +27590,7 @@ closeDocPrintModal() {
       <div class="fin-modal-backdrop open" id="modal-update-cheque-status">
         <div class="fin-modal-dialog" style="max-width:440px;">
           <div class="fin-modal-header">
-            <h3 class="fin-modal-title">✏️ Update Cheque #${chq.cheque_no} Status</h3>
+            <h3 class="fin-modal-title">✏️ Update Cheque ${chq.reference_no ? chq.reference_no + ' (#' + chq.cheque_no + ')' : '#' + chq.cheque_no} Status</h3>
             <button type="button" class="fin-modal-close" onclick="window.finApp.closeModal('modal-update-cheque-status')">&times;</button>
           </div>
           <div class="fin-modal-body">
@@ -27476,9 +27598,10 @@ closeDocPrintModal() {
               <div class="fin-form-group">
                 <label class="fin-form-label">Cheque Details</label>
                 <div style="font-size:0.82rem; color:#94a3b8; background:rgba(0,0,0,0.2); padding:8px 12px; border-radius:6px; margin-bottom:1rem;">
+                  <div><strong>Rayan Ref #:</strong> <span style="color:#38bdf8; font-family:monospace; font-weight:700;">${chq.reference_no || '—'}</span> &nbsp;|&nbsp; <strong>Cheque #:</strong> <span style="color:#f8fafc; font-family:monospace; font-weight:600;">${chq.cheque_no}</span></div>
                   <div><strong>Party:</strong> ${chq.party_name}</div>
                   <div><strong>Bank:</strong> ${chq.bank_name || '—'}</div>
-                  <div><strong>Amount:</strong> <span style="color:#38bdf8; font-weight:700;">${this.formatCurrency(chq.amount)}</span></div>
+                  <div><strong>Amount:</strong> <span style="color:#10b981; font-weight:700;">${this.formatCurrency(chq.amount)}</span></div>
                 </div>
               </div>
 
@@ -30308,11 +30431,11 @@ closeDocPrintModal() {
     let cheques = (this.db?.cheques || []).filter(c => (c.company_id || 'rayan-corp-uae') === this.activeCompanyId);
     if (filterType === 'inward') cheques = cheques.filter(c => c.type === 'inward');
     else if (filterType === 'outward') cheques = cheques.filter(c => c.type === 'outward');
-    let csv = 'Cheque #,Type (Inward/Outward),Cheque Date,Drawee Bank,Party / Issuer / Vendor,Amount,Currency,Status,Deposit Bank,Notes\n';
+    let csv = 'Rayan Ref #,Cheque #,Type (Inward/Outward),Cheque Date,Drawee Bank,Party / Issuer / Vendor,Amount,Currency,Status,Deposit Bank,Notes\n';
     cheques.forEach(c => {
       const rawChq = (c.cheque_no || '').trim();
       const formattedChq = rawChq ? (rawChq.startsWith("'") ? rawChq : `'${rawChq}`) : '';
-      csv += `${this.csvEscape(formattedChq)},${this.csvEscape(c.type || 'inward')},${this.csvEscape(c.date || c.cheque_date)},${this.csvEscape(c.bank_name || c.drawee_bank || '')},${this.csvEscape(c.party_name || '')},${Number(c.amount || 0).toFixed(2)},${this.csvEscape(c.currency || 'AED')},${this.csvEscape(c.status || 'Cleared')},${this.csvEscape(c.deposit_bank || '')},${this.csvEscape(c.notes || '')}\n`;
+      csv += `${this.csvEscape(c.reference_no || '')},${this.csvEscape(formattedChq)},${this.csvEscape(c.type || 'inward')},${this.csvEscape(c.date || c.cheque_date)},${this.csvEscape(c.bank_name || c.drawee_bank || '')},${this.csvEscape(c.party_name || '')},${Number(c.amount || 0).toFixed(2)},${this.csvEscape(c.currency || 'AED')},${this.csvEscape(c.status || 'Cleared')},${this.csvEscape(c.deposit_bank || '')},${this.csvEscape(c.notes || '')}\n`;
     });
     const suffix = filterType === 'inward' ? 'Inward_Cheques' : (filterType === 'outward' ? 'Outward_Cheques' : 'All_Cheques');
     this.downloadFile(`Rayan_Group_${suffix}_Register_${this.activeCompanyId}.csv`, csv, 'text/csv;charset=utf-8;');

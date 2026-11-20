@@ -155,8 +155,11 @@ async function deploy() {
               const localCheques = (localData.cheques || []);
               if (!Array.isArray(liveJson.data.cheques)) liveJson.data.cheques = [];
               localCheques.forEach(cq => {
-                if (!liveJson.data.cheques.some(p => p.id === cq.id || (p.receipt_id && p.receipt_id === cq.receipt_id))) {
+                const target = liveJson.data.cheques.find(p => p.id === cq.id || (p.receipt_id && p.receipt_id === cq.receipt_id));
+                if (!target) {
                   liveJson.data.cheques.unshift(cq);
+                } else {
+                  if (cq.reference_no && !target.reference_no) target.reference_no = cq.reference_no;
                 }
               });
               liveJson.data.cheques.forEach(cq => {
@@ -169,6 +172,25 @@ async function deploy() {
                   cq.status = 'In Hand';
                   cq.amount = 17784.14;
                   cq.notes = 'Customer Receipt REC-RV-44071 against REC-RG-INV-44015';
+                }
+              });
+
+              // Normalize all cheques chronologically with sequential Rayan Ref # (REC-CQ-44001+ / ASH-CQ-44001+)
+              const chequesToSeq = liveJson.data.cheques || [];
+              chequesToSeq.sort((a, b) => {
+                const dA = a.date || a.cheque_date || '';
+                const dB = b.date || b.cheque_date || '';
+                if (dA !== dB) return dA.localeCompare(dB);
+                return String(a.id || '').localeCompare(String(b.id || ''));
+              });
+              let nextRecChqSeq = 44001;
+              let nextAshChqSeq = 44001;
+              chequesToSeq.forEach(c => {
+                const isInd = (c.company_id === 'ashaz-eng-in') || (c.currency === 'INR');
+                const prefix = isInd ? 'ASH-CQ' : 'REC-CQ';
+                const targetRef = isInd ? (prefix + '-' + nextAshChqSeq++) : (prefix + '-' + nextRecChqSeq++);
+                if (!c.reference_no) {
+                  c.reference_no = targetRef;
                 }
               });
 
