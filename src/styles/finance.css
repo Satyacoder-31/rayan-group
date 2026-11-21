@@ -1580,6 +1580,7 @@
 .fin-metric-card.accent-profit { --card-accent: #059669; }
 .fin-metric-card.accent-overdue { --card-accent: #ef4444; }
 .fin-metric-card.accent-vat { --card-accent: #00a699; }
+.fin-metric-card.accent-credit-notes { --card-accent: #ec4899; }
 
 .fin-metric-header {
   display: flex;
