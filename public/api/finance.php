@@ -5771,7 +5771,12 @@ function loadFinanceDb($pdo, $dataFile, $candidates) {
                             }
 
                             // Purge fake PO LPO-HLN-2025-44
-                            if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {
+                            if (!empty($data['employees']) && is_array($data['employees'])) {
+            usort($data['employees'], function($a, $b) {
+                return strnatcasecmp($a['employee_no'] ?? '', $b['employee_no'] ?? '');
+            });
+        }
+        if (!empty($data['purchase_orders']) && is_array($data['purchase_orders'])) {
                                 $data['purchase_orders'] = array_values(array_filter($data['purchase_orders'], function($p) {
                                     $id = $p['id'] ?? '';
                                     $no = $p['po_no'] ?? '';

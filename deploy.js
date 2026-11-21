@@ -119,7 +119,14 @@ async function deploy() {
                   target.visa_expiry_date = target.visa_expiry_date || emp.visa_expiry_date;
                   target.labor_card_no = target.labor_card_no || emp.labor_card_no;
                   if (!target.photo && emp.photo) target.photo = emp.photo;
+                  if (emp.eligible_for_rehire !== undefined) target.eligible_for_rehire = emp.eligible_for_rehire;
+                  if (emp.rehire_notes !== undefined) target.rehire_notes = emp.rehire_notes;
                 }
+              });
+
+              // Sort employees strictly in ascending serial order by employee_no (EN12001, EN12002, EN12003, etc.)
+              liveJson.data.employees.sort((a, b) => {
+                return (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' });
               });
 
               if (Array.isArray(liveJson.data.debit_notes)) {

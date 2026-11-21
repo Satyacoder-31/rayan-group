@@ -384,6 +384,8 @@ export function registerPayrollModules(FinanceApp) {
     if (!root) return;
     this.ensurePayrollSeedData();
     const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
+    // Sort employees strictly in ascending serial order by employee_no (EN12001, EN12002, EN12003, etc.)
+    employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
 
     const totalActive = employees.filter(e => (e.status || 'Active').toLowerCase() === 'active').length;
     const totalSalaryMonthly = employees.reduce((sum, e) => {
@@ -474,7 +476,13 @@ export function registerPayrollModules(FinanceApp) {
           <option value="">All Statuses</option>
           <option value="active">Active</option>
           <option value="on leave">On Leave</option>
-          <option value="resigned">Resigned / Former</option>
+          <option value="resigned">Resigned</option>
+          <option value="terminated">Terminated</option>
+        </select>
+        <select id="fin-emp-rehire-filter" class="fin-form-select" style="min-width:150px;" onchange="window.finApp.filterEmployeeRows()">
+          <option value="">All Rehire Status</option>
+          <option value="yes">✓ Eligible for Rehire</option>
+          <option value="no">✕ Ineligible for Rehire</option>
         </select>
         <button type="button" class="fin-btn-secondary" onclick="window.finApp.renderEmployeesTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')))">
           🔄 Refresh
@@ -520,17 +528,63 @@ export function registerPayrollModules(FinanceApp) {
       `;
     }
 
-    return employees.map((emp, index) => {
+    // Always sort in ascending serial order by employee_no (EN12001, EN12002, EN12003, EN12004, EN12005)
+    const sortedEmployees = [...employees].sort((a, b) => {
+      return (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    return sortedEmployees.map((emp, index) => {
       const basic = Number(emp.basic_salary) || 0;
       const acc = Number(emp.accommodation_allowance) || 0;
       const cons = Number(emp.consolidated_allowance) || 0;
       const oth = Number(emp.other_allowance) || 0;
       const totalSalary = basic + acc + cons + oth;
 
-      const isAct = (emp.status || 'Active').toLowerCase() === 'active';
-      const isResigned = (emp.status || '').toLowerCase() === 'resigned' || (emp.status || '').toLowerCase() === 'terminated';
-      const statusColor = isAct ? '#10b981' : (isResigned ? '#ef4444' : '#f59e0b');
-      const statusBg = isAct ? 'rgba(16,185,129,0.12)' : (isResigned ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)');
+      const rawStatus = (emp.status || 'Active').trim();
+      const statusLower = rawStatus.toLowerCase();
+      const isAct = statusLower === 'active';
+      const isResigned = statusLower === 'resigned';
+      const isTerminated = statusLower === 'terminated';
+      const isOnLeave = statusLower === 'on leave';
+
+      // DISTINCT COLORING:
+      // Resigned = Vivid Amber / Warm Gold (#f59e0b)
+      // Terminated = Vivid Crimson / Red (#ef4444)
+      // Active = Vivid Emerald Green (#10b981)
+      // On Leave = Purple (#a855f7)
+      let statusColor = '#94a3b8';
+      let statusBg = 'rgba(148,163,184,0.12)';
+      let statusBorder = 'rgba(148,163,184,0.3)';
+      let statusLabel = rawStatus;
+
+      if (isAct) {
+        statusColor = '#10b981';
+        statusBg = 'rgba(16,185,129,0.14)';
+        statusBorder = 'rgba(16,185,129,0.35)';
+        statusLabel = 'Active';
+      } else if (isResigned) {
+        statusColor = '#f59e0b';
+        statusBg = 'rgba(245,158,11,0.15)';
+        statusBorder = 'rgba(245,158,11,0.4)';
+        statusLabel = 'Resigned';
+      } else if (isTerminated) {
+        statusColor = '#ef4444';
+        statusBg = 'rgba(239,68,68,0.16)';
+        statusBorder = 'rgba(239,68,68,0.45)';
+        statusLabel = 'Terminated';
+      } else if (isOnLeave) {
+        statusColor = '#a855f7';
+        statusBg = 'rgba(168,85,247,0.14)';
+        statusBorder = 'rgba(168,85,247,0.35)';
+        statusLabel = 'On Leave';
+      }
+
+      // Rehire eligibility: default to yes unless explicitly 'no' or false
+      const isEligibleForRehire = emp.eligible_for_rehire !== 'no' && emp.eligible_for_rehire !== false;
+      const rehireColor = isEligibleForRehire ? '#10b981' : '#ef4444';
+      const rehireBg = isEligibleForRehire ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)';
+      const rehireBorder = isEligibleForRehire ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)';
+      const rehireLabel = isEligibleForRehire ? '✓ Rehire: Yes' : '✕ Rehire: No';
 
       const initials = (emp.name || 'EM').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
       const hasPhoto = Boolean(emp.photo);
@@ -540,7 +594,7 @@ export function registerPayrollModules(FinanceApp) {
 
       return `
         <tr data-emp-id="${escapeHtml(emp.id)}" style="transition:background 0.15s ease;">
-          <td style="color:#64748b; font-size:0.78rem; text-align:center; padding:7px 8px; vertical-align:middle;">${index + 1}</td>
+          <td style="color:#94a3b8; font-size:0.78rem; text-align:center; padding:7px 8px; vertical-align:middle; font-weight:700;">${index + 1}</td>
           <td style="padding:7px 10px; vertical-align:middle; white-space:nowrap;">
             <div style="cursor:pointer; display:inline-block;" onclick="window.finApp.openEmployeeProfileModal('${emp.id}')" title="Click to view full dossier, documents &amp; payouts ledger">
               <strong style="color:#38bdf8; font-weight:700; font-family:monospace; font-size:0.88rem; text-decoration:underline; text-decoration-color:rgba(56,189,248,0.4);">
@@ -580,14 +634,21 @@ export function registerPayrollModules(FinanceApp) {
             </div>
           </td>
           <td style="text-align:center; padding:7px 8px; vertical-align:middle; white-space:nowrap;">
-            <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.7rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusColor}40;">
-              ${escapeHtml(emp.status || 'Active')}
+            <!-- Primary Status Badge with distinct colors -->
+            <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.7rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusBorder};">
+              ${escapeHtml(statusLabel)}
             </span>
-            ${(isResigned && (emp.end_date || emp.resignation_date)) ? `
-              <div style="font-size:0.65rem; color:#f87171; margin-top:2px; font-family:monospace;" title="End date / Resignation date">
-                Left: ${escapeHtml(emp.end_date || emp.resignation_date)}
+            ${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? `
+              <div style="font-size:0.65rem; color:${statusColor}; margin-top:2px; font-family:monospace;" title="${isTerminated ? 'Termination date' : 'Resignation / Last working day'}">
+                ${isTerminated ? 'Terminated:' : 'Left:'} ${escapeHtml(emp.end_date || emp.resignation_date)}
               </div>
             ` : ''}
+            <!-- Rehire Eligibility Badge with direct toggle -->
+            <div style="margin-top:3px;">
+              <span style="display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:8px; font-size:0.64rem; font-weight:700; color:${rehireColor}; background:${rehireBg}; border:1px solid ${rehireBorder}; cursor:pointer;" onclick="event.stopPropagation(); window.finApp.toggleEmployeeRehireEligibility('${emp.id}')" title="Click to toggle rehire eligibility (Current: ${isEligibleForRehire ? 'Eligible' : 'Not Eligible'})">
+                ${rehireLabel}
+              </span>
+            </div>
           </td>
           <td style="text-align:right; padding:7px 10px; vertical-align:middle; white-space:nowrap;">
             <div style="display:inline-flex; gap:4px; align-items:center; flex-wrap:nowrap; justify-content:flex-end;">
@@ -615,12 +676,13 @@ export function registerPayrollModules(FinanceApp) {
     const dept = (document.getElementById('fin-emp-dept-filter')?.value || '').toLowerCase().trim();
     const prj = (document.getElementById('fin-emp-proj-filter')?.value || '').toLowerCase().trim();
     const status = (document.getElementById('fin-emp-status-filter')?.value || '').toLowerCase().trim();
+    const rehireFilter = (document.getElementById('fin-emp-rehire-filter')?.value || '').toLowerCase().trim();
 
     const employees = (this.db?.employees || []).filter(e => {
       if (!this.matchesActiveCompany(e.company_id)) return false;
 
       if (q) {
-        const hay = `${e.employee_no || ''} ${e.name || ''} ${e.position || ''} ${e.department || ''} ${e.bank_name || ''} ${e.iban || ''} ${e.phone || ''}`.toLowerCase();
+        const hay = `${e.employee_no || ''} ${e.name || ''} ${e.position || ''} ${e.department || ''} ${e.bank_name || ''} ${e.iban || ''} ${e.phone || ''} ${e.rehire_notes || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (dept && !(e.department || '').toLowerCase().includes(dept)) return false;
@@ -629,16 +691,26 @@ export function registerPayrollModules(FinanceApp) {
         if (prj !== 'corporate' && (e.project_id || '').toLowerCase() !== prj) return false;
       }
       if (status) {
-        const empSt = (e.status || 'active').toLowerCase();
+        const empSt = (e.status || 'active').toLowerCase().trim();
         if (status === 'resigned') {
-          if (empSt !== 'resigned' && empSt !== 'terminated' && empSt !== 'former') return false;
+          if (empSt !== 'resigned') return false;
+        } else if (status === 'terminated') {
+          if (empSt !== 'terminated') return false;
         } else if (empSt !== status) {
           return false;
         }
       }
+      if (rehireFilter) {
+        const isRehire = e.eligible_for_rehire !== 'no' && e.eligible_for_rehire !== false;
+        if (rehireFilter === 'yes' && !isRehire) return false;
+        if (rehireFilter === 'no' && isRehire) return false;
+      }
 
       return true;
     });
+
+    // Always sort filtered employees serially by employee_no
+    employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
 
     const tbody = document.getElementById('fin-emp-tbody');
     if (tbody) {
@@ -1313,6 +1385,23 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
               </div>
 
+              <!-- Eligible for Rehire Selection & Notes -->
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:0.75rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Eligible to Rehire Employee? <span style="color:#ef4444;">*</span></label>
+                  <select name="eligible_for_rehire" id="fin-emp-rehire-select" class="fin-form-select" style="font-weight:700;">
+                    <option value="yes" ${emp?.eligible_for_rehire !== 'no' && emp?.eligible_for_rehire !== false ? 'selected' : ''}>✅ Yes (Eligible for Rehire)</option>
+                    <option value="no" ${emp?.eligible_for_rehire === 'no' || emp?.eligible_for_rehire === false ? 'selected' : ''}>⛔ No (Ineligible / Do Not Rehire)</option>
+                  </select>
+                  <span style="font-size:0.68rem; color:#94a3b8;">Corporate HR clearance policy for future rehiring</span>
+                </div>
+                <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Rehire Clearance Remarks / Notes</label>
+                  <input type="text" name="rehire_notes" class="fin-form-input" value="${escapeHtml(emp?.rehire_notes || '')}" placeholder="e.g. Good standing, eligible upon new tender award">
+                  <span style="font-size:0.68rem; color:#94a3b8;">HR commentary on rehire decision or conditions</span>
+                </div>
+              </div>
+
               <!-- Resignation & Exit Details Panel (Prominently shown when Resigned or Terminated) -->
               <div id="fin-emp-end-date-section" style="margin-top:1rem; padding:1.15rem; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:10px; display:${(emp?.status === 'Resigned' || emp?.status === 'Terminated' || emp?.end_date || emp?.resignation_date) ? 'block' : 'none'};">
                 <div style="font-size:0.84rem; font-weight:700; color:#f87171; margin-bottom:0.75rem; display:flex; align-items:center; justify-content:space-between; gap:6px;">
@@ -1440,6 +1529,9 @@ export function registerPayrollModules(FinanceApp) {
       empStatus = 'Resigned';
     }
 
+    const eligibleForRehire = (formData.get('eligible_for_rehire') || 'yes').trim();
+    const rehireNotes = (formData.get('rehire_notes') || '').trim();
+
     const empObj = {
       id: empId,
       employee_no: empNo,
@@ -1484,6 +1576,8 @@ export function registerPayrollModules(FinanceApp) {
       project_id: prjId,
       project_name: prj ? prj.name : 'Corporate / General Overhead',
       status: empStatus,
+      eligible_for_rehire: eligibleForRehire,
+      rehire_notes: rehireNotes,
       updated_at: new Date().toISOString()
     };
 
@@ -1508,16 +1602,18 @@ export function registerPayrollModules(FinanceApp) {
       if (idx >= 0) {
         this.db.employees[idx] = { ...this.db.employees[idx], ...empObj };
       } else {
-        this.db.employees.unshift(empObj);
+        this.db.employees.push(empObj);
       }
     } else {
       const existingIdx = this.db.employees.findIndex(em => em.employee_no === empObj.employee_no || em.id === empObj.id);
       if (existingIdx >= 0) {
         this.db.employees[existingIdx] = { ...this.db.employees[existingIdx], ...empObj };
       } else {
-        this.db.employees.unshift(empObj);
+        this.db.employees.push(empObj);
       }
     }
+    // Maintain ascending serial order by employee_no
+    this.db.employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
 
     // Cross-sync Employment Certificates and LOA
     if (Array.isArray(this.db.employment_certificates)) {
@@ -1700,10 +1796,45 @@ export function registerPayrollModules(FinanceApp) {
       }
     }
 
-    const isAct = (emp.status || 'Active').toLowerCase() === 'active';
-    const isResigned = (emp.status || '').toLowerCase() === 'resigned' || (emp.status || '').toLowerCase() === 'terminated';
-    const statusColor = isAct ? '#10b981' : (isResigned ? '#ef4444' : '#f59e0b');
-    const statusBg = isAct ? 'rgba(16,185,129,0.15)' : (isResigned ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)');
+    const rawStatus = (emp.status || 'Active').trim();
+    const statusLower = rawStatus.toLowerCase();
+    const isAct = statusLower === 'active';
+    const isResigned = statusLower === 'resigned';
+    const isTerminated = statusLower === 'terminated';
+    const isOnLeave = statusLower === 'on leave';
+
+    // DISTINCT COLORING:
+    let statusColor = '#94a3b8';
+    let statusBg = 'rgba(148,163,184,0.14)';
+    let statusBorder = 'rgba(148,163,184,0.3)';
+    let statusLabel = rawStatus;
+
+    if (isAct) {
+      statusColor = '#10b981';
+      statusBg = 'rgba(16,185,129,0.14)';
+      statusBorder = 'rgba(16,185,129,0.35)';
+      statusLabel = 'Active';
+    } else if (isResigned) {
+      statusColor = '#f59e0b';
+      statusBg = 'rgba(245,158,11,0.16)';
+      statusBorder = 'rgba(245,158,11,0.4)';
+      statusLabel = 'Resigned';
+    } else if (isTerminated) {
+      statusColor = '#ef4444';
+      statusBg = 'rgba(239,68,68,0.16)';
+      statusBorder = 'rgba(239,68,68,0.45)';
+      statusLabel = 'Terminated';
+    } else if (isOnLeave) {
+      statusColor = '#a855f7';
+      statusBg = 'rgba(168,85,247,0.14)';
+      statusBorder = 'rgba(168,85,247,0.35)';
+      statusLabel = 'On Leave';
+    }
+
+    const isEligibleForRehire = emp.eligible_for_rehire !== 'no' && emp.eligible_for_rehire !== false;
+    const rehireColor = isEligibleForRehire ? '#10b981' : '#ef4444';
+    const rehireBg = isEligibleForRehire ? 'rgba(16,185,129,0.14)' : 'rgba(239,68,68,0.14)';
+    const rehireBorder = isEligibleForRehire ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)';
 
     const initials = (emp.name || 'EM').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase();
     const hasPhoto = Boolean(emp.photo);
@@ -1733,8 +1864,13 @@ export function registerPayrollModules(FinanceApp) {
                   <span style="font-family:monospace; font-size:0.85rem; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:6px; border:1px solid rgba(56,189,248,0.3);">
                     ${escapeHtml(emp.employee_no || 'EN---')}
                   </span>
-                  <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${statusBg}; color:${statusColor}; font-weight:800; border:1px solid ${statusColor}40;">
-                    ${escapeHtml(emp.status || 'Active')}${(isResigned && (emp.end_date || emp.resignation_date)) ? ` • Relieved: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
+                  <!-- Distinct Status Badge (Amber for Resigned, Red for Terminated, Green for Active) -->
+                  <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${statusBg}; color:${statusColor}; font-weight:800; border:1px solid ${statusBorder};">
+                    ${escapeHtml(statusLabel)}${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? ` • ${isTerminated ? 'Terminated' : 'Relieved'}: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
+                  </span>
+                  <!-- Rehire Eligibility Header Badge with direct toggle -->
+                  <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${rehireBg}; color:${rehireColor}; font-weight:800; border:1px solid ${rehireBorder}; display:inline-flex; align-items:center; gap:4px; cursor:pointer;" onclick="window.finApp.toggleEmployeeRehireEligibility('${emp.id}')" title="Click to toggle rehire clearance">
+                    <span>${isEligibleForRehire ? '✓' : '⛔'}</span> Rehire Eligible: <strong>${isEligibleForRehire ? 'YES' : 'NO'}</strong>
                   </span>
                   <span style="font-size:0.72rem; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);">
                     ${escapeHtml(emp.department || 'Rayan Engineering')}
@@ -1880,6 +2016,26 @@ export function registerPayrollModules(FinanceApp) {
                     Exit Remark: ${escapeHtml(emp.end_reason || emp.resignation_reason)}
                   </div>
                 ` : ''}
+                <!-- Rehire Policy Clearance Card -->
+                <div style="background:${isEligibleForRehire ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'}; border:1px solid ${rehireBorder}; border-radius:8px; padding:0.75rem 0.95rem; margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <div style="font-size:0.68rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Rehire Policy Clearance</div>
+                    <div style="font-size:0.92rem; font-weight:800; color:${rehireColor}; margin-top:2px; display:flex; align-items:center; gap:6px;">
+                      <span>${isEligibleForRehire ? '✅' : '⛔'}</span>
+                      <span>Eligible for Rehire: <u>${isEligibleForRehire ? 'YES' : 'NO'}</u></span>
+                    </div>
+                    ${emp.rehire_notes ? `
+                      <div style="font-size:0.72rem; color:#cbd5e1; margin-top:3px; line-height:1.35;">
+                        <strong>Notes:</strong> ${escapeHtml(emp.rehire_notes)}
+                      </div>
+                    ` : ''}
+                  </div>
+                  <div>
+                    <button type="button" class="fin-btn-row-action" style="background:${isEligibleForRehire ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.18)'}; color:${isEligibleForRehire ? '#f87171' : '#10b981'}; border:1px solid ${isEligibleForRehire ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)'}; padding:5px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; border-radius:6px;" onclick="window.finApp.toggleEmployeeRehireEligibility('${emp.id}')">
+                      ${isEligibleForRehire ? 'Mark Ineligible (No)' : 'Mark Eligible (Yes)'}
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- Card B: Addresses & Contact Coordinates -->
@@ -2253,6 +2409,14 @@ export function registerPayrollModules(FinanceApp) {
             <td>${escapeHtml(emp.bank_name || 'Cash / On-Hand')}</td>
             <th>IBAN / Account</th>
             <td style="font-family:monospace; font-weight:600;">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
+          </tr>
+          <tr>
+            <th>Rehire Eligibility</th>
+            <td style="font-weight:700; color:${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '#dc2626' : '#16a34a'};">
+              ${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '⛔ INELIGIBLE (Do Not Rehire)' : '✅ ELIGIBLE FOR REHIRE (Approved)'}
+            </td>
+            <th>Rehire Remarks</th>
+            <td>${escapeHtml(emp.rehire_notes || 'Clearance on file in accordance with corporate HR policy')}</td>
           </tr>
         </table>
 
