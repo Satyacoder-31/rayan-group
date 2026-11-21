@@ -2195,7 +2195,7 @@ class FinanceApp {
             po.po_type = 'customer_lpo';
             po.direction = 'inward';
             po.supplier_name = 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C';
-            po.supplier_trn = '100234567800003';
+            po.supplier_trn = '104937380400003';
           } else if (!po.type) {
             po.type = 'customer_po';
             po.po_type = 'customer_lpo';
@@ -2553,7 +2553,7 @@ class FinanceApp {
   loadDatabaseLocal() {
     // 0. Cache version check to clear stale localStorage
     const DB_VERSION_KEY = 'rayan_fin_db_version';
-    const CURRENT_DB_VERSION = 'v2026_clean_v183';
+    const CURRENT_DB_VERSION = 'v2026_clean_v186';
     if (localStorage.getItem(DB_VERSION_KEY) !== CURRENT_DB_VERSION) {
       localStorage.removeItem('rayan_fin_db_cache');
       localStorage.removeItem('rayan_fin_deleted_employee_ids');
@@ -6371,7 +6371,7 @@ class FinanceApp {
               ${this.formatCurrency(netVatPayable)}
             </div>
             <div style="font-size:0.73rem; color:#cbd5e1;">
-              Deadline: <strong style="color:#ffffff;">28 Nov 2026</strong> &bull; TRN: <span style="color:#00e5c9;">100234567800003</span>
+              Deadline: <strong style="color:#ffffff;">28 Nov 2026</strong> &bull; TRN: <span style="color:#00e5c9;">104937380400003</span>
             </div>
             <div style="font-size:0.70rem; color:#a7f3d0; margin-top:0.25rem; font-weight:600;">
               ${dashVatPeriod === '3_months' ? '⭐ Current Return Due for Remittance ✓' : 'Period calculated balance ✓'}
@@ -11348,7 +11348,7 @@ class FinanceApp {
           customer_id: custIdVal,
           customer_name: custNameVal,
           supplier_name: 'RAYAN ENGINEERING & CONTRACTING L.L.C - S.P.C',
-          supplier_trn: '100234567800003',
+          supplier_trn: '104937380400003',
           project_id: prjIdVal,
           project_name: prjNameVal,
           date: dateVal,
@@ -11416,7 +11416,7 @@ class FinanceApp {
       (defaultSeedData.companies || []).find(c => c.id === (po.company_id || this.activeCompanyId)) ||
       (this.db?.companies || [])[0] || {};
     const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
-    const compTrn = '100234567800003';
+    const compTrn = '104937380400003';
 
     const custObj = (this.db?.customers || []).find(c => c.name === custName || (po.customer_id && c.id === po.customer_id));
     const custTrn = custObj?.trn_vat || custObj?.trn || '10457119600003';
@@ -12603,7 +12603,7 @@ class FinanceApp {
           <div style="background:var(--fin-bg-card-hover); border:1px solid var(--fin-border); border-radius:12px; padding:1.5rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--fin-border); padding-bottom:0.75rem; margin-bottom:1rem;">
               <h3 style="font-family:var(--fin-font-heading); font-size:1.1rem; color:#f8fafc;">${isIndia ? 'GST Reconciliation (GSTR-1 / GSTR-3B)' : 'UAE VAT Reconciliation (VAT 201)'}</h3>
-              <span style="font-size:0.72rem; color:#0099e6; font-weight:700;">${isIndia ? 'GSTIN: 27AAACA9921M1Z5' : 'TRN: 100234567800003'}</span>
+              <span style="font-size:0.72rem; color:#0099e6; font-weight:700;">${isIndia ? 'GSTIN: 27AAACA9921M1Z5' : 'TRN: 104937380400003'}</span>
             </div>
 
             <div class="fin-calc-row">
@@ -13239,7 +13239,7 @@ class FinanceApp {
         <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:0.75rem; margin-bottom:1rem;">
             <h3 style="font-size:1rem; color:#f8fafc; margin:0;">🏛️ UAE Federal Tax Authority (FTA) Form 201</h3>
-            <span style="font-size:0.72rem; color:#38bdf8; font-weight:700;">TRN: 100234567800003</span>
+            <span style="font-size:0.72rem; color:#38bdf8; font-weight:700;">TRN: 104937380400003</span>
           </div>
 
           <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.83rem;">
@@ -13540,7 +13540,7 @@ class FinanceApp {
 
     let csv = '=== RAYAN GROUP - VAT RETURN & AUDIT STATEMENT (REALIZATION BASIS) ===\n';
     csv += `Entity,RAYAN ENGINEERING AND CONTRACTING LLC SPC\n`;
-    csv += `TRN,100234567800003\n`;
+    csv += `TRN,104937380400003\n`;
     csv += `Filing Period,${ledger.range.label}\n`;
     csv += `Prior Settled Net VAT (< 01 Aug 2026),AED ${ledger.priorSettledNetVat.toFixed(2)} (Settled & Remitted to FTA)\n`;
     csv += `Filing Basis,Cash Realization Basis (Payment-In collections less Payment-Out disbursements)\n\n`;
@@ -13626,7 +13626,7 @@ class FinanceApp {
                 </div>
                 <div style="text-align:right; font-size:12px; line-height:1.6; color:#334155;">
                   <strong style="color:#0f172a; font-size:13px;">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
-                  TRN: <strong style="color:#0f172a;">100234567800003</strong><br>
+                  TRN: <strong style="color:#0f172a;">104937380400003</strong><br>
                   Dalma Mall Branch, Abu Dhabi, UAE<br>
                   Filing Period: <strong style="color:#2563eb;">${ledger.range.shortLabel}</strong><br>
                   ${ledger.range.id === '3_months' ? '<span style="color:#059669; font-weight:700;">✓ Prior taxes settled (&lt; 01 Aug 2026): ' + this.formatCurrency(ledger.priorSettledNetVat) + '</span><br>' : ''}
@@ -13849,7 +13849,7 @@ class FinanceApp {
                 <span class="fin-badge" style="background:rgba(16,185,129,0.2); color:#34d399; font-weight:700;">9% Standard Rate • 0% Threshold</span>
               </div>
               <p style="font-size:0.8rem; color:#94a3b8; margin:0.3rem 0 0 0;">
-                Statutory profit taxation framework for <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong> (TRN: 100234567800003). Corporate Tax is assessed strictly on net taxable profit, not on gross revenue.
+                Statutory profit taxation framework for <strong>RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong> (TRN: 104937380400003). Corporate Tax is assessed strictly on net taxable profit, not on gross revenue.
               </p>
             </div>
             
@@ -14329,7 +14329,7 @@ class FinanceApp {
                 </div>
                 <div style="text-align:right; font-size:12px; line-height:1.6; color:#334155;">
                   <strong style="color:#0f172a; font-size:13px;">RAYAN ENGINEERING &amp; CONTRACTING L.L.C - S.P.C</strong><br>
-                  TRN: <strong style="color:#0f172a;">100234567800003</strong><br>
+                  TRN: <strong style="color:#0f172a;">104937380400003</strong><br>
                   Dalma Mall Branch, Abu Dhabi, UAE<br>
                   Assessment Period: <strong style="color:#059669;">${ctRange.label}</strong><br>
                   Date Generated: <strong>${new Date().toLocaleDateString('en-GB')}</strong>
@@ -19060,7 +19060,7 @@ class FinanceApp {
                       <button type="button" id="bill-regime-gst" class="fin-tax-pill ${isIndia ? 'active' : ''}">🇮🇳 GST</button>
                     </div>
                   </div>
-                  <input type="text" id="bill-tax-no" class="fin-form-input" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 100234567800003 (15 digits)'}" style="font-family:monospace; font-weight:600; text-transform:uppercase;">
+                  <input type="text" id="bill-tax-no" class="fin-form-input" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 104937380400003 (15 digits)'}" style="font-family:monospace; font-weight:600; text-transform:uppercase;">
                   <input type="hidden" id="bill-tax-regime" value="${defaultRegime}">
                 </div>
                 <div class="fin-form-group">
@@ -19230,7 +19230,7 @@ class FinanceApp {
         billBtnTrn.classList.add('active', 'trn-pill');
         billBtnGst.classList.remove('active');
         billTaxTypeText.textContent = 'VENDOR TRN';
-        billTaxInp.placeholder = 'e.g. 100234567800003 (15 digits)';
+        billTaxInp.placeholder = 'e.g. 104937380400003 (15 digits)';
         gstRateSel.value = '5';
       } else {
         billBtnGst.classList.add('active');
@@ -22308,7 +22308,7 @@ class FinanceApp {
       (defaultSeedData.companies || []).find(c => c.id === this.activeCompanyId) ||
       (this.db?.companies || [])[0] || {};
     const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
     const compPhone = comp.phone || '+971 2 565 4497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
     const compAddress = isIndia ? (comp.address || 'Mumbai, Maharashtra, India') : (comp.address || 'Office 09, Plot 42, Mussafah M-40, Abu Dhabi, UAE');
@@ -23337,7 +23337,7 @@ class FinanceApp {
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">TRN (UAE VAT)</label>
-                  <input type="text" id="new-vend-trn" class="fin-form-input" placeholder="100234567800003">
+                  <input type="text" id="new-vend-trn" class="fin-form-input" placeholder="104937380400003">
                 </div>
               </div>
 
@@ -26631,7 +26631,7 @@ Scope of Work & Technical Execution:
       (defaultSeedData.companies || []).find(c => c.id === (trn.company_id || this.activeCompanyId)) ||
       (this.db?.companies || [])[0] || {};
     const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const formattedDate = trn.date ? this.formatDate(trn.date) : (trn.transfer_date ? this.formatDate(trn.transfer_date) : this.formatDate(new Date()));
     const amountVal = Number(trn.amount || 0);
@@ -27623,7 +27623,7 @@ Scope of Work & Technical Execution:
       (defaultSeedData.companies || []).find(c => c.id === (v.company_id || this.activeCompanyId)) ||
       (this.db?.companies || [])[0] || {};
     const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const formattedDate = v.date ? this.formatDate(v.date) : (v.voucher_date ? this.formatDate(v.voucher_date) : this.formatDate(new Date()));
     const amountVal = Number(v.amount || 0);
@@ -29102,7 +29102,7 @@ Scope of Work & Technical Execution:
 
     const compPhone = comp.phone || '+971 2 565 4497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     // Customer Lookup & Complete Hydration
     const custName = inv.customer_name || 'M/S TOP ROCK INTERIORS LLC.';
@@ -29319,7 +29319,7 @@ Scope of Work & Technical Execution:
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
-                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode({ ...inv, invoice_no: inv.invoice_no || (isTopRock ? 'REC-RG-INV-44035' : (inv.id || 'REC-RG-INV-44049')) }, 'invoice')}
               </div>
@@ -29669,7 +29669,7 @@ Scope of Work & Technical Execution:
 
     const compPhone = comp.phone || '+971 2 565 4497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const cust = (this.db?.customers || []).find(c => c.id === rec.customer_id || (c.name && rec.customer_name && c.name.toLowerCase() === rec.customer_name.toLowerCase())) || {};
     const customerAddress = rec.customer_address || linkedInv?.customer_address || cust.billing_address || cust.address || '';
@@ -29769,7 +29769,7 @@ Scope of Work & Technical Execution:
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
-                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(rec, 'receipt')}
               </div>
@@ -30447,7 +30447,7 @@ Scope of Work & Technical Execution:
 
     const compPhone = comp.phone || '+971 25 654497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const totalVal = Number(po.total_value || po.grand_total || 57750);
     const subtotalVal = Number(po.subtotal_ex_vat || po.subtotal || 55000);
@@ -30555,7 +30555,7 @@ Scope of Work & Technical Execution:
                   ${compName}
                 </div>
                 <div style="font-size:0.68rem; color:#4b5563; line-height:1.3; margin-bottom:2px;">
-                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(po, 'po')}
               </div>
@@ -30643,7 +30643,7 @@ Scope of Work & Technical Execution:
                 </div>
                 <!-- Site Office address removed per client request -->
                 <div style="color:#4b5563;">Attn: Mr. Arshad Alam Shaikh</div>
-                <div style="color:#4b5563;">TRN: ${compTrn || '100234567800003'} &nbsp;|&nbsp; Phone: ${compPhone}</div>
+                <div style="color:#4b5563;">TRN: ${compTrn || '104937380400003'} &nbsp;|&nbsp; Phone: ${compPhone}</div>
                 <div style="color:#111827; font-weight:700; margin-top:2px;">
                   Responsible Person: ${po.responsible_person || 'Mohammad Suhel'} ${po.responsible_person_phone ? `(${po.responsible_person_phone})` : ''}
                   <button type="button" class="fin-doc-print-hide" onclick="window.finApp.quickEditPOResponsiblePerson('${po.id || po.po_no}')" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.65rem; padding:0 2px;" title="Edit Responsible Person">✏️</button>
@@ -31273,7 +31273,7 @@ Scope of Work & Technical Execution:
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">${isIndia ? 'Customer GSTIN' : 'Customer TRN'}</label>
-                  <input type="text" id="edit-inv-cust-tax" class="fin-form-input" value="${inv.customer_trn || inv.customer_gstin || ''}" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 100234567800003'}">
+                  <input type="text" id="edit-inv-cust-tax" class="fin-form-input" value="${inv.customer_trn || inv.customer_gstin || ''}" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 104937380400003'}">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Place of Supply</label>
@@ -31924,7 +31924,7 @@ Scope of Work & Technical Execution:
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">${isIndia ? 'Vendor GSTIN' : 'Vendor TRN'}</label>
-                  <input type="text" id="edit-bill-tax-no" class="fin-form-input" value="${bill.vendor_trn || bill.vendor_gstin || ''}" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 100234567800003'}">
+                  <input type="text" id="edit-bill-tax-no" class="fin-form-input" value="${bill.vendor_trn || bill.vendor_gstin || ''}" placeholder="${isIndia ? 'e.g. 27AAACT2727Q1ZT' : 'e.g. 104937380400003'}">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">Supplier Invoice # <span style="color:#ef4444;">*</span></label>
@@ -32952,7 +32952,7 @@ Scope of Work & Technical Execution:
 
     const compPhone = comp.phone || '+971 2 565 4497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const amountVal = Number(exp.amount || 0);
     const taxVal = Number(exp.tax_amount || 0);
@@ -33019,7 +33019,7 @@ Scope of Work & Technical Execution:
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
-                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(exp, 'expense')}
               </div>
@@ -33320,7 +33320,7 @@ Scope of Work & Technical Execution:
     const isIndia = (pay.company_id || this.activeCompanyId) === 'ashaz-eng-in' || pay.currency === 'INR';
     const compPhone = comp.phone || '+971 2 565 4497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const curr = pay.currency || (isIndia ? 'INR' : 'AED');
     const currSym = pay.currency_symbol || (isIndia ? '₹' : 'AED ');
@@ -33395,7 +33395,7 @@ Scope of Work & Technical Execution:
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
-                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(pay, 'payment')}
               </div>
@@ -35085,7 +35085,7 @@ Scope of Work & Technical Execution:
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">TRN (UAE VAT)</label>
-                  <input type="text" id="edit-vend-trn" class="fin-form-input" value="${vend.trn || ''}" placeholder="100234567800003">
+                  <input type="text" id="edit-vend-trn" class="fin-form-input" value="${vend.trn || ''}" placeholder="104937380400003">
                 </div>
                 <div class="fin-form-group">
                   <label class="fin-form-label">GSTIN (India)</label>
@@ -35299,7 +35299,7 @@ Scope of Work & Technical Execution:
     }
     const compPhone = comp.phone || '+971 2 565 4497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const curr = cn.currency || (isIndia ? 'INR' : 'AED');
     const currSym = cn.currency_symbol || (isIndia ? '₹' : 'AED ');
@@ -35395,7 +35395,7 @@ Scope of Work & Technical Execution:
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
-                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(cn, 'credit_note')}
               </div>
@@ -35643,7 +35643,7 @@ Scope of Work & Technical Execution:
     }
     const compPhone = comp.phone || '+971 2 565 4497';
     const compEmail = isIndia ? (comp.email || 'accounts.india@rayan-group.com') : 'info@rayan-group.com';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const curr = dn.currency || (isIndia ? 'INR' : 'AED');
     const currSym = dn.currency_symbol || (isIndia ? '₹' : 'AED ');
@@ -35710,7 +35710,7 @@ Scope of Work & Technical Execution:
                   ${compName}
                 </div>
                 <div style="font-size:0.8rem; color:#4b5563; line-height:1.45;">
-                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '100234567800003'}
+                  ${isIndia ? 'GSTIN' : 'TRN'}: ${compTrn || '104937380400003'}
                 </div>
                 ${this.getRayanDynamicVerificationCode(dn, 'debit_note')}
               </div>

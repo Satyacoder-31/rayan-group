@@ -2187,7 +2187,7 @@ export function registerPayrollModules(FinanceApp) {
         <div class="header">
           <div>
             <div class="company-name">RAYAN ENGINEERING AND CONTRACTING LLC SPC</div>
-            <div style="font-size: 8pt; color: #64748b;">Abu Dhabi, United Arab Emirates • TRN: 100234567800003</div>
+            <div style="font-size: 8pt; color: #64748b;">Abu Dhabi, United Arab Emirates • TRN: 104937380400003</div>
             <div class="doc-title">OFFICIAL EMPLOYEE PROFILE &amp; COMPENSATION DOSSIER</div>
           </div>
           <div style="text-align: right;">
@@ -3535,7 +3535,7 @@ export function registerPayrollModules(FinanceApp) {
       (this.companies || []).find(c => c.id === (slip.company_id || this.activeCompanyId)) ||
       (this.db?.companies || [])[0] || {};
     const compName = 'RAYAN ENGINEERING AND CONTRACTING LLC SPC';
-    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '100234567800003');
+    const compTrn = isIndia ? (comp.gstin || '27AABCU9603R1ZM') : (comp.trn_vat || '104937380400003');
 
     const basicVal = Number(slip.basic_salary) || 9500;
     const accVal = Number(slip.accommodation_allowance) || 5500;
@@ -4380,7 +4380,7 @@ export function registerPayrollModules(FinanceApp) {
                   RAYAN ENGINEERING AND CONTRACTING LLC SPC
                 </div>
                 <div style="font-size:0.65rem; font-weight:700; color:#64748b; line-height:1.2; margin-top:1px;">
-                  TRN: 100234567800003
+                  TRN: 104937380400003
                 </div>
                 <div style="font-size:0.60rem; color:#64748b; line-height:1.2;">
                   Abu Dhabi, UAE | Tel: +971 2 565 4497
@@ -5317,7 +5317,7 @@ export function registerPayrollModules(FinanceApp) {
                   RAYAN ENGINEERING AND CONTRACTING LLC SPC
                 </div>
                 <div style="font-size:0.65rem; font-weight:700; color:#64748b; line-height:1.2; margin-top:1px;">
-                  TRN: 100234567800003
+                  TRN: 104937380400003
                 </div>
                 <div style="font-size:0.60rem; color:#64748b; line-height:1.2;">
                   Abu Dhabi, UAE | Tel: +971 2 565 4497
