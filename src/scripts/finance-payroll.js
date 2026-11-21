@@ -164,8 +164,8 @@ export function registerPayrollModules(FinanceApp) {
           updated_at: '2026-11-18T05:56:24.423Z'
         },
         {
-          id: 'emp-en12001',
-          employee_no: 'EN12004',
+          id: 'emp-en12009',
+          employee_no: 'EN12009',
           company_id: this.activeCompanyId || 'rayan-corp-uae',
           name: 'Bakhteyar Alam Mokhtar Ahmad',
           name_ar: 'بختيار عالم مختار احمد',
@@ -216,10 +216,11 @@ export function registerPayrollModules(FinanceApp) {
         nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
       }
 
-      // Ensure Bakhteyar Alam Mokhtar Ahmad is recognized as EN12004
-      let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || (e.id === 'emp-en12001' && (!e.name || !e.name.toLowerCase().includes('nadeem'))));
+      // Ensure Bakhteyar Alam Mokhtar Ahmad is recognized as EN12009 (Shafiur Rahman is EN12004)
+      let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || e.employee_no === 'EN12009' || e.id === 'emp-en12009');
       if (bakht) {
-        bakht.employee_no = 'EN12004';
+        bakht.id = 'emp-en12009';
+        bakht.employee_no = 'EN12009';
         bakht.passport_no = bakht.passport_no || 'S3552106';
         bakht.emirates_id = bakht.emirates_id || '784-1988-1234567-1';
         bakht.phone = bakht.phone || '+971 50 123 4567';
@@ -229,6 +230,26 @@ export function registerPayrollModules(FinanceApp) {
         if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
         if (!bakht.position) bakht.position = 'Civil Engineer';
         if (!bakht.company_id) bakht.company_id = this.activeCompanyId || 'rayan-corp-uae';
+      }
+
+      let shafiur = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('shafiur')) || e.id === 'emp-en12004');
+      if (shafiur) {
+        shafiur.id = 'emp-en12004';
+        shafiur.employee_no = 'EN12004';
+      }
+
+      // Heal any corrupted cache in employees array
+      if (Array.isArray(this.db.employees)) {
+        this.db.employees.forEach(e => {
+          if (e.name && e.name.toLowerCase().includes('bakhteyar')) {
+            e.id = 'emp-en12009';
+            e.employee_no = 'EN12009';
+          }
+          if (e.name && e.name.toLowerCase().includes('shafiur')) {
+            e.id = 'emp-en12004';
+            e.employee_no = 'EN12004';
+          }
+        });
       }
     }
 
@@ -677,8 +698,8 @@ export function registerPayrollModules(FinanceApp) {
               <button type="button" class="fin-btn-row-action" style="background:rgba(16,185,129,0.18); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:4px 9px; font-size:0.74rem; font-weight:700; border-radius:5px; cursor:pointer; white-space:nowrap;" onclick="window.finApp.openRecordEmployeePaymentModal('${emp.id}')" title="Record Monthly Salary Payout">
                 💳 Pay
               </button>
-              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.12); padding:4px 7px; font-size:0.74rem; border-radius:5px; cursor:pointer;" onclick="window.finApp.openEmployeeModal('${emp.id}')" title="Edit Employee Profile">
-                ✏️
+              <button type="button" class="fin-btn-row-action" style="background:rgba(255,255,255,0.08); color:#f1f5f9; border:1px solid rgba(255,255,255,0.18); padding:4px 9px; font-size:0.74rem; font-weight:700; border-radius:5px; cursor:pointer; white-space:nowrap;" onclick="event.stopPropagation(); window.finApp.openEmployeeModal('${emp.id}')" title="Edit Employee Profile &amp; Compensation">
+                ✏️ Edit
               </button>
               <button type="button" class="fin-btn-row-action" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:4px 7px; font-size:0.74rem; border-radius:5px; cursor:pointer;" onclick="window.finApp.deleteEmployee('${emp.id}')" title="Delete Employee">
                 🗑️
@@ -1123,7 +1144,10 @@ export function registerPayrollModules(FinanceApp) {
   proto.openEmployeeModal = function (empId = null) {
     let emp = null;
     if (empId) {
-      emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
+      emp = (this.db?.employees || []).find(e => e.id === empId);
+      if (!emp) {
+        emp = (this.db?.employees || []).find(e => e.employee_no === empId);
+      }
     }
 
     const isEdit = Boolean(emp);
@@ -1549,7 +1573,7 @@ export function registerPayrollModules(FinanceApp) {
     const rawId = formData.get('id');
     const isEdit = Boolean(rawId && rawId.trim());
     const empNo = (formData.get('employee_no') || '').trim();
-    const empId = isEdit ? rawId.trim() : (empNo ? 'emp-' + empNo.toLowerCase() : ('emp-' + Date.now().toString(36)));
+    let empId = isEdit ? rawId.trim() : (empNo ? 'emp-' + empNo.toLowerCase() : ('emp-' + Date.now().toString(36)));
     const prjId = formData.get('project_id') || '';
     const prj = (this.db?.projects || []).find(p => p.id === prjId);
 
@@ -1639,8 +1663,20 @@ export function registerPayrollModules(FinanceApp) {
       }
     } catch (e) {}
 
+    // If saving Bakhteyar, ensure id is emp-en12009 and employee_no is EN12009 if left as EN12004
+    if ((empObj.name || '').toLowerCase().includes('bakhteyar')) {
+      if (!empObj.employee_no || empObj.employee_no === 'EN12004') {
+        empObj.employee_no = 'EN12009';
+      }
+      empObj.id = 'emp-en12009';
+      empId = 'emp-en12009';
+    }
+
     if (isEdit) {
-      const idx = this.db.employees.findIndex(em => em.id === empId || em.employee_no === empObj.employee_no);
+      let idx = this.db.employees.findIndex(em => em.id === rawId.trim());
+      if (idx < 0) {
+        idx = this.db.employees.findIndex(em => em.id === empId || em.employee_no === empObj.employee_no);
+      }
       if (idx >= 0) {
         this.db.employees[idx] = { ...this.db.employees[idx], ...empObj };
       } else {
@@ -1654,6 +1690,16 @@ export function registerPayrollModules(FinanceApp) {
         this.db.employees.push(empObj);
       }
     }
+
+    // Deduplicate employees by employee_no so collisions never persist
+    const seenEmpNos = new Set();
+    this.db.employees = this.db.employees.filter(em => {
+      const key = (em.employee_no || em.id || '').toUpperCase();
+      if (!key) return true;
+      if (seenEmpNos.has(key)) return false;
+      seenEmpNos.add(key);
+      return true;
+    });
     // Maintain ascending serial order by employee_no
     this.db.employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
 

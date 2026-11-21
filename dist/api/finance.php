@@ -4384,6 +4384,14 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             if (!isset($emp['passport_expiry_date'])) {
                 $emp['passport_expiry_date'] = '';
             }
+            if (stripos($emp['name'] ?? '', 'Bakhteyar') !== false) {
+                $emp['id'] = 'emp-en12009';
+                $emp['employee_no'] = 'EN12009';
+            }
+            if (stripos($emp['name'] ?? '', 'Shafiur') !== false) {
+                $emp['id'] = 'emp-en12004';
+                $emp['employee_no'] = 'EN12004';
+            }
         }
         unset($emp);
         usort($data['employees'], function($a, $b) {

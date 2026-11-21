@@ -124,6 +124,15 @@ async function deploy() {
                   if (emp.eid_expiry_date !== undefined) target.eid_expiry_date = emp.eid_expiry_date;
                   if (emp.eligible_for_rehire !== undefined) target.eligible_for_rehire = emp.eligible_for_rehire;
                   if (emp.rehire_notes !== undefined) target.rehire_notes = emp.rehire_notes;
+                  // Enforce Bakhteyar as EN12009 and Shafiur as EN12004
+                  if (target.name && target.name.includes('Bakhteyar')) {
+                    target.id = 'emp-en12009';
+                    target.employee_no = 'EN12009';
+                  }
+                  if (target.name && target.name.includes('Shafiur')) {
+                    target.id = 'emp-en12004';
+                    target.employee_no = 'EN12004';
+                  }
                   // If employee is Kamala Chhetri (EN12006), enforce Active status and clear end date
                   if (target.employee_no === 'EN12006' || (target.name && target.name.includes('Kamala'))) {
                     target.status = 'Active';
@@ -139,6 +148,14 @@ async function deploy() {
               // Enforce Kamala Chhetri as Active
               if (Array.isArray(liveJson.data.employees)) {
                 liveJson.data.employees.forEach(emp => {
+                  if (emp.name && emp.name.includes('Bakhteyar')) {
+                    emp.id = 'emp-en12009';
+                    emp.employee_no = 'EN12009';
+                  }
+                  if (emp.name && emp.name.includes('Shafiur')) {
+                    emp.id = 'emp-en12004';
+                    emp.employee_no = 'EN12004';
+                  }
                   if (emp.employee_no === 'EN12006' || (emp.name && emp.name.includes('Kamala'))) {
                     emp.status = 'Active';
                     emp.gender = 'Female';
