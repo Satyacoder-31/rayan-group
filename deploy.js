@@ -120,6 +120,8 @@ async function deploy() {
                   target.labor_card_no = target.labor_card_no || emp.labor_card_no;
                   if (!target.photo && emp.photo) target.photo = emp.photo;
                   if (emp.gender) target.gender = emp.gender;
+                  if (emp.passport_expiry_date !== undefined) target.passport_expiry_date = emp.passport_expiry_date;
+                  if (emp.eid_expiry_date !== undefined) target.eid_expiry_date = emp.eid_expiry_date;
                   if (emp.eligible_for_rehire !== undefined) target.eligible_for_rehire = emp.eligible_for_rehire;
                   if (emp.rehire_notes !== undefined) target.rehire_notes = emp.rehire_notes;
                   // If employee is Kamala Chhetri (EN12006), enforce Active status and clear end date
@@ -148,6 +150,12 @@ async function deploy() {
                     emp.gender = 'Female';
                   } else if (!emp.gender) {
                     emp.gender = 'Male';
+                  }
+                  if (!emp.eid_expiry_date && emp.visa_expiry_date) {
+                    emp.eid_expiry_date = emp.visa_expiry_date;
+                  }
+                  if (!emp.passport_expiry_date) {
+                    emp.passport_expiry_date = '';
                   }
                 });
                 // Sort employees strictly in ascending serial order by employee_no (EN12001, EN12002, EN12003, etc.)

@@ -4378,6 +4378,12 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             } else if (empty($emp['gender'])) {
                 $emp['gender'] = 'Male';
             }
+            if (empty($emp['eid_expiry_date']) && !empty($emp['visa_expiry_date'])) {
+                $emp['eid_expiry_date'] = $emp['visa_expiry_date'];
+            }
+            if (!isset($emp['passport_expiry_date'])) {
+                $emp['passport_expiry_date'] = '';
+            }
         }
         unset($emp);
         usort($data['employees'], function($a, $b) {

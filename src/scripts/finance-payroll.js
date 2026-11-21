@@ -1247,27 +1247,37 @@ export function registerPayrollModules(FinanceApp) {
               </div>
             </div>
 
-            <!-- Card 2: Legal Identity, Visas & Labor Details -->
+            <!-- Card 2: Legal Identity, Passports & Labor Details -->
             <div class="fin-form-section-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
               <div class="fin-form-section-header" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:700; color:#10b981; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
                 <span>🪪</span>
-                <span>Legal Identity, Visas &amp; Labor Details</span>
+                <span>Legal Identity, Passports &amp; Labor Details</span>
               </div>
-              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem;">
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Emirates ID (EID)</label>
                   <input type="text" name="emirates_id" class="fin-form-input" value="${escapeHtml(emp?.emirates_id || '')}" placeholder="784-1998-3368120-0" style="font-family:monospace; font-weight:600;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">EID Expiry Date</label>
+                  <input type="date" name="eid_expiry_date" class="fin-form-input" value="${emp?.eid_expiry_date || emp?.visa_expiry_date || ''}">
+                </div>
+              </div>
+              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Passport No.</label>
                   <input type="text" name="passport_no" class="fin-form-input" value="${escapeHtml(emp?.passport_no || '')}" placeholder="e.g. U3566719" style="font-family:monospace; font-weight:700;">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
+                  <label class="fin-field-label">Passport Expiry Date <span style="font-size:0.68rem; color:#f59e0b; font-weight:normal;">(passport validity)</span></label>
+                  <input type="date" name="passport_expiry_date" class="fin-form-input" value="${emp?.passport_expiry_date || ''}" style="border-color:rgba(245,158,11,0.35);">
+                </div>
+              </div>
+              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
+                <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Nationality</label>
                   <input type="text" name="nationality" class="fin-form-input" value="${escapeHtml(emp?.nationality || 'India')}" placeholder="e.g. India">
                 </div>
-              </div>
-              <div class="fin-form-grid-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Visa Status</label>
                   <select name="visa_status" class="fin-form-select">
@@ -1277,10 +1287,6 @@ export function registerPayrollModules(FinanceApp) {
                     <option value="Mission / Visit Visa" ${(emp?.visa_status || '').includes('Visit') ? 'selected' : ''}>Mission / Visit Visa</option>
                     <option value="Under Processing" ${(emp?.visa_status || '').includes('Processing') ? 'selected' : ''}>Under Processing</option>
                   </select>
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Visa Expiry Date</label>
-                  <input type="date" name="visa_expiry_date" class="fin-form-input" value="${emp?.visa_expiry_date || ''}">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
                   <label class="fin-field-label">Labor Card / Work Permit No.</label>
@@ -1576,6 +1582,9 @@ export function registerPayrollModules(FinanceApp) {
       position_ar: (formData.get('position_ar') || '').trim(),
       gender: gender,
       passport_no: (formData.get('passport_no') || '').trim(),
+      passport_expiry_date: formData.get('passport_expiry_date') || '',
+      emirates_id: (formData.get('emirates_id') || '').trim(),
+      eid_expiry_date: formData.get('eid_expiry_date') || '',
       nationality: (formData.get('nationality') || 'India').trim(),
       date_of_joining: formData.get('date_of_joining') || '',
       date_of_appointment: formData.get('date_of_joining') || '',
@@ -2027,8 +2036,16 @@ export function registerPayrollModules(FinanceApp) {
                       <strong style="color:#f8fafc; font-family:monospace; font-size:0.85rem;">${escapeHtml(emp.emirates_id || 'Not Provided')}</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">EID Expiry Date:</span>
+                      <strong style="color:#cbd5e1; font-weight:700;">${escapeHtml(emp.eid_expiry_date || emp.visa_expiry_date || '---')}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
                       <span style="color:#94a3b8;">Passport Number:</span>
                       <strong style="color:#38bdf8; font-family:monospace; font-weight:700;">${escapeHtml(emp.passport_no || '---')}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Passport Expiry Date:</span>
+                      <strong style="color:#f59e0b; font-weight:700;">${escapeHtml(emp.passport_expiry_date || '---')}</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <span style="color:#94a3b8;">Nationality:</span>
@@ -2039,10 +2056,6 @@ export function registerPayrollModules(FinanceApp) {
                       <span style="background:rgba(56,189,248,0.12); color:#38bdf8; padding:2px 7px; border-radius:4px; font-size:0.75rem; font-weight:600; border:1px solid rgba(56,189,248,0.3);">
                         ${escapeHtml(emp.visa_status || 'Employment Visa')}
                       </span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <span style="color:#94a3b8;">Visa Expiry Date:</span>
-                      <strong style="color:#cbd5e1;">${escapeHtml(emp.visa_expiry_date || 'Active / On-File')}</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <span style="color:#94a3b8;">Labor Card / MoHRE No.:</span>
@@ -2438,13 +2451,19 @@ export function registerPayrollModules(FinanceApp) {
           </div>
         </div>
 
-        <div class="section-title">1. Legal Identity, Visas &amp; Bank Coordinates</div>
+        <div class="section-title">1. Legal Identity, Passports &amp; Bank Coordinates</div>
         <table class="data-table">
           <tr>
             <th style="width:20%;">Emirates ID (EID)</th>
             <td style="width:30%; font-family:monospace; font-weight:700;">${escapeHtml(emp.emirates_id || '---')}</td>
-            <th style="width:20%;">Passport No.</th>
-            <td style="width:30%; font-family:monospace; font-weight:700;">${escapeHtml(emp.passport_no || '---')} (${escapeHtml(emp.nationality || 'India')})</td>
+            <th style="width:20%;">EID Expiry Date</th>
+            <td style="width:30%; font-weight:700;">${escapeHtml(emp.eid_expiry_date || emp.visa_expiry_date || '---')}</td>
+          </tr>
+          <tr>
+            <th>Passport No.</th>
+            <td style="font-family:monospace; font-weight:700;">${escapeHtml(emp.passport_no || '---')} (${escapeHtml(emp.nationality || 'India')})</td>
+            <th>Passport Expiry Date</th>
+            <td style="font-weight:700; color:#b45309;">${escapeHtml(emp.passport_expiry_date || '---')}</td>
           </tr>
           <tr>
             <th>Gender</th>
@@ -2453,10 +2472,10 @@ export function registerPayrollModules(FinanceApp) {
             <td>${escapeHtml(emp.visa_status || 'Employment Visa')}</td>
           </tr>
           <tr>
-            <th>Visa Expiry Date</th>
-            <td>${escapeHtml(emp.visa_expiry_date || '---')}</td>
             <th>Labor Card No.</th>
             <td style="font-family:monospace;">${escapeHtml(emp.labor_card_no || '---')}</td>
+            <th>Payment Channel</th>
+            <td>${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
           </tr>
           <tr>
             <th>Payment Channel</th>
