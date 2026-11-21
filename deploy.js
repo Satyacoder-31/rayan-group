@@ -119,15 +119,50 @@ async function deploy() {
                   target.visa_expiry_date = target.visa_expiry_date || emp.visa_expiry_date;
                   target.labor_card_no = target.labor_card_no || emp.labor_card_no;
                   if (!target.photo && emp.photo) target.photo = emp.photo;
+                  if (emp.gender) target.gender = emp.gender;
                   if (emp.eligible_for_rehire !== undefined) target.eligible_for_rehire = emp.eligible_for_rehire;
                   if (emp.rehire_notes !== undefined) target.rehire_notes = emp.rehire_notes;
+                  // If employee is Kamala Chhetri (EN12006), enforce Active status and clear end date
+                  if (target.employee_no === 'EN12006' || (target.name && target.name.includes('Kamala'))) {
+                    target.status = 'Active';
+                    target.gender = 'Female';
+                    target.end_date = '';
+                    target.resignation_date = '';
+                    target.date_of_leaving = '';
+                    target.end_reason = '';
+                  }
                 }
               });
 
-              // Sort employees strictly in ascending serial order by employee_no (EN12001, EN12002, EN12003, etc.)
-              liveJson.data.employees.sort((a, b) => {
-                return (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' });
-              });
+              // Enforce Kamala Chhetri as Active
+              if (Array.isArray(liveJson.data.employees)) {
+                liveJson.data.employees.forEach(emp => {
+                  if (emp.employee_no === 'EN12006' || (emp.name && emp.name.includes('Kamala'))) {
+                    emp.status = 'Active';
+                    emp.gender = 'Female';
+                    emp.end_date = '';
+                    emp.resignation_date = '';
+                    emp.date_of_leaving = '';
+                    emp.end_reason = '';
+                  } else if (emp.employee_no === 'EN12002' || (emp.name && emp.name.includes('Menta'))) {
+                    emp.gender = 'Female';
+                  } else if (!emp.gender) {
+                    emp.gender = 'Male';
+                  }
+                });
+                // Sort employees strictly in ascending serial order by employee_no (EN12001, EN12002, EN12003, etc.)
+                liveJson.data.employees.sort((a, b) => {
+                  return (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' });
+                });
+              }
+
+              // Purge deleted payroll records permanently
+              const deletedPayrollList = ['ps-june2026-en12001', 'PSJune 2026/EN12001', ...(localData.deleted_payroll_ids || [])];
+              liveJson.data.deleted_payroll_ids = deletedPayrollList;
+              liveJson.data.payroll_initialized = true;
+              if (Array.isArray(liveJson.data.payroll)) {
+                liveJson.data.payroll = liveJson.data.payroll.filter(p => !deletedPayrollList.includes(p.id) && !deletedPayrollList.includes(p.slip_no));
+              }
 
               if (Array.isArray(liveJson.data.debit_notes)) {
                 liveJson.data.debit_notes.forEach(dn => {

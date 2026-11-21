@@ -322,7 +322,24 @@ export function registerPayrollModules(FinanceApp) {
       });
     }
 
-    if (!Array.isArray(this.db.payroll) || this.db.payroll.length === 0) {
+    if (!Array.isArray(this.db.payroll)) {
+      this.db.payroll = [];
+    }
+    const deletedSlips = [];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        deletedSlips.push(...JSON.parse(localStorage.getItem('rayan_fin_deleted_payroll_ids') || '[]'));
+      }
+    } catch (e) {}
+    if (Array.isArray(this.db.deleted_payroll_ids)) {
+      deletedSlips.push(...this.db.deleted_payroll_ids);
+    }
+    if (deletedSlips.length > 0) {
+      this.db.payroll = this.db.payroll.filter(p => !deletedSlips.includes(p.id) && !deletedSlips.includes(p.slip_no));
+    }
+
+    if (!this.db.payroll_initialized && this.db.payroll.length === 0 && !deletedSlips.includes('ps-june2026-en12001') && !deletedSlips.includes('PSJune 2026/EN12001')) {
+      this.db.payroll_initialized = true;
       this.db.payroll = [
         {
           id: 'ps-june2026-en12001',
@@ -643,12 +660,14 @@ export function registerPayrollModules(FinanceApp) {
                 ${isTerminated ? 'Terminated:' : 'Left:'} ${escapeHtml(emp.end_date || emp.resignation_date)}
               </div>
             ` : ''}
-            <!-- Rehire Eligibility Badge with direct toggle -->
-            <div style="margin-top:3px;">
-              <span style="display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:8px; font-size:0.64rem; font-weight:700; color:${rehireColor}; background:${rehireBg}; border:1px solid ${rehireBorder}; cursor:pointer;" onclick="event.stopPropagation(); window.finApp.toggleEmployeeRehireEligibility('${emp.id}')" title="Click to toggle rehire eligibility (Current: ${isEligibleForRehire ? 'Eligible' : 'Not Eligible'})">
-                ${rehireLabel}
-              </span>
-            </div>
+            <!-- Rehire Eligibility Badge ONLY for former/inactive employees (NOT for active employees) -->
+            ${(!isAct && (isResigned || isTerminated)) ? `
+              <div style="margin-top:3px;">
+                <span style="display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:8px; font-size:0.64rem; font-weight:700; color:${rehireColor}; background:${rehireBg}; border:1px solid ${rehireBorder}; cursor:pointer;" onclick="event.stopPropagation(); window.finApp.toggleEmployeeRehireEligibility('${emp.id}')" title="Click to toggle rehire eligibility (Current: ${isEligibleForRehire ? 'Eligible' : 'Not Eligible'})">
+                  ${rehireLabel}
+                </span>
+              </div>
+            ` : ''}
           </td>
           <td style="text-align:right; padding:7px 10px; vertical-align:middle; white-space:nowrap;">
             <div style="display:inline-flex; gap:4px; align-items:center; flex-wrap:nowrap; justify-content:flex-end;">
@@ -1219,8 +1238,11 @@ export function registerPayrollModules(FinanceApp) {
                   <input type="date" name="date_of_joining" class="fin-form-input" value="${emp?.date_of_joining || new Date().toISOString().split('T')[0]}">
                 </div>
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">End Date / Exit Date <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(if resigned)</span></label>
-                  <input type="date" name="end_date_quick" id="fin-emp-end-date-quick" class="fin-form-input" value="${emp?.end_date || emp?.resignation_date || ''}" onchange="window.finApp.syncEmployeeEndDate(this.value)">
+                  <label class="fin-field-label">Gender <span style="color:#ef4444;">*</span></label>
+                  <select name="gender" id="fin-emp-gender-select" class="fin-form-select" style="font-weight:700;">
+                    <option value="Male" ${(emp?.gender || '').toLowerCase() === 'female' ? '' : 'selected'}>👨 Male</option>
+                    <option value="Female" ${(emp?.gender || '').toLowerCase() === 'female' ? 'selected' : ''}>👩 Female</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1385,42 +1407,42 @@ export function registerPayrollModules(FinanceApp) {
                 </div>
               </div>
 
-              <!-- Eligible for Rehire Selection & Notes -->
-              <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:0.75rem;">
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Eligible to Rehire Employee? <span style="color:#ef4444;">*</span></label>
-                  <select name="eligible_for_rehire" id="fin-emp-rehire-select" class="fin-form-select" style="font-weight:700;">
-                    <option value="yes" ${emp?.eligible_for_rehire !== 'no' && emp?.eligible_for_rehire !== false ? 'selected' : ''}>✅ Yes (Eligible for Rehire)</option>
-                    <option value="no" ${emp?.eligible_for_rehire === 'no' || emp?.eligible_for_rehire === false ? 'selected' : ''}>⛔ No (Ineligible / Do Not Rehire)</option>
-                  </select>
-                  <span style="font-size:0.68rem; color:#94a3b8;">Corporate HR clearance policy for future rehiring</span>
-                </div>
-                <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Rehire Clearance Remarks / Notes</label>
-                  <input type="text" name="rehire_notes" class="fin-form-input" value="${escapeHtml(emp?.rehire_notes || '')}" placeholder="e.g. Good standing, eligible upon new tender award">
-                  <span style="font-size:0.68rem; color:#94a3b8;">HR commentary on rehire decision or conditions</span>
-                </div>
-              </div>
-
-              <!-- Resignation & Exit Details Panel (Prominently shown when Resigned or Terminated) -->
-              <div id="fin-emp-end-date-section" style="margin-top:1rem; padding:1.15rem; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:10px; display:${(emp?.status === 'Resigned' || emp?.status === 'Terminated' || emp?.end_date || emp?.resignation_date) ? 'block' : 'none'};">
+              <!-- Resignation & Exit Details Panel (Prominently shown ONLY when Resigned or Terminated) -->
+              <div id="fin-emp-end-date-section" style="margin-top:1rem; padding:1.15rem; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:10px; display:${(emp?.status === 'Resigned' || emp?.status === 'Terminated') ? 'block' : 'none'};">
                 <div style="font-size:0.84rem; font-weight:700; color:#f87171; margin-bottom:0.75rem; display:flex; align-items:center; justify-content:space-between; gap:6px;">
                   <div style="display:flex; align-items:center; gap:6px;">
                     <span>📅</span>
-                    <span>Resignation &amp; Exit Record</span>
+                    <span id="fin-emp-exit-title">${emp?.status === 'Terminated' ? 'Termination &amp; Exit Record' : 'Resignation &amp; Exit Record'}</span>
                   </div>
-                  <span style="font-size:0.68rem; color:#fca5a5; font-weight:600; background:rgba(239,68,68,0.15); padding:2px 8px; border-radius:4px;">Resigned / Former Personnel</span>
+                  <span style="font-size:0.68rem; color:#fca5a5; font-weight:600; background:rgba(239,68,68,0.15); padding:2px 8px; border-radius:4px;">Former Personnel Exit Dossier</span>
                 </div>
-                <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                   <div class="fin-form-group" style="margin-bottom:0;">
                     <label class="fin-field-label" style="color:#fca5a5;">End Date / Last Working Day <span style="color:#ef4444;">*</span></label>
-                    <input type="date" name="end_date" id="fin-emp-end-date" class="fin-form-input" value="${emp?.end_date || emp?.resignation_date || ''}" onchange="window.finApp.syncEmployeeEndDate(this.value)" style="border-color:rgba(239,68,68,0.45); font-weight:700;">
+                    <input type="date" name="end_date" id="fin-emp-end-date" class="fin-form-input" value="${emp?.end_date || emp?.resignation_date || ''}" style="border-color:rgba(239,68,68,0.45); font-weight:700;">
                     <span style="font-size:0.68rem; color:#94a3b8;">Effective date of resignation / departure</span>
                   </div>
                   <div class="fin-form-group" style="margin-bottom:0;">
                     <label class="fin-field-label">Reason for Leaving / Exit Remarks</label>
                     <input type="text" name="end_reason" id="fin-emp-end-reason" class="fin-form-input" value="${escapeHtml(emp?.end_reason || emp?.resignation_reason || '')}" placeholder="e.g. Resigned - Relieved on notice">
                     <span style="font-size:0.68rem; color:#94a3b8;">Optional exit remark / relieving status</span>
+                  </div>
+                </div>
+
+                <!-- Rehire Option (Only for Exited / Resigned / Terminated Employees) -->
+                <div class="fin-form-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06);">
+                  <div class="fin-form-group" style="margin-bottom:0;">
+                    <label class="fin-field-label">Eligible to Rehire Employee? <span style="color:#ef4444;">*</span></label>
+                    <select name="eligible_for_rehire" id="fin-emp-rehire-select" class="fin-form-select" style="font-weight:700;">
+                      <option value="yes" ${emp?.eligible_for_rehire !== 'no' && emp?.eligible_for_rehire !== false ? 'selected' : ''}>✅ Yes (Eligible for Rehire)</option>
+                      <option value="no" ${emp?.eligible_for_rehire === 'no' || emp?.eligible_for_rehire === false ? 'selected' : ''}>⛔ No (Ineligible / Do Not Rehire)</option>
+                    </select>
+                    <span style="font-size:0.68rem; color:#94a3b8;">Corporate HR clearance policy for future rehiring</span>
+                  </div>
+                  <div class="fin-form-group" style="margin-bottom:0;">
+                    <label class="fin-field-label">Rehire Clearance Remarks / Notes</label>
+                    <input type="text" name="rehire_notes" class="fin-form-input" value="${escapeHtml(emp?.rehire_notes || '')}" placeholder="e.g. Good standing, eligible upon new tender award">
+                    <span style="font-size:0.68rem; color:#94a3b8;">HR commentary on rehire decision or conditions</span>
                   </div>
                 </div>
               </div>
@@ -1474,14 +1496,20 @@ export function registerPayrollModules(FinanceApp) {
     const isExit = val === 'Resigned' || val === 'Terminated';
     if (sec) {
       sec.style.display = isExit ? 'block' : 'none';
+      const titleEl = document.getElementById('fin-emp-exit-title');
+      if (titleEl) {
+        titleEl.textContent = val === 'Terminated' ? 'Termination & Exit Record' : 'Resignation & Exit Record';
+      }
     }
-    if (isExit) {
+    if (!isExit) {
       const endInput = document.getElementById('fin-emp-end-date');
-      const quickInput = document.getElementById('fin-emp-end-date-quick');
+      if (endInput) endInput.value = '';
+      const endReason = document.getElementById('fin-emp-end-reason');
+      if (endReason) endReason.value = '';
+    } else {
+      const endInput = document.getElementById('fin-emp-end-date');
       if (endInput && !endInput.value) {
-        const today = new Date().toISOString().split('T')[0];
-        endInput.value = today;
-        if (quickInput) quickInput.value = today;
+        endInput.value = new Date().toISOString().split('T')[0];
       }
     }
   };
@@ -1522,11 +1550,15 @@ export function registerPayrollModules(FinanceApp) {
     const basicSalary = parseFloat(formData.get('basic_salary')) || 0;
     const accAllowance = parseFloat(formData.get('accommodation_allowance')) || 0;
     const otherAllowance = parseFloat(formData.get('other_allowance')) || 0;
-    const endDate = (formData.get('end_date') || formData.get('end_date_quick') || '').trim();
-    const endReason = (formData.get('end_reason') || '').trim();
-    let empStatus = formData.get('status') || 'Active';
-    if (endDate && empStatus === 'Active') {
-      empStatus = 'Resigned';
+    let empStatus = (formData.get('status') || 'Active').trim();
+    let endDate = (formData.get('end_date') || '').trim();
+    let endReason = (formData.get('end_reason') || '').trim();
+    const gender = (formData.get('gender') || 'Male').trim();
+
+    // If user explicitly selected Active or On Leave, clear exit dates so status is never forced to Resigned!
+    if (empStatus === 'Active' || empStatus === 'On Leave') {
+      endDate = '';
+      endReason = '';
     }
 
     const eligibleForRehire = (formData.get('eligible_for_rehire') || 'yes').trim();
@@ -1542,6 +1574,7 @@ export function registerPayrollModules(FinanceApp) {
       department: (formData.get('department') || 'Rayan Engineering').trim(),
       name_ar: (formData.get('name_ar') || '').trim(),
       position_ar: (formData.get('position_ar') || '').trim(),
+      gender: gender,
       passport_no: (formData.get('passport_no') || '').trim(),
       nationality: (formData.get('nationality') || 'India').trim(),
       date_of_joining: formData.get('date_of_joining') || '',
@@ -1868,10 +1901,15 @@ export function registerPayrollModules(FinanceApp) {
                   <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${statusBg}; color:${statusColor}; font-weight:800; border:1px solid ${statusBorder};">
                     ${escapeHtml(statusLabel)}${((isResigned || isTerminated) && (emp.end_date || emp.resignation_date)) ? ` • ${isTerminated ? 'Terminated' : 'Relieved'}: ${escapeHtml(emp.end_date || emp.resignation_date)}` : ''}
                   </span>
-                  <!-- Rehire Eligibility Header Badge with direct toggle -->
-                  <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${rehireBg}; color:${rehireColor}; font-weight:800; border:1px solid ${rehireBorder}; display:inline-flex; align-items:center; gap:4px; cursor:pointer;" onclick="window.finApp.toggleEmployeeRehireEligibility('${emp.id}')" title="Click to toggle rehire clearance">
-                    <span>${isEligibleForRehire ? '✓' : '⛔'}</span> Rehire Eligible: <strong>${isEligibleForRehire ? 'YES' : 'NO'}</strong>
+                  <span style="font-size:0.72rem; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);">
+                    ${(emp.gender || '').toLowerCase() === 'female' ? '👩 Female' : '👨 Male'}
                   </span>
+                  <!-- Rehire Eligibility Header Badge ONLY for former / inactive employees -->
+                  ${(!isAct && (isResigned || isTerminated)) ? `
+                    <span style="font-size:0.72rem; padding:2px 9px; border-radius:12px; background:${rehireBg}; color:${rehireColor}; font-weight:800; border:1px solid ${rehireBorder}; display:inline-flex; align-items:center; gap:4px; cursor:pointer;" onclick="window.finApp.toggleEmployeeRehireEligibility('${emp.id}')" title="Click to toggle rehire clearance">
+                      <span>${isEligibleForRehire ? '✓' : '⛔'}</span> Rehire Eligible: <strong>${isEligibleForRehire ? 'YES' : 'NO'}</strong>
+                    </span>
+                  ` : ''}
                   <span style="font-size:0.72rem; padding:2px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1);">
                     ${escapeHtml(emp.department || 'Rayan Engineering')}
                   </span>
@@ -1979,6 +2017,12 @@ export function registerPayrollModules(FinanceApp) {
                   </div>
                   <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.82rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="color:#94a3b8;">Gender:</span>
+                      <strong style="color:#f8fafc; font-size:0.85rem;">
+                        ${(emp.gender || '').toLowerCase() === 'female' ? '👩 Female' : '👨 Male'}
+                      </strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
                       <span style="color:#94a3b8;">Emirates ID (EID):</span>
                       <strong style="color:#f8fafc; font-family:monospace; font-size:0.85rem;">${escapeHtml(emp.emirates_id || 'Not Provided')}</strong>
                     </div>
@@ -2016,26 +2060,36 @@ export function registerPayrollModules(FinanceApp) {
                     Exit Remark: ${escapeHtml(emp.end_reason || emp.resignation_reason)}
                   </div>
                 ` : ''}
-                <!-- Rehire Policy Clearance Card -->
-                <div style="background:${isEligibleForRehire ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'}; border:1px solid ${rehireBorder}; border-radius:8px; padding:0.75rem 0.95rem; margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                  <div>
-                    <div style="font-size:0.68rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Rehire Policy Clearance</div>
-                    <div style="font-size:0.92rem; font-weight:800; color:${rehireColor}; margin-top:2px; display:flex; align-items:center; gap:6px;">
-                      <span>${isEligibleForRehire ? '✅' : '⛔'}</span>
-                      <span>Eligible for Rehire: <u>${isEligibleForRehire ? 'YES' : 'NO'}</u></span>
-                    </div>
-                    ${emp.rehire_notes ? `
-                      <div style="font-size:0.72rem; color:#cbd5e1; margin-top:3px; line-height:1.35;">
-                        <strong>Notes:</strong> ${escapeHtml(emp.rehire_notes)}
+                <!-- Rehire Policy Clearance Card (Shown ONLY for Exited/Former Employees) -->
+                ${(!isAct && (isResigned || isTerminated)) ? `
+                  <div style="background:${isEligibleForRehire ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'}; border:1px solid ${rehireBorder}; border-radius:8px; padding:0.75rem 0.95rem; margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                      <div style="font-size:0.68rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Rehire Policy Clearance</div>
+                      <div style="font-size:0.92rem; font-weight:800; color:${rehireColor}; margin-top:2px; display:flex; align-items:center; gap:6px;">
+                        <span>${isEligibleForRehire ? '✅' : '⛔'}</span>
+                        <span>Eligible for Rehire: <u>${isEligibleForRehire ? 'YES' : 'NO'}</u></span>
                       </div>
-                    ` : ''}
+                      ${emp.rehire_notes ? `
+                        <div style="font-size:0.72rem; color:#cbd5e1; margin-top:3px; line-height:1.35;">
+                          <strong>Notes:</strong> ${escapeHtml(emp.rehire_notes)}
+                        </div>
+                      ` : ''}
+                    </div>
+                    <div>
+                      <button type="button" class="fin-btn-row-action" style="background:${isEligibleForRehire ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.18)'}; color:${isEligibleForRehire ? '#f87171' : '#10b981'}; border:1px solid ${isEligibleForRehire ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)'}; padding:5px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; border-radius:6px;" onclick="window.finApp.toggleEmployeeRehireEligibility('${emp.id}')">
+                        ${isEligibleForRehire ? 'Mark Ineligible (No)' : 'Mark Eligible (Yes)'}
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <button type="button" class="fin-btn-row-action" style="background:${isEligibleForRehire ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.18)'}; color:${isEligibleForRehire ? '#f87171' : '#10b981'}; border:1px solid ${isEligibleForRehire ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)'}; padding:5px 11px; font-size:0.74rem; font-weight:700; cursor:pointer; border-radius:6px;" onclick="window.finApp.toggleEmployeeRehireEligibility('${emp.id}')">
-                      ${isEligibleForRehire ? 'Mark Ineligible (No)' : 'Mark Eligible (Yes)'}
-                    </button>
+                ` : `
+                  <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:0.6rem 0.85rem; margin-top:0.75rem; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.1rem;">🟢</span>
+                    <div>
+                      <div style="font-size:0.68rem; color:#94a3b8; font-weight:700; text-transform:uppercase;">Employment Status</div>
+                      <div style="font-size:0.84rem; font-weight:800; color:#10b981;">Active Personnel (Currently Employed)</div>
+                    </div>
                   </div>
-                </div>
+                `}
               </div>
 
               <!-- Card B: Addresses & Contact Coordinates -->
@@ -2393,31 +2447,39 @@ export function registerPayrollModules(FinanceApp) {
             <td style="width:30%; font-family:monospace; font-weight:700;">${escapeHtml(emp.passport_no || '---')} (${escapeHtml(emp.nationality || 'India')})</td>
           </tr>
           <tr>
+            <th>Gender</th>
+            <td style="font-weight:700;">${(emp.gender || '').toLowerCase() === 'female' ? '👩 Female' : '👨 Male'}</td>
             <th>Visa Status</th>
             <td>${escapeHtml(emp.visa_status || 'Employment Visa')}</td>
+          </tr>
+          <tr>
             <th>Visa Expiry Date</th>
             <td>${escapeHtml(emp.visa_expiry_date || '---')}</td>
-          </tr>
-          <tr>
             <th>Labor Card No.</th>
             <td style="font-family:monospace;">${escapeHtml(emp.labor_card_no || '---')}</td>
+          </tr>
+          <tr>
             <th>Payment Channel</th>
             <td>${escapeHtml(emp.default_pay_method || 'Bank Transfer')}</td>
-          </tr>
-          <tr>
             <th>Bank Name</th>
             <td>${escapeHtml(emp.bank_name || 'Cash / On-Hand')}</td>
-            <th>IBAN / Account</th>
-            <td style="font-family:monospace; font-weight:600;">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
           </tr>
           <tr>
+            <th>IBAN / Account</th>
+            <td style="font-family:monospace; font-weight:600;" colspan="${(emp.status === 'Resigned' || emp.status === 'Terminated') ? '1' : '3'}">${escapeHtml(emp.iban || emp.account_no || '---')}</td>
+            ${(emp.status === 'Resigned' || emp.status === 'Terminated') ? `
             <th>Rehire Eligibility</th>
             <td style="font-weight:700; color:${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '#dc2626' : '#16a34a'};">
               ${emp.eligible_for_rehire === 'no' || emp.eligible_for_rehire === false ? '⛔ INELIGIBLE (Do Not Rehire)' : '✅ ELIGIBLE FOR REHIRE (Approved)'}
-            </td>
-            <th>Rehire Remarks</th>
-            <td>${escapeHtml(emp.rehire_notes || 'Clearance on file in accordance with corporate HR policy')}</td>
+            </td>` : ''}
           </tr>
+          ${(emp.status === 'Resigned' || emp.status === 'Terminated') ? `
+          <tr>
+            <th>Exit / Departure Date</th>
+            <td style="font-weight:700; color:#dc2626;">${escapeHtml(emp.end_date || emp.resignation_date || '---')}</td>
+            <th>Exit / Rehire Remarks</th>
+            <td>${escapeHtml(emp.rehire_notes || emp.end_reason || 'Clearance on file in accordance with corporate HR policy')}</td>
+          </tr>` : ''}
         </table>
 
         <div class="section-title">2. Residential Addresses &amp; Emergency Contacts</div>
@@ -3374,23 +3436,65 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   proto.deletePayslip = async function (slipId) {
-    const slip = (this.db?.payroll || []).find(p => p.id === slipId);
-    if (!slip) return;
+    if (!this.db) return;
+    const slip = (this.db?.payroll || []).find(p => p.id === slipId || p.slip_no === slipId);
+    const slipNo = slip ? slip.slip_no : slipId;
+    const empName = slip ? slip.employee_name : 'Employee';
 
-    if (!confirm(`Are you sure you want to delete pay slip "${slip.slip_no}" for ${slip.employee_name}?`)) {
-      return;
+    const confirmed = (typeof window !== 'undefined' && typeof window.confirm === 'function')
+      ? window.confirm(`Are you sure you want to delete pay slip "${slipNo}" for ${empName}?`)
+      : true;
+    if (!confirmed) return;
+
+    // Track in deleted_payroll_ids so it is NEVER restored
+    if (!Array.isArray(this.db.deleted_payroll_ids)) {
+      this.db.deleted_payroll_ids = [];
     }
-
-    this.db.payroll = this.db.payroll.filter(p => p.id !== slipId);
+    if (slip?.id && !this.db.deleted_payroll_ids.includes(slip.id)) this.db.deleted_payroll_ids.push(slip.id);
+    if (slipId && !this.db.deleted_payroll_ids.includes(slipId)) this.db.deleted_payroll_ids.push(slipId);
+    if (slipNo && !this.db.deleted_payroll_ids.includes(slipNo)) this.db.deleted_payroll_ids.push(slipNo);
 
     try {
-      await this.syncWithBackend('delete_payroll', { id: slipId });
+      if (typeof localStorage !== 'undefined') {
+        const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_payroll_ids') || '[]');
+        if (slip?.id && !stored.includes(slip.id)) stored.push(slip.id);
+        if (slipId && !stored.includes(slipId)) stored.push(slipId);
+        if (slipNo && !stored.includes(slipNo)) stored.push(slipNo);
+        localStorage.setItem('rayan_fin_deleted_payroll_ids', JSON.stringify(stored));
+      }
+    } catch (e) {}
+
+    this.db.payroll_initialized = true;
+    this.db.payroll = (this.db.payroll || []).filter(p => p.id !== slipId && p.slip_no !== slipId && (!slip || (p.id !== slip.id && p.slip_no !== slip.slip_no)));
+
+    try {
+      localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db));
     } catch (err) {}
 
-    this.normalizeAllBalances();
-    this.showToast ? this.showToast('Pay slip deleted', 'info') : null;
+    // Sync deletion with backend
+    try {
+      if (typeof this.syncApi === 'function') {
+        await this.syncApi('delete_payroll', { id: slip?.id || slipId, slip_no: slipNo });
+      } else if (typeof this.syncWithBackend === 'function') {
+        await this.syncWithBackend('delete_payroll', { id: slip?.id || slipId, slip_no: slipNo });
+      }
+    } catch (err) {
+      console.warn('Delete payroll backend sync warning:', err);
+    }
+
+    if (typeof this.normalizeAllBalances === 'function') {
+      this.normalizeAllBalances();
+    }
+    if (typeof this.showNotification === 'function') {
+      this.showNotification(`✓ Pay slip "${slipNo}" deleted successfully.`, 'info');
+    } else if (typeof this.showToast === 'function') {
+      this.showToast(`✓ Pay slip "${slipNo}" deleted`, 'info');
+    }
+
     if (this.activeTab === 'payroll') {
       this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
+    } else if (typeof this.renderActiveTab === 'function') {
+      this.renderActiveTab();
     }
   };
 
