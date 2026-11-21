@@ -4345,17 +4345,20 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
     if (empty($data['employees']) || !is_array($data['employees'])) {
         $data['employees'] = $defaultEmployees;
     }
-    $deletedPayroll = $data['deleted_payroll_ids'] ?? [];
+    $deletedPayroll = array_unique(array_merge(
+        $data['deleted_payroll_ids'] ?? [],
+        ['ps-june2026-en12001', 'PSJune 2026/EN12001']
+    ));
+    $data['deleted_payroll_ids'] = $deletedPayroll;
+    $data['payroll_initialized'] = true;
     if (!isset($data['payroll']) || !is_array($data['payroll'])) {
         $data['payroll'] = [];
     }
-    if (!empty($deletedPayroll) && is_array($deletedPayroll) && !empty($data['payroll'])) {
-        $data['payroll'] = array_values(array_filter($data['payroll'], function($p) use ($deletedPayroll) {
-            $pId = $p['id'] ?? '';
-            $pSlip = $p['slip_no'] ?? '';
-            return !in_array($pId, $deletedPayroll) && !in_array($pSlip, $deletedPayroll);
-        }));
-    }
+    $data['payroll'] = array_values(array_filter($data['payroll'], function($p) use ($deletedPayroll) {
+        $pId = $p['id'] ?? '';
+        $pSlip = $p['slip_no'] ?? '';
+        return !in_array($pId, $deletedPayroll) && !in_array($pSlip, $deletedPayroll);
+    }));
     if ($pdo) {
         try {
             $pdo->exec("DELETE FROM finance_payroll WHERE id IN ('ps-june2026-en12001', 'PSJune 2026/EN12001') OR slip_no IN ('ps-june2026-en12001', 'PSJune 2026/EN12001')");
@@ -4377,6 +4380,9 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             }
         }
         unset($emp);
+        usort($data['employees'], function($a, $b) {
+            return strnatcasecmp($a['employee_no'] ?? '', $b['employee_no'] ?? '');
+        });
     }
 
     if ($pdo) {

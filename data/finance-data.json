@@ -15646,7 +15646,7 @@
       "client_po_no": "SD/2026/09",
       "po_date": "2026-11-05",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794907665036",
@@ -15675,7 +15675,7 @@
       "client_po_no": "BD/2026/12",
       "po_date": "2026-11-08",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794907359313",
@@ -15704,7 +15704,7 @@
       "client_po_no": "WALD-2026-11",
       "po_date": "2026-05-11",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794906873322",
@@ -15733,7 +15733,7 @@
       "client_po_no": "PODSUB-2026/0841",
       "po_date": "2026-04-17",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794906783496",
@@ -15762,7 +15762,7 @@
       "client_po_no": "BR/SCA-001/JBN-1504/2026",
       "po_date": "2026-04-19",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794906395194",
@@ -15791,7 +15791,7 @@
       "client_po_no": "AYAT-2026-14",
       "po_date": "2026-02-08",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794906065607",
@@ -15820,7 +15820,7 @@
       "client_po_no": "MOBIN1111",
       "po_date": "2026-01-14",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794891555181",
@@ -15849,7 +15849,7 @@
       "client_po_no": "PODSUB-2025/1826/R1",
       "po_date": "2025-09-22",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794891456844",
@@ -15878,7 +15878,7 @@
       "client_po_no": "HLN-2025-44",
       "po_date": "2025-08-09",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-smi-26-0089",
@@ -15907,7 +15907,7 @@
       "client_po_no": "SMI-26-0089",
       "po_date": "2026-05-13",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "po-cust-1794730202844",
@@ -15929,7 +15929,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2026-06-03",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "internal_ref": "REC-CLPO-44024",
       "ref_no": "REC-CLPO-44024",
       "rec_ref": "REC-CLPO-44024",
@@ -15958,7 +15958,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2026-01-26",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "internal_ref": "REC-CLPO-44016",
       "ref_no": "REC-CLPO-44016",
       "rec_ref": "REC-CLPO-44016",
@@ -16001,7 +16001,7 @@
       ],
       "po_date": "2026-03-10",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "internal_ref": "REC-CLPO-44018",
       "ref_no": "REC-CLPO-44018",
       "rec_ref": "REC-CLPO-44018",
@@ -16030,7 +16030,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2024-03-19",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -16063,7 +16063,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2025-05-01",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "internal_ref": "REC-CLPO-44011",
       "ref_no": "REC-CLPO-44011",
       "rec_ref": "REC-CLPO-44011",
@@ -16092,7 +16092,7 @@
       "approved_by": "Arshad Alam Shaikh",
       "po_date": "2023-05-11",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:30",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17326,7 +17326,7 @@
       ],
       "po_date": "2024-05-25",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17374,7 +17374,7 @@
       ],
       "po_date": "2026-11-09",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17431,7 +17431,7 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "customer_id": "cust-sadeco",
       "customer_name": "M/S SADECO DÉCOR LLC",
       "type": "customer_po",
@@ -17489,7 +17489,7 @@
       "vat_total": 9726.6515,
       "po_date": "2026-11-01",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17547,7 +17547,7 @@
       "vat_total": 719.821,
       "po_date": "2026-06-07",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17605,7 +17605,7 @@
       "vat_total": 509.425,
       "po_date": "2026-06-22",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17663,7 +17663,7 @@
       "vat_total": 3406.8115,
       "po_date": "2026-03-19",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17710,7 +17710,7 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17767,7 +17767,7 @@
       ],
       "po_date": "2024-03-22",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17826,7 +17826,7 @@
       "vat_total": 6493.224,
       "po_date": "2024-10-12",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17873,7 +17873,7 @@
       ],
       "po_date": "2024-11-15",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17930,7 +17930,7 @@
       ],
       "po_date": "2023-07-06",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:30",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -17987,7 +17987,7 @@
       ],
       "po_date": "2025-11-19",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18044,7 +18044,7 @@
       ],
       "po_date": "2026-06-06",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18103,7 +18103,7 @@
       "vat_total": 4524.963500000001,
       "po_date": "2026-06-19",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18159,7 +18159,7 @@
       ],
       "po_date": "2024-07-15",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18216,7 +18216,7 @@
       ],
       "po_date": "2026-06-28",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18264,7 +18264,7 @@
       ],
       "po_date": "2026-11-05",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18321,7 +18321,7 @@
       ],
       "po_date": "2026-10-04",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18373,7 +18373,7 @@
       "vat_total": 0,
       "po_date": "2026-10-26",
       "created_at": "2026-11-21 05:35:02",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "type": "customer_po",
       "po_type": "customer_lpo",
       "direction": "inward",
@@ -18461,6 +18461,18 @@
     }
   ],
   "audit_logs": [
+    {
+      "id": "aud-1a1fd46a549",
+      "timestamp": "2026-11-21T08:43:47+00:00",
+      "actor_name": "Arshad Alam Shaikh",
+      "actor_role": "super_admin",
+      "actor_email": "superadmin@rayangroup.com",
+      "action": "save",
+      "entity": "employee",
+      "entity_id": "EN12008",
+      "details": "Saved employee Muhammad Adnan Ur Rehman Abdul Rehman",
+      "ip_address": "2001:8f8:1c39:1aba:e9d0:55ec:886d:91f"
+    },
     {
       "id": "aud-1a1fd457956",
       "timestamp": "2026-11-21T08:42:31+00:00",
@@ -22671,7 +22683,7 @@
       "bank_account_id": "bank-adcb-uae",
       "reference_no": "REC-CQ-44025",
       "cheque_date": "2026-11-16",
-      "updated_at": "2026-11-21 08:42:31"
+      "updated_at": "2026-11-21 08:45:20"
     },
     {
       "id": "chq-rcp-rec-mwm010bx",
@@ -22690,7 +22702,7 @@
       "notes": "Customer Receipt REC-RV-44071 against REC-RG-INV-44015",
       "created_at": "2026-11-18 10:49:08",
       "bank_account_id": "bank-adcb-uae",
-      "updated_at": "2026-11-21 08:42:31",
+      "updated_at": "2026-11-21 08:45:20",
       "reference_no": "REC-CQ-44026"
     }
   ],
@@ -23178,7 +23190,7 @@
       "currency": "AED",
       "purpose": "Corporate bank cash withdrawal to replenish RAYAN E-Wallets for project disbursements & expenses",
       "status": "Cleared",
-      "created_at": "2026-11-21T08:43:42+00:00",
+      "created_at": "2026-11-21T08:47:31+00:00",
       "updated_at": "2026-11-21 05:35:02"
     },
     {
@@ -25240,7 +25252,7 @@
       "currency": "AED",
       "reference_no": "ATM-ADCB-47231",
       "status": "Approved",
-      "created_at": "2026-11-21T08:43:42+00:00",
+      "created_at": "2026-11-21T08:47:31+00:00",
       "voucher_date": "2026-11-18",
       "updated_at": "2026-11-21 05:35:02"
     },
@@ -25946,10 +25958,10 @@
       "department": "Rayan Engineering",
       "name_ar": "",
       "position_ar": "",
-      "passport_no": "",
+      "passport_no": "PJ9151322",
       "nationality": "Pakistan",
-      "date_of_joining": "2027-07-13",
-      "date_of_appointment": "2027-07-13",
+      "date_of_joining": "2024-07-01",
+      "date_of_appointment": "2024-07-01",
       "end_date": "",
       "resignation_date": "",
       "date_of_leaving": "",
@@ -25982,7 +25994,7 @@
       "status": "Active",
       "eligible_for_rehire": "yes",
       "rehire_notes": "",
-      "updated_at": "2026-11-21T08:42:31.127Z",
+      "updated_at": "2026-11-21T08:43:48.109Z",
       "gender": "Male"
     }
   ],
@@ -26053,6 +26065,8 @@
     }
   ],
   "deleted_payroll_ids": [
+    "ps-june2026-en12001",
+    "PSJune 2026/EN12001",
     "ps-june2026-en12001",
     "PSJune 2026/EN12001",
     "ps-june2026-en12001",
