@@ -104,10 +104,19 @@ export function registerPayrollModules(FinanceApp) {
       } catch (e) { return []; }
     })();
 
+    // Always protect essential corporate staff from accidental deletion cache
+    const protectedStaffKeys = ['emp-en12009', 'en12009', 'emp-mwlpkkbs', 'emp-en12004', 'en12004', 'emp-mwlpkkbr', 'emp-en12001', 'en12001'];
+    const cleanStoredDel = storedDel.filter(id => !protectedStaffKeys.includes(String(id || '').toLowerCase()));
+    try {
+      if (typeof localStorage !== 'undefined' && cleanStoredDel.length !== storedDel.length) {
+        localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(cleanStoredDel));
+      }
+    } catch (e) {}
+
     const deleted = Array.from(new Set([
       ...(Array.isArray(this.db.deleted_employee_ids) ? this.db.deleted_employee_ids : []),
-      ...storedDel
-    ]));
+      ...cleanStoredDel
+    ])).filter(id => !protectedStaffKeys.includes(String(id || '').toLowerCase()));
     this.db.deleted_employee_ids = deleted;
 
     if (!Array.isArray(this.db.employees)) {
@@ -216,13 +225,56 @@ export function registerPayrollModules(FinanceApp) {
         nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
       }
 
-      // Ensure Bakhteyar Alam Mokhtar Ahmad is recognized as EN12009 (Shafiur Rahman is EN12004)
+      // Ensure Bakhteyar Alam Mokhtar Ahmad is ALWAYS present as EN12009 (Civil Engineer)
       let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || e.employee_no === 'EN12009' || e.id === 'emp-en12009');
-      if (bakht) {
+      if (!bakht) {
+        bakht = {
+          id: 'emp-en12009',
+          employee_no: 'EN12009',
+          company_id: this.activeCompanyId || 'rayan-corp-uae',
+          name: 'Bakhteyar Alam Mokhtar Ahmad',
+          name_ar: 'بختيار عالم مختار احمد',
+          position: 'Civil Engineer',
+          position_ar: 'مهندس مدني',
+          department: 'Rayan Engineering',
+          date_of_joining: '2025-08-07',
+          date_of_appointment: '2025-08-07',
+          currency: 'AED',
+          phone: '+971 50 123 4567',
+          email: 'bakhteyar@rayan-group.com',
+          emirates_id: '784-1988-1234567-1',
+          eid_expiry_date: '2027-08-07',
+          passport_no: 'S3552106',
+          passport_expiry_date: '2030-05-15',
+          nationality: 'India',
+          nationality_ar: 'هندي',
+          gender: 'Male',
+          visa_status: 'Employment Visa (Rayan Engineering)',
+          basic_salary: 9500.00,
+          accommodation_allowance: 5500.00,
+          consolidated_allowance: 0.00,
+          other_allowance: 0.00,
+          bank_name: 'Emirates NBD Bank PJSC',
+          swift: 'EBILAEADXXX',
+          iban: 'AE860260001015934645101',
+          account_no: 'AE860260001015934645101',
+          default_pay_method: 'AED RAYAN GROUP Host To Host',
+          project_id: 'prj-toprock-police-01',
+          project_name: 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+          status: 'Active',
+          eligible_for_rehire: 'yes',
+          created_at: '2025-08-07T09:00:00Z',
+          updated_at: new Date().toISOString()
+        };
+        this.db.employees.push(bakht);
+      } else {
         bakht.id = 'emp-en12009';
         bakht.employee_no = 'EN12009';
+        bakht.status = 'Active';
         bakht.passport_no = bakht.passport_no || 'S3552106';
+        bakht.passport_expiry_date = bakht.passport_expiry_date || '2030-05-15';
         bakht.emirates_id = bakht.emirates_id || '784-1988-1234567-1';
+        bakht.eid_expiry_date = bakht.eid_expiry_date || '2027-08-07';
         bakht.phone = bakht.phone || '+971 50 123 4567';
         bakht.email = bakht.email || 'bakhteyar@rayan-group.com';
         if (!bakht.name || !bakht.name.includes('Mokhtar')) bakht.name = 'Bakhteyar Alam Mokhtar Ahmad';
@@ -230,6 +282,8 @@ export function registerPayrollModules(FinanceApp) {
         if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
         if (!bakht.position) bakht.position = 'Civil Engineer';
         if (!bakht.company_id) bakht.company_id = this.activeCompanyId || 'rayan-corp-uae';
+        if (!bakht.basic_salary) bakht.basic_salary = 9500.00;
+        if (!bakht.accommodation_allowance) bakht.accommodation_allowance = 5500.00;
       }
 
       let shafiur = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('shafiur')) || e.id === 'emp-en12004');
@@ -244,12 +298,23 @@ export function registerPayrollModules(FinanceApp) {
           if (e.name && e.name.toLowerCase().includes('bakhteyar')) {
             e.id = 'emp-en12009';
             e.employee_no = 'EN12009';
+            e.status = 'Active';
           }
           if (e.name && e.name.toLowerCase().includes('shafiur')) {
             e.id = 'emp-en12004';
             e.employee_no = 'EN12004';
           }
         });
+        // Deduplicate to avoid collisions
+        const seen = new Set();
+        this.db.employees = this.db.employees.filter(e => {
+          const k = (e.employee_no || e.id || '').toUpperCase();
+          if (!k) return true;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+        this.db.employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
       }
     }
 
@@ -426,6 +491,8 @@ export function registerPayrollModules(FinanceApp) {
     employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
 
     const totalActive = employees.filter(e => (e.status || 'Active').toLowerCase() === 'active').length;
+    const totalResigned = employees.filter(e => (e.status || '').toLowerCase() === 'resigned').length;
+    const totalTerminated = employees.filter(e => (e.status || '').toLowerCase() === 'terminated').length;
     const totalSalaryMonthly = employees.reduce((sum, e) => {
       const basic = Number(e.basic_salary) || 0;
       const acc = Number(e.accommodation_allowance) || 0;
@@ -466,10 +533,13 @@ export function registerPayrollModules(FinanceApp) {
 
       <!-- Metrics Overview Cards -->
       <div class="fin-metrics-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
-        <div class="fin-metric-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
-          <div style="font-size:0.75rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Active Workforce</div>
+        <div class="fin-metric-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:1.25rem; cursor:pointer; transition:transform 0.15s ease;" onclick="window.finApp.setEmployeeStatusFilter('active')" title="Click to filter and view Active Workforce only">
+          <div style="font-size:0.75rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; display:flex; justify-content:space-between; align-items:center;">
+            <span>Active Workforce</span>
+            <span style="font-size:0.68rem; color:#38bdf8; background:rgba(56,189,248,0.14); padding:2px 8px; border-radius:10px; font-weight:700;">View Active 🟢</span>
+          </div>
           <div style="font-size:1.85rem; font-weight:800; color:#38bdf8; margin:6px 0;">${totalActive}</div>
-          <div style="font-size:0.72rem; color:#64748b;">Total enrolled personnel: ${employees.length}</div>
+          <div style="font-size:0.72rem; color:#64748b;">Total enrolled personnel: ${employees.length} (Click to filter)</div>
         </div>
 
         <div class="fin-metric-card" style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem;">
@@ -492,39 +562,64 @@ export function registerPayrollModules(FinanceApp) {
       </div>
 
       <!-- Search & Filters Toolbar -->
-      <div class="fin-filter-bar" style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; margin-bottom:1.25rem; background:rgba(15,23,42,0.4); padding:1rem; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
-        <div style="flex:1; min-width:240px; position:relative;">
-          <input type="text" id="fin-emp-search" class="fin-form-input" placeholder="Search by name, employee #, designation, bank, IBAN..." style="width:100%; padding-left:2.2rem;" oninput="window.finApp.filterEmployeeRows()">
-          <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b;">🔍</span>
+      <div class="fin-filter-bar" style="display:flex; flex-direction:column; gap:0.85rem; margin-bottom:1.25rem; background:rgba(15,23,42,0.55); padding:1rem 1.15rem; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+        <!-- Quick Status View Selector Tabs -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.65rem; padding-bottom:0.75rem; border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <span style="font-size:0.75rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.04em; margin-right:4px;">Workforce View:</span>
+            <button type="button" class="fin-emp-filter-pill active" id="fin-emp-pill-all" onclick="window.finApp.setEmployeeStatusFilter('')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.78rem; font-weight:700; cursor:pointer; background:rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8; box-shadow:0 0 10px rgba(56,189,248,0.25); transition:all 0.15s ease;">
+              👥 All Employees <span style="background:rgba(255,255,255,0.14); padding:1px 6px; border-radius:10px; font-size:0.7rem;">${employees.length}</span>
+            </button>
+            <button type="button" class="fin-emp-filter-pill" id="fin-emp-pill-active" onclick="window.finApp.setEmployeeStatusFilter('active')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.78rem; font-weight:700; cursor:pointer; background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.25); transition:all 0.15s ease;">
+              🟢 Active Employees <span style="background:rgba(16,185,129,0.2); padding:1px 6px; border-radius:10px; font-size:0.7rem;">${totalActive}</span>
+            </button>
+            <button type="button" class="fin-emp-filter-pill" id="fin-emp-pill-resigned" onclick="window.finApp.setEmployeeStatusFilter('resigned')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.78rem; font-weight:700; cursor:pointer; background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.25); transition:all 0.15s ease;">
+              🟡 Resigned <span style="background:rgba(245,158,11,0.2); padding:1px 6px; border-radius:10px; font-size:0.7rem;">${totalResigned}</span>
+            </button>
+            <button type="button" class="fin-emp-filter-pill" id="fin-emp-pill-terminated" onclick="window.finApp.setEmployeeStatusFilter('terminated')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.78rem; font-weight:700; cursor:pointer; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); transition:all 0.15s ease;">
+              🔴 Terminated <span style="background:rgba(239,68,68,0.2); padding:1px 6px; border-radius:10px; font-size:0.7rem;">${totalTerminated}</span>
+            </button>
+          </div>
+          <div style="font-size:0.72rem; color:#94a3b8;">
+            Showing <strong id="fin-emp-showing-count" style="color:#f1f5f9;">${employees.length}</strong> of ${employees.length} personnel
+          </div>
         </div>
-        <select id="fin-emp-dept-filter" class="fin-form-select" style="min-width:180px;" onchange="window.finApp.filterEmployeeRows()">
-          <option value="">All Departments</option>
-          <option value="Rayan Engineering">Rayan Engineering</option>
-          <option value="Civil & Fitout">Civil &amp; Fitout</option>
-          <option value="Operations">Operations</option>
-          <option value="MEP & Electrical">MEP &amp; Electrical</option>
-          <option value="Management">Management</option>
-        </select>
-        <select id="fin-emp-proj-filter" class="fin-form-select" style="min-width:200px;" onchange="window.finApp.filterEmployeeRows()">
-          <option value="">All Project Allocations</option>
-          <option value="corporate">Corporate / General Overhead</option>
-          ${projects.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.code || '')} - ${escapeHtml(p.name)}</option>`).join('')}
-        </select>
-        <select id="fin-emp-status-filter" class="fin-form-select" style="min-width:130px;" onchange="window.finApp.filterEmployeeRows()">
-          <option value="">All Statuses</option>
-          <option value="active">Active</option>
-          <option value="on leave">On Leave</option>
-          <option value="resigned">Resigned</option>
-          <option value="terminated">Terminated</option>
-        </select>
-        <select id="fin-emp-rehire-filter" class="fin-form-select" style="min-width:150px;" onchange="window.finApp.filterEmployeeRows()">
-          <option value="">All Rehire Status</option>
-          <option value="yes">✓ Eligible for Rehire</option>
-          <option value="no">✕ Ineligible for Rehire</option>
-        </select>
-        <button type="button" class="fin-btn-secondary" onclick="window.finApp.renderEmployeesTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')))">
-          🔄 Refresh
-        </button>
+
+        <!-- Filter Controls Row -->
+        <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+          <div style="flex:1; min-width:240px; position:relative;">
+            <input type="text" id="fin-emp-search" class="fin-form-input" placeholder="Search by name, employee #, designation, bank, IBAN..." style="width:100%; padding-left:2.2rem;" oninput="window.finApp.filterEmployeeRows()">
+            <span style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:#64748b;">🔍</span>
+          </div>
+          <select id="fin-emp-dept-filter" class="fin-form-select" style="min-width:170px;" onchange="window.finApp.filterEmployeeRows()">
+            <option value="">All Departments</option>
+            <option value="Rayan Engineering">Rayan Engineering</option>
+            <option value="Civil & Fitout">Civil &amp; Fitout</option>
+            <option value="Operations">Operations</option>
+            <option value="MEP & Electrical">MEP &amp; Electrical</option>
+            <option value="Management">Management</option>
+          </select>
+          <select id="fin-emp-proj-filter" class="fin-form-select" style="min-width:190px;" onchange="window.finApp.filterEmployeeRows()">
+            <option value="">All Project Allocations</option>
+            <option value="corporate">Corporate / General Overhead</option>
+            ${projects.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.code || '')} - ${escapeHtml(p.name)}</option>`).join('')}
+          </select>
+          <select id="fin-emp-status-filter" class="fin-form-select" style="min-width:165px; font-weight:700;" onchange="window.finApp.onStatusFilterDropdownChange(this.value)">
+            <option value="">All Statuses (${employees.length})</option>
+            <option value="active">🟢 Active Employees (${totalActive})</option>
+            <option value="on leave">On Leave</option>
+            <option value="resigned">🟡 Resigned (${totalResigned})</option>
+            <option value="terminated">🔴 Terminated (${totalTerminated})</option>
+          </select>
+          <select id="fin-emp-rehire-filter" class="fin-form-select" style="min-width:150px;" onchange="window.finApp.filterEmployeeRows()">
+            <option value="">All Rehire Status</option>
+            <option value="yes">✓ Eligible for Rehire</option>
+            <option value="no">✕ Ineligible for Rehire</option>
+          </select>
+          <button type="button" class="fin-btn-secondary" onclick="window.finApp.resetEmployeeFilters()" title="Reset all filters">
+            🔄 Reset
+          </button>
+        </div>
       </div>
 
       <!-- Employees Directory Table -->
@@ -752,10 +847,90 @@ export function registerPayrollModules(FinanceApp) {
     // Always sort filtered employees serially by employee_no
     employees.sort((a, b) => (a.employee_no || '').localeCompare(b.employee_no || '', undefined, { numeric: true, sensitivity: 'base' }));
 
+    const countEl = document.getElementById('fin-emp-showing-count');
+    if (countEl) countEl.textContent = employees.length;
+
     const tbody = document.getElementById('fin-emp-tbody');
     if (tbody) {
       tbody.innerHTML = this.renderEmployeeRowsHtml(employees);
     }
+  };
+
+  proto.setEmployeeStatusFilter = function (status) {
+    const sel = document.getElementById('fin-emp-status-filter');
+    if (sel) sel.value = status;
+    this.updateStatusPills(status);
+    this.filterEmployeeRows();
+  };
+
+  proto.onStatusFilterDropdownChange = function (val) {
+    this.updateStatusPills(val);
+    this.filterEmployeeRows();
+  };
+
+  proto.updateStatusPills = function (activeVal) {
+    const pills = [
+      { id: 'fin-emp-pill-all', val: '' },
+      { id: 'fin-emp-pill-active', val: 'active' },
+      { id: 'fin-emp-pill-resigned', val: 'resigned' },
+      { id: 'fin-emp-pill-terminated', val: 'terminated' }
+    ];
+    pills.forEach(p => {
+      const el = document.getElementById(p.id);
+      if (!el) return;
+      const isSelected = (p.val === activeVal);
+      if (isSelected) {
+        el.classList.add('active');
+        if (p.val === 'active') {
+          el.style.background = 'rgba(16,185,129,0.25)';
+          el.style.borderColor = '#10b981';
+          el.style.boxShadow = '0 0 12px rgba(16,185,129,0.3)';
+        } else if (p.val === 'resigned') {
+          el.style.background = 'rgba(245,158,11,0.25)';
+          el.style.borderColor = '#f59e0b';
+          el.style.boxShadow = '0 0 12px rgba(245,158,11,0.3)';
+        } else if (p.val === 'terminated') {
+          el.style.background = 'rgba(239,68,68,0.25)';
+          el.style.borderColor = '#ef4444';
+          el.style.boxShadow = '0 0 12px rgba(239,68,68,0.3)';
+        } else {
+          el.style.background = 'rgba(56,189,248,0.25)';
+          el.style.borderColor = '#38bdf8';
+          el.style.boxShadow = '0 0 12px rgba(56,189,248,0.3)';
+        }
+      } else {
+        el.classList.remove('active');
+        el.style.boxShadow = 'none';
+        if (p.val === 'active') {
+          el.style.background = 'rgba(16,185,129,0.1)';
+          el.style.borderColor = 'rgba(16,185,129,0.25)';
+        } else if (p.val === 'resigned') {
+          el.style.background = 'rgba(245,158,11,0.1)';
+          el.style.borderColor = 'rgba(245,158,11,0.25)';
+        } else if (p.val === 'terminated') {
+          el.style.background = 'rgba(239,68,68,0.1)';
+          el.style.borderColor = 'rgba(239,68,68,0.25)';
+        } else {
+          el.style.background = 'rgba(255,255,255,0.06)';
+          el.style.borderColor = 'rgba(255,255,255,0.12)';
+        }
+      }
+    });
+  };
+
+  proto.resetEmployeeFilters = function () {
+    const s = document.getElementById('fin-emp-search');
+    const d = document.getElementById('fin-emp-dept-filter');
+    const p = document.getElementById('fin-emp-proj-filter');
+    const st = document.getElementById('fin-emp-status-filter');
+    const r = document.getElementById('fin-emp-rehire-filter');
+    if (s) s.value = '';
+    if (d) d.value = '';
+    if (p) p.value = '';
+    if (st) st.value = '';
+    if (r) r.value = '';
+    this.updateStatusPills('');
+    this.filterEmployeeRows();
   };
 
   // ==========================================================================
@@ -767,6 +942,8 @@ export function registerPayrollModules(FinanceApp) {
     this.ensurePayrollSeedData();
     const payroll = (this.db?.payroll || []).filter(p => this.matchesActiveCompany(p.company_id));
     const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
+    const activeEmployees = employees.filter(e => (e.status || 'Active').toLowerCase() === 'active');
+    const formerEmployees = employees.filter(e => (e.status || 'Active').toLowerCase() !== 'active');
 
     const totalSlips = payroll.length;
     const paidSlips = payroll.filter(p => (p.status || '').toLowerCase() === 'paid');
@@ -857,7 +1034,14 @@ export function registerPayrollModules(FinanceApp) {
         <!-- Filter by Employee -->
         <select id="fin-pay-emp-filter" class="fin-form-select" style="min-width:180px;" onchange="window.finApp.filterPayrollRows()">
           <option value="">All Employees (${employees.length})</option>
-          ${employees.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.employee_no)} - ${escapeHtml(e.name)}</option>`).join('')}
+          <optgroup label="🟢 Active Employees (${activeEmployees.length})">
+            ${activeEmployees.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.employee_no)} - ${escapeHtml(e.name)}</option>`).join('')}
+          </optgroup>
+          ${formerEmployees.length > 0 ? `
+          <optgroup label="⚪ Former Employees (${formerEmployees.length})">
+            ${formerEmployees.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.employee_no)} - ${escapeHtml(e.name)} [${escapeHtml(e.status)}]</option>`).join('')}
+          </optgroup>
+          ` : ''}
         </select>
 
         <!-- Filter by Source Type -->
@@ -2926,12 +3110,17 @@ export function registerPayrollModules(FinanceApp) {
     const bankAccounts = (this.db?.bank_accounts || []).filter(b => this.matchesActiveCompany(b.company_id));
     const cashRegisters = (this.db?.cash_in_hand || []).filter(c => this.matchesActiveCompany(c.company_id));
 
+    const activeEmployees = employees.filter(e => (e.status || 'Active').toLowerCase() === 'active');
+    const formerEmployees = employees.filter(e => (e.status || 'Active').toLowerCase() !== 'active');
+
     // Determine target employee
     let targetEmp = null;
     if (slip?.employee_id) {
       targetEmp = employees.find(e => e.id === slip.employee_id || e.employee_no === slip.employee_id);
     } else if (empId) {
       targetEmp = employees.find(e => e.id === empId || e.employee_no === empId || (e.name && e.name.toLowerCase() === (empId || '').toLowerCase()));
+    } else if (activeEmployees.length > 0) {
+      targetEmp = activeEmployees[0];
     } else if (employees.length > 0) {
       targetEmp = employees[0];
     }
@@ -2998,13 +3187,30 @@ export function registerPayrollModules(FinanceApp) {
               </div>
               <div class="fin-form-grid-3" style="align-items:flex-start;">
                 <div class="fin-form-group" style="margin-bottom:0;">
-                  <label class="fin-field-label">Registered Employee <span style="color:#ef4444;">*</span></label>
-                  <select name="employee_id" id="fin-rec-emp-select" class="fin-form-select" required onchange="window.finApp.onRecordEmpChange(this.value)" style="border-color:rgba(56,189,248,0.35); background:#0f172a;">
-                    ${employees.map(e => `
-                      <option value="${escapeHtml(e.id)}" ${(targetEmp?.id === e.id) ? 'selected' : ''}>
-                        ${escapeHtml(e.employee_no)} — ${escapeHtml(e.name)} (${escapeHtml(e.position || 'Staff')})
-                      </option>
-                    `).join('')}
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label class="fin-field-label" style="margin-bottom:0;">Registered Employee <span style="color:#ef4444;">*</span></label>
+                    <div style="display:flex; gap:3px;">
+                      <button type="button" id="fin-rec-filter-active-btn" class="fin-doc-pill-btn active" style="padding:1px 6px; font-size:0.65rem; font-weight:700; background:rgba(16,185,129,0.22); color:#10b981; border:1px solid rgba(16,185,129,0.4); cursor:pointer;" onclick="window.finApp.toggleRecEmpFilter('active')">🟢 Active Only</button>
+                      <button type="button" id="fin-rec-filter-all-btn" class="fin-doc-pill-btn" style="padding:1px 6px; font-size:0.65rem; font-weight:700; background:rgba(255,255,255,0.06); color:#94a3b8; border:1px solid rgba(255,255,255,0.15); cursor:pointer;" onclick="window.finApp.toggleRecEmpFilter('all')">👥 All</button>
+                    </div>
+                  </div>
+                  <select name="employee_id" id="fin-rec-emp-select" class="fin-form-select" required onchange="window.finApp.onRecordEmpChange(this.value)" style="border-color:rgba(56,189,248,0.35); background:#0f172a; font-weight:600;">
+                    <optgroup label="🟢 Active Employees (${activeEmployees.length})" id="fin-rec-optgroup-active">
+                      ${activeEmployees.map(e => `
+                        <option value="${escapeHtml(e.id)}" ${(targetEmp?.id === e.id) ? 'selected' : ''}>
+                          ${escapeHtml(e.employee_no)} — ${escapeHtml(e.name)} (${escapeHtml(e.position || 'Staff')})
+                        </option>
+                      `).join('')}
+                    </optgroup>
+                    ${formerEmployees.length > 0 ? `
+                    <optgroup label="⚪ Former / Inactive Staff (${formerEmployees.length})" id="fin-rec-optgroup-former">
+                      ${formerEmployees.map(e => `
+                        <option value="${escapeHtml(e.id)}" ${(targetEmp?.id === e.id) ? 'selected' : ''}>
+                          ${escapeHtml(e.employee_no)} — ${escapeHtml(e.name)} [${escapeHtml(e.status || 'Inactive')}]
+                        </option>
+                      `).join('')}
+                    </optgroup>
+                    ` : ''}
                   </select>
                 </div>
 
@@ -3213,6 +3419,21 @@ export function registerPayrollModules(FinanceApp) {
       if (slipNoEl && emp) {
         slipNoEl.value = `PS${val.replace(/\s+/g, '')}/${emp.employee_no || 'EN'}`;
       }
+    }
+  };
+
+  proto.toggleRecEmpFilter = function (mode) {
+    const actBtn = document.getElementById('fin-rec-filter-active-btn');
+    const allBtn = document.getElementById('fin-rec-filter-all-btn');
+    const formerGroup = document.getElementById('fin-rec-optgroup-former');
+    if (mode === 'active') {
+      if (formerGroup) formerGroup.style.display = 'none';
+      if (actBtn) { actBtn.style.background = 'rgba(16,185,129,0.25)'; actBtn.style.borderColor = '#10b981'; actBtn.style.color = '#10b981'; }
+      if (allBtn) { allBtn.style.background = 'rgba(255,255,255,0.06)'; allBtn.style.borderColor = 'rgba(255,255,255,0.15)'; allBtn.style.color = '#94a3b8'; }
+    } else {
+      if (formerGroup) formerGroup.style.display = '';
+      if (allBtn) { allBtn.style.background = 'rgba(56,189,248,0.25)'; allBtn.style.borderColor = '#38bdf8'; allBtn.style.color = '#38bdf8'; }
+      if (actBtn) { actBtn.style.background = 'rgba(255,255,255,0.06)'; actBtn.style.borderColor = 'rgba(255,255,255,0.15)'; actBtn.style.color = '#94a3b8'; }
     }
   };
 
@@ -5012,7 +5233,18 @@ export function registerPayrollModules(FinanceApp) {
     if (!cert) cert = (this.db?.employment_certificates || [])[0] || {};
 
     const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
-    const empOptions = employees.map(e => `<option value="${e.id}" ${cert.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')})</option>`).join('');
+    const activeEmps = employees.filter(e => (e.status || 'Active').toLowerCase() === 'active');
+    const formerEmps = employees.filter(e => (e.status || 'Active').toLowerCase() !== 'active');
+    const empOptions = `
+      <optgroup label="🟢 Active Employees (${activeEmps.length})">
+        ${activeEmps.map(e => `<option value="${e.id}" ${cert.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')})</option>`).join('')}
+      </optgroup>
+      ${formerEmps.length > 0 ? `
+      <optgroup label="⚪ Former Staff (${formerEmps.length})">
+        ${formerEmps.map(e => `<option value="${e.id}" ${cert.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')}) [${escapeHtml(e.status)}]</option>`).join('')}
+      </optgroup>
+      ` : ''}
+    `;
 
     const isWithoutSalary = (cert.salary_option === 'without_salary');
     const targetPreset = cert.target_preset || 'general';
@@ -5972,7 +6204,18 @@ export function registerPayrollModules(FinanceApp) {
     if (!loa) loa = (this.db?.letters_of_assignment || [])[0] || {};
 
     const employees = (this.db?.employees || []).filter(e => this.matchesActiveCompany(e.company_id));
-    const empOptions = employees.map(e => `<option value="${e.id}" ${loa.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')})</option>`).join('');
+    const activeEmps = employees.filter(e => (e.status || 'Active').toLowerCase() === 'active');
+    const formerEmps = employees.filter(e => (e.status || 'Active').toLowerCase() !== 'active');
+    const empOptions = `
+      <optgroup label="🟢 Active Employees (${activeEmps.length})">
+        ${activeEmps.map(e => `<option value="${e.id}" ${loa.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')})</option>`).join('')}
+      </optgroup>
+      ${formerEmps.length > 0 ? `
+      <optgroup label="⚪ Former Staff (${formerEmps.length})">
+        ${formerEmps.map(e => `<option value="${e.id}" ${loa.employee_id === e.id ? 'selected' : ''}>${escapeHtml(e.name)} (${escapeHtml(e.employee_no || '')}) [${escapeHtml(e.status)}]</option>`).join('')}
+      </optgroup>
+      ` : ''}
+    `;
 
     const modalHtml = `
       <div class="fin-modal-backdrop open" id="modal-loa-edit" style="z-index:100030;">

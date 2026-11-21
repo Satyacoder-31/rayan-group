@@ -4387,6 +4387,7 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             if (stripos($emp['name'] ?? '', 'Bakhteyar') !== false) {
                 $emp['id'] = 'emp-en12009';
                 $emp['employee_no'] = 'EN12009';
+                $emp['status'] = 'Active';
             }
             if (stripos($emp['name'] ?? '', 'Shafiur') !== false) {
                 $emp['id'] = 'emp-en12004';
@@ -4394,6 +4395,51 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             }
         }
         unset($emp);
+        $hasBakht = false;
+        foreach ($data['employees'] as $e) {
+            if (stripos($e['name'] ?? '', 'Bakhteyar') !== false || ($e['employee_no'] ?? '') === 'EN12009' || ($e['id'] ?? '') === 'emp-en12009') {
+                $hasBakht = true;
+                break;
+            }
+        }
+        if (!$hasBakht) {
+            $data['employees'][] = [
+                'id' => 'emp-en12009',
+                'employee_no' => 'EN12009',
+                'company_id' => 'rayan-corp-uae',
+                'name' => 'Bakhteyar Alam Mokhtar Ahmad',
+                'name_ar' => 'بختيار عالم مختار احمد',
+                'position' => 'Civil Engineer',
+                'position_ar' => 'مهندس مدني',
+                'department' => 'Rayan Engineering',
+                'date_of_joining' => '2025-08-07',
+                'date_of_appointment' => '2025-08-07',
+                'currency' => 'AED',
+                'phone' => '+971 50 123 4567',
+                'email' => 'bakhteyar@rayan-group.com',
+                'emirates_id' => '784-1988-1234567-1',
+                'eid_expiry_date' => '2027-08-07',
+                'passport_no' => 'S3552106',
+                'passport_expiry_date' => '2030-05-15',
+                'nationality' => 'India',
+                'nationality_ar' => 'هندي',
+                'gender' => 'Male',
+                'visa_status' => 'Employment Visa (Rayan Engineering)',
+                'basic_salary' => 9500.00,
+                'accommodation_allowance' => 5500.00,
+                'consolidated_allowance' => 0.00,
+                'other_allowance' => 0.00,
+                'bank_name' => 'Emirates NBD Bank PJSC',
+                'swift' => 'EBILAEADXXX',
+                'iban' => 'AE860260001015934645101',
+                'account_no' => 'AE860260001015934645101',
+                'default_pay_method' => 'AED RAYAN GROUP Host To Host',
+                'project_id' => 'prj-toprock-police-01',
+                'project_name' => 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+                'status' => 'Active',
+                'eligible_for_rehire' => 'yes'
+            ];
+        }
         usort($data['employees'], function($a, $b) {
             return strnatcasecmp($a['employee_no'] ?? '', $b['employee_no'] ?? '');
         });
