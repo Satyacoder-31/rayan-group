@@ -242,6 +242,18 @@ async function deploy() {
                 liveJson.data.payroll = liveJson.data.payroll.filter(p => !deletedPayrollList.includes(p.id) && !deletedPayrollList.includes(p.slip_no));
               }
 
+              // Merge local payroll slips into live payroll to guarantee all created pay slips are preserved
+              const localPayroll = (localData.payroll || []);
+              if (!Array.isArray(liveJson.data.payroll)) liveJson.data.payroll = [];
+              localPayroll.forEach(lp => {
+                if (!deletedPayrollList.includes(lp.id) && !deletedPayrollList.includes(lp.slip_no)) {
+                  const existing = liveJson.data.payroll.find(p => p.id === lp.id || (p.slip_no && lp.slip_no && p.slip_no.toLowerCase() === lp.slip_no.toLowerCase()));
+                  if (!existing) {
+                    liveJson.data.payroll.push(lp);
+                  }
+                }
+              });
+
               if (Array.isArray(liveJson.data.debit_notes)) {
                 liveJson.data.debit_notes.forEach(dn => {
                   if (dn && dn.debit_note_no && dn.debit_note_no.startsWith('DN-RG-')) {
@@ -447,7 +459,12 @@ async function deploy() {
   }
 
   console.log('\n📦 [1/6] Building production bundle (vite build)...');
-  execSync('npm run build', { stdio: 'inherit' });
+  try {
+    execSync('npm run build', { stdio: 'inherit' });
+  } catch (err) {
+    console.warn('Vite build initial attempt warning, retrying build...');
+    execSync('npm run build', { stdio: 'inherit' });
+  }
 
   // Ensure fresh dist copy after vite build
   try {

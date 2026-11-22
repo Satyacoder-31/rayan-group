@@ -1139,18 +1139,34 @@ export function registerPayrollModules(FinanceApp) {
             ${slip.normal_overtime > 0 ? `<div style="font-size:0.65rem; color:#38bdf8;">Incl. OT: ${this.formatCurrency(slip.normal_overtime)}</div>` : ''}
           </td>
           <td>
-            <div style="font-size:0.8rem; font-weight:600; color:#f1f5f9;">
-              ${escapeHtml(slip.payout_source_name || slip.bank_name || 'Bank Transfer')}
+            <div style="font-size:0.82rem; font-weight:700; color:#f1f5f9; display:flex; align-items:center; gap:5px;">
+              <span>${slip.payout_source_type === 'cash' ? '💵' : '🏦'}</span>
+              <span>${escapeHtml(slip.payout_source_name || (slip.payout_source_type === 'cash' ? 'RAYAN E-Wallets' : 'Bank Transfer'))}</span>
             </div>
-            <div style="font-size:0.7rem; color:#94a3b8;">
-              ${slip.payout_source_type === 'cash' ? '💵 Cash / RAYAN E-Wallets' : '🏦 Bank Transfer / Wire'}
-              ${slip.payout_reference ? ` • Ref: ${escapeHtml(slip.payout_reference)}` : ''}
+            <div style="font-size:0.7rem; color:${isPaid ? '#10b981' : '#f59e0b'}; font-weight:600; margin-top:2px;">
+              ${isPaid ? '✓ Deducted from Account' : '⏳ Linked (Pending Payout)'}
             </div>
+            ${slip.payout_reference ? `
+              <div style="font-size:0.68rem; color:#64748b; font-family:monospace; margin-top:2px;">
+                Ref: ${escapeHtml(slip.payout_reference)}
+              </div>
+            ` : ''}
           </td>
-          <td style="text-align:center;">
+          <td style="text-align:center; white-space:nowrap;">
             <span style="display:inline-block; padding:3px 9px; border-radius:12px; font-size:0.72rem; font-weight:700; color:${statusColor}; background:${statusBg}; border:1px solid ${statusColor}40;">
               ${escapeHtml((slip.status || 'Draft').toUpperCase())}
             </span>
+            ${!isPaid ? `
+              <div style="margin-top:5px;">
+                <button type="button" class="fin-btn-row-action" style="background:linear-gradient(135deg, #059669 0%, #10b981 100%); color:#ffffff; font-weight:800; border:none; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:0.72rem; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 8px rgba(16,185,129,0.35); transition:transform 0.15s ease;" onclick="window.finApp.disbursePayrollDirect('${escapeHtml(slip.id)}')" title="Pay and deduct balance immediately from ${escapeHtml(slip.payout_source_name || 'RAYAN E-Wallets')}">
+                  ⚡ Pay &amp; Deduct
+                </button>
+              </div>
+            ` : `
+              <div style="margin-top:3px; font-size:0.68rem; color:#10b981; font-weight:600;">
+                ✓ Deducted
+              </div>
+            `}
           </td>
           <td style="text-align:right;">
             <div style="display:inline-flex; gap:0.35rem; align-items:center;">
@@ -3874,6 +3890,9 @@ export function registerPayrollModules(FinanceApp) {
 
     this.closeRecordEmployeePaymentModal();
     this.normalizeAllBalances();
+    if (typeof this.saveDatabaseToCache === 'function') {
+      this.saveDatabaseToCache();
+    }
 
     const deductionMsg = status === 'Paid'
       ? ` and deducted ${this.formatCurrency(netPay)} from ${sourceName}`
@@ -4160,6 +4179,9 @@ export function registerPayrollModules(FinanceApp) {
 
     this.closeDisburseModal();
     this.normalizeAllBalances();
+    if (typeof this.saveDatabaseToCache === 'function') {
+      this.saveDatabaseToCache();
+    }
     this.showToast ? this.showToast(`Salary disbursed: ${this.formatCurrency(slip.net_pay)} deducted from ${sourceName}`, 'success') : null;
 
     try {
@@ -4178,6 +4200,89 @@ export function registerPayrollModules(FinanceApp) {
 
     if (this.activeTab === 'payroll') {
       this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
+    }
+  };
+
+  proto.disbursePayrollDirect = async function (slipId) {
+    this.ensurePayrollSeedData();
+    const slip = (this.db?.payroll || []).find(p => p.id === slipId);
+    if (!slip) {
+      alert('Pay slip not found');
+      return;
+    }
+
+    const net = Number(slip.net_pay) || (Number(slip.total_earnings || 0) - Number(slip.total_deductions || 0));
+    const sourceType = slip.payout_source_type || 'cash';
+    let sourceName = slip.payout_source_name || (sourceType === 'cash' ? 'RAYAN E-Wallets' : 'Abu Dhabi Commercial Bank (ADCB)');
+    let currentBalance = 0;
+
+    if (sourceType === 'cash') {
+      const reg = (this.db?.cash_in_hand || []).find(c => c.id === slip.payout_source_id) ||
+        (this.db?.cash_in_hand || []).find(c => (c.register_name || '').toLowerCase().includes('wallet')) ||
+        (this.db?.cash_in_hand || [])[0];
+      if (reg) {
+        sourceName = reg.register_name;
+        currentBalance = Number(reg.balance) || 0;
+        slip.payout_source_id = reg.id;
+      }
+    } else {
+      const bank = (this.db?.bank_accounts || []).find(b => b.id === slip.payout_source_id) ||
+        (this.db?.bank_accounts || [])[0];
+      if (bank) {
+        sourceName = bank.bank_name;
+        currentBalance = Number(bank.balance) || 0;
+        slip.payout_source_id = bank.id;
+      }
+    }
+    slip.payout_source_name = sourceName;
+
+    const confirmMsg = `⚡ Confirm Salary Payout & Direct Balance Deduction:\n\n` +
+      `• Employee: ${slip.employee_name} (${slip.employee_no || ''})\n` +
+      `• Pay Slip Ref: ${slip.slip_no}\n` +
+      `• Target Period: ${slip.month_year || slip.period_label || 'Current'}\n` +
+      `• Payout Net Amount: ${this.formatCurrency(net, slip.currency || 'AED')}\n` +
+      `• Payment Source: ${sourceName} (Available Balance: ${this.formatCurrency(currentBalance)})\n\n` +
+      `Click OK to deduct ${this.formatCurrency(net)} immediately from ${sourceName} and mark this slip as Paid.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    slip.status = 'Paid';
+    slip.payment_date = new Date().toISOString().split('T')[0];
+    if (!slip.payout_reference) {
+      slip.payout_reference = `TXN-PAYROLL-${slip.payment_date.replace(/-/g, '')}-${slip.employee_no || 'EMP'}`;
+    }
+    slip.updated_at = new Date().toISOString();
+
+    // Execute direct deduction from cash or bank and create outflow voucher/wire
+    this.applyPayrollPayoutDeduction(slip);
+    this.normalizeAllBalances();
+    if (typeof this.saveDatabaseToCache === 'function') {
+      this.saveDatabaseToCache();
+    }
+
+    this.showToast
+      ? this.showToast(`✓ Salary disbursed: ${this.formatCurrency(net)} deducted from ${sourceName}`, 'success')
+      : alert(`✓ Salary disbursed: ${this.formatCurrency(net)} deducted from ${sourceName}`);
+
+    // Sync with backend API
+    try {
+      await this.syncWithBackend('disburse_payroll', {
+        slip_id: slip.id,
+        payroll: slip,
+        source_type: slip.payout_source_type || 'cash',
+        source_id: slip.payout_source_id,
+        amount: net,
+        payment_date: slip.payment_date,
+        payout_reference: slip.payout_reference
+      });
+    } catch (err) {
+      console.warn('Backend disburse sync warning:', err);
+    }
+
+    if (this.activeTab === 'payroll') {
+      this.renderPayrollTab((document.getElementById('fin-tab-content-root') || document.getElementById('fin-view-container')));
+    } else if (typeof this.renderActiveTab === 'function') {
+      this.renderActiveTab();
     }
   };
 
