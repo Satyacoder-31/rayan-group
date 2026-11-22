@@ -2801,6 +2801,63 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
     const ultDocNo = ult.ref_no || 'REC-RG-ULT-11006';
     const modalHtml = `
       <div class="fin-doc-modal-backdrop" id="fin-doc-print-modal" data-doc-no="${escapeHtml(ultDocNo)}" data-doc-type="Undertaking Letter">
+        <style>
+          @media print {
+            @page {
+              size: A4 portrait;
+              margin: 6mm 10mm 6mm 10mm;
+            }
+            #fin-doc-print-modal .fin-doc-viewport {
+              display: block !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 100% !important;
+            }
+            #fin-doc-print-modal .fin-document-paper.fin-doc-page-1 {
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: space-between !important;
+              page-break-before: avoid !important;
+              break-before: avoid !important;
+              page-break-after: always !important;
+              break-after: page !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              margin: 0 auto !important;
+              margin-bottom: 0 !important;
+              padding: 10mm 14mm 8mm 14mm !important;
+              min-height: 275mm !important;
+              height: 275mm !important;
+              box-sizing: border-box !important;
+            }
+            #fin-doc-print-modal .fin-document-paper.fin-doc-page-2 {
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: space-between !important;
+              page-break-before: always !important;
+              break-before: page !important;
+              page-break-after: auto !important;
+              break-after: auto !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              margin: 0 auto !important;
+              margin-top: 0 !important;
+              padding: 10mm 14mm 8mm 14mm !important;
+              min-height: 275mm !important;
+              height: 275mm !important;
+              box-sizing: border-box !important;
+            }
+            #fin-doc-print-modal .fin-doc-page-break {
+              page-break-before: always !important;
+              break-before: page !important;
+              height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              display: block !important;
+            }
+          }
+        </style>
         <div class="fin-doc-toolbar">
           <div class="fin-doc-toolbar-left">
             <div class="fin-doc-title-badge">
@@ -2843,9 +2900,9 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
           </div>
         </div>
 
-        <div class="fin-doc-viewport">
+        <div class="fin-doc-viewport fin-doc-multipage">
           <!-- PAGE 1: Undertaking Statement -->
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; min-height:1020px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div class="fin-document-paper fin-doc-page-1" style="background:#ffffff; color:#111827; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 1.5rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; min-height:1020px; display:flex; flex-direction:column; justify-content:space-between; page-break-after:always !important; break-after:page !important; page-break-inside:avoid !important; break-inside:avoid !important;">
             ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
 
             <div style="position:relative; z-index:1;">
@@ -2894,8 +2951,10 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
             </div>
           </div>
 
+          <div class="fin-doc-page-break" style="page-break-before:always !important; break-before:page !important; height:0; margin:0; padding:0; border:none; display:block;"></div>
+
           <!-- PAGE 2: Employee List Table & Dual Stamps -->
-          <div class="fin-document-paper" style="background:#ffffff; color:#111827; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; min-height:1020px; display:flex; flex-direction:column; justify-content:space-between; page-break-before:always; break-before:page;">
+          <div class="fin-document-paper fin-doc-page-2" style="background:#ffffff; color:#111827; padding:12mm 16mm 10mm 16mm; font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing:border-box; width:100%; max-width:820px; margin:0 auto 2rem auto; box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:4px; position:relative; min-height:1020px; display:flex; flex-direction:column; justify-content:space-between; page-break-before:always !important; break-before:page !important; page-break-after:auto !important; break-after:auto !important; page-break-inside:avoid !important; break-inside:avoid !important;">
             ${this.getRayanWatermark ? this.getRayanWatermark() : ''}
 
             <div style="position:relative; z-index:1;">
@@ -2994,7 +3053,9 @@ I accept the above works on behalf of M/S TOP ROCK INTERIORS LLC, to be complete
     @media print {
       @page { size: A4 portrait; margin: 8mm 10mm; }
       body { background: #fff; padding: 0; gap: 0; }
-      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 8mm 10mm !important; page-break-after: always; break-after: page; }
+      .fin-document-paper { box-shadow: none; border-radius: 0; max-width: 100%; width: 100%; padding: 8mm 10mm !important; }
+      .fin-doc-page-1 { page-break-before: avoid !important; break-before: avoid !important; page-break-after: always !important; break-after: page !important; }
+      .fin-doc-page-2 { page-break-before: always !important; break-before: page !important; page-break-after: auto !important; break-after: auto !important; }
     }
   </style>
 </head>

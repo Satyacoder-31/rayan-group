@@ -156,6 +156,29 @@
         page-break-inside: auto !important;
         break-inside: auto !important;
       }
+      .fin-doc-page-1,
+      .fin-document-paper.fin-doc-page-1 {
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        margin-bottom: 0 !important;
+      }
+      .fin-doc-page-2,
+      .fin-document-paper.fin-doc-page-2,
+      .fin-doc-page-break,
+      .fin-document-paper[style*="page-break-before:always"],
+      .fin-document-paper[style*="page-break-before: always"],
+      .fin-document-paper[style*="break-before:page"],
+      .fin-document-paper[style*="break-before: page"] {
+        page-break-before: always !important;
+        break-before: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        margin-top: 0 !important;
+      }
       .fin-document-paper table,
       .fin-document-paper tr {
         page-break-inside: avoid !important;
