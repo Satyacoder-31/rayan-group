@@ -151,7 +151,17 @@ async function deploy() {
                   if (emp.name && emp.name.includes('Bakhteyar')) {
                     emp.id = 'emp-en12009';
                     emp.employee_no = 'EN12009';
-                    emp.status = 'Active';
+                    if (emp.phone === '+971 50 123 4567') emp.phone = '+971528990903';
+                    if (emp.email === 'bakhteyar@rayan-group.com') emp.email = 'bakhteyarnke@gmail.com';
+                    if (emp.project_name && emp.project_name.includes('Police Academy')) {
+                      emp.project_id = '';
+                      emp.project_name = 'Corporate / General Overhead';
+                    }
+                    if (emp.basic_salary === 9500 && emp.accommodation_allowance === 5500) {
+                      emp.basic_salary = 16000;
+                      emp.accommodation_allowance = 4000;
+                      emp.other_allowance = 16000;
+                    }
                   }
                   if (emp.name && emp.name.includes('Shafiur')) {
                     emp.id = 'emp-en12004';
@@ -176,8 +186,11 @@ async function deploy() {
                     emp.passport_expiry_date = '';
                   }
                 });
+
+                const delEmps = (liveJson.data.deleted_employee_ids || []).map(x => String(x).toLowerCase());
+                const isBakhtDel = delEmps.includes('emp-en12009') || delEmps.includes('en12009');
                 const hasBakht = liveJson.data.employees.some(e => (e.name && e.name.includes('Bakhteyar')) || e.employee_no === 'EN12009' || e.id === 'emp-en12009');
-                if (!hasBakht) {
+                if (!hasBakht && !isBakhtDel) {
                   liveJson.data.employees.push({
                     id: 'emp-en12009',
                     employee_no: 'EN12009',
@@ -187,30 +200,30 @@ async function deploy() {
                     position: 'Civil Engineer',
                     position_ar: 'مهندس مدني',
                     department: 'Rayan Engineering',
-                    date_of_joining: '2025-08-07',
-                    date_of_appointment: '2025-08-07',
+                    date_of_joining: '2025-08-10',
+                    date_of_appointment: '2025-08-10',
                     currency: 'AED',
-                    phone: '+971 50 123 4567',
-                    email: 'bakhteyar@rayan-group.com',
-                    emirates_id: '784-1988-1234567-1',
-                    eid_expiry_date: '2027-08-07',
+                    phone: '+971528990903',
+                    email: 'bakhteyarnke@gmail.com',
+                    emirates_id: '784-1996-4684544-8',
+                    eid_expiry_date: '2027-08-11',
                     passport_no: 'S3552106',
-                    passport_expiry_date: '2030-05-15',
+                    passport_expiry_date: '2028-09-03',
                     nationality: 'India',
                     nationality_ar: 'هندي',
                     gender: 'Male',
                     visa_status: 'Employment Visa (Rayan Engineering)',
-                    basic_salary: 9500.00,
-                    accommodation_allowance: 5500.00,
+                    basic_salary: 16000.00,
+                    accommodation_allowance: 4000.00,
                     consolidated_allowance: 0.00,
-                    other_allowance: 0.00,
+                    other_allowance: 16000.00,
                     bank_name: 'Emirates NBD Bank PJSC',
                     swift: 'EBILAEADXXX',
                     iban: 'AE860260001015934645101',
                     account_no: 'AE860260001015934645101',
                     default_pay_method: 'AED RAYAN GROUP Host To Host',
-                    project_id: 'prj-toprock-police-01',
-                    project_name: 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+                    project_id: '',
+                    project_name: 'Corporate / General Overhead',
                     status: 'Active',
                     eligible_for_rehire: 'yes'
                   });

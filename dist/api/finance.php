@@ -4384,10 +4384,24 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             if (!isset($emp['passport_expiry_date'])) {
                 $emp['passport_expiry_date'] = '';
             }
-            if (stripos($emp['name'] ?? '', 'Bakhteyar') !== false) {
+            if (stripos($emp['name'] ?? '', 'Bakhteyar') !== false || ($emp['id'] ?? '') === 'emp-en12009' || ($emp['employee_no'] ?? '') === 'EN12009') {
                 $emp['id'] = 'emp-en12009';
                 $emp['employee_no'] = 'EN12009';
-                $emp['status'] = 'Active';
+                if (($emp['phone'] ?? '') === '+971 50 123 4567') {
+                    $emp['phone'] = '+971528990903';
+                }
+                if (($emp['email'] ?? '') === 'bakhteyar@rayan-group.com') {
+                    $emp['email'] = 'bakhteyarnke@gmail.com';
+                }
+                if (stripos($emp['project_name'] ?? '', 'Police Academy') !== false) {
+                    $emp['project_id'] = '';
+                    $emp['project_name'] = 'Corporate / General Overhead';
+                }
+                if (($emp['basic_salary'] ?? 0) == 9500 && ($emp['accommodation_allowance'] ?? 0) == 5500) {
+                    $emp['basic_salary'] = 16000;
+                    $emp['accommodation_allowance'] = 4000;
+                    $emp['other_allowance'] = 16000;
+                }
             }
             if (stripos($emp['name'] ?? '', 'Shafiur') !== false) {
                 $emp['id'] = 'emp-en12004';
@@ -4395,6 +4409,16 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
             }
         }
         unset($emp);
+
+        $deletedEmps = array_map('strtolower', $data['deleted_employee_ids'] ?? []);
+        if (!empty($deletedEmps)) {
+            $data['employees'] = array_values(array_filter($data['employees'], function($e) use ($deletedEmps) {
+                $eId = strtolower(trim($e['id'] ?? ''));
+                $eNo = strtolower(trim($e['employee_no'] ?? ''));
+                return !in_array($eId, $deletedEmps) && !in_array($eNo, $deletedEmps);
+            }));
+        }
+
         $hasBakht = false;
         foreach ($data['employees'] as $e) {
             if (stripos($e['name'] ?? '', 'Bakhteyar') !== false || ($e['employee_no'] ?? '') === 'EN12009' || ($e['id'] ?? '') === 'emp-en12009') {
@@ -4402,7 +4426,8 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
                 break;
             }
         }
-        if (!$hasBakht) {
+        $isBakhtDel = in_array('emp-en12009', $deletedEmps) || in_array('en12009', $deletedEmps);
+        if (!$hasBakht && !$isBakhtDel) {
             $data['employees'][] = [
                 'id' => 'emp-en12009',
                 'employee_no' => 'EN12009',
@@ -4412,30 +4437,30 @@ function reconcileV82EmployeesAndPayroll(&$data, $pdo) {
                 'position' => 'Civil Engineer',
                 'position_ar' => 'مهندس مدني',
                 'department' => 'Rayan Engineering',
-                'date_of_joining' => '2025-08-07',
-                'date_of_appointment' => '2025-08-07',
+                'date_of_joining' => '2025-08-10',
+                'date_of_appointment' => '2025-08-10',
                 'currency' => 'AED',
-                'phone' => '+971 50 123 4567',
-                'email' => 'bakhteyar@rayan-group.com',
-                'emirates_id' => '784-1988-1234567-1',
-                'eid_expiry_date' => '2027-08-07',
+                'phone' => '+971528990903',
+                'email' => 'bakhteyarnke@gmail.com',
+                'emirates_id' => '784-1996-4684544-8',
+                'eid_expiry_date' => '2027-08-11',
                 'passport_no' => 'S3552106',
-                'passport_expiry_date' => '2030-05-15',
+                'passport_expiry_date' => '2028-09-03',
                 'nationality' => 'India',
                 'nationality_ar' => 'هندي',
                 'gender' => 'Male',
                 'visa_status' => 'Employment Visa (Rayan Engineering)',
-                'basic_salary' => 9500.00,
-                'accommodation_allowance' => 5500.00,
+                'basic_salary' => 16000.00,
+                'accommodation_allowance' => 4000.00,
                 'consolidated_allowance' => 0.00,
-                'other_allowance' => 0.00,
+                'other_allowance' => 16000.00,
                 'bank_name' => 'Emirates NBD Bank PJSC',
                 'swift' => 'EBILAEADXXX',
                 'iban' => 'AE860260001015934645101',
                 'account_no' => 'AE860260001015934645101',
                 'default_pay_method' => 'AED RAYAN GROUP Host To Host',
-                'project_id' => 'prj-toprock-police-01',
-                'project_name' => 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
+                'project_id' => '',
+                'project_name' => 'Corporate / General Overhead',
                 'status' => 'Active',
                 'eligible_for_rehire' => 'yes'
             ];
@@ -12181,6 +12206,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$found) {
                     array_unshift($db['employees'], $emp);
                 }
+                if (!empty($db['deleted_employee_ids']) && is_array($db['deleted_employee_ids'])) {
+                    $eIdLower = strtolower(trim($emp['id'] ?? ''));
+                    $eNoLower = strtolower(trim($emp['employee_no'] ?? ''));
+                    $db['deleted_employee_ids'] = array_values(array_filter($db['deleted_employee_ids'], function($d) use ($eIdLower, $eNoLower) {
+                        return $d !== $eIdLower && $d !== $eNoLower;
+                    }));
+                }
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("REPLACE INTO finance_employees (id, employee_no, company_id, name, designation, department, joining_date, phone, email, bank_name, iban, account_no, swift, basic_salary, accommodation_allowance, consolidated_allowance, other_allowance, project_id, project_name, status, data_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
@@ -12217,14 +12249,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'delete_employee':
             $targetId = $body['id'] ?? '';
+            $targetNo = $body['employee_no'] ?? '';
             if (!empty($targetId) && !empty($db['employees'])) {
-                $db['employees'] = array_values(array_filter($db['employees'], function($e) use ($targetId) {
-                    return ($e['id'] ?? '') !== $targetId && ($e['employee_no'] ?? '') !== $targetId;
+                $db['employees'] = array_values(array_filter($db['employees'], function($e) use ($targetId, $targetNo) {
+                    $eId = strtolower(trim($e['id'] ?? ''));
+                    $eNo = strtolower(trim($e['employee_no'] ?? ''));
+                    return $eId !== strtolower($targetId) && $eNo !== strtolower($targetId) && ($targetNo === '' || ($eId !== strtolower($targetNo) && $eNo !== strtolower($targetNo)));
                 }));
+                if (!isset($db['deleted_employee_ids']) || !is_array($db['deleted_employee_ids'])) {
+                    $db['deleted_employee_ids'] = [];
+                }
+                $tIdLower = strtolower(trim($targetId));
+                if (!in_array($tIdLower, $db['deleted_employee_ids'])) {
+                    $db['deleted_employee_ids'][] = $tIdLower;
+                }
+                if ($targetNo) {
+                    $tNoLower = strtolower(trim($targetNo));
+                    if (!in_array($tNoLower, $db['deleted_employee_ids'])) {
+                        $db['deleted_employee_ids'][] = $tNoLower;
+                    }
+                }
                 if ($pdo) {
                     try {
                         $stmt = $pdo->prepare("DELETE FROM finance_employees WHERE id = ? OR employee_no = ?");
-                        $stmt->execute([$targetId, $targetId]);
+                        $stmt->execute([$targetId, $targetNo ?: $targetId]);
                     } catch (Exception $e) {}
                 }
                 $addAuditLog('delete', 'employee', $targetId, 'Deleted employee ' . $targetId);

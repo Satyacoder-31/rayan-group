@@ -104,19 +104,10 @@ export function registerPayrollModules(FinanceApp) {
       } catch (e) { return []; }
     })();
 
-    // Always protect essential corporate staff from accidental deletion cache
-    const protectedStaffKeys = ['emp-en12009', 'en12009', 'emp-mwlpkkbs', 'emp-en12004', 'en12004', 'emp-mwlpkkbr', 'emp-en12001', 'en12001'];
-    const cleanStoredDel = storedDel.filter(id => !protectedStaffKeys.includes(String(id || '').toLowerCase()));
-    try {
-      if (typeof localStorage !== 'undefined' && cleanStoredDel.length !== storedDel.length) {
-        localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(cleanStoredDel));
-      }
-    } catch (e) {}
-
     const deleted = Array.from(new Set([
       ...(Array.isArray(this.db.deleted_employee_ids) ? this.db.deleted_employee_ids : []),
-      ...cleanStoredDel
-    ])).filter(id => !protectedStaffKeys.includes(String(id || '').toLowerCase()));
+      ...storedDel
+    ])).map(id => String(id || '').trim().toLowerCase()).filter(Boolean);
     this.db.deleted_employee_ids = deleted;
 
     if (!Array.isArray(this.db.employees)) {
@@ -129,9 +120,14 @@ export function registerPayrollModules(FinanceApp) {
       this.db.letters_of_assignment = this.db.letters_of_assignment.filter(l => l && l.employee_id !== 'emp-rg11047' && !(l.employee_name && l.employee_name.toLowerCase().includes('ashraf')));
     }
 
-    // Filter out only user-deleted internal IDs
+    // Filter out all user-deleted employee IDs & numbers
     if (deleted.length > 0) {
-      this.db.employees = this.db.employees.filter(e => !deleted.includes(e.id));
+      this.db.employees = this.db.employees.filter(e => {
+        if (!e) return false;
+        const eId = String(e.id || '').trim().toLowerCase();
+        const eNo = String(e.employee_no || '').trim().toLowerCase();
+        return !deleted.includes(eId) && !deleted.includes(eNo);
+      });
     }
 
     // If directory is empty, seed the authoritative real employees
@@ -225,65 +221,70 @@ export function registerPayrollModules(FinanceApp) {
         nadeem.company_id = nadeem.company_id || this.activeCompanyId || 'rayan-corp-uae';
       }
 
-      // Ensure Bakhteyar Alam Mokhtar Ahmad is ALWAYS present as EN12009 (Civil Engineer)
-      let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || e.employee_no === 'EN12009' || e.id === 'emp-en12009');
-      if (!bakht) {
-        bakht = {
-          id: 'emp-en12009',
-          employee_no: 'EN12009',
-          company_id: this.activeCompanyId || 'rayan-corp-uae',
-          name: 'Bakhteyar Alam Mokhtar Ahmad',
-          name_ar: 'بختيار عالم مختار احمد',
-          position: 'Civil Engineer',
-          position_ar: 'مهندس مدني',
-          department: 'Rayan Engineering',
-          date_of_joining: '2025-08-07',
-          date_of_appointment: '2025-08-07',
-          currency: 'AED',
-          phone: '+971 50 123 4567',
-          email: 'bakhteyar@rayan-group.com',
-          emirates_id: '784-1988-1234567-1',
-          eid_expiry_date: '2027-08-07',
-          passport_no: 'S3552106',
-          passport_expiry_date: '2030-05-15',
-          nationality: 'India',
-          nationality_ar: 'هندي',
-          gender: 'Male',
-          visa_status: 'Employment Visa (Rayan Engineering)',
-          basic_salary: 9500.00,
-          accommodation_allowance: 5500.00,
-          consolidated_allowance: 0.00,
-          other_allowance: 0.00,
-          bank_name: 'Emirates NBD Bank PJSC',
-          swift: 'EBILAEADXXX',
-          iban: 'AE860260001015934645101',
-          account_no: 'AE860260001015934645101',
-          default_pay_method: 'AED RAYAN GROUP Host To Host',
-          project_id: 'prj-toprock-police-01',
-          project_name: 'Project # The New Dubai Police Academy @ Al Rowaiyah, Dubai',
-          status: 'Active',
-          eligible_for_rehire: 'yes',
-          created_at: '2025-08-07T09:00:00Z',
-          updated_at: new Date().toISOString()
-        };
-        this.db.employees.push(bakht);
-      } else {
-        bakht.id = 'emp-en12009';
-        bakht.employee_no = 'EN12009';
-        bakht.status = 'Active';
-        bakht.passport_no = bakht.passport_no || 'S3552106';
-        bakht.passport_expiry_date = bakht.passport_expiry_date || '2030-05-15';
-        bakht.emirates_id = bakht.emirates_id || '784-1988-1234567-1';
-        bakht.eid_expiry_date = bakht.eid_expiry_date || '2027-08-07';
-        bakht.phone = bakht.phone || '+971 50 123 4567';
-        bakht.email = bakht.email || 'bakhteyar@rayan-group.com';
-        if (!bakht.name || !bakht.name.includes('Mokhtar')) bakht.name = 'Bakhteyar Alam Mokhtar Ahmad';
-        if (!bakht.name_ar) bakht.name_ar = 'بختيار عالم مختار احمد';
-        if (!bakht.position_ar) bakht.position_ar = 'مهندس مدني';
-        if (!bakht.position) bakht.position = 'Civil Engineer';
-        if (!bakht.company_id) bakht.company_id = this.activeCompanyId || 'rayan-corp-uae';
-        if (!bakht.basic_salary) bakht.basic_salary = 9500.00;
-        if (!bakht.accommodation_allowance) bakht.accommodation_allowance = 5500.00;
+      // Bakhteyar Alam Mokhtar Ahmad EN12009
+      const isBakhtDeleted = deleted.includes('emp-en12009') || deleted.includes('en12009');
+      let bakht = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('bakhteyar')) || (e.employee_no && e.employee_no.toUpperCase() === 'EN12009') || e.id === 'emp-en12009');
+      if (!isBakhtDeleted) {
+        if (!bakht) {
+          bakht = {
+            id: 'emp-en12009',
+            employee_no: 'EN12009',
+            company_id: this.activeCompanyId || 'rayan-corp-uae',
+            name: 'Bakhteyar Alam Mokhtar Ahmad',
+            name_ar: 'بختيار عالم مختار احمد',
+            position: 'Civil Engineer',
+            position_ar: 'مهندس مدني',
+            department: 'Rayan Engineering',
+            date_of_joining: '2025-08-10',
+            date_of_appointment: '2025-08-10',
+            currency: 'AED',
+            phone: '+971528990903',
+            email: 'bakhteyarnke@gmail.com',
+            emirates_id: '784-1996-4684544-8',
+            eid_expiry_date: '2027-08-11',
+            passport_no: 'S3552106',
+            passport_expiry_date: '2028-09-03',
+            nationality: 'India',
+            nationality_ar: 'هندي',
+            gender: 'Male',
+            visa_status: 'Employment Visa (Rayan Engineering)',
+            basic_salary: 16000.00,
+            accommodation_allowance: 4000.00,
+            consolidated_allowance: 0.00,
+            other_allowance: 16000.00,
+            bank_name: 'Emirates NBD Bank PJSC',
+            swift: 'EBILAEADXXX',
+            iban: 'AE860260001015934645101',
+            account_no: 'AE860260001015934645101',
+            default_pay_method: 'AED RAYAN GROUP Host To Host',
+            project_id: '',
+            project_name: 'Corporate / General Overhead',
+            status: 'Active',
+            eligible_for_rehire: 'yes',
+            created_at: '2025-08-07T09:00:00Z',
+            updated_at: new Date().toISOString()
+          };
+          this.db.employees.push(bakht);
+        } else {
+          // Normalize IDs without clobbering user edits (status, custom salary, dates are preserved!)
+          bakht.id = 'emp-en12009';
+          bakht.employee_no = 'EN12009';
+          if (bakht.phone === '+971 50 123 4567' || !bakht.phone) {
+            bakht.phone = '+971528990903';
+          }
+          if (bakht.email === 'bakhteyar@rayan-group.com' || !bakht.email) {
+            bakht.email = 'bakhteyarnke@gmail.com';
+          }
+          if (bakht.project_name && bakht.project_name.includes('Police Academy')) {
+            bakht.project_id = '';
+            bakht.project_name = 'Corporate / General Overhead';
+          }
+          if (bakht.basic_salary === 9500 && bakht.accommodation_allowance === 5500) {
+            bakht.basic_salary = 16000;
+            bakht.accommodation_allowance = 4000;
+            bakht.other_allowance = 16000;
+          }
+        }
       }
 
       let shafiur = this.db.employees.find(e => (e.name && e.name.toLowerCase().includes('shafiur')) || e.id === 'emp-en12004');
@@ -297,8 +298,7 @@ export function registerPayrollModules(FinanceApp) {
         this.db.employees.forEach(e => {
           if (e.name && e.name.toLowerCase().includes('bakhteyar')) {
             e.id = 'emp-en12009';
-            e.employee_no = 'EN12009';
-            e.status = 'Active';
+            if (!e.employee_no || e.employee_no === 'EN12004') e.employee_no = 'EN12009';
           }
           if (e.name && e.name.toLowerCase().includes('shafiur')) {
             e.id = 'emp-en12004';
@@ -337,9 +337,9 @@ export function registerPayrollModules(FinanceApp) {
           nationality_ar: 'هندي',
           passport_no: 'S3552106',
           currency: 'AED',
-          basic_salary: 9500.00,
-          accommodation_allowance: 5500.00,
-          total_salary: 15000.00,
+          basic_salary: 16000.00,
+          accommodation_allowance: 4000.00,
+          total_salary: 20000.00,
           purpose: 'This certificate is issued upon request for whatever purpose it may serve, with no responsibility on the part of the company.',
           purpose_ar: 'وقد أعطيت له هذه الشهـادة بناء على طلبه، دون تحمل الشركة أدنى مسؤولية تجاه الغير.',
           verification_email: 'rayan@rayan-group.com',
@@ -383,29 +383,6 @@ export function registerPayrollModules(FinanceApp) {
           created_at: '2026-08-26T09:00:00Z'
         }
       ];
-    }
-
-    // Cross-sync: ensure any employee data in employment_certificates is reflected in employees
-    if (Array.isArray(this.db.employment_certificates) && Array.isArray(this.db.employees)) {
-      this.db.employment_certificates.forEach(cert => {
-        if (!cert) return;
-        const certName = (cert.employee_name_en || '').toLowerCase().trim();
-        const emp = this.db.employees.find(e => {
-          const eName = (e.name || '').toLowerCase().trim();
-          return (cert.passport_no && e.passport_no === cert.passport_no) ||
-                 (certName && eName && (eName === certName || eName.includes(certName) || certName.includes(eName)));
-        });
-        if (emp) {
-          if (cert.employee_name_en) emp.name = cert.employee_name_en;
-          if (cert.employee_name_ar) emp.name_ar = cert.employee_name_ar;
-          if (cert.job_title_en) { emp.position = cert.job_title_en; emp.designation = cert.job_title_en; }
-          if (cert.job_title_ar) emp.position_ar = cert.job_title_ar;
-          if (cert.passport_no) emp.passport_no = cert.passport_no;
-          if (cert.nationality_en) emp.nationality = cert.nationality_en;
-          if (cert.basic_salary) emp.basic_salary = cert.basic_salary;
-          if (cert.accommodation_allowance !== undefined) emp.accommodation_allowance = cert.accommodation_allowance;
-        }
-      });
     }
 
     if (!Array.isArray(this.db.payroll)) {
@@ -1328,10 +1305,11 @@ export function registerPayrollModules(FinanceApp) {
   proto.openEmployeeModal = function (empId = null) {
     let emp = null;
     if (empId) {
-      emp = (this.db?.employees || []).find(e => e.id === empId);
-      if (!emp) {
-        emp = (this.db?.employees || []).find(e => e.employee_no === empId);
-      }
+      const searchKey = String(empId).trim().toLowerCase();
+      emp = (this.db?.employees || []).find(e => 
+        (e.id && String(e.id).trim().toLowerCase() === searchKey) ||
+        (e.employee_no && String(e.employee_no).trim().toLowerCase() === searchKey)
+      );
     }
 
     const isEdit = Boolean(emp);
@@ -1837,12 +1815,22 @@ export function registerPayrollModules(FinanceApp) {
 
     // Undelete if previously marked deleted
     if (Array.isArray(this.db.deleted_employee_ids)) {
-      this.db.deleted_employee_ids = this.db.deleted_employee_ids.filter(id => id !== empId && id !== empObj.employee_no);
+      const eIdLow = String(empId).toLowerCase();
+      const eNoLow = String(empObj.employee_no || '').toLowerCase();
+      this.db.deleted_employee_ids = this.db.deleted_employee_ids.filter(id => {
+        const idLow = String(id || '').toLowerCase();
+        return idLow !== eIdLow && idLow !== eNoLow;
+      });
     }
     try {
       if (typeof localStorage !== 'undefined') {
         const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]');
-        const updatedStored = stored.filter(id => id !== empId && id !== empObj.employee_no);
+        const eIdLow = String(empId).toLowerCase();
+        const eNoLow = String(empObj.employee_no || '').toLowerCase();
+        const updatedStored = stored.filter(id => {
+          const idLow = String(id || '').toLowerCase();
+          return idLow !== eIdLow && idLow !== eNoLow;
+        });
         localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(updatedStored));
       }
     } catch (e) {}
@@ -1938,7 +1926,11 @@ export function registerPayrollModules(FinanceApp) {
   };
 
   proto.deleteEmployee = async function (empId) {
-    const emp = (this.db?.employees || []).find(e => e.id === empId || e.employee_no === empId);
+    const searchKey = String(empId).trim().toLowerCase();
+    const emp = (this.db?.employees || []).find(e => 
+      (e.id && String(e.id).trim().toLowerCase() === searchKey) ||
+      (e.employee_no && String(e.employee_no).trim().toLowerCase() === searchKey)
+    );
     if (!emp) return;
 
     const confirmed = (typeof window !== 'undefined' && typeof window.confirm === 'function')
@@ -1949,20 +1941,29 @@ export function registerPayrollModules(FinanceApp) {
     if (!Array.isArray(this.db.deleted_employee_ids)) {
       this.db.deleted_employee_ids = [];
     }
-    // Track unique internal record ID only
-    if (!this.db.deleted_employee_ids.includes(emp.id)) {
-      this.db.deleted_employee_ids.push(emp.id);
+    const idKey = String(emp.id || '').trim().toLowerCase();
+    const noKey = String(emp.employee_no || '').trim().toLowerCase();
+    if (idKey && !this.db.deleted_employee_ids.includes(idKey)) {
+      this.db.deleted_employee_ids.push(idKey);
+    }
+    if (noKey && !this.db.deleted_employee_ids.includes(noKey)) {
+      this.db.deleted_employee_ids.push(noKey);
     }
 
     try {
       if (typeof localStorage !== 'undefined') {
         const stored = JSON.parse(localStorage.getItem('rayan_fin_deleted_employee_ids') || '[]');
-        if (!stored.includes(emp.id)) stored.push(emp.id);
+        if (idKey && !stored.includes(idKey)) stored.push(idKey);
+        if (noKey && !stored.includes(noKey)) stored.push(noKey);
         localStorage.setItem('rayan_fin_deleted_employee_ids', JSON.stringify(stored));
       }
     } catch (e) {}
 
-    this.db.employees = (this.db.employees || []).filter(e => e.id !== emp.id);
+    this.db.employees = (this.db.employees || []).filter(e => {
+      const eId = String(e.id || '').trim().toLowerCase();
+      const eNo = String(e.employee_no || '').trim().toLowerCase();
+      return eId !== idKey && eNo !== noKey;
+    });
     try { localStorage.setItem('rayan_fin_db_cache', JSON.stringify(this.db)); } catch (err) {}
 
     // Sync deletion with backend
